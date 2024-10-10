@@ -2943,6 +2943,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsStories: CGImage {
+      if let image = cached.with({ $0["settingsStories"] }) {
+          return image
+      } else {
+          let image = _settingsStories()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStories"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var settingsGeneral: CGImage {
       if let image = cached.with({ $0["settingsGeneral"] }) {
           return image
@@ -3125,6 +3138,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsGiftPremium: CGImage {
+      if let image = cached.with({ $0["settingsGiftPremium"] }) {
+          return image
+      } else {
+          let image = _settingsGiftPremium()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsGiftPremium"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var settingsAskQuestionActive: CGImage {
       if let image = cached.with({ $0["settingsAskQuestionActive"] }) {
           return image
@@ -3146,6 +3172,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsFaqActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var settingsStoriesActive: CGImage {
+      if let image = cached.with({ $0["settingsStoriesActive"] }) {
+          return image
+      } else {
+          let image = _settingsStoriesActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStoriesActive"] = image
               return current
           }
           return image
@@ -3328,6 +3367,45 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsProfile"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var settingsBusiness: CGImage {
+      if let image = cached.with({ $0["settingsBusiness"] }) {
+          return image
+      } else {
+          let image = _settingsBusiness()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsBusiness"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var settingsBusinessActive: CGImage {
+      if let image = cached.with({ $0["settingsBusinessActive"] }) {
+          return image
+      } else {
+          let image = _settingsBusinessActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsBusinessActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var settingsStars: CGImage {
+      if let image = cached.with({ $0["settingsStars"] }) {
+          return image
+      } else {
+          let image = _settingsStars()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStars"] = image
               return current
           }
           return image
@@ -4828,6 +4906,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var peerInfoRecentActions: CGImage {
+      if let image = cached.with({ $0["peerInfoRecentActions"] }) {
+          return image
+      } else {
+          let image = _peerInfoRecentActions()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoRecentActions"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var peerInfoPermissions: CGImage {
       if let image = cached.with({ $0["peerInfoPermissions"] }) {
           return image
@@ -4862,6 +4953,32 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["peerInfoMembers"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var peerInfoStarsBalance: CGImage {
+      if let image = cached.with({ $0["peerInfoStarsBalance"] }) {
+          return image
+      } else {
+          let image = _peerInfoStarsBalance()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoStarsBalance"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var peerInfoBotUsername: CGImage {
+      if let image = cached.with({ $0["peerInfoBotUsername"] }) {
+          return image
+      } else {
+          let image = _peerInfoBotUsername()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoBotUsername"] = image
               return current
           }
           return image
@@ -5148,6 +5265,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["privacySettings_twoStep"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var privacy_settings_autodelete: CGImage {
+      if let image = cached.with({ $0["privacy_settings_autodelete"] }) {
+          return image
+      } else {
+          let image = _privacy_settings_autodelete()
+          _ = cached.modify { current in 
+              var current = current
+              current["privacy_settings_autodelete"] = image
               return current
           }
           return image
@@ -6128,6 +6258,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_filter_new_chats: CGImage {
+      if let image = cached.with({ $0["chat_filter_new_chats"] }) {
+          return image
+      } else {
+          let image = _chat_filter_new_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_new_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_filter_existing_chats: CGImage {
+      if let image = cached.with({ $0["chat_filter_existing_chats"] }) {
+          return image
+      } else {
+          let image = _chat_filter_existing_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_existing_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var group_invite_via_link: CGImage {
       if let image = cached.with({ $0["group_invite_via_link"] }) {
           return image
@@ -6461,6 +6617,97 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["profile_unblock"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_translate: CGImage {
+      if let image = cached.with({ $0["profile_translate"] }) {
+          return image
+      } else {
+          let image = _profile_translate()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_translate"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_join_channel: CGImage {
+      if let image = cached.with({ $0["profile_join_channel"] }) {
+          return image
+      } else {
+          let image = _profile_join_channel()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_join_channel"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_boost: CGImage {
+      if let image = cached.with({ $0["profile_boost"] }) {
+          return image
+      } else {
+          let image = _profile_boost()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_boost"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_archive: CGImage {
+      if let image = cached.with({ $0["profile_archive"] }) {
+          return image
+      } else {
+          let image = _profile_archive()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_archive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_boost: CGImage {
+      if let image = cached.with({ $0["stats_boost_boost"] }) {
+          return image
+      } else {
+          let image = _stats_boost_boost()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_boost"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_giveaway: CGImage {
+      if let image = cached.with({ $0["stats_boost_giveaway"] }) {
+          return image
+      } else {
+          let image = _stats_boost_giveaway()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_giveaway"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stats_boost_info: CGImage {
+      if let image = cached.with({ $0["stats_boost_info"] }) {
+          return image
+      } else {
+          let image = _stats_boost_info()
+          _ = cached.modify { current in 
+              var current = current
+              current["stats_boost_info"] = image
               return current
           }
           return image
@@ -7038,6 +7285,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var search_filter_hashtag: CGImage {
+      if let image = cached.with({ $0["search_filter_hashtag"] }) {
+          return image
+      } else {
+          let image = _search_filter_hashtag()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_hashtag"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var search_hashtag_chevron: CGImage {
+      if let image = cached.with({ $0["search_hashtag_chevron"] }) {
+          return image
+      } else {
+          let image = _search_hashtag_chevron()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_hashtag_chevron"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_reply_count_bubble_incoming: CGImage {
       if let image = cached.with({ $0["chat_reply_count_bubble_incoming"] }) {
           return image
@@ -7493,6 +7766,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_channel_color: CGImage {
+      if let image = cached.with({ $0["profile_channel_color"] }) {
+          return image
+      } else {
+          let image = _profile_channel_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_channel_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var profile_channel_stats: CGImage {
+      if let image = cached.with({ $0["profile_channel_stats"] }) {
+          return image
+      } else {
+          let image = _profile_channel_stats()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_channel_stats"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var profile_removed: CGImage {
       if let image = cached.with({ $0["profile_removed"] }) {
           return image
@@ -7839,6 +8138,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["audioplayer_speed_x2"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var audioplayer_list: CGImage {
+      if let image = cached.with({ $0["audioplayer_list"] }) {
+          return image
+      } else {
+          let image = _audioplayer_list()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_list"] = image
               return current
           }
           return image
@@ -8910,6 +9222,1280 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var dialog_auto_delete: CGImage {
+      if let image = cached.with({ $0["dialog_auto_delete"] }) {
+          return image
+      } else {
+          let image = _dialog_auto_delete()
+          _ = cached.modify { current in 
+              var current = current
+              current["dialog_auto_delete"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var contact_set_photo: CGImage {
+      if let image = cached.with({ $0["contact_set_photo"] }) {
+          return image
+      } else {
+          let image = _contact_set_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["contact_set_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var contact_suggest_photo: CGImage {
+      if let image = cached.with({ $0["contact_suggest_photo"] }) {
+          return image
+      } else {
+          let image = _contact_suggest_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["contact_suggest_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var send_media_spoiler: CGImage {
+      if let image = cached.with({ $0["send_media_spoiler"] }) {
+          return image
+      } else {
+          let image = _send_media_spoiler()
+          _ = cached.modify { current in 
+              var current = current
+              current["send_media_spoiler"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var general_delete: CGImage {
+      if let image = cached.with({ $0["general_delete"] }) {
+          return image
+      } else {
+          let image = _general_delete()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_delete"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var storage_music_play: CGImage {
+      if let image = cached.with({ $0["storage_music_play"] }) {
+          return image
+      } else {
+          let image = _storage_music_play()
+          _ = cached.modify { current in 
+              var current = current
+              current["storage_music_play"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var storage_music_pause: CGImage {
+      if let image = cached.with({ $0["storage_music_pause"] }) {
+          return image
+      } else {
+          let image = _storage_music_pause()
+          _ = cached.modify { current in 
+              var current = current
+              current["storage_music_pause"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var storage_media_play: CGImage {
+      if let image = cached.with({ $0["storage_media_play"] }) {
+          return image
+      } else {
+          let image = _storage_media_play()
+          _ = cached.modify { current in 
+              var current = current
+              current["storage_media_play"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var general_chevron_up: CGImage {
+      if let image = cached.with({ $0["general_chevron_up"] }) {
+          return image
+      } else {
+          let image = _general_chevron_up()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_chevron_up"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var general_chevron_down: CGImage {
+      if let image = cached.with({ $0["general_chevron_down"] }) {
+          return image
+      } else {
+          let image = _general_chevron_down()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_chevron_down"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var account_settings_set_password: CGImage {
+      if let image = cached.with({ $0["account_settings_set_password"] }) {
+          return image
+      } else {
+          let image = _account_settings_set_password()
+          _ = cached.modify { current in 
+              var current = current
+              current["account_settings_set_password"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var select_peer_create_channel: CGImage {
+      if let image = cached.with({ $0["select_peer_create_channel"] }) {
+          return image
+      } else {
+          let image = _select_peer_create_channel()
+          _ = cached.modify { current in 
+              var current = current
+              current["select_peer_create_channel"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var select_peer_create_group: CGImage {
+      if let image = cached.with({ $0["select_peer_create_group"] }) {
+          return image
+      } else {
+          let image = _select_peer_create_group()
+          _ = cached.modify { current in 
+              var current = current
+              current["select_peer_create_group"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_translate: CGImage {
+      if let image = cached.with({ $0["chat_translate"] }) {
+          return image
+      } else {
+          let image = _chat_translate()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_translate"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_activities: CGImage {
+      if let image = cached.with({ $0["msg_emoji_activities"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_activities()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_activities"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_angry: CGImage {
+      if let image = cached.with({ $0["msg_emoji_angry"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_angry()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_angry"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_away: CGImage {
+      if let image = cached.with({ $0["msg_emoji_away"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_away()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_away"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_bath: CGImage {
+      if let image = cached.with({ $0["msg_emoji_bath"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_bath()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_bath"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_busy: CGImage {
+      if let image = cached.with({ $0["msg_emoji_busy"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_busy()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_busy"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_dislike: CGImage {
+      if let image = cached.with({ $0["msg_emoji_dislike"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_dislike()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_dislike"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_food: CGImage {
+      if let image = cached.with({ $0["msg_emoji_food"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_food()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_food"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_haha: CGImage {
+      if let image = cached.with({ $0["msg_emoji_haha"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_haha()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_haha"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_happy: CGImage {
+      if let image = cached.with({ $0["msg_emoji_happy"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_happy()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_happy"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_heart: CGImage {
+      if let image = cached.with({ $0["msg_emoji_heart"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_heart()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_heart"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_hi2: CGImage {
+      if let image = cached.with({ $0["msg_emoji_hi2"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_hi2()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_hi2"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_home: CGImage {
+      if let image = cached.with({ $0["msg_emoji_home"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_home()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_home"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_like: CGImage {
+      if let image = cached.with({ $0["msg_emoji_like"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_like()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_like"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_neutral: CGImage {
+      if let image = cached.with({ $0["msg_emoji_neutral"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_neutral()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_neutral"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_omg: CGImage {
+      if let image = cached.with({ $0["msg_emoji_omg"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_omg()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_omg"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_party: CGImage {
+      if let image = cached.with({ $0["msg_emoji_party"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_party()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_party"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_recent: CGImage {
+      if let image = cached.with({ $0["msg_emoji_recent"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_recent()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_recent"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_sad: CGImage {
+      if let image = cached.with({ $0["msg_emoji_sad"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_sad()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_sad"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_sleep: CGImage {
+      if let image = cached.with({ $0["msg_emoji_sleep"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_sleep()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_sleep"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_study: CGImage {
+      if let image = cached.with({ $0["msg_emoji_study"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_study()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_study"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_tongue: CGImage {
+      if let image = cached.with({ $0["msg_emoji_tongue"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_tongue()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_tongue"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_vacation: CGImage {
+      if let image = cached.with({ $0["msg_emoji_vacation"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_vacation()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_vacation"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_what: CGImage {
+      if let image = cached.with({ $0["msg_emoji_what"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_what()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_what"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_work: CGImage {
+      if let image = cached.with({ $0["msg_emoji_work"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_work()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_work"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_premium: CGImage {
+      if let image = cached.with({ $0["msg_emoji_premium"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_premium()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_premium"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_archive: CGImage {
+      if let image = cached.with({ $0["installed_stickers_archive"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_archive()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_archive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_custom_emoji: CGImage {
+      if let image = cached.with({ $0["installed_stickers_custom_emoji"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_custom_emoji()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_custom_emoji"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_dynamic_order: CGImage {
+      if let image = cached.with({ $0["installed_stickers_dynamic_order"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_dynamic_order()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_dynamic_order"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_loop: CGImage {
+      if let image = cached.with({ $0["installed_stickers_loop"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_loop()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_loop"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_reactions: CGImage {
+      if let image = cached.with({ $0["installed_stickers_reactions"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_reactions()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_reactions"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_suggest: CGImage {
+      if let image = cached.with({ $0["installed_stickers_suggest"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_suggest()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_suggest"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_trending: CGImage {
+      if let image = cached.with({ $0["installed_stickers_trending"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_trending()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_trending"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var folder_invite_link: CGImage {
+      if let image = cached.with({ $0["folder_invite_link"] }) {
+          return image
+      } else {
+          let image = _folder_invite_link()
+          _ = cached.modify { current in 
+              var current = current
+              current["folder_invite_link"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var folder_invite_link_revoked: CGImage {
+      if let image = cached.with({ $0["folder_invite_link_revoked"] }) {
+          return image
+      } else {
+          let image = _folder_invite_link_revoked()
+          _ = cached.modify { current in 
+              var current = current
+              current["folder_invite_link_revoked"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var folders_sidebar_edit: CGImage {
+      if let image = cached.with({ $0["folders_sidebar_edit"] }) {
+          return image
+      } else {
+          let image = _folders_sidebar_edit()
+          _ = cached.modify { current in 
+              var current = current
+              current["folders_sidebar_edit"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var folders_sidebar_edit_active: CGImage {
+      if let image = cached.with({ $0["folders_sidebar_edit_active"] }) {
+          return image
+      } else {
+          let image = _folders_sidebar_edit_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["folders_sidebar_edit_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_unseen: CGImage {
+      if let image = cached.with({ $0["story_unseen"] }) {
+          return image
+      } else {
+          let image = _story_unseen()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_unseen"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_seen: CGImage {
+      if let image = cached.with({ $0["story_seen"] }) {
+          return image
+      } else {
+          let image = _story_seen()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_seen"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_selected: CGImage {
+      if let image = cached.with({ $0["story_selected"] }) {
+          return image
+      } else {
+          let image = _story_selected()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_selected"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_unseen_chat: CGImage {
+      if let image = cached.with({ $0["story_unseen_chat"] }) {
+          return image
+      } else {
+          let image = _story_unseen_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_unseen_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_seen_chat: CGImage {
+      if let image = cached.with({ $0["story_seen_chat"] }) {
+          return image
+      } else {
+          let image = _story_seen_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_seen_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_unseen_profile: CGImage {
+      if let image = cached.with({ $0["story_unseen_profile"] }) {
+          return image
+      } else {
+          let image = _story_unseen_profile()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_unseen_profile"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_seen_profile: CGImage {
+      if let image = cached.with({ $0["story_seen_profile"] }) {
+          return image
+      } else {
+          let image = _story_seen_profile()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_seen_profile"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_view_read: CGImage {
+      if let image = cached.with({ $0["story_view_read"] }) {
+          return image
+      } else {
+          let image = _story_view_read()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_view_read"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_view_reaction: CGImage {
+      if let image = cached.with({ $0["story_view_reaction"] }) {
+          return image
+      } else {
+          let image = _story_view_reaction()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_view_reaction"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_chatlist_reply: CGImage {
+      if let image = cached.with({ $0["story_chatlist_reply"] }) {
+          return image
+      } else {
+          let image = _story_chatlist_reply()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_chatlist_reply"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_chatlist_reply_active: CGImage {
+      if let image = cached.with({ $0["story_chatlist_reply_active"] }) {
+          return image
+      } else {
+          let image = _story_chatlist_reply_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_chatlist_reply_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_story_expired: CGImage {
+      if let image = cached.with({ $0["message_story_expired"] }) {
+          return image
+      } else {
+          let image = _message_story_expired()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_story_expired"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_story_expired_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["message_story_expired_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _message_story_expired_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_story_expired_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_story_expired_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["message_story_expired_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _message_story_expired_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_story_expired_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_accent: CGImage {
+      if let image = cached.with({ $0["message_quote_accent"] }) {
+          return image
+      } else {
+          let image = _message_quote_accent()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_accent"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_red: CGImage {
+      if let image = cached.with({ $0["message_quote_red"] }) {
+          return image
+      } else {
+          let image = _message_quote_red()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_red"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_orange: CGImage {
+      if let image = cached.with({ $0["message_quote_orange"] }) {
+          return image
+      } else {
+          let image = _message_quote_orange()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_orange"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_violet: CGImage {
+      if let image = cached.with({ $0["message_quote_violet"] }) {
+          return image
+      } else {
+          let image = _message_quote_violet()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_violet"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_green: CGImage {
+      if let image = cached.with({ $0["message_quote_green"] }) {
+          return image
+      } else {
+          let image = _message_quote_green()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_green"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_cyan: CGImage {
+      if let image = cached.with({ $0["message_quote_cyan"] }) {
+          return image
+      } else {
+          let image = _message_quote_cyan()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_cyan"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_blue: CGImage {
+      if let image = cached.with({ $0["message_quote_blue"] }) {
+          return image
+      } else {
+          let image = _message_quote_blue()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_blue"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_pink: CGImage {
+      if let image = cached.with({ $0["message_quote_pink"] }) {
+          return image
+      } else {
+          let image = _message_quote_pink()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_pink"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["message_quote_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _message_quote_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["message_quote_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _message_quote_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_stats_likes: CGImage {
+      if let image = cached.with({ $0["channel_stats_likes"] }) {
+          return image
+      } else {
+          let image = _channel_stats_likes()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_stats_likes"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_stats_shares: CGImage {
+      if let image = cached.with({ $0["channel_stats_shares"] }) {
+          return image
+      } else {
+          let image = _channel_stats_shares()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_stats_shares"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_repost_from_white: CGImage {
+      if let image = cached.with({ $0["story_repost_from_white"] }) {
+          return image
+      } else {
+          let image = _story_repost_from_white()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_repost_from_white"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_repost_from_green: CGImage {
+      if let image = cached.with({ $0["story_repost_from_green"] }) {
+          return image
+      } else {
+          let image = _story_repost_from_green()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_repost_from_green"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_background: CGImage {
+      if let image = cached.with({ $0["channel_feature_background"] }) {
+          return image
+      } else {
+          let image = _channel_feature_background()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_background"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_background_photo: CGImage {
+      if let image = cached.with({ $0["channel_feature_background_photo"] }) {
+          return image
+      } else {
+          let image = _channel_feature_background_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_background_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_cover_color: CGImage {
+      if let image = cached.with({ $0["channel_feature_cover_color"] }) {
+          return image
+      } else {
+          let image = _channel_feature_cover_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_cover_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_cover_icon: CGImage {
+      if let image = cached.with({ $0["channel_feature_cover_icon"] }) {
+          return image
+      } else {
+          let image = _channel_feature_cover_icon()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_cover_icon"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_link_color: CGImage {
+      if let image = cached.with({ $0["channel_feature_link_color"] }) {
+          return image
+      } else {
+          let image = _channel_feature_link_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_link_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_link_icon: CGImage {
+      if let image = cached.with({ $0["channel_feature_link_icon"] }) {
+          return image
+      } else {
+          let image = _channel_feature_link_icon()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_link_icon"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_name_color: CGImage {
+      if let image = cached.with({ $0["channel_feature_name_color"] }) {
+          return image
+      } else {
+          let image = _channel_feature_name_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_name_color"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_reaction: CGImage {
+      if let image = cached.with({ $0["channel_feature_reaction"] }) {
+          return image
+      } else {
+          let image = _channel_feature_reaction()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_reaction"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_status: CGImage {
+      if let image = cached.with({ $0["channel_feature_status"] }) {
+          return image
+      } else {
+          let image = _channel_feature_status()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_status"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_stories: CGImage {
+      if let image = cached.with({ $0["channel_feature_stories"] }) {
+          return image
+      } else {
+          let image = _channel_feature_stories()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_stories"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_emoji_pack: CGImage {
+      if let image = cached.with({ $0["channel_feature_emoji_pack"] }) {
+          return image
+      } else {
+          let image = _channel_feature_emoji_pack()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_emoji_pack"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_voice_to_text: CGImage {
+      if let image = cached.with({ $0["channel_feature_voice_to_text"] }) {
+          return image
+      } else {
+          let image = _channel_feature_voice_to_text()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_voice_to_text"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var channel_feature_no_ads: CGImage {
+      if let image = cached.with({ $0["channel_feature_no_ads"] }) {
+          return image
+      } else {
+          let image = _channel_feature_no_ads()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_no_ads"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_hidden_author: CGImage {
+      if let image = cached.with({ $0["chat_hidden_author"] }) {
+          return image
+      } else {
+          let image = _chat_hidden_author()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_hidden_author"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_my_notes: CGImage {
+      if let image = cached.with({ $0["chat_my_notes"] }) {
+          return image
+      } else {
+          let image = _chat_my_notes()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_my_notes"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_required_forward: CGImage {
+      if let image = cached.with({ $0["premium_required_forward"] }) {
+          return image
+      } else {
+          let image = _premium_required_forward()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_required_forward"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var create_new_message_general: CGImage {
+      if let image = cached.with({ $0["create_new_message_general"] }) {
+          return image
+      } else {
+          let image = _create_new_message_general()
+          _ = cached.modify { current in 
+              var current = current
+              current["create_new_message_general"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var bot_manager_settings: CGImage {
+      if let image = cached.with({ $0["bot_manager_settings"] }) {
+          return image
+      } else {
+          let image = _bot_manager_settings()
+          _ = cached.modify { current in 
+              var current = current
+              current["bot_manager_settings"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var preview_text_down: CGImage {
+      if let image = cached.with({ $0["preview_text_down"] }) {
+          return image
+      } else {
+          let image = _preview_text_down()
+          _ = cached.modify { current in 
+              var current = current
+              current["preview_text_down"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var preview_text_up: CGImage {
+      if let image = cached.with({ $0["preview_text_up"] }) {
+          return image
+      } else {
+          let image = _preview_text_up()
+          _ = cached.modify { current in 
+              var current = current
+              current["preview_text_up"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9137,6 +10723,7 @@ public final class TelegramIconsTheme {
   private let _groupStickerNotFound: ()->CGImage
   private let _settingsAskQuestion: ()->CGImage
   private let _settingsFaq: ()->CGImage
+  private let _settingsStories: ()->CGImage
   private let _settingsGeneral: ()->CGImage
   private let _settingsLanguage: ()->CGImage
   private let _settingsNotifications: ()->CGImage
@@ -9151,8 +10738,10 @@ public final class TelegramIconsTheme {
   private let _settingsUpdate: ()->CGImage
   private let _settingsFilters: ()->CGImage
   private let _settingsPremium: ()->CGImage
+  private let _settingsGiftPremium: ()->CGImage
   private let _settingsAskQuestionActive: ()->CGImage
   private let _settingsFaqActive: ()->CGImage
+  private let _settingsStoriesActive: ()->CGImage
   private let _settingsGeneralActive: ()->CGImage
   private let _settingsLanguageActive: ()->CGImage
   private let _settingsNotificationsActive: ()->CGImage
@@ -9167,6 +10756,9 @@ public final class TelegramIconsTheme {
   private let _settingsUpdateActive: ()->CGImage
   private let _settingsFiltersActive: ()->CGImage
   private let _settingsProfile: ()->CGImage
+  private let _settingsBusiness: ()->CGImage
+  private let _settingsBusinessActive: ()->CGImage
+  private let _settingsStars: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
   private let _settingsLogout: ()->CGImage
@@ -9282,9 +10874,12 @@ public final class TelegramIconsTheme {
   private let _chatPollVoteUnselectedBubble_incoming: ()->CGImage
   private let _chatPollVoteUnselectedBubble_outgoing: ()->CGImage
   private let _peerInfoAdmins: ()->CGImage
+  private let _peerInfoRecentActions: ()->CGImage
   private let _peerInfoPermissions: ()->CGImage
   private let _peerInfoBanned: ()->CGImage
   private let _peerInfoMembers: ()->CGImage
+  private let _peerInfoStarsBalance: ()->CGImage
+  private let _peerInfoBotUsername: ()->CGImage
   private let _chatUndoAction: ()->CGImage
   private let _appUpdate: ()->CGImage
   private let _inlineVideoSoundOff: ()->CGImage
@@ -9307,6 +10902,7 @@ public final class TelegramIconsTheme {
   private let _privacySettings_activeSessions: ()->CGImage
   private let _privacySettings_passcode: ()->CGImage
   private let _privacySettings_twoStep: ()->CGImage
+  private let _privacy_settings_autodelete: ()->CGImage
   private let _deletedAccount: ()->CGImage
   private let _stickerPackSelection: ()->CGImage
   private let _stickerPackSelectionActive: ()->CGImage
@@ -9382,6 +10978,8 @@ public final class TelegramIconsTheme {
   private let _chat_filter_large_groups_avatar: ()->CGImage
   private let _chat_filter_non_contacts_avatar: ()->CGImage
   private let _chat_filter_archive_avatar: ()->CGImage
+  private let _chat_filter_new_chats: ()->CGImage
+  private let _chat_filter_existing_chats: ()->CGImage
   private let _group_invite_via_link: ()->CGImage
   private let _tab_contacts: ()->CGImage
   private let _tab_contacts_active: ()->CGImage
@@ -9408,6 +11006,13 @@ public final class TelegramIconsTheme {
   private let _profile_share: ()->CGImage
   private let _profile_stats: ()->CGImage
   private let _profile_unblock: ()->CGImage
+  private let _profile_translate: ()->CGImage
+  private let _profile_join_channel: ()->CGImage
+  private let _profile_boost: ()->CGImage
+  private let _profile_archive: ()->CGImage
+  private let _stats_boost_boost: ()->CGImage
+  private let _stats_boost_giveaway: ()->CGImage
+  private let _stats_boost_info: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
@@ -9452,6 +11057,8 @@ public final class TelegramIconsTheme {
   private let _search_filter_downloads: ()->CGImage
   private let _search_filter_add_peer: ()->CGImage
   private let _search_filter_add_peer_active: ()->CGImage
+  private let _search_filter_hashtag: ()->CGImage
+  private let _search_hashtag_chevron: ()->CGImage
   private let _chat_reply_count_bubble_incoming: ()->CGImage
   private let _chat_reply_count_bubble_outgoing: ()->CGImage
   private let _chat_reply_count: ()->CGImage
@@ -9487,6 +11094,8 @@ public final class TelegramIconsTheme {
   private let _profile_group_discussion: ()->CGImage
   private let _profile_requests: ()->CGImage
   private let _profile_reactions: ()->CGImage
+  private let _profile_channel_color: ()->CGImage
+  private let _profile_channel_stats: ()->CGImage
   private let _profile_removed: ()->CGImage
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
@@ -9514,6 +11123,7 @@ public final class TelegramIconsTheme {
   private let _audioplayer_volume_off: ()->CGImage
   private let _audioplayer_speed_x1: ()->CGImage
   private let _audioplayer_speed_x2: ()->CGImage
+  private let _audioplayer_list: ()->CGImage
   private let _chat_info_voice_chat: ()->CGImage
   private let _chat_info_create_group: ()->CGImage
   private let _chat_info_change_colors: ()->CGImage
@@ -9596,6 +11206,104 @@ public final class TelegramIconsTheme {
   private let _chatlist_forum_closed_topic_active: ()->CGImage
   private let _chatlist_arrow: ()->CGImage
   private let _chatlist_arrow_active: ()->CGImage
+  private let _dialog_auto_delete: ()->CGImage
+  private let _contact_set_photo: ()->CGImage
+  private let _contact_suggest_photo: ()->CGImage
+  private let _send_media_spoiler: ()->CGImage
+  private let _general_delete: ()->CGImage
+  private let _storage_music_play: ()->CGImage
+  private let _storage_music_pause: ()->CGImage
+  private let _storage_media_play: ()->CGImage
+  private let _general_chevron_up: ()->CGImage
+  private let _general_chevron_down: ()->CGImage
+  private let _account_settings_set_password: ()->CGImage
+  private let _select_peer_create_channel: ()->CGImage
+  private let _select_peer_create_group: ()->CGImage
+  private let _chat_translate: ()->CGImage
+  private let _msg_emoji_activities: ()->CGImage
+  private let _msg_emoji_angry: ()->CGImage
+  private let _msg_emoji_away: ()->CGImage
+  private let _msg_emoji_bath: ()->CGImage
+  private let _msg_emoji_busy: ()->CGImage
+  private let _msg_emoji_dislike: ()->CGImage
+  private let _msg_emoji_food: ()->CGImage
+  private let _msg_emoji_haha: ()->CGImage
+  private let _msg_emoji_happy: ()->CGImage
+  private let _msg_emoji_heart: ()->CGImage
+  private let _msg_emoji_hi2: ()->CGImage
+  private let _msg_emoji_home: ()->CGImage
+  private let _msg_emoji_like: ()->CGImage
+  private let _msg_emoji_neutral: ()->CGImage
+  private let _msg_emoji_omg: ()->CGImage
+  private let _msg_emoji_party: ()->CGImage
+  private let _msg_emoji_recent: ()->CGImage
+  private let _msg_emoji_sad: ()->CGImage
+  private let _msg_emoji_sleep: ()->CGImage
+  private let _msg_emoji_study: ()->CGImage
+  private let _msg_emoji_tongue: ()->CGImage
+  private let _msg_emoji_vacation: ()->CGImage
+  private let _msg_emoji_what: ()->CGImage
+  private let _msg_emoji_work: ()->CGImage
+  private let _msg_emoji_premium: ()->CGImage
+  private let _installed_stickers_archive: ()->CGImage
+  private let _installed_stickers_custom_emoji: ()->CGImage
+  private let _installed_stickers_dynamic_order: ()->CGImage
+  private let _installed_stickers_loop: ()->CGImage
+  private let _installed_stickers_reactions: ()->CGImage
+  private let _installed_stickers_suggest: ()->CGImage
+  private let _installed_stickers_trending: ()->CGImage
+  private let _folder_invite_link: ()->CGImage
+  private let _folder_invite_link_revoked: ()->CGImage
+  private let _folders_sidebar_edit: ()->CGImage
+  private let _folders_sidebar_edit_active: ()->CGImage
+  private let _story_unseen: ()->CGImage
+  private let _story_seen: ()->CGImage
+  private let _story_selected: ()->CGImage
+  private let _story_unseen_chat: ()->CGImage
+  private let _story_seen_chat: ()->CGImage
+  private let _story_unseen_profile: ()->CGImage
+  private let _story_seen_profile: ()->CGImage
+  private let _story_view_read: ()->CGImage
+  private let _story_view_reaction: ()->CGImage
+  private let _story_chatlist_reply: ()->CGImage
+  private let _story_chatlist_reply_active: ()->CGImage
+  private let _message_story_expired: ()->CGImage
+  private let _message_story_expired_bubble_incoming: ()->CGImage
+  private let _message_story_expired_bubble_outgoing: ()->CGImage
+  private let _message_quote_accent: ()->CGImage
+  private let _message_quote_red: ()->CGImage
+  private let _message_quote_orange: ()->CGImage
+  private let _message_quote_violet: ()->CGImage
+  private let _message_quote_green: ()->CGImage
+  private let _message_quote_cyan: ()->CGImage
+  private let _message_quote_blue: ()->CGImage
+  private let _message_quote_pink: ()->CGImage
+  private let _message_quote_bubble_incoming: ()->CGImage
+  private let _message_quote_bubble_outgoing: ()->CGImage
+  private let _channel_stats_likes: ()->CGImage
+  private let _channel_stats_shares: ()->CGImage
+  private let _story_repost_from_white: ()->CGImage
+  private let _story_repost_from_green: ()->CGImage
+  private let _channel_feature_background: ()->CGImage
+  private let _channel_feature_background_photo: ()->CGImage
+  private let _channel_feature_cover_color: ()->CGImage
+  private let _channel_feature_cover_icon: ()->CGImage
+  private let _channel_feature_link_color: ()->CGImage
+  private let _channel_feature_link_icon: ()->CGImage
+  private let _channel_feature_name_color: ()->CGImage
+  private let _channel_feature_reaction: ()->CGImage
+  private let _channel_feature_status: ()->CGImage
+  private let _channel_feature_stories: ()->CGImage
+  private let _channel_feature_emoji_pack: ()->CGImage
+  private let _channel_feature_voice_to_text: ()->CGImage
+  private let _channel_feature_no_ads: ()->CGImage
+  private let _chat_hidden_author: ()->CGImage
+  private let _chat_my_notes: ()->CGImage
+  private let _premium_required_forward: ()->CGImage
+  private let _create_new_message_general: ()->CGImage
+  private let _bot_manager_settings: ()->CGImage
+  private let _preview_text_down: ()->CGImage
+  private let _preview_text_up: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9824,6 +11532,7 @@ public final class TelegramIconsTheme {
       groupStickerNotFound: @escaping()->CGImage,
       settingsAskQuestion: @escaping()->CGImage,
       settingsFaq: @escaping()->CGImage,
+      settingsStories: @escaping()->CGImage,
       settingsGeneral: @escaping()->CGImage,
       settingsLanguage: @escaping()->CGImage,
       settingsNotifications: @escaping()->CGImage,
@@ -9838,8 +11547,10 @@ public final class TelegramIconsTheme {
       settingsUpdate: @escaping()->CGImage,
       settingsFilters: @escaping()->CGImage,
       settingsPremium: @escaping()->CGImage,
+      settingsGiftPremium: @escaping()->CGImage,
       settingsAskQuestionActive: @escaping()->CGImage,
       settingsFaqActive: @escaping()->CGImage,
+      settingsStoriesActive: @escaping()->CGImage,
       settingsGeneralActive: @escaping()->CGImage,
       settingsLanguageActive: @escaping()->CGImage,
       settingsNotificationsActive: @escaping()->CGImage,
@@ -9854,6 +11565,9 @@ public final class TelegramIconsTheme {
       settingsUpdateActive: @escaping()->CGImage,
       settingsFiltersActive: @escaping()->CGImage,
       settingsProfile: @escaping()->CGImage,
+      settingsBusiness: @escaping()->CGImage,
+      settingsBusinessActive: @escaping()->CGImage,
+      settingsStars: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
       settingsLogout: @escaping()->CGImage,
@@ -9969,9 +11683,12 @@ public final class TelegramIconsTheme {
       chatPollVoteUnselectedBubble_incoming: @escaping()->CGImage,
       chatPollVoteUnselectedBubble_outgoing: @escaping()->CGImage,
       peerInfoAdmins: @escaping()->CGImage,
+      peerInfoRecentActions: @escaping()->CGImage,
       peerInfoPermissions: @escaping()->CGImage,
       peerInfoBanned: @escaping()->CGImage,
       peerInfoMembers: @escaping()->CGImage,
+      peerInfoStarsBalance: @escaping()->CGImage,
+      peerInfoBotUsername: @escaping()->CGImage,
       chatUndoAction: @escaping()->CGImage,
       appUpdate: @escaping()->CGImage,
       inlineVideoSoundOff: @escaping()->CGImage,
@@ -9994,6 +11711,7 @@ public final class TelegramIconsTheme {
       privacySettings_activeSessions: @escaping()->CGImage,
       privacySettings_passcode: @escaping()->CGImage,
       privacySettings_twoStep: @escaping()->CGImage,
+      privacy_settings_autodelete: @escaping()->CGImage,
       deletedAccount: @escaping()->CGImage,
       stickerPackSelection: @escaping()->CGImage,
       stickerPackSelectionActive: @escaping()->CGImage,
@@ -10069,6 +11787,8 @@ public final class TelegramIconsTheme {
       chat_filter_large_groups_avatar: @escaping()->CGImage,
       chat_filter_non_contacts_avatar: @escaping()->CGImage,
       chat_filter_archive_avatar: @escaping()->CGImage,
+      chat_filter_new_chats: @escaping()->CGImage,
+      chat_filter_existing_chats: @escaping()->CGImage,
       group_invite_via_link: @escaping()->CGImage,
       tab_contacts: @escaping()->CGImage,
       tab_contacts_active: @escaping()->CGImage,
@@ -10095,6 +11815,13 @@ public final class TelegramIconsTheme {
       profile_share: @escaping()->CGImage,
       profile_stats: @escaping()->CGImage,
       profile_unblock: @escaping()->CGImage,
+      profile_translate: @escaping()->CGImage,
+      profile_join_channel: @escaping()->CGImage,
+      profile_boost: @escaping()->CGImage,
+      profile_archive: @escaping()->CGImage,
+      stats_boost_boost: @escaping()->CGImage,
+      stats_boost_giveaway: @escaping()->CGImage,
+      stats_boost_info: @escaping()->CGImage,
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
@@ -10139,6 +11866,8 @@ public final class TelegramIconsTheme {
       search_filter_downloads: @escaping()->CGImage,
       search_filter_add_peer: @escaping()->CGImage,
       search_filter_add_peer_active: @escaping()->CGImage,
+      search_filter_hashtag: @escaping()->CGImage,
+      search_hashtag_chevron: @escaping()->CGImage,
       chat_reply_count_bubble_incoming: @escaping()->CGImage,
       chat_reply_count_bubble_outgoing: @escaping()->CGImage,
       chat_reply_count: @escaping()->CGImage,
@@ -10174,6 +11903,8 @@ public final class TelegramIconsTheme {
       profile_group_discussion: @escaping()->CGImage,
       profile_requests: @escaping()->CGImage,
       profile_reactions: @escaping()->CGImage,
+      profile_channel_color: @escaping()->CGImage,
+      profile_channel_stats: @escaping()->CGImage,
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
       destruct_clear_history: @escaping()->CGImage,
@@ -10201,6 +11932,7 @@ public final class TelegramIconsTheme {
       audioplayer_volume_off: @escaping()->CGImage,
       audioplayer_speed_x1: @escaping()->CGImage,
       audioplayer_speed_x2: @escaping()->CGImage,
+      audioplayer_list: @escaping()->CGImage,
       chat_info_voice_chat: @escaping()->CGImage,
       chat_info_create_group: @escaping()->CGImage,
       chat_info_change_colors: @escaping()->CGImage,
@@ -10282,7 +12014,105 @@ public final class TelegramIconsTheme {
       chatlist_forum_closed_topic: @escaping()->CGImage,
       chatlist_forum_closed_topic_active: @escaping()->CGImage,
       chatlist_arrow: @escaping()->CGImage,
-      chatlist_arrow_active: @escaping()->CGImage
+      chatlist_arrow_active: @escaping()->CGImage,
+      dialog_auto_delete: @escaping()->CGImage,
+      contact_set_photo: @escaping()->CGImage,
+      contact_suggest_photo: @escaping()->CGImage,
+      send_media_spoiler: @escaping()->CGImage,
+      general_delete: @escaping()->CGImage,
+      storage_music_play: @escaping()->CGImage,
+      storage_music_pause: @escaping()->CGImage,
+      storage_media_play: @escaping()->CGImage,
+      general_chevron_up: @escaping()->CGImage,
+      general_chevron_down: @escaping()->CGImage,
+      account_settings_set_password: @escaping()->CGImage,
+      select_peer_create_channel: @escaping()->CGImage,
+      select_peer_create_group: @escaping()->CGImage,
+      chat_translate: @escaping()->CGImage,
+      msg_emoji_activities: @escaping()->CGImage,
+      msg_emoji_angry: @escaping()->CGImage,
+      msg_emoji_away: @escaping()->CGImage,
+      msg_emoji_bath: @escaping()->CGImage,
+      msg_emoji_busy: @escaping()->CGImage,
+      msg_emoji_dislike: @escaping()->CGImage,
+      msg_emoji_food: @escaping()->CGImage,
+      msg_emoji_haha: @escaping()->CGImage,
+      msg_emoji_happy: @escaping()->CGImage,
+      msg_emoji_heart: @escaping()->CGImage,
+      msg_emoji_hi2: @escaping()->CGImage,
+      msg_emoji_home: @escaping()->CGImage,
+      msg_emoji_like: @escaping()->CGImage,
+      msg_emoji_neutral: @escaping()->CGImage,
+      msg_emoji_omg: @escaping()->CGImage,
+      msg_emoji_party: @escaping()->CGImage,
+      msg_emoji_recent: @escaping()->CGImage,
+      msg_emoji_sad: @escaping()->CGImage,
+      msg_emoji_sleep: @escaping()->CGImage,
+      msg_emoji_study: @escaping()->CGImage,
+      msg_emoji_tongue: @escaping()->CGImage,
+      msg_emoji_vacation: @escaping()->CGImage,
+      msg_emoji_what: @escaping()->CGImage,
+      msg_emoji_work: @escaping()->CGImage,
+      msg_emoji_premium: @escaping()->CGImage,
+      installed_stickers_archive: @escaping()->CGImage,
+      installed_stickers_custom_emoji: @escaping()->CGImage,
+      installed_stickers_dynamic_order: @escaping()->CGImage,
+      installed_stickers_loop: @escaping()->CGImage,
+      installed_stickers_reactions: @escaping()->CGImage,
+      installed_stickers_suggest: @escaping()->CGImage,
+      installed_stickers_trending: @escaping()->CGImage,
+      folder_invite_link: @escaping()->CGImage,
+      folder_invite_link_revoked: @escaping()->CGImage,
+      folders_sidebar_edit: @escaping()->CGImage,
+      folders_sidebar_edit_active: @escaping()->CGImage,
+      story_unseen: @escaping()->CGImage,
+      story_seen: @escaping()->CGImage,
+      story_selected: @escaping()->CGImage,
+      story_unseen_chat: @escaping()->CGImage,
+      story_seen_chat: @escaping()->CGImage,
+      story_unseen_profile: @escaping()->CGImage,
+      story_seen_profile: @escaping()->CGImage,
+      story_view_read: @escaping()->CGImage,
+      story_view_reaction: @escaping()->CGImage,
+      story_chatlist_reply: @escaping()->CGImage,
+      story_chatlist_reply_active: @escaping()->CGImage,
+      message_story_expired: @escaping()->CGImage,
+      message_story_expired_bubble_incoming: @escaping()->CGImage,
+      message_story_expired_bubble_outgoing: @escaping()->CGImage,
+      message_quote_accent: @escaping()->CGImage,
+      message_quote_red: @escaping()->CGImage,
+      message_quote_orange: @escaping()->CGImage,
+      message_quote_violet: @escaping()->CGImage,
+      message_quote_green: @escaping()->CGImage,
+      message_quote_cyan: @escaping()->CGImage,
+      message_quote_blue: @escaping()->CGImage,
+      message_quote_pink: @escaping()->CGImage,
+      message_quote_bubble_incoming: @escaping()->CGImage,
+      message_quote_bubble_outgoing: @escaping()->CGImage,
+      channel_stats_likes: @escaping()->CGImage,
+      channel_stats_shares: @escaping()->CGImage,
+      story_repost_from_white: @escaping()->CGImage,
+      story_repost_from_green: @escaping()->CGImage,
+      channel_feature_background: @escaping()->CGImage,
+      channel_feature_background_photo: @escaping()->CGImage,
+      channel_feature_cover_color: @escaping()->CGImage,
+      channel_feature_cover_icon: @escaping()->CGImage,
+      channel_feature_link_color: @escaping()->CGImage,
+      channel_feature_link_icon: @escaping()->CGImage,
+      channel_feature_name_color: @escaping()->CGImage,
+      channel_feature_reaction: @escaping()->CGImage,
+      channel_feature_status: @escaping()->CGImage,
+      channel_feature_stories: @escaping()->CGImage,
+      channel_feature_emoji_pack: @escaping()->CGImage,
+      channel_feature_voice_to_text: @escaping()->CGImage,
+      channel_feature_no_ads: @escaping()->CGImage,
+      chat_hidden_author: @escaping()->CGImage,
+      chat_my_notes: @escaping()->CGImage,
+      premium_required_forward: @escaping()->CGImage,
+      create_new_message_general: @escaping()->CGImage,
+      bot_manager_settings: @escaping()->CGImage,
+      preview_text_down: @escaping()->CGImage,
+      preview_text_up: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10510,6 +12340,7 @@ public final class TelegramIconsTheme {
       self._groupStickerNotFound = groupStickerNotFound
       self._settingsAskQuestion = settingsAskQuestion
       self._settingsFaq = settingsFaq
+      self._settingsStories = settingsStories
       self._settingsGeneral = settingsGeneral
       self._settingsLanguage = settingsLanguage
       self._settingsNotifications = settingsNotifications
@@ -10524,8 +12355,10 @@ public final class TelegramIconsTheme {
       self._settingsUpdate = settingsUpdate
       self._settingsFilters = settingsFilters
       self._settingsPremium = settingsPremium
+      self._settingsGiftPremium = settingsGiftPremium
       self._settingsAskQuestionActive = settingsAskQuestionActive
       self._settingsFaqActive = settingsFaqActive
+      self._settingsStoriesActive = settingsStoriesActive
       self._settingsGeneralActive = settingsGeneralActive
       self._settingsLanguageActive = settingsLanguageActive
       self._settingsNotificationsActive = settingsNotificationsActive
@@ -10540,6 +12373,9 @@ public final class TelegramIconsTheme {
       self._settingsUpdateActive = settingsUpdateActive
       self._settingsFiltersActive = settingsFiltersActive
       self._settingsProfile = settingsProfile
+      self._settingsBusiness = settingsBusiness
+      self._settingsBusinessActive = settingsBusinessActive
+      self._settingsStars = settingsStars
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
       self._settingsLogout = settingsLogout
@@ -10655,9 +12491,12 @@ public final class TelegramIconsTheme {
       self._chatPollVoteUnselectedBubble_incoming = chatPollVoteUnselectedBubble_incoming
       self._chatPollVoteUnselectedBubble_outgoing = chatPollVoteUnselectedBubble_outgoing
       self._peerInfoAdmins = peerInfoAdmins
+      self._peerInfoRecentActions = peerInfoRecentActions
       self._peerInfoPermissions = peerInfoPermissions
       self._peerInfoBanned = peerInfoBanned
       self._peerInfoMembers = peerInfoMembers
+      self._peerInfoStarsBalance = peerInfoStarsBalance
+      self._peerInfoBotUsername = peerInfoBotUsername
       self._chatUndoAction = chatUndoAction
       self._appUpdate = appUpdate
       self._inlineVideoSoundOff = inlineVideoSoundOff
@@ -10680,6 +12519,7 @@ public final class TelegramIconsTheme {
       self._privacySettings_activeSessions = privacySettings_activeSessions
       self._privacySettings_passcode = privacySettings_passcode
       self._privacySettings_twoStep = privacySettings_twoStep
+      self._privacy_settings_autodelete = privacy_settings_autodelete
       self._deletedAccount = deletedAccount
       self._stickerPackSelection = stickerPackSelection
       self._stickerPackSelectionActive = stickerPackSelectionActive
@@ -10755,6 +12595,8 @@ public final class TelegramIconsTheme {
       self._chat_filter_large_groups_avatar = chat_filter_large_groups_avatar
       self._chat_filter_non_contacts_avatar = chat_filter_non_contacts_avatar
       self._chat_filter_archive_avatar = chat_filter_archive_avatar
+      self._chat_filter_new_chats = chat_filter_new_chats
+      self._chat_filter_existing_chats = chat_filter_existing_chats
       self._group_invite_via_link = group_invite_via_link
       self._tab_contacts = tab_contacts
       self._tab_contacts_active = tab_contacts_active
@@ -10781,6 +12623,13 @@ public final class TelegramIconsTheme {
       self._profile_share = profile_share
       self._profile_stats = profile_stats
       self._profile_unblock = profile_unblock
+      self._profile_translate = profile_translate
+      self._profile_join_channel = profile_join_channel
+      self._profile_boost = profile_boost
+      self._profile_archive = profile_archive
+      self._stats_boost_boost = stats_boost_boost
+      self._stats_boost_giveaway = stats_boost_giveaway
+      self._stats_boost_info = stats_boost_info
       self._chat_quiz_explanation = chat_quiz_explanation
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
@@ -10825,6 +12674,8 @@ public final class TelegramIconsTheme {
       self._search_filter_downloads = search_filter_downloads
       self._search_filter_add_peer = search_filter_add_peer
       self._search_filter_add_peer_active = search_filter_add_peer_active
+      self._search_filter_hashtag = search_filter_hashtag
+      self._search_hashtag_chevron = search_hashtag_chevron
       self._chat_reply_count_bubble_incoming = chat_reply_count_bubble_incoming
       self._chat_reply_count_bubble_outgoing = chat_reply_count_bubble_outgoing
       self._chat_reply_count = chat_reply_count
@@ -10860,6 +12711,8 @@ public final class TelegramIconsTheme {
       self._profile_group_discussion = profile_group_discussion
       self._profile_requests = profile_requests
       self._profile_reactions = profile_reactions
+      self._profile_channel_color = profile_channel_color
+      self._profile_channel_stats = profile_channel_stats
       self._profile_removed = profile_removed
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history
@@ -10887,6 +12740,7 @@ public final class TelegramIconsTheme {
       self._audioplayer_volume_off = audioplayer_volume_off
       self._audioplayer_speed_x1 = audioplayer_speed_x1
       self._audioplayer_speed_x2 = audioplayer_speed_x2
+      self._audioplayer_list = audioplayer_list
       self._chat_info_voice_chat = chat_info_voice_chat
       self._chat_info_create_group = chat_info_create_group
       self._chat_info_change_colors = chat_info_change_colors
@@ -10969,5 +12823,103 @@ public final class TelegramIconsTheme {
       self._chatlist_forum_closed_topic_active = chatlist_forum_closed_topic_active
       self._chatlist_arrow = chatlist_arrow
       self._chatlist_arrow_active = chatlist_arrow_active
+      self._dialog_auto_delete = dialog_auto_delete
+      self._contact_set_photo = contact_set_photo
+      self._contact_suggest_photo = contact_suggest_photo
+      self._send_media_spoiler = send_media_spoiler
+      self._general_delete = general_delete
+      self._storage_music_play = storage_music_play
+      self._storage_music_pause = storage_music_pause
+      self._storage_media_play = storage_media_play
+      self._general_chevron_up = general_chevron_up
+      self._general_chevron_down = general_chevron_down
+      self._account_settings_set_password = account_settings_set_password
+      self._select_peer_create_channel = select_peer_create_channel
+      self._select_peer_create_group = select_peer_create_group
+      self._chat_translate = chat_translate
+      self._msg_emoji_activities = msg_emoji_activities
+      self._msg_emoji_angry = msg_emoji_angry
+      self._msg_emoji_away = msg_emoji_away
+      self._msg_emoji_bath = msg_emoji_bath
+      self._msg_emoji_busy = msg_emoji_busy
+      self._msg_emoji_dislike = msg_emoji_dislike
+      self._msg_emoji_food = msg_emoji_food
+      self._msg_emoji_haha = msg_emoji_haha
+      self._msg_emoji_happy = msg_emoji_happy
+      self._msg_emoji_heart = msg_emoji_heart
+      self._msg_emoji_hi2 = msg_emoji_hi2
+      self._msg_emoji_home = msg_emoji_home
+      self._msg_emoji_like = msg_emoji_like
+      self._msg_emoji_neutral = msg_emoji_neutral
+      self._msg_emoji_omg = msg_emoji_omg
+      self._msg_emoji_party = msg_emoji_party
+      self._msg_emoji_recent = msg_emoji_recent
+      self._msg_emoji_sad = msg_emoji_sad
+      self._msg_emoji_sleep = msg_emoji_sleep
+      self._msg_emoji_study = msg_emoji_study
+      self._msg_emoji_tongue = msg_emoji_tongue
+      self._msg_emoji_vacation = msg_emoji_vacation
+      self._msg_emoji_what = msg_emoji_what
+      self._msg_emoji_work = msg_emoji_work
+      self._msg_emoji_premium = msg_emoji_premium
+      self._installed_stickers_archive = installed_stickers_archive
+      self._installed_stickers_custom_emoji = installed_stickers_custom_emoji
+      self._installed_stickers_dynamic_order = installed_stickers_dynamic_order
+      self._installed_stickers_loop = installed_stickers_loop
+      self._installed_stickers_reactions = installed_stickers_reactions
+      self._installed_stickers_suggest = installed_stickers_suggest
+      self._installed_stickers_trending = installed_stickers_trending
+      self._folder_invite_link = folder_invite_link
+      self._folder_invite_link_revoked = folder_invite_link_revoked
+      self._folders_sidebar_edit = folders_sidebar_edit
+      self._folders_sidebar_edit_active = folders_sidebar_edit_active
+      self._story_unseen = story_unseen
+      self._story_seen = story_seen
+      self._story_selected = story_selected
+      self._story_unseen_chat = story_unseen_chat
+      self._story_seen_chat = story_seen_chat
+      self._story_unseen_profile = story_unseen_profile
+      self._story_seen_profile = story_seen_profile
+      self._story_view_read = story_view_read
+      self._story_view_reaction = story_view_reaction
+      self._story_chatlist_reply = story_chatlist_reply
+      self._story_chatlist_reply_active = story_chatlist_reply_active
+      self._message_story_expired = message_story_expired
+      self._message_story_expired_bubble_incoming = message_story_expired_bubble_incoming
+      self._message_story_expired_bubble_outgoing = message_story_expired_bubble_outgoing
+      self._message_quote_accent = message_quote_accent
+      self._message_quote_red = message_quote_red
+      self._message_quote_orange = message_quote_orange
+      self._message_quote_violet = message_quote_violet
+      self._message_quote_green = message_quote_green
+      self._message_quote_cyan = message_quote_cyan
+      self._message_quote_blue = message_quote_blue
+      self._message_quote_pink = message_quote_pink
+      self._message_quote_bubble_incoming = message_quote_bubble_incoming
+      self._message_quote_bubble_outgoing = message_quote_bubble_outgoing
+      self._channel_stats_likes = channel_stats_likes
+      self._channel_stats_shares = channel_stats_shares
+      self._story_repost_from_white = story_repost_from_white
+      self._story_repost_from_green = story_repost_from_green
+      self._channel_feature_background = channel_feature_background
+      self._channel_feature_background_photo = channel_feature_background_photo
+      self._channel_feature_cover_color = channel_feature_cover_color
+      self._channel_feature_cover_icon = channel_feature_cover_icon
+      self._channel_feature_link_color = channel_feature_link_color
+      self._channel_feature_link_icon = channel_feature_link_icon
+      self._channel_feature_name_color = channel_feature_name_color
+      self._channel_feature_reaction = channel_feature_reaction
+      self._channel_feature_status = channel_feature_status
+      self._channel_feature_stories = channel_feature_stories
+      self._channel_feature_emoji_pack = channel_feature_emoji_pack
+      self._channel_feature_voice_to_text = channel_feature_voice_to_text
+      self._channel_feature_no_ads = channel_feature_no_ads
+      self._chat_hidden_author = chat_hidden_author
+      self._chat_my_notes = chat_my_notes
+      self._premium_required_forward = premium_required_forward
+      self._create_new_message_general = create_new_message_general
+      self._bot_manager_settings = bot_manager_settings
+      self._preview_text_down = preview_text_down
+      self._preview_text_up = preview_text_up
   }
 }

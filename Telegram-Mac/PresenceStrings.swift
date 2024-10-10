@@ -12,6 +12,7 @@ import TelegramCore
 import DateUtils
 import TGUIKit
 import MapKit
+import CalendarUtils
 
 func stringForTimestamp(day: Int32, month: Int32, year: Int32) -> String {
     return String(format: "%d.%02d.%02d", day, month, year - 100)
@@ -184,7 +185,7 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, timeDiff
 }
 
 
-func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32, medium: Bool = false) -> String {
     var t: time_t = time_t(relativeTimestamp)
     var timeinfo: tm = tm()
     localtime_r(&t, &timeinfo)
@@ -201,36 +202,72 @@ func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo tim
     if dayDifference == 0 {
         return strings().timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
     } else {
-        return stringForFullDate(timestamp: relativeTimestamp)
+        if medium {
+            return stringForMediumDate(timestamp: relativeTimestamp)
+        } else {
+            return stringForFullDate(timestamp: relativeTimestamp)
+        }
     }
 }
 
 
 
 func stringForShortTimestamp(hours: Int32, minutes: Int32) -> String {
-    let hourString: String
-    if hours == 0 {
-        hourString = "12"
-    } else if hours > 12 {
-        hourString = "\(hours - 12)"
-    } else {
-        hourString = "\(hours)"
+    
+    
+    
+    var components = DateComponents()
+    components.hour = Int(hours)
+    components.minute = Int(minutes)
+
+    // Use the current calendar to ensure the components are interpreted correctly
+    let calendar = Calendar.current
+    
+    // Optional: you might want to ensure you're using the current time zone
+    components.timeZone = TimeZone.current
+    
+    // Create a Date from components
+    guard let date = calendar.date(from: components) else {
+        print("Failed to create date from components.")
+        return ""
     }
     
-    let periodString: String
-    if hours >= 12 {
-        periodString = "PM"
-    } else {
-        periodString = "AM"
-    }
-    if minutes >= 10 {
-        return "\(hourString):\(minutes) \(periodString)"
-    } else {
-        return "\(hourString):0\(minutes) \(periodString)"
-    }
+    // Create a DateFormatter and set its dateStyle to .none and timeStyle to .short
+    // This will ensure that the time is formatted according to the user's locale
+    let formatter = DateFormatter()
+    formatter.dateStyle = .none
+    formatter.timeStyle = .short
+    
+    // Format the date to a string
+    let formattedTime = formatter.string(from: date)
+    
+    return formattedTime
+//    
+//    let hourString: String
+//    if hours == 0 {
+//        hourString = "12"
+//    } else if hours > 12 {
+//        hourString = "\(hours - 12)"
+//    } else {
+//        hourString = "\(hours)"
+//    }
+//    
+//    let periodString: String
+//    if hours >= 12 {
+//        periodString = "PM"
+//    } else {
+//        periodString = "AM"
+//    }
+//    if minutes >= 10 {
+//        return "\(hourString):\(minutes) \(periodString)"
+//    } else {
+//        return "\(hourString):0\(minutes) \(periodString)"
+//    }
 }
 
-
+func stringForDuration(_ duration: Int32) -> String {
+    return String.durationTransformed(elapsed: Int(duration))
+}
 
 func stringForFullDate(timestamp: Int32) -> String {
     var t: time_t = Int(timestamp)
@@ -266,6 +303,30 @@ func stringForFullDate(timestamp: Int32) -> String {
         return ""
     }
 }
+
+
+
+extension Date {
+    
+    static var kernelBootTimeSecs:Int32 {
+        var mib = [ CTL_KERN, KERN_BOOTTIME ]
+        var bootTime = timeval()
+        var bootTimeSize = MemoryLayout<timeval>.size
+        
+        if 0 != sysctl(&mib, UInt32(mib.count), &bootTime, &bootTimeSize, nil, 0) {
+            fatalError("Could not get boot time, errno: \(errno)")
+        }
+        
+        return Int32(bootTime.tv_sec)
+    }
+    var isToday: Bool {
+        return CalendarUtils.isSameDate(self, date: Date(), checkDay: true)
+    }
+    var isTomorrow: Bool {
+        return Calendar.current.isDateInTomorrow(self)
+    }
+}
+
 
 func stringForMediumDate(timestamp: Int32) -> String {
     var t: time_t = Int(timestamp)
@@ -327,4 +388,34 @@ func stringForDistance(distance: CLLocationDistance) -> String {
     }
     
     return distanceFormatter.string(fromDistance: distance)
+}
+
+
+
+public func formatBirthdayToString(day: Int, month: Int, year: Int?) -> String? {
+    var dateComponents = DateComponents()
+    dateComponents.year = year
+    dateComponents.month = month
+    dateComponents.day = day
+
+    // Use the current calendar and adjust it according to the system's locale if necessary
+    let calendar = Calendar.current
+
+    guard let date = calendar.date(from: dateComponents) else {
+        return nil
+    }
+
+    let dateFormatter = DateFormatter()
+    if year == nil {
+        dateFormatter.dateFormat = "MMM d"
+    } else {
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+    }
+
+    // The locale and time zone adjustments are optional and can be tailored to specific needs
+    dateFormatter.locale = Locale.current // Use the current system locale
+    dateFormatter.timeZone = TimeZone.current // Use the current system time zone
+
+    return dateFormatter.string(from: date)
 }

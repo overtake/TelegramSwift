@@ -65,11 +65,26 @@ func bestGeneralViewType<T>(_ array:[T], for i: Int) -> GeneralViewType  {
     }
 }
 
+func bestGeneralViewTypeAfterFirst<T>(_ array:[T], for i: Int) -> GeneralViewType  {
+    if i == 0 {
+        if array.count == 1 {
+            return .lastItem
+        } else {
+            return .innerItem
+        }
+    } else {
+        return bestGeneralViewType(array, for: i)
+    }
+}
+
 enum GeneralInteractedType : Equatable {
     case none
     case next
     case nextContext(String)
+    case imageContext(CGImage, String)
+    case nextImage(CGImage)
     case selectable(Bool)
+    case selectableLeft(Bool)
     case switchable(Bool)
     case context(String)
     case loading
@@ -79,7 +94,7 @@ enum GeneralInteractedType : Equatable {
     case colorSelector(NSColor)
     case badge(String, NSColor)
     #if !SHARE
-    case contextSelector(String, [SPopoverItem])
+    case contextSelector(String, [ContextMenuItem])
     #endif
 }
 
@@ -103,7 +118,9 @@ final class GeneralViewItemCorners : OptionSet {
     static var all: GeneralViewItemCorners {
         return [.topLeft, .topRight, .bottomLeft, .bottomRight]
     }
-
+    static var allList: [GeneralViewItemCorners] {
+        return [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    }
 }
 
 enum GeneralViewItemPosition : Equatable {
@@ -171,7 +188,7 @@ enum GeneralViewType : Equatable {
         case .legacy:
             return []
         case let .modern(position, insets):
-            return isPlainMode || insets.isEmpty ? [] : position.corners
+            return isPlainMode ? [] : position.corners
         }
     }
     var hasBorder: Bool {
@@ -201,22 +218,22 @@ enum GeneralViewType : Equatable {
     }
     
     static var firstItem: GeneralViewType {
-        return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .first, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var innerItem: GeneralViewType {
-        return .modern(position: .inner, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .inner, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var lastItem: GeneralViewType {
-        return .modern(position: .last, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .last, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var singleItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var textTopItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 5, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 14, 5, 0))
     }
     static var textBottomItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 16, 0, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 14, 0, 0))
     }
     static var separator: GeneralViewType {
         return .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
@@ -249,6 +266,26 @@ class GeneralRowItem: TableRowItem {
         
         let unselectedImage: CGImage
         let selectedImage: CGImage
+        
+        static func initialize(_ theme: TelegramPresentationTheme) -> GeneralRowItem.Theme {
+            return .init(backgroundColor: theme.colors.background,
+                         grayBackground: theme.colors.grayBackground,
+                         grayForeground: theme.colors.grayForeground,
+                         highlightColor: theme.colors.grayHighlight,
+                         borderColor: theme.colors.border,
+                         accentColor: theme.colors.accent,
+                         secondaryColor: theme.colors.grayUI,
+                         textColor: theme.colors.text,
+                         grayTextColor: theme.colors.grayText,
+                         underSelectedColor: theme.colors.underSelectedColor,
+                         accentSelectColor: theme.colors.accentSelect,
+                         redColor: theme.colors.redUI,
+                         indicatorColor: theme.colors.indicatorColor,
+                         appearance: theme.colors.appearance,
+                         switchAppearance: .init(theme: theme),
+                         unselectedImage: theme.icons.chatToggleUnselected,
+                         selectedImage: theme.icons.chatToggleSelected)
+        }
 
         init(backgroundColor: NSColor = theme.colors.background,
              grayBackground: NSColor = theme.colors.grayBackground,
@@ -308,7 +345,7 @@ class GeneralRowItem: TableRowItem {
     var drawCustomSeparator:Bool = true {
         didSet {
             if drawCustomSeparator != oldValue {
-                self.redraw()
+                self.noteHeightOfRow()
             }
         }
     }
@@ -341,7 +378,7 @@ class GeneralRowItem: TableRowItem {
         return _ignoreAtInitialization
     }
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false) {
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false) {
         self.type = type
         _height = height
         _stableId = stableId

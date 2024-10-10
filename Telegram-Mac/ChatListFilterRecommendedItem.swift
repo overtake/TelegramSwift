@@ -49,7 +49,7 @@ class ChatListFilterRecommendedItem: GeneralRowItem {
 
 private final class ChatListFilterRecommendedView : GeneralContainableRowView {
     private let textView: TextView = TextView()
-    private let button = TitleButton()
+    private let button = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)

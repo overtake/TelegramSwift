@@ -34,7 +34,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     private var downloadingView: RadialProgressView?
     
     private var unreadView: View?
-    
+    private var badgeView: SingleTimeVoiceBadgeView?
     
     required init(frame frameRect: NSRect) {
         waveformView = AudioWaveformView(frame: NSMakeRect(0, 20, 100, 20))
@@ -49,11 +49,14 @@ class ChatVoiceContentView: ChatAudioContentView {
     
     override func open() {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
-            if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
+            if parent.autoclearTimeout != nil, parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
+                SingleTimeMediaViewer.show(context: context, message: parent)
+            } else if let controller = context.sharedContext.getAudioPlayer(), controller.playOrPause(parent.id) {
+                
             } else {
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: strings().audioControllerVoiceMessage, performer: parent.author?.displayTitle, duration: Int32(parameters.duration), id: parent.chatStableId), streamable: false, volume: FastSettings.volumeRate)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: strings().audioControllerVoiceMessage, performer: parent.author?.displayTitle, duration: parameters.duration, id: parent.chatStableId), streamable: false, volume: FastSettings.volumeRate)
                 } else {
                     controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(parent), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                 }
@@ -81,7 +84,7 @@ class ChatVoiceContentView: ChatAudioContentView {
    
         
         if  let parameters = parameters as? ChatMediaVoiceLayoutParameters {
-            if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
+            if let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong {
                 if song.entry.isEqual(to: parent) {
                     switch song.state {
                     case let .playing(current, _, progress):
@@ -130,7 +133,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
         
-        if acceptDragging, let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
+        if acceptDragging, let parent = parent, let controller = context?.sharedContext.getAudioPlayer(), let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 let point = waveformView.convert(event.locationInWindow, from: nil)
                 let progress = Float(min(max(point.x, 0), waveformView.frame.width)/waveformView.frame.width)
@@ -158,7 +161,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         if acceptDragging && playAfterDragging {
-            _ = context?.audioPlayer?.play()
+            _ = context?.sharedContext.getAudioPlayer()?.play()
         }
         playAfterDragging = false
         acceptDragging = false
@@ -178,7 +181,7 @@ class ChatVoiceContentView: ChatAudioContentView {
             updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
-                        return .Fetching(isActive: true, progress: pendingStatus.progress)
+                        return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                     } else {
                         return resourceStatus
                     }
@@ -193,40 +196,64 @@ class ChatVoiceContentView: ChatAudioContentView {
             if let strongSelf = self {
                 strongSelf.fetchStatus = status
                 
-                var state: RadialProgressState? = nil
-                switch status {
-                case let .Fetching(_, progress):
-                    state = .Fetching(progress: progress, force: false)
-                case .Paused:
-                    state = .Remote
-                case .Remote:
-                    state = .Remote
-                case .Local:
-                    break
-                }
-                if let state = state {
-                    let current: RadialProgressView
-                    if let value = strongSelf.downloadingView {
-                        current = value
+//                var state: RadialProgressState? = nil
+//                switch status {
+//                case let .Fetching(_, progress):
+//                    state = .Fetching(progress: progress, force: false)
+//                case .Paused:
+//                    state = .Remote
+//                case .Remote:
+//                    state = .Remote
+//                case .Local:
+//                    break
+//                }
+//                if let state = state {
+//                    let current: RadialProgressView
+//                    if let value = strongSelf.downloadingView {
+//                        current = value
+//                    } else {
+//                        current = RadialProgressView(theme: strongSelf.progressView.theme, twist: true, size: NSMakeSize(40, 40))
+//                        current.fetchControls = strongSelf.fetchControls
+//                        strongSelf.downloadingView = current
+//                     //   strongSelf.addSubview(current)
+//                        current.frame = strongSelf.progressView.frame
+//                        
+//                        if !approximateSynchronousValue && animated {
+//                            current.layer?.animateAlpha(from: 0.2, to: 1, duration: 0.3)
+//                        }
+//                    }
+//                    current.state = state
+//                } else if let download = strongSelf.downloadingView {
+//                    download.state = .Fetching(progress: 1.0, force: false)
+//                    strongSelf.downloadingView = nil
+//                    download.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.25, removeOnCompletion: false, completion: { [weak download] _ in
+//                        download?.removeFromSuperview()
+//                    })
+//                }
+                
+                if let parent = parent, let _ = parent.autoclearTimeout, parent.id.namespace == Namespaces.Message.Cloud, status == .Local, let parameters = parameters {
+                    let current: SingleTimeVoiceBadgeView
+                    if let view = strongSelf.badgeView {
+                        current = view
                     } else {
-                        current = RadialProgressView(theme: strongSelf.progressView.theme, twist: true, size: NSMakeSize(40, 40))
-                        current.fetchControls = strongSelf.fetchControls
-                        strongSelf.downloadingView = current
+                        current = SingleTimeVoiceBadgeView(frame: NSMakeRect(strongSelf.progressView.frame.maxX - 15, strongSelf.waveformView.frame.maxY + 2, 20, 20))
                         strongSelf.addSubview(current)
-                        current.frame = strongSelf.progressView.frame
+                        strongSelf.badgeView = current
+                        current.isEventLess = true
+                        current.update(size: NSMakeSize(30, 30), text: "1", foreground: parameters.presentation.activityForeground, background: parameters.presentation.activityBackground, blendMode: parameters.presentation.blendingMode)
                         
-                        if !approximateSynchronousValue && animated {
-                            current.layer?.animateAlpha(from: 0.2, to: 1, duration: 0.3)
+                        if animated {
+                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
                         }
                     }
-                    current.state = state
-                } else if let download = strongSelf.downloadingView {
-                    download.state = .Fetching(progress: 1.0, force: false)
-                    strongSelf.downloadingView = nil
-                    download.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.25, removeOnCompletion: false, completion: { [weak download] _ in
-                        download?.removeFromSuperview()
-                    })
+                    strongSelf.progressView.badge = NSMakeRect(24, 19, 22, 22)
+                } else if let view = strongSelf.badgeView {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    strongSelf.badgeView = nil
+                    strongSelf.progressView.badge = nil
                 }
+                strongSelf.needsLayout = true
             }
         }))
         
@@ -245,6 +272,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     current = view
                 } else {
                     current = View(frame: NSMakeRect(leftInset + parameters.durationLayout.layoutSize.width + 3, waveformView.frame.maxY + 10, 5, 5))
+                    current.isDynamicColorUpdateLocked = true
                     self.addSubview(current)
                     self.unreadView = current
                     
@@ -259,6 +287,8 @@ class ChatVoiceContentView: ChatAudioContentView {
                 performSubviewRemoval(view, animated: animated, scale: true)
                 self.unreadView = nil
             }
+            
+           
 
         }
         
@@ -274,6 +304,8 @@ class ChatVoiceContentView: ChatAudioContentView {
             switch data.state {
             case .possible:
                 controlState = .possible(false)
+            case .locked:
+                controlState = .locked
             case let .state(inner):
                 switch inner {
                 case .collapsed:
@@ -352,6 +384,10 @@ class ChatVoiceContentView: ChatAudioContentView {
         
         if let view = self.unreadView {
             transition.updateFrame(view: view, frame: NSMakeRect(durationView.frame.maxX + 3, waveformView.frame.maxY + 10, view.frame.width, view.frame.height))
+        }
+        
+        if let view = self.badgeView {
+            transition.updateFrame(view: view, frame: NSMakeRect(progressView.frame.maxX - 15, waveformView.frame.maxY + 2, view.frame.width, view.frame.height))
         }
         
         if let control = transcribeControl {

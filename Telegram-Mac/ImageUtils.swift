@@ -13,25 +13,183 @@ import FastBlur
 import SwiftSignalKit
 import TGUIKit
 import FastBlur
+import ColorPalette
+
+private extension PeerNameColors.Colors {
+    init?(colors: EngineAvailableColorOptions.MultiColorPack) {
+        if colors.colors.isEmpty {
+            return nil
+        }
+        let secondary: NSColor?
+        let tertiary: NSColor?
+        
+        let main = NSColor(rgb: colors.colors[0])
+        if colors.colors.count > 1 {
+            secondary = NSColor(rgb: colors.colors[1])
+        } else {
+            secondary = nil
+        }
+        if colors.colors.count > 2 {
+            tertiary = NSColor(rgb: colors.colors[2])
+        } else {
+            tertiary = nil
+        }
+        self.init(main: main, secondary: secondary, tertiary: tertiary)
+    }
+}
+
+
+extension PeerNameColors {
+    
+    public func get(_ color: PeerNameColor, dark: Bool = false) -> Colors {
+        if dark, let colors = self.darkColors[color.rawValue] {
+            return colors
+        } else if let colors = self.colors[color.rawValue] {
+            return colors
+        } else {
+            return PeerNameColors.defaultSingleColors[5]!
+        }
+    }
+    
+    public func getProfile(_ color: PeerNameColor, dark: Bool = false, subject: Subject = .background) -> Colors {
+        switch subject {
+        case .background:
+            if dark, let colors = self.profileDarkColors[color.rawValue] {
+                return colors
+            } else if let colors = self.profileColors[color.rawValue] {
+                return colors
+            } else {
+                return Colors(main: NSColor(rgb: 0xcc5049))
+            }
+        case .palette:
+            if dark, let colors = self.profilePaletteDarkColors[color.rawValue] {
+                return colors
+            } else if let colors = self.profilePaletteColors[color.rawValue] {
+                return colors
+            } else {
+                return self.getProfile(color, dark: dark, subject: .background)
+            }
+        case .stories:
+            if dark, let colors = self.profileStoryDarkColors[color.rawValue] {
+                return colors
+            } else if let colors = self.profileStoryColors[color.rawValue] {
+                return colors
+            } else {
+                return self.getProfile(color, dark: dark, subject: .background)
+            }
+        }
+    }
+    
+    public static func with(availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions) -> PeerNameColors {
+        var colors: [Int32: Colors] = [:]
+        var darkColors: [Int32: Colors] = [:]
+        var displayOrder: [Int32] = []
+        var profileColors: [Int32: Colors] = [:]
+        var profileDarkColors: [Int32: Colors] = [:]
+        var profilePaletteColors: [Int32: Colors] = [:]
+        var profilePaletteDarkColors: [Int32: Colors] = [:]
+        var profileStoryColors: [Int32: Colors] = [:]
+        var profileStoryDarkColors: [Int32: Colors] = [:]
+        var profileDisplayOrder: [Int32] = []
+        
+        var nameColorsChannelMinRequiredBoostLevel: [Int32: Int32] = [:]
+        var nameColorsGroupMinRequiredBoostLevel: [Int32: Int32] = [:]
+        
+        if !availableReplyColors.options.isEmpty {
+            for option in availableReplyColors.options {
+                if let requiredChannelMinBoostLevel = option.value.requiredChannelMinBoostLevel {
+                    nameColorsChannelMinRequiredBoostLevel[option.key] = requiredChannelMinBoostLevel
+                }
+                if let requiredGroupMinBoostLevel = option.value.requiredGroupMinBoostLevel {
+                    nameColorsGroupMinRequiredBoostLevel[option.key] = requiredGroupMinBoostLevel
+                }
+                
+                if let parsedLight = PeerNameColors.Colors(colors: option.value.light.background) {
+                    colors[option.key] = parsedLight
+                }
+                if let parsedDark = (option.value.dark?.background).flatMap(PeerNameColors.Colors.init(colors:)) {
+                    darkColors[option.key] = parsedDark
+                }
+                
+                for option in availableReplyColors.options {
+                    if !displayOrder.contains(option.key) {
+                        displayOrder.append(option.key)
+                    }
+                }
+            }
+        } else {
+            let defaultValue = PeerNameColors.defaultValue
+            colors = defaultValue.colors
+            darkColors = defaultValue.darkColors
+            displayOrder = defaultValue.displayOrder
+        }
+            
+        if !availableProfileColors.options.isEmpty {
+            for option in availableProfileColors.options {
+                if let parsedLight = PeerNameColors.Colors(colors: option.value.light.background) {
+                    profileColors[option.key] = parsedLight
+                }
+                if let parsedDark = (option.value.dark?.background).flatMap(PeerNameColors.Colors.init(colors:)) {
+                    profileDarkColors[option.key] = parsedDark
+                }
+                if let parsedPaletteLight = PeerNameColors.Colors(colors: option.value.light.palette) {
+                    profilePaletteColors[option.key] = parsedPaletteLight
+                }
+                if let parsedPaletteDark = (option.value.dark?.palette).flatMap(PeerNameColors.Colors.init(colors:)) {
+                    profilePaletteDarkColors[option.key] = parsedPaletteDark
+                }
+                if let parsedStoryLight = (option.value.light.stories).flatMap(PeerNameColors.Colors.init(colors:)) {
+                    profileStoryColors[option.key] = parsedStoryLight
+                }
+                if let parsedStoryDark = (option.value.dark?.stories).flatMap(PeerNameColors.Colors.init(colors:)) {
+                    profileStoryDarkColors[option.key] = parsedStoryDark
+                }
+                for option in availableProfileColors.options {
+                    if !profileDisplayOrder.contains(option.key) {
+                        profileDisplayOrder.append(option.key)
+                    }
+                }
+            }
+        }
+        
+        return PeerNameColors(
+            colors: colors,
+            darkColors: darkColors,
+            displayOrder: displayOrder,
+            profileColors: profileColors,
+            profileDarkColors: profileDarkColors,
+            profilePaletteColors: profilePaletteColors,
+            profilePaletteDarkColors: profilePaletteDarkColors,
+            profileStoryColors: profileStoryColors,
+            profileStoryDarkColors: profileStoryDarkColors,
+            profileDisplayOrder: profileDisplayOrder,
+            nameColorsChannelMinRequiredBoostLevel: nameColorsChannelMinRequiredBoostLevel,
+            nameColorsGroupMinRequiredBoostLevel: nameColorsGroupMinRequiredBoostLevel
+        )
+    }
+}
+
+
+
 
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
-    case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
-    case topic(EngineMessageHistoryThread.Info)
+    case peer(Peer, TelegramMediaImageRepresentation?, PeerNameColor?, [String], Message?)
+    case topic(EngineMessageHistoryThread.Info, Bool)
 }
 
 private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
 
-private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
+private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
     
-    let isForum: Bool = peer.isForum
+    let isForum: Bool = peer.isForum && !disableForum
     
     if let representation = representation {
-        return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedPeerPhoto(peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             return autoreleasepool {
                 if let cached = cached {
-                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                         return (cached, false)
                     }
                 } else {
@@ -62,11 +220,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                        
                                        let fetchedDataDisposable: Disposable
                                        if let message = message, message.author?.id == peer.id {
-                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
                                         } else if let reference = PeerReference(peer) {
-                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
+                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
                                        } else {
-                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
                                        }
                                        return ActionDisposable {
                                            resourceDataDisposable.dispose()
@@ -128,7 +286,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             if tiny {
                                 return .single((image, animated))
                             }
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                                 return (image, animated)
                             }
                         } else {
@@ -154,9 +312,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             }
         }
         
-        
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
-        
+        //peer.nameColor?.index ??
+        let number = peer.nameColor.flatMap { Int64($0.rawValue) } ?? peer.id.id._internalGetInt64Value()
+        let index = Int(abs(number % 7))
+        let color = theme.colors.peerColors(index)
+
         
         let symbol = letters.reduce("", { (current, letter) -> String in
             return current + letter
@@ -181,12 +341,12 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
     }
 }
 
-func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
+func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
-    case let .peer(peer, representation, displayLetters, message):
-        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
-    case let .topic(info):
+    case let .peer(peer, representation, peerNameColor, displayLetters, message):
+        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad, disableForum: disableForum)
+    case let .topic(info, isGeneral):
         #if !SHARE
       
         let file: Signal<TelegramMediaFile, NoError>
@@ -198,7 +358,7 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
             |> filter { $0 != nil }
             |> map { $0! }
         } else {
-            file = .single(ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor))
+            file = .single(ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: isGeneral))
         }
         
         return file |> mapToSignal { file in
@@ -221,6 +381,12 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
             case "bundle/topic":
                 if let resource = file.resource as? ForumTopicIconResource {
                     signal = makeTopicIcon(resource.title, bgColors: resource.bgColors, strokeColors: resource.strokeColors)
+                } else {
+                    signal = .complete()
+                }
+            case "bundle/jpeg":
+                if let resource = file.resource as? LocalBundleResource {
+                    signal = makeGeneralTopicIcon(resource)
                 } else {
                     signal = .complete()
                 }
@@ -303,9 +469,9 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
                 
                 let lineOrigin = CGPoint(x: floorToScreenPixels(System.backingScale, -lineBounds.origin.x + (size.width - lineBounds.size.width) / 2.0) , y: floorToScreenPixels(System.backingScale, -lineBounds.origin.y + (size.height - lineBounds.size.height) / 2.0))
                 
-                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                ctx.translateBy(x: floorToScreenPixels(size.width / 2.0), y: floorToScreenPixels(size.height / 2.0))
                 ctx.scaleBy(x: 1.0, y: 1.0)
-                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                ctx.translateBy(x: -floorToScreenPixels(size.width / 2.0), y: -floorToScreenPixels(size.height / 2.0))
                 //
                 ctx.translateBy(x: lineOrigin.x, y: lineOrigin.y)
                 CTLineDraw(line, ctx)
@@ -313,7 +479,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
             }
             
             if let icon = icon, let iconSize = iconSize {
-                let rect = NSMakeRect((displayDimensions.width - iconSize.width)/2, (displayDimensions.height - iconSize.height)/2, iconSize.width, iconSize.height)
+                let rect = NSMakeRect(floorToScreenPixels((displayDimensions.width - iconSize.width)/2), floorToScreenPixels((displayDimensions.height - iconSize.height)/2), iconSize.width, iconSize.height)
                 ctx.draw(icon, in: rect)
             }
             
@@ -328,7 +494,11 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
+        //peer.nameColor?.index ??
+        let number = peer.nameColor.flatMap { Int64($0.rawValue) } ?? peer.id.id._internalGetInt64Value()
+        let index = Int(abs(number % 7))
+        
+        let color = theme.colors.peerColors(index)
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))

@@ -106,7 +106,7 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
         showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(.name(info.shortName))]), for: context.window)
     }, removePack: { id in
         
-        confirm(for: context.window, information: strings().installedStickersRemoveDescription, okTitle: strings().installedStickersRemoveDelete, successHandler: { result in
+        verifyAlert_button(for: context.window, information: strings().installedStickersRemoveDescription, ok: strings().installedStickersRemoveDelete, successHandler: { result in
             switch result {
             case .basic:
                 _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: .delete).start()
@@ -128,7 +128,7 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
         FastSettings.toggleSwapEmoji(stateValue.with { $0.suggest})
     })
     
-    let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+    let emojies = context.diceCache.emojies
 
     
     actionsDisposable.add(emojies.start(next: { view in

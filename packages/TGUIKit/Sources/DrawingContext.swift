@@ -9,13 +9,33 @@
 import Cocoa
 import SwiftSignalKit
 
-//canRepresent(<#T##displayGamut: NSDisplayGamut##NSDisplayGamut#>)
 
-public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
+public final class ImageDataTransformation {
+    public let data: ImageRenderData
+    public let execute:(TransformImageArguments, ImageRenderData)->DrawingContext?
+    public init(data: ImageRenderData = ImageRenderData(nil, nil, false), execute:@escaping(TransformImageArguments, ImageRenderData)->DrawingContext? = { _, _ in return nil}) {
+        self.data = data
+        self.execute = execute
+    }
+}
+
+public final class ImageRenderData {
+    public let thumbnailData: Data?
+    public let fullSizeData:Data?
+    public let fullSizeComplete:Bool
+    public init(_ thumbnailData: Data?, _ fullSizeData: Data?, _ fullSizeComplete: Bool) {
+        self.thumbnailData = thumbnailData
+        self.fullSizeData = fullSizeData
+        self.fullSizeComplete = fullSizeComplete
+    }
+}
+
+
+public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = System.backingScale) -> CGImage? {
     if size.width.isZero || size.height.isZero {
         return nil
     }
-    let context = DrawingContext(size: size, scale: scale ?? 0.0, clear: false)
+    let context = DrawingContext(size: size, scale: scale, clear: false)
     context.withContext { c in
         contextGenerator(context.size, c)
     }
@@ -23,7 +43,7 @@ public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) 
 
 }
 
-public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, scale: CGFloat = 2.0) -> CGImage? {
+public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, scale: CGFloat = System.backingScale) -> CGImage? {
     let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
     let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
     let length = bytesPerRow * Int(scaledSize.height)
@@ -55,7 +75,7 @@ public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGConte
     return image
 }
 
-public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = 2.0, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
+public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = System.backingScale, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
     if size.width.isZero || size.height.isZero {
         return nil
     }
@@ -242,7 +262,8 @@ public class DrawingContext {
     }
     
     public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
-        self.size = NSMakeSize(max(size.width, 1), max(size.height, 1))
+        let size = NSMakeSize(max(size.width, 1), max(size.height, 1))
+        self.size = size
         
         let actualScale: CGFloat
         if scale.isZero {

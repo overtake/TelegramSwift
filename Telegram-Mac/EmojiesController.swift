@@ -12,121 +12,62 @@ import SwiftSignalKit
 import TelegramCore
 import InAppSettings
 import Postbox
+import ColorPalette
+import TelegramMedia
 
-//private final class WarpView: View {
-//    private final class WarpPartView: View {
-//        let cloneView: PortalView
-//        
-//        init?(contentView: PortalSourceView) {
-//            guard let cloneView = PortalView(matchPosition: false) else {
-//                return nil
-//            }
-//            self.cloneView = cloneView
-//            
-//            super.init(frame: CGRect())
-//            
-//            self.layer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-//            
-//            self.clipsToBounds = true
-//            self.addSubview(cloneView.view)
-//            contentView.addPortal(view: cloneView)
-//        }
-//        
-//        required init?(coder: NSCoder) {
-//            fatalError("init(coder:) has not been implemented")
-//        }
-//        
-//        func update(containerSize: CGSize, rect: CGRect, transition: Transition) {
-//            transition.setFrame(view: self.cloneView.view, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: CGSize(width: containerSize.width, height: containerSize.height)))
-//        }
-//    }
-//    
-//    let contentView: PortalSourceView
-//    
-//    private let clippingView: UIView
-//    private let overlayView: UIView
-//    
-//    private var warpViews: [WarpPartView] = []
-//    
-//    override init(frame: CGRect) {
-//        self.contentView = PortalSourceView()
-//        self.clippingView = UIView()
-//        self.overlayView = UIView()
-//        
-//        super.init(frame: frame)
-//        
-//        self.clippingView.addSubview(self.contentView)
-//        
-//        self.clippingView.clipsToBounds = false
-//        self.addSubview(self.clippingView)
-//        
-//        self.addSubview(self.overlayView)
-//        
-//        for _ in 0 ..< 8 {
-//            if let warpView = WarpPartView(contentView: self.contentView) {
-//                self.warpViews.append(warpView)
-//                self.addSubview(warpView)
-//            }
-//        }
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//    
-//    func update(size: CGSize, topInset: CGFloat, warpHeight: CGFloat, theme: PresentationTheme, transition: Transition) {
-//        transition.setFrame(view: self.contentView, frame: CGRect(origin: CGPoint(), size: size))
-//        
-//        let frame = CGRect(origin: CGPoint(x: 0.0, y: -topInset), size: CGSize(width: size.width, height: size.height + topInset - warpHeight))
-//        transition.setPosition(view: self.clippingView, position: frame.center)
-//        transition.setBounds(view: self.clippingView, bounds: CGRect(origin: CGPoint(x: 0.0, y: -topInset + (topInset - warpHeight) * 0.5), size: size))
-//        
-//        let allItemsHeight = warpHeight * 0.5
-//        for i in 0 ..< self.warpViews.count {
-//            let itemHeight = warpHeight / CGFloat(self.warpViews.count)
-//            let itemFraction = CGFloat(i + 1) / CGFloat(self.warpViews.count)
-//            let _ = itemHeight
-//            
-//            let da = CGFloat.pi * 0.5 / CGFloat(self.warpViews.count)
-//            let alpha = CGFloat.pi * 0.5 - itemFraction * CGFloat.pi * 0.5
-//            let endPoint = CGPoint(x: cos(alpha), y: sin(alpha))
-//            let prevAngle = alpha + da
-//            let prevPt = CGPoint(x: cos(prevAngle), y: sin(prevAngle))
-//            var angle: CGFloat
-//            angle = -atan2(endPoint.y - prevPt.y, endPoint.x - prevPt.x)
-//            
-//            let itemLengthVector = CGPoint(x: endPoint.x - prevPt.x, y: endPoint.y - prevPt.y)
-//            let itemLength = sqrt(itemLengthVector.x * itemLengthVector.x + itemLengthVector.y * itemLengthVector.y) * warpHeight * 0.5
-//            let _ = itemLength
-//            
-//            var transform: CATransform3D
-//            transform = CATransform3DIdentity
-//            transform.m34 = 1.0 / 240.0
-//            
-//            transform = CATransform3DTranslate(transform, 0.0, prevPt.x * allItemsHeight, (1.0 - prevPt.y) * allItemsHeight)
-//            transform = CATransform3DRotate(transform, angle, 1.0, 0.0, 0.0)
-//            
-//            //self.warpViews[i].backgroundColor = UIColor(red: 0.0, green: 0.0, blue: CGFloat(i) / CGFloat(self.warpViews.count - 1), alpha: 1.0)
-//            //self.warpViews[i].backgroundColor = UIColor(white: 0.0, alpha: 0.5)
-//            //self.warpViews[i].backgroundColor = theme.list.plainBackgroundColor
-//            
-//            let positionY = size.height - allItemsHeight + 4.0 + /*warpHeight * cos(alpha)*/ CGFloat(i) * itemLength
-//            let rect = CGRect(origin: CGPoint(x: 0.0, y: positionY), size: CGSize(width: size.width, height: itemLength))
-//            transition.setPosition(view: self.warpViews[i], position: CGPoint(x: rect.midX, y: size.height - allItemsHeight + 4.0))
-//            transition.setBounds(view: self.warpViews[i], bounds: CGRect(origin: CGPoint(), size: CGSize(width: size.width, height: itemLength)))
-//            transition.setTransform(view: self.warpViews[i], transform: transform)
-//            self.warpViews[i].update(containerSize: size, rect: rect, transition: transition)
-//        }
-//        
-//        self.overlayView.backgroundColor = theme.list.plainBackgroundColor
-//        transition.setFrame(view: self.overlayView, frame: CGRect(origin: CGPoint(x: 0.0, y: size.height - allItemsHeight + 4.0), size: CGSize(width: size.width, height: allItemsHeight)))
-//    }
-//    
-//    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-//        return self.contentView.hitTest(point, with: event)
-//    }
-//}
 
+// https://getemoji.com/ to get the latest list
+
+private extension EmojiSearchCategories.Group {
+    var icon: CGImage? {
+        switch self.title.lowercased() {
+        case "love":
+            return theme.icons.msg_emoji_heart
+        case "approval":
+            return theme.icons.msg_emoji_like
+        case "disapproval":
+            return theme.icons.msg_emoji_dislike
+        case "cheers":
+            return theme.icons.msg_emoji_party
+        case "laughter":
+            return theme.icons.msg_emoji_haha
+        case "astonishment":
+            return theme.icons.msg_emoji_omg
+        case "sadness":
+            return theme.icons.msg_emoji_sad
+        case "anger":
+            return theme.icons.msg_emoji_angry
+        case "neutral":
+            return theme.icons.msg_emoji_neutral
+        case "doubt":
+            return theme.icons.msg_emoji_what
+        case "silly":
+            return theme.icons.msg_emoji_tongue
+        case "hi":
+            return theme.icons.msg_emoji_hi2
+        case "dnd":
+            return theme.icons.msg_emoji_busy
+        case "work / on call":
+            return theme.icons.msg_emoji_work
+        case "eat":
+            return theme.icons.msg_emoji_food
+        case "away / bath":
+            return theme.icons.msg_emoji_bath
+        case "sleep":
+            return theme.icons.msg_emoji_sleep
+        case "travel & vacation":
+            return theme.icons.msg_emoji_vacation
+        case "activities":
+            return theme.icons.msg_emoji_activities
+        case "home":
+            return theme.icons.msg_emoji_home
+        case "premium":
+            return theme.icons.msg_emoji_premium
+        default:
+            return nil
+        }
+    }
+}
 
 private extension RecentReactionItem.Content {
     var reaction: MessageReaction.Reaction {
@@ -188,14 +129,16 @@ let emojiesInstance:[EmojiSegment:[String]] = {
     var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
     
     let resource:URL?
-    if #available(OSX 11.1, *) {
+    if #available(OSX 14.4, *) {
+        resource = Bundle.main.url(forResource:"emoji144", withExtension:"txt")
+    } else if #available(OSX 14.0, *) {
+        resource = Bundle.main.url(forResource:"emoji14", withExtension:"txt")
+    } else if #available(OSX 11.1, *) {
         resource = Bundle.main.url(forResource:"emoji1016", withExtension:"txt")
     } else if #available(OSX 10.14.1, *) {
-        resource = Bundle.main.url(forResource:"emoji1014-1", withExtension:"txt")
-    } else  if #available(OSX 10.12, *) {
-        resource = Bundle.main.url(forResource:"emoji", withExtension:"txt")
+        resource = Bundle.main.url(forResource:"emoji1014", withExtension:"txt")
     } else {
-        resource = Bundle.main.url(forResource:"emoji11", withExtension:"txt")
+        resource = Bundle.main.url(forResource:"emoji", withExtension:"txt")
     }
     if let resource = resource {
         
@@ -239,20 +182,14 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
             var e:String = emoji.emojiUnmodified
             for modifier in skinModifiers {
                 if e == modifier.emoji {
-                    if e.length == 5 {
-                        let mutable = NSMutableString()
-                        mutable.insert(e, at: 0)
-                        mutable.insert(modifier.modifier, at: 2)
-                        e = mutable as String
-                    } else {
-                        e = e + modifier.modifier
-                    }
+                    e = e.emojiWithSkinModifier(modifier.modifier)
                 }
 
             }
-            if !line.contains(where: {$0.string == String(e.first!) }), let first = e.first {
-                if String(first).length > 1 {
-                    line.append(.initialize(string: String(first), font: .normal(26.0)))
+            if let first = e.first, !line.contains(where: { $0.string == String(first) }) {
+                let emoji = String(first).normalizedEmoji
+                if emoji.length > 1 {
+                    line.append(.initialize(string: emoji, font: .normal(26.0)))
                     i += 1
                 }
             }
@@ -289,7 +226,8 @@ private final class Arguments {
     let openPremium:()->Void
     let installPack:(StickerPackCollectionInfo, [StickerPackItem])->Void
     let clearRecent:()->Void
-    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, sendEmoji:@escaping(String, NSRect)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
+    let selectEmojiCategory:(EmojiSearchCategories.Group?)->Void
+    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, sendEmoji:@escaping(String, NSRect)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void, selectEmojiCategory:@escaping(EmojiSearchCategories.Group?)->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
@@ -300,6 +238,7 @@ private final class Arguments {
         self.installPack = installPack
         self.mode = mode
         self.clearRecent = clearRecent
+        self.selectEmojiCategory = selectEmojiCategory
     }
 }
 
@@ -314,8 +253,32 @@ private struct State : Equatable {
         var items:[StickerPackItem]
         var dict:[MediaId: StickerPackItem]
         var installed: Bool
+        var groupEmojiPack: Bool = false
+        var isBig: Bool = false
+        static func ==(lhs: Section, rhs: Section) -> Bool {
+            if lhs.info != rhs.info {
+                return false
+            }
+            if lhs.installed != rhs.installed {
+                return false
+            }
+            if lhs.items.count != rhs.items.count {
+                return false
+            }
+            if lhs.dict.count != rhs.dict.count {
+                return false
+            }
+            if lhs.groupEmojiPack != rhs.groupEmojiPack {
+                return false
+            }
+            if lhs.isBig != rhs.isBig {
+                return false
+            }
+            return true
+        }
     }
     var sections:[Section]
+    var itemsDict: [MediaId: StickerPackItem]
     var peer: PeerEquatable?
     var emojiState: EmojiState = .init(selected: nil)
     var revealed:[Int64: Bool] = [:]
@@ -327,13 +290,90 @@ private struct State : Equatable {
     
     var recentReactionsItems: [RecentReactionItem] = []
     var topReactionsItems: [RecentReactionItem] = []
-
-    
+    var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
+    var featuredChannelStatusEmojiItems: [RecentMediaItem] = []
     var recent: RecentUsedEmoji = .defaultSettings
     var reactionSettings: ReactionSettings = .default
     
+    var messageEffects: [AvailableMessageEffects.MessageEffect] = []
+    
     var iconStatusEmoji: [TelegramMediaFile] = []
     var selectedItems: [EmojiesSectionRowItem.SelectedItem]
+    var searchCategories: EmojiSearchCategories?
+    var selectedEmojiCategory: EmojiSearchCategories.Group?
+    
+    var availableReactions: AvailableReactions?
+    
+    var color: NSColor? = nil
+    
+    static func ==(lhs: State, rhs: State) -> Bool {
+        
+        if lhs.sections != rhs.sections {
+            return false
+        }
+        if lhs.peer != rhs.peer {
+            return false
+        }
+        if lhs.emojiState != rhs.emojiState {
+            return false
+        }
+        if lhs.revealed != rhs.revealed {
+            return false
+        }
+        if lhs.search != rhs.search {
+            return false
+        }
+        if lhs.reactions != rhs.reactions {
+            return false
+        }
+        if lhs.recentStatusItems.count != rhs.recentStatusItems.count {
+            return false
+        }
+        if lhs.forumTopicItems.count != rhs.forumTopicItems.count {
+            return false
+        }
+        if lhs.featuredStatusItems.count != rhs.featuredStatusItems.count {
+            return false
+        }
+        if lhs.recentReactionsItems.count != rhs.recentReactionsItems.count {
+            return false
+        }
+        if lhs.topReactionsItems.count != rhs.topReactionsItems.count {
+            return false
+        }
+        if lhs.recent != rhs.recent {
+            return false
+        }
+        if lhs.reactionSettings != rhs.reactionSettings {
+            return false
+        }
+        if lhs.iconStatusEmoji.count != rhs.iconStatusEmoji.count {
+            return false
+        }
+        if lhs.selectedItems != rhs.selectedItems {
+            return false
+        }
+        if lhs.searchCategories != rhs.searchCategories {
+            return false
+        }
+        if lhs.selectedEmojiCategory != rhs.selectedEmojiCategory {
+            return false
+        }
+        if lhs.featuredBackgroundIconEmojiItems != rhs.featuredBackgroundIconEmojiItems {
+            return false
+        }
+        if lhs.featuredChannelStatusEmojiItems != rhs.featuredChannelStatusEmojiItems {
+            return false
+        }
+        if lhs.color != rhs.color {
+            return false
+        }
+        if lhs.availableReactions != rhs.availableReactions {
+            return false
+        }
+        
+        return true
+    }
     
     struct ExternalTopic: Equatable {
         let title: String
@@ -343,8 +383,8 @@ private struct State : Equatable {
     var externalTopic: ExternalTopic = .init(title: "", iconColor: 0)
 }
 
-private func _id_section(_ id:Int64) -> InputDataIdentifier {
-    return .init("_id_section_\(id)")
+private func _id_section(_ id:Int64, _ index: String = "") -> InputDataIdentifier {
+    return .init("_id_section_\(id)_\(index)")
 }
 private func _id_pack(_ id: Int64) -> InputDataIdentifier {
     return .init("_id_pack_\(id)")
@@ -353,15 +393,16 @@ private func _id_emoji_segment(_ segment:Int64) -> InputDataIdentifier {
     return .init("_id_emoji_segment_\(segment)")
 }
 private func _id_aemoji_block(_ segment:Int64) -> InputDataIdentifier {
-    return .init("_id_aemoji_block\(segment)")
+    return .init("_id_aemoji_block_\(segment)")
 }
 private func _id_emoji_block(_ segment: Int64) -> InputDataIdentifier {
     return .init("_id_emoji_block_\(segment)")
 }
 private let _id_segments_pack = InputDataIdentifier("_id_segments_pack")
 private let _id_recent_pack = InputDataIdentifier("_id_recent_pack")
+private let _id_search_empty = InputDataIdentifier("search_empty")
 
-private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func packEntries(_ state: State, arguments: Arguments, presentation: TelegramPresentationTheme?) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var index: Int32 = 0
@@ -376,36 +417,54 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
     switch arguments.mode {
     case .status:
         hasRecent = !state.recentStatusItems.isEmpty || !state.featuredStatusItems.isEmpty
-    case .emoji:
+    case .emoji, .stories:
         hasRecent = true
-    case .reactions:
+    case .reactions, .quickReaction, .defaultTags:
         hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
     case .selectAvatar:
         hasRecent = true
     case .forumTopic:
         hasRecent = true
+    case .backgroundIcon:
+        hasRecent = true
+    case .channelReactions, .channelStatus:
+        hasRecent = true
+    case .messageEffects:
+        hasRecent = false
     }
     if hasRecent {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return ETabRowItem(initialSize, stableId: stableId, icon: theme.icons.emojiRecentTab, iconSelected: theme.icons.emojiRecentTabActive)
+        let recentImage = NSImage(named: "Icon_EmojiTabRecent")!
+        let color = state.color ?? theme.colors.grayIcon
+        let icon = recentImage.precomposed(color.withAlphaComponent(0.8))
+        let activeIcon = recentImage.precomposed((state.color ?? theme.colors.grayIcon.darker()))
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: .init(color), comparable: nil, item: { initialSize, stableId in
+            return ETabRowItem(initialSize, stableId: stableId, icon: icon, iconSelected: activeIcon)
         }))
         index += 1
     }
-    
    
 
-    if arguments.mode == .emoji {
+    if arguments.mode == .emoji || arguments.mode == .stories {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_segments_pack, equatable: InputDataEquatable(state.emojiState), comparable: nil, item: { initialSize, stableId in
-            return EmojiTabsItem(initialSize, stableId: stableId, segments: EmojiSegment.all, selected: state.emojiState.selected, select: arguments.selectEmojiSegment)
+            return EmojiTabsItem(initialSize, stableId: stableId, segments: EmojiSegment.all, selected: state.emojiState.selected, select: arguments.selectEmojiSegment, presentation: presentation)
         }))
         index += 1
     }
     
+    var color: NSColor? = state.color
+    if color == nil {
+        switch arguments.mode {
+        case .emoji:
+            color = theme.colors.text
+        default:
+            color = nil
+        }
+    }
     
-    for section in state.sections {
-        let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji })
+    for (i, section) in state.sections.enumerated() {
+        let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji }) && arguments.mode != .channelReactions
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, context: arguments.context, info: section.info, topItem: section.items.first)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, allItems: section.items, isTopic: arguments.mode == .forumTopic || arguments.mode == .backgroundIcon)
         }))
         index += 1
     }
@@ -424,26 +483,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
+    
     var index: Int32 = 0
-    
-//    entries.append(.sectionId(sectionId, type: .custom(10)))
-//    sectionId += 1
-    
-    if arguments.mode != .reactions {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
-        }))
-        index += 1
-    } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
-        }))
-        index += 1
-    }
-    
-    
-//    entries.append(.sectionId(sectionId, type: .custom(46)))
-//    sectionId += 1
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
+    }))
+    index += 1
     
     var e = emojiesInstance
     e[EmojiSegment.Recent] = state.recent.emojies
@@ -454,18 +499,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     let isPremium = state.peer?.peer.isPremium == true
-    
-    let recentDict:[MediaId: StickerPackItem] = state.sections.reduce([:], { current, value in
-        return current + value.dict
-    })
+        
     var recentAnimated:[StickerPackItem] = state.recent.animated.compactMap { mediaId in
-        if let item = recentDict[mediaId] {
+        if let item = state.itemsDict[mediaId] {
             if !item.file.isPremiumEmoji || isPremium {
                 return item
             }
         }
         return nil
     }
+    
+    if arguments.mode == .channelReactions, let availableReactions = state.availableReactions {
+        recentAnimated.removeAll()
+        for reaction in availableReactions.reactions {
+            recentAnimated.append(.init(index: .init(index: 0, id: 0), file: reaction.activateAnimation, indexKeys: []))
+        }
+    }
+    
     
     if arguments.mode == .forumTopic {
         let file = ForumUI.makeIconFile(title: state.externalTopic.title, iconColor: state.externalTopic.iconColor)
@@ -476,6 +526,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     struct Tuple : Equatable {
         let items: [StickerPackItem]
         let selected: [EmojiesSectionRowItem.SelectedItem]
+        let color: NSColor?
     }
     
     if let search = state.search {
@@ -487,7 +538,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
 
             
-            if arguments.mode == .emoji {
+            if arguments.mode == .emoji || arguments.mode == .stories {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_e_stick"), equatable: InputDataEquatable(search), comparable: nil, item: { initialSize, stableId in
                     return EStickItem(initialSize, stableId: stableId, segmentName: strings().emojiSearchEmoji)
                 }))
@@ -511,7 +562,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             })
             
-            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media }
+            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media } + state.featuredBackgroundIconEmojiItems.map { $0.media } + state.featuredChannelStatusEmojiItems.map { $0.media }
+            
+            
             var contains:Set<MediaId> = Set()
             let normalized:[StickerPackItem] = statuses.filter { item in
                 let text = item.customEmojiText ?? item.stickerText ?? ""
@@ -530,34 +583,46 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             if !animatedEmoji.isEmpty {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_stick"), equatable: InputDataEquatable(search), comparable: nil, item: { initialSize, stableId in
-                    return EStickItem(initialSize, stableId: stableId, segmentName: strings().emojiSearchAnimatedEmoji)
-                }))
-                index += 1
+                if arguments.mode == .emoji || arguments.mode == .stories {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_stick"), equatable: InputDataEquatable(search), comparable: nil, item: { initialSize, stableId in
+                        return EStickItem(initialSize, stableId: stableId, segmentName: strings().emojiSearchAnimatedEmoji)
+                    }))
+                    index += 1
+                }
                 
+                let chunks = animatedEmoji.chunks(24)
+                var string: String = "a"
+                for chunk in chunks {
+                    let tuple = Tuple(items: chunk, selected: state.selectedItems, color: state.color)
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_\(string)"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selected, color: tuple.color, callback: arguments.send)
+                    }))
+                    index += 1
+                    string += "a"
+                }
                                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(Tuple(items: animatedEmoji, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
-                }))
-                index += 1
+                
                 
             } else if arguments.mode == .status {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_empty"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                    return SearchEmptyRowItem.init(initialSize, stableId: stableId)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                    return SearchEmptyRowItem(initialSize, stableId: stableId, customTheme: .init(backgroundColor: .clear))
                 }))
                 index += 1
             }
         } else {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_empty"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                return SearchEmptyRowItem.init(initialSize, stableId: stableId)
-            }))
-            index += 1
+            if state.sections.isEmpty {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                    return SearchEmptyRowItem(initialSize, stableId: stableId, customTheme: .init(backgroundColor: .clear))
+                }))
+                index += 1
+            }
+           
         }
         
     } else {
         for key in seglist {
             
-            if key == .Recent, arguments.mode == .reactions {
+            if key == .Recent, arguments.mode == .reactions || arguments.mode == .quickReaction || arguments.mode == .defaultTags {
                 
                 
                 var reactionsRecent:[StickerPackItem] = []
@@ -573,7 +638,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     if arguments.context.isPremium {
                         return true
                     } else {
-                        return !value.content.reaction.string.isEmpty
+                        if arguments.mode == .defaultTags {
+                            return true
+                        } else {
+                            return !value.content.reaction.string.isEmpty
+                        }
                     }
                 }
                 popular = Array(top.prefix(perline * 2))
@@ -636,9 +705,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 reactionsRecent = reactionsRecent.filter { item in
                     return !reactionsPopular.contains(where: { $0.file.fileId == item.file.fileId })
                 }
-                
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(Tuple(items: reactionsPopular, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
+                let tuple = Tuple(items: reactionsPopular, selected: state.selectedItems, color: state.color)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, color: tuple.color, callback: arguments.send)
                 }))
                 index += 1
                 
@@ -659,9 +728,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         index += 1
                     }
                     
+                    let tuple = Tuple(items: reactionsRecent, selected: state.selectedItems, color: state.color)
                     
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(-1), equatable: InputDataEquatable(Tuple(items: reactionsRecent, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
-                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsRecent, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(-1), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsRecent, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, color: tuple.color, callback: arguments.send)
                     }))
                     index += 1
                 }
@@ -681,21 +751,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             
-            if key == .Recent, arguments.mode == .status {
+            if key == .Recent, arguments.mode == .status || arguments.mode == .backgroundIcon || arguments.mode == .channelStatus {
                 
-                let string: String
-                if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate, expiryDate > arguments.context.timestamp {
-                    string = strings().customStatusExpires(timeIntervalString(Int(expiryDate - arguments.context.timestamp)))
-                } else {
-                    string = strings().customStatusExpiresPromo
+                if arguments.mode == .status {
+                    let string: String
+                    if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate, expiryDate > arguments.context.timestamp {
+                        string = strings().customStatusExpires(timeIntervalString(Int(expiryDate - arguments.context.timestamp)))
+                    } else {
+                        string = strings().customStatusExpiresPromo
+                    }
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_status_status"), equatable: .init(string), comparable: nil, item: { initialSize, stableId in
+                        return EmojiStatusStatusRowItem(initialSize, stableId: stableId, status: string.uppercased(), viewType: .textTopItem)
+                    }))
+                    index += 1
                 }
-                
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_status_status"), equatable: .init(string), comparable: nil, item: { initialSize, stableId in
-                    return EmojiStatusStatusRowItem(initialSize, stableId: stableId, status: string.uppercased(), viewType: .textTopItem)
-                }))
-                index += 1
-                
-                let def = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_Premium_StickerPack", ext: ""), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+               
+                let iconName: String = arguments.mode == .status ? "Icon_Premium_StickerPack" : "Icon_NoPeerIcon"
+                let color = state.color ?? theme.colors.accent
+                let def = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: iconName, ext: "", color: color), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 
                 normalized.insert(.init(index: .init(index: 0, id: 0), file: def, indexKeys: []), at: 0)
                 
@@ -707,11 +781,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     let items: [StickerPackItem]
                     let revealed: Bool
                     let selected:[EmojiesSectionRowItem.SelectedItem]
+                    let color: NSColor?
                 }
-                let tuple = Tuple(items: Array(normalized.prefix(13 * 8)), revealed: state.revealed[-1] ?? false, selected: state.selectedItems)
+                let tuple = Tuple(items: Array(normalized.prefix(13 * 8)), revealed: state.revealed[-1] ?? false, selected: state.selectedItems, color: state.color)
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: true, info: nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selected, callback: arguments.send, showAllItems: {
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: true, info: nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selected, color: tuple.color, callback: arguments.send, showAllItems: {
                         arguments.showAllItems(-1)
                     })
                 }))
@@ -719,15 +794,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             
-            let hasAnimatedRecent = arguments.mode == .emoji || arguments.mode == .forumTopic || arguments.mode == .selectAvatar
+            let hasAnimatedRecent = arguments.mode == .emoji || arguments.mode == .stories || arguments.mode == .forumTopic || arguments.mode == .selectAvatar || arguments.mode == .channelReactions
+            
             if key == .Recent, !recentAnimated.isEmpty, hasAnimatedRecent {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(Tuple.init(items: recentAnimated, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
+                let tuple = Tuple(items: recentAnimated, selected: state.selectedItems, color: state.color)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, color: tuple.color, callback: arguments.send)
                 }))
                 index += 1
             }
             
-            if key != .Recent || !recentAnimated.isEmpty, arguments.mode == .emoji {
+            if key != .Recent || !recentAnimated.isEmpty, arguments.mode == .emoji || arguments.mode == .stories {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_segment(key.rawValue), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
                     return EStickItem(initialSize, stableId: stableId, segmentName:key.localizedString)
                 }))
@@ -735,34 +812,55 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
            
-            if arguments.mode == .emoji {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(key.rawValue), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
-                    return EBlockItem(initialSize, stableId: stableId, attrLines: seg[key]!, segment: key, account: arguments.context.account, selectHandler: arguments.sendEmoji)
+            if arguments.mode == .emoji || arguments.mode == .stories {
+                struct Tuple : Equatable {
+                    let key: EmojiSegment
+                    let lines: [[NSAttributedString]]
+                }
+                let tuple = Tuple(key: key, lines: seg[key]!)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(key.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return EBlockItem(initialSize, stableId: stableId, attrLines: tuple.lines, segment: tuple.key, account: arguments.context.account, selectHandler: arguments.sendEmoji)
                 }))
                 index += 1
             }
             
         }
         
-        for section in state.sections {
-            
+    }
+    
+    for (i, section) in state.sections.enumerated() {
+        
+        
+        if !section.info.title.isEmpty, i > 0  {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
                 return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
             }))
             index += 1
-            
-            
-            struct Tuple : Equatable {
-                let section: State.Section
-                let isPremium: Bool
-                let revealed: Bool
-                let selectedItems:[EmojiesSectionRowItem.SelectedItem]
-            }
-            
-            let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems)
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send, viewSet: { info in
+        }
+        
+        struct Tuple : Equatable {
+            let section: State.Section
+            let isPremium: Bool
+            let revealed: Bool
+            let selectedItems:[EmojiesSectionRowItem.SelectedItem]
+            let items: [StickerPackItem]
+            let index: String
+            let color: NSColor?
+        }
+        
+        var tuples:[Tuple] = []
+
+        let chunks = section.items.chunks(1000)
+        var string: String = "a"
+        
+        for items in chunks {
+            tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: string, color: state.color))
+            string += "a"
+        }
+                
+        for tuple in tuples {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, isBig: tuple.section.isBig, groupEmojiPack: tuple.section.groupEmojiPack, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, color: tuple.color, callback: arguments.send, viewSet: { info in
                     arguments.viewSet(info)
                 }, showAllItems: {
                     arguments.showAllItems(section.info.id.id)
@@ -770,8 +868,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             index += 1
         }
+        
     }
-    
     
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("bottom_section"), equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -785,6 +883,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    let empty = entries.contains(where: { $0.stableId == .custom(_id_search_empty) })
+    
+    if empty {
+        entries.removeAll(where: {
+            $0.stableId != .custom(_id_search_empty)
+        })
+    }
+
     // entries
     
 //    entries.append(.sectionId(sectionId, type: .normal))
@@ -793,19 +899,448 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-final class AnimatedEmojiesView : View {
-    let tableView = TableView()
-    let packsView = HorizontalTableView(frame: NSZeroRect)
+extension EmojiSearchCategories.Group : Identifiable, Comparable {
+    public static func < (lhs: EmojiSearchCategories.Group, rhs: EmojiSearchCategories.Group) -> Bool {
+        return false
+    }
+    
+    public var stableId: AnyHashable {
+        return self.id
+    }
+    
+}
+
+
+final class BackCategoryControl : Control {
+    private var sticker: InlineStickerItemLayer
+    private let context: AccountContext
+    private let presentation: TelegramPresentationTheme
+    init(frame frameRect: NSRect, context: AccountContext, presentation: TelegramPresentationTheme) {
+        self.context = context
+        self.presentation = presentation
+        let theme = presentation
+        self.sticker = .init(account: context.account, file: LocalAnimatedSticker.emoji_category_search_to_arrow.file, size: NSMakeSize(18, 18), playPolicy: .onceEnd, getColors: { _ in
+            return [.init(keyPath: "", color: theme.colors.grayIcon.withMultipliedAlpha(0.8))]
+        }, ignorePreview: true)
+        super.init(frame: frameRect)
+        
+        self.sticker.isPlayable = true
+        self.sticker.superview = self
+        self.layer?.addSublayer(self.sticker)
+        
+        self.scaleOnClick = true
+        
+        updateLocalizationAndTheme(theme: theme)
+        
+        needsLayout = true
+    }
+    
+    func close() {
+        self.sticker.removeFromSuperlayer()
+        let theme = self.presentation
+        
+        self.sticker = .init(account: context.account, file: LocalAnimatedSticker.emoji_category_arrow_to_search.file, size: NSMakeSize(18, 18), playPolicy: .onceEnd, getColors: { _ in
+            return [.init(keyPath: "", color: theme.colors.grayIcon.withMultipliedAlpha(0.8))]
+        }, ignorePreview: true)
+
+        self.sticker.isPlayable = true
+        self.sticker.superview = self
+        self.layer?.addSublayer(self.sticker)
+        
+        needsLayout = true
+
+    }
+    
+    override func layout() {
+        super.layout()
+        var rect = focus(NSMakeSize(18, 18))
+        rect.origin.x += 5
+        self.sticker.frame = rect
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func update(context: AccountContext, isVisible: Bool, animated: Bool, callback:@escaping()->Void) {
+                            
+        self.isHidden = !isVisible
+        
+        needsLayout = true
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+final class AnimatedEmojiesCategories : Control {
+    
+    private final class CategoryView : Control {
+                
+        private var player: InlineStickerItemLayer?
+        private var imageView: ImageView?
+        let category: EmojiSearchCategories.Group
+        let context: AccountContext
+        private var currentKey: String?
+        
+        
+        private var selectionView : SimpleLayer?
+        private var presenation: TelegramPresentationTheme? = nil
+        
+        required init(frame frameRect: NSRect, context: AccountContext, category: EmojiSearchCategories.Group, isSelected: Bool, presenation: TelegramPresentationTheme? = nil) {
+            
+            self.presenation = presenation
+            self.category = category
+            self.context = context
+           
+            super.init(frame: frameRect)
+                        
+            self.toolTip = category.title
+
+            scaleOnClick = true
+            
+            let lite = self.isLite
+            if let image = category.icon {
+                let imageView = ImageView()
+                imageView.image = image
+                imageView.sizeToFit()
+                addSubview(imageView)
+                self.imageView = imageView
+            } else {
+                self.apply(key: "select", policy: .toEnd(from: lite ? .max : 0))
+            }
+            
+
+            
+            self.isSelected = isSelected
+            
+        }
+        
+        private func apply(key: String, policy: LottiePlayPolicy, animated: Bool = false) {
+            
+            let presentation = self.presenation ?? theme
+            if self.currentKey != key {
+                if let player = self.player {
+                    performSublayerRemoval(player, animated: animated)
+                }
+                let color = presentation.colors.grayIcon.withAlphaComponent(0.8)
+                let inline = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: category.id, file: self.player?.file, emoji: ""), size: NSMakeSize(23, 23), playPolicy: policy, getColors: { _ in
+                    return [.init(keyPath: "", color: color)]
+                }, ignorePreview: true)
+                self.player = inline
+                inline.superview = self
+                inline.frame = focus(NSMakeSize(23, 23))
+                inline.isPlayable = visibleRect != .zero
+                self.layer?.addSublayer(inline)
+                
+                if animated {
+                    inline.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            self.currentKey = key
+        }
+        
+        deinit {
+        }
+        
+        override func layout() {
+            super.layout()
+            updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            if let player = player {
+                transition.updateFrame(layer: player, frame: self.focus(player.frame.size))
+            }
+            if let imageView = self.imageView {
+                transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            }
+            if let selectionView = self.selectionView {
+                transition.updateFrame(layer: selectionView, frame: self.focus(selectionView.frame.size))
+            }
+        }
+        
+        var isLite: Bool {
+            return self.context.isLite(.emoji)
+        }
+        
+        func playAppearAnimation() {
+            
+            guard self.visibleRect != .zero || isLite else {
+                return
+            }
+            //self.apply(key: "appear", policy: .toEnd(from: 1))
+        }
+        
+        func update(isSelected: Bool, animated: Bool) {
+            if self.isSelected != isSelected {
+                self.isSelected = isSelected
+                let presentation = self.presenation ?? theme
+
+                if isSelected {
+                    let current: SimpleLayer
+                    if let view = self.selectionView {
+                        current = view
+                    } else {
+                        current = SimpleLayer()
+                        current.frame = focus(NSMakeSize(25, 25))
+                        current.cornerRadius = current.frame.height / 2
+                        current.backgroundColor = presentation.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1).cgColor
+                        self.layer?.insertSublayer(current, at: 0)
+                        self.selectionView = current
+                        
+                        if animated {
+                            current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            current.animateScale(from: 0.1, to: 1, duration: 0.2)
+                        }
+                    }
+                } else if let view = self.selectionView {
+                    performSublayerRemoval(view, animated: animated)
+                    self.selectionView = nil
+                }
+                
+            }
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        required init(frame frameRect: NSRect) {
+            fatalError("init(frame:) has not been implemented")
+        }
+    }
+
+    let scrollView = HorizontalScrollView()
+    private let documentView = View()
+    
+    private let topGradient = ShadowView()
+    private let bottomGradient = ShadowView()
+    
+    
+    private let backgroundView = View()
+    
+    private var categories: [EmojiSearchCategories.Group] = []
+    var select:((EmojiSearchCategories.Group?)->Void)? = nil
+    required init(frame frameRect: NSRect, presentation: TelegramPresentationTheme? = nil) {
+        self.presentation = presentation
+        super.init(frame: frameRect)
+        
+       // addSubview(backgroundView)
+        addSubview(scrollView)
+        
+        
+        
+        scrollView.background = .clear
+        scrollView.documentView = documentView
+        
+        
+        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
+            self?.updateScroll()
+        })
+        
+        self.addSubview(topGradient)
+        self.addSubview(bottomGradient)
+
+        updateLocalizationAndTheme(theme: presentation ?? theme)
+
+        self.layer?.cornerRadius = frame.height / 2
+        updateScroll()
+    }
+    var presentation: TelegramPresentationTheme? = nil
+    
+    var searchTheme: SearchTheme? {
+        didSet {
+            updateLocalizationAndTheme(theme: presentation ?? theme)
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        backgroundView.backgroundColor = searchTheme?.backgroundColor ?? theme.search.backgroundColor
+        bottomGradient.shadowBackground = searchTheme?.backgroundColor ?? theme.search.backgroundColor
+        bottomGradient.direction = .horizontal(true)
+        topGradient.shadowBackground = searchTheme?.backgroundColor ?? theme.search.backgroundColor
+        topGradient.direction = .horizontal(false)
+
+    }
+    
+    
+    private var previousOffset: NSPoint = .zero
+    private var previousRange: [Int] = []
+    func updateScroll() {
+        
+        self.topGradient.isHidden = self.scrollView.documentOffset.x == 0
+        self.bottomGradient.isHidden = self.scrollView.documentOffset.x == self.scrollView.documentSize.width - self.scrollView.frame.width
+
+        
+        let range = visibleRange(self.scrollView.documentOffset)
+        if previousRange != range, !previousRange.isEmpty {
+            let new = range.filter({
+                !previousRange.contains($0)
+            })
+            for i in new {
+                let view = self.documentView.subviews[i] as? CategoryView
+                view?.playAppearAnimation()
+            }
+        }
+        self.previousRange = range
+    }
+    
+    private func visibleRange(_ documentOffset: NSPoint) -> [Int] {
+        var range: [Int] = []
+        for (i, view) in documentView.subviews.enumerated() {
+            if view.visibleRect != .zero {
+                range.append(i)
+            }
+        }
+        return range
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private(set) var selected: EmojiSearchCategories.Group?
+    
+    func update(categories: [EmojiSearchCategories.Group], context: AccountContext, selected: EmojiSearchCategories.Group?, animated: Bool) {
+        
+        
+       
+        let selectedUpdated = self.selected != selected
+        self.selected = selected
+        
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.categories, rightList: categories)
+        
+        
+                
+        for rdx in deleteIndices.reversed() {
+            self.documentView.subviews.remove(at: rdx)
+            self.categories.remove(at: rdx)
+        }
+        
+        
+        for (idx, item, _) in indicesAndItems {
+            let subview = CategoryView(frame: NSMakeRect(CGFloat(idx) * 30, 0, 30, 30), context: context, category: item, isSelected: selected == item, presenation: presentation)
+            subview.set(handler: { [weak self] _ in
+                self?.select?(item)
+            }, for: .Click)
+            self.documentView.subviews.insert(subview, at: idx)
+            self.categories.insert(item, at: idx)
+        }
+        for (idx, item, _) in updateIndices {
+            let subview = documentView.subviews[idx] as! CategoryView
+            
+            subview.update(isSelected: selected == item, animated: animated)
+            self.categories[idx] = item
+        }
+        let itemViews = self.documentView.subviews.compactMap { $0 as? CategoryView }
+        for view in itemViews {
+            view.update(isSelected: selected == view.category, animated: animated)
+        }
+        
+        if selectedUpdated {
+            if let selected = selected {
+                self.focus(to: selected, animated: animated)
+            } else {
+                scrollView.clipView.scroll(to: .zero, animated: animated)
+            }
+        }
+        
+    }
+    
+    func focus(to category: EmojiSearchCategories.Group, animated: Bool) {
+        let selectedView = documentView.subviews.first(where: { subview in
+            if let subview = subview as? CategoryView, subview.category == category {
+                return true
+            } else {
+                return false
+            }
+        })
+        if let selectedView = selectedView {
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated)
+        }
+    }
+    
+    private var validLayout: NSSize? = nil
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        guard validLayout != size else {
+            return
+        }
+        var rect = NSMakeRect(0, 0, 30, 30)
+        var documentSize: NSSize = NSMakeSize(0, 30)
+        for subview in documentView.subviews {
+            transition.updateFrame(view: subview, frame: rect)
+            rect = rect.offsetBy(dx: rect.width, dy: 0)
+            documentSize = NSMakeSize(rect.width + documentSize.width, rect.height)
+        }
+        
+//        transition.updateFrame(view: back, frame: back.centerFrameY(x: 0))
+        
+        let scrollRect = NSMakeRect(0, 0, size.width, size.height)
+        transition.updateFrame(view: scrollView.contentView, frame: scrollRect)
+        transition.updateFrame(view: scrollView, frame: scrollRect)
+        transition.updateFrame(view: documentView, frame: documentSize.bounds)
+        
+        transition.updateFrame(view: backgroundView, frame: NSMakeRect(0, 0, size.width, rect.height))
+        
+        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, size.height))
+        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(size.width - 10, 0, 10, size.height))
+
+        
+        validLayout = size
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+final class AnimatedEmojiesView : Control {
+    let tableView = TableView(frame: NSMakeRect(0, 0, 350, 350))
+    let packsView = HorizontalTableView(frame: NSMakeRect(0, 0, 350, 46))
     private let borderView = View()
     private let tabs = View()
     private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
     
     let searchView = SearchView(frame: .zero)
-    private let searchContainer = View()
+    fileprivate let searchContainer = View()
+    private let visualEffect = NSVisualEffectView()
+    private let searchInside = View()
+    
     private let searchBorder = View()
     
+    
+    
+    fileprivate var categories: AnimatedEmojiesCategories?
+    fileprivate var closeCategories: BackCategoryControl?
+    
     private var mode: EmojiesController.Mode = .emoji
-
+    fileprivate var state: State?
+    private var context: AccountContext?
+    fileprivate var arguments: Arguments?
+    
+    var presentation: TelegramPresentationTheme? {
+        didSet {
+            categories?.presentation = presentation
+        }
+    }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -817,11 +1352,29 @@ final class AnimatedEmojiesView : View {
             .clear
         }
         addSubview(self.tableView)
-
-        searchContainer.addSubview(searchView)
-        searchContainer.addSubview(searchBorder)
-        addSubview(searchContainer)
         
+        searchView.isLeftOrientated = true
+        searchView.layer?.cornerRadius = 15
+
+        searchInside.addSubview(searchView)
+        
+        visualEffect.wantsLayer = true
+        
+        if !isLite(.blur) {
+            visualEffect.state = .active
+            visualEffect.blendingMode = .behindWindow
+            visualEffect.autoresizingMask = []
+        }
+        
+        
+        if #available(macOS 11.0, *), !isLite(.blur) {
+            searchContainer.addSubview(visualEffect)
+        }
+        
+        searchContainer.addSubview(searchBorder)
+        searchContainer.addSubview(searchInside)
+        addSubview(searchContainer)
+                
         tabs.addSubview(selectionView)
         tabs.addSubview(self.packsView)
         addSubview(self.borderView)
@@ -835,11 +1388,10 @@ final class AnimatedEmojiesView : View {
             self?.updateScrollerSearch()
         }))
         
-        
-        self.layout()
+       
+        self.updateLayout(frame.size, transition: .immediate)
     }
  
-    
     override func layout() {
         super.layout()
         self.updateLayout(self.frame.size, transition: .immediate)
@@ -851,24 +1403,42 @@ final class AnimatedEmojiesView : View {
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        let initial: CGFloat = searchState?.state == .Focus ? -46 : 0
-
+        let inSearch = searchState?.state == .Focus || state?.selectedEmojiCategory != nil
+        
+        let initial: CGFloat = inSearch || arguments?.mode == .messageEffects ? -46 : 0
+        
         transition.updateFrame(view: tabs, frame: NSMakeRect(0, initial, size.width, 46))
         transition.updateFrame(view: packsView, frame: tabs.focus(NSMakeSize(size.width, 36)))
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, .borderSize))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
+        
+        transition.updateAlpha(view: borderView, alpha: inSearch ? 0 : 1)
 
         
-        let searchDest = tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y)
-                
-        transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, min(max(tabs.frame.maxY - searchDest, 0), tabs.frame.maxY), size.width, 46))
-        transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 16, 30)))
+        let dest = max(0, min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
+
+        let searchDest = inSearch ? 0 : dest
+        transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, tabs.frame.maxY, size.width, 46 - min(searchDest, 46)))
+
+        
+        let searchInsideRect: CGRect = CGRect(origin: CGPoint(x: 0, y: searchContainer.frame.height - 46), size: NSMakeSize(size.width, 46))
+        transition.updateFrame(view: searchInside, frame: searchInsideRect)
+        transition.updateFrame(view: visualEffect, frame: searchInsideRect)
+
+        
+        
+        transition.updateFrame(view: searchView, frame: searchInside.focus(NSMakeSize(size.width - 16, 30)))
         transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
-        
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height))
-
-
-        let alpha: CGFloat = searchState?.state == .Focus && tableView.documentOffset.y > 0 ? 1 : 0
+        let alpha: CGFloat = inSearch && tableView.documentOffset.y > 0 ? 1 : 0
         transition.updateAlpha(view: searchBorder, alpha: alpha)
+        
+        if let categories = categories {
+            transition.updateFrame(view: categories, frame: categories.centerFrameY(x: searchInside.frame.width - categories.frame.width - searchView.frame.minX))
+            categories.updateLayout(size: categories.frame.size, transition: transition)
+        }
+        
+
+       
         
         self.updateSelectionState(animated: transition.isAnimated)
         
@@ -882,11 +1452,25 @@ final class AnimatedEmojiesView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        
         self.backgroundColor = mode == .reactions ? .clear : theme.colors.background
-        borderView.backgroundColor = mode == .reactions ? theme.colors.grayIcon.withAlphaComponent(0.1) : theme.colors.border
-        tabs.backgroundColor = mode != .reactions ? theme.colors.background : .clear
-        searchContainer.backgroundColor = theme.colors.background
-        searchBorder.backgroundColor = theme.colors.border
+        self.borderView.backgroundColor = mode == .reactions ? theme.colors.grayIcon.withAlphaComponent(0.1) : theme.colors.border
+        self.tabs.backgroundColor = !mode.isTransparent ? theme.colors.background : .clear
+        self.backgroundColor = mode.isTransparent ? .clear : theme.colors.background
+        self.searchContainer.background = mode.isTransparent ? .clear : theme.colors.background
+        self.searchBorder.backgroundColor = mode.isTransparent ? .clear : theme.colors.border
+        visualEffect.material = theme.colors.isDark ? .dark : .light
+        searchInside.backgroundColor = mode.isTransparent ? theme.colors.background.withAlphaComponent(0.7) : theme.colors.background
+        if mode.isTransparent {
+            let background = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1)
+            let searchTheme = SearchTheme(background, theme.search.searchImage, theme.search.clearImage, theme.search.placeholder, theme.search.textColor, theme.search.placeholderColor)
+            self.searchView.searchTheme = searchTheme
+            self.categories?.searchTheme = searchTheme
+        } else {
+            self.searchView.searchTheme = theme.search
+            self.categories?.searchTheme = theme.search
+        }
+        
         self.searchView.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -896,6 +1480,19 @@ final class AnimatedEmojiesView : View {
     private var searchState: SearchState? = nil
 
     func updateSearchState(_ searchState: SearchState, animated: Bool) {
+        
+        if let window = _window, self.mode.isFocusSearch {
+            switch searchState.state {
+            case .Focus:
+                window._canBecomeKey = true
+                window.makeKey()
+            case .None:
+                window._canBecomeKey = false
+                context?.window.makeKey()
+            }
+        }
+        
+        let previous = self.searchState
         self.searchState = searchState
 
         let transition: ContainedViewLayoutTransition
@@ -904,19 +1501,116 @@ final class AnimatedEmojiesView : View {
         } else {
             transition = .immediate
         }
+        updateSelectionState(animated: animated)
         self.updateLayout(self.frame.size, transition: transition)
+        
+        if previous?.state != searchState.state {
+            self.tableView.scroll(to: .up(animated))
+            self.moveCategories(nil)
+        }
     }
     
-    func update(sections: TableUpdateTransition, packs: TableUpdateTransition, mode: EmojiesController.Mode) {
+    fileprivate func update(sections: TableUpdateTransition, packs: TableUpdateTransition, state: State, context: AccountContext, arguments: Arguments, mode: EmojiesController.Mode) {
         self.mode = mode
+        
+        let previous = self.state
+        self.state = state
+        
+        let transition: ContainedViewLayoutTransition
+        if packs.animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.updateLayout(frame.size, transition: transition)
+        
+        self.arguments = arguments
+        self.context = context
         self.tableView.merge(with: sections)
         self.packsView.merge(with: packs)
         
-        searchContainer.isHidden = mode == .reactions
-        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 50)
+//        searchContainer.isHidden = mode == .reactions
+//        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 50)
 
+//        searchContainer.isHidden = mode == .reactions
+        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 50)
+        
         updateSelectionState(animated: packs.animated)
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
+        
+        if state.selectedEmojiCategory != previous?.selectedEmojiCategory {
+            self.tableView.scroll(to: .up(transition.isAnimated))
+        }
+    }
+    
+    
+    @discardableResult func moveCategories(_ event: NSEvent?) -> Bool {
+        let transition: ContainedViewLayoutTransition = event == nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate
+        if let view = self.categories {
+            if let event = event, state?.selectedEmojiCategory == nil {
+                let previous = view.scrollView.contentView.bounds.origin
+                let point = view.scrollView.makeScrollPoint(event)
+                let difference = previous.x - point.x
+                var rect = view.frame.insetBy(dx: difference, dy: 0)
+                
+                var accept: Bool = previous.x == 0
+
+                if accept {
+                    
+                    let minX = searchView.frame.minX + searchView.searchSize.width
+                    
+                    if rect.origin.x < minX {
+                        accept = false
+                    } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - searchView.frame.minX {
+                        accept = false
+                    }
+                    rect.size.width = min(searchView.frame.width - searchView.searchSize.width, max(categoryRect.width, rect.width))
+                    rect.origin.x = max(minX, searchContainer.frame.width - rect.width - searchView.frame.minX)
+                    transition.updateFrame(view: view, frame: rect)
+                    
+                    let maxX = (searchView.frame.minX + searchView.holderSize.width)
+                    
+                    let sInset = maxX - rect.origin.x
+                    let sOpacity: CGFloat = 1 - sInset / minX
+                    if minCategoryWidth != categoryRect.width {
+                        searchView.movePlaceholder(-sInset, opacity: sOpacity, transition: transition)
+                    } else {
+                        searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    }
+                }
+                view.updateScroll()
+                
+                return accept
+            } else {
+                if let _ = state?.selectedEmojiCategory {
+                    transition.updateFrame(view: view, frame: revealedCategoryRect)
+                    if minCategoryWidth != categoryRect.width {
+                        searchView.movePlaceholder(-((searchView.frame.minX + searchView.holderSize.width) - revealedCategoryRect.minX), opacity: 0, transition: transition)
+                    } else {
+                        searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    }
+                } else {
+                    transition.updateFrame(view: view, frame: categoryRect)
+                    searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    view.scrollView.clipView.scroll(to: .zero, animated: transition.isAnimated)
+                }
+                view.updateLayout(size: view.frame.size, transition: transition)
+            }
+        } else {
+            searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+        }
+        return false
+    }
+    var minCategoryWidth: CGFloat {
+        return CGFloat(state?.searchCategories?.groups.count ?? 0) * 30
+    }
+    var categoryRect: NSRect {
+        let width = min(searchView.frame.width - searchView.holderSize.width, minCategoryWidth)
+        return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
+    }
+    var revealedCategoryRect: NSRect {
+        let width = min(searchView.frame.width - searchView.searchSize.width, minCategoryWidth)
+        return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
     }
     
     func updateSelectionState(animated: Bool) {
@@ -927,6 +1621,84 @@ final class AnimatedEmojiesView : View {
         } else {
             transition = .immediate
         }
+        let currentClose: BackCategoryControl
+
+        if state?.selectedEmojiCategory != nil, let context = context {
+            if let view = self.closeCategories {
+                currentClose = view
+            } else {
+                currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context, presentation: presentation ?? theme)
+                self.closeCategories = currentClose
+                searchInside.addSubview(currentClose)
+                
+                
+                currentClose.set(handler: { [weak self] _ in
+                    self?.arguments?.selectEmojiCategory(nil)
+                }, for: .Click)
+            }
+            self.searchView.updateSearchHolderVisibility(visible: false, transition: .immediate)
+        } else {
+            if let view = self.closeCategories {
+                view.close()
+                delay(0.4, closure: { [weak self, weak view] in
+                    view?.removeFromSuperview()
+                    if self?.closeCategories == nil {
+                        self?.searchView.updateSearchHolderVisibility(visible: true, transition: .immediate)
+                    }
+                })
+                self.closeCategories = nil
+            }
+        }
+        
+        if searchState == nil || searchState?.state == .None, let groups = self.state?.searchCategories?.groups, let context = context {
+            let current: AnimatedEmojiesCategories
+            
+            
+            
+            if let view = self.categories {
+                current = view
+            } else {
+                current = AnimatedEmojiesCategories(frame: categoryRect, presentation: presentation)
+                self.categories = current
+                searchInside.addSubview(current)
+                
+                current.select = { [weak self] category in
+                    self?.arguments?.selectEmojiCategory(category)
+                }
+            }
+            
+            current.userInteractionEnabled = current.selected != nil
+            
+            if current.selected != state?.selectedEmojiCategory, current.selected == nil || state?.selectedEmojiCategory == nil {
+                self.moveCategories(nil)
+            }
+            
+            current.update(categories: groups, context: context, selected: self.state?.selectedEmojiCategory, animated: animated)
+            current.scrollView.applyExternalScroll = { [weak self] event in
+                return self?.moveCategories(event) ?? false
+            }
+            current.updateScroll()
+            
+            
+            self.searchView.externalScroll = { [weak current] event in
+                if current?.mouseInside() == false {
+                    current?.scrollView.scrollWheel(with: event)
+                }
+            }
+            
+        } else if let view = self.categories {
+            performSubviewRemoval(view, animated: animated)
+            if animated {
+                view.layer?.animatePosition(from: view.frame.origin, to: categoryRect.origin, duration: 0.2, removeOnCompletion: false)
+                view.layer?.animateBounds(from: view.frame.size.bounds, to: categoryRect.size.bounds, duration: 0.2, removeOnCompletion: false)
+            }
+            self.categories = nil
+            self.searchView.externalScroll = nil
+            
+        }
+        
+//        self.moveCategories(nil)
+        
         var animated = transition.isAnimated
         var item = packsView.selectedItem()
         if item == nil, packsView.count > 1 {
@@ -934,6 +1706,7 @@ final class AnimatedEmojiesView : View {
             animated = false
         }
 
+        let theme = presentation ?? theme
         
         guard let item = item else {
             return
@@ -953,7 +1726,7 @@ final class AnimatedEmojiesView : View {
             selectionView.layer?.animateCornerRadius()
         }
         transition.updateFrame(view: selectionView, frame: rect)
-        
+        updateLocalizationAndTheme(theme: presentation ?? theme)
     }
     
     
@@ -979,7 +1752,12 @@ final class AnimatedEmojiesView : View {
             } else if identifier.identifier.hasPrefix("_id_pack_") {
                 let collectionId = identifier.identifier.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890").inverted)
                 if let collectionId = Int64(collectionId) {
-                    let stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
+                    var stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
+                    
+                    if tableView.item(stableId: stableId) == nil {
+                        stableId = InputDataEntryId.custom(_id_section(collectionId, "a"))
+                    }
+                    
                     tableView.scroll(to: .top(id: stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
                     
                     let packStableId = InputDataEntryId.custom(_id_pack(collectionId))
@@ -1049,6 +1827,11 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
     
+    private let onStage = ValuePromise<Bool>(ignoreRepeated: true)
+    
+    private var groupEmojiPack: Signal<(StickerPackCollectionInfo, [StickerPackItem])?, NoError> = .single(nil)
+
+    
     private var updateState: (((State) -> State) -> Void)? = nil
     private var scrollOnAppear:(()->Void)? = nil
     
@@ -1075,16 +1858,55 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case emoji
         case status
         case reactions
+        case quickReaction
         case selectAvatar
         case forumTopic
+        case backgroundIcon
+        case stories
+        case channelReactions
+        case channelStatus
+        case defaultTags
+        case messageEffects
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
                 return .reactions
+            case .quickReaction:
+                return .reactions
             case .status:
                 return .statuses
+            case .forumTopic:
+                return .topic
+            case .backgroundIcon:
+                return .backgroundIcon
+            case .channelReactions:
+                return .channelReactions
+            case .channelStatus:
+                return .channelStatus
+            case .defaultTags:
+                return .defaultTags
+            case .messageEffects:
+                return .messageEffects
             default:
                 return .panel
+            }
+        }
+        var isTransparent: Bool {
+            switch self {
+            case .reactions:
+                return true
+            case .messageEffects:
+                return true
+            default:
+                return false
+            }
+        }
+        var isFocusSearch: Bool {
+            switch self {
+            case .reactions, .messageEffects, .defaultTags:
+                return true
+            default:
+                return false
             }
         }
     }
@@ -1092,12 +1914,24 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     
     var closeCurrent:(()->Void)? = nil
     var animateAppearance:(([TableRowItem])->Void)? = nil
-    
+    private var presentation: TelegramPresentationTheme?
     private let selectedItems: [EmojiesSectionRowItem.SelectedItem]
     
-    init(_ context: AccountContext, mode: Mode = .emoji, selectedItems: [EmojiesSectionRowItem.SelectedItem] = []) {
+    var color: NSColor? = nil {
+        didSet {
+            self.updateState?({ current in
+                var current = current
+                current.color = color
+                return current
+            })
+        }
+    }
+    
+    init(_ context: AccountContext, mode: Mode = .emoji, selectedItems: [EmojiesSectionRowItem.SelectedItem] = [], presentation: TelegramPresentationTheme? = nil, color: NSColor? = nil) {
         self.mode = mode
+        self.presentation = presentation
         self.selectedItems = selectedItems
+        self.color = color
         super.init(context)
         _frameRect = NSMakeRect(0, 0, 350, 300)
         self.bar = .init(height: 0)
@@ -1162,20 +1996,20 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
     }
     
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: presentation ?? theme)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         
+        onStage.set(true)
+        
+        genericView.presentation = self.presentation
         genericView.packsView.delegate = self
         
-        let searchInteractions = SearchInteractions({ [weak self] state, _ in
-            self?.updateSearchState(state)
-        }, { [weak self] state in
-            self?.updateSearchState(state)
-        })
-        
-        genericView.searchView.searchInteractions = searchInteractions
-        
+       
         
         let scrollToOnNextTransaction: Atomic<StickerPackCollectionInfo?> = Atomic(value: nil)
         let scrollToOnNextAppear: Atomic<StickerPackCollectionInfo?> = Atomic(value: nil)
@@ -1184,7 +2018,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let mode = self.mode
         let actionsDisposable = DisposableSet()
         
-        let initialState = State(sections: [], selectedItems: self.selectedItems)
+        let initialState = State(sections: [], itemsDict: [:], selectedItems: self.selectedItems, color: self.color)
         
         let statePromise = ValuePromise<State>(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1196,6 +2030,25 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             updateState(f)
         }
         
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
+            self?.updateSearchState(state)
+            updateState { current in
+                var current = current
+                current.selectedEmojiCategory = nil
+                return current
+            }
+        }, { [weak self] state in
+            self?.updateSearchState(state)
+            updateState { current in
+                var current = current
+                current.selectedEmojiCategory = nil
+                return current
+            }
+        })
+        
+        genericView.searchView.searchInteractions = searchInteractions
+        
+        
         self.scrollOnAppear = { [weak self] in
             if let info = scrollToOnNextAppear.swap(nil) {
                 self?.genericView.scroll(to: info, animated: false)
@@ -1204,7 +2057,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item, info, timeout, rect in
             switch mode {
-            case .emoji:
+            case .emoji, .stories:
                 if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
                         showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
@@ -1245,7 +2098,23 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             _ = signal.start()
         }, clearRecent: {
             _ = context.engine.stickers.clearRecentlyUsedReactions().start()
+        }, selectEmojiCategory: { [weak self] category in
+            updateState { current in
+                var current = current
+                current.selectedEmojiCategory = category
+                return current
+            }
+            let searchState: SearchState
+            if let category = category {
+                searchState = .init(state: .None, request: category.identifiers.joined(separator: ""))
+            } else {
+                searchState = .init(state: .None, request: nil)
+            }
+            self?.genericView.state = stateValue.with { $0 }
+            self?.updateSearchState(searchState)
         })
+        
+        genericView.arguments = arguments
         
         let selectUpdater = { [weak self] in
             if self?.genericView.tableView.clipView.isAnimateScrolling == true {
@@ -1268,7 +2137,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let search = self.searchValue.get() |> distinctUntilChanged(isEqual: { prev, new in
             return prev.request == new.request
-        }) |> mapToSignal { state -> Signal<[String]?, NoError> in
+        }) |> mapToThrottled { value in
+            return .single(value) |> delay(0.1, queue: .mainQueue())
+        } |> mapToSignal { state -> Signal<[String]?, NoError> in
             if state.request.isEmpty {
                 return .single(nil)
             } else {
@@ -1278,9 +2149,15 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let combined = statePromise.get()
         
-        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnResourceQueue |> map { state in
+        let presentation = self.presentation
+        
+        let takePresentation:()->TelegramPresentationTheme = {
+            return presentation ?? theme
+        }
+        
+        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnPrepareQueue |> map { state in
             let sections = InputDataSignalValue(entries: entries(state, arguments: arguments))
-            let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
+            let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments, presentation: takePresentation()))
             return (sections: sections, packs: packs, state: state)
         }
         
@@ -1290,7 +2167,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
 
         let initialSize = self.atomicSize
         
-        let onMainQueue: Atomic<Bool> = Atomic(value: false)
+        let onMainQueue: Atomic<Bool> = Atomic(value: true)
         
         let inputArguments = InputDataArguments(select: { _, _ in
             
@@ -1299,26 +2176,27 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         })
         
         let transition: Signal<(sections: TableUpdateTransition, packs: TableUpdateTransition, state: State), NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, signal) |> mapToQueue { appearance, state in
-            let sectionEntries = state.sections.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            let packEntries = state.packs.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let sectionEntries = state.sections.entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            let packEntries = state.packs.entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
 
             let onMain = onMainQueue.swap(false)
             
             
+            let initialSize = initialSize.modify { $0 }
             
-            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: state.sections.animated, searchState: state.sections.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: onMain)
+            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true, makeFirstFast: true)
             
             
-            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: state.packs.animated, searchState: state.packs.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: onMain)
+            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true, makeFirstFast: true)
 
             return combineLatest(sectionsTransition, packsTransition) |> map { values in
                 return (sections: values.0, packs: values.1, state: state.state)
             }
             
         } |> deliverOnMainQueue
-        
+                        
         disposable.set(transition.start(next: { [weak self] values in
-            self?.genericView.update(sections: values.sections, packs: values.packs, mode: mode)
+            self?.genericView.update(sections: values.sections, packs: values.packs, state: values.state, context: context, arguments: arguments, mode: mode)
             
             selectUpdater()
 
@@ -1349,20 +2227,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
 
         }
         
-        /*
-         public static let CloudRecentStatusEmoji: Int32 = 17
-         public static let CloudFeaturedStatusEmoji: Int32 = 18
-
-         */
-        
-        var orderedItemListCollectionIds: [Int32] = []
         var iconStatusEmoji: Signal<[TelegramMediaFile], NoError> = .single([])
 
-
         if mode == .status {
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudFeaturedStatusEmoji)
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentStatusEmoji)
-            
             
             iconStatusEmoji = context.engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false)
             |> map { result -> [TelegramMediaFile] in
@@ -1374,18 +2241,33 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
             }
             |> take(1)
-
-            
-        } else if mode == .reactions {
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
-        } else if mode == .forumTopic {
-            
+        } else if mode == .channelStatus {
+            iconStatusEmoji = context.engine.stickers.loadedStickerPack(reference: .iconChannelStatusEmoji, forceActualized: false)
+            |> map { result -> [TelegramMediaFile] in
+                switch result {
+                case let .result(_, items, _):
+                    return items.map(\.file)
+                default:
+                    return []
+                }
+            }
+            |> take(1)
         }
-
         
  
-        let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+        let emojies: Signal<ItemCollectionsView, NoError>
+        switch mode {
+        case .reactions, .quickReaction, .defaultTags:
+            emojies = context.diceCache.emojies_reactions_small |> take(1) |> then(context.diceCache.emojies_reactions |> delay(1.0, queue: prepareQueue))
+        case .status:
+            emojies = context.diceCache.emojies_status_small |> take(1) |> then(context.diceCache.emojies_status |> delay(1.0, queue: prepareQueue))
+        case .backgroundIcon:
+            emojies = context.diceCache.background_icons_small |> take(1) |> then(context.diceCache.background_icons |> delay(1.0, queue: prepareQueue))
+        case .channelStatus:
+            emojies = context.diceCache.channel_statuses_small |> take(1) |> then(context.diceCache.channel_statuses |> delay(1.0, queue: prepareQueue))
+        default:
+            emojies = context.diceCache.emojies_small |> take(1) |> then(context.diceCache.emojies |> delay(1.0, queue: prepareQueue))
+        }
         
         
         let forumTopic: Signal<[StickerPackItem], NoError>
@@ -1401,10 +2283,19 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         } else {
             forumTopic = .single([])
         }
-
+        
+        let searchCategories: Signal<EmojiSearchCategories?, NoError>
+        if mode == .emoji || mode == .reactions || mode == .quickReaction || mode == .stories || mode == .messageEffects {
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
+        } else if mode == .status {
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .status)
+        } else if mode == .selectAvatar {
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .avatar)
+        } else {
+            searchCategories = .single(nil)
+        }
         
         let reactions = context.reactions.stateValue
-        
         let reactionSettings = context.account.postbox.preferencesView(keys: [PreferencesKeys.reactionSettings])
            |> map { preferencesView -> ReactionSettings in
                let reactionSettings: ReactionSettings
@@ -1416,116 +2307,291 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                return reactionSettings
            }
         
+        let peer = getPeerView(peerId: context.peerId, postbox: context.account.postbox)
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic in
-            
-            
-            var featuredStatusEmoji: OrderedItemListView?
-            var recentStatusEmoji: OrderedItemListView?
-            var recentReactionsView: OrderedItemListView?
-            var topReactionsView: OrderedItemListView?
-            for orderedView in view.orderedItemListsViews {
-                if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
-                    featuredStatusEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentStatusEmoji {
-                    recentStatusEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
-                    recentReactionsView = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
-                    topReactionsView = orderedView
-                }
-            }
-            var recentStatusItems:[RecentMediaItem] = []
-            var featuredStatusItems:[RecentMediaItem] = []
-            var recentReactionsItems:[RecentReactionItem] = []
-            var topReactionsItems:[RecentReactionItem] = []
+        let featured: Signal<[FeaturedStickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks() |> map {
+            Array($0.prefix(5))
+        } |> take(1) |> then(context.account.viewTracker.featuredEmojiPacks() |> delay(1.0, queue: prepareQueue))
+        
 
-            if let recentStatusEmoji = recentStatusEmoji {
-                for item in recentStatusEmoji.items {
-                    guard let item = item.contents.get(RecentMediaItem.self) else {
-                        continue
-                    }
-                    recentStatusItems.append(item)
-                }
-            }
-            if let featuredStatusEmoji = featuredStatusEmoji {
-                for item in featuredStatusEmoji.items {
-                    guard let item = item.contents.get(RecentMediaItem.self) else {
-                        continue
-                    }
-                    featuredStatusItems.append(item)
-                }
-            }
-            if let recentReactionsView = recentReactionsView {
-                for item in recentReactionsView.items {
-                    guard let item = item.contents.get(RecentReactionItem.self) else {
-                        continue
-                    }
-                    recentReactionsItems.append(item)
-                }
-            }
-            if let topReactionsView = topReactionsView {
-                for item in topReactionsView.items {
-                    guard let item = item.contents.get(RecentReactionItem.self) else {
-                        continue
-                    }
-                    topReactionsItems.append(item)
-                }
-            }
-            
-
-            
-            updateState { current in
-                var current = current
-                var sections: [State.Section] = []
-                for (_, info, _) in view.collectionInfos {
-                    var files: [StickerPackItem] = []
-                    var dict: [MediaId: StickerPackItem] = [:]
+        switch mode {
+        case .messageEffects:
+            let messageEffects = context.engine.stickers.availableMessageEffects()
+            actionsDisposable.add(combineLatest(queue: prepareQueue, messageEffects, search, searchCategories).startStrict(next: { messageEffects, search, searchCategories in
+                updateState { current in
+                    var current = current
+                    current.messageEffects = messageEffects?.messageEffects ?? []
+                    current.searchCategories = searchCategories
+                    var sections: [State.Section] = []
                     
-                    if let info = info as? StickerPackCollectionInfo {
-                        let items = view.entries
-                        for (i, entry) in items.enumerated() {
-                            if entry.index.collectionId == info.id {
-                                if let item = view.entries[i].item as? StickerPackItem {
-                                    files.append(item)
-                                    dict[item.file.fileId] = item
-                                }
+                   
+                    let emojiItems: [StickerPackItem] = current.messageEffects.filter({ value in
+                        if value.effectAnimation != nil {
+                            if let search {
+                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                return search.contains(emoji)
+                            } else {
+                                return true
                             }
                         }
-                        if !files.isEmpty {
-                            sections.append(.init(info: info, items: files, dict: dict, installed: true))
+                        return false
+                    }).map {
+                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
+                    }
+                    
+                    let stickerItems: [StickerPackItem] = current.messageEffects.filter({ value in
+                        if value.effectAnimation == nil {
+                            if let search {
+                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                return search.contains(emoji)
+                            } else {
+                                return true
+                            }
+                        }
+                        return false
+                    }).map {
+                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
+                    }
+                    
+                    
+                    
+                    var stickerDict: [MediaId : StickerPackItem] = [:]
+                    for item in stickerItems {
+                        stickerDict[item.file.fileId] = item
+                    }
+                    
+                    var emojiDict: [MediaId : StickerPackItem] = [:]
+                    for item in emojiItems {
+                        emojiDict[item.file.fileId] = item
+                    }
+                    
+                    if !emojiItems.isEmpty {
+                        sections.append(.init(info: .init(id: .init(namespace: 0, id: 0), flags: .init(), accessHash: 0, title: "", shortName: "", thumbnail: nil, thumbnailFileId: nil, immediateThumbnailData: nil, hash: 0, count: 0), items: emojiItems, dict: emojiDict, installed: true))
+                    }
+                    
+                    
+                    if !stickerItems.isEmpty {
+                        sections.append(.init(info: .init(id: .init(namespace: 0, id: 1), flags: .init(), accessHash: 0, title: strings().emojiesMessageEffectsTitle, shortName: "", thumbnail: nil, thumbnailFileId: nil, immediateThumbnailData: nil, hash: 0, count: 0), items: stickerItems, dict: stickerDict, installed: true, isBig: true))
+                    }
+                    current.search = search
+                    current.sections = sections
+                    
+                    if search != nil {
+                        var bp = 0
+                        bp += 1
+                    }
+                    return current
+                }
+                DispatchQueue.main.async {
+                    updateSearchCommand()
+                }
+            }))
+        default:
+            let signal = combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, context.reactions.stateValue, onStage.get()) |> filter { $0.12 }
+            actionsDisposable.add(signal.start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, groupEmojiPack, forumTopic, searchCategories, availableReactions, _ in
+                
+                            
+                var featuredStatusEmoji: OrderedItemListView?
+                var recentStatusEmoji: OrderedItemListView?
+                var recentReactionsView: OrderedItemListView?
+                var topReactionsView: OrderedItemListView?
+                var featuredBackgroundIconEmoji: OrderedItemListView?
+                var featuredChannelStatusEmoji: OrderedItemListView?
+                var defaultTagReactions: OrderedItemListView?
+
+                for orderedView in view.orderedItemListsViews {
+                    if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
+                        featuredStatusEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentStatusEmoji {
+                        recentStatusEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
+                        recentReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
+                        topReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji {
+                        featuredBackgroundIconEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji {
+                        featuredChannelStatusEmoji = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
+                        defaultTagReactions = orderedView
+                    }
+                }
+                var recentStatusItems:[RecentMediaItem] = []
+                var featuredStatusItems:[RecentMediaItem] = []
+                var recentReactionsItems:[RecentReactionItem] = []
+                var topReactionsItems:[RecentReactionItem] = []
+                var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
+                var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
+                var defaultTagReactionsItems: [RecentReactionItem] = []
+                
+                if let recentStatusEmoji = recentStatusEmoji {
+                    for item in recentStatusEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        recentStatusItems.append(item)
+                    }
+                }
+                if let featuredStatusEmoji = featuredStatusEmoji {
+                    for item in featuredStatusEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        featuredStatusItems.append(item)
+                    }
+                }
+                if let featuredBackgroundIconEmoji = featuredBackgroundIconEmoji {
+                    for item in featuredBackgroundIconEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        featuredBackgroundIconEmojiItems.append(item)
+                    }
+                }
+                if let featuredChannelStatusEmoji = featuredChannelStatusEmoji {
+                    for item in featuredChannelStatusEmoji.items {
+                        guard let item = item.contents.get(RecentMediaItem.self) else {
+                            continue
+                        }
+                        featuredChannelStatusEmojiItems.append(item)
+                    }
+                }
+                
+                
+                if let recentReactionsView = recentReactionsView {
+                    for item in recentReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        recentReactionsItems.append(item)
+                    }
+                }
+                if let topReactionsView = topReactionsView {
+                    for item in topReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        topReactionsItems.append(item)
+                    }
+                }
+                if let defaultTagReactions = defaultTagReactions {
+                    for item in defaultTagReactions.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        defaultTagReactionsItems.append(item)
+                    }
+                }
+                
+                updateState { current in
+                    var current = current
+                    var sections: [State.Section] = []
+                    var itemsDict: [MediaId: StickerPackItem] = [:]
+                    
+                    if let groupEmojiPack = groupEmojiPack {
+                        var files: [StickerPackItem] = []
+                        var dict: [MediaId: StickerPackItem] = [:]
+                        for item in groupEmojiPack.1 {
+                            var updated = item
+                            var attrs = item.file.attributes
+                            loop: for (i, attr) in attrs.enumerated() {
+                                switch attr {
+                                case let .CustomEmoji(isPremium, isSingleColor, alt, packReference):
+                                    attrs[i] = .CustomEmoji(isPremium: false, isSingleColor: isSingleColor, alt: alt, packReference: packReference)
+                                    break loop;
+                                default:
+                                    break
+                                }
+                            }
+                            updated = StickerPackItem(index: updated.index, file: item.file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
+                            files.append(updated)
+                            dict[item.file.fileId] = updated
+                            itemsDict[item.file.fileId] = updated
+                        }
+                        sections.append(.init(info: groupEmojiPack.0, items: files, dict: dict, installed: true, groupEmojiPack: true))
+                    }
+                    for (_, info, _) in view.collectionInfos {
+                        var files: [StickerPackItem] = []
+                        var dict: [MediaId: StickerPackItem] = [:]
+                        
+                        if let info = info as? StickerPackCollectionInfo, !sections.contains(where: { $0.info.id == info.id }) {
+                            let items = view.entries
+                            for (i, entry) in items.enumerated() {
+                                if entry.index.collectionId == info.id {
+                                    if let item = view.entries[i].item as? StickerPackItem {
+                                        var pass: Bool = true
+                                        if case .backgroundIcon = mode {
+                                            pass = item.file.isCustomTemplateEmoji
+                                        }
+                                        if pass {
+                                            files.append(item)
+                                            dict[item.file.fileId] = item
+                                            itemsDict[item.file.fileId] = item
+                                        }
+                                    }
+                                }
+                            }
+                            if !files.isEmpty {
+                                sections.append(.init(info: info, items: files, dict: dict, installed: true))
+                            }
                         }
                     }
-                }
-                for item in featured {
-                    let contains = sections.contains(where: { $0.info.id == item.info.id })
-                    if !contains {
-                        let dict = item.topItems.toDictionary(with: {
-                            $0.file.fileId
-                        })
-                        sections.append(.init(info: item.info, items: item.topItems, dict: dict, installed: false))
+                   
+                   
+                    for item in featured {
+                        let contains = sections.contains(where: { $0.info.id == item.info.id })
+                        if !contains {
+                            let dict = item.topItems.toDictionary(with: {
+                                $0.file.fileId
+                            }).filter { _, value in
+                                if mode == .backgroundIcon {
+                                    return value.file.isCustomTemplateEmoji
+                                } else {
+                                    return true
+                                }
+                            }
+                            let items = item.topItems.filter({ value in
+                                if mode == .backgroundIcon {
+                                    return value.file.isCustomTemplateEmoji
+                                } else {
+                                    return true
+                                }
+                            })
+                            if !items.isEmpty {
+                                sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
+                            }
+                        }
                     }
+                    
+                    if let peer = peer {
+                        current.peer = .init(peer)
+                    }
+                    current.featuredStatusItems = featuredStatusItems
+                    current.recentStatusItems = recentStatusItems
+                    current.forumTopicItems = forumTopic
+                    current.sections = sections
+                    current.itemsDict = itemsDict
+                    current.search = search
+                    current.reactions = reactions
+                    current.recent = recentEmoji
+                    current.topReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : topReactionsItems
+                    current.recentReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : recentReactionsItems
+                    current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
+                    current.featuredChannelStatusEmojiItems = featuredChannelStatusEmojiItems
+                    current.reactionSettings = reactionSettings
+                    current.iconStatusEmoji = iconStatusEmoji
+                    current.searchCategories = searchCategories
+                    current.availableReactions = availableReactions
+                    return current
                 }
-                if let peer = peerView.peers[peerView.peerId] {
-                    current.peer = .init(peer)
+                DispatchQueue.main.async {
+                    updateSearchCommand()
                 }
-                current.featuredStatusItems = featuredStatusItems
-                current.recentStatusItems = recentStatusItems
-                current.forumTopicItems = forumTopic
-                current.sections = sections
-                current.search = search
-                current.reactions = reactions
-                current.recent = recentEmoji
-                current.topReactionsItems = topReactionsItems
-                current.recentReactionsItems = recentReactionsItems
-                current.reactionSettings = reactionSettings
-                current.iconStatusEmoji = iconStatusEmoji
-                return current
-            }
-            DispatchQueue.main.async {
-                updateSearchCommand()
-            }
-        }))
+            }))
+            
+
+        }
+        
         
 
             
@@ -1540,11 +2606,45 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.scrollOnAppear?()
+        onStage.set(true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        onStage.set(false)
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        let context = chatInteraction.context
+        
+        if mode == .emoji || mode == .stories {
+            if let peer = chatInteraction.peer, peer.isSupergroup {
+                let emojiPack = getCachedDataView(peerId: peer.id, postbox: context.account.postbox) |> map { $0 as? CachedChannelData } |> map { $0?.emojiPack }
+                groupEmojiPack = emojiPack |> mapToSignal { info in
+                    if let info = info {
+                        return context.engine.stickers.loadedStickerPack(reference: .id(id: info.id.id, accessHash: info.accessHash), forceActualized: false)
+                        |> map { result in
+                            switch result {
+                            case let .result(info, items, _):
+                                return (info, items)
+                            default:
+                                return nil
+                            }
+                        }
+                        |> take(1)
+                    } else {
+                        return .single(nil)
+                    }
+                    
+                }
+            } else {
+                groupEmojiPack = .single(nil)
+            }
+        } else {
+            groupEmojiPack = .single(nil)
+        }
     }
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
@@ -1594,12 +2694,53 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             return current
         }
     }
+    func setSelectedItems(_ selectedItems: [EmojiesSectionRowItem.SelectedItem]) {
+        updateState? { current in
+            var current = current
+            current.selectedItems = selectedItems
+            return current
+        }
+    }
     
     override func scrollup(force: Bool = false) {
+        
+        self.updateState? { current in
+            var current = current
+            if current.selectedEmojiCategory != nil {
+                current.selectedEmojiCategory = nil
+            }
+            return current
+        }
+        self.makeSearchCommand?(.close)
+
         genericView.tableView.scroll(to: .up(true))
     }
     
+    override func escapeKeyAction() -> KeyHandlerResult {
+        var cancelled: Bool = false
+        self.updateState? { current in
+            var current = current
+            if current.selectedEmojiCategory != nil {
+                cancelled = true
+                current.selectedEmojiCategory = nil
+            }
+            return current
+        }
+        if searchState.state == .Focus {
+            cancelled = true
+        }
+        if cancelled {
+            self.updateSearchState(.init(state: .None, request: nil))
+            return .invoked
+        } else {
+            return super.escapeKeyAction()
+        }
+    }
+    
     override var supportSwipes: Bool {
+        if let categories = genericView.categories, categories._mouseInside() || genericView.searchContainer._mouseInside() {
+            return false
+        }
         return !genericView.packsView._mouseInside()
     }
 }

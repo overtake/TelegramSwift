@@ -10,6 +10,47 @@ import Cocoa
 import SwiftSignalKit
 import KeyboardKey
 
+public class AppWindow : Window {
+    
+    public enum ButtonPoint {
+        case app
+        case system
+        
+        var point: NSPoint {
+            switch self {
+            case .app:
+                return NSMakePoint(20, 5)
+            case .system:
+                return NSMakePoint(9, 15)
+            }
+        }
+    }
+    
+    
+    
+    public var initialButtonPoint: ButtonPoint = .app {
+        didSet {
+            updateButtons()
+        }
+    }
+    private func updateButtons() {
+//        if !isFullScreen {
+//            var point: NSPoint = initialButtonPoint.point
+//            self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
+//            point.x += 20
+//            self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
+//            point.x += 20
+//            self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+//        }
+    }
+    
+    public override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+      //  toolbar?.isVisible = !isFullScreen
+        //updateButtons()
+    }
+}
+
 public class ObervableView: NSView {
     private var listeners:[WeakReference<NSObject>] = []
 
@@ -270,12 +311,14 @@ open class Window: NSWindow {
     private var swipeHandlers:[SwipeIdentifier: SwipeHandler] = [:]
     private var swipeState:[SwipeIdentifier: SwipeDirection] = [:]
     public var keyUpHandler:((NSEvent)->Void)?
-    private var responsders:[ResponderObserver] = []
+    private var responders:[ResponderObserver] = []
     private var mouseHandlers:[UInt:[MouseObserver]] = [:]
     private var swipePoints:[NSPoint] = []
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
+    public  var pastehandler:(()->Void)? = nil
+
     public  var masterCopyhandler:(()->Void)? = nil
 
     public var closeInterceptor:(()->Bool)? = nil
@@ -289,6 +332,10 @@ open class Window: NSWindow {
     private let visibleObserver: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
 
     public var acceptFirstMouse: Bool = true
+    
+    public static var controlsInset: CGFloat {
+        return 70
+    }
 
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     public var keyWindowUpdater: Signal<Bool, NoError> {
@@ -316,17 +363,17 @@ open class Window: NSWindow {
     }
     
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
-        responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow]))
+        responders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow, .Space]))
     }
     
     public func removeObserver(for object:NSObject) {
         var copy:[ResponderObserver] = []
-        for observer in responsders {
+        for observer in responders {
             copy.append(observer)
         }
         for i in stride(from: copy.count - 1, to: -1, by: -1) {
             if copy[i].object.value == object || copy[i].object.value == nil  {
-                responsders.remove(at: i)
+                responders.remove(at: i)
             }
         }
     }
@@ -393,7 +440,7 @@ open class Window: NSWindow {
         self.swipeHandlers = self.swipeHandlers.filter { key, value in
             return value.object.value !== object && value.object.value != nil
         }
-        self.responsders = responsders.filter {
+        self.responders = responders.filter {
             $0.object.value !== object
         }
     }
@@ -485,13 +532,17 @@ open class Window: NSWindow {
     
     
     public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
-        let sorted = responsders.sorted(by: >)
-        if let event = event, event.modifierFlags.contains(.option)
+        let sorted = responders.sorted(by: >)
+        
+        if let event = event, event.modifierFlags.contains(.option) || event.modifierFlags.contains(.command)
          || event.modifierFlags.contains(.control) {
             return
         }
         for observer in sorted {
             if let event = event, let code = KeyboardKey(rawValue: event.keyCode), observer.ignoreKeys.contains(code) {
+                continue
+            }
+            if observer.object.value == nil {
                 continue
             }
             if let responder = observer.handler() {
@@ -508,8 +559,8 @@ open class Window: NSWindow {
                         responder.setCursorToEnd()
                     }
                 }
-                break
             }
+            break
         }
     }
 
@@ -528,26 +579,6 @@ open class Window: NSWindow {
         return self.isPushToTalkEquaivalent?(event) ?? super.performKeyEquivalent(with: event)
     }
     
-    @available(OSX 10.12.2, *)
-    open override func makeTouchBar() -> NSTouchBar? {
-        if !sheets.isEmpty {
-            for sheet in sheets.reversed() {
-                if let sheet = sheet as? Window {
-                    if hasModals(sheet) {
-                        return Modal.topModalController(self)?.makeTouchBar() ?? sheet.makeTouchBar()
-                    }
-                }
-                return sheet.makeTouchBar()
-            }
-        }
-        if let topModal = Modal.topModalController(self) {
-            if topModal.hasOwnTouchbar {
-                return topModal.makeTouchBar() ?? super.makeTouchBar()
-            }
-        }
-        return self.rootViewController?.makeTouchBar() ?? super.makeTouchBar()
-    }
-    
     open override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
         if let responder = responder, responder.responds(to: NSSelectorFromString("window")) {
             let window:NSWindow? = responder.value(forKey: "window") as? NSWindow
@@ -561,9 +592,7 @@ open class Window: NSWindow {
     open override func becomeFirstResponder() -> Bool {
         return false
     }
-    open override var accessibilityFocusedUIElement: Any? {
-        return nil
-    }
+   
 
     public func sendKeyEvent(_ key: KeyboardKey, modifierFlags: NSEvent.ModifierFlags) {
         guard let event = NSEvent.keyEvent(with: .keyDown, location: mouseLocationOutsideOfEventStream, modifierFlags: modifierFlags, timestamp: Date().timeIntervalSince1970, windowNumber: windowNumber, context: graphicsContext, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: key.rawValue) else {return}
@@ -600,6 +629,7 @@ open class Window: NSWindow {
             return
         }
         if isReleasedWhenClosed {
+            closeAllModals(window: self)
             super.close()
         } else {
             super.close()
@@ -704,11 +734,16 @@ open class Window: NSWindow {
     
     @objc public func pasteToFirstResponder(_ sender: Any) {
         
-        applyResponderIfNeeded()
-        
-        if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
-            firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+        if let pastehandler = pastehandler {
+            pastehandler()
+        } else {
+            applyResponderIfNeeded()
+            if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
+                firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+            }
         }
+        
+        
     }
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
@@ -737,6 +772,7 @@ open class Window: NSWindow {
         if event.type == .keyUp {
             self.keyUpHandler?(event)
         }
+        
         
         let eventType = event.type
         if sheets.isEmpty {
@@ -768,7 +804,7 @@ open class Window: NSWindow {
                 if let keyCode = KeyboardKey(rawValue:event.keyCode), let handlers = keyHandlers[keyCode]?.sorted(by: >) {
                     loop: for handle in handlers {
                         
-                        if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
+                        if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)), event.window?.isKeyWindow == true  {
                             
                             switch handle.handler(event) {
                             case .invoked:
@@ -947,7 +983,7 @@ open class Window: NSWindow {
     }
 
 
-    
+
     @objc open func windowDidBecomeKey() {
         isKeyWindowValue.set(true)
 
@@ -971,15 +1007,22 @@ open class Window: NSWindow {
     @objc func windowDidChangeOcclusionState() {
         occlusionStateValue.set(self.occlusionState)
     }
+    
+    open override func updateConstraintsIfNeeded() {
+        
+    }
+    
 
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
+        
+        
         
         self.acceptsMouseMovedEvents = true
         occlusionStateValue.set(self.occlusionState)
         isOpaque = true
         
-        self.contentView?.acceptsTouchEvents = true
+        self.contentView?.allowedTouchTypes = [.direct]
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         

@@ -16,6 +16,17 @@ import InAppSettings
 import TGUIKit
 import WebKit
 
+func clearUserDefaultsObject(forKeyPrefix prefix: String) {
+    let defaults = UserDefaults.standard
+    let keys = defaults.dictionaryRepresentation().keys
+    
+    for key in keys {
+        if key.hasPrefix(prefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+}
+
 enum SendingType :String {
     case enter = "enter"
     case cmdEnter = "cmdEnter"
@@ -141,6 +152,7 @@ class FastSettings {
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
     private static let kPlayingRate = "kPlayingRate2"
+    private static let kPlayingMusicRate = "kPlayingMusicRate"
     private static let kPlayingVideoRate = "kPlayingVideoRate"
 
     private static let kSVCShareMicro = "kSVCShareMicro"
@@ -163,7 +175,10 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
-    
+    private static let kStoryMuted = "kStoryMuted"
+    private static let kStoryHD = "kStoryHD"
+
+
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -218,6 +233,53 @@ class FastSettings {
             return false
         }
     }
+    
+    static func allowBotAccessToBiometric(peerId: PeerId, accountId: PeerId) {
+        FastSettings.setBotAccessToBiometricRequested(peerId: peerId, accountId: accountId)
+        UserDefaults.standard.setValue(true, forKey: "_biometric_bot_\(peerId.toInt64())_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func disallowBotAccessToBiometric(peerId: PeerId, accountId: PeerId) {
+        FastSettings.setBotAccessToBiometricRequested(peerId: peerId, accountId: accountId)
+        UserDefaults.standard.setValue(false, forKey: "_biometric_bot_\(peerId.toInt64())_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func botAccessToBiometric(peerId: PeerId, accountId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "_biometric_bot_\(peerId.toInt64())_\(accountId.toInt64())") as? Bool
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    
+    static func setBotAccessToBiometricRequested(peerId: PeerId, accountId: PeerId) {
+        UserDefaults.standard.setValue(true, forKey: "_biometric_bot_\(peerId.toInt64())_requested_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func botAccessToBiometricRequested(peerId: PeerId, accountId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "_biometric_bot_\(peerId.toInt64())_requested_\(accountId.toInt64())") as? Bool
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    static func botBiometricTokenIsSaved(peerId: PeerId, accountId: PeerId, value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: "_biometric_bot_\(peerId.toInt64())_token_saved_\(accountId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    static func botBiometricRequestedTokenSaved(peerId: PeerId, accountId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "_biometric_bot_\(peerId.toInt64())_token_saved_\(accountId.toInt64())") as? Bool
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    
+    
+    
     @available(macOS 12.0, *)
     static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
         UserDefaults.standard.setValue(true, forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())")
@@ -226,15 +288,35 @@ class FastSettings {
     
         
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
+        let double = UserDefaults.standard.double(forKey: kPlayingRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
     }
     
     static func setPlayingRate(_ rate: Double) {
         UserDefaults.standard.set(rate, forKey: kPlayingRate)
     }
     
+    static var playingMusicRate: Double {
+        let double = UserDefaults.standard.double(forKey: kPlayingMusicRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
+    }
+    
+    static func setPlayingMusicRate(_ rate: Double) {
+        UserDefaults.standard.set(rate, forKey: kPlayingMusicRate)
+    }
+    
     static var playingVideoRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 1), 2.0)
+        let double = UserDefaults.standard.double(forKey: kPlayingVideoRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
     }
     
     static func setPlayingVideoRate(_ rate: Double) {
@@ -261,6 +343,16 @@ class FastSettings {
             UserDefaults.standard.set(newValue, forKey: kIsMinimisizeType)
         }
     }
+    static var canViewPeerId: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "kCanViewPeerId")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "kCanViewPeerId")
+        }
+    }
+    
+    
     
     static var sidebarEnabled:Bool {
         return UserDefaults.standard.bool(forKey: kSidebarType)
@@ -325,7 +417,20 @@ class FastSettings {
         UserDefaults.standard.setValue(value, forKey: kShowEmptyTips)
     }
     
-    
+    static func systemUnsupported(_ time: Int32?) -> Bool {
+        if #available(macOS 10.13, *) {
+            return false
+        } else {
+            if let time = time {
+                return time < Int(Date().timeIntervalSince1970)
+            } else {
+                return true
+            }
+        }
+    }
+    static func hideUnsupported() {
+        UserDefaults.standard.setValue(Int(Date().timeIntervalSince1970) + 7 * 24 * 60 * 60, forKey: "unsupported")
+    }
     
     
     static func toggleRecordingState() {
@@ -448,10 +553,10 @@ class FastSettings {
         return !UserDefaults.standard.bool(forKey: kAutomaticallyPlayGifs)
     }
     
-    static var archiveStatus: HiddenArchiveStatus {
+    static var archiveStatus: ItemHideStatus {
         get {
             let value = UserDefaults.standard.integer(forKey: kArchiveIsHidden)
-            return HiddenArchiveStatus(rawValue: min(value, 3))!
+            return ItemHideStatus(rawValue: min(value, 3))!
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: kArchiveIsHidden)
@@ -484,6 +589,41 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static var storyIsMuted: Bool {
+        get {
+            return UserDefaults.standard.value(forKey: kStoryMuted) as? Bool ?? false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kStoryMuted)
+        }
+    }
+    
+    
+    private static let kDefaultScreenShareKey = "kDefaultScreenShare"
+    private static let kDefaultVideoShare = "kDefaultVideoShare"
+    static func defaultScreenShare() -> String? {
+        return UserDefaults.standard.value(forKey: kDefaultScreenShareKey) as? String
+    }
+    static func setDefaultScreenShare(_ uniqueId: String?) -> Void {
+        if let uniqueId = uniqueId {
+            UserDefaults.standard.set(uniqueId, forKey: kDefaultScreenShareKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: kDefaultScreenShareKey)
+        }
+        UserDefaults.standard.synchronize()
+    }
+    static func defaultVideoShare() -> String? {
+        return UserDefaults.standard.value(forKey: kDefaultVideoShare) as? String
+    }
+    static func setDefaultVideoShare(_ uniqueId: String?) -> Void {
+        if let uniqueId = uniqueId {
+            UserDefaults.standard.set(uniqueId, forKey: kDefaultVideoShare)
+        } else {
+            UserDefaults.standard.removeObject(forKey: kDefaultVideoShare)
+        }
+        UserDefaults.standard.synchronize()
+    }
+    
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)
         let path = paths.first
@@ -495,18 +635,11 @@ class FastSettings {
                 
         let localizedHeader = _NSLocalizedString("Confirm.Header.\(permission.rawValue)")
         let localizedDesc = _NSLocalizedString("Confirm.Desc.\(permission.rawValue)")
-        confirm(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
+        verifyAlert_button(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
             success()
         })
     }
     
-    static func diceHasAlreadyPlayed(_ message: Message) -> Bool {
-        return UserDefaults.standard.bool(forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
-    }
-    static func markDiceAsPlayed(_ message: Message) {
-        UserDefaults.standard.set(true, forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
-        UserDefaults.standard.synchronize()
-    }
     
     static func updateLeftColumnWidth(_ width: CGFloat) {
         UserDefaults.standard.set(round(width), forKey: kLeftColumnWidth)
@@ -557,61 +690,73 @@ class FastSettings {
     }
     
     
+    static var premiumPerks:[String] {
+        let perks = [PremiumValue.stories.rawValue,
+                     PremiumValue.wallpapers.rawValue,
+                     PremiumValue.peer_colors.rawValue,
+                     PremiumValue.saved_tags.rawValue,
+                     PremiumValue.last_seen.rawValue,
+                     PremiumValue.message_privacy.rawValue,
+                     PremiumValue.business.rawValue,
+                     PremiumValue.folder_tags.rawValue,
+                     PremiumValue.business_intro.rawValue,
+                     PremiumValue.business_bots.rawValue,
+                     PremiumValue.business_links.rawValue]
+        let dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
+        return perks.filter { !dismissedPerks.contains($0) }
+    }
+    static func dismissPremiumPerk(_ string: String) {
+        var dismissedPerks = UserDefaults.standard.value(forKey: "dismissedPerks") as? [String] ?? []
+        dismissedPerks.append(string)
+        UserDefaults.standard.setValue(dismissedPerks, forKey: "dismissedPerks")
+    }
     
-    /*
- 
-     +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {
-     
-     static NSMutableDictionary *denied;
-     
-     static dispatch_once_t onceToken;
-     dispatch_once(&onceToken, ^{
-     denied =  [NSMutableDictionary dictionary];
-     });
-     
-     
-     
-     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-     
-     NSString *key = [NSString stringWithFormat:@"%@:%d",permissionKey,peer_id];
-     
-     BOOL access = [defaults boolForKey:key];
-     
-     
-     if(access) {
-     if(handler)
-     handler(access);
-     } else {
-     
-     if([denied[key] boolValue]) {
-     if(handler)
-     handler(NO);
-     return;
-     }
-     
-     NSString *localizeHeaderKey = [NSString stringWithFormat:@"Confirm.Header.%@",permissionKey];
-     NSString *localizeDescKey = [NSString stringWithFormat:@"Confirm.Desc.%@",permissionKey];
-     confirm(NSLocalizedString(localizeHeaderKey, nil), NSLocalizedString(localizeDescKey, nil), ^{
-     if(handler)
-     handler(YES);
-     
-     [defaults setBool:YES forKey:key];
-     [defaults synchronize];
-     }, ^{
-     if(handler)
-     handler(NO);
-     
-     [denied setValue:@(YES) forKey:key];
-     
-     [defaults setBool:NO forKey:key];
-     [defaults synchronize];
-     });
-     }
-     
-     }
+    static func getUUID(_ id: Int64) -> UUID? {
+        let stored = UserDefaults.standard.string(forKey: "_uuid_\(id)")
+        if let stored = stored {
+            return .init(uuidString: stored)
+        } else {
+            let uuid: UUID = UUID()
+            UserDefaults.standard.setValue(uuid.uuidString, forKey: "_uuid_\(id)")
+            return uuid
+        }
+    }
+    
+    static func defaultUUID() -> UUID? {
+        let stored = UserDefaults.standard.string(forKey: "_uuid_default")
+        if let stored = stored {
+            return .init(uuidString: stored)
+        } else {
+            let uuid: UUID = UUID()
+            UserDefaults.standard.setValue(uuid.uuidString, forKey: "_uuid_default")
+            return uuid
+        }
+    }
+    
+    static func isDefaultAccount(_ id: Int64) -> Bool {
+        let accountId = UserDefaults.standard.value(forKey: "_default_account_id")
+        
+        if let accountId = accountId as? Int64 {
+            return accountId == id
+        } else {
+            UserDefaults.standard.setValue(id, forKey: "_default_account_id")
+            return true
+        }
 
- */
+    }
     
+    static func clear_uuid(_ id: Int64) {
+        if #available(macOS 14.0, *) {
+            if let uuid = FastSettings.getUUID(id) {
+//                autoreleasepool {
+//                    let configuration = WKWebViewConfiguration()
+//                    configuration.websiteDataStore = WKWebsiteDataStore(forIdentifier: uuid)
+//                }
+//                WKWebsiteDataStore.remove(forIdentifier: uuid, completionHandler: { _ in
+//                })
+            }
+        }
+    }
 }
 
 fileprivate let TelegramFileMediaBoxPath:String = "TelegramFileMediaBoxPathAttributeKey"
@@ -663,6 +808,13 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
         }
         
         try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+
+        let quarantineData = "does not really matter what is here".cString(using: String.Encoding.utf8)!
+        let quarantineDataLength = Int(strlen(quarantineData))
+        
+//        setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
+        
+        //removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
         
         let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
         
@@ -720,13 +872,14 @@ func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
             } else {
-                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
-                    if let folder = FastSettings.downloadsFolder {
-                        let ext = ext == "*" || ext == nil ? "file" : ext!
-                        return .single((data.path, "\(folder)/\(fileName).\( ext )"))
-                    }
-                    return .single(nil)
-                }
+                return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension)"))
+//                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
+//                    if let folder = FastSettings.downloadsFolder {
+//                        let ext = ext == "*" || ext == nil ? "file" : ext!
+//                        return .single((data.path, "\(folder)/\(fileName).\( ext )"))
+//                    }
+//                    return .single(nil)
+//                }
             }
         } else {
             return .single(nil)
@@ -760,7 +913,7 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
 func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     let path = downloadFilePath(file, account.postbox) |> deliverOnMainQueue
     
-    _ = combineLatest(path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
+    _ = combineLatest(queue: .mainQueue(), path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
         
         guard let (boxPath, adopted) = expanded else {
             return
@@ -788,6 +941,14 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
            
+                let quarantineData = "does not really matter what is here".cString(using: String.Encoding.utf8)!
+                let quarantineDataLength = Int(strlen(quarantineData))
+                
+//                setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
+
+                    // removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
+
+                
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)

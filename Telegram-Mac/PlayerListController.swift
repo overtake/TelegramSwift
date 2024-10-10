@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 import RangeSet
@@ -583,19 +583,20 @@ final class PlayerListView : View, APDelegate {
 }
 
 
-class PlayerListController: TelegramGenericViewController<PlayerListView> {
+class PlayerListController: ModalViewController {
     private let audioPlayer: InlineAudioPlayerView
     private let chatInteraction: ChatInteraction
     private let disposable = MetaDisposable()
     private let messageIndex: MessageIndex
     private let messages: [Message]
+    private let context: AccountContext
     init(audioPlayer: InlineAudioPlayerView, context: AccountContext, currentContext: AccountContext, messageIndex: MessageIndex, messages: [Message] = []) {
         self.chatInteraction = ChatInteraction(chatLocation: .peer(messageIndex.id.peerId), context: context)
         self.messageIndex = messageIndex
         self.audioPlayer = audioPlayer
-        
+        self.context = context
         self.messages = messages
-        super.init(context)
+        super.init(frame: NSMakeRect(0, 0, 300, 400))
         
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
@@ -603,6 +604,14 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
             self?.audioPlayer.update(with: object)
             self?.genericView.setController(controller)
         }
+    }
+    
+    var genericView: PlayerListView {
+        return self.view as! PlayerListView
+    }
+    
+    override func viewClass() -> AnyClass {
+        return PlayerListView.self
     }
     
     var tableView: TableView {
@@ -644,7 +653,7 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
                 
                 guard let `self` = self else {return .complete()}
                 
-                return chatHistoryViewForLocation(location, context: self.chatInteraction.context, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: [], chatLocationInput: chatLocationInput) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
+                return chatHistoryViewForLocation(location, context: self.chatInteraction.context, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tag: .tag(.music), additionalData: [], chatLocationInput: chatLocationInput) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
                     switch view {
                     case .Loading:
                         return .single((PeerMediaUpdate(), nil))
@@ -677,7 +686,7 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
         
         
         let arguments = PlayerListArguments(chatInteraction: chatInteraction, music: { message, _ in
-            context.audioPlayer?.playOrPause(message.id)
+            context.sharedContext.getAudioPlayer()?.playOrPause(message.id)
         })
         
         let historyViewTransition: Signal<TableUpdateTransition, NoError>
@@ -707,7 +716,6 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
             guard let `self` = self else {return}
             self.tableView.merge(with: transition)
             if !self.didSetReady, !self.tableView.isEmpty {
-                self.view.setFrameSize(300, min(self.tableView.listHeight + 140, 325))
                 self.tableView.scroll(to: .top(id: PeerMediaSharedEntryStableId.messageId(self.messageIndex.id), innerId: nil, animated: false, focus: .init(focus: false), inset: -25))
                 self.genericView.setController(self.audioPlayer.controller)
                 self.readyOnce()

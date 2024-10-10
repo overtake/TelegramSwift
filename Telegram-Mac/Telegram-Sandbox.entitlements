@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>com.apple.security.cs.disable-library-validation</key>
-	<true/>
 	<key>com.apple.developer.maps</key>
 	<true/>
 	<key>com.apple.security.app-sandbox</key>
@@ -12,12 +10,11 @@
 	<array>
 		<string>6N38VWS5BX.ru.keepcoder.Telegram</string>
 		<string>6N38VWS5BX.ru.keepcoder.Telegram.TelegramShare</string>
+		<string>6N38VWS5BX.ru.keepcoder.Telegram.FocusIntents</string>
 	</array>
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
 	<key>com.apple.security.device.camera</key>
-	<true/>
-	<key>com.apple.security.device.microphone</key>
 	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>

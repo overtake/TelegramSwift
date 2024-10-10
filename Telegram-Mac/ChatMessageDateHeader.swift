@@ -23,16 +23,17 @@ private let timezoneOffset: Int32 = {
     return Int32(timeinfoNow.tm_gmtoff)
 }()
 
+private let formatter = DateFormatter()
 private let granularity: Int32 = 60 * 60 * 24
 
 
 
 func chatDateId(for timestamp:Int32) -> Int64 {
-    return Int64(Calendar.autoupdatingCurrent.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
+    return Int64(Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
 }
 func mediaDateId(for timestamp:Int32) -> Int64 {
-    let startMonth = Calendar.autoupdatingCurrent.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
-    let endMonth = Calendar.autoupdatingCurrent.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
+    let startMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
+    let endMonth = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
     return Int64(endMonth.timeIntervalSince1970)
 }
 
@@ -76,9 +77,9 @@ class ChatDateStickItem : TableStickItem {
             }
             
         } else {
-            let dateFormatter = makeNewDateFormatter()
+            let dateFormatter = formatter
             
-            dateFormatter.calendar = Calendar.autoupdatingCurrent
+            dateFormatter.calendar = Calendar.current
             //dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";
             //&& (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2)
@@ -90,7 +91,7 @@ class ChatDateStickItem : TableStickItem {
             let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
             switch interaction.mode {
             case .scheduled:
-                if timestamp == 2147457600 {
+                if timestamp - 2147460000 > 0 {
                     text = strings().chatDateScheduledUntilOnline
                 } else {
                     text = strings().chatDateScheduledFor(dateString)
@@ -105,6 +106,13 @@ class ChatDateStickItem : TableStickItem {
 
         
         super.init(initialSize)
+    }
+    
+    var shouldBlurService: Bool {
+        if isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
     }
     
     override var canBeAnchor: Bool {
@@ -250,7 +258,7 @@ class ChatDateStickView : TableStickView {
                     return true
                 })
             }
-            if presentation.shouldBlurService {
+            if item.shouldBlurService {
                 textView.blurBackground = presentation.blurServiceColor
                 textView.backgroundColor = .clear
             } else {
@@ -280,5 +288,14 @@ class ChatDateStickView : TableStickView {
 
         }
         super.set(item: item, animated:animated)
+    }
+    
+    override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
+        if let item = item as? ChatDateStickItem, !isLite(.animations) {
+            if item.isBubbled, appearAnimated {
+                self.textView.layer?.animateScaleSpring(from: 0.5, to: 1, duration: 0.4, bounce: false)
+                self.textView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
+            }
+        }
     }
 }

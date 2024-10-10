@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TGUIKit
 
 final class ChatMessageThrottledProcessingManager {
-    private let queue = Queue()
+    private let queue = messagesViewQueue
     
     private let delay: Double
     private let submitInterval: Double?
@@ -74,7 +74,7 @@ final class ChatMessageThrottledProcessingManager {
                         }
                         let buffer = strongSelf.buffer
                         strongSelf.buffer.removeAll()
-
+                        
                         if let submitInterval = strongSelf.submitInterval {
                             strongSelf.disposable.set(delaySignal(submitInterval).start(completed: { [weak strongSelf]in
                                 strongSelf?.add(Array(buffer))

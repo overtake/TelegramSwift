@@ -15,12 +15,9 @@ import Postbox
 import CoreMediaIO
 import Localization
 
-private let _dQueue = Queue.init(name: "chatListQueue")
-private let _sQueue = Queue.init(name: "ChatQueue")
-
-public let resourcesQueue = Queue(name: "ResourcesQueue")
-public let prepareQueue = Queue(name: "PrepareQueue")
-public let messagesViewQueue = Queue(name: "messagesViewQueue")
+public let resourcesQueue = Queue(name: "ResourcesQueue", qos: .utility)
+public let prepareQueue = Queue(name: "PrepareQueue", qos: .utility)
+public let messagesViewQueue = Queue(name: "messagesViewQueue", qos: .utility)
 
 public let appName = "Telegram"
 public let kMediaImageExt = "jpg";
@@ -101,43 +98,6 @@ fileprivate func proccessEntries<T,R>(_ reverse:Bool = true, _ left:[R]?,right:[
         return ([],list,[])
         
     }
-}
-
-
-
-func link(path:String?, ext:String) -> String? {
-    var realPath:String? = path
-    if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
-        let path = path.nsstring.appendingPathExtension(ext)!
-        if !FileManager.default.fileExists(atPath: path) {
-            try? FileManager.default.removeItem(atPath: path)
-            try? FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
-        }
-        realPath = path
-    }
-    return realPath
-}
-
-
-func fs(_ path:String) -> Int32? {
-    
-    if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
-    
-        if attrs["NSFileType"] as? String == "NSFileTypeSymbolicLink" {
-            if let path = try? FileManager.default.destinationOfSymbolicLink(atPath: path) {
-                attrs = (try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary) ?? attrs
-            }
-        }
-        
-        
-        let size = attrs.fileSize()
-    
-        if size > UInt64(INT32_MAX) {
-            return INT32_MAX
-        }
-        return Int32(size)
-    }
-    return nil
 }
 
 

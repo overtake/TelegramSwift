@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import AppKit
+import TelegramMedia
 
 final class EmojiAnimationEffectView : View {
     enum Source {
@@ -27,6 +28,8 @@ final class EmojiAnimationEffectView : View {
         self.animationSize = animationSize
         self.animationPoint = animationPoint
         let view: NSView
+        
+        
         switch animation {
         case let .builtin(animation):
             let player = LottiePlayerView(frame: .init(origin: animationPoint, size: animationSize))
@@ -41,6 +44,7 @@ final class EmojiAnimationEffectView : View {
         addSubview(view)
         isEventLess = true
         updateLayout(size: frameRect.size, transition: .immediate)
+        
     }
     
     override func layout() {

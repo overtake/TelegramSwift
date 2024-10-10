@@ -89,7 +89,7 @@ private enum WebSessionEntry : TableItemListNodeEntry {
     func item(_ arguments: WebSessionArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case let .description(_, _, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .logout(_, _, viewType):
@@ -263,7 +263,7 @@ class WebSessionsController: TableViewController {
         }
                 
         let arguments = WebSessionArguments(context: context, logoutSession: { session in
-            confirm(for: context.window, information: strings().webAuthorizationsConfirmRevoke, successHandler: { result in
+            verifyAlert_button(for: context.window, information: strings().webAuthorizationsConfirmRevoke, successHandler: { result in
                 updateState { state in
                     return state.withUpdatedRemovingSessionId(session.hash)
                 }
@@ -276,7 +276,7 @@ class WebSessionsController: TableViewController {
             })
             
         }, logoutAll: { [weak self] in
-            confirm(for: context.window, information: strings().webAuthorizationsConfirmRevokeAll, successHandler: { result in
+            verifyAlert_button(for: context.window, information: strings().webAuthorizationsConfirmRevokeAll, successHandler: { result in
                 self?.navigationController?.back()
                 _ = showModalProgress(signal: context.webSessions.removeAll(), for: context.window).start()
             })

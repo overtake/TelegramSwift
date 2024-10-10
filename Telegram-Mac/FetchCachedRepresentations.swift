@@ -16,6 +16,8 @@ import RLottie
 import libwebp
 import GZIP
 import Svg
+import TelegramMedia
+import TelegramMediaPlayer
 
 private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
@@ -47,7 +49,7 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
         if let diceCache = account.diceCache {
             return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, synchronous: false) |> map { values -> (String, Data?, TelegramMediaFile)? in
                 for value in values {
-                    if value.0 == representation.value {
+                    if value.0.withoutColorizer == representation.value {
                         return value
                     }
                 }
@@ -614,7 +616,7 @@ private func fetchCachedScaledVideoFirstFrameRepresentation(account: Account, re
 private func fetchCachedBlurredWallpaperRepresentation(account: Account, resource: MediaResource, resourceData: MediaResourceData, representation: CachedBlurredWallpaperRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return Signal({ subscriber in
         if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-            if let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            if let image = NSImage(data: data)?.jpegCGImage {
                 var randomId: Int64 = 0
                 arc4random_buf(&randomId, 8)
                 let path = NSTemporaryDirectory() + "\(randomId)"
@@ -787,6 +789,14 @@ func getAnimatedStickerThumb(data: Data, size: NSSize = NSMakeSize(512, 512)) ->
             })
             
             if let image = image {
+                let rep = NSBitmapImageRep(cgImage: image)
+                let data = rep.representation(using: .png, properties: [:])
+                let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"
+                try? data?.write(to: URL(fileURLWithPath: path))
+                return path
+            }
+        } else {
+            if let image = convertFromWebP(dataValue)?._cgImage {
                 let rep = NSBitmapImageRep(cgImage: image)
                 let data = rep.representation(using: .png, properties: [:])
                 let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"

@@ -20,11 +20,11 @@ private class JoinLinkPreviewView : View {
     private let usersContainer: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.backgroundColor = theme.colors.background
+        self.backgroundColor = .clear
         imageView.setFrameSize(70,70)
         addSubview(basicContainer)
-        basicContainer.backgroundColor = theme.colors.background
-        titleView.backgroundColor = theme.colors.background
+        basicContainer.backgroundColor = .clear
+        titleView.backgroundColor = .clear
         basicContainer.addSubview(imageView)
         basicContainer.addSubview(titleView)
         addSubview(usersContainer)
@@ -34,6 +34,7 @@ private class JoinLinkPreviewView : View {
     }
     
     func update(with peer:TelegramGroup, account:Account, participants:[Peer]? = nil, groupUserCount: Int32 = 0) -> Void {
+        
         imageView.setPeer(account: account, peer: peer)
         let attr = NSMutableAttributedString()
         _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .normal(.title))
@@ -94,13 +95,17 @@ private class JoinLinkPreviewView : View {
         
     }
     
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
+    
     override func layout() {
         super.layout()
         imageView.centerX(y: 0)
-        titleView.centerX(y: 80)
+        titleView.centerX(y: imageView.frame.maxY + 10)
         
         if !usersContainer.subviews.isEmpty {
-            basicContainer.centerX(y: 20)
+            basicContainer.centerX(y: 0)
             var x:CGFloat = 0
             for avatar in usersContainer.subviews {
                 avatar.setFrameOrigin(NSMakePoint(x, 0))
@@ -108,7 +113,7 @@ private class JoinLinkPreviewView : View {
             }
             usersContainer.setFrameSize(x - 10, usersContainer.subviews[0].frame.height)
         } else {
-            basicContainer.center()
+            basicContainer.centerX(y: 0)
         }
         
         usersContainer.centerX(y: basicContainer.frame.maxY + 20)
@@ -151,17 +156,20 @@ class JoinLinkPreviewModalController: ModalViewController {
         self.joinhash = hash
         self.interaction = interaction
         
-        var rect = NSMakeRect(0, 0, 270, 180)
+        var rect = NSMakeRect(0, 50, 300, 190)
         switch join {
         case let .invite(state):
             if let participants = state.participants, participants.count > 0 {
-                rect.size.height = 230
+                rect.size.height = 260
             }
         default:
             break
         }
         super.init(frame: rect)
-        bar = .init(height: 0)
+    }
+    
+    override var dynamicSize: Bool {
+        return true
     }
     
     override var modalInteractions: ModalInteractions? {
@@ -191,8 +199,22 @@ class JoinLinkPreviewModalController: ModalViewController {
                     alert(for: context.window, info: text)
                 })
             }
-        }, cancelTitle: strings().modalCancel)
+        }, singleButton: true)
         
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: nil, right: nil)
+    }
+    
+    override var containerBackground: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
     }
     
 }

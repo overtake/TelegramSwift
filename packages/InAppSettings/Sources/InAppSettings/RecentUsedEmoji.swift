@@ -72,7 +72,7 @@ public class RecentUsedEmoji: Codable, Equatable {
         var isset:[String: String] = [:]
         var list:[String] = []
         for emoji in _emojies {
-            if isset[emoji] == nil, emoji != "�", !emoji.emojiSkinToneModifiers.contains(emoji), emoji != "️" {
+            if isset[emoji] == nil, !emoji.emojiSkinToneModifiers.contains(emoji), emoji != "️" {
                 var emoji = emoji
                 isset[emoji] = emoji
                 for skin in skinModifiers {
@@ -114,7 +114,14 @@ public class RecentUsedEmoji: Codable, Equatable {
                         emoji = skin.modify
                     }
                 }
-                list.append(emoji)
+                if emoji.isSingleEmoji {
+                    let updated = emoji + "\u{fe0f}"
+                    if updated.glyphCount == 1 {
+                        list.append(updated)
+                    } else {
+                        list.append(emoji)
+                    }
+                }
             }
         }
         self._emojies = list
@@ -205,5 +212,5 @@ public func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox)
 public func recentUsedEmoji(postbox: Postbox) -> Signal<RecentUsedEmoji, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.recentEmoji]) |> map { preferences in
         return preferences.values[ApplicationSpecificPreferencesKeys.recentEmoji]?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
-    }
+    } |> deliverOn(.concurrentDefaultQueue())
 }

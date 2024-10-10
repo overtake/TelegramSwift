@@ -32,9 +32,10 @@ final class SupportAccountContext {
     private let disposable: DisposableDict<AccountRecordId> = DisposableDict()
     
     func open(account: Account) {
-        
-        let data = combineLatest(TelegramEngine(account: account).peers.updatedChatListFilters(), chatListFolderSettings(account.postbox)) |> map {
-            return ChatListFolders(list: $0, sidebar: $1.sidebar)
+        let showTags = TelegramEngine(account: account).data.get(TelegramEngine.EngineData.Item.ChatList.FiltersDisplayTags())
+
+        let data = combineLatest(TelegramEngine(account: account).peers.updatedChatListFilters(), chatListFolderSettings(account.postbox), showTags) |> map {
+            return ChatListFolders(list: $0, sidebar: $1.sidebar, showTags: $2)
         }
         |> deliverOnMainQueue
         |> take(1)
@@ -57,7 +58,7 @@ final class SupportAccountContext {
             }
             
             let context = AccountContext(sharedContext: sharedContext, window: window, account: account, isSupport: true)
-            let applicationContext = AuthorizedApplicationContext(window: window, context: context, launchSettings: LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), folders: folders)
+            let applicationContext = AuthorizedApplicationContext(window: window, context: context, launchSettings: LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), inlinePlayerContext: sharedContext.getCrossInlinePlayer(), folders: folders)
 
             let out = account.loggedOut
             |> filter { $0 }

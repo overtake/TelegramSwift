@@ -27,19 +27,27 @@ class MediaPreviewRowItem: TableRowItem {
     fileprivate let paint:()->Void
     fileprivate let delete: (()->Void)?
     fileprivate let editedData: EditedImageData?
-    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    fileprivate let theme: TelegramPresentationTheme
+    fileprivate let payAmount: Int64?
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, theme: TelegramPresentationTheme, editedData: EditedImageData? = nil, isSpoiler: Bool, payAmount: Int64?, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
         self.paint = paint
         self.delete = delete
         self.media = media
         self.context = context
+        self.theme = theme
+        self.payAmount = payAmount
         self.editedData = editedData
         self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context)
         if let media = media as? TelegramMediaFile {
-            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
+            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(theme: theme), automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
         } else {
-            parameters = nil
+            parameters = ChatMediaLayoutParameters(presentation: .make(theme: theme), media: media)
         }
+        
+        parameters?.forceSpoiler = isSpoiler || payAmount != nil
+        parameters?.payAmount = payAmount
+        
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -48,7 +56,7 @@ class MediaPreviewRowItem: TableRowItem {
     private var overSize: CGFloat? = nil
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
-        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 120))
+        parameters?.makeLabelsForWidth(width - (media.isInteractiveMedia ? 20 : 60))
         
         if let table = table, table.count == 1 {
             if contentSize.height > table.frame.height && table.frame.height > 0 {
@@ -123,7 +131,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -154,7 +162,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
         
     }
     
-    override func updateMouse() {
+    override func updateMouse(animated: Bool) {
         guard let window = window, let table = item?.table else {
             editControl.isHidden = true
             return
@@ -172,7 +180,9 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
     override func shakeView() {
         contentNode?.shake()
     }
-    
+    override var backdorColor: NSColor {
+        return .clear
+    }
     
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
@@ -184,12 +194,12 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
             self.contentNode = node.init(frame:NSZeroRect)
             self.addSubview(self.contentNode!)
             addSubview(editControl)
-            updateMouse()
+            updateMouse(animated: animated)
         }
         
         
         editControl.canEdit = (item.media is TelegramMediaImage)
-        editControl.isInteractiveMedia = item.media.isInteractiveMedia
+        editControl.isInteractiveMedia = item.media.isInteractiveMedia || item.media.probablySticker
         editControl.canDelete = item.delete != nil
         editControl.set(edit: { [weak item] in
             item?.edit()

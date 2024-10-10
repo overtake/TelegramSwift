@@ -58,12 +58,14 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         case swirlStars
         case fasterStars
         case badgeStars
+        case hello
     }
     private var bgDecoration: BackgroundDecoration = .none
 
-    
+    private let presentation: TelegramPresentationTheme
 
-    required init(frame frameRect: NSRect) {
+    init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+        self.presentation = presentation
         super.init(frame: frameRect)
         bottom.addSubview(descView)
         bottom.addSubview(nameView)
@@ -83,6 +85,13 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    var appear: (()->Void)? = nil
+    var disappear: (()->Void)? = nil
+
     func setup(context: AccountContext, type: PremiumValue, decoration: BackgroundDecoration, getView: @escaping(PremiumFeatureSlideView)->(NSView & PremiumSlideView)) {
         
         self.getView = getView
@@ -91,8 +100,8 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         let title = type.title(context.premiumLimits)
         let info = type.info(context.premiumLimits)
         
-        let titleLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.title)), alignment: .center)
-        let infoLayout = TextViewLayout(.initialize(string: info, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        let titleLayout = TextViewLayout(.initialize(string: title, color: presentation.colors.text, font: .medium(.title)), alignment: .center)
+        let infoLayout = TextViewLayout(.initialize(string: info, color: presentation.colors.text, font: .normal(.text)), alignment: .center)
         
         
         titleLayout.measure(width: frame.width - 40)
@@ -120,6 +129,7 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         view.frame = bounds
         self.content.addSubview(view)
         
+        appear?()
         
         switch bgDecoration {
         case .none:
@@ -167,12 +177,23 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
                 content.addSubview(current, positioned: .below, relativeTo: content.subviews.first)
             }
             current.setVisible(true)
+        case .hello:
+            let current: (NSView & PremiumDecorationProtocol)
+            if let view = self.decorationView {
+                current = view
+            } else {
+                current = HelloView(frame: content.bounds)
+                self.decorationView = current
+                content.addSubview(current, positioned: .below, relativeTo: content.subviews.first)
+            }
+            current.setVisible(true)
         }
         
         needsLayout = true
     }
     
     func willDisappear() {
+        disappear?()
         self.decorationView?.setVisible(false)
         self.view?.willDisappear()
     }

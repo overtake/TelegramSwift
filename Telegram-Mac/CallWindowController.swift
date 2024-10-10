@@ -15,9 +15,9 @@ import SwiftSignalKit
 import TgVoipWebrtc
 import TelegramVoip
 import ColorPalette
+import PrivateCallScreen
 
 private let defaultWindowSize = NSMakeSize(720, 560)
-
 extension CallState {
     func videoIsAvailable(_ isVideo: Bool) -> Bool {
         switch state {
@@ -922,7 +922,7 @@ private class PhoneCallWindowView : View {
             self.imageView.set(arguments: arguments)
             
             if let reference = PeerReference(user) {
-                fetching.set(fetchedMediaResource(mediaBox: session.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start())
+                fetching.set(fetchedMediaResource(mediaBox: session.account.postbox.mediaBox, userLocation: .peer(user.id), userContentType: .image, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start())
             }
             
         } else {
@@ -1077,7 +1077,7 @@ class PhoneCallWindowController {
                             self.session.disableVideo()
                         }
                     } else {
-                        confirm(for: self.window, information: strings().callCameraError, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                        verifyAlert_button(for: self.window, information: strings().callCameraError, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                             switch result {
                             case .thrid:
                                 openSystemSettings(.camera)
@@ -1101,7 +1101,7 @@ class PhoneCallWindowController {
             if let result = result {
                 switch result {
                 case .permission:
-                    confirm(for: window, information: strings().callScreenError, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                    verifyAlert_button(for: window, information: strings().callScreenError, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                         switch result {
                         case .thrid:
                             openSystemSettings(.sharing)
@@ -1129,11 +1129,12 @@ class PhoneCallWindowController {
                     }
                 default:
                     _ = self?.session.hangUpCurrentCall().start()
+                    self?.session.setToRemovableState()
                 }
             } else {
                 self?.session.setToRemovableState()
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         self.window.contentView = view
@@ -1230,7 +1231,7 @@ class PhoneCallWindowController {
     @objc open func windowDidResignKey() {
         keyStateDisposable.set((session.state |> deliverOnMainQueue).start(next: { [weak self] state in
             if let strongSelf = self {
-                if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.window.isKeyWindow {
+                if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.session.isScreenCapture, !strongSelf.window.isKeyWindow {
                     switch state.videoState {
                     case .active, .paused:
                         break
@@ -1398,6 +1399,12 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 }
 
 func showCallWindow(_ session:PCallSession) {
+    
+    #if arch(arm64)
+    callScreen(session.accountContext, .success(session))
+    return
+    #endif
+    
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
             _ = controller?.session.hangUpCurrentCall().start()
@@ -1430,6 +1437,7 @@ func closeCall(minimisize: Bool = false) {
                     break
                 }
             })
+            closeAllModals(window: controller.window)
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {
@@ -1454,7 +1462,19 @@ func closeCall(minimisize: Bool = false) {
 }
 
 
+
+
+
+private var peerCall: PeerCallScreen?
 func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
+    
+    #if arch(arm64)
+
+    callScreen(context, result)
+    
+    return
+    #endif
+    
     assertOnMainThread()
     switch result {
     case let .success(session):

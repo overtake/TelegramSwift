@@ -26,7 +26,7 @@ struct InteractiveEmojiConfiguration : Equatable {
     private let confettiCompitable: [String: InteractiveEmojiConfetti]
         
     fileprivate init(emojis: [String], confettiCompitable: [String: InteractiveEmojiConfetti]) {
-        self.emojis = emojis.map { $0.fixed }
+        self.emojis = emojis.map { $0.withoutColorizer }
         self.confettiCompitable = confettiCompitable
     }
     
@@ -107,10 +107,98 @@ class DiceCache {
     private let loadDataDisposable = MetaDisposable()
     private let emojiesSoundDisposable = MetaDisposable()
     
+    var animatedEmojies:Signal<[String: StickerPackItem], NoError> {
+        return _animatedEmojies.get()
+    }
+    private let _animatedEmojies:Promise<[String : StickerPackItem]> = .init()
+    
+    private let _emojies_reactions = Promise<ItemCollectionsView>()
+    private let _emojies_status = Promise<ItemCollectionsView>()
+    private let _emojies = Promise<ItemCollectionsView>()
+    
+
+    var emojies_reactions: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    
+    var emojies_reactions_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+    }
+    
+    var top_reactions: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions, Namespaces.OrderedItemList.CloudDefaultTagReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 100)
+    }
+    
+    var top_emojies_status: Signal<[TelegramMediaFile], NoError> {
+        return engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false)
+        |> map { result -> [TelegramMediaFile] in
+            switch result {
+            case let .result(_, items, _):
+                return items.map(\.file)
+            default:
+                return []
+            }
+        }
+        |> take(1)
+    }
+    
+    var availableMessageEffects: Signal<AvailableMessageEffects?, NoError> {
+        return engine.stickers.availableMessageEffects()
+    }
+
+    
+    var emojies_status: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    
+    var emojies_status_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+    }
+    
+    var background_icons: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    
+    var background_icons_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedBackgroundIconEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+    }
+    var channel_statuses: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudIconChannelStatusEmoji], aroundIndex: nil, count: 8000)
+    }
+    var channel_statuses_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedChannelStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudIconChannelStatusEmoji], aroundIndex: nil, count: 2000)
+    }
+    var emojies: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    var emojies_small: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+    }
+    
+    var premium_gifts: Signal<LoadedStickerPack, NoError> {
+        return engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
+    }
+    
     init(postbox: Postbox, engine: TelegramEngine) {
         self.postbox = postbox
         self.engine = engine
         
+        
+        self._animatedEmojies.set(engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+                                  |> map { result -> [String: StickerPackItem] in
+                                      switch result {
+                                      case let .result(_, items, _):
+                                          var animatedEmojiStickers: [String: StickerPackItem] = [:]
+                                          for case let item in items {
+                                              if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                                                  animatedEmojiStickers[emoji.withoutColorizer] = item
+                                              }
+                                          }
+                                          return animatedEmojiStickers
+                                      default:
+                                          return [:]
+                                      }
+                              })
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
             return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue
@@ -125,7 +213,7 @@ class DiceCache {
             return EmojiesSoundConfiguration.with(appConfiguration: value)
         } |> distinctUntilChanged |> mapToSignal { value -> Signal<Never, NoError> in
             //val
-            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
+            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
             let signals = combineLatest(list)
             
             return signals |> ignoreValues |> `catch` { _ -> Signal<Never, NoError> in return .complete() }
@@ -179,7 +267,7 @@ class DiceCache {
                 } else {
                     reference = FileMediaReference.standalone(media: value.file).resourceReference(value.file.resource)
                 }
-                return fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference)
+                return fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: reference)
             }
             return combineLatest(signals) |> map { _ in return } |> `catch` { _ in return .complete() }
         }
@@ -198,7 +286,7 @@ class DiceCache {
                         } else {
                             return .single(nil)
                         }
-                    } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).fixed, $0, value.file) }
+                    } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file) }
                 }
                 signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
@@ -207,7 +295,7 @@ class DiceCache {
                 var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
                 
                 for value in values {
-                    dict[value.0.fixed] = value.1
+                    dict[value.0.withoutColorizer] = value.1
                 }
                 return dict
             }
@@ -224,13 +312,13 @@ class DiceCache {
                     } else {
                         return .single(nil)
                     }
-                } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).fixed, $0, value.file) }
+                } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file) }
             }
             return combineLatest(effects) |> map { values in
                 var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
                 
                 for value in values {
-                    var list = dict[value.0.fixed] ?? []
+                    var list = dict[value.0.withoutColorizer] ?? []
                     list.append(value)
                     dict[value.0] = list
                 }
@@ -243,12 +331,12 @@ class DiceCache {
                 return
             }
             for diceData in data {
-                let context = self.dataContexts[diceData.key.fixed] ?? EmojiDataContext()
+                let context = self.dataContexts[diceData.key] ?? EmojiDataContext()
                 context.data = diceData.value
                 for subscriber in context.subscribers.copyItems() {
                     subscriber(diceData.value)
                 }
-                self.dataContexts[diceData.key.fixed] = context
+                self.dataContexts[diceData.key] = context
             }
             for effect in dataEffects {
                 let context = self.dataEffectsContexts[effect.key] ?? EmojiDataContext()
@@ -273,13 +361,13 @@ class DiceCache {
             let invoke = {
                 if !cancelled {
                     var dataContext: EmojiDataContext
-                    if let dc = self.dataEffectsContexts[emoji.fixed] {
+                    if let dc = self.dataEffectsContexts[emoji.withoutColorizer] {
                         dataContext = dc
                     } else {
                         dataContext = EmojiDataContext()
                     }
                     
-                    self.dataEffectsContexts[emoji.fixed] = dataContext
+                    self.dataEffectsContexts[emoji.withoutColorizer] = dataContext
                     
                     let index = dataContext.subscribers.add({ data in
                         if !cancelled {
@@ -289,7 +377,7 @@ class DiceCache {
                     subscriber.putNext(dataContext.data)
                     disposable.set(ActionDisposable { [weak self] in
                         resourcesQueue.async {
-                            if let current = self?.dataEffectsContexts[emoji.fixed] {
+                            if let current = self?.dataEffectsContexts[emoji.withoutColorizer] {
                                 current.subscribers.remove(index)
                             }
                         }

@@ -16,14 +16,232 @@ import InAppSettings
 import ThemeSettings
 import Reactions
 import FetchManager
+#if !SHARE
 import InAppPurchaseManager
+#endif
 import ApiCredentials
+
+let clown: String = "🤡"
+let focusIntentEmoji = "⛔️"
+
+
+
+func bestWindow(_ accountContext: AccountContext, _ controller: ViewController?) -> Window {
+    return controller?.window ?? accountContext.window
+}
+
+public struct PremiumConfiguration {
+    public static var defaultValue: PremiumConfiguration {
+        return PremiumConfiguration(
+            isPremiumDisabled: false,
+            showPremiumGiftInAttachMenu: false,
+            showPremiumGiftInTextField: false,
+            giveawayGiftsPurchaseAvailable: false,
+            boostsPerGiftCount: 3,
+            audioTransciptionTrialMaxDuration: 300,
+            audioTransciptionTrialCount: 2,
+            minChannelNameColorLevel: 1,
+            minChannelNameIconLevel: 4,
+            minChannelProfileColorLevel: 5,
+            minChannelProfileIconLevel: 7,
+            minChannelEmojiStatusLevel: 8,
+            minChannelWallpaperLevel: 9,
+            minChannelCustomWallpaperLevel: 10,
+            minChannelRestrictAdsLevel: 50,
+            minGroupProfileIconLevel: 7,
+            minGroupEmojiStatusLevel: 8,
+            minGroupWallpaperLevel: 9,
+            minGroupCustomWallpaperLevel: 9,
+            minGroupEmojiPackLevel: 9,
+            minGroupAudioTranscriptionLevel: 9
+        )
+    }
+    
+    public let isPremiumDisabled: Bool
+    public let showPremiumGiftInAttachMenu: Bool
+    public let showPremiumGiftInTextField: Bool
+    public let giveawayGiftsPurchaseAvailable: Bool
+    public let boostsPerGiftCount: Int32
+    public let audioTransciptionTrialMaxDuration: Int32
+    public let audioTransciptionTrialCount: Int32
+    public let minChannelNameColorLevel: Int32
+    public let minChannelNameIconLevel: Int32
+    public let minChannelProfileColorLevel: Int32
+    public let minChannelProfileIconLevel: Int32
+    public let minChannelEmojiStatusLevel: Int32
+    public let minChannelWallpaperLevel: Int32
+    public let minChannelCustomWallpaperLevel: Int32
+    public let minChannelRestrictAdsLevel: Int32
+
+    
+    public let minGroupProfileIconLevel: Int32
+    public let minGroupEmojiStatusLevel: Int32
+    public let minGroupWallpaperLevel: Int32
+    public let minGroupCustomWallpaperLevel: Int32
+    public let minGroupEmojiPackLevel: Int32
+    public let minGroupAudioTranscriptionLevel: Int32
+    
+    fileprivate init(
+        isPremiumDisabled: Bool,
+        showPremiumGiftInAttachMenu: Bool,
+        showPremiumGiftInTextField: Bool,
+        giveawayGiftsPurchaseAvailable: Bool,
+        boostsPerGiftCount: Int32,
+        audioTransciptionTrialMaxDuration: Int32,
+        audioTransciptionTrialCount: Int32,
+        minChannelNameColorLevel: Int32,
+        minChannelNameIconLevel: Int32,
+        minChannelProfileColorLevel: Int32,
+        minChannelProfileIconLevel: Int32,
+        minChannelEmojiStatusLevel: Int32,
+        minChannelWallpaperLevel: Int32,
+        minChannelCustomWallpaperLevel: Int32,
+        minChannelRestrictAdsLevel: Int32,
+        minGroupProfileIconLevel: Int32,
+        minGroupEmojiStatusLevel: Int32,
+        minGroupWallpaperLevel: Int32,
+        minGroupCustomWallpaperLevel: Int32,
+        minGroupEmojiPackLevel: Int32,
+        minGroupAudioTranscriptionLevel: Int32
+    ) {
+        self.isPremiumDisabled = isPremiumDisabled
+        self.showPremiumGiftInAttachMenu = showPremiumGiftInAttachMenu
+        self.showPremiumGiftInTextField = showPremiumGiftInTextField
+        self.giveawayGiftsPurchaseAvailable = giveawayGiftsPurchaseAvailable
+        self.boostsPerGiftCount = boostsPerGiftCount
+        self.audioTransciptionTrialMaxDuration = audioTransciptionTrialMaxDuration
+        self.audioTransciptionTrialCount = audioTransciptionTrialCount
+        self.minChannelNameColorLevel = minChannelNameColorLevel
+        self.minChannelNameIconLevel = minChannelNameIconLevel
+        self.minChannelProfileColorLevel = minChannelProfileColorLevel
+        self.minChannelProfileIconLevel = minChannelProfileIconLevel
+        self.minChannelEmojiStatusLevel = minChannelEmojiStatusLevel
+        self.minChannelWallpaperLevel = minChannelWallpaperLevel
+        self.minChannelCustomWallpaperLevel = minChannelCustomWallpaperLevel
+        self.minChannelRestrictAdsLevel = minChannelRestrictAdsLevel
+        self.minGroupProfileIconLevel = minGroupProfileIconLevel
+        self.minGroupEmojiStatusLevel = minGroupEmojiStatusLevel
+        self.minGroupWallpaperLevel = minGroupWallpaperLevel
+        self.minGroupCustomWallpaperLevel = minGroupCustomWallpaperLevel
+        self.minGroupEmojiPackLevel = minGroupEmojiPackLevel
+        self.minGroupAudioTranscriptionLevel = minGroupAudioTranscriptionLevel
+    }
+    
+    public static func with(appConfiguration: AppConfiguration) -> PremiumConfiguration {
+        let defaultValue = self.defaultValue
+        if let data = appConfiguration.data {
+            func get(_ value: Any?) -> Int32? {
+                return (value as? Double).flatMap(Int32.init)
+            }
+            return PremiumConfiguration(
+                isPremiumDisabled: data["premium_purchase_blocked"] as? Bool ?? defaultValue.isPremiumDisabled,
+                showPremiumGiftInAttachMenu: data["premium_gift_attach_menu_icon"] as? Bool ?? defaultValue.showPremiumGiftInAttachMenu,
+                showPremiumGiftInTextField: data["premium_gift_text_field_icon"] as? Bool ?? defaultValue.showPremiumGiftInTextField,
+                giveawayGiftsPurchaseAvailable: data["giveaway_gifts_purchase_available"] as? Bool ?? defaultValue.giveawayGiftsPurchaseAvailable,
+                boostsPerGiftCount: get(data["boosts_per_sent_gift"]) ?? defaultValue.boostsPerGiftCount,
+                audioTransciptionTrialMaxDuration: get(data["transcribe_audio_trial_duration_max"]) ?? defaultValue.audioTransciptionTrialMaxDuration,
+                audioTransciptionTrialCount: get(data["transcribe_audio_trial_weekly_number"]) ?? defaultValue.audioTransciptionTrialCount,
+                minChannelNameColorLevel: get(data["channel_color_level_min"]) ?? defaultValue.minChannelNameColorLevel,
+                minChannelNameIconLevel: get(data["channel_bg_icon_level_min"]) ?? defaultValue.minChannelNameIconLevel,
+                minChannelProfileColorLevel: get(data["channel_profile_color_level_min"]) ?? defaultValue.minChannelProfileColorLevel,
+                minChannelProfileIconLevel: get(data["channel_profile_bg_icon_level_min"]) ?? defaultValue.minChannelProfileIconLevel,
+                minChannelEmojiStatusLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelEmojiStatusLevel,
+                minChannelWallpaperLevel: get(data["channel_wallpaper_level_min"]) ?? defaultValue.minChannelWallpaperLevel,
+                minChannelCustomWallpaperLevel: get(data["channel_custom_wallpaper_level_min"]) ?? defaultValue.minChannelCustomWallpaperLevel,
+                minChannelRestrictAdsLevel: get(data["channel_restrict_sponsored_level_min"]) ?? defaultValue.minChannelRestrictAdsLevel,
+                minGroupProfileIconLevel: get(data["group_profile_bg_icon_level_min "]) ?? defaultValue.minGroupProfileIconLevel,
+                minGroupEmojiStatusLevel: get(data["group_emoji_status_level_min"]) ?? defaultValue.minGroupEmojiStatusLevel,
+                minGroupWallpaperLevel: get(data["group_wallpaper_level_min"]) ?? defaultValue.minGroupWallpaperLevel,
+                minGroupCustomWallpaperLevel: get(data["group_custom_wallpaper_level_min"]) ?? defaultValue.minGroupCustomWallpaperLevel,
+                minGroupEmojiPackLevel: get(data["group_emoji_stickers_level_min"]) ?? defaultValue.minGroupEmojiPackLevel,
+                minGroupAudioTranscriptionLevel: get(data["group_transcribe_level_min"]) ?? defaultValue.minGroupAudioTranscriptionLevel
+            )
+        } else {
+            return defaultValue
+        }
+    }
+}
+
+
+
+
+
+extension AppConfiguration {
+    func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
+        if let value = self.data?[key] as? Double {
+            return Int32(value)
+        } else {
+            return defaultValue
+        }
+    }
+    func getStringValue(_ key: String, orElse defaultValue: String) -> String {
+        if let value = self.data?[key] as? String {
+            return value
+        } else {
+            return defaultValue
+        }
+    }
+    func getBoolValue(_ key: String, orElse defaultValue: Bool) -> Bool {
+        if let value = self.data?[key] as? Bool {
+            return value
+        } else {
+            return defaultValue
+        }
+    }
+}
+
+private let globalStoryDisposable = MetaDisposable()
+
+func SetOpenStoryDisposable(_ disposable: Disposable?) {
+    globalStoryDisposable.set(disposable)
+}
+func CancelOpenStory() {
+    globalStoryDisposable.set(nil)
+}
+
+
+
+
+
+struct AntiSpamBotConfiguration {
+    static var defaultValue: AntiSpamBotConfiguration {
+        return AntiSpamBotConfiguration(antiSpamBotId: nil, group_size_min: 100)
+    }
+    
+    let antiSpamBotId: EnginePeer.Id?
+    let group_size_min: Int32
+    fileprivate init(antiSpamBotId: EnginePeer.Id?, group_size_min: Int32) {
+        self.antiSpamBotId = antiSpamBotId
+        self.group_size_min = group_size_min
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> AntiSpamBotConfiguration {
+        if let data = appConfiguration.data, let string = data["telegram_antispam_user_id"] as? String, let value = Int64(string) {
+            let group_size_min: Int32
+            
+            if let string = data["telegram_antispam_group_size_min"] as? String, let value = Int32(string) {
+                group_size_min = value
+            } else {
+                group_size_min = 100
+            }
+            
+            return AntiSpamBotConfiguration(antiSpamBotId: EnginePeer.Id(namespace: Namespaces.Peer.CloudUser, id: EnginePeer.Id.Id._internalFromInt64Value(value)), group_size_min: group_size_min)
+        } else {
+            return .defaultValue
+        }
+    }
+}
 
 
 
 protocol ChatLocationContextHolder: AnyObject {
 }
 
+extension ChatReplyThreadMessage {
+    var effectiveTopId: MessageId {
+        return self.channelMessageId ?? MessageId(peerId: self.peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: self.threadId))
+    }
+}
 
 
 enum ChatLocation: Equatable {
@@ -32,12 +250,17 @@ enum ChatLocation: Equatable {
 }
 
 extension ChatLocation {
+    
+    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId) -> ChatLocation {
+        return .thread(.init(peerId: accountPeerId, threadId: peerId.toInt64(), channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
+    }
+    
     var unreadMessageCountsItem: UnreadMessageCountsItem {
         switch self {
         case let .peer(peerId):
             return .peer(id: peerId, handleThreads: false)
         case let .thread(data):
-            return .peer(id: data.messageId.peerId, handleThreads: false)
+            return .peer(id: data.peerId, handleThreads: false)
         }
     }
     
@@ -46,7 +269,7 @@ extension ChatLocation {
         case let .peer(peerId):
             return .peer(peerId: peerId, components: [])
         case let .thread(data):
-            return .peer(peerId: data.messageId.peerId, components: [])
+            return .peer(peerId: data.peerId, components: [])
         }
     }
     
@@ -55,7 +278,7 @@ extension ChatLocation {
         case let .peer(peerId):
             return .peer(peerId)
         case let .thread(data):
-            return .peer(data.messageId.peerId)
+            return .peer(data.peerId)
         }
     }
     
@@ -64,7 +287,7 @@ extension ChatLocation {
         case let .peer(peerId):
             return peerId
         case let .thread(data):
-            return data.messageId.peerId
+            return data.peerId
         }
     }
     var threadId: Int64? {
@@ -72,7 +295,7 @@ extension ChatLocation {
         case .peer:
             return nil
         case let .thread(replyThreadMessage):
-            return makeMessageThreadId(replyThreadMessage.messageId) //Int64(replyThreadMessage.messageId.id)
+            return replyThreadMessage.threadId
         }
     }
     var threadMsgId: MessageId? {
@@ -80,7 +303,15 @@ extension ChatLocation {
         case .peer:
             return nil
         case let .thread(replyThreadMessage):
-            return replyThreadMessage.messageId
+            return replyThreadMessage.effectiveTopId
+        }
+    }
+    var threadMessage: ChatReplyThreadMessage? {
+        switch self {
+        case .peer:
+            return nil
+        case let .thread(replyThreadMessage):
+            return replyThreadMessage
         }
     }
 
@@ -106,12 +337,12 @@ final class AccountContextBindings {
     let rootNavigation: () -> MajorNavigationController
     let mainController: () -> MainViewController
     let showControllerToaster: (ControllerToaster, Bool) -> Void
-    let globalSearch:(String)->Void
+    let globalSearch:(String, PeerId?)->Void
     let switchSplitLayout:(SplitViewState)->Void
     let entertainment:()->EntertainmentViewController
     let needFullsize:()->Void
     let displayUpgradeProgress:(CGFloat)->Void
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String, PeerId?) -> Void = { _, _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -143,19 +374,21 @@ final class AccountContext {
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
+    let starsContext: StarsContext
     
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
-    
-    var audioPlayer:APController?
+        
     
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     let blockedPeersContext: BlockedPeersContext
+    let storiesBlockedPeersContext: BlockedPeersContext
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     let reactions: Reactions
+    let dockControl: DockControl
     private(set) var reactionSettings: ReactionSettings = ReactionSettings.default
     private let reactionSettingsDisposable = MetaDisposable()
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
@@ -172,7 +405,21 @@ final class AccountContext {
     var cloudThemes:Signal<CloudThemesCachedData, NoError> {
         return _cloudThemes.get() |> deliverOnMainQueue
     }
+    
+    
+    var privacy:Signal<AccountPrivacySettings?, NoError> {
+        return bindings.mainController().settings.privacySettings
+    }
+    func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
+        bindings.mainController().settings.updatePrivacy(updated, kind: kind)
+    }
     #endif
+
+    
+    private let _emoticonThemes = Atomic<[(String, TelegramPresentationTheme)]>(value: [])
+    var emoticonThemes: [(String, TelegramPresentationTheme)] {
+        return _emoticonThemes.with { $0 }
+    }
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
     
@@ -203,11 +450,23 @@ final class AccountContext {
     
     private let premiumDisposable = MetaDisposable()
     
+    private let globalLocationDisposable = MetaDisposable()
     let globalPeerHandler:Promise<ChatLocation?> = Promise()
     
-    func updateGlobalPeer() {
-        globalPeerHandler.set(globalPeerHandler.get() |> take(1))
+    private let _globalLocationId = Atomic<ChatLocation?>(value: nil)
+    var globalLocationId: ChatLocation? {
+        return _globalLocationId.with { $0 }
     }
+    
+    let globalForumId:ValuePromise<PeerId?> = ValuePromise(nil, ignoreRepeated: true)
+    
+    func updateGlobalPeer() {
+        _ = (self.globalPeerHandler.get() |> take(1)).start(next: { [weak self] location in
+            self?.globalPeerHandler.set(.single(location))
+        })
+    }
+    
+    private(set) var autologinToken: String?
     
     let hasPassportSettings: Promise<Bool> = Promise(false)
 
@@ -238,7 +497,13 @@ final class AccountContext {
     private let cloudThemeObserver = MetaDisposable()
     private let freeSpaceDisposable = MetaDisposable()
     private let prefDisposable = DisposableSet()
+    private let reindexCacheDisposable = MetaDisposable()
+    private let shouldReindexCacheDisposable = MetaDisposable()
+    private let checkSidebarShouldEnable = MetaDisposable()
+    private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
+    
+    private var _peerNameColors: PeerNameColors?
     
     var limitConfiguration: LimitsConfiguration {
         return _limitConfiguration.with { $0 }
@@ -249,6 +514,16 @@ final class AccountContext {
     var appConfiguration: AppConfiguration {
         return _appConfiguration.with { $0 }
     }
+    
+    private var cached: PeerNameColors?
+    
+    var peerNameColors: PeerNameColors {
+        if let _peerNameColors = _peerNameColors {
+            return _peerNameColors
+        }
+        return .init(colors: [:], darkColors: [:], displayOrder: [], profileColors: [:], profileDarkColors: [:], profilePaletteColors: [:], profilePaletteDarkColors: [:], profileStoryColors: [:], profileStoryDarkColors: [:], profileDisplayOrder: [], nameColorsChannelMinRequiredBoostLevel: [:], nameColorsGroupMinRequiredBoostLevel: [:])
+    }
+    
     
     private var _myPeer: Peer?
     
@@ -293,10 +568,15 @@ final class AccountContext {
         return _contentSettings.with { $0 }
     }
     
+    private let _stickerSettings: Atomic<StickerSettings> = Atomic(value: StickerSettings.defaultSettings)
+    
+    var stickerSettings: StickerSettings {
+        return _stickerSettings.with { $0 }
+    }
+    
     
     public var closeFolderFirst: Bool = false
     
-    private let preloadGifsDisposable = MetaDisposable()
     let engine: TelegramEngine
     
     private let giftStickersValues:Promise<[TelegramMediaFile]> = Promise([])
@@ -304,6 +584,10 @@ final class AccountContext {
         return giftStickersValues.get()
     }
 
+    public private(set) var audioTranscriptionTrial: AudioTranscription.TrialState = .defaultValue
+
+
+    
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
         self.sharedContext = sharedContext
@@ -312,19 +596,22 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
         self.isSupport = isSupport
         #if !SHARE
-        self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
+        self.inAppPurchaseManager = .init(engine: engine)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))
-        self.blockedPeersContext = BlockedPeersContext(account: account)
+        self.blockedPeersContext = BlockedPeersContext(account: account, subject: .blocked)
+        self.storiesBlockedPeersContext = BlockedPeersContext(account: account, subject: .stories)
         self.cacheCleaner = AccountClearCache(account: account)
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
         self.activeSessionsContext = engine.privacy.activeSessions()
         self.webSessions = engine.privacy.webSessions()
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
-        #endif
+        self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
+        self.starsContext = engine.payments.peerStarsContext()
+#endif
         
         
         giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
@@ -345,7 +632,6 @@ final class AccountContext {
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration]?.get(LimitsConfiguration.self) ?? LimitsConfiguration.defaultValue)
         }))
-        let preloadGifsDisposable = self.preloadGifsDisposable
         let appConfiguration = _appConfiguration
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
             let configuration = view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
@@ -356,32 +642,10 @@ final class AccountContext {
         }))
         
         
+       
+        
+        
         #if !SHARE
-        let signal:Signal<Void, NoError> = Signal { subscriber in
-            
-            let signal: Signal<Never, NoError> = account.postbox.transaction {
-                return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
-            } |> mapToSignal { configuration in
-                let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
-                var signals = value.emojis.map {
-                    engine.stickers.searchGifs(query: $0)
-                }
-                signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
-                return combineLatest(signals) |> ignoreValues
-            }
-            
-            let disposable = signal.start(completed: {
-                subscriber.putCompletion()
-            })
-            
-            return ActionDisposable {
-                disposable.dispose()
-            }
-        }
-        
-        let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
-        preloadGifsDisposable.set(updated.start())
-        
        
         let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager)) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
@@ -409,7 +673,12 @@ final class AccountContext {
                 return dict
             }
         }
-        self._chatThemes.set((chatThemes |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart)
+        let themes = (chatThemes |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
+        
+        actionsDisposable.add(themes.start(next: { [weak self] values in
+            self?._emoticonThemes.swap(values)
+            self?._chatThemes.set(.single(values))
+        }))
         
         
         let cloudThemes: Signal<[TelegramTheme], NoError> = telegramThemes(postbox: account.postbox, network: account.network, accountManager: sharedContext.accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
@@ -526,6 +795,26 @@ final class AccountContext {
         
         #endif
         
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), engine.accountData.observeAvailableColorOptions(scope: .profile), engine.accountData.observeAvailableColorOptions(scope: .replies)).start(next: { [weak self] profile, replies in
+            self?._peerNameColors = .with(availableReplyColors: replies, availableProfileColors: profile)
+        }))
+        
+        actionsDisposable.add((self.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: account.peerId))
+           |> mapToSignal { peer -> Signal<AudioTranscription.TrialState, NoError> in
+               let isPremium = peer?.isPremium ?? false
+               if isPremium {
+                   return .single(AudioTranscription.TrialState(cooldownUntilTime: nil, remainingCount: 1))
+               } else {
+                   return self.engine.data.subscribe(TelegramEngine.EngineData.Item.Configuration.AudioTranscriptionTrial())
+               }
+           }
+           |> deliverOnMainQueue).startStrict(next: { [weak self] audioTranscriptionTrial in
+               guard let `self` = self else {
+                   return
+               }
+               self.audioTranscriptionTrial = audioTranscriptionTrial
+           }))
+
         
         
         let autoplayMedia = _autoplayMedia
@@ -536,6 +825,11 @@ final class AccountContext {
         let contentSettings = _contentSettings
         prefDisposable.add(getContentSettings(postbox: account.postbox).start(next: { settings in
             _ = contentSettings.swap(settings)
+        }))
+        
+        let st = _stickerSettings
+        prefDisposable.add(InAppSettings.stickerSettings(postbox: account.postbox).start(next: { settings in
+            _ = st.swap(settings)
         }))
         
         
@@ -573,11 +867,28 @@ final class AccountContext {
             self?.updateTheme(update)
         }))
         
+        var previous: [ChatListFilter]?
+        checkSidebarShouldEnable.set(engine.peers.updatedChatListFilters().start(next: { filters in
+            if previous != filters, let previous = previous {
+                let prevCount = previous.count
+                let newCount = filters.count
+                if newCount > prevCount, newCount > 3 {
+                    _ = updateChatListFolderSettings(account.postbox, { current in
+                        if !current.interacted {
+                            return current.withUpdatedSidebar(true)
+                        } else {
+                            return current
+                        }
+                    }).start()
+                }
+            }
+            previous = filters
+        }))
+        
         
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
-       
         
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
@@ -617,11 +928,48 @@ final class AccountContext {
             CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
         })
         
-//        reactions.needsPremium = { [weak self] in
-//            if let strongSelf = self {
-//                showModal(with: PremiumReactionsModal(context: strongSelf), for: strongSelf.window)
+        actionsDisposable.add(requestApplicationIcons(engine: engine).start())
+
+//        let focusIntentStatus = someAccountSetings(postbox: account.postbox) 
+//        |> distinctUntilChanged(isEqual: { 
+//            $0.focusIntentStatusEnabled == $1.focusIntentStatusEnabled &&
+//            $0.focusIntentStatusActive == $1.focusIntentStatusActive
+//        })
+//        |> deliverOnMainQueue
+//        
+//        actionsDisposable.add(focusIntentStatus.startStandalone(next: { [weak self] settings in
+//            guard let self else {
+//                return
 //            }
-//        }
+//            let setStatus:(Int64?)->Void = { [weak self] fileId in
+//                guard let self else {
+//                    return
+//                }
+//                if let fileId {
+//                    let file = self.inlinePacksContext.load(fileId: fileId) |> deliverOnMainQueue
+//                    _ = file.startStandalone(next: { file in
+//                        _ = engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+//                    })
+//                } else {
+//                    _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: nil).start()
+//                }
+//            }
+//            if settings.focusIntentStatusEnabled {
+//                if let fileId = settings.focusIntentStatusActive {
+//                    setStatus(fileId)
+//                } else {
+//                     _ = (self.diceCache.top_emojies_status |> deliverOnMainQueue).startStandalone(next: { files in
+//                         if let file = files.first(where: { $0.customEmojiText == focusIntentEmoji }) {
+//                             setStatus(file.fileId.id)
+//                         }
+//                     })
+//                }
+//            } else if let fileId = settings.focusIntentStatusFallback {
+//                setStatus(fileId)
+//            } else {
+//                setStatus(nil)
+//            }
+//        }))
         
         #endif
         
@@ -633,6 +981,14 @@ final class AccountContext {
             self?.isPremium = value
         }))
         
+        self.globalLocationDisposable.set(globalPeerHandler.get().start(next: { [weak self] value in
+            _ = self?._globalLocationId.swap(value)
+        }))
+        let autologinToken = engine.data.subscribe(TelegramEngine.EngineData.Item.Configuration.Links()) |> deliverOnMainQueue
+        
+        actionsDisposable.add(autologinToken.start(next: { [weak self] token in
+            self?.autologinToken = token.autologinToken
+        }))
     }
     
     @objc private func updateKeyWindow() {
@@ -641,6 +997,13 @@ final class AccountContext {
     
     func focus() {
         window.makeKeyAndOrderFront(nil)
+    }
+    
+    func isLite(_ key: LiteModeKey = .any) -> Bool {
+        #if !SHARE
+        return sharedContext.isLite(key)
+        #endif
+        return false
     }
     
     private func updateTheme(_ update: ApplyThemeUpdate) {
@@ -720,19 +1083,22 @@ final class AccountContext {
         actualizeCloudTheme.dispose()
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()
-        preloadGifsDisposable.dispose()
         freeSpaceDisposable.dispose()
         premiumDisposable.dispose()
+        globalLocationDisposable.dispose()
+        reindexCacheDisposable.dispose()
+        shouldReindexCacheDisposable.dispose()
+        checkSidebarShouldEnable.dispose()
+        actionsDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
         self.networkStatusManager.cleanup()
-        self.audioPlayer?.cleanup()
-        self.audioPlayer = nil
         self.diceCache.cleanup()
         _chatThemes.set(.single([]))
         _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))
         reactionSettingsDisposable.dispose()
+        dockControl.clear()
         #endif
     }
    
@@ -756,11 +1122,11 @@ final class AccountContext {
         case let .peer(peerId):
             return .peer(peerId: peerId, threadId: nil)
         case let .thread(data):
-            if data.isForumPost {
-                return .peer(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId))
+            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel {
+                return .peer(peerId: data.peerId, threadId: data.threadId)
             } else {
                 let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-                return .thread(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId), data: context.state)
+                return .thread(peerId: data.peerId, threadId: data.threadId, data: context.state)
             }
         }
     }
@@ -771,7 +1137,7 @@ final class AccountContext {
             return .single(nil)
         case let .thread(data):
             if data.isForumPost {
-                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
+                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.peerId, threadId: data.threadId)
                 return self.account.postbox.combinedView(keys: [viewKey])
                 |> map { views -> MessageId? in
                     if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.data.get(MessageHistoryThreadData.self) {
@@ -780,10 +1146,13 @@ final class AccountContext {
                         return nil
                     }
                 }
-            } else {
+            } else if data.peerId.namespace == Namespaces.Peer.CloudChannel {
                 let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
                 return context.maxReadOutgoingMessageId
+            } else {
+                return .single(nil)
             }
+
         }
     }
 
@@ -805,7 +1174,7 @@ final class AccountContext {
             }
         case let .thread(data):
             if data.isForumPost {
-                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
+                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.peerId, threadId: data.threadId)
                 return self.account.postbox.combinedView(keys: [viewKey])
                 |> map { views -> Int in
                     if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.data.get(MessageHistoryThreadData.self) {
@@ -814,6 +1183,8 @@ final class AccountContext {
                         return 0
                     }
                 }
+            } else if data.peerId.namespace != Namespaces.Peer.CloudChannel {
+                return .single(0)
             } else {
                 let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
                 return context.unreadCount
@@ -855,7 +1226,7 @@ final class AccountContext {
             } else {
                 updatedMode = .replies(origin: fromId)
             }
-            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
+            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: fromId), initialAction: nil, chatLocationContextHolder: result.contextHolder)
             
             context.bindings.rootNavigation().push(controller)
             
@@ -878,22 +1249,34 @@ final class AccountContext {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle))
+                    return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
                 }
             }
-            return confirmSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count))
+            return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
         }
         let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
-        let create = select |> map { $0.first! } |> mapToSignal { peerId in
-            return engine.peers.createSecretChat(peerId: peerId) |> `catch` {_ in .complete()}
-            } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
-                return showModalProgress(signal: .single(peerId), for: window)
-        }
+        let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
+            return engine.peers.createSecretChat(peerId: peerId)
+        } |> deliverOnMainQueue
         
         _ = create.start(next: { [weak self] peerId in
             guard let `self` = self else {return}
             self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
+        }, error: { [weak self] error in
+            guard let context = self else {
+                return
+            }
+            switch error {
+            case .generic:
+                showModalText(for: context.window, text: strings().unknownError)
+            case .limitExceeded:
+                showModalText(for: context.window, text: strings().loginFloodWait)
+            case let .premiumRequired(peer):
+                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
+            }
         })
     }
     #endif
@@ -979,14 +1362,14 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
         |> deliverOnMainQueue
     } else if let file = cloudTheme.file {
         return Signal { subscriber in
-            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: file.resource)).start()
             let wallpaperDisposable = DisposableSet()
             
             let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)
 
             let dataDisposable = resourceData.start(next: { data in
                 
-                if let palette = importPalette(data.path) {                    
+                if let palette = importPalette(data.path) {
                     var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
                     var newSettings: WallpaperSettings = WallpaperSettings()
                     #if !SHARE
@@ -1125,7 +1508,34 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     let context: ReplyThreadHistoryContext
     
     init(account: Account, data: ChatReplyThreadMessage) {
-        self.context = ReplyThreadHistoryContext(account: account, peerId: data.messageId.peerId, data: data)
+        self.context = ReplyThreadHistoryContext(account: account, peerId: data.peerId, data: data)
     }
 }
 
+
+/*
+ let signal:Signal<Void, NoError> = Signal { subscriber in
+     
+     let signal: Signal<Never, NoError> = account.postbox.transaction {
+         return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+     } |> mapToSignal { configuration in
+         let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
+         var signals = value.emojis.map {
+             engine.stickers.searchGifs(query: $0)
+         }
+         signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
+         return combineLatest(signals) |> ignoreValues
+     }
+     
+     let disposable = signal.start(completed: {
+         subscriber.putCompletion()
+     })
+     
+     return ActionDisposable {
+         disposable.dispose()
+     }
+ }
+ 
+ let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
+ preloadGifsDisposable.set(updated.start())
+ */

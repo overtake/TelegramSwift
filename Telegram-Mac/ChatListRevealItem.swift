@@ -20,15 +20,19 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let selected: ChatListFilter
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: ChatListFilterBadges
-    fileprivate let _menuItems: ((ChatListFilter)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter)->[ContextMenuItem])? = nil) {
+    fileprivate let presentation: TelegramPresentationTheme
+    fileprivate let _menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])?
+    fileprivate let getCurrentStoriesState:()->(StoryListChatListRowItem.InterfaceState, NSView)?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])? = nil, presentation: TelegramPresentationTheme = theme, getCurrentStoriesState:@escaping()->(StoryListChatListRowItem.InterfaceState, NSView)? = { return nil }) {
         self.action = action
         self.context = context
         self.tabs = tabs
+        self.presentation = presentation
         self.selected = selected
         self.openSettings = openSettings
         self.counters = counters
         self._menuItems = menuItems
+        self.getCurrentStoriesState = getCurrentStoriesState
         super.init(initialSize)
     }
     
@@ -36,19 +40,66 @@ class ChatListRevealItem: TableStickItem {
         self.action = nil
         self.context = nil
         self.tabs = []
+        self.presentation = theme
         self.selected = .allChats
         self.openSettings = nil
         self._menuItems = nil
+        self.getCurrentStoriesState = { return nil }
         self.counters = ChatListFilterBadges(total: 0, filters: [])
         super.init(initialSize)
     }
+    
 
-    override var singletonItem: Bool {
-        return true
+    override var backdorColor: NSColor {
+        return self.presentation.colors.background
     }
     
-    func menuItems(for item: ChatListFilter) -> [ContextMenuItem] {
-        return self._menuItems?(item) ?? []
+    override var borderColor: NSColor {
+        return self.presentation.colors.border
+    }
+
+    override var singletonItem: Bool {
+        return false
+    }
+    
+    func menuItems(for item: ChatListFilter, unreadCount: Int?) -> Signal<[ContextMenuItem], NoError> {
+        
+        let id = item.id
+        let folder = item
+        let context = self.context
+        
+        guard let context = self.context else {
+            return .complete()
+        }
+        
+        let filterPeersAreMuted: Signal<Bool, NoError> = context.engine.peers.currentChatListFilters()
+        |> take(1)
+        |> mapToSignal { filters -> Signal<Bool, NoError> in
+            guard let filter = filters.first(where: { $0.id == id }) else {
+                return .single(false)
+            }
+            guard case let .filter(_, _, _, data) = filter else {
+                return .single(false)
+            }
+            return context.engine.data.get(
+                EngineDataList(data.includePeers.peers.map(TelegramEngine.EngineData.Item.Peer.NotificationSettings.init(id:)))
+            )
+            |> map { list -> Bool in
+                for item in list {
+                    switch item.muteState {
+                    case .default, .unmuted:
+                        return false
+                    default:
+                        break
+                    }
+                }
+                return true
+            }
+        } |> deliverOnMainQueue
+        
+        return filterPeersAreMuted |> map { [weak self] allMuted in
+            return self?._menuItems?(item, unreadCount, allMuted) ?? []
+        }
     }
     
     override var stableId: AnyHashable {
@@ -77,28 +128,27 @@ final class ChatListRevealView : TableStickView {
         super.init(frame: frameRect)
         addSubview(containerView)
         containerView.addSubview(segmentView)
-        border = [.Right]
+       // border = [.Right]
         
-        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: segmentView.scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification  in
-            guard let `self` = self else {
-                return
-            }
-            guard let item = self.item else {
-                return
-            }
-            guard let view = item.view as? ChatListRevealView else {
-                return
-            }
-            if !self.segmentView.scrollView.clipView.isAnimateScrolling {
-                if view !== self {
-                    view.segmentView.scrollView.contentView.scroll(to: self.segmentView.scrollView.documentOffset)
-                } else if let view = item.table?.p_stickView as? ChatListRevealView, view !== self {
-                    view.segmentView.scrollView.contentView.scroll(to: self.segmentView.scrollView.documentOffset)
+        segmentView.scrollView.applyExternalScroll = { [weak self] event in
+            if let item = self?.item as? ChatListRevealItem {
+                if let (state, view) = item.getCurrentStoriesState() {
+                    switch state {
+                    case .progress:
+                        view.scrollWheel(with: event)
+                        return true
+                    default:
+                        return false
+                    }
                 }
             }
-        })
+            return false
+        }
+        
+        
         
     }
+    
     
     
     override func mouseUp(with event: NSEvent) {
@@ -121,13 +171,15 @@ final class ChatListRevealView : TableStickView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
     }
     
     override func updateColors() {
         super.updateColors()
-        backgroundColor = backdorColor
-        segmentView.updateLocalizationAndTheme(theme: theme)
+        //backgroundColor = backdorColor
+        if let item = item as? ChatListRevealItem {
+            segmentView.updateLocalizationAndTheme(theme: item.presentation)
+        }
         needsDisplay = true
     }
     
@@ -154,7 +206,7 @@ final class ChatListRevealView : TableStickView {
             let unreadCount:ChatListFilterBadge? = item.counters.count(for: tab)
             let icon: CGImage?
             if let unreadCount = unreadCount, unreadCount.count > 0 {
-                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
+                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: item.presentation.colors.background, font: .medium(.short))
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
                 var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
                 size = NSMakeSize(max(size.height,size.width), size.height)
@@ -163,9 +215,9 @@ final class ChatListRevealView : TableStickView {
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
                     if item.selected == tab || unreadCount.hasUnmutedUnread {
-                        ctx.setFillColor(theme.colors.accent.cgColor)
+                        ctx.setFillColor(item.presentation.colors.accent.cgColor)
                     } else {
-                        ctx.setFillColor(theme.colors.badgeMuted.cgColor)
+                        ctx.setFillColor(item.presentation.colors.badgeMuted.cgColor)
                     }
                     
                     
@@ -187,7 +239,7 @@ final class ChatListRevealView : TableStickView {
         animated = animated && splitViewState == context.layout
         self.splitViewState = context.layout
         
-        let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
+        let segmentTheme = ScrollableSegmentTheme(background: item.presentation.colors.background, border: item.presentation.colors.border, selector: item.presentation.colors.accent, inactiveText: item.presentation.colors.grayText, activeText: item.presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
         var items:[ScrollableSegmentItem] = []
@@ -232,11 +284,11 @@ final class ChatListRevealView : TableStickView {
         }
         segmentView.menuItems = { [weak item] selected in
             if let item = item, selected.uniqueId != -1 && selected.uniqueId != -2 {
-                return item.menuItems(for: item.tabs[selected.index])
+                return item.menuItems(for: item.tabs[selected.index], unreadCount: item.counters.count(for: item.tabs[selected.index])?.count)
             } else if let item = item, selected.uniqueId == -1 {
-                return item.menuItems(for: .allChats)
+                return item.menuItems(for: .allChats, unreadCount: nil)
             } else {
-                return []
+                return .single([])
             }
         }
       

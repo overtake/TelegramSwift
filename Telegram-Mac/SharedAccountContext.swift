@@ -13,9 +13,11 @@ import Postbox
 import SwiftSignalKit
 import TGUIKit
 import BuildConfig
-import InAppPurchaseManager
 import ApiCredentials
 
+#if !SHARE
+import PrivateCallScreen
+#endif
 
 
 private struct AccountAttributes: Equatable {
@@ -61,10 +63,13 @@ public final class AccountWithInfo: Equatable {
 
 
 
+
 class SharedAccountContext {
     let accountManager: AccountManager<TelegramAccountManagerTypes>
 
     #if !SHARE
+    var peerCall: PeerCallScreen?
+    
     let inputSource: InputSources = InputSources()
     let devicesContext: DevicesContext
     private let _baseSettings: Atomic<BaseApplicationSettings> = Atomic(value: BaseApplicationSettings.defaultSettings)
@@ -72,8 +77,31 @@ class SharedAccountContext {
     var baseSettings: BaseApplicationSettings {
         return _baseSettings.with { $0 }
     }
-    #endif
+    
+    var baseApplicationSettings: Signal<BaseApplicationSettings, NoError> {
+        return baseAppSettings(accountManager: self.accountManager)
+    }
+    
    
+    func isLite(_ key: LiteModeKey = .any) -> Bool {
+        let mode = baseSettings.liteMode
+        if mode.enabled {
+            return true
+        }
+        if mode.lowBatteryPercent != 100 {
+            if batteryLevel <= Double(mode.lowBatteryPercent) {
+                return true
+            }
+        }
+        
+        return !mode.isEnabled(key: key)
+    }
+    #endif
+
+    private(set) var batteryLevel: Double = 100
+    
+    private var batteryLevelTimer: SwiftSignalKit.Timer?
+    
     private let managedAccountDisposables = DisposableDict<AccountRecordId>()
     
     
@@ -232,10 +260,20 @@ class SharedAccountContext {
         #endif
         
         
+        self.batteryLevelTimer = .init(timeout: 1 * 60, repeat: true, completion: {
+            let internalFinder = InternalFinder()
+            if let internalBattery = internalFinder.getInternalBattery() {
+                let batteryLevel = internalBattery.charge ?? 100
+                DispatchQueue.main.async {
+                    self.batteryLevel = batteryLevel
+                }
+            }
+        }, queue: .concurrentDefaultQueue())
         
         
+        self.batteryLevelTimer?.start()
         
-        
+
         let differenceDisposable = MetaDisposable()
         let _ = (accountManager.accountRecords()
             |> map { view -> (AccountRecordId?, [AccountRecordId: AccountAttributes], (AccountRecordId, Bool)?) in
@@ -305,7 +343,7 @@ class SharedAccountContext {
                 var addedAuthSignal: Signal<UnauthorizedAccount?, NoError> = .single(nil)
                 for (id, attributes) in records {
                     if self.activeAccountsValue?.accounts.firstIndex(where: { $0.0 == id}) == nil {
-                        addedSignals.append(accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: supplementary, rootPath: rootPath, beginWithTestingEnvironment: attributes.isTestingEnvironment, backupData: attributes.backupData, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+                        addedSignals.append(accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: id, encryptionParameters: encryptionParameters, supplementary: supplementary, isSupportUser: false, rootPath: rootPath, beginWithTestingEnvironment: attributes.isTestingEnvironment, backupData: attributes.backupData, auxiliaryMethods: telegramAccountAuxiliaryMethods)
                             |> map { result -> AddedAccountResult in
                                 switch result {
                                 case let .authorized(account):
@@ -326,7 +364,7 @@ class SharedAccountContext {
                     }
                 }
                 if let authRecord = authRecord, authRecord.0 != self.activeAccountsValue?.currentAuth?.id {
-                    addedAuthSignal = accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: authRecord.0, encryptionParameters: encryptionParameters, supplementary: supplementary, rootPath: rootPath, beginWithTestingEnvironment: authRecord.1, backupData: nil, auxiliaryMethods: telegramAccountAuxiliaryMethods)
+                    addedAuthSignal = accountWithId(accountManager: accountManager, networkArguments: networkArguments, id: authRecord.0, encryptionParameters: encryptionParameters, supplementary: supplementary, isSupportUser: false, rootPath: rootPath, beginWithTestingEnvironment: authRecord.1, backupData: nil, auxiliaryMethods: telegramAccountAuxiliaryMethods)
                         |> map { result -> UnauthorizedAccount? in
                             switch result {
                             case let .unauthorized(account):
@@ -490,7 +528,7 @@ class SharedAccountContext {
         
         let signal = self.activeAccountsWithInfoPromise.get() |> mapToSignal { (primary, accounts) -> Signal<(primary: AccountRecordId?, accounts: [AccountWithInfo], [PeerId : CGImage]), NoError> in
             let photos:[Signal<(PeerId, CGImage?), NoError>] = accounts.map { info in
-                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.displayLetters, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
+                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.nameColor, info.peer.displayLetters, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
                     (info.account.peerId, $0.0)
                 }
             }
@@ -559,6 +597,7 @@ class SharedAccountContext {
     func getCrossAccountGroupCall() -> GroupCallContext? {
         return crossGroupCall.with { $0 }
     }
+   
     #endif
     
     
@@ -696,7 +735,38 @@ class SharedAccountContext {
     }
     
     #endif
+    
+    
+    #if !SHARE
+    private let crossInlinePlayer: Atomic<InlineAudioPlayerView.ContextObject?> = Atomic<InlineAudioPlayerView.ContextObject?>(value: nil)
+
+    func getCrossInlinePlayer() -> InlineAudioPlayerView.ContextObject? {
+        return crossInlinePlayer.with { $0 }
+    }
+    func endInlinePlayer(animated: Bool) -> Void {
+        let value = crossInlinePlayer.swap(nil)
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let header = accountContext.bindings.rootNavigation().header
+            header?.hide(animated)
+        }
+    }
+    
+    func showInlinePlayer(_ object: InlineAudioPlayerView.ContextObject) {
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let header = accountContext.bindings.rootNavigation().header
+            header?.show(true, contextObject: object)
+        }
+        _ = crossInlinePlayer.swap(object)
+    }
+    
+    func getAudioPlayer() -> APController? {
+        return getCrossInlinePlayer()?.controller
+    }
+    
+    #endif
+    
     deinit {
+        batteryLevelTimer?.invalidate()
     }
     
 }

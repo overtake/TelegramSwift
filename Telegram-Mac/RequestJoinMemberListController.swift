@@ -166,9 +166,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                    
 
                     if state.searchResult == nil {
+                        
                         entries.append(.sectionId(sectionId, type: .normal))
                         sectionId += 1
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().requestJoinListListHeaderCountable(Int(importerState.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
                         index += 1
                     }
                     for (i, importer) in importers.enumerated() {
@@ -217,7 +218,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("progress"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                return LoadingTableItem(initialSize, height: 100, stableId: stableId)
+                return LoadingTableItem(initialSize, height: 50, stableId: stableId, backgroundColor: .clear)
             }))
             index += 1
             
@@ -246,9 +247,9 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         statePromise.set(stateValue.modify (f))
     }
     
-    let searchStatePromise = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
-    let searchStateValue = Atomic(value: SearchState(state: .None, request: nil))
-    let updateSearchState: ((SearchState) -> SearchState) -> Void = { f in
+    let searchStatePromise = ValuePromise<SearchState?>(nil, ignoreRepeated: true)
+    let searchStateValue = Atomic<SearchState?>(value: nil)
+    let updateSearchState: ((SearchState?) -> SearchState?) -> Void = { f in
         searchStatePromise.set(searchStateValue.modify (f))
     }
 
@@ -288,7 +289,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         }
         manager?.update(userId, action: .deny)
     }, openInfo: { peerId in
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }, openInviteLinks: openInviteLinks)
     
     let peerSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
@@ -319,7 +320,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     actionsDisposable.add(searchStatePromise.get().start(next: { state in
         
         let result: State.SearchResult?
-        if !state.request.isEmpty {
+        if let state = state, !state.request.isEmpty {
             result = .init(isLoading: true, result: nil)
         } else {
             result = nil
@@ -330,7 +331,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
             current.searchResult = result
             return current
         }
-        if result != nil {
+        if result != nil, let state = state {
             let manager = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: state.request))
             manager.loadMore()
             searchManager = manager
@@ -389,24 +390,42 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     var updateBarIsHidden:((Bool)->Void)? = nil
 
     
-    let controller = InputDataController(dataSignal: signal, title: strings().requestJoinListTitle, removeAfterDisappear: false, customRightButton: { controller in
-        let bar = ImageBarView(controller: controller, theme.icons.chatSearch)
-        bar.button.set(handler: { _ in
-            updateSearchValue { current in
-                switch current {
-                case .none:
-                    return .visible(searchData)
-                case .visible:
-                    return .none({ searchState in
-                        updateState { current in
-                            var current = current
-                            current.searchState = searchState
-                            return current
-                        }
-                    })
+    let controller = InputDataController(dataSignal: signal, title: strings().requestJoinListTitle, removeAfterDisappear: false, customRightButton: { [weak manager] controller in
+        let bar = ImageBarView(controller: controller, theme.icons.chatActions)
+        bar.button.contextMenu = {
+            
+            let state = stateValue.with { $0 }
+            
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().contextMenuSearch, handler: {
+                updateSearchValue { current in
+                    switch current {
+                    case .none:
+                        return .visible(searchData)
+                    case .visible:
+                        return .none({ searchState in
+                            updateState { current in
+                                var current = current
+                                current.searchState = nil
+                                return current
+                            }
+                        })
+                    }
                 }
+            }, itemImage: MenuAnimation.menu_search.value))
+            
+            if state.state?.importers.count != 0 {
+                menu.addItem(ContextMenuItem(strings().requestJoinListApproveAll, handler: {
+                    manager?.updateAll(action: .approve)
+                }, itemImage: MenuAnimation.menu_add.value))
+                
+                menu.addItem(ContextMenuItem(strings().requestJoinListDismissAll, handler: {
+                    manager?.updateAll(action: .deny)
+                }, itemImage: MenuAnimation.menu_clear_history.value))
             }
-        }, for: .Click)
+            
+            return menu
+        }
         bar.button.autohighlight = false
         bar.button.scaleOnClick = true
         updateBarIsHidden = { [weak bar] isHidden in
@@ -431,7 +450,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
                 return .none({ searchState in
                     updateState { current in
                         var current = current
-                        current.searchState = searchState
+                        current.searchState = nil
                         return current
                     }
                 })
@@ -441,7 +460,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     }
     
     
-    controller.didLoaded = { [weak manager] controller, _ in
+    controller.didLoad = { [weak manager] controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:

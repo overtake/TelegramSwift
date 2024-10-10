@@ -21,12 +21,12 @@ class MGalleryPhotoItem: MGalleryItem {
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
         case .message(let entry):
-            let media = entry.message!.effectiveMedia
+            let media = entry.message!.anyMedia
             if let webpage = media as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
                 } else if case let .Loaded(content) = webpage.content, let media = content.file  {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
@@ -36,7 +36,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 }
             } else {
                 if let media = media as? TelegramMediaFile {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
@@ -51,6 +51,9 @@ class MGalleryPhotoItem: MGalleryItem {
         case let .secureIdDocument(document, _):
             self.media = document.image
             self.secureIdAccessContext = document.context
+        case .media(let media, _, _):
+            self.media = media as! TelegramMediaImage
+            secureIdAccessContext = nil
         default:
             fatalError("photo item not supported entry type")
         }
@@ -142,7 +145,7 @@ class MGalleryPhotoItem: MGalleryItem {
             let result = combineLatest(signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { [weak self] data, magnify -> Signal<Data, NoError> in
                 
                 let (size, orientation) = data
-                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
+                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true, drawChessboard: false)
                     |> map { [weak self] transform in
                         
                         var size = NSMakeSize(ceil(size.width * magnify), ceil(size.height * magnify))
@@ -189,11 +192,15 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override var backgroundColor: NSColor {
-        return theme.colors.transparentBackground
+        if self.entry.isProtected {
+            return .clear
+        } else {
+            return theme.colors.transparentBackground
+        }
     }
     
     override func fetch() -> Void {
-        if let message = entry.message, let file = entry.message?.effectiveMedia as? TelegramMediaFile {
+        if let message = entry.message, let file = entry.message?.anyMedia as? TelegramMediaFile {
             fetching.set(messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).start())
         } else {
             fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media)).start())

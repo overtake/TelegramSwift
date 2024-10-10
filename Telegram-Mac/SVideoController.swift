@@ -14,18 +14,7 @@ import SwiftSignalKit
 import Postbox
 import RangeSet
 import IOKit.pwr_mgt
-
-extension MediaPlayerStatus {
-    func withUpdatedVolume(_ volume: Float) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: volume, seekId: self.seekId, status: self.status)
-    }
-    func withUpdatedTimestamp(_ timestamp: Double) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
-    }
-    func withUpdatedDuration(_ duration: Double) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
-    }
-}
+import TelegramMedia
 
 enum SVideoStyle {
     case regular
@@ -35,6 +24,8 @@ enum SVideoStyle {
 
 
 class SVideoController: GenericViewController<SVideoView>, PictureInPictureControl {
+    
+    
    
     
     
@@ -78,12 +69,13 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var scrubbingFrame = Promise<MediaPlayerFramePreviewResult?>(nil)
     private var scrubbingFrames = false
     private var scrubbingFrameDisposable: Disposable?
-
+    private let isProtected: Bool
     
-    init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false) {
+    init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false, isProtected: Bool = false) {
         self.reference = reference
         self.postbox = postbox
-        mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
+        self.isProtected = isProtected
+        mediaPlayer = MediaPlayer(postbox: postbox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)
     }
@@ -137,11 +129,15 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         
     }
     
+    func isPlaying() -> Bool {
+        return !self.isPaused
+    }
+    
     private func updateIdleTimer() {
         NSCursor.unhide()
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
-            let hide = !self.genericView.isInMenu
+            let hide = !self.genericView.isInMenu && !self.genericView.insideControls
             self.hideControls.set(hide)
             if !self.pictureInPicture, !self.isPaused, hide {
                 NSCursor.hide()
@@ -167,6 +163,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 if !self.isPaused {
                     NSCursor.hide()
                 }
+            }
+            if contextMenuOnScreen() {
+                hide = false
             }
             hideControls.set(hide || forceHiddenControls)
         } else {
@@ -315,6 +314,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         
         genericView.layerContentsRedrawPolicy = .duringViewResize
 
+        genericView.mediaPlayer.preventsCapture = isProtected
         
         mediaPlayer.attachPlayerView(genericView.mediaPlayer)
         genericView.isStreamable = reference.media.isStreamable
@@ -365,21 +365,22 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 guard let `self` = self else {
                     return
                 }
+            let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0 && self.genericView.mouseDownIncontrols
                 if let result = result {
-                    self.genericView.showScrubblerPreviewIfNeeded()
-                    self.genericView.setCurrentScrubblingState(result)
+                    self.genericView.showScrubblerPreviewIfNeeded(live: live)
+                    self.genericView.setCurrentScrubblingState(result, live: live)
                 } else {
-                    self.genericView.hideScrubblerPreviewIfNeeded()
+                    self.genericView.hideScrubblerPreviewIfNeeded(live: live)
                     // empty image
                 }
             })
 
+        var paused: Bool? = nil
         
         genericView.interactions = SVideoInteractions(playOrPause: { [weak self] in
             self?.playOrPause()
         }, rewind: { [weak self] timestamp in
-            guard let `self` = self else { return }
-            self.mediaPlayer.seek(timestamp: timestamp)
+            self?.mediaPlayer.seek(timestamp: timestamp)
         }, scrobbling: { [weak self] timecode in
             guard let `self` = self else { return }
 
@@ -409,6 +410,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             closePipVideo()
         }, setBaseRate: { [weak self] rate in
             self?.setBaseRate(rate)
+        }, pause: { [weak self] in
+            if self?.isPaused == false {
+                self?.pause()
+                paused = true
+            }
+        }, play: { [weak self] in
+            if paused == true {
+                self?.play()
+                paused = nil
+            }
         })
         
         if let duration = reference.media.duration, duration < 30 {

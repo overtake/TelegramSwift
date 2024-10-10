@@ -128,6 +128,7 @@ public class LinearProgressControl: Control {
     
     public override func mouseDown(with event: NSEvent) {
         scrubblingTempState = nil
+        self.started = true
         self.startScrobbling?()
         if let _ = onUserChanged, !liveScrobbling, isEnabled {
             let location = containerView.convert(event.locationInWindow, from: nil)
@@ -140,12 +141,15 @@ public class LinearProgressControl: Control {
         }
     }
     
+    private var started: Bool = false
+    
     public var hasTemporaryState: Bool {
-        return scrubblingTempState != nil
+        return scrubblingTempState != nil || started
     }
 
     public override func mouseUp(with event: NSEvent) {
         scrubblingTempState = nil
+        self.started = false
         self.endScrobbling?()
         if let onUserChanged = onUserChanged, isEnabled {
             let location = containerView.convert(event.locationInWindow, from: nil)
@@ -265,6 +269,8 @@ public class LinearProgressControl: Control {
         if animated {
             let size = NSMakeSize(size.width - progressView.frame.width, size.height - progressView.frame.height)
             progressView.layer?.animateBounds(from: CGRect(origin: .zero, size: size), to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
+        } else {
+            progressView.layer?.removeAnimation(forKey: "bounds")
         }
         
         progressView.change(size: size, animated: animated, duration: duration, timingFunction: timingFunction)

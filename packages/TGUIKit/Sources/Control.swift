@@ -79,9 +79,15 @@ open class Control: View {
         }
     }
     open var hideAnimated:Bool = false
+    public var tooltipOnclick = false
     
-    
-    public var appTooltip: String?
+    public var appTooltip: String? {
+        didSet {
+            if let tp = appTooltip, (!tooltipOnclick && controlState == .Hover) || (tooltipOnclick && controlState == .Highlight) {
+                tooltip(for: self, text: tp)
+            }
+        }
+    }
 
     open var isSelected:Bool {
         didSet {
@@ -102,16 +108,21 @@ open class Control: View {
     
     var trackingArea:NSTrackingArea?
     
-    
+    public var hasHandlers: Bool {
+        return !handlers.isEmpty
+    }
     
     private var handlers:[ControlEventHandler] = []
     private var stateHandlers:[ControlStateHandler] = []
     
     private(set) internal var backgroundState:[ControlState:NSColor] = [:]
+    
+    private(set) internal var cursorState:[ControlState:NSCursor] = [:]
+    
     private var mouseMovedInside: Bool = true
     private var longInvoked: Bool = false
     public var handleLongEvent: Bool = true
-    
+    public var isMoving: Bool = false
     public var scaleOnClick: Bool = false
     
     open override var backgroundColor: NSColor {
@@ -145,8 +156,12 @@ open class Control: View {
     public var controlState:ControlState = .Normal {
         didSet {
             stateDidUpdate(controlState)
+            for value in stateHandlers {
+                if value.state == .Other {
+                    value.handler(self)
+                }
+            }
             if oldValue != controlState {
-                apply(state: isSelected ? .Highlight : controlState)
                 
                 for value in stateHandlers {
                     if value.state == controlState {
@@ -158,6 +173,7 @@ open class Control: View {
                     tooltip(for: self, text: tp)
                 }
             }
+            apply(state: isSelected ? .Highlight : controlState)
         }
     }
     
@@ -175,15 +191,22 @@ open class Control: View {
         if animates {
             self.layer?.animateBackground()
         }
+        
+        let cursor: NSCursor? = cursorState[state]
+        if let cursor = cursor {
+            cursor.set()
+        } else if !cursorState.isEmpty {
+            NSCursor.arrow.set()
+        }
     }
     private var previousState: ControlState?
     open func stateDidUpdate(_ state: ControlState) {
         if self.scaleOnClick {
-            if state != previousState {
+            if state != previousState, isEnabled {
                 if state == .Highlight {
-                    self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
+                    self.layer?.animateScaleSpring(from: 1, to: 0.97, duration: 0.3, removeOnCompletion: false)
                 } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {
-                    self.layer?.animateScaleSpring(from: 0.96, to: 1.0, duration: 0.3)
+                    self.layer?.animateScaleSpring(from: 0.97, to: 1.0, duration: 0.3)
                 }
             }
         }
@@ -203,12 +226,12 @@ open class Control: View {
         
         trackingArea = nil
         
-        if let _ = window {
+        if let _ = window, visibleRect != .zero {
             let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeInActiveApp, .assumeInside, .inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)
-        }
+        } 
         
     }
     
@@ -232,8 +255,10 @@ open class Control: View {
     }
     
     public var controlIsHidden: Bool {
-        return super.isHidden || layer!.opacity < Float(1.0)
+        return super.isHidden || (layer!.opacity < Float(0.5) && !controlOpacityEventIgnored)
     }
+    
+    public var controlOpacityEventIgnored: Bool = false
     
     open override var isHidden: Bool {
         get {
@@ -291,8 +316,19 @@ open class Control: View {
         return new.identifier
     }
     
+    open override func cursorUpdate(with event: NSEvent) {
+      //  super.cursorUpdate(with: event)
+        apply(state: self.controlState)
+    }
+    
     public func set(background:NSColor, for state:ControlState) -> Void {
         backgroundState[state] = background
+        apply(state: self.controlState)
+        self.setNeedsDisplayLayer()
+    }
+    
+    public func set(cursor:NSCursor, for state:ControlState) -> Void {
+        cursorState[state] = cursor
         apply(state: self.controlState)
         self.setNeedsDisplayLayer()
     }
@@ -347,7 +383,7 @@ open class Control: View {
     override open func mouseDown(with event: NSEvent) {
         longInvoked = false
         longOverHandleDisposable.set(nil)
-        
+                
         if event.modifierFlags.contains(.control) {
             
             if let menu = self.contextMenu?(), event.clickCount == 1 {
@@ -359,7 +395,9 @@ open class Control: View {
                     handler.handler(self)
                 }
             }
-            super.mouseDown(with: event)
+            if sendRightMouseAnyway {
+                super.mouseDown(with: event)
+            }
             return
         }
         
@@ -401,18 +439,25 @@ open class Control: View {
         }
     }
     
+    public var moveNextEventDeep: Bool = false
+    
     override open func mouseUp(with event: NSEvent) {
         longHandleDisposable.set(nil)
         longOverHandleDisposable.set(nil)
         
+        if moveNextEventDeep {
+            super.mouseUp(with: event)
+            moveNextEventDeep = false
+            return
+        }
+        
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
-            if isEnabled && layer!.opacity > 0 {
+            if isEnabled && !controlIsHidden {
                 send(event: .Up)
                 
                 if longInvoked {
                     send(event: .LongMouseUp)
                 }
-                
                 if mouseInside() && !longInvoked {
                     if event.clickCount == 1  {
                         send(event: .SingleClick)
@@ -424,10 +469,9 @@ open class Control: View {
                 }
             } else {
                 if mouseInside() && !longInvoked {
-                    NSSound.beep()
+                    //NSSound.beep()
                 }
             }
-            
             updateState()
             
         } else {
@@ -447,6 +491,11 @@ open class Control: View {
     }
     public var contextMenu:(()->ContextMenu?)? = nil
    
+    open func showContextMenu() {
+        if let menu = self.contextMenu?(), let event = NSApp.currentEvent {
+            AppMenu.show(menu: menu, event: event, for: self)
+        }
+    }
     
     public func send(event:ControlEvent) -> Void {
         for value in handlers {
@@ -466,6 +515,19 @@ open class Control: View {
         }
     }
     
+    public var handleScrollEventOnInteractionEnabled: Bool = false
+    
+    open override func scrollWheel(with event: NSEvent) {
+        if userInteractionEnabled, handleScrollEventOnInteractionEnabled {
+            
+        } else {
+            super.scrollWheel(with: event)
+        }
+    }
+    
+    open var sendRightMouseAnyway: Bool {
+        return true
+    }
     
     open override func rightMouseDown(with event: NSEvent) {
         if let menu = self.contextMenu?(), event.clickCount == 1, userInteractionEnabled {
@@ -475,7 +537,9 @@ open class Control: View {
         if userInteractionEnabled {
             updateState()
             send(event: .RightDown)
-            super.rightMouseDown(with: event)
+            if sendRightMouseAnyway {
+                super.rightMouseDown(with: event)
+            }
         } else {
             super.rightMouseDown(with: event)
         }
@@ -566,11 +630,6 @@ open class Control: View {
         super.init(frame: frameRect)
         animates = false
 //        layer?.disableActions()
-        guard #available(OSX 10.12, *) else {
-            layer?.opacity = 0.99
-            return
-        }
-        
       
         
         //self.wantsLayer = true
@@ -583,12 +642,7 @@ open class Control: View {
         animates = false
         layer?.disableActions()
 
-        guard #available(OSX 10.12, *) else {
-            layer?.opacity = 0.99
-            return
-        }
-        
-      
+       
         
         //self.wantsLayer = true
         //self.layer?.isOpaque = true
@@ -599,10 +653,28 @@ open class Control: View {
     }
     
     open override func becomeFirstResponder() -> Bool {
-        if let window = kitWindow {
+        if let window = _window {
             return window.makeFirstResponder(self)
         }
         return false
+    }
+    
+    public weak var redirectView: NSView?
+    
+    open override func smartMagnify(with event: NSEvent) {
+        if let redirectView = self.redirectView {
+            redirectView.smartMagnify(with: event)
+        } else {
+            super.smartMagnify(with: event)
+        }
+    }
+    
+    open override func magnify(with event: NSEvent) {
+        if let redirectView = self.redirectView {
+            redirectView.magnify(with: event)
+        } else {
+            super.magnify(with: event)
+        }
     }
  
     public var forceMouseDownCanMoveWindow: Bool = false

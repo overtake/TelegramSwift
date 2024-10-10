@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 
@@ -23,8 +23,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         let message = object.message!
         self.file = message.media[0] as! TelegramMediaFile
         self.music = music
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        let formatter = DateSelectorUtil.mediaMediumDate
         
         let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - interface.context.timeDifference)
         
@@ -310,7 +309,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             updatedStatusSignal = combineLatest(chatMessageFileStatus(context: item.interface.context, message: item.message, file: file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
-                        return .Fetching(isActive: true, progress: pendingStatus.progress)
+                        return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                     } else {
                         return resourceStatus
                     }
@@ -348,19 +347,19 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let backgroundColor: NSColor
         let foregroundColor: NSColor
-        if let media = item.message.effectiveMedia as? TelegramMediaFile, media.isInstantVideo {
+        if let media = item.message.anyMedia as? TelegramMediaFile, media.isInstantVideo {
             backgroundColor = .blackTransparent
             foregroundColor = .white
         } else {
             backgroundColor = theme.colors.fileActivityBackground
             foregroundColor = theme.colors.fileActivityForeground
         }
-        if let controller = item.context.audioPlayer, let song = controller.currentSong {
+        if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
            
             
             if song.entry.isEqual(to: item.message), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:0))
-                progressView.state = .Icon(image: theme.icons.chatMusicPause, mode: .normal)
+                progressView.state = .Icon(image: theme.icons.chatMusicPause)
             } else {
                 progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
                 progressView.state = .Play

@@ -12,17 +12,18 @@ import TelegramCore
 import InAppSettings
 import TGUIKit
 import SwiftSignalKit
+import TelegramMedia
 
-let diceSide1: String = "1️⃣"
-let diceSide2: String = "2️⃣"
-let diceSide3: String = "3️⃣"
-let diceSide4: String = "4️⃣"
-let diceSide5: String = "5️⃣"
-let diceSide6: String = "6️⃣"
-let diceSide7: String = "7️⃣"
-let diceSide8: String = "8️⃣"
-let diceSide9: String = "9️⃣"
-let diceIdle: String = "#️⃣"
+let diceSide1: String = "1⃣"
+let diceSide2: String = "2⃣"
+let diceSide3: String = "3⃣"
+let diceSide4: String = "4⃣"
+let diceSide5: String = "5⃣"
+let diceSide6: String = "6⃣"
+let diceSide7: String = "7⃣"
+let diceSide8: String = "8⃣"
+let diceSide9: String = "9⃣"
+let diceIdle: String = "#⃣"
 
 
 
@@ -72,10 +73,10 @@ private struct DiceState : Equatable {
         return lhs.play == rhs.play && isEqualMessages(lhs.message, rhs.message)
     }
     
-    init(message: Message) {
+    init(message: Message, played: Bool) {
         self.message = message
         self.messageId = message.id
-        if let dice = message.effectiveMedia as? TelegramMediaDice, dice.value == 0 {
+        if let dice = message.anyMedia as? TelegramMediaDice, dice.value == 0 {
             play = .idle
         } else if message.forwardInfo != nil {
             play = .end(animated: false)
@@ -85,7 +86,7 @@ private struct DiceState : Equatable {
             } else if message.flags.isSending {
                 play = .idle
             } else {
-                if !FastSettings.diceHasAlreadyPlayed(message) {
+                if !played {
                     play = .end(animated: true)
                 } else {
                     play = .end(animated: false)
@@ -146,7 +147,7 @@ class ChatDiceContentView: ChatMediaContentView {
         if let media = media, let message = self.parent {
             let item = self.table?.item(stableId: ChatHistoryEntryId.message(message))
             
-            if let item = item as? ChatRowItem, let peer = item.peer, peer.canSendMessage(item.chatInteraction.mode.isThreadMode) {
+            if let item = item as? ChatRowItem, let peer = item.peer, peer.canSendMessage(item.chatInteraction.mode.isThreadMode, media: message.media.first) {
                 let text: String
                 
                 switch media.emoji {
@@ -237,7 +238,7 @@ class ChatDiceContentView: ChatMediaContentView {
     
         let settings = InteractiveEmojiConfiguration.with(appConfiguration: context.appConfiguration)
         
-        let diceState = DiceState(message: parent)
+        let diceState = DiceState(message: parent, played: parameters?.dicePlayed(parent) ?? true)
         
         
         self.diceState = diceState
@@ -246,7 +247,8 @@ class ChatDiceContentView: ChatMediaContentView {
         
         let data: Signal<(Data?, TelegramMediaFile), NoError> = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, synchronous: approximateSynchronousValue) |> mapToSignal { values in
             for value in values {
-                if value.0 == sideSymbol {
+                let str = value.0.withoutColorizer
+                if str == sideSymbol {
                     return .single((value.1, value.2))
                 }
             }
@@ -281,11 +283,11 @@ class ChatDiceContentView: ChatMediaContentView {
                             saveContext = true
                         } else {
                             playPolicy = .toEnd(from: .max)
-                            FastSettings.markDiceAsPlayed(parent)
+                            parameters?.markDiceAsPlayed(parent)
                         }
                     } else {
                         playPolicy = .toEnd(from: .max)
-                        FastSettings.markDiceAsPlayed(parent)
+                        parameters?.markDiceAsPlayed(parent)
                     }
                     
                 } else {
@@ -299,7 +301,7 @@ class ChatDiceContentView: ChatMediaContentView {
 
                 animation.onFinish = {
                     if case .end = diceState.play {
-                        FastSettings.markDiceAsPlayed(parent)
+                        parameters?.markDiceAsPlayed(parent)
                     }
                 }
                 switch diceState.play {

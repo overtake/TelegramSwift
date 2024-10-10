@@ -74,7 +74,7 @@ func searchPeerMembers(context: AccountContext, peerId: PeerId, chatLocation: Ch
                             disposable.dispose()
                         }
                     case let .thread(replyThreadMessage):
-                        let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.mentions(peerId: peerId, threadMessageId: replyThreadMessage.messageId, searchQuery: query.isEmpty ? nil : query, updated: { state in
+                        let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.mentions(peerId: peerId, threadMessageId: replyThreadMessage.effectiveTopId, searchQuery: query.isEmpty ? nil : query, updated: { state in
                             if case .ready = state.loadingState {
                                 subscriber.putNext((state.list.compactMap { participant in
                                     if participant.peer.isDeleted {

@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import TGUIKit
-
+import ApiCredentials
 
 func resourcePath(_ postbox: Postbox, _ resource: MediaResource) -> String {
     if let resource = resource as? LocalFileReferenceMediaResource {
@@ -100,14 +100,14 @@ class UNUserNotifications : NSObject {
                     if sourceMessageId.peerId.namespace != Namespaces.Peer.CloudUser {
                         replyToMessageId = sourceMessageId
                     }
-                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: Int64(messageId.id), replyToMessageId: replyToMessageId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
 
                 } else {
                     var replyToMessageId:MessageId?
                     if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
                         replyToMessageId = messageId
                     }
-                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: Int64(messageId.id), replyToMessageId: replyToMessageId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                 }
             } else {
                 let fromId = getNotificationMessageId(userInfo: userInfo, for: "source")
@@ -306,6 +306,10 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.userInfo = notification.userInfo ?? [:]
         let soundSettings = self.soundSettings
         
+        guard let containerUrl = ApiEnvironment.legacyContainerURL?.path else {
+            return
+        }
+        
         if let soundName = notification.soundName {
             if soundName == "default" {
                 content.sound = .default
@@ -313,7 +317,13 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
                 if let soundSettings = soundSettings {
                     switch soundSettings {
                     case .enabled:
-                        appDelegate?.playSound(soundName)
+                        if soundName.hasPrefix(containerUrl) {
+                            content.sound = nil
+                            appDelegate?.playSound(soundName)
+                        } else {
+                            let name = soundName.nsstring.lastPathComponent.nsstring.deletingPathExtension
+                            content.sound = .init(named: .init(name))
+                        }
                     default:
                         break
                     }

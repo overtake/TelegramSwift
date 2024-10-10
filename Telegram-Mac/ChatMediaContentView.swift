@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import TelegramMedia
 import TGUIKit
 
 
@@ -38,6 +38,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             super.backgroundColor = newValue
             for view in subviews {
                 if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) && !(view is VoiceTranscriptionControl) {
+                    if let view = view as? View, view.isDynamicColorUpdateLocked {
+                        continue
+                    }
                     view.background = newValue
                 }
             }
@@ -266,6 +269,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             if let parent = parent, parent.id.peerId.namespace == Namespaces.Peer.SecretChat {
                 acceptDragging = false
             }
+            if hasHandlers {
+                super.mouseDown(with: event)
+            }
         }
         
         if !acceptDragging {
@@ -362,12 +368,15 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     override func mouseUp(with event: NSEvent) {
+            
         if event.modifierFlags.contains(.control) {
             super.mouseUp(with: event)
             return
         }
         
-        
+        if userInteractionEnabled, hasHandlers {
+            super.mouseUp(with: event)
+        }
         if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 || canSpamClicks {
             executeInteraction(false)
         } else {

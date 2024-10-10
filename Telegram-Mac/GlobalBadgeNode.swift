@@ -265,13 +265,13 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
     if string.count > 3 {
         string = ".." + string.nsstring.substring(from: string.length - 2)
     }
-    let attributedString = NSAttributedString.initialize(string: string, color: .white, font: .medium(8), coreText: true)
+    let attributedString = NSAttributedString.initialize(string: string, color: .white, font: .medium(8))
     
     let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(18, CGFloat.greatestFiniteMagnitude), nil, false, .center)
     
     let generated: CGImage?
     if unreadCount > 0 {
-        generated = generateImage(NSMakeSize(max((textLayout.0.size.width + 4), (textLayout.0.size.height + 4)), (textLayout.0.size.height + 2)), scale: nil, rotatedContext: { size, ctx in
+        generated = generateImage(NSMakeSize(max((textLayout.0.size.width + 4), (textLayout.0.size.height + 4)), (textLayout.0.size.height + 2)), rotatedContext: { size, ctx in
             let rect = NSMakeRect(0, 0, size.width, size.height)
             ctx.clear(rect)
             

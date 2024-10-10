@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import TgVoipWebrtc
 import SwiftSignalKit
-
+import TelegramMedia
 
 
 
@@ -73,10 +73,12 @@ private final class DesktopCapturerView : View {
     private let titleContainer = View()
     private let controls = View()
     
-    let cancel = TitleButton()
-    let share = TitleButton()
+    let cancel = TextButton()
+    let share = TextButton()
     
     fileprivate class Micro : Control {
+        
+        private(set) var valueIsUpdated: Bool = false
         
         var isOn: Bool = false {
             didSet {
@@ -104,6 +106,7 @@ private final class DesktopCapturerView : View {
                     return
                 }
                 strongSelf.isOn = !strongSelf.isOn
+                strongSelf.valueIsUpdated = true
             }, for: .Click)
         }
         
@@ -142,9 +145,22 @@ private final class DesktopCapturerView : View {
     }
     
     fileprivate let micro: Micro = Micro(frame: NSMakeRect(0, 0, 40, 40))
+    private let visualBackgroundView = NSVisualEffectView()
+    private let backgroundContainerView = View()
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.addSubview(visualBackgroundView)
+        self.addSubview(backgroundContainerView)
+        
+        backgroundContainerView.backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(1.0)
+
+
+        visualBackgroundView.wantsLayer = true
+        visualBackgroundView.material = .ultraDark
+        visualBackgroundView.blendingMode = .behindWindow
+        visualBackgroundView.state = .active
+        
         addSubview(listContainer)
         addSubview(previewContainer)
         
@@ -153,7 +169,6 @@ private final class DesktopCapturerView : View {
         addSubview(controls)
         previewContainer.layer?.cornerRadius = 10
         previewContainer.backgroundColor = .black
-        backgroundColor = GroupCallTheme.windowBackground
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         layout()
@@ -277,6 +292,10 @@ private final class DesktopCapturerView : View {
     
     override func layout() {
         super.layout()
+        
+        backgroundContainerView.frame = bounds
+        visualBackgroundView.frame = bounds
+        
         previewContainer.frame = .init(origin: .init(x: 20, y: 53), size: .init(width: 660, height: 360))
         listContainer.frame = .init(origin: .init(x: 0, y: frame.height - 90 - 80), size: .init(width: frame.width, height: 90))
         if let listView = listView {
@@ -323,6 +342,8 @@ final class DesktopCapturerWindow : Window {
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
         self.isMovableByWindowBackground = true
+//        self.backgroundColor = .clear
+        self.isOpaque = true
         self.level = .normal
         self.toolbar = NSToolbar(identifier: "window")
         self.toolbar?.showsBaselineSeparator = false
@@ -363,12 +384,16 @@ final class DesktopCapturerWindow : Window {
             if let source = self?.listController.selected {
                 let select = self?.select
                 let wantsToSpeak = self?.genericView.micro.isOn ?? false
-                delay(1.0, closure: {
-                    select?(source, wantsToSpeak)
-                })
+                select?(source, wantsToSpeak)
             }
         }, for: .Click)
 
+    }
+    
+    func updateDefaultMuted(_ defaultMuted: Bool) {
+        if !self.genericView.micro.valueIsUpdated {
+            self.genericView.micro.isOn = !defaultMuted
+        }
     }
     
     private var genericView:DesktopCapturerView {

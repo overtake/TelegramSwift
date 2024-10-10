@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 
 enum LocalAnimatedSticker : String {
@@ -38,8 +38,11 @@ enum LocalAnimatedSticker : String {
     case group_call_chatlist_typing
     case invitations
     case destructor
+    case global_autoremove
     case gigagroup
     case police
+    case duck_empty
+    case ton_logo
     
     case voice_chat_raise_hand_1
     case voice_chat_raise_hand_2
@@ -79,7 +82,8 @@ enum LocalAnimatedSticker : String {
     
     case bot_menu_close
     case bot_close_menu
-    
+    case bot_menu_web_app
+
     case request_join_link
     case thumbsup
     case zoom
@@ -87,6 +91,9 @@ enum LocalAnimatedSticker : String {
     case email_recovery
     case qrcode_matrix
     case login_airplane
+    case login_word
+    
+    case hand_animation
     
     case device_android
     case device_chrome
@@ -101,14 +108,30 @@ enum LocalAnimatedSticker : String {
     case device_windows
     
     case change_sim
+    case pirate_flag
+    case expired_story
+    
+    case stories_archive
+    
+    case share_folder
     
     case text_to_voice
     case voice_to_text
     case voice_dots
+    case transcription_locked
     
     case premium_addone
     case premium_double
     case premium_unlock
+    
+    case premium_gift_12
+    case premium_gift_6
+    case premium_gift_3
+    
+    case single_voice_fire
+    
+    case show_status_profile
+    case show_status_read
     
     case menu_add_to_folder
     case menu_archive
@@ -138,6 +161,7 @@ enum LocalAnimatedSticker : String {
     case menu_save_as
     case menu_select_messages
     case menu_schedule_message
+    case menu_online
     case menu_send_now
     case menu_seen
     case menu_view_replies
@@ -183,13 +207,12 @@ enum LocalAnimatedSticker : String {
     case menu_moon
     case menu_sun
     case menu_lock
+    case menu_unlock
     case menu_poll
     case menu_location
     case menu_camera
     case menu_translate
     case menu_gear
-
-    
     case menu_folder_all_chats
     case menu_folder_animal
     case menu_folder_book
@@ -220,18 +243,14 @@ enum LocalAnimatedSticker : String {
     case menu_drugs
     case menu_reload
     case menu_webapp_placeholder
-    
     case menu_autodelete_1d
     case menu_autodelete_1h
     case menu_autodelete_1m
     case menu_autodelete_1w
     case menu_autodelete_never
     case menu_autodelete_customize
-
-    
     case menu_speaker_muted
     case menu_speaker
-    
     case menu_sharescreen_slash
     case menu_sharescreen
     case menu_note_download
@@ -243,14 +262,107 @@ enum LocalAnimatedSticker : String {
     case menu_topics
     case menu_pause
     case menu_play
-
+    case menu_hide
+    case menu_show
+    case menu_report_false_positive
+    case menu_bio
+    case menu_send_spoiler
+    case menu_forever
+    case menu_add
+    case menu_more
+    case menu_atsign
+    case menu_speed
+    case menu_success
+    case menu_save_to_profile
+    case menu_move_to_contacts
+    case menu_stories
+    case menu_download_circle_lock
+    case menu_download_circle
+    case menu_eye_locked
+    case menu_eye_slash
+    case menu_lighting
+    case menu_quote
+    case menu_boost
+    case menu_boost_plus
+    case menu_search
+    case menu_eye
+    case menu_ban
+    case menu_adult_slash
+    case menu_adult
+    case menu_sort_up
+    case menu_sort_down
+    case menu_verification
+    case menu_paid
+    
+    case emoji_category_activities
+    case emoji_category_angry
+    case emoji_category_arrow_to_search
+    case emoji_category_away
+    case emoji_category_bath
+    case emoji_category_busy
+    case emoji_category_dislike
+    case emoji_category_food
+    case emoji_category_happy
+    case emoji_category_heart
+    case emoji_category_hi
+    case emoji_category_home
+    case emoji_category_like
+    case emoji_category_neutral
+    case emoji_category_omg
+    case emoji_category_party
+    case emoji_category_recent
+    case emoji_category_sad
+    case emoji_category_search_to_arrow
+    case emoji_category_sleep
+    case emoji_category_study
+    case emoji_category_tongue
+    case emoji_category_vacation
+    case emoji_category_what
+    case emoji_category_work
+    
+    case menu_tag_filter
+    case menu_tag_remove
+    case menu_tag_rename
+    
+    case menu_hd
+    case menu_hd_lock
+    case menu_sd
+    
     case forum_topic
     
     case custom_reaction
     
+    case business_away_message
+    case business_greeting_message
+    case business_hours
+    case business_chatbot
+    case business_location
+    case business_quick_reply
+    case business_links
+    
+    case fragment_username
+    case fragment
+    
+    case chatlist_game
+    case chatlist_music
+    case chatlist_poll
+    case chatlist_voice
+    
+    case star_currency
+    case star_currency_part
+
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
+    }
+    
+    var monochromeFile: TelegramMediaFile {
+        let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
+        return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs"), .CustomEmoji(isPremium: false, isSingleColor: true, alt: "", packReference: nil)])
+    }
+    
+    func menuIcon(_ color: NSColor) -> CGImage? {
+        return NSImage(named: self.rawValue)?.precomposed(color)
     }
     
     
@@ -340,6 +452,37 @@ enum LocalAnimatedSticker : String {
         case .police:
             playPolicy = .loop
             hidePlayer = false
+        case .premium_gift_3:
+            playPolicy = .onceEnd
+        case .premium_gift_6:
+            playPolicy = .onceEnd
+        case .premium_gift_12:
+            playPolicy = .onceEnd
+        case .show_status_read:
+            playPolicy = .onceEnd
+        case .show_status_profile:
+            playPolicy = .onceEnd
+        case .business_hours:
+            playPolicy = .onceEnd
+        case .business_location:
+            playPolicy = .onceEnd
+        case .business_quick_reply:
+            playPolicy = .onceEnd
+        case .business_chatbot:
+            playPolicy = .onceEnd
+        case .business_away_message:
+            playPolicy = .onceEnd
+        case .business_links:
+            playPolicy = .onceEnd
+        case .business_greeting_message:
+            playPolicy = .onceEnd
+        case .fragment_username:
+            playPolicy = .onceEnd
+        case .fragment:
+            playPolicy = .onceEnd
+        case .ton_logo:
+            playPolicy = .onceEnd
+
         default:
             playPolicy = .loop
             hidePlayer = false

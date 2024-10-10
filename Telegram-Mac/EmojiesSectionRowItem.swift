@@ -15,7 +15,8 @@ import Postbox
 import FastBlur
 import ObjcUtils
 import Accelerate
-
+import TelegramMedia
+import InAppSettings
 final class EmojiesSectionRowItem : GeneralRowItem {
     
     enum Item : Equatable {
@@ -92,6 +93,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let viewSet: ((StickerPackCollectionInfo)->Void)?
     
     let nameLayout: TextViewLayout?
+    private(set) var sectionLayout: TextViewLayout?
+
     let isPremium: Bool
     let revealed: Bool
     let showAllItems:(()->Void)?
@@ -102,19 +105,26 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     let openPremium:(()->Void)?
     let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
-    
+
     enum Mode {
         case panel
         case preview
         case reactions
         case statuses
+        case topic
+        case backgroundIcon
+        case channelReactions
+        case channelStatus
+        case defaultTags
+        case messageEffects
     }
     let mode: Mode
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
-        self.itemSize = NSMakeSize(41, 34)
+    let color: NSColor?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], isBig: Bool = false, groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+        self.itemSize = isBig ? NSMakeSize(66, 60) : NSMakeSize(40, 34)
         self.info = info
         self.mode = mode
+        self.color = color
         self._items = items
         self.viewSet = viewSet
         self.installed = installed
@@ -124,13 +134,17 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.showAllItems = showAllItems
         self.openPremium = openPremium
         self.installPack = installPack
-        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0)
+        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions && !groupEmojiPack //&& mode != .defaultTags
        
+        
         self.context = context
         self.callback = callback
         
-        if stableId != AnyHashable(0), let info = info {
+        if stableId != AnyHashable(0), let info = info, !info.title.isEmpty {
             let text = info.title.uppercased()
+            if groupEmojiPack {
+                sectionLayout = .init(.initialize(string: strings().emojiSectionGroupEmoji, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
+            }
             let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
             self.nameLayout = layout
         } else {
@@ -139,7 +153,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             switch mode {
-            case .panel, .reactions, .statuses:
+            case .panel, .reactions, .statuses, .topic, .backgroundIcon, .defaultTags:
                 if isPremium && !context.isPremium {
                     if installed {
                         self.unlockText = (strings().emojiPackRestore, true, true)
@@ -151,6 +165,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 } else {
                     self.unlockText = nil
                 }
+            case .channelReactions, .channelStatus, .messageEffects:
+                self.unlockText = nil
             case .preview:
                 if stableId != AnyHashable(0) {
                     if installed {
@@ -222,8 +238,13 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         self.items = mapped
         
-        nameLayout?.measure(width: unlockText != nil ? 200 : 300)
+        sectionLayout?.measure(width: unlockText != nil ? 200 : 300)
 
+        var name_w: CGFloat = (unlockText != nil ? 200 : 300)
+        if let sectionLayout {
+            name_w -= (sectionLayout.layoutSize.width + 10)
+        }
+        nameLayout?.measure(width: name_w)
         return true
     }
     
@@ -234,13 +255,13 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             height += nameLayout.layoutSize.height + (unlockText != nil ? 15 : 5)
         }
         
-        let perline: CGFloat = floor(width / itemSize.width)
+        let perline: CGFloat = floor(max(300, width - 20) / itemSize.width)
 
         
         height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / perline))
         
         if let _ = nameLayout {
-            height += 5
+            height += 7
         }
 
         
@@ -254,17 +275,51 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         let context = self.context
         
         var copyItem: ContextMenuItem?
+        var setStatus: ContextMenuItem?
         if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
             let input: ChatTextInputState
             if let bundle = file.stickerText {
                 input = .init(inputText: bundle, selectionRange: 0..<bundle.length, attributes: [])
             } else {
                 let text = file.customEmojiText ?? file.stickerText ?? ""
-                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id, nil)])
+                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, file.fileId.id, file, info?.id)])
             }
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
             }, itemImage: MenuAnimation.menu_copy.value)
+            
+            
+        }
+        
+        if context.isPremium {
+            if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+                switch mode {
+                case .panel:
+                    setStatus = .init(strings().emojiContextSetStatus, handler: {
+                        _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                        showModalText(for: context.window, text: strings().emojiContextSetStatusSuccess)
+                    }, itemImage: MenuAnimation.menu_smile.value)
+                default:
+                    setStatus = nil
+                }
+                
+            }
+        }
+        
+        if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                            if let path = path {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.writeObjects([NSURL(fileURLWithPath: path)])
+                            }
+                        })
+                    }, itemImage: MenuAnimation.menu_copy_media.value))
+                }
+            }
         }
         
         switch mode {
@@ -284,6 +339,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 if let copyItem = copyItem {
                     items.append(copyItem)
                 }
+                if let setStatus = setStatus {
+                    items.append(setStatus)
+                }
             }
             return .single(items)
         case .statuses:
@@ -301,22 +359,47 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                         
                         let lrect = context.window.convertFromScreen(srect)
                         
+                        
                         for hour in hours {
                             items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
                                 self?.callback(sticker, self?.info, hour, lrect)
                             }))
                         }
+                        #if DEBUG
+                        if #available(macOS 13, *) {
+                            items.append(ContextSeparatorItem())
+                            //TODO LANG
+                            items.append(ContextMenuItem("Apply for Focus Filter", handler: {
+                                _ = updateSomeSettingsInteractively(postbox: context.account.postbox, { current in
+                                    var current = current
+                                    current.focusIntentStatusActive = sticker.file.fileId.id
+                                    return current
+                                }).startStandalone()
+                                showModalText(for: context.window, text: "This emoji will be used for system Focus Mode")
+                            }))
+                        }
+                        #endif
                     }
                 }
             }
+            
             return .single(items)
         case .preview:
             if let copyItem = copyItem {
                 items.append(copyItem)
             }
+            if let setStatus = setStatus {
+                items.append(setStatus)
+            }
             return .single(items)
         default:
             break
+        }
+        
+        
+        
+        if let setStatus = setStatus {
+            items.append(setStatus)
         }
         
         if stableId == AnyHashable(0) || self.viewSet == nil {
@@ -334,6 +417,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             }
         }
        
+      
         
         
 //        items.append(ContextMenuItem(strings().emojiContextRemove, handler: {
@@ -350,14 +434,22 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     func invokeLockAction() {
         if let info = info {
             switch mode {
-            case .panel, .reactions, .statuses:
+            case .panel, .reactions, .statuses, .topic, .backgroundIcon:
                 if isPremium && !context.isPremium {
                     self.openPremium?()
                 } else if !installed {
                     self.installPack?(info, self.stickerItems)
                 }
+            case .channelReactions:
+                self.installPack?(info, self.stickerItems)
+            case .defaultTags:
+                self.installPack?(info, self.stickerItems)
             case .preview:
                 self.installPack?(info, self.stickerItems)
+            case .channelStatus:
+                self.installPack?(info, self.stickerItems)
+            case .messageEffects:
+                break
             }
             
         }
@@ -371,17 +463,19 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
 
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
-        
-//        if let item = itemUnderMouse?.1, let file = item.item?.file, let emojiReference = file.emojiReference {
-//            let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
-//            if file.isVideoSticker && !file.isWebm {
-//                return (.file(reference, GifPreviewModalView.self), nil)
-//            } else if file.isAnimatedSticker || file.isWebm {
-//                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
-//            } else if file.isStaticSticker {
-//                return (.file(reference, StickerPreviewModalView.self), nil)
-//            }
-//        }
+        if let item = itemUnderMouse?.1, let file = item.item?.file {
+            let emojiReference = file.emojiReference ?? file.stickerReference
+            if let emojiReference = emojiReference {
+                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
+                if file.isVideoSticker && !file.isWebm {
+                    return (.file(reference, GifPreviewModalView.self), nil)
+                } else if file.isAnimatedSticker || file.isWebm || file.isCustomEmoji {
+                    return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+                } else if file.isStaticSticker  {
+                    return (.file(reference, StickerPreviewModalView.self), nil)
+                }
+            }
+        }
         return nil
     }
     
@@ -439,11 +533,12 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     fileprivate let contentView = Control()
     
     private var nameView: TextView?
-    
+    private var sectionTextView: TextView?
+
     private var lockView: ImageView?
     private let container = View()
     
-    private var reveal: TitleButton?
+    private var reveal: TextButton?
     
     private var appearanceViews:[WeakReference<NSView>] = []
     
@@ -451,6 +546,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         super.init(frame: frameRect)
         addSubview(container)
         addSubview(contentView)
+        
+        container.layer?.masksToBounds = false
         
         contentView.set(handler: { [weak self] _ in
             self?.updateDown()
@@ -539,10 +636,13 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 transition.updateFrame(view: nameView, frame: nameView.centerFrame())
             }
         }
+        if let sectionTextView = sectionTextView {
+            transition.updateFrame(view: sectionTextView, frame: sectionTextView.centerFrameY(x: (nameView?.frame.maxX ?? 0) + 4))
+        }
         
         var contentRect = bounds
         if let nameView = nameView {
-            contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + (unlock != nil ? 15 : 5))
+            contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + (unlock != nil ? 15 : 7))
         }
         transition.updateFrame(view: contentView, frame: contentRect)
         
@@ -667,13 +767,33 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
             self.nameView = nil
         }
         
+        if let layout = item.sectionLayout {
+            let current: TextView
+            if let view = self.sectionTextView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.sectionTextView = current
+                container.addSubview(current)
+            }
+            current.update(layout)
+            current.backgroundColor = theme.colors.grayIcon.withAlphaComponent(0.2)
+            current.setFrameSize(NSMakeSize(layout.layoutSize.width + 12, layout.layoutSize.height + 2))
+            current.layer?.cornerRadius = current.frame.height * 0.5
+        } else if let view = self.sectionTextView {
+            performSubviewRemoval(view, animated: animated)
+            self.sectionTextView = nil
+        }
+        
         
         if case let .more(rect, count) = item.items.last {
-            let current: TitleButton
+            let current: TextButton
             if let view = self.reveal {
                 current = view
             } else {
-                current = TitleButton()
+                current = TextButton()
                 self.reveal = current
                 contentView.addSubview(current)
             }
@@ -726,16 +846,16 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     item?.invokeLockAction()
                 }, for: .Click)
             } else {
-                let current: TitleButton
+                let current: TextButton
                 let isNew: Bool
-                if let view = self.unlock as? TitleButton {
+                if let view = self.unlock as? TextButton {
                     current = view
                     isNew = false
                 } else {
                     if let view = unlock {
                         performSubviewRemoval(view, animated: animated)
                     }
-                    current = TitleButton(frame: .zero)
+                    current = TextButton(frame: .zero)
                     current.autohighlight = false
                     current.scaleOnClick = true
                     current.layer?.cornerRadius = 10
@@ -743,7 +863,9 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     self.addSubview(current)
                     isNew = true
                 }
-                current.set(background: unlockText.2 ? theme.colors.accent : theme.colors.accent.withAlphaComponent(0.6), for: .Normal)
+                let primaryColor = item.color ?? theme.colors.accent
+                
+                current.set(background: unlockText.2 ? primaryColor : primaryColor.withAlphaComponent(0.6), for: .Normal)
                 current.set(font: .medium(12), for: .Normal)
                 current.set(color: theme.colors.underSelectedColor, for: .Normal)
                 current.set(text: unlockText.0, for: .Normal)
@@ -774,8 +896,15 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         
         self.updateLayout(size: frame.size, transition: transition)
         
+        let color: NSColor
+        if let c = item.color {
+            color = c
+        } else {
+            let isPanel = item.mode == .panel || item.mode == .preview
+            color = isPanel ? theme.colors.text : theme.colors.accent
+        }
         
-        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
+        self.updateInlineStickers(context: item.context, color: color, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
 
         while !appearanceViews.isEmpty {
             appearanceViews.removeLast().value?.removeFromSuperview()
@@ -800,16 +929,20 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
     }
     
-    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {
+    private var previousColor: NSColor? = nil
+    
+    func updateInlineStickers(context: AccountContext, color: NSColor, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var validLockIds: [InlineStickerItemLayer.Key] = []
         var validSelectedIds: [InlineStickerItemLayer.Key] = []
         
         var index: Int = 0
+        
+        let animated = animated && previousColor == color
 
         for item in items {
             if let current = item.item {
-                let id = InlineStickerItemLayer.Key(id: current.file.fileId.id, index: index)
+                let id = InlineStickerItemLayer.Key(id: current.file.fileId.id, index: index, color: color)
                 validIds.append(id)
 
                 let rect = item.rect
@@ -821,7 +954,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     } else {
                         current = SimpleLayer()
                         current.masksToBounds = true
-                        current.frame = NSMakeRect(rect.minX - 4.5, rect.minY - 4.5, 34, 33)
+                        current.frame = NSMakeRect(rect.minX - floorToScreenPixels(4.5), rect.minY - floorToScreenPixels(4.5), 34, 33)
                         current.cornerRadius = 10
                         if #available(macOS 10.15, *) {
                             current.cornerCurve = .continuous
@@ -834,7 +967,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     
                     switch selection {
                     case .normal:
-                        current.backgroundColor = theme.colors.accent.withAlphaComponent(0.2).cgColor
+                        current.backgroundColor = color.withAlphaComponent(0.2).cgColor
                     case .transparent:
                         current.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1).cgColor
                     }
@@ -852,12 +985,18 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                     view = current
                 } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    if let layer = self.inlineStickerItemViews[id] {
+                        performSublayerRemoval(layer, animated: animated, scale: true)
+                    }
                     
-                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, playPolicy: isEmojiLite ? .framesCount(1) : .loop, textColor: color)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)
+                    if animated {
+                        view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                        view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
                 
                 if #available(macOS 10.15, *) {
@@ -865,7 +1004,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 }
                 view.masksToBounds = true
                 view.cornerRadius = item.selection != nil ? 4 : 0
-//                view.backgroundColor = NSColor.random.cgColor
                 
                 if item.lock {
                     let current: InlineStickerLockLayer
@@ -890,15 +1028,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                
                 
                 index += 1
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
-                    }
-                }
-                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && isKeyWindow
                 view.frame = rect
             }
         }
@@ -907,7 +1036,14 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperlayer()
+                if previousColor != color {
+                    delay(0.1, closure: {
+                        performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                    })
+                } else {
+                    performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                }
+                
             }
         }
         for key in removeKeys {
@@ -935,56 +1071,27 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for key in removeSelectionKeys {
             self.selectedLayers.removeValue(forKey: key)
         }
+        self.previousColor = color
+        self.updateAnimatableContent()
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? EmojiesSectionRowItem {
+            if item.mode == .topic || item.mode == .backgroundIcon {
+                return true
+            }
+            return item.context.isLite(.emoji)
+        }
         
+        return super.isEmojiLite
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
-
-
-/*
- let groupBorderFrame = NSMakeRect(10, 8, bounds.width - 20, bounds.height - 2 - 8)
-
- 
- shapeLayer.frame = groupBorderFrame
- 
- 
- let radius: CGFloat = 10
- 
- let headerWidth: CGFloat = container.frame.width + 10
- 
- let path = CGMutablePath()
- path.move(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0), y: 0.0))
- path.addLine(to: CGPoint(x: radius, y: 0.0))
- path.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: 0.0, y: radius), radius: radius)
- path.addLine(to: CGPoint(x: 0.0, y: groupBorderFrame.height - radius))
- path.addArc(tangent1End: CGPoint(x: 0.0, y: groupBorderFrame.height), tangent2End: CGPoint(x: radius, y: groupBorderFrame.height), radius: radius)
- path.addLine(to: CGPoint(x: groupBorderFrame.width - radius, y: groupBorderFrame.height))
- path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height), tangent2End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height - radius), radius: radius)
- path.addLine(to: CGPoint(x: groupBorderFrame.width, y: radius))
- path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: 0.0), tangent2End: CGPoint(x: groupBorderFrame.width - radius, y: 0.0), radius: radius)
- path.addLine(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0) + headerWidth, y: 0.0))
- 
- let pathLength = (2.0 * groupBorderFrame.width + 2.0 * groupBorderFrame.height - 8.0 * radius + 2.0 * .pi * radius) - headerWidth
- 
- var numberOfDashes = Int(floor(pathLength / 6.0))
- if numberOfDashes % 2 == 0 {
-     numberOfDashes -= 1
- }
- let wholeLength = 6.0 * CGFloat(numberOfDashes)
- let remainingLength = pathLength - wholeLength
- let dashSpace = remainingLength / CGFloat(numberOfDashes)
-                        
- shapeLayer.path = path
- shapeLayer.lineDashPattern = [(5.0 + dashSpace) as NSNumber, (7.0 + dashSpace) as NSNumber]
-
- 
- shapeLayer.strokeColor = theme.colors.grayIcon.withAlphaComponent(0.7).cgColor
- shapeLayer.lineWidth = 1
- shapeLayer.lineCap = .round
- shapeLayer.fillColor = nil
- 
- shapeLayer.opacity = !item.context.isPremium && item.isPremium ? 1 : 0
- */

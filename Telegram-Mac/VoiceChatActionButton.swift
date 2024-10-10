@@ -851,8 +851,8 @@ final class BlobLayer: SimpleShapeLayer {
     private var blobAnimation: DisplayLinkAnimator?
 
 
-    private let shapeLayer: CAShapeLayer = {
-            let layer = CAShapeLayer()
+    private let shapeLayer: SimpleShapeLayer = {
+            let layer = SimpleShapeLayer()
             layer.strokeColor = nil
             return layer
         }()
@@ -860,14 +860,11 @@ final class BlobLayer: SimpleShapeLayer {
 
     var level: CGFloat = 0 {
         didSet {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            let lv = minScale + (maxScale - minScale) * level
-            shapeLayer.transform = CATransform3DMakeScale(lv, lv, 1)
             if level != oldValue {
+                let lv = minScale + (maxScale - minScale) * level
+                shapeLayer.transform = CATransform3DMakeScale(lv, lv, 1)
                 self.scaleUpdated?(level)
             }
-            CATransaction.commit()
         }
     }
 
@@ -889,7 +886,7 @@ final class BlobLayer: SimpleShapeLayer {
                 return EmptyDisposable
                 
             }
-            |> runOn(resourcesQueue)
+            |> runOn(.concurrentBackgroundQueue())
             |> deliverOnMainQueue
             
             _ = signal.start(next: { [weak self] path in

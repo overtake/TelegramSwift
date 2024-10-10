@@ -51,7 +51,7 @@ class StickerSetTableRowItem: GeneralRowItem {
         self.removePack = removePack
         nameLayout = TextViewLayout(.initialize(string: info.title, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
         countLayout = TextViewLayout(.initialize(string: strings().stickersSetCount1Countable(Int(itemCount)), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
-        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsets(left: 30, right: 30), enabled: enabled)
+        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsets(left: 20, right: 20), enabled: enabled)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
 
@@ -211,7 +211,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
-        self.updateMouse()
+        self.updateMouse(animated: animated)
         self.contentView.userInteractionEnabled = false
         if let item = item as? StickerSetTableRowItem {
             
@@ -220,7 +220,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
             
             var file: TelegramMediaFile?
             if let thumbnail = item.info.thumbnail {
-                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: item.info.flags.contains(.isVideo) ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
             } else if let item = item.topItem {
                 file = item.file
             }

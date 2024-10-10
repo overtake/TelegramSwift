@@ -12,6 +12,7 @@ import TelegramCore
 import Postbox
 import CoreMediaIO
 import InAppSettings
+import TelegramMedia
 
 struct IODevices {
     let camera: [AVCaptureDevice]
@@ -97,14 +98,14 @@ final class DevicesContext : NSObject {
     
     private final class UpdaterContext {
 //        var status: (camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
-        let subscribers = Bag<((camera: String?, input: String?, output: String?)) -> Void>()
+        let subscribers = Bag<((camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?)) -> Void>()
     }
     
     private let updaterContext: UpdaterContext = UpdaterContext()
     
    
     
-    func updater() -> Signal<(camera: String?, input: String?, output: String?), NoError> {
+    func updater() -> Signal<(camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?), NoError> {
         return Signal { subscriber in
             
             let disposable = MetaDisposable()
@@ -148,16 +149,16 @@ final class DevicesContext : NSObject {
     init(_ accountManager: AccountManager<TelegramAccountManagerTypes> ) {
         super.init()
         
-
-        var prop : CMIOObjectPropertyAddress = CMIOObjectPropertyAddress(
-                mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
-                mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
-                mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster))
-        
-        var allow: UInt32 = 1
-        CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject),
-                                &prop, 0, nil,
-                                UInt32(sizeof(allow)), &allow );
+//
+//        var prop : CMIOObjectPropertyAddress = CMIOObjectPropertyAddress(
+//                mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
+//                mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+//                mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster))
+//        
+//        var allow: UInt32 = 1
+//        CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject),
+//                                &prop, 0, nil,
+//                                UInt32(sizeof(allow)), &allow );
         
 
     
@@ -194,12 +195,12 @@ final class DevicesContext : NSObject {
         
         var sampleIndex:Int = -1
         
-        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal, sampleUpdater.get()) |> map { settings, devices, index -> (camera: String?, input: String?, output: String?) in
+        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal, sampleUpdater.get()) |> map { settings, devices, index -> (camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?) in
             let inputUpdated = DevicesContext.updateMicroId(settings, devices: devices)
             let cameraUpdated = DevicesContext.updateCameraId(settings, devices: devices)
             let outputUpdated = DevicesContext.updateOutputId(settings, devices: devices)
             
-            var result:(camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
+            var result:(camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?) = (camera: nil, input: nil, output: nil, sampleUpdateIndex: nil)
             
             if currentMicroId.swap(inputUpdated) != inputUpdated || sampleIndex != index {
                 result.input = inputUpdated
@@ -209,6 +210,9 @@ final class DevicesContext : NSObject {
             }
             if currentOutputId.swap(outputUpdated) != outputUpdated || sampleIndex != index {
                 result.output = outputUpdated
+            }
+            if sampleIndex != index {
+                result.sampleUpdateIndex = index
             }
             sampleIndex = index
             
@@ -263,37 +267,35 @@ final class DevicesContext : NSObject {
     }
     
     static func updateCameraId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
-        let cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
+        var cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
         
-        let activeDevice: AVCaptureDevice?
+        var activeDevice: AVCaptureDevice?
         if let cameraDevice = cameraDevice {
             if cameraDevice.isConnected && !cameraDevice.isSuspended {
                 activeDevice = cameraDevice
             } else {
                 activeDevice = nil
             }
-        } else if settings.cameraInputDeviceId == nil {
-            activeDevice = AVCaptureDevice.default(for: .video)
-        } else {
-            activeDevice = devices.camera.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
+        if activeDevice == nil {
+            activeDevice = AVCaptureDevice.default(for: .video)
+        }
         return activeDevice?.uniqueID
     }
     static func updateMicroId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
-        let audiodevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+        var audiodevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
         
-        let activeDevice: AVCaptureDevice?
+        var activeDevice: AVCaptureDevice?
         if let audiodevice = audiodevice {
             if audiodevice.isConnected && !audiodevice.isSuspended {
                 activeDevice = audiodevice
             } else {
                 activeDevice = nil
             }
-        } else if settings.audioInputDeviceId == nil {
+        }
+        if activeDevice == nil {
             activeDevice = AVCaptureDevice.default(for: .audio)
-        } else {
-            activeDevice = devices.audioInput.first(where: { $0.isConnected && !$0.isSuspended })
         }
                 
         return activeDevice?.uniqueID

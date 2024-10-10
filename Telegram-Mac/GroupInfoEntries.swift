@@ -13,6 +13,23 @@ import TelegramCore
 import SwiftSignalKit
 import TGUIKit
 
+extension AddGroupMemberError {
+    var channelError: AddChannelMemberError {
+        switch self {
+        case .generic:
+            return .generic
+        case .groupFull:
+            return .generic
+        case let .privacy(result):
+            return .restricted(result?.forbiddenPeers.first)
+        case .notMutualContact:
+            return .notMutualContact
+        case .tooManyChannels:
+            return .tooMuchJoined
+        }
+    }
+}
+
 enum TopicsLimitedReason : Equatable {
     case participants(Int)
     case discussion
@@ -218,11 +235,21 @@ final class GroupInfoArguments : PeerInfoArguments {
     
     func visibilitySetup() {
         let setup = ChannelVisibilityController(context, peerId: peerId, isChannel: false, linksManager: linksManager)
-        _ = (setup.onComplete.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peerId in
-            self?.changeControllers(peerId)
+        let context = context
+        let signal: Signal<Peer?, NoError> = setup.onComplete.get() |> take(1) |> mapToSignal { peerId in
+            if let peerId = peerId {
+                return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
+            } else {
+                return .single(nil)
+            }
+        } |> deliverOnMainQueue
+        
+        _ = signal.start(next: { [weak self] peer in
+            self?.changeControllers(peer)
             self?.pullNavigation()?.back()
         })
         pushViewController(setup)
+
     }
 
     func autoremoveController() {
@@ -241,11 +268,27 @@ final class GroupInfoArguments : PeerInfoArguments {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: true)))
     }
     
-    private func changeControllers(_ peerId: PeerId?) {
+    func openNameColor(peer: Peer) {
+        pushViewController(SelectColorController(context: context, peer: peer))
+    }
+    
+    func enableTranslate() {
+        let peerId = self.peerId
+        _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: peerId, hidden: false).start()
+        
+        let chat = self.pullNavigation()?.first({ $0 is ChatController }) as? ChatController
+        chat?.chatInteraction.toggleTranslate()
+        
+        self.pullNavigation()?.back()
+
+    }
+    
+    private func changeControllers(_ peer: Peer?) {
         guard let navigationController = self.pullNavigation() else {
             return
         }
-        if let peerId = peerId {
+        if let peer = peer {
+            let peerId = peer.id
             var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
             
             navigationController.removeAll()
@@ -255,7 +298,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
             
-            var controller: PeerInfoController? = PeerInfoController(context: context, peerId: peerId)
+            var controller: PeerInfoController? = PeerInfoController(context: context, peer: peer)
             
             
             controller!.navigationController = navigationController
@@ -312,8 +355,17 @@ final class GroupInfoArguments : PeerInfoArguments {
     
     func preHistorySetup() {
         let setup = PreHistorySettingsController(context, peerId: peerId)
-        _ = (setup.onComplete.get() |> deliverOnMainQueue).start(next: { [weak self] peerId in
-            self?.changeControllers(peerId)
+        let context = self.context
+        let signal: Signal<Peer?, NoError> = setup.onComplete.get() |> take(1) |> mapToSignal { peerId in
+            if let peerId = peerId {
+                return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
+            } else {
+                return .single(nil)
+            }
+        } |> deliverOnMainQueue
+        
+        _ = signal.start(next: { [weak self] peer in
+            self?.changeControllers(peer)
         })
         pushViewController(setup)
     }
@@ -362,13 +414,44 @@ final class GroupInfoArguments : PeerInfoArguments {
     func admins() {
         pushViewController(ChannelAdminsViewController(context, peerId: peerId))
     }
+    func members() {
+        pushViewController(ChannelMembersViewController(context, peerId: peerId))
+    }
     
     func invation() {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(GroupStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+        if self.peer?.isSupergroup == true {
+            self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: false))
+        } else {
+            self.pushViewController(GroupStatsViewController(context, peerId: peerId))
+        }
+    }
+    
+    func archiveStories() {
+        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true), standalone: true, isArchived: true))
+    }
+    func boosts(_ access: GroupAccess) {
+        let context = self.context
+        
+        if access.isCreator || self.peer?.isAdmin == true {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId, isGroup: true))
+        } else {
+            let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
+                }
+            }
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+                if let value = value, let boosts = value.1 {
+                    showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2), for: context.window)
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
+        }
     }
     
     func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {
@@ -551,33 +634,35 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
             let context = self.context
             
+            let signal = context.account.postbox.loadedPeerWithId(upgradedPeerId) |> deliverOnMainQueue
             
-            var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
-            
-            chatController!.navigationController = navigationController
-            chatController!.loadViewIfNeeded(navigationController.bounds)
-            
-            var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
-            
-            var controller: PeerInfoController? = PeerInfoController(context: context, peerId: upgradedPeerId)
-            
-            controller!.navigationController = navigationController
-            controller!.loadViewIfNeeded(navigationController.bounds)
-            
-            let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
-            
-            signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
-            
-            _ = signal.start(completed: { [weak navigationController] in
-                navigationController?.removeAll()
-                navigationController?.push(chatController!, false, style: ViewControllerStyle.none)
-                navigationController?.push(controller!, false, style: ViewControllerStyle.none)
+            _ = signal.start(next: { peer in
+                var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
                 
-                chatController = nil
-                controller = nil
-                f()
+                chatController!.navigationController = navigationController
+                chatController!.loadViewIfNeeded(navigationController.bounds)
+                
+                var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+                
+                var controller: PeerInfoController? = PeerInfoController(context: context, peer: peer)
+                
+                controller!.navigationController = navigationController
+                controller!.loadViewIfNeeded(navigationController.bounds)
+                
+                let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
+                
+                signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
+                
+                _ = signal.start(completed: { [weak navigationController] in
+                    navigationController?.removeAll()
+                    navigationController?.push(chatController!, false, style: ViewControllerStyle.none)
+                    navigationController?.push(controller!, false, style: ViewControllerStyle.none)
+                    
+                    chatController = nil
+                    controller = nil
+                    f()
+                })
             })
-            
         }
     }
     
@@ -593,19 +678,24 @@ final class GroupInfoArguments : PeerInfoArguments {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return context.account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: context.window, information: strings().peerInfoConfirmAddMember(peer.displayTitle), okTitle: strings().peerInfoConfirmAdd)
+                    return verifyAlertSignal(for: context.window, information: strings().peerInfoConfirmAddMember(peer.displayTitle), ok: strings().peerInfoConfirmAdd) |> map { $0 == .basic }
                 }
             }
-            return confirmSignal(for: context.window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count), okTitle: strings().peerInfoConfirmAdd)
+            return verifyAlertSignal(for: context.window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count), ok: strings().peerInfoConfirmAdd) |> map { $0 == .basic }
+        }
+        
+        struct Result {
+            let success:[PeerId]
+            let failed:[(PeerId, AddChannelMemberError)]
         }
         
         
-        let addMember = context.account.viewTracker.peerView(peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<[PeerId], NoError> in
+        let addMember = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue |> mapToSignal{ cachedData -> Signal<Result, NoError> in
             
             var excludePeerIds:[PeerId] = []
-            if let cachedData = view.cachedData as? CachedChannelData {
+            if let cachedData = cachedData as? CachedChannelData {
                 excludePeerIds = Array(cachedData.peerIds)
-            } else if let cachedData = view.cachedData as? CachedGroupData {
+            } else if let cachedData = cachedData as? CachedGroupData {
                 excludePeerIds = Array(cachedData.peerIds)
             }
             
@@ -619,11 +709,11 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             return selectModalPeers(window: context.window, context: context, title: strings().peerInfoAddMember, settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl, linkInvation: linkInvation)
                 |> deliverOnMainQueue
-                |> mapToSignal { memberIds -> Signal<[PeerId], NoError> in
+                |> mapToSignal { memberIds -> Signal<Result, NoError> in
                     return context.account.postbox.multiplePeersView(memberIds + [peerId])
                         |> take(1)
                         |> deliverOnMainQueue
-                        |> mapToSignal { view -> Signal<[PeerId], NoError> in
+                        |> mapToSignal { view -> Signal<Result, NoError> in
                             updateState { state in
                                 var state = state
                                 for (memberId, peer) in view.peers {
@@ -650,74 +740,18 @@ final class GroupInfoArguments : PeerInfoArguments {
                                 if peer.isGroup, let memberId = memberIds.first {
                                     return context.engine.peers.addGroupMember(peerId: peerId, memberId: memberId)
                                         |> deliverOnMainQueue
-                                        |> map { _ in return [memberId] }
-                                        |> afterCompleted {
-                                            updateState { state in
-                                                var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
-                                                successfullyAddedParticipantIds.insert(memberId)
-                                                
-                                                return state.withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
-                                            }
-                                        } |> `catch` { error -> Signal<[PeerId], NoError> in
-                                            updateState { state in
-                                                var temporaryParticipants = state.temporaryParticipants
-                                                for i in 0 ..< temporaryParticipants.count {
-                                                    if temporaryParticipants[i].peer.id == memberId {
-                                                        temporaryParticipants.remove(at: i)
-                                                        break
-                                                    }
-                                                }
-                                                var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
-                                                successfullyAddedParticipantIds.remove(memberId)
-                                                
-                                                return state.withUpdatedTemporaryParticipants(temporaryParticipants).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
-                                            }
-                                            return .complete()
+                                        |> map { _ in return .init(success: [memberId], failed: []) }
+                                        |> `catch` { error -> Signal<Result, NoError> in
+                                            return .single(.init(success: [], failed: [(memberId, error.channelError)]))
                                     }
                                     
                                 } else if peer.isSupergroup {
-                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
-                                        let text: String
-                                        switch error {
-                                        case .notMutualContact:
-                                            text = strings().groupInfoAddUserLeftError
-                                        case .limitExceeded:
-                                            text = strings().channelErrorAddTooMuch
-                                        case .botDoesntSupportGroups:
-                                            text = strings().channelBotDoesntSupportGroups
-                                        case .tooMuchBots:
-                                            text = strings().channelTooMuchBots
-                                        case .tooMuchJoined:
-                                            text = strings().inviteChannelsTooMuch
-                                        case .generic:
-                                            text = strings().unknownError
-                                        case .kicked:
-                                            text = strings().channelAddUserKickedError
-                                        case let .bot(memberId):
-                                            let _ = (context.account.postbox.transaction { transaction in
-                                                return transaction.getPeer(peerId)
-                                                }
-                                                |> deliverOnMainQueue).start(next: { peer in
-                                                    guard let peer = peer as? TelegramChannel else {
-                                                        alert(for: context.window, info: strings().unknownError)
-                                                        return
-                                                    }
-                                                    if peer.hasPermission(.addAdmins) {
-                                                        confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
-                                                            showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
-                                                        })
-                                                    } else {
-                                                        alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
-                                                    }
-                                                })
-                                            return .complete()
-                                        case .restricted:
-                                            text = strings().groupErrorAddBlocked
+                                    return context.peerChannelMemberCategoriesContextsManager.addMembersAllowPartial(peerId: peerId, memberIds: memberIds) |> map { failed in
+                                        let success = memberIds.filter { memberId in
+                                            return !failed.contains(where: { $0.0 == memberId })
                                         }
-                                        alert(for: context.window, info: text)
-                                        
-                                        return .complete()
-                                    }
+                                        return .init(success: success, failed: failed)
+                                    } |> deliverOnMainQueue
                                 }
                             }
                             
@@ -726,9 +760,70 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
         }
         
-        addMemberDisposable.set(addMember.start())
+        addMemberDisposable.set(addMember.start(next: { result in
+            updateState { state in
+                var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
+
+                for memberId in result.success {
+                    successfullyAddedParticipantIds.insert(memberId)
+                }
+                return state.withUpdatedTemporaryParticipants([]).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
+            }
+            var forbidden: [TelegramForbiddenInvitePeer] = []
+            
+            for (_, failed) in result.failed {
+                switch failed {
+                case let .restricted(peer):
+                    if let peer {
+                        forbidden.append(peer)
+                    }
+                default:
+                    break
+                }
+            }
+            
+            let failed = result.failed.filter {
+                switch $0.1 {
+                case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked, .restricted:
+                    return true
+                default:
+                    return false
+                }
+            }
+            let botFailed = result.failed.filter {
+                switch $0.1 {
+                case .bot:
+                    return true
+                default:
+                    return false
+                }
+            }
+            if !failed.isEmpty {
+                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 }, forbidden: forbidden)
+            } else if let first = botFailed.first {
+                if case let .bot(memberId) = first.1 {
+                    let _ = (context.account.postbox.transaction { transaction in
+                        return transaction.getPeer(peerId)
+                        }
+                        |> deliverOnMainQueue).start(next: { peer in
+                            guard let peer = peer as? TelegramChannel else {
+                                alert(for: context.window, info: strings().unknownError)
+                                return
+                            }
+                            if peer.hasPermission(.addAdmins) {
+                                verifyAlert_button(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
+                                })
+                            } else {
+                                alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
+                            }
+                        })
+                }
+            }
+        }))
         
     }
+    
     
     func restrict(_ participant: ChannelParticipant) -> Void {
         
@@ -820,12 +915,12 @@ final class GroupInfoArguments : PeerInfoArguments {
     
     func updateGroupPhoto(_ custom: NSImage?, control: Control?) {
         let context = self.context
-        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
             let signal = image |> mapToSignal { image in
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
-            _ = signal.start(next: { path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+            _ = signal.start(next: { [weak self] path in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)
@@ -925,7 +1020,14 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func eventLog() {
-        pullNavigation()?.push(ChannelEventLogController(context, peerId: peerId))
+        let context = self.context
+        let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+        _ = signal.startStandalone(next: { [weak self] peer in
+            if let peer {
+                self?.pullNavigation()?.push(ChannelEventLogController(context, peer: peer))
+            }
+        })
+
     }
     
     func peerMenuItems(for peer: Peer) -> [ContextMenuItem] {
@@ -1051,7 +1153,8 @@ enum GroupInfoEntry: PeerInfoEntry {
     case setTitle(section:Int, text: String, viewType: GeneralViewType)
     case scam(section:Int, title: String, text: String, viewType: GeneralViewType)
     case about(section:Int, text: String, viewType: GeneralViewType)
-    case addressName(section:Int, name:[String], viewType: GeneralViewType)
+    case addressName(section:Int, name:[UserInfoAddress], viewType: GeneralViewType)
+    case peerId(section:Int, value: String, viewType: GeneralViewType)
     case sharedMedia(section:Int, viewType: GeneralViewType)
     case notifications(section:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case usersHeader(section:Int, count:Int, viewType: GeneralViewType)
@@ -1062,6 +1165,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case requests(section:Int, count: Int32, viewType: GeneralViewType)
     case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
     case reactions(section:Int, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
+    case color(section: Int, peer: PeerEquatable, viewType: GeneralViewType)
     case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
     case groupStickerset(section:Int, packName: String, viewType: GeneralViewType)
@@ -1069,10 +1173,12 @@ enum GroupInfoEntry: PeerInfoEntry {
     case toggleForum(section:Int, enabled: Bool, convert: Bool, limit: TopicsLimitedReason?, viewType: GeneralViewType)
     case forumInfo(section:Int, text: String, viewType: GeneralViewType)
     case groupManagementInfoLabel(section:Int, text: String, viewType: GeneralViewType)
+    case members(section:Int, count: Int32, viewType: GeneralViewType)
     case administrators(section:Int, count: String, viewType: GeneralViewType)
+    case recentActions(section:Int, viewType: GeneralViewType)
     case permissions(section:Int, count: String, viewType: GeneralViewType)
     case blocked(section:Int, count:Int32?, viewType: GeneralViewType)
-    case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, menuItems: [ContextMenuItem], enabled:Bool, viewType: GeneralViewType)
+    case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, stories: PeerStoryStats?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, menuItems: [ContextMenuItem], enabled:Bool, viewType: GeneralViewType)
     case showMore(section:Int, index: Int, viewType: GeneralViewType)
     case leave(section:Int, text: String, viewType: GeneralViewType)
     case media(section:Int, controller: PeerMediaController, isVisible: Bool, viewType: GeneralViewType)
@@ -1085,6 +1191,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .scam(section, title, text, _): return .scam(section: section, title: title, text: text, viewType: viewType)
         case let .about(section, text, _): return .about(section: section, text: text, viewType: viewType)
         case let .addressName(section, name, _): return .addressName(section: section, name: name, viewType: viewType)
+        case let .peerId(section, value, _): return .peerId(section: section, value: value, viewType: viewType)
         case let .sharedMedia(section, _): return .sharedMedia(section: section, viewType: viewType)
         case let .notifications(section, settings, _): return .notifications(section: section, settings: settings, viewType: viewType)
         case let .usersHeader(section, count, _): return .usersHeader(section: section, count: count, viewType: viewType)
@@ -1094,6 +1201,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
         case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
+        case let .color(section, peer, _): return .color(section: section, peer: peer, viewType: viewType)
         case let .linkedChannel(section, channel, subscriber, _): return .linkedChannel(section: section, channel: channel, subscribers: subscriber, viewType: viewType)
         case let .groupDescriptionSetup(section, text, _): return .groupDescriptionSetup(section: section, text: text, viewType: viewType)
         case let .groupAboutDescription(section, _): return .groupAboutDescription(section: section, viewType: viewType)
@@ -1102,10 +1210,12 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .toggleForum(section, enabled, convert, limit, _): return .toggleForum(section: section, enabled: enabled, convert: convert, limit: limit, viewType: viewType)
         case let .forumInfo(section, text, _): return .forumInfo(section: section, text: text, viewType: viewType)
         case let .groupManagementInfoLabel(section, text, _): return .groupManagementInfoLabel(section: section, text: text, viewType: viewType)
+        case let .members(section, count, _): return .members(section: section, count: count, viewType: viewType)
         case let .administrators(section, count, _): return .administrators(section: section, count: count, viewType: viewType)
+        case let .recentActions(section, _): return .recentActions(section: section, viewType: viewType)
         case let .permissions(section, count, _): return .permissions(section: section, count: count, viewType: viewType)
         case let .blocked(section, count, _): return .blocked(section: section, count: count, viewType: viewType)
-        case let .member(section, index, peerId, peer, presence, activity, memberStatus, editing, menuItems, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: enabled, viewType: viewType)
+        case let .member(section, index, peerId, peer, presence, activity, stories, memberStatus, editing, menuItems, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, stories: stories, memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: enabled, viewType: viewType)
         case let .showMore(section, index, _): return .showMore(section: section, index: index, viewType: viewType)
         case let .leave(section, text, _): return  .leave(section: section, text: text, viewType: viewType)
         case let .media(section, controller, isVisible, _): return  .media(section: section, controller: controller, isVisible: isVisible, viewType: viewType)
@@ -1182,6 +1292,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .peerId(section, value, viewType):
+            if case .peerId(section, value, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .scam(section, title, text, viewType):
             if case .scam(section, title, text, viewType) = entry {
                 return true
@@ -1218,8 +1334,20 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .members(section, count, viewType):
+            if case .members(section, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .administrators(section, count, viewType):
             if case .administrators(section, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .recentActions(section, viewType):
+            if case .recentActions(section, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1280,6 +1408,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .color(sectionId, peer, viewType):
+            if case .color(sectionId, peer, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .requests(sectionId, count, viewType):
             if case .requests(sectionId, count, viewType) = entry {
                 return true
@@ -1322,8 +1456,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .member(lhsSection, lhsIndex, lhsPeerId, lhsPeer, lhsPresence, lhsActivity, lhsMemberStatus, lhsEditing, lhsMenuItems, lhsEnabled, lhsViewType):
-            if case let .member(rhsSection, rhsIndex, rhsPeerId, rhsPeer, rhsPresence, rhsActivity, rhsMemberStatus, rhsEditing, rhsMenuItems, rhsEnabled, rhsViewType) = entry {
+        case let .member(lhsSection, lhsIndex, lhsPeerId, lhsPeer, lhsPresence, lhsActivity, lhsStories, lhsMemberStatus, lhsEditing, lhsMenuItems, lhsEnabled, lhsViewType):
+            if case let .member(rhsSection, rhsIndex, rhsPeerId, rhsPeer, rhsPresence, rhsActivity, rhsStories, rhsMemberStatus, rhsEditing, rhsMenuItems, rhsEnabled, rhsViewType) = entry {
                 if lhsIndex != rhsIndex {
                     return false
                 }
@@ -1340,6 +1474,9 @@ enum GroupInfoEntry: PeerInfoEntry {
                     return false
                 }
                 if lhsViewType != rhsViewType {
+                    return false
+                }
+                if lhsStories != rhsStories {
                     return false
                 }
                 if let lhsPeer = lhsPeer, let rhsPeer = rhsPeer {
@@ -1399,7 +1536,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     
     var stableId: PeerInfoEntryStableId {
         switch self {
-        case let .member(_, _, peerId, _, _, _, _, _, _, _, _):
+        case let .member(_, _, peerId, _, _, _, _, _, _, _, _, _):
             return GroupPeerEntryStableId(peerId: peerId)
         default:
             return IntPeerInfoEntryStableId(value: stableIndex)
@@ -1418,54 +1555,62 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 3
         case .addressName:
             return 4
-        case .groupDescriptionSetup:
+        case .peerId:
             return 5
-        case .groupAboutDescription:
+        case .groupDescriptionSetup:
             return 6
-        case .notifications:
+        case .groupAboutDescription:
             return 7
-        case .sharedMedia:
+        case .notifications:
             return 8
-        case .groupTypeSetup:
+        case .sharedMedia:
             return 9
-        case .inviteLinks:
+        case .groupTypeSetup:
             return 10
-        case .requests:
+        case .members:
             return 11
-        case .reactions:
+        case .inviteLinks:
             return 12
-        case .linkedChannel:
+        case .requests:
             return 13
-        case .preHistory:
+        case .reactions:
             return 14
-        case .groupStickerset:
+        case .color:
             return 15
-        case .autoDeleteMessages:
+        case .linkedChannel:
             return 16
-        case .groupManagementInfoLabel:
+        case .preHistory:
             return 17
-        case .permissions:
+        case .groupStickerset:
             return 18
-        case .blocked:
+        case .autoDeleteMessages:
             return 19
-        case .administrators:
+        case .groupManagementInfoLabel:
             return 20
-        case .toggleForum:
+        case .permissions:
             return 21
-        case .forumInfo:
+        case .blocked:
             return 22
-        case .usersHeader:
+        case .administrators:
             return 23
-        case .addMember:
+        case .recentActions:
             return 24
+        case .toggleForum:
+            return 25
+        case .forumInfo:
+            return 26
+        case .usersHeader:
+            return 27
+        case .addMember:
+            return 28
         case .member:
             fatalError("no stableIndex")
         case .showMore:
-            return 25
+            return 29
         case .leave:
-            return 26
+            return 30
         case .media:
-            return 27
+            return 31
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -1480,6 +1625,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .about(sectionId, _, _):
             return sectionId
         case let .addressName(sectionId, _, _):
+            return sectionId
+        case let .peerId(sectionId, _, _):
             return sectionId
         case let .setTitle(sectionId, _, _):
             return sectionId
@@ -1499,6 +1646,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return sectionId
         case let .reactions(sectionId, _, _, _, _):
             return sectionId
+        case let .color(sectionId, _, _):
+            return sectionId
         case let .linkedChannel(sectionId, _, _, _):
             return sectionId
         case let .preHistory(sectionId, _, _):
@@ -1510,6 +1659,10 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupStickerset(sectionId, _, _):
             return sectionId
         case let .administrators(sectionId, _, _):
+            return sectionId
+        case let .recentActions(sectionId, _):
+            return sectionId
+        case let .members(sectionId, _, _):
             return sectionId
         case let .permissions(sectionId, _, _):
             return sectionId
@@ -1523,7 +1676,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return sectionId
         case let .usersHeader(sectionId, _, _):
             return sectionId
-        case let .member(sectionId, _, _, _, _, _, _, _, _, _, _):
+        case let .member(sectionId, _, _, _, _, _, _, _, _, _, _, _):
             return sectionId
         case let .showMore(sectionId, _, _):
             return sectionId
@@ -1546,6 +1699,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .addressName(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
+        case let .peerId(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
         case let .setTitle(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .addMember(sectionId, _, _):
@@ -1564,6 +1719,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .reactions(sectionId, _, _, _, _):
             return (sectionId * 100000) + stableIndex
+        case let .color(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
         case let .linkedChannel(sectionId, _, _, _):
             return (sectionId * 100000) + stableIndex
         case let .preHistory(sectionId, _, _):
@@ -1574,7 +1731,11 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .groupStickerset(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
+        case let .members(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
         case let .administrators(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .recentActions(sectionId, _):
             return (sectionId * 100000) + stableIndex
         case let .permissions(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1588,7 +1749,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .usersHeader(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
-        case let .member(sectionId, index, _, _, _, _, _, _, _, _, _):
+        case let .member(sectionId, index, _, _, _, _, _, _, _, _, _, _):
             return (sectionId * 100000) + index + 200
         case let .showMore(sectionId, index, _):
             return (sectionId * 100000) + index + 200
@@ -1613,7 +1774,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         let arguments = arguments as! GroupInfoArguments
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateGroupPhoto)
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateGroupPhoto)
         case let .scam(_, title, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
@@ -1623,20 +1784,27 @@ enum GroupInfoEntry: PeerInfoEntry {
                 } else {
                     arguments?.peerInfo(peerId)
                 }
-        }, hashtag: arguments.context.bindings.globalSearch)
+            }, hashtag: { hashtag in
+                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+            })
         case let .addressName(_, value, viewType):
-            let link = "https://t.me/\(value[0])"
+            let link = "@\(value[0].username)"
             
             let text: String
             if value.count > 1 {
-                text = strings().peerInfoUsernamesList("https://t.me/\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+                text = strings().peerInfoUsernamesList("@\(value[0].username)", value.suffix(value.count - 1).map { "@\($0.username)" }.joined(separator: ", "))
             } else {
-                text = "@\(value[0])"
+                text = "@\(value[0].username)"
             }
             let interactions = TextViewInteractions()
-            interactions.processURL = { value in
-                if let value = value as? inAppLink {
-                    arguments.copy(value.link)
+            interactions.processURL = { link in
+                if let link = link as? inAppLink {
+                    let found = value.first(where: {  $0.username == link.link.replacingOccurrences(of: "@", with: "") })
+                    if let found {
+                        arguments.openFragment(.username(found.username))
+                    } else {
+                        arguments.copy(link.link)
+                    }
                 }
             }
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
@@ -1646,6 +1814,10 @@ enum GroupInfoEntry: PeerInfoEntry {
             }, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
+        case let .peerId(_, value, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: "PEER ID", copyMenuText: strings().textCopyText, text: value, context: arguments.context, viewType: viewType, canCopy: true, _copyToClipboard: {
+                arguments.copy(value)
+            })
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoGroupTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .notifications(_, settings, viewType):
@@ -1704,14 +1876,23 @@ enum GroupInfoEntry: PeerInfoEntry {
                 title = channel.displayTitle
             }
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoLinkedChannel, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
+        case let .color(_, peer, viewType):
+            let level = (peer.peer as? TelegramChannel)?.approximateBoostLevel ?? 0
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelAppearance, icon: theme.icons.profile_channel_color, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: peer.peer, context: arguments.context), ""), viewType: viewType, action: {
+                arguments.openNameColor(peer: peer.peer)
+            }, afterNameImage: level == 0 ? generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(1)) : nil)
         case let .groupStickerset(_, name, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSetGroupStickersSet, icon: theme.icons.settingsStickers, type: .nextContext(name), viewType: viewType, action: arguments.setGroupStickerset)
         case let .permissions(section: _, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .nextContext(count), viewType: viewType, action: arguments.blacklist)
         case let .blocked(section: _, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBlackList, icon: theme.icons.peerInfoBanned, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
+        case let .members(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoMembers, icon: theme.icons.peerInfoMembers, type: .nextContext("\(count)"), viewType: viewType, action: arguments.members)
         case let .administrators(section: _, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count), viewType: viewType, action: arguments.admins)
+        case let .recentActions(section: _, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoRecentActions, icon: theme.icons.peerInfoRecentActions, type: .next, viewType: viewType, action: arguments.eventLog)
         case let .usersHeader(section: _, count, viewType):
             var countValue = strings().peerInfoMembersHeaderCountable(count)
             countValue = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
@@ -1720,7 +1901,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { [weak arguments] in
                 arguments?.addMember(inviteViaLink)
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
-        case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, menuItems, enabled, viewType):
+        case let .member(_, _, _, peer, presence, inputActivity, stories, memberStatus, editing, menuItems, enabled, viewType):
             let label: String
             switch memberStatus {
             case let .admin(rank):
@@ -1749,19 +1930,21 @@ enum GroupInfoEntry: PeerInfoEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, context: arguments.context, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, context: arguments.context, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
                 arguments?.peerInfo(peer!.id)
             }, contextMenuItems: {
                 return .single(menuItems)
-            }, inputActivity: inputActivity, highlightVerified: true)
+            }, inputActivity: inputActivity, highlightVerified: true, story: stories?.subscriptionItem(peer!))
         case let .showMore(_, _, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.showMore, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
         case let .leave(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: arguments.delete)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
+                arguments.delete()
+            })
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator, backgroundColor: .clear)
         default:
             preconditionFailure()
         }
@@ -1791,14 +1974,16 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         var infoBlock: [GroupInfoEntry] = []
         func applyBlock(_ block:[GroupInfoEntry]) {
-            var block = block
+            var block = block.sorted { (p1, p2) -> Bool in
+                return p1.isOrderedBefore(p2)
+            }
             for (i, item) in block.enumerated() {
                 block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
             }
             entries.append(contentsOf: block)
         }
         
-        infoBlock.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
+        entries.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
         
         
         if let editingState = state.editingState {
@@ -1834,7 +2019,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 switch group.role {
                 case .admin, .creator:
                     if case .creator = group.role {
-                        actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
+                        actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.usernames.first(where: { $0.isActive }) != nil || group.username != nil, viewType: .singleItem))
                     }
                    
                     if case .creator = group.role {
@@ -1844,7 +2029,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     let cachedGroupData = view.cachedData as? CachedGroupData
                                         
                     let text: String
-                    if let allowed = cachedGroupData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                    if let allowed = cachedGroupData?.reactionSettings.knownValue?.allowedReactions, let availableReactions = availableReactions {
                         switch allowed {
                         case .all:
                             text = strings().peerInfoReactionsAll
@@ -1858,17 +2043,18 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     }
                     
                     
-                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
                     
                 default:
                     break
                 }
 
                 if hasAccess {
+                    let permissionList = internal_allPossibleGroupPermissionList
                     var activePermissionCount: Int?
                     if let defaultBannedRights = group.defaultBannedRights {
                         var count = 0
-                        for right in allGroupPermissionList {
+                        for (right, _) in permissionList {
                             if !defaultBannedRights.flags.contains(right) {
                                 count += 1
                             }
@@ -1884,9 +2070,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         actionBlock.append(.requests(section: GroupInfoSection.type.rawValue, count: joinRequestsCount, viewType: .singleItem))
                     }
 
+                    actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0 - 2)/\(permissionList.count - 2)" }) ?? "", viewType: .singleItem))
+                    actionBlock.append(.administrators(section: GroupInfoSection.type.rawValue, count: "", viewType: .singleItem))
                     
-                    actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .innerItem))
-                    actionBlock.append(.administrators(section: GroupInfoSection.type.rawValue, count: "", viewType: .lastItem))
                     
                     if access.isCreator, let cachedData = view.cachedData as? CachedGroupData {
                         
@@ -1921,7 +2107,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if access.canEditGroupInfo {
                                         
                     let text: String
-                    if let allowed = cachedChannelData.allowedReactions.knownValue, let availableReactions = availableReactions {
+                    if let allowed = cachedChannelData.reactionSettings.knownValue?.allowedReactions, let availableReactions = availableReactions {
                         switch allowed {
                         case .all:
                             text = strings().peerInfoReactionsAll
@@ -1933,9 +2119,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
-                    
-                    
-                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
+                    actionBlock.append(.color(section: GroupInfoSection.type.rawValue, peer: PeerEquatable(peer: channel), viewType: .singleItem))
+
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
                 }
                 
 
@@ -1991,14 +2177,22 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if canViewAdminsAndBanned {
                     var block: [GroupInfoEntry] = []
                     var activePermissionCount: Int?
+                    
+                    let permissionList = internal_allPossibleGroupPermissionList
                     if let defaultBannedRights = channel.defaultBannedRights {
                         var count = 0
-                        for right in allGroupPermissionList {
+                        for (right, _) in permissionList {
                             if !defaultBannedRights.flags.contains(right) {
                                 count += 1
                             }
                         }
                         activePermissionCount = count
+                    }
+                    
+                    if !channel.flags.contains(.isGigagroup) {
+                        if access.canEditMembers {
+                            block.append(.members(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.memberCount ?? 0, viewType: .singleItem))
+                        }
                     }
                                         
                     if (access.isCreator || access.canCreateInviteLink) {
@@ -2011,12 +2205,15 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
 
                     if !channel.flags.contains(.isGigagroup) {
                         if access.canEditMembers {
-                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .singleItem))
+                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\(max(0, $0 - 2))/\(permissionList.count - 2)" }) ?? "", viewType: .singleItem))
                         }
                     } else {
                         block.append(.blocked(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.kickedCount, viewType: .singleItem))
                     }
                     block.append(.administrators(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.adminCount.flatMap { "\($0)" } ?? "", viewType: .lastItem))
+                    
+                    block.append(.recentActions(section: GroupInfoSection.admin.rawValue, viewType: .singleItem))
+
                     
                     applyBlock(block)
                     
@@ -2048,16 +2245,19 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
-            var usernames = group.usernames.filter { $0.isActive }.map {
-                $0.username
+            var usernames:[UserInfoAddress] = group.usernames.filter { $0.isActive }.map {
+                .init(username: $0.username, collectable: $0.flags.contains(.isEditable))
             }
             if usernames.isEmpty, let address = group.addressName {
-                usernames.append(address)
+                usernames.append(.init(username: address, collectable: false))
             }
             if !usernames.isEmpty {
                 aboutBlock.append(GroupInfoEntry.addressName(section: GroupInfoSection.desc.rawValue, name: usernames, viewType: .singleItem))
             }
-            
+            if FastSettings.canViewPeerId {
+                aboutBlock.append(GroupInfoEntry.peerId(section: GroupInfoSection.desc.rawValue, value: "\(group.id.id._internalGetInt64Value())", viewType: .singleItem))
+            }
+
             applyBlock(aboutBlock)
             
 

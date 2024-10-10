@@ -17,29 +17,31 @@ import QuartzCore
 
 final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     
-    private weak var textView: TGModernGrowingTextView?
-    private let _window: Window
+    private let inputView: UITextView
+    private let textContent: NSClipView
+    private let __window: Window
     private let context: AccountContext
     private let tableView = HorizontalTableView(frame: .zero)
     private let containerView = View()
     private weak var relativeView: NSView?
-    private let chatInteraction: ChatInteraction
-    
+    private let presentation: TelegramPresentationTheme
     private let backgroundLayer = SimpleShapeLayer()
-    
-    init(_ textView: TGModernGrowingTextView, relativeView: NSView, window: Window, context: AccountContext, chatInteraction: ChatInteraction) {
-        self.textView = textView
+    private let highlightRect:(NSRange, Bool)-> NSRect
+    init(inputView: UITextView, textContent:NSClipView, relativeView: NSView, window: Window, context: AccountContext, presentation: TelegramPresentationTheme = theme, highlightRect:@escaping(NSRange, Bool)-> NSRect) {
+        self.textContent = textContent
+        self.highlightRect = highlightRect
+        self.inputView = inputView
         self.context = context
         self.relativeView = relativeView
-        self._window = window
-        self.chatInteraction = chatInteraction
+        self.__window = window
+        self.presentation = presentation
         super.init(frame: .zero)
         addSubview(containerView)
         containerView.addSubview(tableView)
         
         self.layer?.addSublayer(backgroundLayer)
         let center = NotificationCenter.default
-        center.addObserver(self, selector: #selector(updateAfterScroll), name: NSView.boundsDidChangeNotification, object: textView.scroll.contentView)
+        center.addObserver(self, selector: #selector(updateAfterScroll), name: NSView.boundsDidChangeNotification, object: textContent)
 
         tableView.layer?.cornerRadius = 10
         
@@ -50,10 +52,14 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         self.backgroundLayer.shadowOffset = CGSize(width: 0.0, height: 2.0)
         self.backgroundLayer.shadowRadius = 3
         self.backgroundLayer.shadowOpacity = 0.15
-        self.backgroundLayer.fillColor = theme.colors.background.cgColor
+        self.backgroundLayer.fillColor = presentation.colors.background.cgColor
 
 
         tableView.delegate = self
+        
+        tableView.getBackgroundColor = {
+            .clear
+        }
 
     }
     
@@ -65,16 +71,16 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
             return false
         }
         if byClick {
-            let textInputState = chatInteraction.presentation.effectiveInput
+            let textInputState = inputView.interactions.presentation.textInputState()
             if let (stringRange, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
                 let inputText = textInputState.inputText
                 
-                let replacementText = (item.clue.customEmojiText ?? item.clue.stickerText ?? "😀").fixed
                 var range = NSRange(string: inputText, range: stringRange)
                 
                 let attach = NSMutableAttributedString()
                                 
-//                attach.append(.makeAnimated(item.clue, text: replacementText))
+                let replacementText = inputText.nsstring.substring(with: range)
+                
                 let symbolLength = range.length
                 var acceptedLast: Bool = false
                 while range.location >= 0 {
@@ -93,8 +99,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
                     range.location += symbolLength
                     range.length -= symbolLength
                 }
-                
-                _ = chatInteraction.appendText(attach, selectedRange: range.lowerBound ..< range.upperBound)
+                inputView.insertText(attach, range: range.lowerBound ..< range.upperBound)
             }
         }
         return false
@@ -148,10 +153,10 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
             }
         }
         
-        func makeItem(_ size: NSSize, context: AccountContext) -> TableRowItem {
+        func makeItem(_ size: NSSize, context: AccountContext, presentation: TelegramPresentationTheme) -> TableRowItem {
             switch self {
             case let .animated(file, _):
-                return AnimatedClueRowItem(size, context: context, clue: file)
+                return AnimatedClueRowItem(size, context: context, clue: file, presentation: presentation)
             }
         }
     }
@@ -164,7 +169,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     func apply(_ items: [TelegramMediaFile], range: NSRange, animated: Bool, isNew: Bool) {
         
         
-        guard let textView = textView, let relativeView = relativeView else {
+        guard let relativeView = relativeView else {
             return
         }
         
@@ -173,9 +178,9 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         
         relativeView.addSubview(self)
         let size = NSMakeSize(min(40 * 5 + 20, CGFloat(items.count) * 40) + 10, 55)
-        let rect = textView.highlightRect(for: range, whole: false)
+        let rect = self.highlightRect(range, false)
 
-        let convert = textView.inputView.convert(rect, to: relativeView)
+        let convert = inputView.convert(rect, to: relativeView)
         
         
         var index: Int = 0
@@ -199,12 +204,12 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         }
         
         for (idx, item, _) in indicesAndItems {
-            _ = tableView.insert(item: item.makeItem(bounds.size, context: context), at: idx, animation: animated ? .effectFade : .none)
+            _ = tableView.insert(item: item.makeItem(bounds.size, context: context, presentation: self.presentation), at: idx, animation: animated ? .effectFade : .none)
             self.items.insert(item, at: idx)
         }
         for (idx, item, _) in updateIndices {
             let item =  item
-            tableView.replace(item: item.makeItem(bounds.size, context: context), at: idx, animated: animated)
+            tableView.replace(item: item.makeItem(bounds.size, context: context, presentation: self.presentation), at: idx, animated: animated)
             self.items[idx] = item
         }
 
@@ -239,13 +244,13 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     }
     
     func updateRect(transition: ContainedViewLayoutTransition) {
-        guard let textView = textView, let relativeView = relativeView, let range = self.range else {
+        guard let relativeView = relativeView, let range = self.range else {
             return
         }
         
         let size = self.frame.size
-        let rect = textView.highlightRect(for: range, whole: false)
-        let convert = textView.inputView.convert(rect, to: relativeView)
+        let rect = self.highlightRect(range, false)
+        let convert = inputView.convert(rect, to: relativeView)
         
         let mid = convert.midX - size.width / 2
         
@@ -256,7 +261,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         
         let x = containerView.frame.width / 2 - (frame.minX - mid)
         
-        self.isHidden = !NSPointInRect(NSMakePoint(rect.midX, rect.midY), textView.scroll.documentVisibleRect)
+        self.isHidden = !NSPointInRect(NSMakePoint(rect.midX, rect.midY), textContent.documentVisibleRect)
 
         adjustBackground(relativePositionX: x, animated: transition.isAnimated)
         

@@ -368,3 +368,48 @@ fragment half4 matrixFragment(RasterizerData in[[stage_in]],
     return half4(out);
 }
 
+
+
+struct Rectangle {
+    float2 origin;
+    float2 size;
+};
+
+constant static float2 quadVertices[6] = {
+    float2(0.0, 0.0),
+    float2(1.0, 0.0),
+    float2(0.0, 1.0),
+    float2(1.0, 0.0),
+    float2(0.0, 1.0),
+    float2(1.0, 1.0)
+};
+
+struct QuadVertexOut {
+    float4 position [[position]];
+    float2 uv;
+};
+
+vertex QuadVertexOut edgeTestVertex(
+    const device Rectangle &rect [[ buffer(0) ]],
+    unsigned int vid [[ vertex_id ]]
+) {
+    float2 quadVertex = quadVertices[vid];
+    
+    QuadVertexOut out;
+    
+    out.position = float4(rect.origin.x + quadVertex.x * rect.size.x, rect.origin.y + quadVertex.y * rect.size.y, 0.0, 1.0);
+    out.position.x = -1.0 + out.position.x * 2.0;
+    out.position.y = -1.0 + out.position.y * 2.0;
+    
+    out.uv = quadVertex;
+    
+    return out;
+}
+
+fragment half4 edgeTestFragment(
+    QuadVertexOut in [[stage_in]],
+    const device float4 &colorIn
+) {
+    half4 color = half4(colorIn);
+    return color;
+}

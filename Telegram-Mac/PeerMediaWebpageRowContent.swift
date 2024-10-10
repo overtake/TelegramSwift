@@ -69,7 +69,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         
-        if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
+        if let webpage = message.anyMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 
                 var hostName: String = ""
@@ -88,7 +88,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 }
                 
                 if let iconImageRepresentation = iconImageRepresentation {
-                    icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                    icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: arc4random64()), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     
                     let imageCorners = ImageCorners(radius: .cornerRadius)
                     iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
@@ -154,7 +154,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         
         for linkLayout in linkLayouts {
             linkLayout.interactions = TextViewInteractions(processURL: { [weak self] url in
-                if let webpage = self?.message.effectiveMedia as? TelegramMediaWebpage, let `self` = self {
+                if let webpage = self?.message.anyMedia as? TelegramMediaWebpage, let `self` = self {
                     if self.hasInstantPage {
                         showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
                         return
@@ -177,7 +177,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     }
     
     var hasInstantPage: Bool {
-        if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
+        if let webpage = message.anyMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 if let instantPage = content.instantPage {
                     let hasInstantPage:()->Bool = {
@@ -276,7 +276,8 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        
+        let previous = self.item as? PeerMediaFileRowItem
+
         super.set(item: item,animated:animated)
         textView.backgroundColor = backdorColor
         if let item = item as? PeerMediaWebpageRowItem {
@@ -321,16 +322,30 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             if let icon = item.icon {
                 updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
-                updateIconImageSignal = .single(ImageDataTransformation())
+                updateIconImageSignal = .complete()
+            }
+            
+            
+            if let icon = item.icon, let arguments = item.iconArguments {
+                imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
+            } else {
+                imageView.clear()
+            }
+            
+            if !imageView.isFullyLoaded {
+                if !imageView.hasImage {
+                    imageView.layer?.contents = item.thumb
+                }
+                imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
+                    if let icon = item.icon, let arguments = item.iconArguments {
+                        cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)
+                    }
+                })
             }
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-                imageView.setSignal( updateIconImageSignal)
             }
-            
-            if item.icon == nil {
-                imageView.layer?.contents = item.thumb
-            }
+
             
             needsLayout = true
         }

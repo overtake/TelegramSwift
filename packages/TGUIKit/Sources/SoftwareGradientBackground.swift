@@ -31,11 +31,11 @@ private func gatherPositions(_ list: [CGPoint]) -> [CGPoint] {
     return result
 }
 
-private func interpolateFloat(_ value1: CGFloat, _ value2: CGFloat, at factor: CGFloat) -> CGFloat {
+public func interpolateFloat(_ value1: CGFloat, _ value2: CGFloat, at factor: CGFloat) -> CGFloat {
     return value1 * (1.0 - factor) + value2 * factor
 }
 
-private func interpolatePoints(_ point1: CGPoint, _ point2: CGPoint, at factor: CGFloat) -> CGPoint {
+public func interpolatePoints(_ point1: CGPoint, _ point2: CGPoint, at factor: CGFloat) -> CGPoint {
     return CGPoint(x: interpolateFloat(point1.x, point2.x, at: factor), y: interpolateFloat(point1.y, point2.y, at: factor))
 }
 
@@ -79,6 +79,7 @@ public func adjustSaturationInContext(context: DrawingContext, saturation: CGFlo
 }
 
 private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoint], adjustSaturation: CGFloat = 1.0) -> CGImage {
+    
     let width = Int(max(1, size.width))
     let height = Int(max(1, size.height))
 
@@ -279,6 +280,8 @@ public final class AnimatedGradientBackgroundView: ImageView {
     }
     
     deinit {
+        var bp = 0
+        bp += 1
     }
 
     public func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition, extendAnimation: Bool = false) {

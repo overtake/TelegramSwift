@@ -122,7 +122,7 @@ private func _id_tab(_ stableId: AnyHashable) -> InputDataIdentifier {
 }
 
 
-private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func packEntries(_ state: State, arguments: Arguments, presentation: TelegramPresentationTheme) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var index: Int32 = 0
@@ -155,7 +155,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_tab(tuple.tab.stableId), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return GifKeyboardTabRowItem(initialSize, stableId: stableId, selected: tuple.selected, context: arguments.context, source: source, select: {
                 arguments.selectTab(tab)
-            })
+            }, theme: presentation)
         }))
     }
     
@@ -227,19 +227,25 @@ private func entries(_ state: State, arguments: Arguments, mediaArguments: Conte
 final class GifKeyboardView : View {
     let tableView = TableView()
     let packsView = HorizontalTableView(frame: NSZeroRect)
+    fileprivate var restrictedView:RestrictionWrappedView?
     private let borderView = View()
     private let tabs = View()
-    private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
     
     let searchView = SearchView(frame: .zero)
     private let searchContainer = View()
     private let searchBorder = View()
 
     
+    var presentation: TelegramPresentationTheme?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         self.packsView.getBackgroundColor = {
+            .clear
+        }
+        
+        self.tableView.getBackgroundColor = {
             .clear
         }
         addSubview(self.tableView)
@@ -248,7 +254,6 @@ final class GifKeyboardView : View {
         searchContainer.addSubview(searchBorder)
         addSubview(searchContainer)
         
-        tabs.addSubview(selectionView)
         tabs.addSubview(self.packsView)
         addSubview(self.borderView)
         addSubview(tabs)
@@ -264,6 +269,24 @@ final class GifKeyboardView : View {
         self.layout()
     }
  
+    
+    func updateRestricion(_ peer: Peer?, animated: Bool) {
+        if let peer = peer, let text = permissionText(from: peer, for: .banSendGifs) {
+            let current: RestrictionWrappedView
+            if let view = self.restrictedView {
+                current = view
+            } else {
+                current = RestrictionWrappedView(text)
+                self.restrictedView = current
+                addSubview(current)
+            }
+            current.update(text)
+        } else if let view = self.restrictedView {
+            performSubviewRemoval(view, animated: animated)
+            self.restrictedView = nil
+        }
+        needsLayout = true
+    }
     
     override func layout() {
         super.layout()
@@ -283,7 +306,7 @@ final class GifKeyboardView : View {
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, .borderSize))
 
         
-        let searchDest = (tableView.firstItem?.frame.minY ?? 0) + (tableView.clipView.destination?.y ?? tableView.documentOffset.y)
+        let searchDest = max(0, min((tableView.firstItem?.frame.minY ?? 0) + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
                 
         transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, min(max(tabs.frame.maxY - searchDest, 0), tabs.frame.maxY), size.width, 46))
         transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 16, 30)))
@@ -291,6 +314,9 @@ final class GifKeyboardView : View {
         
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height))
 
+        if let restrictedView = restrictedView {
+            transition.updateFrame(view: restrictedView, frame: size.bounds)
+        }
 
         let alpha: CGFloat = searchState?.state == .Focus && tableView.documentOffset.y > 0 ? 1 : 0
         transition.updateAlpha(view: searchBorder, alpha: alpha)
@@ -299,11 +325,13 @@ final class GifKeyboardView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        self.backgroundColor = theme.colors.background
         borderView.backgroundColor = theme.colors.border
         tabs.backgroundColor = theme.colors.background
         searchContainer.backgroundColor = theme.colors.background
         searchBorder.backgroundColor = theme.colors.border
         self.searchView.updateLocalizationAndTheme(theme: theme)
+        self.searchView.searchTheme = theme.search
     }
     
     required init?(coder: NSCoder) {
@@ -348,8 +376,10 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             self.searchValue.set(searchState)
         }
     }
+    private var presentation: TelegramPresentationTheme?
     
-    override init(_ context: AccountContext) {
+    init(_ context: AccountContext, presentation: TelegramPresentationTheme? = nil) {
+        self.presentation = presentation
         super.init(context)
         bar = .init(height: 0)
     }
@@ -369,12 +399,33 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        if isLoaded() {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: presentation ?? theme)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        genericView.presentation = presentation
         
         let emojies = GIFKeyboardConfiguration.with(appConfiguration: context.appConfiguration)
                 
@@ -555,12 +606,17 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
         self.updateState = { f in
             updateState(f)
         }
+        let presentation = self.presentation
+        
+        let takePresentation:()->TelegramPresentationTheme = {
+            return presentation ?? theme
+        }
         
         let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = statePromise.get()
         |> deliverOnPrepareQueue
         |> map { state in
             let sections = InputDataSignalValue(entries: entries(state, arguments: arguments, mediaArguments: mediaArguments))
-            let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
+            let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments, presentation: takePresentation()))
             return (sections: sections, packs: packs, state: state)
         }
         
@@ -686,5 +742,11 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             current.entries = current.entries.filter({ $0.key == current.tab.stableId || $0.key == State.TabEntryId.recent.stableId })
             return current
         }
+    }
+    
+    override func scrollup(force: Bool = false) {
+        super.scrollup(force: force)
+        self.makeSearchCommand?(.close)
+        self.genericView.tableView.scroll(to: .up(true))
     }
 }

@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import SwiftSignalKit
 
 
 
@@ -171,9 +171,9 @@ private final class SegmentItemView : Control {
     private var imageView: ImageView?
     private let textView = TextView()
     private let callback: (ScrollableSegmentItem)->Void
-    private let menuItems:(ScrollableSegmentItem)->[ContextMenuItem]
+    private let menuItems:(ScrollableSegmentItem)->Signal<[ContextMenuItem], NoError>
     private let startDraggingIfNeeded: (ScrollableSegmentItem, Control)->Void
-    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, callback: @escaping(ScrollableSegmentItem)->Void, startDraggingIfNeeded: @escaping(ScrollableSegmentItem, Control)->Void, menuItems:@escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
+    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, callback: @escaping(ScrollableSegmentItem)->Void, startDraggingIfNeeded: @escaping(ScrollableSegmentItem, Control)->Void, menuItems:@escaping(ScrollableSegmentItem)->Signal<[ContextMenuItem], NoError>) {
         self.item = item
         self.callback = callback
         self.menuItems = menuItems
@@ -230,7 +230,11 @@ private final class SegmentItemView : Control {
                 return
             }
             if let event = NSApp.currentEvent {
-                ContextMenu.show(items: self.menuItems(self.item), view: control, event: event)
+                _ = self.menuItems(self.item).start(next: { [weak control] items in
+                    if let control = control {
+                        ContextMenu.show(items: items, view: control, event: event)
+                    }
+                })
             }
             
         }, for: .RightDown)
@@ -360,34 +364,6 @@ public struct ScrollableSegmentTheme : Equatable {
 private let duration: Double = 0.2
 
 
-private class Scroll : ScrollView {
-    override func scrollWheel(with event: NSEvent) {
-        
-        var scrollPoint = contentView.bounds.origin
-        let isInverted: Bool = System.isScrollInverted
-        if event.scrollingDeltaY != 0 {
-            if isInverted {
-                scrollPoint.x += -event.scrollingDeltaY
-            } else {
-                scrollPoint.x -= event.scrollingDeltaY
-            }
-        }
-        if event.scrollingDeltaX != 0 {
-            if !isInverted {
-                scrollPoint.x += -event.scrollingDeltaX
-            } else {
-                scrollPoint.x -= event.scrollingDeltaX
-            }
-        }
-        if documentView!.frame.width > frame.width {
-            scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
-            clipView.scroll(to: scrollPoint)
-        } else {
-            superview?.scrollWheel(with: event)
-        }
-    }
-}
-
 private struct ResortData {
     let point: NSPoint
     let item: ScrollableSegmentItem
@@ -396,7 +372,7 @@ private struct ResortData {
 }
 
 public class ScrollableSegmentView: View {
-    public let scrollView:ScrollView = Scroll()
+    public let scrollView:ScrollView = HorizontalScrollView()
     
     private let selectorView: SelectorView = SelectorView(frame: NSZeroRect)
     private let borderView = View()
@@ -405,7 +381,7 @@ public class ScrollableSegmentView: View {
     private var items: [ScrollableSegmentItem] = []
     private var selected:Int = 0
     
-    public var menuItems:((ScrollableSegmentItem)->[ContextMenuItem])?
+    public var menuItems:((ScrollableSegmentItem)->Signal<[ContextMenuItem], NoError>)?
 
     
     public var fitToWidth: Bool = false
@@ -555,7 +531,7 @@ public class ScrollableSegmentView: View {
                 self?.didChangeSelectedItem?(item)
             }, menuItems: { [weak self] item in
                 guard let menuItems = self?.menuItems else {
-                    return []
+                    return .single([])
                 }
                 return menuItems(item)
             })
@@ -605,7 +581,7 @@ public class ScrollableSegmentView: View {
         
         self.items[index] = item
     }
-    private func insertItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void, menuItems: @escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
+    private func insertItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void, menuItems: @escaping(ScrollableSegmentItem)->Signal<[ContextMenuItem], NoError>) {
         let view = SegmentItemView(item: item, theme: theme, callback: callback, startDraggingIfNeeded: { [weak self] item, view in
             self?.startDraggingIfNeeded(item, view)
         }, menuItems: menuItems)

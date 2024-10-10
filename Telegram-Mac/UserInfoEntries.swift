@@ -46,17 +46,26 @@ struct UserInfoEditingState: Equatable {
 final class UserInfoState : PeerInfoState {
     let editingState: UserInfoEditingState?
     let savingData: Bool
-    
-    init(editingState: UserInfoEditingState?, savingData: Bool) {
+    let updatingPhotoState:PeerInfoUpdatingPhotoState?
+    let suggestingPhotoState:PeerInfoUpdatingPhotoState?
+    let businessHoursRevealed: Bool
+    let businessHoursDisplayMyTimezone: Bool
+    init(editingState: UserInfoEditingState?, savingData: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, suggestingPhotoState:PeerInfoUpdatingPhotoState?, businessHoursRevealed: Bool, businessHoursDisplayMyTimezone: Bool) {
         self.editingState = editingState
         self.savingData = savingData
-        
-        
+        self.updatingPhotoState = updatingPhotoState
+        self.suggestingPhotoState = suggestingPhotoState
+        self.businessHoursRevealed = businessHoursRevealed
+        self.businessHoursDisplayMyTimezone = businessHoursDisplayMyTimezone
     }
     
     override init() {
         self.editingState = nil
         self.savingData = false
+        self.updatingPhotoState = nil
+        self.suggestingPhotoState = nil
+        self.businessHoursRevealed = false
+        self.businessHoursDisplayMyTimezone = true
     }
     
     func isEqual(to: PeerInfoState) -> Bool {
@@ -73,42 +82,108 @@ final class UserInfoState : PeerInfoState {
         if lhs.savingData != rhs.savingData {
             return false
         }
-        
+        if lhs.updatingPhotoState != rhs.updatingPhotoState {
+            return false
+        }
+        if lhs.suggestingPhotoState != rhs.suggestingPhotoState {
+            return false
+        }
+        if lhs.businessHoursRevealed != rhs.businessHoursRevealed {
+            return false
+        }
+        if lhs.businessHoursDisplayMyTimezone != rhs.businessHoursDisplayMyTimezone {
+            return false
+        }
         return true
     }
     
     func withUpdatedSavingData(_ savingData: Bool) -> UserInfoState {
-        return UserInfoState(editingState: self.editingState, savingData: savingData)
+        return UserInfoState(editingState: self.editingState, savingData: savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     
     func withUpdatedEditingState(_ editingState: UserInfoEditingState?) -> UserInfoState {
-        return UserInfoState(editingState: editingState, savingData: self.savingData)
+        return UserInfoState(editingState: editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
     }
     
+    func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: f(self.updatingPhotoState), suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
+    }
+    func withoutUpdatingPhotoState() -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: nil, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
+    }
+    
+    func withUpdatedSuggestingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: f(self.updatingPhotoState), businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
+    }
+    func withoutSuggestingPhotoState() -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: nil, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
+    }
+    func withBusinessHoursRevealed(_ revealed: Bool) -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: revealed, businessHoursDisplayMyTimezone: self.businessHoursDisplayMyTimezone)
+    }
+    func withBusinessHoursTimeZoneUpdated(_ businessHoursDisplayMyTimezone: Bool) -> UserInfoState {
+        return UserInfoState(editingState: self.editingState, savingData: self.savingData, updatingPhotoState: self.updatingPhotoState, suggestingPhotoState: self.suggestingPhotoState, businessHoursRevealed: self.businessHoursRevealed, businessHoursDisplayMyTimezone: businessHoursDisplayMyTimezone)
+    }
 }
 
 class UserInfoArguments : PeerInfoArguments {
     
     
+    enum SetPhotoType: Int, Equatable {
+        case suggest = 0
+        case set = 1
+    }
+    
+
     private let shareDisposable = MetaDisposable()
     private let blockDisposable = MetaDisposable()
     private let startSecretChatDisposable = MetaDisposable()
     private let updatePeerNameDisposable = MetaDisposable()
     private let deletePeerContactDisposable = MetaDisposable()
     private let callDisposable = MetaDisposable()
+    private let updatePhotoDisposable = MetaDisposable()
+
     
     func giftPremium(_ options: [CachedPremiumGiftOption]) {
-        showModal(with: PremiumGiftController(context: context, peerId: self.peerId, options: options), for: context.window)
+        showModal(with: PremiumGiftController(context: context, peerId: self.effectivePeerId, options: options), for: context.window)
+    }
+    
+    func editBot(_ payload: String?, action: Bool = true) -> Void {
+        let context = self.context
+        if let username = peer?.addressName {
+            let botFather = showModalProgress(signal: resolveUsername(username: "botfather", context: context), for: context.window)
+            _ = botFather.start(next: { [weak self] peer in
+                if let peer = peer {
+                    let payload = payload != nil ? "-\(payload!)" : ""
+                    let initialAction: ChatInitialAction?
+                    if action {
+                        initialAction = .start(parameter: username + payload, behavior: .automatic)
+                    } else {
+                        initialAction = nil
+                    }
+                    self?.pullNavigation()?.push(ChatAdditionController(context: context, chatLocation: .peer(peer.id), initialAction: initialAction))
+                }
+            })
+        }
+    }
+    
+    func openBotfather() {
+        self.editBot(nil, action: false)
+    }
+    func openEditBotUsername() {
+        self.pullNavigation()?.push(EditBotUsernameController(context: context, peerId: peerId))
+    }
+    
+    func openStarsBalance() {
+        if let revenueContext = getStarsContext?() {
+            self.pullNavigation()?.push(FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: revenueContext))
+        }
     }
     
     func shareContact() {
         let context = self.context
-        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
-            return peerViewMainPeer($0)
-        } |> deliverOnMainQueue
         
-
-        
+        let peer = getPeerView(peerId: effectivePeerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
         shareDisposable.set(peer.start(next: { [weak self] peer in
             if let context = self?.context, let peer = peer as? TelegramUser {
                 showModal(with: ShareModalController(ShareContactObject(context, user: peer)), for: context.window)
@@ -116,14 +191,6 @@ class UserInfoArguments : PeerInfoArguments {
         }))
     }
     
-    override init(context: AccountContext, peerId: PeerId, state: PeerInfoState, isAd: Bool, pushViewController: @escaping (ViewController) -> Void, pullNavigation: @escaping () -> NavigationViewController?, mediaController: @escaping()->PeerMediaController?) {
-        super.init(context: context, peerId: peerId, state: state, isAd: isAd, pushViewController: pushViewController, pullNavigation: pullNavigation, mediaController: mediaController)
-        
-        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
-            self?.updateState(f)
-        }
-        
-    }
     
     func shareMyInfo() {
         
@@ -138,9 +205,9 @@ class UserInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { [weak self] peer in
             if let peer = peer {
-                confirm(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
+                verifyAlert_button(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
                     let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
-                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), threadId: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                         return signal  |> map { _ in}
                     }
                     self?.shareDisposable.set(showModalProgress(signal: signal, for: context.window).start())
@@ -153,9 +220,9 @@ class UserInfoArguments : PeerInfoArguments {
     
     func addContact() {
         let context = self.context
-        let peerView = context.account.postbox.peerView(id: self.peerId) |> take(1) |> deliverOnMainQueue
-        _ = peerView.start(next: { peerView in
-            if let peer = peerViewMainPeer(peerView) {
+        let peerView = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
+        _ = peerView.start(next: { peer in
+            if let peer = peer {
                 showModal(with: NewContactController(context: context, peerId: peer.id), for: context.window)
             }
         })
@@ -165,22 +232,30 @@ class UserInfoArguments : PeerInfoArguments {
         
         let context = self.context
         let peerId = self.peerId
+        let isEditableBot = self.peer?.botInfo?.flags.contains(.canEdit) == true
         let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
             self?.updateState(f)
         }
         
+        let peer = self.peer as? TelegramUser
+        
+        let firstName: String = peerViewMainPeer(peerView)?.compactDisplayTitle ?? ""
+        let lastName = isEditableBot ? (peerView.cachedData as? CachedUserData)?.about : peer?.lastName
+
         if editable {
-            if let peer = peerViewMainPeer(peerView) as? TelegramUser {
-                updateState { state -> UserInfoState in
-                    return state.withUpdatedEditingState(UserInfoEditingState(editingFirstName: peer.firstName, editingLastName: peer.lastName))
-                }
+            updateState { state -> UserInfoState in
+                return state.withUpdatedEditingState(UserInfoEditingState(editingFirstName: firstName, editingLastName: lastName))
             }
         } else {
             var updateValues: (firstName: String?, lastName: String?) = (nil, nil)
             updateState { state in
-                if let peer = peerViewMainPeer(peerView) as? TelegramUser, peer.firstName != state.editingState?.editingFirstName || peer.lastName != state.editingState?.editingLastName  {
-                    updateValues.firstName = state.editingState?.editingFirstName
-                    updateValues.lastName = state.editingState?.editingLastName
+                if let peer = peerViewMainPeer(peerView) as? TelegramUser {
+                    if peer.firstName != state.editingState?.editingFirstName {
+                        updateValues.firstName = state.editingState?.editingFirstName
+                    }
+                    if lastName != state.editingState?.editingLastName {
+                        updateValues.lastName = state.editingState?.editingLastName
+                    }
                     return state.withUpdatedSavingData(true)
                 } else {
                     return state.withUpdatedEditingState(nil)
@@ -188,7 +263,7 @@ class UserInfoArguments : PeerInfoArguments {
             }
             
             if let firstName = updateValues.firstName, firstName.isEmpty {
-                controller.genericView.tableView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
+                controller.genericView.tableView.item(stableId: IntPeerInfoEntryStableId(value: 101).hashValue)?.view?.shakeView()
                 return false
             }
             
@@ -204,11 +279,27 @@ class UserInfoArguments : PeerInfoArguments {
             }
             
             
+            enum UpdateError {
+                case generic
+            }
             
-            let updateNames: Signal<Void, UpdateContactNameError>
-            
-            if let firstName = updateValues.firstName {
-                updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: context.window)
+            let updateNames: Signal<Never, UpdateError>
+            //
+            if updateValues.firstName != nil || updateValues.lastName != nil {
+                if isEditableBot {
+                    var signals:[Signal<Void, UpdateError>] = []
+                    if let firstName = updateValues.firstName {
+                        signals.append(context.engine.peers.updateBotName(peerId: peerId, name: firstName) |> mapError { _ in return UpdateError.generic })
+                    }
+                    
+                    if let lastName = updateValues.lastName {
+                        signals.append(context.engine.peers.updateBotAbout(peerId: peerId, about: lastName) |> mapError { _ in return UpdateError.generic })
+                    }
+                    
+                    updateNames = combineLatest(signals) |> ignoreValues
+                } else {
+                    updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: updateValues.firstName ?? peer?.firstName ?? "", lastName: updateValues.lastName ?? peer?.lastName ?? "") |> mapError { _ in return UpdateError.generic } |> ignoreValues |> deliverOnMainQueue, for: context.window)
+                }
             } else {
                 updateNames = .complete()
             }
@@ -229,9 +320,33 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     func sendMessage() {
-        self.peerChat(self.peerId)
+        self.peerChat(self.effectivePeerId)
     }
     
+    
+    func openLocation(_ peer: Peer, _ location: TelegramBusinessLocation) {
+        if let coordinates = location.coordinates {
+            showModal(with: LocationModalPreview(context, map: .init(latitude: coordinates.latitude, longitude: coordinates.longitude, heading: nil, accuracyRadius: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil), peer: peer, messageId: nil), for: context.window)
+        }
+    }
+    func openHours(_ peer: Peer, _ businessHours: TelegramBusinessHours) {
+        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        updateState { state in
+            return state.withBusinessHoursRevealed(!state.businessHoursRevealed)
+        }
+    }
+    
+    func toggleDisplayZoneTime() {
+        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        updateState { state in
+            return state.withBusinessHoursTimeZoneUpdated(!state.businessHoursDisplayMyTimezone).withBusinessHoursRevealed(true)
+        }
+    }
+        
     func reportReaction(_ messageId: MessageId) {
         let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: peerId) |> `catch` { _ in .complete() }
         let report = context.engine.peers.reportPeerReaction(authorId: self.peerId, messageId: messageId) |> ignoreValues
@@ -243,8 +358,8 @@ class UserInfoArguments : PeerInfoArguments {
     
     func call(_ isVideo: Bool) {
         let context = self.context
-        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
-            return peerViewMainPeer($0)?.id
+        let peer = getPeerView(peerId: effectivePeerId, postbox: context.account.postbox) |> take(1) |> map {
+            return $0?.id
         } |> filter { $0 != nil } |> map { $0! }
         
         let call = peer |> mapToSignal {
@@ -255,12 +370,16 @@ class UserInfoArguments : PeerInfoArguments {
             applyUIPCallResult(context, result)
         }))
     }
+    
+    func openPersonalChannel(_ item: UserInfoPersonalChannel) {
+        self.pullNavigation()?.push(ChatAdditionController(context: context, chatLocation: .peer(item.peer.id)))
+    }
         
     func botAddToGroup() {
         let context = self.context
         let peerId = self.peerId
         
-        let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectGroupOrChannelBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+        let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectChatsBehavior(settings: [.groups, .channels], limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
             return .single(true)
         })
         |> filter { $0.first != nil }
@@ -280,7 +399,7 @@ class UserInfoArguments : PeerInfoArguments {
                 }), for: context.window)
             }
             let addSimple:()->Void = {
-                confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
+                verifyAlert_button(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
                     addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { [weak self] peerId in
                         self?.peerChat(peerId, postId: nil)
                     }, error: { error in 
@@ -309,35 +428,44 @@ class UserInfoArguments : PeerInfoArguments {
     func botShare(_ botName: String) {
         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(botName)")), for: context.window)
     }
+    
+    func giftBirthday() {
+        let context = self.context
+        
+        let peerId = self.peerId
+        
+        multigift(context: context, selected: [peerId])
+        
+    }
+    
     func botSettings() {
-        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/settings"), context: context, peerId: peerId, replyId: nil).start()
+        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/settings"), context: context, peerId: peerId, replyId: nil, threadId: nil).start()
         pullNavigation()?.back()
     }
     func botHelp() {
-        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/help"), context: context, peerId: peerId, replyId: nil).start()
+        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/help"), context: context, peerId: peerId, replyId: nil, threadId: nil).start()
         pullNavigation()?.back()
     }
     
     func botPrivacy() {
-        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/privacy"), context: context, peerId: peerId, replyId: nil).start()
+        _ = Sender.enqueue(input: ChatTextInputState(inputText: "/privacy"), context: context, peerId: peerId, replyId: nil, threadId: nil).start()
         pullNavigation()?.back()
     }
     
     func startSecretChat() {
         let context = self.context
         let peerId = self.peerId
-        let signal = context.account.postbox.transaction { transaction -> Peer? in
-            
-            return transaction.getPeer(peerId)
-            
-        } |> deliverOnMainQueue  |> mapToSignal { peer -> Signal<PeerId, NoError> in
-            if let peer = peer {
-                let confirm = confirmSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: strings().peerInfoConfirmSecretChatOK)
-                return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
-                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window)
-                }
-            } else {
-                return .complete()
+        
+        let peer = context.account.postbox.loadedPeerWithId(peerId)
+        let premiumRequired = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId))
+        
+        let signal = combineLatest(peer, premiumRequired) |> castError(CreateSecretChatError.self) |> deliverOnMainQueue |> mapToSignal { peer, premiumRequired -> Signal<PeerId?, CreateSecretChatError> in
+            if !context.isPremium && premiumRequired {
+                return .single(nil)
+            }
+            let confirm = verifyAlertSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), ok: strings().peerInfoConfirmSecretChatOK) |> castError(CreateSecretChatError.self)
+            return confirm |> filter { $0 == .basic } |> mapToSignal { _ -> Signal<PeerId?, CreateSecretChatError> in
+                return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id), for: context.window) |> map(Optional.init)
             }
         } |> deliverOnMainQueue
         
@@ -345,9 +473,28 @@ class UserInfoArguments : PeerInfoArguments {
         
         startSecretChatDisposable.set(signal.start(next: { [weak self] peerId in
             if let strongSelf = self {
-                strongSelf.pushViewController(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+                if let peerId = peerId {
+                    strongSelf.pushViewController(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+                }
+            }
+        }, error: { error in
+            switch error {
+            case .generic:
+                showModalText(for: context.window, text: strings().unknownError)
+            case .limitExceeded:
+                showModalText(for: context.window, text: strings().loginFloodWait)
+            case let .premiumRequired(peer):
+                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                })
             }
         }))
+    }
+    
+    override func dismissEdition() {
+        updateState { state in
+            return state.withUpdatedSavingData(false).withUpdatedEditingState(nil)
+        }
     }
     
     func updateState(_ f: (UserInfoState) -> UserInfoState) -> Void {
@@ -373,7 +520,7 @@ class UserInfoArguments : PeerInfoArguments {
             peerId = peer.regularPeerId
         }
         if blocked {
-            confirm(for: context.window, header: strings().peerInfoBlockHeader, information: strings().peerInfoBlockText(peer.displayTitle), okTitle: strings().peerInfoBlockOK, successHandler: { [weak self] _ in
+            verifyAlert_button(for: context.window, header: strings().peerInfoBlockHeader, information: strings().peerInfoBlockText(peer.displayTitle), ok: strings().peerInfoBlockOK, successHandler: { [weak self] _ in
                 let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peerId) |> deliverOnMainQueue, for: context.window)
                 self?.blockDisposable.set(signal.start(error: { error in
                     switch error {
@@ -405,19 +552,411 @@ class UserInfoArguments : PeerInfoArguments {
     func deleteContact() {
         let context = self.context
         let peerId = self.peerId
-        deletePeerContactDisposable.set((confirmSignal(for: context.window, information: strings().peerInfoConfirmDeleteContact)
-            |> filter {$0}
-            |> mapToSignal { _ in
-                showModalProgress(signal: context.engine.contacts.deleteContactPeerInteractively(peerId: peerId) |> deliverOnMainQueue, for: context.window)
-            }).start(completed: { [weak self] in
-                self?.pullNavigation()?.back()
-            }))
+        
+        verifyAlert(for: context.window, information: strings().peerInfoConfirmDeleteContact, ok: strings().modalDelete, successHandler: { _ in
+            _ = showModalProgress(signal: context.engine.contacts.deleteContactPeerInteractively(peerId: peerId) |> deliverOnMainQueue, for: context.window).start()
+        })
+
     }
+    
     
     func encryptionKey() {
         pushViewController(SecretChatKeyViewController(context, peerId: peerId))
     }
     
+    private func makeUpdatePhotoItems(_ custom: NSImage?, type: SetPhotoType) -> [ContextMenuItem] {
+        let context = self.context
+        let peerId = self.peerId
+        let isEditableBot = self.peer?.botInfo?.flags.contains(.canEdit) == true
+        let info = strings().userInfoSetPhotoInfo(peer?.compactDisplayTitle ?? "")
+        
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
+            let signal = image |> mapToSignal { image in
+                return putToTemp(image: image, compress: true)
+            } |> deliverOnMainQueue
+            _ = signal.start(next: { [weak self] path in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                    if isEditableBot {
+                        f()
+                    } else {
+                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+                    }
+                })
+                showModal(with: controller, for: context.window, animationType: .scaleCenter)
+                _ = controller.result.start(next: { [weak self] url, _ in
+                    DispatchQueue.main.async {
+                        self?.updatePhoto(url.path, type: type)
+                    }
+                })
+            })
+        }
+        if let image = custom {
+            updatePhoto(.single(image))
+        } else {
+            
+            let context = self.context
+            let updateVideo = self.updateVideo
+            
+            let makeVideo:(MediaObjectToAvatar)->Void = { object in
+                
+                switch object.object.foreground.type {
+                case .emoji:
+                    updatePhoto(object.start() |> mapToSignal { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .image(image):
+                                return .single(image)
+                            default:
+                                return .never()
+                            }
+                        } else {
+                            return .never()
+                        }
+                    })
+                default:
+                    let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .video(path, thumb):
+                                return .complete(thumb: thumb, video: path, keyFrame: nil)
+                            default:
+                                return .error
+                            }
+                        } else if let status = value.status {
+                            switch status {
+                            case let .initializing(thumb):
+                                return .start(thumb: thumb)
+                            case let .converting(progress):
+                                return .progress(progress)
+                            default:
+                                return .error
+                            }
+                        } else {
+                            return .error
+                        }
+                    }
+                    updateVideo(signal, type)
+                }
+            }
+            
+            
+            var items:[ContextMenuItem] = []
+            
+            items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
+                filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        updatePhoto(.single(image))
+                    } else if let path = paths?.first {
+                        selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
+                            updateVideo(signal, type)
+                        }, confirm: { url, f in
+                            if isEditableBot {
+                                f()
+                            } else {
+                                showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+                            }
+                        })
+                    }
+                })
+            }, itemImage: MenuAnimation.menu_shared_media.value))
+//            
+//            items.append(.init(strings().editAvatarCustomize, handler: {
+//                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo, confirm: { url, f in
+//                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+//                }), for: context.window)
+//            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            
+            return items
+        }
+        return []
+    }
+    
+    func updateContactPhoto(_ custom: NSImage?, control: Control?, type: SetPhotoType) {
+        let context = self.context
+        let peerId = self.peerId
+        let info = strings().userInfoSetPhotoInfo(peer?.compactDisplayTitle ?? "")
+        let updateVideo = self.updateVideo
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
+            let signal = image |> mapToSignal { image in
+                return putToTemp(image: image, compress: true)
+            } |> deliverOnMainQueue
+            _ = signal.start(next: { [weak self] path in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+                })
+                showModal(with: controller, for: context.window, animationType: .scaleCenter)
+                _ = controller.result.start(next: { [weak self] url, _ in
+                    DispatchQueue.main.async {
+                        self?.updatePhoto(url.path, type: type)
+                    }
+                })
+            })
+        }
+        let items = self.makeUpdatePhotoItems(custom, type: type)
+        
+        if let control = control, let event = NSApp.currentEvent, !items.isEmpty {
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
+            }
+            let value = AppMenu(menu: menu)
+            value.show(event: event, view: control)
+        } else {
+            filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                    updatePhoto(.single(image))
+                } else if let path = paths?.first {
+                    selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
+                        updateVideo(signal, type)
+                    }, confirm: { url, f in
+                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+                    })
+                }
+            })
+        }
+            
+    }
+    
+    func setPhotoItems(_ type: SetPhotoType) -> [ContextMenuItem] {
+        return makeUpdatePhotoItems(nil, type: type)
+    }
+
+    
+    func updatePhoto(_ path:String, type: SetPhotoType) -> Void {
+        
+        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        
+        let cancel = { [weak self] in
+            self?.updatePhotoDisposable.set(nil)
+            updateState { state -> UserInfoState in
+                return state.withoutUpdatingPhotoState()
+            }
+        }
+        
+        let context = self.context
+        let peerId = self.peerId
+        let title = self.peer?.compactDisplayTitle ?? ""
+        
+        let isEditableBot = self.peer?.botInfo?.flags.contains(.canEdit) == true
+        
+        let suggestSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
+            return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
+            } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+                return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: resource, videoResource: nil, videoStartTimestamp: nil, markup: nil, mode: .suggest, mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                })
+        }
+        
+        let updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
+            return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
+            } |> beforeNext { resource in
+                updateState { state in
+                    return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                        return PeerInfoUpdatingPhotoState(progress: 0, image: NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil), cancel: cancel)
+                    }
+                }
+            } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+                return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: resource, videoResource: nil, videoStartTimestamp: nil, markup: nil, mode: .custom, mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                })
+        }
+        
+        switch type {
+        case .suggest:
+            self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { value in
+                updateState { current in
+                    return current.withUpdatedSuggestingPhotoState({ _ in
+                        .init(progress: 0, cancel: {})
+                    })
+                }
+            }, completed: { [weak self] in
+                if !isEditableBot {
+                    showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
+                }
+                updateState { current in
+                    return current.withoutSuggestingPhotoState()
+                }
+                self?.pullNavigation()?.back()
+            }))
+        case .set:
+            self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+                updateState { state in
+                    switch status {
+                    case .complete:
+                        return state
+                    case let .progress(progress):
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return previous?.withUpdatedProgress(progress)
+                        }
+                    }
+                }
+            }, error: { error in
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+            }, completed: {
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+                resetPeerPhotos(peerId: peerId)
+                if !isEditableBot {
+                    showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+                }
+            }))
+        }        
+    }
+    
+    func updateVideo(_ signal:Signal<VideoAvatarGeneratorState, NoError>, type: SetPhotoType) -> Void {
+        
+        let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        
+        let cancel = { [weak self] in
+            self?.updatePhotoDisposable.set(nil)
+            updateState { state in
+                return state.withoutUpdatingPhotoState()
+            }
+        }
+        
+        let context = self.context
+        let peerId = self.peerId
+        let title = self.peer?.compactDisplayTitle ?? ""
+        
+        let suggestSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
+        |> castError(UploadPeerPhotoError.self)
+        |> mapToSignal { state in
+            switch state {
+            case .error:
+                return .fail(.generic)
+            case .start:
+                return .next(.progress(0))
+            case let .progress(value):
+                return .next(.progress(value * 0.2))
+            case let .complete(thumb, video, keyFrame):
+                
+                let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
+                                                      LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
+
+                
+                return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: thumbResource, videoResource: videoResource, videoStartTimestamp: keyFrame, markup: nil, mode: .suggest, mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                }) |> mapToSignal { result in
+                    switch result {
+                    case let .progress(current):
+                        if current == 1.0 {
+                            return .single(.complete([]))
+                        } else {
+                            return .next(.progress(0.2 + (current * 0.8)))
+                        }
+                    default:
+                        return .complete()
+                    }
+                }
+            }
+        }
+        
+        
+        let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
+            |> castError(UploadPeerPhotoError.self)
+            |> mapToSignal { state in
+                switch state {
+                case .error:
+                    return .fail(.generic)
+                case let .start(path):
+                    updateState { state in
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return PeerInfoUpdatingPhotoState(progress: 0, image: NSImage(contentsOfFile: path)?._cgImage, cancel: cancel)
+                        }
+                    }
+                    return .next(.progress(0))
+                case let .progress(value):
+                    return .next(.progress(value * 0.2))
+                case let .complete(thumb, video, keyFrame):
+                    
+                    updateState { state in
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return PeerInfoUpdatingPhotoState(progress: 0.2, image: NSImage(contentsOfFile: thumb)?._cgImage, cancel: cancel)
+                        }
+                    }
+                    
+                    let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
+                                                          LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
+                                        
+                    return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: thumbResource, videoResource: videoResource, videoStartTimestamp: keyFrame, markup: nil, mode: .custom, mapResourceToAvatarSizes: { resource, representations in
+                        return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                    }) |> mapToSignal { result in
+                        switch result {
+                        case let .progress(current):
+                            if current == 1.0 {
+                                return .single(.complete([]))
+                            } else {
+                                return .next(.progress(0.2 + (current * 0.8)))
+                            }
+                        default:
+                            return .complete()
+                        }
+                    }
+                }
+        }
+        
+        switch type {
+        case .suggest:
+            self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { [weak self] value in
+                if case .complete = value {
+                    showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
+                    updateState { current in
+                        return current.withoutSuggestingPhotoState()
+                    }
+                    self?.pullNavigation()?.back()
+                } else {
+                    updateState { current in
+                        return current.withUpdatedSuggestingPhotoState({ _ in
+                            .init(progress: 0, cancel: {})
+                        })
+                    }
+                }
+            }))
+        case .set:
+            self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+                updateState { state in
+                    switch status {
+                    case .complete:
+                        return state.withoutUpdatingPhotoState()
+                    case let .progress(progress):
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return previous?.withUpdatedProgress(progress)
+                        }
+                    }
+                }
+            }, error: { error in
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+            }, completed: {
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+                resetPeerPhotos(peerId: peerId)
+                showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+            }))
+        }
+    }
+    
+    func resetPhoto() {
+        let context = self.context
+        let peerId = self.peerId
+        verifyAlert_button(for: context.window, information: strings().userInfoResetPhotoConfirm(peer?.compactDisplayTitle ?? ""), ok: strings().userInfoResetPhotoConfirmOK, successHandler: { _ in
+            let signal = context.engine.contacts.updateContactPhoto(peerId: peerId, resource: nil, videoResource: nil, videoStartTimestamp: nil, markup: nil, mode: .custom, mapResourceToAvatarSizes: { _,_  in
+                return .complete()
+            })
+            _ = showModalProgress(signal: signal, for: context.window).start()
+        })
+    }
+    
+   
     func groupInCommon(_ peerId: PeerId) -> Void {
     }
     
@@ -428,21 +967,37 @@ class UserInfoArguments : PeerInfoArguments {
         updatePeerNameDisposable.dispose()
         deletePeerContactDisposable.dispose()
         callDisposable.dispose()
+        updatePhotoDisposable.dispose()
     }
     
 }
 
-
+struct UserInfoAddress : Equatable {
+    let username: String
+    let collectable: Bool
+}
 
 enum UserInfoEntry: PeerInfoEntry {
-    case info(sectionId:Int, peerView: PeerView, editable:Bool, viewType: GeneralViewType)
+    case info(sectionId:Int, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, stories: PeerExpiringStoryListContext.State?, viewType: GeneralViewType)
+    case personalChannelInfo(sectionId:Int, left: String, right: String, viewType: GeneralViewType)
+    case personalChannel(sectionId:Int, item: UserInfoPersonalChannel, viewType: GeneralViewType)
     case setFirstName(sectionId:Int, text: String, viewType: GeneralViewType)
-    case setLastName(sectionId:Int, text: String, viewType: GeneralViewType)
+    case setLastName(sectionId:Int, text: String, placeholder: String, viewType: GeneralViewType)
     case about(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botStarsBalance(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botEditIntro(sectionId:Int, viewType: GeneralViewType)
+    case botEditCommands(sectionId:Int, viewType: GeneralViewType)
+    case botEditSettings(sectionId:Int, viewType: GeneralViewType)
+    case botEditInfo(sectionId:Int, viewType: GeneralViewType)
     case bio(sectionId:Int, text: String, PeerEquatable, viewType: GeneralViewType)
+    case birthday(sectionId:Int, text: String, Bool, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
-    case userName(sectionId:Int, value: [String], viewType: GeneralViewType)
+    case peerId(sectionId:Int, value: String, viewType: GeneralViewType)
+    case userName(sectionId:Int, value: [UserInfoAddress], viewType: GeneralViewType)
+    case businessLocation(sectionId:Int, peer: EnginePeer, businessLocation: TelegramBusinessLocation, viewType: GeneralViewType)
+    case businessHours(sectionId:Int, peer: EnginePeer, businessHours: TelegramBusinessHours, revealed: Bool, displayMyZone: Bool, viewType: GeneralViewType)
     case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
     case sendMessage(sectionId:Int, viewType: GeneralViewType)
     case shareContact(sectionId:Int, viewType: GeneralViewType)
@@ -458,6 +1013,9 @@ enum UserInfoEntry: PeerInfoEntry {
     case sharedMedia(sectionId:Int, viewType: GeneralViewType)
     case notifications(sectionId:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case groupInCommon(sectionId:Int, count:Int, peerId: PeerId, viewType: GeneralViewType)
+    case setPhoto(sectionId:Int, string: String, type: UserInfoArguments.SetPhotoType, nextType: GeneralInteractedType, viewType: GeneralViewType)
+    case resetPhoto(sectionId:Int, string: String, image: TelegramMediaImage, user: TelegramUser, viewType: GeneralViewType)
+    case setPhotoInfo(sectionId:Int, string: String, viewType: GeneralViewType)
     case block(sectionId:Int, peer: Peer, blocked: Bool, isBot: Bool, viewType: GeneralViewType)
     case deleteChat(sectionId: Int, viewType: GeneralViewType)
     case deleteContact(sectionId: Int, viewType: GeneralViewType)
@@ -467,14 +1025,26 @@ enum UserInfoEntry: PeerInfoEntry {
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> UserInfoEntry {
         switch self {
-        case let .info(sectionId, peerView, editable, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, viewType: viewType)
+        case let .info(sectionId, peerView, editable, updatingPhotoState, stories, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, stories: stories, viewType: viewType)
+        case let .personalChannelInfo(sectionId, left, right, _): return .personalChannelInfo(sectionId: sectionId, left: left, right: right, viewType: viewType)
+        case let .personalChannel(sectionId, item, _): return .personalChannel(sectionId: sectionId, item: item, viewType: viewType)
         case let .setFirstName(sectionId, text, _): return .setFirstName(sectionId: sectionId, text: text, viewType: viewType)
-        case let .setLastName(sectionId, text, _): return .setLastName(sectionId: sectionId, text: text, viewType: viewType)
+        case let .setLastName(sectionId, text, placeholder, _): return .setLastName(sectionId: sectionId, text: text, placeholder: placeholder, viewType: viewType)
+        case let .botStarsBalance(sectionId, text, _): return .botStarsBalance(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botEditIntro(sectionId, _): return .botEditIntro(sectionId: sectionId, viewType: viewType)
+        case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
+        case let .botEditSettings(sectionId, _): return .botEditSettings(sectionId: sectionId, viewType: viewType)
+        case let .botEditInfo(sectionId, _): return .botEditInfo(sectionId: sectionId, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
+        case let .birthday(sectionId, text, peer, _): return .birthday(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
+        case let .peerId(sectionId, value, _): return .peerId(sectionId: sectionId, value: value, viewType: viewType)
+        case let .businessLocation(sectionId, peer, location, _): return .businessLocation(sectionId: sectionId, peer: peer, businessLocation: location, viewType: viewType)
+        case let .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, _): return .businessHours(sectionId: sectionId, peer: peer, businessHours: businessHours, revealed: revealed, displayMyZone: displayMyZone, viewType: viewType)
         case let .reportReaction(sectionId, value, _): return .reportReaction(sectionId: sectionId, value: value, viewType: viewType)
         case let .sendMessage(sectionId, _): return .sendMessage(sectionId: sectionId, viewType: viewType)
         case let .shareContact(sectionId, _): return .shareContact(sectionId: sectionId, viewType: viewType)
@@ -490,6 +1060,9 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .sharedMedia(sectionId, _): return .sharedMedia(sectionId: sectionId, viewType: viewType)
         case let .notifications(sectionId, settings, _): return .notifications(sectionId: sectionId, settings: settings, viewType: viewType)
         case let .groupInCommon(sectionId, count, peerId, _): return .groupInCommon(sectionId: sectionId, count: count, peerId: peerId, viewType: viewType)
+        case let .setPhoto(sectionId, string, type, nextType, _): return .setPhoto(sectionId: sectionId, string: string, type: type, nextType: nextType, viewType: viewType)
+        case let .resetPhoto(sectionId, string, image, user, _): return .resetPhoto(sectionId: sectionId, string: string, image: image, user: user, viewType: viewType)
+        case let .setPhotoInfo(sectionId, string, viewType): return .setPhotoInfo(sectionId: sectionId, string: string, viewType: viewType)
         case let .block(sectionId, peer, blocked, isBot, _): return .block(sectionId: sectionId, peer: peer, blocked: blocked, isBot: isBot, viewType: viewType)
         case let .deleteChat(sectionId, _): return .deleteChat(sectionId: sectionId, viewType: viewType)
         case let .deleteContact(sectionId, _): return .deleteContact(sectionId: sectionId, viewType: viewType)
@@ -509,9 +1082,9 @@ enum UserInfoEntry: PeerInfoEntry {
         }
         
         switch self {
-        case let .info(lhsSectionId, lhsPeerView, lhsEditable, lhsViewType):
+        case let .info(lhsSectionId, lhsPeerView, lhsEditable, lhsUpdatingPhotoState, lhsStories, lhsViewType):
             switch entry {
-            case let .info(rhsSectionId, rhsPeerView, rhsEditable, rhsViewType):
+            case let .info(rhsSectionId, rhsPeerView, rhsEditable, rhsUpdatingPhotoState, rhsStories, rhsViewType):
                 
                 if lhsSectionId != rhsSectionId {
                     return false
@@ -519,8 +1092,13 @@ enum UserInfoEntry: PeerInfoEntry {
                 if lhsViewType != rhsViewType {
                     return false
                 }
-                
+                if lhsUpdatingPhotoState != rhsUpdatingPhotoState {
+                    return false
+                }
                 if lhsEditable != rhsEditable {
+                    return false
+                }
+                if lhsStories != rhsStories {
                     return false
                 }
                 
@@ -558,6 +1136,18 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .personalChannelInfo(sectionId, left, right, viewType):
+            if case .personalChannelInfo(sectionId, left, right, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .personalChannel(sectionId, item, viewType):
+            if case .personalChannel(sectionId, item, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .setFirstName(sectionId, text, viewType):
             switch entry {
             case .setFirstName(sectionId, text, viewType):
@@ -565,9 +1155,51 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .setLastName(sectionId, text, viewType):
+        case let .setLastName(sectionId, text, placeholder, viewType):
             switch entry {
-            case .setLastName(sectionId, text, viewType):
+            case .setLastName(sectionId, text, placeholder, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botStarsBalance(sectionId, text, viewType):
+            switch entry {
+            case .botStarsBalance(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botEditUsername(sectionId, text, viewType):
+            switch entry {
+            case .botEditUsername(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botEditIntro(sectionId, viewType):
+            switch entry {
+            case .botEditIntro(sectionId, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botEditCommands(sectionId, viewType):
+            switch entry {
+            case .botEditCommands(sectionId, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botEditSettings(sectionId, viewType):
+            switch entry {
+            case .botEditSettings(sectionId, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botEditInfo(sectionId, viewType):
+            switch entry {
+            case .botEditInfo(sectionId, viewType):
                 return true
             default:
                 return false
@@ -582,6 +1214,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .bio(sectionId, text, peer, viewType):
             switch entry {
             case .bio(sectionId, text, peer, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .birthday(sectionId, text, peer, viewType):
+            switch entry {
+            case .birthday(sectionId, text, peer, viewType):
                 return true
             default:
                 return false
@@ -603,6 +1242,27 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .userName(sectionId, value, viewType):
             switch entry {
             case .userName(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .peerId(sectionId, value, viewType):
+            switch entry {
+            case .peerId(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .businessLocation(sectionId, peer, location, viewType):
+            switch entry {
+            case .businessLocation(sectionId, peer: peer, businessLocation: location, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, viewType):
+            switch entry {
+            case .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, viewType):
                 return true
             default:
                 return false
@@ -710,6 +1370,27 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .setPhoto(sectionId, string, type, nextType, viewType):
+            switch entry {
+            case .setPhoto(sectionId, string, type, nextType, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .resetPhoto(sectionId, string, image, user, viewType):
+            switch entry {
+            case .resetPhoto(sectionId, string, image, user, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .setPhotoInfo(sectionId, string, viewType):
+            switch entry {
+            case .setPhotoInfo(sectionId, string, viewType):
+                return true
+            default:
+                return false
+            }
         case let .block(sectionId, lhsPeer, isBlocked, isBot, viewType):
             switch entry {
             case .block(sectionId, let rhsPeer, isBlocked, isBot, viewType):
@@ -766,60 +1447,90 @@ enum UserInfoEntry: PeerInfoEntry {
         switch self {
         case .info:
             return 100
-        case .setFirstName:
+        case .personalChannelInfo:
             return 101
-        case .setLastName:
+        case .personalChannel:
             return 102
-        case .scam:
+        case .setFirstName:
             return 103
-        case .about:
+        case .setLastName:
             return 104
-        case .bio:
+        case .botEditUsername:
             return 105
-        case .phoneNumber:
+        case .botStarsBalance:
             return 106
-        case .userName:
+        case .botEditIntro:
             return 107
-        case .sendMessage:
+        case .botEditCommands:
             return 108
-        case .botAddToGroup:
+        case .botEditSettings:
             return 109
-        case .botAddToGroupInfo:
+        case .botEditInfo:
             return 110
-        case .botShare:
+        case .scam:
             return 111
-        case .botSettings:
+        case .about:
             return 112
-        case .botHelp:
+        case .bio:
             return 113
-        case .botPrivacy:
+        case .phoneNumber:
             return 114
-        case .shareContact:
+        case .birthday:
             return 115
-        case .shareMyInfo:
+        case .userName:
             return 116
-        case .addContact:
+        case .peerId:
             return 117
-        case .startSecretChat:
+        case .businessHours:
             return 118
-        case .sharedMedia:
+        case .businessLocation:
             return 119
-        case .notifications:
+        case .sendMessage:
             return 120
-        case .encryptionKey:
+        case .botAddToGroup:
             return 121
-        case .groupInCommon:
+        case .botAddToGroupInfo:
             return 122
-        case .block:
+        case .botShare:
             return 123
-        case .reportReaction:
+        case .botSettings:
             return 124
-        case .deleteChat:
+        case .botHelp:
             return 125
-        case .deleteContact:
+        case .botPrivacy:
             return 126
-        case .media:
+        case .shareContact:
             return 127
+        case .shareMyInfo:
+            return 128
+        case .addContact:
+            return 129
+        case .startSecretChat:
+            return 130
+        case .sharedMedia:
+            return 131
+        case .notifications:
+            return 132
+        case .encryptionKey:
+            return 133
+        case .groupInCommon:
+            return 134
+        case let .setPhoto(_, _, type, _, _):
+            return 135 + type.rawValue
+        case .resetPhoto:
+            return 139
+        case .setPhotoInfo:
+            return 140
+        case .block:
+            return 141
+        case .reportReaction:
+            return 142
+        case .deleteChat:
+            return 143
+        case .deleteContact:
+            return 144
+        case .media:
+            return 145
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -827,19 +1538,43 @@ enum UserInfoEntry: PeerInfoEntry {
     
     private var sortIndex:Int {
         switch self {
-        case let .info(sectionId, _, _, _):
+        case let .info(sectionId, _, _, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .personalChannelInfo(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .personalChannel(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .setFirstName(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .setLastName(sectionId, _, _):
+        case let .setLastName(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botEditUsername(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botStarsBalance(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botEditIntro(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botEditCommands(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botEditSettings(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botEditInfo(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .about(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .bio(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
+        case let .birthday(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .peerId(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .businessHours(sectionId, _, _, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .businessLocation(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .reportReaction(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -875,6 +1610,12 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .encryptionKey(sectionId, _):
             return (sectionId * 1000) + stableIndex
+        case let .setPhoto(sectionId, _, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .resetPhoto(sectionId, _, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .setPhotoInfo(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
         case let .block(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .deleteChat(sectionId, _):
@@ -907,16 +1648,44 @@ enum UserInfoEntry: PeerInfoEntry {
         }
         
         switch self {
-        case let .info(_, peerView, editable, viewType):
-            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable)
+        case let .info(_, peerView, editable, updatingPhotoState, stories, viewType):
+            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, stories: stories, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: { image, control in
+                arguments.updateContactPhoto(image, control: control, type: .set)
+            })
+        case let .personalChannelInfo(sectionId, left, right, viewType):
+            return GeneralTextRowItem(initialSize, text: left, viewType: viewType, rightItem: .init(isLoading: false, text: .initialize(string: right, color: theme.colors.listGrayText, font: .normal(.small))))
+        case let .personalChannel(sectionId, item, viewType):
+            return PersonalChannelRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, item: item, viewType: viewType, action: {
+                arguments.openPersonalChannel(item)
+            })
         case let .setFirstName(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: $0, lastName: state.editingState?.editingLastName)
             }, limit: 255)
-        case let .setLastName(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoLastNamePlaceholder, filter: { $0 }, updated: {
+        case let .setLastName(_, text, placeholder, viewType):
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: placeholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: state.editingState?.editingFirstName, lastName: $0)
             }, limit: 255)
+        case let .botEditUsername(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
+        case let .botStarsBalance(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoStarsBalance, type: .nextContext(text), viewType: viewType, action: arguments.openStarsBalance)
+        case let .botEditIntro(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
+                arguments.editBot("intro")
+            })
+        case let .botEditCommands(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditCommands, icon: NSImage(named: "Icon_PeerInfo_BotCommands")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
+                arguments.editBot("commands")
+            })
+        case let .botEditSettings(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditSettings, icon: NSImage(named: "Icon_PeerInfo_BotSettings")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
+                arguments.editBot(nil)
+            })
+        case let .botEditInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .markdown(strings().peerInfoBotEditInfo, linkHandler: { _ in
+                arguments.openBotfather()
+            }), viewType: viewType)
         case let .about(_, text, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoAbout, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
@@ -924,40 +1693,78 @@ enum UserInfoEntry: PeerInfoEntry {
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.bindings.globalSearch)
+            }, hashtag: { hashtag in
+                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+            })
         case let .bio(_, text, peer, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
+            }, hashtag: { value in
+                arguments.context.bindings.globalSearch(value, nil)
             })
+        case let .birthday(_, text, canBirth, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)
         case let .phoneNumber(_, _, value, canCopy, viewType):
+            var items:[ContextMenuItem] = []
+            if value.number.hasPrefix("888") {
+                if canCopy {
+                    items.append(ContextSeparatorItem())
+                }
+                items.append(ContextMenuItem(strings().peerInfoPhoneAnonymousInfo, handler: {
+                    execute(inapp: .external(link: "https://fragment.com", false))
+                }, itemImage: MenuAnimation.menu_show_info.value, removeTail: false, overrideWidth: 200))
+            }
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
-                arguments.copy("+\(value.number)")
-            })
+                
+                if value.number.hasPrefix("888") {
+                    arguments.openFragment(.phoneNumber(value.number))
+                } else {
+                    arguments.copy("+\(value.number)")
+                }
+            }, contextItems: items)
         case let .userName(_, value, viewType):
-            let link = "https://t.me/\(value[0])"
+            
+            let link = "@\(value[0].username)"
             
             let text: String
             if value.count > 1 {
-                text = strings().peerInfoUsernamesList("@\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+                text = strings().peerInfoUsernamesList("@\(value[0].username)", value.suffix(value.count - 1).map { "@\($0.username)" }.joined(separator: ", "))
             } else {
-                text = "@\(value[0])"
+                text = "@\(value[0].username)"
             }
             
             let interactions = TextViewInteractions()
-            interactions.processURL = { value in
-                if let value = value as? inAppLink {
-                    arguments.copy(value.link)
+            interactions.processURL = { link in
+                if let link = link as? inAppLink {
+                    let found = value.first(where: {  $0.username == link.link.replacingOccurrences(of: "@", with: "") })
+                    if let found {
+                        arguments.openFragment(.username(found.username))
+                    } else {
+                        arguments.copy(link.link)
+                    }
                 }
             }
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
             
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: value.count > 1, isTextSelectable: value.count > 1, _copyToClipboard: {
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
+        case let .peerId(_, value, viewType):
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: "PEER ID", copyMenuText: strings().textCopyText, text: value, context: arguments.context, viewType: viewType, canCopy: true, _copyToClipboard: {
+                arguments.copy(value)
+            })
+        case let .businessLocation(_, peer, location, viewType):
+            return PeerInfoLocationRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peer: peer._asPeer(), location: location, viewType: viewType, open: {
+                arguments.openLocation(peer._asPeer(), location)
+            })
+        case let .businessHours(_, peer, businessHours, revealed, displayMyZone, viewType):
+            return PeerInfoHoursRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, revealed: revealed, peer: peer._asPeer(), businessHours: businessHours, displayLocalTimezone: displayMyZone, viewType: viewType, open: {
+                arguments.openHours(peer._asPeer(), businessHours)
+            }, toggleDisplayZoneTime: arguments.toggleDisplayZoneTime)
         case let .reportReaction(_, value, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReportReaction, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.reportReaction(value)
@@ -1016,7 +1823,6 @@ enum UserInfoEntry: PeerInfoEntry {
             })
             
         case let .notifications(_, settings, viewType):
-            
             let settings = settings as? TelegramPeerNotificationSettings
             let enabled = !(settings?.isMuted ?? false)
             
@@ -1025,6 +1831,14 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
                 arguments.encryptionKey()
             })
+        case let .setPhoto(_, string, type, nextType, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: string, icon: type == .set ? theme.icons.contact_set_photo : theme.icons.contact_suggest_photo, nameStyle: blueActionButton, type: nextType, viewType: viewType, action: {
+                arguments.updateContactPhoto(nil, control: nil, type: type)
+            })
+        case let .resetPhoto(_, string, image, user, viewType):
+            return UserInfoResetPhotoItem(initialSize, stableId: stableId.hashValue, context: arguments.context, string: string, user: user, image: image, viewType: viewType, action: arguments.resetPhoto)
+        case let .setPhotoInfo(_, string, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: string, viewType: viewType)
         case let .block(_, peer, isBlocked, isBot, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isBot ? (!isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot) : (!isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), nameStyle:redActionButton, type: .none, viewType: viewType, action: {
                 arguments.updateBlocked(peer: peer, !isBlocked, isBot)
@@ -1040,7 +1854,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
         }
         
     }
@@ -1049,7 +1863,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -1060,9 +1874,31 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     entries.append(UserInfoEntry.section(sectionId: sectionId))
     sectionId += 1
     
+    let editing = state.editingState != nil
+
+    entries.append(UserInfoEntry.info(sectionId: sectionId, peerView: view, editable: editing, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
+
+    
+    if let personalChannel, !editing {
+        entries.append(UserInfoEntry.section(sectionId: sectionId))
+        sectionId += 1
+        
+        let right: String
+        if let subscribers = personalChannel.subscribers {
+            let membersLocalized: String = strings().peerStatusSubscribersCountable(Int(subscribers))
+            right = membersLocalized.replacingOccurrences(of: "\(subscribers)", with: subscribers.formattedWithSeparator).uppercased()
+        } else {
+            right = ""
+        }
+        
+        entries.append(UserInfoEntry.personalChannelInfo(sectionId: sectionId, left: strings().peerInfoPersonalChannelTitle, right: right, viewType: .textTopItem))
+        entries.append(UserInfoEntry.personalChannel(sectionId: sectionId, item: personalChannel, viewType: .singleItem))
+    }
     
     func applyBlock(_ block:[UserInfoEntry]) {
-        var block = block
+        var block = block.sorted { (p1, p2) -> Bool in
+            return p1.isOrderedBefore(p2)
+        }
         for (i, item) in block.enumerated() {
             block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
         }
@@ -1071,13 +1907,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     
     var headerBlock: [UserInfoEntry] = []
     
-    let editing = state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil && view.peerIsContact
-    
-    headerBlock.append(.info(sectionId: sectionId, peerView: view, editable: editing, viewType: .singleItem))
+        
     
     if editing {
         headerBlock.append(.setFirstName(sectionId: sectionId, text: state.editingState?.editingFirstName ?? "", viewType: .singleItem))
-        headerBlock.append(.setLastName(sectionId: sectionId, text: state.editingState?.editingLastName ?? "", viewType: .singleItem))
+        headerBlock.append(.setLastName(sectionId: sectionId, text: state.editingState?.editingLastName ?? "", placeholder: peerViewMainPeer(view)?.isBot == true ? strings().peerInfoDescriptionPlaceholder : strings().peerInfoLastNamePlaceholder, viewType: .singleItem))
     }
     
     applyBlock(headerBlock)
@@ -1094,6 +1928,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
         if let user = peerViewMainPeer(view) as? TelegramUser {
             
             var destructBlock:[UserInfoEntry] = []
+            var photoBlock:[UserInfoEntry] = []
             var infoBlock:[UserInfoEntry] = []
             
             if state.editingState == nil {
@@ -1114,23 +1949,41 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                 
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
-                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: phoneNumber.hasPrefix("888") ? strings().peerInfoAnonymousPhone : strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
                 
-                var usernames = user.usernames.filter { $0.isActive }.map {
-                    $0.username
+                var usernames:[UserInfoAddress] = user.usernames.filter { $0.isActive }.map {
+                    .init(username: $0.username, collectable: $0.flags.contains(.isEditable))
                 }
                 if usernames.isEmpty, let address = user.addressName {
-                    usernames.append(address)
+                    usernames.append(.init(username: address, collectable: false))
                 }
                 if !usernames.isEmpty {
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
+                if FastSettings.canViewPeerId {
+                    infoBlock.append(.peerId(sectionId: sectionId, value: "\(user.id.id._internalGetInt64Value())", viewType: .singleItem))
+                }
+                
+                if let cachedUserData = view.cachedData as? CachedUserData {
+                    if let birthday = cachedUserData.birthday {
+                        infoBlock.append(.birthday(sectionId: sectionId, text: birthday.formattedYears, birthday.isEligble, viewType: .singleItem))
+                    }
+                }
+                if let cachedUserData = view.cachedData as? CachedUserData {
+                    if let hours = cachedUserData.businessHours {
+                        infoBlock.append(.businessHours(sectionId: sectionId, peer: .init(peer), businessHours: hours, revealed: state.businessHoursRevealed, displayMyZone: state.businessHoursDisplayMyTimezone, viewType: .singleItem))
+                    }
+                    if let location = cachedUserData.businessLocation {
+                        infoBlock.append(.businessLocation(sectionId: sectionId, peer: .init(peer), businessLocation: location, viewType: .singleItem))
+                    }
+                }
+                
                 if !user.isBot {
-                    if !view.peerIsContact {
+                    if !view.peerIsContact, user.id != arguments.context.peerId {
                         infoBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
                     }
                 }
@@ -1138,7 +1991,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
                 }
                 if !user.isBot {
-                    if !view.peerIsContact {
+                    if !view.peerIsContact, user.id != arguments.context.peerId {
                         if let cachedData = view.cachedData as? CachedUserData {
                             var addBlock = true
                             switch source {
@@ -1169,19 +2022,57 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 
             }
             
-            if let _ = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {
-                if state.editingState != nil {
-                    if peer is TelegramSecretChat {
-                        destructBlock.append(.deleteChat(sectionId: sectionId, viewType: .singleItem))
+            if let cachedData = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {
+                if let _ = state.editingState {
+                    
+                    if peer.botInfo?.flags.contains(.canEdit) == true {
+                        
+                        if let stats = revenueState?.stats, stats.balances.overallRevenue > 0 {
+                            entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
+                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.availableBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.availableBalance)), viewType: .lastItem))
+                        } else {
+                            entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
+                        }
+
+                        entries.append(UserInfoEntry.section(sectionId: sectionId))
+                        sectionId += 1
+                        
+                        destructBlock.append(.botEditIntro(sectionId: sectionId, viewType: .singleItem))
+                        destructBlock.append(.botEditCommands(sectionId: sectionId, viewType: .singleItem))
+                        destructBlock.append(.botEditSettings(sectionId: sectionId, viewType: .singleItem))
+
+                    } else if view.peerIsContact {
+                        photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSuggestPhoto(user.compactDisplayTitle), type: .suggest, nextType: state.suggestingPhotoState != nil ? .loading : .none, viewType: .singleItem))
+                        photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSetPhoto(user.compactDisplayTitle), type: .set, nextType: .none, viewType: .singleItem))
+
+                        if user.photo.contains(where: { $0.isPersonal }), let image = cachedData.photo {
+                            photoBlock.append(.resetPhoto(sectionId: sectionId, string: strings().userInfoResetPhoto, image: image, user: user, viewType: .lastItem))
+                        }
                     }
-                    if view.peerIsContact {
+                    if !photoBlock.isEmpty {
+                        entries.append(UserInfoEntry.setPhotoInfo(sectionId: sectionId, string: strings().userInfoSetPhotoBlockInfo(user.compactDisplayTitle), viewType: .textBottomItem))
+                    }
+                    if !photoBlock.isEmpty, peer is TelegramSecretChat || view.peerIsContact {
+                        entries.append(UserInfoEntry.section(sectionId: sectionId))
+                        sectionId += 1
+                    }
+
+                    if peer is TelegramSecretChat || view.peerIsContact {
                         destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
                     }
                 }
                
             }
+            applyBlock(photoBlock)
+            
+            
+            
+            
             applyBlock(destructBlock)
             
+            if peer.botInfo?.flags.contains(.canEdit) == true, state.editingState != nil {
+                entries.append(UserInfoEntry.botEditInfo(sectionId: sectionId, viewType: .textBottomItem))
+            }
             
             if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
                 entries.append(UserInfoEntry.media(sectionId: sectionId, controller: controller, isVisible: state.editingState == nil, viewType: .singleItem))

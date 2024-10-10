@@ -15,7 +15,7 @@ import SwiftSignalKit
 
 class SidebarCapView : View {
     private let text:NSTextField = NSTextField()
-    fileprivate let close:TitleButton = TitleButton()
+    fileprivate let close:TextButton = TextButton()
     fileprivate var restrictedByPeer: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -105,12 +105,15 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
             if let value = value {
                 switch value {
                 case .peer:
-                    return postbox.peerView(id: value.peerId) |> map {
-                        return peerViewMainPeer($0)?.canSendMessage(false) ?? false
+                    return getPeerView(peerId: value.peerId, postbox: postbox) |> map {
+                        return $0?.canSendMessage(false) ?? false
                     }
-                case .thread:
-                    return postbox.peerView(id: value.peerId) |> map {
-                        return peerViewMainPeer($0)?.canSendMessage(true) ?? false
+                case let .thread(message):
+                    return combineLatest(getPeerView(peerId: value.peerId, postbox: postbox), postbox.transaction {
+                        $0.getMessageHistoryThreadInfo(peerId: value.peerId, threadId: message.threadId)
+                    }) |> map { peer, data in
+                        let data = data?.data.get(MessageHistoryThreadData.self)
+                        return peer?.canSendMessage(true, threadData: data) ?? false
                     }
                 }
                

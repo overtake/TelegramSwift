@@ -80,7 +80,7 @@ class EmptyChatView : View {
         }
         
         toggleTips.set(image: cards != nil ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
-        if theme.shouldBlurService {
+        if theme.shouldBlurService && !isLite(.blur) {
             toggleTips.set(background: .clear, for: .Normal)
             toggleTips.blurBackground = theme.chatServiceItemColor
         } else {
@@ -146,24 +146,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         super.init(context)
         self.bar = NavigationBarStyle(height:0)
     }
-    
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = ChatListTouchBar(context: self.context, search: { [weak self] in
-                self?.context.bindings.globalSearch("")
-            }, newGroup: { [weak self] in
-                self?.context.composeCreateGroup()
-            }, newSecretChat: { [weak self] in
-                self?.context.composeCreateSecretChat()
-            }, newChannel: { [weak self] in
-                self?.context.composeCreateChannel()
-            })
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
+
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -177,6 +160,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         updateBackgroundColor(theme.controllerBackgroundMode)
+        self.cards.updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
@@ -252,5 +236,13 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
             FastSettings.updateEmptyTips(!FastSettings.emptyTips)
             self?.genericView.toggleTips(FastSettings.emptyTips, animated: true, view: cards)
         }, for: .Click)
+    }
+    
+//    override func firstResponder() -> NSResponder? {
+//        return context.bindings.mainController().chatList.firstResponder()
+//    }
+    
+    override var window: Window? {
+        return context.window
     }
 }

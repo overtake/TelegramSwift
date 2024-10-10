@@ -9,10 +9,12 @@
 import Cocoa
 
 public struct ControlStyle: Equatable {
-    public var font:NSFont = .normal(.text)
-    public var foregroundColor:NSColor = .text
-    public var backgroundColor:NSColor = .clear
-    
+    public var font: NSFont = .normal(.text)
+    public var foregroundColor: NSColor = .text
+    public var backgroundColor: NSColor = .clear
+    public var borderColor: NSColor = presentation.colors.border
+    public var grayTextColor: NSColor = presentation.colors.grayText
+    public var textColor: NSColor = presentation.colors.text
     private var _highlightColor: NSColor?
     
     public var highlightColor:NSColor {
@@ -20,7 +22,7 @@ public struct ControlStyle: Equatable {
     }
     
     public func highlight(image:CGImage) -> CGImage {
-        let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
+        let context = DrawingContext(size:image.backingSize, scale: System.backingScale, clear:true)
         context.withContext { ctx in
             ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
             let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
@@ -35,7 +37,7 @@ public struct ControlStyle: Equatable {
         return context.generateImage() ?? image
     }
     
-    public init(font:NSFont? = nil, foregroundColor:NSColor? = nil,backgroundColor:NSColor? = nil, highlightColor:NSColor? = nil) {
+    public init(font:NSFont? = nil, foregroundColor:NSColor? = nil,backgroundColor:NSColor? = nil, highlightColor:NSColor? = nil, borderColor: NSColor? = nil, grayTextColor: NSColor? = nil, textColor: NSColor? = nil) {
         
         if let font = font {
             self.font = font
@@ -46,12 +48,21 @@ public struct ControlStyle: Equatable {
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         }
+        if let borderColor = borderColor {
+            self.borderColor = borderColor
+        }
+        if let textColor = textColor {
+            self.textColor = textColor
+        }
+        if let grayTextColor = grayTextColor {
+            self.grayTextColor = grayTextColor
+        }
         _highlightColor = highlightColor
     }
  
     
     public func text(_ text:String, forState state:ControlState) -> NSAttributedString {
-        return NSAttributedString.initialize(string: text, color: state == .Normal ? foregroundColor : highlightColor, font: font, coreText: true)
+        return NSAttributedString.initialize(string: text, color: state == .Normal ? foregroundColor : highlightColor, font: font)
     }
     
 }

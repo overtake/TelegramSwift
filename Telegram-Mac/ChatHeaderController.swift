@@ -11,83 +11,99 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import Translate
 import Postbox
 import TGModernGrowingTextView
-
+import Localization
 
 
 
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
+    func remove(animated: Bool)
+}
+
+struct EmojiTag : Equatable {
+    let emoji: String
+    let tag: SavedMessageTags.Tag
+    let file: TelegramMediaFile
 }
 
 
-
-
-enum ChatHeaderState : Identifiable, Equatable {
-    case none(ChatActiveGroupCallInfo?)
-    case search(ChatActiveGroupCallInfo?, ChatSearchInteractions, Peer?, String?)
-    case addContact(ChatActiveGroupCallInfo?, block: Bool, autoArchived: Bool)
-    case requestChat(ChatActiveGroupCallInfo?, String, String)
-    case shareInfo(ChatActiveGroupCallInfo?)
-    case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
-    case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
-    case promo(ChatActiveGroupCallInfo?, EngineChatList.AdditionalItem.PromoInfo.Content)
-    case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
-    case restartTopic(ChatActiveGroupCallInfo?)
-    var stableId:Int {
-        switch self {
-        case .none:
-            return 0
-        case .search:
-            return 1
-        case .report:
-            return 2
-        case .addContact:
-            return 3
-        case .pinned:
-            return 4
-        case .promo:
-            return 5
-        case .shareInfo:
-            return 6
-        case .pendingRequests:
-            return 7
-        case .requestChat:
-            return 8
-        case .restartTopic:
-            return 9
+struct ChatHeaderState : Identifiable, Equatable {
+    enum Value : Equatable {
+        case none
+        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag]?, EmojiTag?)
+        case addContact(block: Bool, autoArchived: Bool)
+        case requestChat(String, String)
+        case shareInfo
+        case pinned(ChatPinnedMessage, ChatLiveTranslateContext.State.Result?, doNotChangeTable: Bool)
+        case report(autoArchived: Bool, status: PeerEmojiStatus?)
+        case promo(EngineChatList.AdditionalItem.PromoInfo.Content)
+        case pendingRequests(Int, [PeerInvitationImportersState.Importer])
+        case restartTopic
+        
+        static func ==(lhs:Value, rhs: Value) -> Bool {
+            switch lhs {
+            case let .pinned(pinnedId, translate, value):
+                if case .pinned(pinnedId, translate, value) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .addContact(block, autoArchive):
+                if case .addContact(block, autoArchive) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .search(_, _, _, tags, selected):
+                if case .search(_, _, _, tags, selected) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            default:
+                return lhs.stableId == rhs.stableId
+            }
         }
+        var stableId:Int {
+            switch self {
+            case .none:
+                return 0
+            case .search:
+                return 1
+            case .report:
+                return 2
+            case .addContact:
+                return 3
+            case .pinned:
+                return 4
+            case .promo:
+                return 5
+            case .shareInfo:
+                return 6
+            case .pendingRequests:
+                return 7
+            case .requestChat:
+                return 8
+            case .restartTopic:
+                return 9
+            }
+        }
+        
     }
-
-    var voiceChat: ChatActiveGroupCallInfo? {
-        switch self {
-        case let .none(voiceChat):
-            return voiceChat
-        case let .search(voiceChat, _, _, _):
-            return voiceChat
-        case let .report(voiceChat, _, _):
-            return voiceChat
-        case let .addContact(voiceChat, _, _):
-            return voiceChat
-        case let .pinned(voiceChat, _, _):
-            return voiceChat
-        case let .promo(voiceChat, _):
-            return voiceChat
-        case let .shareInfo(voiceChat):
-            return voiceChat
-        case let .pendingRequests(voiceChat, _, _):
-            return voiceChat
-        case let .requestChat(voiceChat, _, _):
-            return voiceChat
-        case let .restartTopic(voiceChat):
-            return voiceChat
-        }
+    var main: Value
+    var voiceChat: ChatActiveGroupCallInfo?
+    var translate: ChatPresentationInterfaceState.TranslateState?
+    var botManager: ChatBotManagerData?
+    
+    var stableId:Int {
+        return main.stableId
     }
     
     var primaryClass: AnyClass? {
-        switch self {
+        switch main {
         case .addContact:
             return AddContactView.self
         case .shareInfo:
@@ -110,25 +126,31 @@ enum ChatHeaderState : Identifiable, Equatable {
             return nil
         }
     }
-    var secondaryClass: AnyClass? {
-        if let _ = voiceChat {
-            return ChatGroupCallView.self
-        }
-        return nil
+    var secondaryClass: AnyClass {
+        return ChatGroupCallView.self
+    }
+    var thirdClass: AnyClass {
+        return ChatTranslateHeader.self
+    }
+    var fourthClass: AnyClass {
+        return ChatBotManager.self
     }
     
     var height:CGFloat {
-        return primaryHeight + secondaryHeight
+        return primaryHeight + secondaryHeight + thirdHeight + fourthHeight
     }
 
     var primaryHeight:CGFloat {
         var height: CGFloat = 0
-        switch self {
+        switch main {
         case .none:
             height += 0
-        case .search:
+        case let .search(_, _, _, emojiTags, _):
             height += 44
-        case let .report(_, _, status):
+            if emojiTags != nil {
+                height += 35
+            }
+        case let .report(_, status):
             if let _ = status {
                 height += 30
             }
@@ -158,33 +180,29 @@ enum ChatHeaderState : Identifiable, Equatable {
         }
         return height
     }
-    
-    var toleranceHeight: CGFloat {
-        switch self {
-        case let .pinned(_, _, doNotChangeTable):
-            return doNotChangeTable ? height - primaryHeight : height
-        default:
-            return height
+    var thirdHeight:CGFloat {
+        var height: CGFloat = 0
+        if let _ = translate {
+            height += 36
         }
+        return height
+    }
+    var fourthHeight:CGFloat {
+        var height: CGFloat = 0
+        if let _ = botManager {
+            height += 44
+        }
+        return height
     }
     
-    static func ==(lhs:ChatHeaderState, rhs: ChatHeaderState) -> Bool {
-        switch lhs {
-        case let .pinned(call, pinnedId, value):
-            if case .pinned(call, pinnedId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .addContact(call, block, autoArchive):
-            if case .addContact(call, block, autoArchive) = rhs {
-                return true
-            } else {
-                return false
-            }
-        default:
-            return lhs.stableId == rhs.stableId && lhs.voiceChat == rhs.voiceChat
-        }
+    var toleranceHeight: CGFloat {
+        return 0
+//        switch main {
+//        case let .pinned(_, doNotChangeTable):
+//            return doNotChangeTable ? height - primaryHeight : height
+//        default:
+//            return height
+//        }
     }
 }
 
@@ -192,13 +210,15 @@ enum ChatHeaderState : Identifiable, Equatable {
 class ChatHeaderController {
     
     
-    private var _headerState:ChatHeaderState = .none(nil)
+    private var _headerState:ChatHeaderState = .init(main: .none)
     private let chatInteraction:ChatInteraction
     
     private(set) var currentView:View?
 
     private var primaryView: View?
     private var seconderyView : View?
+    private var thirdView : View?
+    private var fourthView : View?
 
     var state:ChatHeaderState {
         return _headerState
@@ -208,13 +228,17 @@ class ChatHeaderController {
         if _headerState != state {
             _headerState = state
 
-            let (primary, secondary) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView)
+            let (primary, secondary, third, fourth) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), thirdSize: NSMakeSize(view.frame.width, state.thirdHeight), fourthSize: NSMakeSize(view.frame.width, state.fourthHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView, t_v: self.thirdView, f_v: self.fourthView)
 
             let previousPrimary = self.primaryView
             let previousSecondary = self.seconderyView
+            let previousThird = self.thirdView
+            let previousFourth = self.fourthView
 
             self.primaryView = primary
             self.seconderyView = secondary
+            self.thirdView = third
+            self.fourthView = fourth
 
             var removed: [View] = []
             var added:[(View, NSPoint, NSPoint, View?)] = []
@@ -225,30 +249,52 @@ class ChatHeaderController {
                     removed.append(previousSecondary)
                 }
                 if let secondary = secondary {
-                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), nil))
+                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight + state.fourthHeight), NSMakePoint(0, state.fourthHeight), fourth ?? previousSecondary))
                 }
             }
+            
             if previousPrimary == nil || previousPrimary != primary {
                 if let previousPrimary = previousPrimary {
                     removed.append(previousPrimary)
                 }
                 if let primary = primary {
-                    added.append((primary, NSMakePoint(0, -(state.height - state.secondaryHeight)), NSMakePoint(0, state.secondaryHeight), secondary))
+                    added.append((primary, NSMakePoint(0, state.secondaryHeight - state.primaryHeight - state.fourthHeight), NSMakePoint(0, state.secondaryHeight + state.fourthHeight), fourth ?? secondary ?? previousPrimary))
+                }
+            }
+            
+            if previousFourth == nil || previousFourth != fourth {
+                if let previousFourth = previousFourth {
+                    removed.append(previousFourth)
+                }
+                if let fourth = fourth {
+                    added.append((fourth, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), previousFourth))
+                }
+            }
+            
+            if previousThird == nil || previousThird != third {
+                if let previousThird = previousThird {
+                    removed.append(previousThird)
+                }
+                if let third = third {
+                    added.append((third, NSMakePoint(0, (state.primaryHeight + state.secondaryHeight + state.fourthHeight) - state.fourthHeight), NSMakePoint(0, state.primaryHeight + state.secondaryHeight + state.fourthHeight), fourth ?? primary ?? secondary ?? previousThird))
                 }
             }
 
-            if (previousSecondary == nil && secondary != nil) || previousSecondary != nil && secondary == nil {
-                if let primary = primary, previousPrimary == primary {
-                    updated.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
-                }
+            if let fourth = fourth, previousFourth == fourth {
+                updated.append((fourth, NSMakePoint(0, 0), nil))
             }
-            if (previousPrimary == nil && primary != nil) || previousPrimary != nil && primary == nil {
-                if let secondary = secondary, previousSecondary == secondary {
-                    updated.append((secondary, NSMakePoint(0, 0), nil))
-                }
+            
+            if let secondary = secondary, previousSecondary == secondary {
+                updated.append((secondary, NSMakePoint(0, state.fourthHeight), fourth))
             }
-
-            if !added.isEmpty || primary != nil  || secondary != nil {
+            if let primary = primary, previousPrimary == primary {
+                updated.append((primary, NSMakePoint(0, state.secondaryHeight + state.fourthHeight), fourth ?? secondary))
+            }
+            if let third = third, previousThird == third {
+                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight + state.fourthHeight), fourth ?? primary ?? secondary))
+            }
+           
+            if !added.isEmpty || primary != nil || secondary != nil || third != nil || fourth != nil {
                 let current: View
                 if let view = currentView {
                     current = view
@@ -260,20 +306,33 @@ class ChatHeaderController {
                     view.addSubview(current)
                     self.currentView = current
                 }
+                
+                for (view, point, above) in updated {
+                    if let above = above {
+                        current.addSubview(view, positioned: .below, relativeTo: above)
+                    } else {
+                        current.addSubview(view)
+                    }
+                    view.change(pos: point, animated: animated)
+                }
                 for view in removed {
+                    if let view = view as? ChatHeaderProtocol {
+                        view.remove(animated: animated)
+                    }
                     if animated {
-//                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-//                            view?.removeFromSuperview()
-//                        })
-                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), removeOnCompletion: false, completion: { [weak view] _ in
+                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
                             view?.removeFromSuperview()
                         })
                     } else {
                         view.removeFromSuperview()
                     }
                 }
-                for (view, from, to, below) in added {
-                    current.addSubview(view, positioned: .below, relativeTo: below)
+                for (view, from, to, above) in added {
+                    if let above = above {
+                        current.addSubview(view, positioned: .below, relativeTo: above)
+                    } else {
+                        current.addSubview(view)
+                    }
                     view.setFrameOrigin(to)
                     
                     if animated {
@@ -281,10 +340,7 @@ class ChatHeaderController {
                       //  view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
-                for (view, point, above) in updated {
-                    current.addSubview(view, positioned: .below, relativeTo: above)
-                    view.change(pos: point, animated: animated)
-                }
+                
             } else {
                 if let currentView = currentView {
                     self.currentView = nil
@@ -307,13 +363,20 @@ class ChatHeaderController {
          (primaryView as? ChatSearchHeader)?.applySearchResponder(true)
     }
     
-    private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, animated: Bool, p_v: View?, s_v: View?) -> (primary: View?, secondary: View?) {
+    private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, thirdSize: NSSize, fourthSize: NSSize, animated: Bool, p_v: View?, s_v: View?, t_v: View?, f_v: View?) -> (primary: View?, secondary: View?, third: View?, fourth: View?) {
+        
         let primary:View?
         let secondary:View?
+        let third: View?
+        let fourth: View?
+
         let primaryRect: NSRect = .init(origin: .zero, size: primarySize)
         let secondaryRect: NSRect = .init(origin: .zero, size: secondarySize)
+        let thirdRect: NSRect = .init(origin: .zero, size: thirdSize)
+        let fourthRect: NSRect = .init(origin: .zero, size: fourthSize)
+
         if p_v == nil || p_v?.className != NSStringFromClass(_headerState.primaryClass ?? NSView.self)  {
-            switch _headerState {
+            switch _headerState.main {
             case .addContact:
                 primary = AddContactView(chatInteraction, state: _headerState, frame: primaryRect)
             case .shareInfo:
@@ -340,8 +403,9 @@ class ChatHeaderController {
             primary = p_v
             (primary as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
         }
+        
         if let _ = self._headerState.voiceChat {
-            if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass ?? NSView.self) {
+            if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass) {
                 secondary = ChatGroupCallView(chatInteraction.joinGroupCall, context: chatInteraction.context, state: _headerState, frame: secondaryRect)
                 secondary?.autoresizingMask = [.width]
             } else {
@@ -351,10 +415,36 @@ class ChatHeaderController {
         } else {
             secondary = nil
         }
+        
+        if let _ = self._headerState.translate {
+            if t_v == nil || t_v?.className != NSStringFromClass(_headerState.thirdClass) {
+                third = ChatTranslateHeader(chatInteraction, state: _headerState, frame: thirdRect)
+                third?.autoresizingMask = [.width]
+            } else {
+                third = t_v
+                (third as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
+            }
+        } else {
+            third = nil
+        }
+        
+        if let _ = self._headerState.botManager {
+            if f_v == nil || f_v?.className != NSStringFromClass(_headerState.fourthClass) {
+                fourth = ChatBotManager(chatInteraction, state: _headerState, frame: thirdRect)
+                fourth?.autoresizingMask = [.width]
+            } else {
+                fourth = f_v
+                (fourth as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
+            }
+        } else {
+            fourth = nil
+        }
 
         primary?.setFrameSize(primarySize)
         secondary?.setFrameSize(secondarySize)
-        return (primary: primary, secondary: secondary)
+        third?.setFrameSize(thirdSize)
+        fourth?.setFrameSize(fourthSize)
+        return (primary: primary, secondary: secondary, third: third, fourth: fourth)
     }
     
     init(_ chatInteraction:ChatInteraction) {
@@ -368,7 +458,7 @@ struct ChatSearchInteractions {
     let results:(String)->Void
     let calendarAction:(Date)->Void
     let cancel:()->Void
-    let searchRequest:(String, PeerId?, SearchMessagesState?) -> Signal<([Message], SearchMessagesState?), NoError>
+    let searchRequest:(String, PeerId?, SearchMessagesState?, [EmojiTag]) -> Signal<([Message], SearchMessagesState?), NoError>
 }
 
 private class ChatSponsoredModel: ChatAccessoryModel {
@@ -438,7 +528,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
             }
             switch kind {
             case .proxy:
-                confirm(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancelTitle: "", thridTitle: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
+                verifyAlert_button(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancel: "", option: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
                     switch result {
                     case .thrid:
                         chatInteraction?.openProxySettings()
@@ -448,7 +538,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
                 })
             case .psa:
                 if let learnMore = kind.learnMore {
-                    confirm(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancelTitle: "", thridTitle: learnMore, successHandler: { result in
+                    verifyAlert_button(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancel: "", option: learnMore, successHandler: { result in
                         switch result {
                         case .thrid:
                             execute(inapp: .external(link: learnMore, false))
@@ -476,10 +566,14 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
 
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
-        switch state {
-        case let  .promo(_, kind):
+        switch state.main {
+        case let .promo(kind):
             self.kind = kind
         default:
             self.kind = nil
@@ -537,12 +631,13 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     private let loadMessageDisposable = MetaDisposable()
     private var pinnedMessage: ChatPinnedMessage?
     
-    private var inlineButton: TitleButton? = nil
-    
+    private var inlineButton: TextButton? = nil
+    private var _state: ChatHeaderState
     private let particleList: VerticalParticleListControl = VerticalParticleListControl()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
         self.chatInteraction = chatInteraction
+        _state = state
         super.init(frame: frame)
         
         dismiss.disableActions()
@@ -593,31 +688,39 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
 
         update(with: state, animated: false)
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
-        switch state {
-        case let .pinned(_, message, _):
-            self.update(message, animated: animated)
+        self._state = state
+        switch state.main {
+        case let .pinned(message, translate, _):
+            self.update(message, translate: translate, animated: animated)
         default:
             break
         }
     }
+    private var translate: ChatLiveTranslateContext.State.Result?
     
-    private func update(_ pinnedMessage: ChatPinnedMessage, animated: Bool) {
+    private func update(_ pinnedMessage: ChatPinnedMessage, translate: ChatLiveTranslateContext.State.Result?, animated: Bool) {
         
-        let animated = animated && (self.pinnedMessage != nil && (!pinnedMessage.isLatest || (self.pinnedMessage?.isLatest != pinnedMessage.isLatest)))
+        
+        
+        let animated = animated && (self.pinnedMessage != nil && (!pinnedMessage.isLatest || (self.pinnedMessage?.isLatest != pinnedMessage.isLatest))) && self.translate == translate
+
         
         particleList.update(count: pinnedMessage.totalCount, selectedIndex: pinnedMessage.index, animated: animated)
         
         self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
         
-        if pinnedMessage.messageId != self.pinnedMessage?.messageId ||
-            pinnedMessage.message != self.pinnedMessage?.message {
+        if pinnedMessage.messageId != self.pinnedMessage?.messageId || pinnedMessage.message != self.pinnedMessage?.message || translate != self.translate {
             let oldContainer = self.container
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
-            
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
+                        
+            let newNode = ReplyModel(message: nil, replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: translate)
             
             newNode.view = newContainer
             
@@ -660,17 +763,17 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             self.node = newNode
         }
         self.pinnedMessage = pinnedMessage
-
+        self.translate = translate
         updateLocalizationAndTheme(theme: theme)
     }
     
     private func installReplyMarkup(_ button: ReplyMarkupButton, message: Message, animated: Bool) {
         self.dismiss.isHidden = true
-        let current: TitleButton
+        let current: TextButton
         if let view = self.inlineButton {
             current = view
         } else {
-            current = TitleButton()
+            current = TextButton()
             current.autohighlight = false
             current.scaleOnClick = true
             
@@ -770,11 +873,11 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
 
 class ChatReportView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
-    private let report:TitleButton = TitleButton()
-    private let unarchiveButton = TitleButton()
+    private let report:TextButton = TextButton()
+    private let unarchiveButton = TextButton()
     private let dismiss:ImageButton = ImageButton()
 
-    private var statusLayer: InlineStickerView?
+    private var statusLayer: InlineStickerItemLayer?
     
     private let buttonsContainer = View()
     
@@ -831,11 +934,14 @@ class ChatReportView : Control, ChatHeaderProtocol {
         needsLayout = true
     }
 
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         buttonsContainer.removeAllSubviews()
-        switch state {
-        case let .report(_, autoArchived, status):
+        switch state.main {
+        case let .report(autoArchived, status):
             buttonsContainer.addSubview(report)
             if autoArchived {
                 buttonsContainer.addSubview(unarchiveButton)
@@ -865,26 +971,25 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 })).mutableCopy() as! NSMutableAttributedString
                 
                 
-                let range = attr.string.nsstring.range(of: "🤡")
+                let range = attr.string.nsstring.range(of: clown)
                 if range.location != NSNotFound {
-                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: status.fileId, file: nil, text: "", info: nil), range: range)
+                    attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: status.fileId, file: nil, emoji: ""))), range: range)
                 }
                 let layout = TextViewLayout(attr, alignment: .center)
                 layout.measure(width: frame.width - 80)
                 layout.interactions = globalLinkExecutor
                 current.update(layout)
                 
-                self.statusLayer?.removeFromSuperview()
+                self.statusLayer?.removeFromSuperlayer()
                 self.statusLayer = nil
                 
                 for embedded in layout.embeddedItems {
                     let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
-                    let view = InlineStickerView(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size)
+                    let view = InlineStickerItemLayer(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size)
                     view.frame = rect
-                    current.addEmbeddedView(view)
+                    current.addEmbeddedLayer(view)
                     self.statusLayer = view
-                    view.updateAnimatableContent()
-                    view.animateLayer.isPlayable = true
+                    view.isPlayable = true
                 }
             } else if let view = self.textView {
                 performSubviewRemoval(view, animated: animated)
@@ -898,11 +1003,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.statusLayer?.updateAnimatableContent()
-    }
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        self.statusLayer?.updateAnimatableContent()
+        self.statusLayer?.isPlayable = window != nil
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -948,7 +1049,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
 
 class ShareInfoView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
-    private let share:TitleButton = TitleButton()
+    private let share:TextButton = TextButton()
     private let dismiss:ImageButton = ImageButton()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
@@ -972,6 +1073,10 @@ class ShareInfoView : Control, ChatHeaderProtocol {
         addSubview(share)
         addSubview(dismiss)
         updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func remove(animated: Bool) {
+        
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {
@@ -1017,10 +1122,10 @@ class ShareInfoView : Control, ChatHeaderProtocol {
 
 class AddContactView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
-    private let add:TitleButton = TitleButton()
+    private let add:TextButton = TextButton()
     private let dismiss:ImageButton = ImageButton()
-    private let blockButton: TitleButton = TitleButton()
-    private let unarchiveButton = TitleButton()
+    private let blockButton: TextButton = TextButton()
+    private let unarchiveButton = TextButton()
     private let buttonsContainer = View()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
@@ -1076,9 +1181,13 @@ class AddContactView : Control, ChatHeaderProtocol {
         needsLayout = true
     }
 
+    func remove(animated: Bool) {
+        
+    }
+    
     func update(with state: ChatHeaderState, animated: Bool) {
-        switch state {
-        case let .addContact(_, canBlock, autoArchived):
+        switch state.main {
+        case let .addContact(canBlock, autoArchived):
             buttonsContainer.removeAllSubviews()
 
             if canBlock {
@@ -1142,604 +1251,6 @@ class AddContactView : Control, ChatHeaderProtocol {
     }
 }
 
-private final class CSearchContextState : Equatable {
-    let inputQueryResult: ChatPresentationInputQueryResult?
-    let tokenState: TokenSearchState
-    let peerId:PeerId?
-    let messages: ([Message], SearchMessagesState?)
-    let selectedIndex: Int
-    let searchState: SearchState
-    
-    init(inputQueryResult: ChatPresentationInputQueryResult? = nil, messages: ([Message], SearchMessagesState?) = ([], nil), selectedIndex: Int = -1, searchState: SearchState = SearchState(state: .None, request: ""), tokenState: TokenSearchState = .none, peerId: PeerId? = nil) {
-        self.inputQueryResult = inputQueryResult
-        self.tokenState = tokenState
-        self.peerId = peerId
-        self.messages = messages
-        self.selectedIndex = selectedIndex
-        self.searchState = searchState
-    }
-    func updatedInputQueryResult(_ f: (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?) -> CSearchContextState {
-        return CSearchContextState(inputQueryResult: f(self.inputQueryResult), messages: self.messages, selectedIndex: self.selectedIndex, searchState: self.searchState, tokenState: self.tokenState, peerId: self.peerId)
-    }
-    func updatedTokenState(_ token: TokenSearchState) -> CSearchContextState {
-        return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: self.messages, selectedIndex: self.selectedIndex, searchState: self.searchState, tokenState: token, peerId: self.peerId)
-    }
-    func updatedPeerId(_ peerId: PeerId?) -> CSearchContextState {
-        return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: self.messages, selectedIndex: self.selectedIndex, searchState: self.searchState, tokenState: self.tokenState, peerId: peerId)
-    }
-    func updatedMessages(_ messages: ([Message], SearchMessagesState?)) -> CSearchContextState {
-        return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: messages, selectedIndex: self.selectedIndex, searchState: self.searchState, tokenState: self.tokenState, peerId: self.peerId)
-    }
-    func updatedSelectedIndex(_ selectedIndex: Int) -> CSearchContextState {
-        return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: self.messages, selectedIndex: selectedIndex, searchState: self.searchState, tokenState: self.tokenState, peerId: self.peerId)
-    }
-    func updatedSearchState(_ searchState: SearchState) -> CSearchContextState {
-        return CSearchContextState(inputQueryResult: self.inputQueryResult, messages: self.messages, selectedIndex: self.selectedIndex, searchState: searchState, tokenState: self.tokenState, peerId: self.peerId)
-    }
-}
-
-private func ==(lhs: CSearchContextState, rhs: CSearchContextState) -> Bool {
-    if lhs.messages.0.count != rhs.messages.0.count {
-        return false
-    } else {
-        for i in 0 ..< lhs.messages.0.count {
-            if !isEqualMessages(lhs.messages.0[i], rhs.messages.0[i]) {
-                return false
-            }
-        }
-    }
-    return lhs.inputQueryResult == rhs.inputQueryResult && lhs.tokenState == rhs.tokenState && lhs.selectedIndex == rhs.selectedIndex && lhs.searchState == rhs.searchState && lhs.messages.1 == rhs.messages.1
-}
-
-private final class CSearchInteraction : InterfaceObserver {
-    private(set) var state: CSearchContextState = CSearchContextState()
-    
-    func update(animated:Bool = true, _ f:(CSearchContextState)->CSearchContextState) -> Void {
-        let oldValue = self.state
-        self.state = f(state)
-        if oldValue != state {
-            notifyObservers(value: state, oldValue:oldValue, animated: animated)
-        }
-    }
-    
-    var currentMessage: Message? {
-        if state.messages.0.isEmpty {
-            return nil
-        } else if state.messages.0.count <= state.selectedIndex || state.selectedIndex < 0 {
-            return nil
-        }
-        return state.messages.0[state.selectedIndex]
-    }
-}
-
-struct SearchStateQuery : Equatable {
-    let query: String?
-    let state: SearchMessagesState?
-    init(_ query: String?, _ state: SearchMessagesState?) {
-        self.query = query
-        self.state = state
-    }
-}
-
-struct SearchMessagesResultState : Equatable {
-    static func == (lhs: SearchMessagesResultState, rhs: SearchMessagesResultState) -> Bool {
-        if lhs.query != rhs.query {
-            return false
-        }
-        if lhs.messages.count != rhs.messages.count {
-            return false
-        } else {
-            for i in 0 ..< lhs.messages.count {
-                if !isEqualMessages(lhs.messages[i], rhs.messages[i]) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
-    
-    let query: String
-    let messages: [Message]
-    init(_ query: String, _ messages: [Message]) {
-        self.query = query
-        self.messages = messages
-    }
-    
-    func containsMessage(_ message: Message) -> Bool {
-        return self.messages.contains(where: { $0.id == message.id })
-    }
-}
-
-class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
-    
-    private let searchView:ChatSearchView = ChatSearchView(frame: NSZeroRect)
-    private let cancel:ImageButton = ImageButton()
-    private let from:ImageButton = ImageButton()
-    private let calendar:ImageButton = ImageButton()
-    
-    private let prev:ImageButton = ImageButton()
-    private let next:ImageButton = ImageButton()
-
-    
-    private let separator:View = View()
-    private let interactions:ChatSearchInteractions
-    private let chatInteraction: ChatInteraction
-    
-    private let query:ValuePromise<SearchStateQuery> = ValuePromise()
-
-    private let disposable:MetaDisposable = MetaDisposable()
-    
-    private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
-    private let inputContextHelper: InputContextHelper
-    private let inputInteraction: CSearchInteraction = CSearchInteraction()
-    private let parentInteractions: ChatInteraction
-    private let loadingDisposable = MetaDisposable()
-   
-    private let calendarController: CalendarController
-    required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
-
-        switch state {
-        case let .search(_, interactions, _, initialString):
-            self.interactions = interactions
-            self.parentInteractions = chatInteraction
-            self.calendarController = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
-            self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, context: chatInteraction.context, mode: chatInteraction.mode)
-            self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
-            self.inputContextHelper = InputContextHelper(chatInteraction: self.chatInteraction, highlightInsteadOfSelect: true)
-
-            if let initialString = initialString {
-                searchView.setString(initialString)
-                self.query.set(SearchStateQuery(initialString, nil))
-            }
-        default:
-            fatalError()
-        }
-
-        super.init()
-        
-        self.chatInteraction.movePeerToInput = { [weak self] peer in
-            self?.searchView.completeToken(peer.compactDisplayTitle)
-            self?.inputInteraction.update({$0.updatedPeerId(peer.id)})
-        }
-        
-        
-        self.chatInteraction.focusMessageId = { [weak self] fromId, messageId, state in
-            self?.parentInteractions.focusMessageId(fromId, messageId, state)
-            self?.inputInteraction.update({$0.updatedSelectedIndex($0.messages.0.firstIndex(where: {$0.id == messageId}) ?? -1)})
-            _ = self?.window?.makeFirstResponder(nil)
-        }
-        
-     
-
-        initialize()
-        
-
-        
-        parentInteractions.loadingMessage.set(.single(false))
-        
-        inputInteraction.add(observer: self)
-        self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
-            self?.searchView.isLoading = loading
-        }))
-        switch state {
-        case let .search(_, _, initialPeer, _):
-            if let initialPeer = initialPeer {
-                self.chatInteraction.movePeerToInput(initialPeer)
-            }
-        default:
-            break
-        }
-        Queue.mainQueue().justDispatch { [weak self] in
-            self?.applySearchResponder(false)
-        }
-    }
-    
-    func update(with state: ChatHeaderState, animated: Bool) {
-        
-    }
-
-    
-    func applySearchResponder(_ animated: Bool = false) {
-       // _ = window?.makeFirstResponder(searchView.input)
-        searchView.layout()
-        if searchView.state == .Focus && window?.firstResponder != searchView.input {
-            _ = window?.makeFirstResponder(searchView.input)
-        }
-        searchView.change(state: .Focus, animated)
-    }
-    
-    private var calendarAbility: Bool {
-        return chatInteraction.mode != .scheduled && chatInteraction.mode != .pinned
-    }
-    
-    private var fromAbility: Bool {
-        if let peer = chatInteraction.presentation.peer {
-            return (peer.isSupergroup || peer.isGroup) && (chatInteraction.mode == .history || chatInteraction.mode.isThreadMode)
-        } else {
-            return false
-        }
-    }
-    
-    func notify(with value: Any, oldValue: Any, animated: Bool) {
-        let context = chatInteraction.context
-        if let value = value as? CSearchContextState, let oldValue = oldValue as? CSearchContextState, let superview = superview, let view = superview.superview {
-            
-            let stateValue = self.query
-            
-            prev.isEnabled = !value.messages.0.isEmpty && value.selectedIndex < value.messages.0.count - 1
-            next.isEnabled = !value.messages.0.isEmpty && value.selectedIndex > 0
-            next.set(image: next.isEnabled ? theme.icons.chatSearchDown : theme.icons.chatSearchDownDisabled, for: .Normal)
-            prev.set(image: prev.isEnabled ? theme.icons.chatSearchUp : theme.icons.chatSearchUpDisabled, for: .Normal)
-
-            
-            
-            if let peer = chatInteraction.presentation.peer {
-                if value.inputQueryResult != oldValue.inputQueryResult {
-                    inputContextHelper.context(with: value.inputQueryResult, for: view, relativeView: superview, position: .below, selectIndex: value.selectedIndex != -1 ? value.selectedIndex : nil, animated: animated)
-                }
-                switch value.tokenState {
-                case .none:
-                    from.isHidden = !fromAbility
-                    calendar.isHidden = !calendarAbility
-                    needsLayout = true
-                    searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
-                    
-                    if (peer.isSupergroup || peer.isGroup) && chatInteraction.mode == .history {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(chatLocations: [chatInteraction.chatLocation], .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
-                            self.contextQueryState?.1.dispose()
-                            self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
-                                if let strongSelf = self {
-                                    strongSelf.inputInteraction.update(animated: animated, { state in
-                                        return state.updatedInputQueryResult { previousResult in
-                                            let messages = state.searchState.responder ? state.messages : ([], nil)
-                                            var suggestedPeers:[Peer] = []
-                                            let inputQueryResult = result(previousResult)
-                                            if let inputQueryResult = inputQueryResult, state.searchState.responder, !state.searchState.request.isEmpty, messages.1 != nil {
-                                                switch inputQueryResult {
-                                                case let .mentions(mentions):
-                                                    suggestedPeers = mentions
-                                                default:
-                                                    break
-                                                }
-                                            }
-                                            return .searchMessages((messages.0, messages.1, { searchMessagesState in
-                                                stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
-                                            }), suggestedPeers, state.searchState.request)
-                                        }
-                                    })
-                                }
-                            }))
-                        }
-                    } else {
-                        inputInteraction.update(animated: animated, { state in
-                            return state.updatedInputQueryResult { previousResult in
-                                let result = state.searchState.responder ? state.messages : ([], nil)
-                                return .searchMessages((result.0, result.1, { searchMessagesState in
-                                    stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
-                                }), [], state.searchState.request)
-                            }
-                        })
-                    }
-                    
-                    
-                case let .from(query, complete):
-                    from.isHidden = true
-                    calendar.isHidden = true
-                    searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
-                    needsLayout = true
-                    if complete {
-                        inputInteraction.update(animated: animated, { state in
-                            return state.updatedInputQueryResult { previousResult in
-                                let result = state.searchState.responder ? state.messages : ([], nil)
-                                return .searchMessages((result.0, result.1, { searchMessagesState in
-                                    stateValue.set(SearchStateQuery(state.searchState.request, searchMessagesState))
-                                }), [], state.searchState.request)
-                            }
-                        })
-                    } else {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(chatLocations: [chatInteraction.chatLocation], .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
-                            self.contextQueryState?.1.dispose()
-                            var inScope = true
-                            var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
-                            self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
-                                if let strongSelf = self {
-                                    if Thread.isMainThread && inScope {
-                                        inScope = false
-                                        inScopeResult = result
-                                    } else {
-                                        strongSelf.inputInteraction.update(animated: animated, {
-                                            $0.updatedInputQueryResult { previousResult in
-                                                return result(previousResult)
-                                            }.updatedMessages(([], nil)).updatedSelectedIndex(-1)
-                                        })
-                                        
-                                    }
-                                }
-                            }))
-                            inScope = false
-                            if let inScopeResult = inScopeResult {
-                                inputInteraction.update(animated: animated, {
-                                    $0.updatedInputQueryResult { previousResult in
-                                        return inScopeResult(previousResult)
-                                    }.updatedMessages(([], nil)).updatedSelectedIndex(-1)
-                                })
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    func isEqual(to other: Notifable) -> Bool {
-        if let to = other as? ChatSearchView {
-            return to === other
-        } else {
-            return false
-        }
-    }
-    
-    
-    
-    
-    
-    private func initialize() {
-        self.from.isHidden = !fromAbility
-        
-        _ = self.searchView.tokenPromise.get().start(next: { [weak self] state in
-            self?.inputInteraction.update({$0.updatedTokenState(state)})
-        })
-        
-     
-        self.searchView.searchInteractions = SearchInteractions({ [weak self] state, _ in
-            if state.state == .None {
-                self?.parentInteractions.loadingMessage.set(.single(false))
-                self?.parentInteractions.updateSearchRequest(SearchMessagesResultState(state.request, []))
-                self?.inputInteraction.update({$0.updatedMessages(([], nil)).updatedSelectedIndex(-1).updatedSearchState(state)})
-            }
-        }, { [weak self] state in
-            guard let `self` = self else {return}
-            
-            self.inputInteraction.update({$0.updatedMessages(([], nil)).updatedSelectedIndex(-1).updatedSearchState(state)})
-            
-            self.updateSearchState()
-            switch self.searchView.tokenState {
-            case .none:
-                if state.request == strings().chatSearchFrom, let peer = self.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
-                    self.query.set(SearchStateQuery("", nil))
-                    self.parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
-                    self.searchView.initToken()
-                } else {
-                    self.parentInteractions.updateSearchRequest(SearchMessagesResultState(state.request, []))
-                    self.parentInteractions.loadingMessage.set(.single(true))
-                    self.query.set(SearchStateQuery(state.request, nil))
-                }
-                
-            case .from(_, let complete):
-                if complete {
-                    self.parentInteractions.updateSearchRequest(SearchMessagesResultState(state.request, []))
-                    self.parentInteractions.loadingMessage.set(.single(true))
-                    self.query.set(SearchStateQuery(state.request, nil))
-                }
-            }
-            
-        }, responderModified: { [weak self] state in
-            self?.inputInteraction.update({$0.updatedSearchState(state)})
-        })
- 
-        
-        let apply = query.get() |> mapToSignal { [weak self] state -> Signal<([Message], SearchMessagesState?, String), NoError> in
-            
-            guard let `self` = self else { return .single(([], nil, "")) }
-            if let query = state.query {
-                
-                let stateSignal: Signal<SearchMessagesState?, NoError>
-                if state.state == nil {
-                    stateSignal = .single(state.state) |> delay(0.3, queue: Queue.mainQueue())
-                } else {
-                    stateSignal = .single(state.state)
-                }
-                
-                return stateSignal |> mapToSignal { [weak self] state in
-                    
-                    guard let `self` = self else { return .single(([], nil, "")) }
-                    
-                    let emptyRequest: Bool
-                    if case .from = self.inputInteraction.state.tokenState {
-                        emptyRequest = true
-                    } else {
-                        emptyRequest = !query.isEmpty
-                    }
-                    if emptyRequest {
-                        return self.interactions.searchRequest(query, self.inputInteraction.state.peerId, state) |> map { ($0.0, $0.1, query) }
-                    } else {
-                        return .single(([], nil, ""))
-                    }
-                }
-            } else {
-                return .single(([], nil, ""))
-            }
-        } |> deliverOnMainQueue
-        
-        self.disposable.set(apply.start(next: { [weak self] messages in
-            guard let `self` = self else {return}
-            self.parentInteractions.updateSearchRequest(SearchMessagesResultState(messages.2, messages.0))
-            self.inputInteraction.update({$0.updatedMessages((messages.0, messages.1)).updatedSelectedIndex(-1)})
-            self.parentInteractions.loadingMessage.set(.single(false))
-        }))
-        
-        next.autohighlight = false
-        prev.autohighlight = false
-
-
-
-        _ = calendar.sizeToFit()
-        
-        addSubview(next)
-        addSubview(prev)
-
-        
-        addSubview(from)
-        
-        
-        addSubview(calendar)
-        
-        calendar.isHidden = !calendarAbility
-        
-        _ = cancel.sizeToFit()
-        
-        let interactions = self.interactions
-        let searchView = self.searchView
-        cancel.set(handler: { [weak self] _ in
-            self?.inputInteraction.update {$0.updatedTokenState(.none).updatedSelectedIndex(-1).updatedMessages(([], nil)).updatedSearchState(SearchState(state: .None, request: ""))}
-            self?.parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
-            interactions.cancel()
-        }, for: .Click)
-        
-        next.set(handler: { [weak self] _ in
-            self?.nextAction()
-            }, for: .Click)
-        prev.set(handler: { [weak self] _ in
-            self?.prevAction()
-        }, for: .Click)
-
-        
-
-        from.set(handler: { [weak self] _ in
-            self?.searchView.initToken()
-        }, for: .Click)
-        
-        
-        
-        calendar.set(handler: { [weak self] calendar in
-            guard let `self` = self else {return}
-            showPopover(for: calendar, with: self.calendarController, edge: .maxY, inset: NSMakePoint(-160, -40))
-        }, for: .Click)
-
-        addSubview(searchView)
-        addSubview(cancel)
-        addSubview(separator)
-        
-        updateLocalizationAndTheme(theme: theme)
-    }
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
-        backgroundColor = theme.colors.background
-        
-        next.set(image: theme.icons.chatSearchDown, for: .Normal)
-        _ = next.sizeToFit()
-        
-        prev.set(image: theme.icons.chatSearchUp, for: .Normal)
-        _ = prev.sizeToFit()
-
-
-        calendar.set(image: theme.icons.chatSearchCalendar, for: .Normal)
-        _ = calendar.sizeToFit()
-        
-        cancel.set(image: theme.icons.chatSearchCancel, for: .Normal)
-        _ = cancel.sizeToFit()
-
-        from.set(image: theme.icons.chatSearchFrom, for: .Normal)
-        _ = from.sizeToFit()
-        
-        separator.backgroundColor = theme.colors.border
-        self.backgroundColor = theme.colors.background
-        needsLayout = true
-        updateSearchState()
-    }
-    
-    func updateSearchState() {
-       
-    }
-    
-    func prevAction() {
-        inputInteraction.update({$0.updatedSelectedIndex(min($0.selectedIndex + 1, $0.messages.0.count - 1))})
-        perform()
-    }
-    
-    func perform() {
-        _ = window?.makeFirstResponder(nil)
-        if let currentMessage = inputInteraction.currentMessage {
-            interactions.jump(currentMessage)
-        }
-    }
-    
-    func nextAction() {
-        inputInteraction.update({$0.updatedSelectedIndex(max($0.selectedIndex - 1, 0))})
-        perform()
-    }
-    
-    private var searchWidth: CGFloat {
-        return frame.width - cancel.frame.width - 20 - 20 - 80 - (calendar.isHidden ? 0 : calendar.frame.width + 20) - (from.isHidden ? 0 : from.frame.width + 20)
-    }
-    
-    override func layout() {
-        super.layout()
-        
-        
-        prev.centerY(x:10)
-        next.centerY(x:prev.frame.maxX)
-
-
-        cancel.centerY(x:frame.width - cancel.frame.width - 20)
-
-        searchView.setFrameSize(NSMakeSize(searchWidth, 30))
-        inputContextHelper.controller.view.setFrameSize(frame.width, inputContextHelper.controller.frame.height)
-        searchView.centerY(x: 80)
-        separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
-        
-        from.centerY(x: searchView.frame.maxX + 20)
-        calendar.centerY(x: (from.isHidden ? searchView : from).frame.maxX + 20)
-
-    }
-    
-    override func viewDidMoveToWindow() {
-        if let _ = window {
-            layout()
-            //self.searchView.change(state: .Focus, false)
-        }
-    }
-    
-    override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if newWindow == nil {
-         //   self.searchView.change(state: .None, false)
-        }
-    }
-    
-    
-    deinit {
-        inputInteraction.update(animated: false, { state in
-            return state.updatedInputQueryResult( { _ in return nil } )
-        })
-        parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
-        disposable.dispose()
-        inputInteraction.remove(observer: self)
-        loadingDisposable.set(nil)
-        if let window = window as? Window {
-            window.removeAllHandlers(for: self)
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    init(frame frameRect: NSRect, interactions:ChatSearchInteractions, chatInteraction: ChatInteraction) {
-        self.interactions = interactions
-        self.chatInteraction = chatInteraction
-        self.parentInteractions = chatInteraction
-        self.inputContextHelper = InputContextHelper(chatInteraction: chatInteraction, highlightInsteadOfSelect: true)
-        self.calendarController = CalendarController(NSMakeRect(0,0,300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
-        super.init(frame: frameRect)
-        initialize()
-    }
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
-}
 
 
 private final class FakeAudioLevelGenerator {
@@ -1845,7 +1356,7 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
     private var avatars:[AvatarContentView] = []
     private let avatarsContainer = View(frame: NSMakeRect(0, 0, 25 * 3 + 10, 38))
 
-    private let joinButton = TitleButton()
+    private let joinButton = TextButton()
     private var data: ChatActiveGroupCallInfo?
     private let headerView = TextView()
     private let membersCountView = DynamicCounterTextView()
@@ -1915,6 +1426,9 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         if let data = state.voiceChat {
@@ -2148,6 +1662,8 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
     override func layout() {
         super.layout()
         
+        avatarsContainer.isHidden = frame.width < 300
+        
         if let scheduleButton = scheduleButton {
             scheduleButton.centerY(x: frame.width - scheduleButton.frame.width - 23)
         }
@@ -2201,9 +1717,9 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { [weak self] control in
-            if let window = control.kitWindow, let state = self?._state {
-                switch state {
-                case let .requestChat(_, _, text):
+            if let window = control._window, let state = self?._state {
+                switch state.main {
+                case let .requestChat(_, text):
                     alert(for: window, info: text)
                 default:
                     break
@@ -2231,11 +1747,15 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
 
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         _state = state
-        switch state {
-        case let .requestChat(_, text, _):
+        switch state.main {
+        case let .requestChat(text, _):
             let attr = NSMutableAttributedString()
             _ = attr.append(string: text, color: theme.colors.text, font: .normal(.text))
             attr.detectBoldColorInString(with: .medium(.text))
@@ -2339,12 +1859,16 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
 
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
       
         
-        switch state {
-        case let .pendingRequests(_, count, peers):
+        switch state.main {
+        case let .pendingRequests(count, peers):
             let text = strings().chatHeaderRequestToJoinCountable(count)
             let layout = TextViewLayout(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
             layout.measure(width: frame.width - 60)
@@ -2354,7 +1878,7 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
             let timingFunction: CAMediaTimingFunctionName = .spring
 
             
-            let peers:[Avatar] = peers.reduce([], { current, value in
+            let peers:[Avatar] = peers.prefix(3).reduce([], { current, value in
                 var current = current
                 if let peer = value.peer.peer {
                     current.append(.init(peer: peer, index: current.count))
@@ -2383,7 +1907,7 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
                 control.updateLayout(size: NSMakeSize(30, 30), isClipped: inserted.0 != 0, animated: animated)
                 control.userInteractionEnabled = false
                 control.setFrameSize(NSMakeSize(30, 30))
-                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 29, 0))
+                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 27, 0))
                 avatars.insert(control, at: inserted.0)
                 avatarsContainer.subviews.insert(control, at: inserted.0)
                 if animated {
@@ -2430,9 +1954,14 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
     override func layout() {
         super.layout()
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        textView.resize(frame.width - 60)
+        textView.resize(frame.width - 60 - avatarsContainer.frame.width)
         textView.center()
         self.avatarsContainer.centerY(x: 22)
+        
+        let minX = 30 + CGFloat(self.avatars.count) * 15
+        let x = max(textView.frame.minX, minX)
+        textView.setFrameOrigin(NSMakePoint(x, textView.frame.minY))
+
     }
     
     
@@ -2485,6 +2014,10 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
 
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         _state = state
@@ -2507,6 +2040,368 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
         super.layout()
         textView.resize(frame.width - 40)
         textView.center()
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
+    
+    private var container: View = View()
+    private let chatInteraction:ChatInteraction
+    
+    private var textView = TextButton()
+    private var action = ImageButton()
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        self.set(handler: { [weak self] control in
+            self?.chatInteraction.toggleTranslate()
+        }, for: .Click)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 0.8
+        }, for: .Highlight)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Normal)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Hover)
+        
+       
+        
+        
+        self.container = View()
+        
+        container.addSubview(textView)
+        self.addSubview(action)
+        
+        addSubview(container)
+        
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+        
+        action.contextMenu = { [weak self] in
+            return self?.makeContextMenu()
+        }
+
+    }
+    
+    private func makeContextMenu() -> ContextMenu? {
+        guard let translate = self._state?.translate else {
+            return nil
+        }
+        
+        let menu = ContextMenu()
+        var items: [ContextMenuItem] = []
+
+        if translate.paywall {
+            items.append(ContextMenuItem(strings().chatTranslateMenuHide, handler: { [weak self] in
+                self?.chatInteraction.hideTranslation()
+            }, itemImage: MenuAnimation.menu_clear_history.value))
+            
+            menu.items = items
+            return menu
+        }
+        
+        
+        let other = ContextMenuItem(strings().chatTranslateMenuTo, itemImage: MenuAnimation.menu_translate.value)
+        
+        var codes = Translate.codes.sorted(by: { lhs, rhs in
+            let lhsSelected = lhs.code.contains(translate.to)
+            let rhsSelected = rhs.code.contains(translate.to)
+            if lhsSelected && !rhsSelected {
+                return true
+            } else if !lhsSelected && rhsSelected {
+                return false
+            } else {
+                return lhs.language < rhs.language
+            }
+        })
+        
+        let codeIndex = codes.firstIndex(where: {
+            $0.code.contains(appAppearance.languageCode)
+        })
+        if let codeIndex = codeIndex {
+            codes.move(at: codeIndex, to: 0)
+        }
+        
+        let submenu = ContextMenu()
+        
+        for code in codes {
+            submenu.addItem(ContextMenuItem(code.language, handler: { [weak self] in
+                if let first = code.code.first {
+                    self?.chatInteraction.translateTo(first)
+                }
+            }, itemImage: code.code.contains(translate.to) ? MenuAnimation.menu_check_selected.value : nil))
+        }
+        other.submenu = submenu
+        
+        items.append(other)
+                
+        if let from = translate.from, let language = Translate.find(from) {
+            items.append(ContextMenuItem(strings().chatTranslateMenuDoNotTranslate(_NSLocalizedString("Translate.Language.\(language.language)")), handler: { [weak self] in
+                self?.chatInteraction.doNotTranslate(from)
+            }, itemImage: MenuAnimation.menu_restrict.value))
+        }
+        
+        items.append(ContextSeparatorItem())
+        items.append(ContextMenuItem(strings().chatTranslateMenuHide, handler: { [weak self] in
+            self?.chatInteraction.hideTranslation()
+        }, itemImage: MenuAnimation.menu_clear_history.value))
+        
+        
+        //items.append(ContextMenuItem("Read about transl"))
+        menu.items = items
+        
+        return menu
+        
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        let updated = state.translate?.translate != _state?.translate?.translate
+        _state = state
+        
+        if updated || !animated {
+            let container = View(frame: bounds)
+            let textView = TextButton()
+            textView.userInteractionEnabled = false
+            textView.autohighlight = false
+            textView.isEventLess = true
+            textView.disableActions()
+            textView.animates = false
+            container.addSubview(textView)
+            
+            let removeTo = state.translate?.translate == true ? NSMakePoint(0, frame.height) : NSMakePoint(0, -frame.height)
+            let appearFrom = state.translate?.translate == true ? NSMakePoint(0, -frame.height) : NSMakePoint(0, frame.height)
+            
+            performSubviewPosRemoval(self.container, pos: removeTo, animated: animated)
+            self.container = container
+            
+            if animated {
+                container.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                container.layer?.animatePosition(from: appearFrom, to: .zero)
+            }
+            self.textView = textView
+            addSubview(container, positioned: .below, relativeTo: action)
+        }
+        
+        textView.set(font: .normal(.text), for: .Normal)
+        textView.set(color: theme.colors.accent, for: .Normal)
+        textView.set(image: theme.icons.chat_translate, for: .Normal)
+        
+        action.set(image: theme.icons.chatActions, for: .Normal)
+        action.sizeToFit(NSZeroSize, NSMakeSize(36, 36), thatFit: true)
+        action.autohighlight = false
+        action.scaleOnClick = true
+        
+        if let translate = state.translate {
+            let language = Translate.find(translate.to)
+            if let language = language {
+                if translate.translate {
+                    textView.set(text: strings().chatTranslateShowOriginal, for: .Normal)
+                } else {
+                    let toString = _NSLocalizedString("Translate.Language.\(language.language)")
+                    textView.set(text: strings().chatTranslateTo(toString), for: .Normal)
+                }
+                textView.sizeToFit(NSMakeSize(0, 6))
+            }
+        }
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        container.frame = bounds
+//        textView.resize(frame.width - 40)
+        textView.center()
+        action.centerY(x: frame.width - action.frame.width - 17)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+
+
+private final class ChatBotManager : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let setup:ImageButton = ImageButton()
+    private let avatar = AvatarControl(font: .avatar(.title))
+    private let textView = TextView()
+    private let infoView = TextView()
+    
+    private let stop = TextButton()
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        avatar.setFrameSize(NSMakeSize(30, 30))
+
+        setup.disableActions()
+        setup.autohighlight = false
+        setup.scaleOnClick = true
+        
+        stop.scaleOnClick = true
+        stop.autohighlight = false
+        
+        let context = self.chatInteraction.context
+        let peerId = self.chatInteraction.peerId
+        
+        self.set(handler: { [weak self] _ in
+            guard let self, let data = self._state?.botManager, let url = data.settings.manageUrl else {
+                return
+            }
+            execute(inapp: inApp(for: url as NSString, context: context, openInfo: self.chatInteraction.openInfo))
+        }, for: .Click)
+
+        
+        stop.set(handler: { _ in
+            context.engine.peers.toggleChatManagingBotIsPaused(chatId: peerId)
+        }, for: .Click)
+
+        setup.contextMenu = { [weak self] in
+            
+            guard let data = self?._state?.botManager else {
+                return nil
+            }
+            
+            let menu = ContextMenu()
+            
+
+            menu.addItem(ContextMenuItem(strings().chatBotManagerContextManage, handler: {
+                context.bindings.rootNavigation().push(BusinessChatbotController(context: context))
+            }, itemImage: MenuAnimation.menu_gear.value))
+            
+            menu.addItem(ContextSeparatorItem())
+            
+            menu.addItem(ContextMenuItem(strings().chatBotManagerContextRevoke, handler: {
+                context.engine.peers.removeChatManagingBot(chatId: peerId)
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+            
+            
+            return menu
+        }
+
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        infoView.userInteractionEnabled = false
+        infoView.isSelectable = false
+        
+        addSubview(avatar)
+        addSubview(setup)
+        addSubview(textView)
+        addSubview(infoView)
+        addSubview(stop)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        if let data = state.botManager  {
+            textView.update(TextViewLayout(.initialize(string: data.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1))
+            let status: String
+            if data.bot.canReply {
+                if data.settings.isPaused {
+                    status = strings().chatBotManagerPaused
+                } else {
+                    status = strings().chatBotManagerReadOnly
+                }
+            } else {
+                status = strings().chatBotManagerFullAccess
+            }
+            stop.isHidden = !data.bot.canReply
+            self.stop.set(text: data.settings.isPaused ? strings().chatBotManagerStart : strings().chatBotManagerStop, for: .Normal)
+            infoView.update(TextViewLayout(.initialize(string: status, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+            self.avatar.setPeer(account: chatInteraction.context.account, peer: data.peer._asPeer())
+
+        }
+        
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+        self.setup.set(image: theme.icons.bot_manager_settings, for: .Normal)
+        self.setup.sizeToFit()
+        
+        self.stop.set(font: .medium(.text), for: .Normal)
+        self.stop.set(background: theme.colors.accent, for: .Normal)
+        self.stop.set(color: theme.colors.underSelectedColor, for: .Normal)
+        self.stop.sizeToFit(NSMakeSize(8, 4))
+        self.stop.layer?.cornerRadius = self.stop.frame.height / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        avatar.centerY(x: 25)
+        setup.centerY(x: frame.width - 23 - setup.frame.width)
+        
+        stop.centerY(x: setup.frame.minX - 10 - stop.frame.width)
+
+        let text_w = frame.width - avatar.frame.maxX - 20 - setup.frame.width - 10 - stop.frame.width - 10
+        textView.resize(text_w)
+        infoView.resize(text_w)
+
+        textView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, 6))
+        infoView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, frame.height - infoView.frame.height - 6))
+
+        
     }
     
     

@@ -8,6 +8,287 @@
 
 import Cocoa
 import SwiftSignalKit
+import AppKit
+
+class DisplayLink
+{
+   let timer  : CVDisplayLink
+   let source : DispatchSourceUserDataAdd
+   
+   var callback : Optional<() -> ()> = nil
+   
+   var running : Bool { return CVDisplayLinkIsRunning(timer) }
+   
+   init?(onQueue queue: DispatchQueue = DispatchQueue.main)
+   {
+       source = DispatchSource.makeUserDataAddSource(queue: queue)
+       
+       var timerRef : CVDisplayLink? = nil
+       
+       var successLink = CVDisplayLinkCreateWithCGDisplay(CGMainDisplayID(), &timerRef)
+       
+       if let timer = timerRef
+       {
+           
+           successLink = CVDisplayLinkSetOutputCallback(timer, { (timer : CVDisplayLink, currentTime : UnsafePointer<CVTimeStamp>, outputTime : UnsafePointer<CVTimeStamp>, _ : CVOptionFlags, _ : UnsafeMutablePointer<CVOptionFlags>, sourceUnsafeRaw : UnsafeMutableRawPointer?) -> CVReturn in
+                                                           
+                if let sourceUnsafeRaw = sourceUnsafeRaw {
+                   let sourceUnmanaged = Unmanaged<DispatchSourceUserDataAdd>.fromOpaque(sourceUnsafeRaw)
+                   sourceUnmanaged.takeUnretainedValue().add(data: 1)
+                }
+               return kCVReturnSuccess
+           }, Unmanaged.passUnretained(source).toOpaque())
+           
+           guard successLink == kCVReturnSuccess else
+           {
+               NSLog("Failed to create timer with active display")
+               return nil
+           }
+           
+           successLink = CVDisplayLinkSetCurrentCGDisplay(timer, CGMainDisplayID())
+           
+           guard successLink == kCVReturnSuccess else
+           {
+               return nil
+           }
+           
+           self.timer = timer
+       } else {
+           return nil
+       }
+       source.setEventHandler(handler: { [weak self] in
+           self?.callback?()
+       })
+   }
+    
+    var timestamp: TimeInterval {
+        return CVDisplayLinkGetActualOutputVideoRefreshPeriod(self.timer)
+    }
+   
+   func start() {
+       guard !running else { return }
+       
+       CVDisplayLinkStart(timer)
+       source.resume()
+   }
+   
+   func cancel()
+   {
+       guard running else { return }
+       
+       CVDisplayLinkStop(timer)
+       source.cancel()
+   }
+   
+   deinit
+   {
+       if running
+       {
+           cancel()
+       }
+   }
+}
+
+
+
+public protocol SharedDisplayLinkDriverLink: AnyObject {
+    var isPaused: Bool { get set }
+    
+    func invalidate()
+}
+
+public final class SharedDisplayLinkDriver {
+    public enum FramesPerSecond: Comparable {
+        case fps(Int)
+        case max
+        
+        public static func <(lhs: FramesPerSecond, rhs: FramesPerSecond) -> Bool {
+            switch lhs {
+            case let .fps(lhsFps):
+                switch rhs {
+                case let .fps(rhsFps):
+                    return lhsFps < rhsFps
+                case .max:
+                    return true
+                }
+            case .max:
+                return false
+            }
+        }
+    }
+    
+    public typealias Link = SharedDisplayLinkDriverLink
+    
+    public static let shared = SharedDisplayLinkDriver()
+    
+    public final class LinkImpl: Link {
+        private let driver: SharedDisplayLinkDriver
+        public let framesPerSecond: FramesPerSecond
+        let update: (CGFloat) -> Void
+        var isValid: Bool = true
+        public var isPaused: Bool = false {
+            didSet {
+                if self.isPaused != oldValue {
+                    self.driver.requestUpdate()
+                }
+            }
+        }
+        
+        init(driver: SharedDisplayLinkDriver, framesPerSecond: FramesPerSecond, update: @escaping (CGFloat) -> Void) {
+            self.driver = driver
+            self.framesPerSecond = framesPerSecond
+            self.update = update
+        }
+        
+        public func invalidate() {
+            self.isValid = false
+        }
+    }
+    
+    private final class RequestContext {
+        weak var link: LinkImpl?
+        let framesPerSecond: FramesPerSecond
+        
+        var lastDuration: Double = 0.0
+        
+        init(link: LinkImpl, framesPerSecond: FramesPerSecond) {
+            self.link = link
+            self.framesPerSecond = framesPerSecond
+        }
+    }
+    
+    private var displayLink: DisplayLink?
+    private var requests: [RequestContext] = []
+    
+    private var isInForeground: Bool = false
+    private var isProcessingEvent: Bool = false
+    private var isUpdateRequested: Bool = false
+    
+    private init() {
+        self.isInForeground = true
+
+        
+        self.update()
+    }
+    
+    public func updateForegroundState(_ isActive: Bool) {
+        if self.isInForeground != isActive {
+            self.isInForeground = isActive
+            self.update()
+        }
+    }
+    
+    private func requestUpdate() {
+        if self.isProcessingEvent {
+            self.isUpdateRequested = true
+        } else {
+            self.update()
+        }
+    }
+    
+    private func update() {
+        var hasActiveItems = false
+        var maxFramesPerSecond: FramesPerSecond = .fps(60)
+        for request in self.requests {
+            if let link = request.link {
+                if link.framesPerSecond > maxFramesPerSecond {
+                    maxFramesPerSecond = link.framesPerSecond
+                }
+                if link.isValid && !link.isPaused {
+                    hasActiveItems = true
+                    break
+                }
+            }
+        }
+        
+        if self.isInForeground && hasActiveItems {
+            let displayLink: DisplayLink?
+            if let current = self.displayLink {
+                displayLink = current
+            } else {
+                displayLink = DisplayLink()
+                displayLink?.callback = { [weak displayLink, weak self] in
+                    if let duration = displayLink?.timestamp {
+                        self?.displayLinkEvent(duration: duration)
+                    }
+                }
+                self.displayLink = displayLink
+            }
+            displayLink?.start()
+        } else {
+            if let displayLink = self.displayLink {
+                self.displayLink = nil
+                displayLink.cancel()
+            }
+        }
+    }
+    
+    private func displayLinkEvent(duration: TimeInterval) {
+        self.isProcessingEvent = true
+        
+        
+        var removeIndices: [Int]?
+        loop: for i in 0 ..< self.requests.count {
+            let request = self.requests[i]
+            if let link = request.link, link.isValid {
+                if !link.isPaused {
+                    var itemDuration = duration
+                    
+                    switch request.framesPerSecond {
+                    case let .fps(value):
+                        let secondsPerFrame = 1.0 / CGFloat(value)
+                        itemDuration = secondsPerFrame
+                        request.lastDuration += duration
+                        if request.lastDuration >= secondsPerFrame * 0.95 {
+                            //print("item \(link) accepting cycle: \(request.lastDuration - duration) + \(duration) = \(request.lastDuration) >= \(secondsPerFrame)")
+                        } else {
+                            //print("item \(link) skipping cycle: \(request.lastDuration - duration) + \(duration) < \(secondsPerFrame)")
+                            continue loop
+                        }
+                    case .max:
+                        break
+                    }
+                    
+                    request.lastDuration = 0.0
+                    link.update(itemDuration)
+                }
+            } else {
+                if removeIndices == nil {
+                    removeIndices = [i]
+                } else {
+                    removeIndices?.append(i)
+                }
+            }
+        }
+        if let removeIndices = removeIndices {
+            for index in removeIndices.reversed() {
+                self.requests.remove(at: index)
+            }
+            
+            if self.requests.isEmpty {
+                self.isUpdateRequested = true
+            }
+        }
+        
+        self.isProcessingEvent = false
+        if self.isUpdateRequested {
+            self.isUpdateRequested = false
+            self.update()
+        }
+    }
+    
+    public func add(framesPerSecond: FramesPerSecond = .fps(60), _ update: @escaping (CGFloat) -> Void) -> Link {
+        let link = LinkImpl(driver: self, framesPerSecond: framesPerSecond, update: update)
+        self.requests.append(RequestContext(link: link, framesPerSecond: framesPerSecond))
+        
+        self.update()
+        
+        return link
+    }
+}
+
+
+
 
 private final class DisplayLinkTarget: NSObject {
     private let f: () -> Void
@@ -113,7 +394,7 @@ private func solveEps(_ duration: Float) -> Float {
 }
 
 public final class DisplayLinkAnimator {
-    private var displayLink: SwiftSignalKit.Timer!
+    private var displayLink: SharedDisplayLinkDriver.Link?
     private let duration: Double
     private let fromValue: CGFloat
     private let toValue: CGFloat
@@ -144,21 +425,22 @@ public final class DisplayLinkAnimator {
         }
         self.startTime = CACurrentMediaTime()
         
-        self.displayLink = SwiftSignalKit.Timer(timeout: 0.032, repeat: true, completion: { [weak self] in
+        self.displayLink = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(60), { [weak self] _ in
             self?.tick(false)
-        }, queue: .mainQueue())
+        })
         
-        self.displayLink.start()
 
         self.tick(true)
     }
     
     deinit {
-        self.displayLink.invalidate()
+        self.displayLink?.invalidate()
+        self.displayLink = nil
     }
     
     public func invalidate() {
-        self.displayLink.invalidate()
+        self.displayLink?.invalidate()
+        self.displayLink = nil
     }
     
     @objc private func tick(_ isFirst: Bool) {
@@ -180,14 +462,14 @@ public final class DisplayLinkAnimator {
         self.update(self.fromValue * CGFloat(1 - solved) + self.toValue * CGFloat(solved))
         if abs(t - 1.0) < Double.ulpOfOne {
             self.completed = true
-            self.displayLink.invalidate()
+            self.displayLink?.invalidate()
             self.completion()
         }
     }
 }
 
 public final class ConstantDisplayLinkAnimator {
-    private var displayLink: SwiftSignalKit.Timer?
+    private var displayLink: SharedDisplayLinkDriver.Link?
     private let update: () -> Void
     private var completed = false
     private let fps: TimeInterval
@@ -197,14 +479,11 @@ public final class ConstantDisplayLinkAnimator {
         didSet {
             if self.isPaused != oldValue {
                 if self.isPaused {
-                    self.displayLink?.invalidate()
+                    self.displayLink = nil
                 } else {
-                    
-                    self.displayLink = SwiftSignalKit.Timer(timeout: 1 / fps, repeat: true, completion: { [weak self] in
+                    self.displayLink = SharedDisplayLinkDriver.shared.add(framesPerSecond: .fps(Int(fps)), { [weak self] _ in
                         self?.tick()
-                    }, queue: .mainQueue())
-                    
-                    self.displayLink?.start()
+                    })
                 }
             }
         }

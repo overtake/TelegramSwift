@@ -9,7 +9,9 @@
 import Foundation
 import CoreText
 import AppKit
+import ObjcUtils
 
+public typealias UIImage = NSImage
 
 public extension NSAttributedString {
     
@@ -31,6 +33,21 @@ public extension NSAttributedString {
         let rect = layoutManager.usedRect(for: textContainer)
 
         return rect.size
+    }
+    
+    
+    func containsAttribute(attributeName: NSAttributedString.Key) -> Any? {
+        let range = NSRange(location: 0, length: self.length)
+        
+        var containsAttribute: Any? = nil
+        
+        self.enumerateAttribute(attributeName, in: range, options: []) { (value, _, _) in
+            if value != nil {
+                containsAttribute = value
+            }
+        }
+        
+        return containsAttribute
     }
     
     func CTSize(_ width:CGFloat, framesetter:CTFramesetter?) -> (CTFramesetter,NSSize) {
@@ -99,20 +116,21 @@ public extension NSAttributedString {
         return string
     }
     var trimNewLinesToSpace: NSAttributedString {
-        
-        let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
-        
-       
-        var range = string.string.nsstring.range(of: "\n")
-        while !string.string.isEmpty, range.location != NSNotFound {
-            string.replaceCharacters(in: range, with: " ")
-            range = string.string.nsstring.range(of: "\n")
-        }
-     
-        
-        return string
+        return replaceNewlinesWithSpaces(in: self)
     }
     
+    func replaceNewlinesWithSpaces(in attributedString: NSAttributedString) -> NSAttributedString {
+        // Create a mutable copy of the input attributed string
+        let mutableAttributedString = NSMutableAttributedString(attributedString: attributedString)
+        
+        // Replace all occurrences of newline characters with space characters
+        let range = NSRange(location: 0, length: mutableAttributedString.length)
+        let newlineRegex = try! NSRegularExpression(pattern: "\\n")
+        newlineRegex.replaceMatches(in: mutableAttributedString.mutableString, options: [], range: range, withTemplate: " ")
+        
+        // Return the modified attributed string
+        return mutableAttributedString
+    }
     
     var range:NSRange {
         return NSMakeRange(0, self.length)
@@ -124,9 +142,9 @@ public extension NSAttributedString {
         return NSMakeRange(loc, length)
     }
     
-    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
+    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = .normal(.text)) -> NSAttributedString {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: string, color: color, font: font, coreText: true)
+        _ = attr.append(string: string, color: color, font: font)
         
         return attr.copy() as! NSAttributedString
     }
@@ -181,13 +199,13 @@ public extension String {
             if removeToken {
                 return String(format: "%.\(afterDot)f", converted)
             } else {
-                return String(format: "%.\(afterDot)f%@", converted, tokens[factor])
+                return String(format: "%.\(afterDot)f %@", converted, tokens[factor])
             }
         } else {
             if removeToken {
                 return String(format: "%.0f", converted)
             } else {
-                return String(format: "%.0f%@", converted, tokens[factor])
+                return String(format: "%.0f %@", converted, tokens[factor])
             }
         }
         
@@ -324,9 +342,164 @@ public struct ParsingType: OptionSet {
     public static let Hashtags = ParsingType(rawValue: 8)
 }
 
+public extension NSAttributedString {
+    func detectBold(with font: NSFont) -> NSAttributedString {
+        let copy = self.mutableCopy() as! NSMutableAttributedString
+        copy.detectBoldColorInString(with: font, string: copy.string)
+        return copy
+    }
+}
+
 public extension NSMutableAttributedString {
     
-    func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
+    func detectBoldColorInString(with font: NSFont, color: NSColor? = nil) {
+        detectBoldColorInString(with: font, string: self.string, color: color)
+    }
+
+    func detectBoldColorInString(with font: NSFont, string: String, color: NSColor? = nil) {
+        var offset: Int = 0
+        
+        let nsString = string.nsstring
+        
+        while (offset < nsString.length) {
+            let startRange = nsString.range(of: "**", options: [], range: NSRange(location: offset, length: nsString.length - offset))
+            if startRange.location != NSNotFound {
+                offset = startRange.upperBound
+                
+                let endOffset = min(offset, nsString.length)
+                
+                let endRange = nsString.range(of: "**", options: [], range: NSRange(location: endOffset, length: nsString.length - endOffset))
+                if endRange.location != NSNotFound {
+                    let startIndex = offset
+                    let endIndex = endRange.lowerBound
+                    let attributeRange = NSRange(location: startIndex, length: endIndex - startIndex)
+                    
+                    addAttribute(NSAttributedString.Key.font, value: font, range: attributeRange)
+                    if let color = color {
+                        addAttribute(.foregroundColor, value: color, range: attributeRange)
+                    }
+                    offset = endRange.upperBound
+                }
+            } else {
+                break
+            }
+        }
+        
+        while let startRange = self.string.range(of: "**") {
+            self.replaceCharacters(in: NSRange(startRange, in: self.string), with: "")
+        }
+    }
+    
+    
+    func mergeIntersectingAttributes(keepBest: Bool = true) {
+        let mergedAttributedString = self
+        let fullRange = NSRange(location: 0, length: self.length)
+
+        for attributeName in self.attributes(at: 0, effectiveRange: nil).keys {
+            var intersectionRanges = [NSRange]()
+
+            var location = 0
+            while location < fullRange.length {
+                var effectiveRange = NSRange()
+                let attributeValue = self.attribute(attributeName, at: location, effectiveRange: &effectiveRange)
+                if effectiveRange.length > 0 {
+                    intersectionRanges.append(effectiveRange)
+                }
+                location = NSMaxRange(effectiveRange)
+            }
+
+            if intersectionRanges.count > 1 {
+                if keepBest {
+                    // Find the best attribute value (e.g., the one with the largest range)
+                    var bestRange = NSRange()
+                    var bestValue: Any?
+
+                    for range in intersectionRanges {
+                        if range.length > bestRange.length {
+                            bestRange = range
+                            bestValue = self.attribute(attributeName, at: range.location, effectiveRange: nil)
+                        }
+                    }
+
+                    // Remove all intersecting ranges except the best one
+                    for range in intersectionRanges {
+                        if range != bestRange {
+                            mergedAttributedString.removeAttribute(attributeName, range: range)
+                        }
+                    }
+                } else {
+                    // Keep only the first attribute and remove the rest
+                    let firstRange = intersectionRanges.first!
+                    for i in 1..<intersectionRanges.count {
+                        let intersectionRange = intersectionRanges[i]
+                        mergedAttributedString.removeAttribute(attributeName, range: intersectionRange)
+                    }
+                }
+            }
+        }
+    }
+    
+    func removeWhitespaceFromQuoteAttribute() {
+        let mutableAttributedString = self
+        var fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+
+        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
+            if let _ = value as? TextViewBlockQuoteData {
+                var rangeToModify = range
+
+                // Remove leading whitespace
+                while rangeToModify.length > 0 {
+                    let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
+                    if let firstChar = rangeString.first, firstChar.isNewline {
+                        rangeToModify.location += 1
+                        rangeToModify.length -= 1
+                    } else {
+                        break
+                    }
+                }
+
+                // Remove trailing whitespace
+                while rangeToModify.length > 0 {
+                    let rangeString = mutableAttributedString.attributedSubstring(from: rangeToModify).string
+                    if let lastChar = rangeString.last, lastChar.isNewline {
+                        rangeToModify.length -= 1
+                    } else {
+                        break
+                    }
+                }
+                if range != rangeToModify {
+                    mutableAttributedString.replaceCharacters(in: range, with: mutableAttributedString.attributedSubstring(from: rangeToModify))
+                }
+            }
+        }
+        
+        fullRange = NSRange(location: 0, length: mutableAttributedString.length)
+
+        mutableAttributedString.enumerateAttribute(TextInputAttributes.quote, in: fullRange, options: []) { value, range, _ in
+            if let _ = value as? TextViewBlockQuoteData {
+                var rangeToModify = range
+                if rangeToModify.min > 0 {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.min - 1, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.min)
+                            rangeToModify.location += 1
+                        }
+                    }
+                }
+                if rangeToModify.max < mutableAttributedString.length {
+                    if let char = mutableAttributedString.attributedSubstring(from: NSMakeRange(rangeToModify.max, 1)).string.first {
+                        if !char.isNewline {
+                            mutableAttributedString.insert(.initialize(string: "\n"), at: rangeToModify.max)
+                            rangeToModify.location -= 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    
+    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
         
         if(string == nil) {
             return NSMakeRange(0, 0)
@@ -337,6 +510,7 @@ public extension NSMutableAttributedString {
 
         var range:NSRange
         
+        
         self.append(NSAttributedString(string: string!))
         let nlength:Int = self.length - slength
         range = NSMakeRange(self.length - nlength, nlength)
@@ -346,9 +520,6 @@ public extension NSMutableAttributedString {
         }
         
         if let f = font {
-            if coreText {
-                 self.setCTFont(font: f, range: range)
-            }
             self.setFont(font: f, range: range)
         }
         
@@ -372,9 +543,6 @@ public extension NSMutableAttributedString {
         self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
     }
     
-    func setCTFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(NSAttributedString.Key(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
-    }
     
     func setSelected(color:NSColor,range:NSRange) -> Void {
         self.addAttribute(.selectedColor, value: color, range: range)
@@ -390,6 +558,20 @@ public extension NSMutableAttributedString {
 
 public extension CALayer {
     
+    var layerTintColor: CGColor? {
+        get {
+            if let value = self.value(forKey: "contentsMultiplyColor"), CFGetTypeID(value as CFTypeRef) == CGColor.typeID {
+                let result = value as! CGColor
+                return result
+            } else {
+                return nil
+            }
+        } set(value) {
+            self.setValue(value, forKey: "contentsMultiplyColor")
+        }
+    }
+
+    
     func disableActions() -> Void {
         
         self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(), "background":NSNull(), "position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]
@@ -402,10 +584,16 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "backgroundColor")
     }
-    
-    func animatePath() {
-        let animation = CABasicAnimation(keyPath: "path")
+    func animateTransform() ->Void {
+        let animation = CABasicAnimation(keyPath: "transform")
         animation.duration = 0.2
+        self.add(animation, forKey: "transform")
+    }
+    
+    func animatePath(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) {
+        let animation = makeSpringAnimation("path")
+        animation.duration = duration
+        animation.timingFunction = .init(name: function)
         self.add(animation, forKey: "path")
     }
     func animateShadow() {
@@ -424,15 +612,26 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderWidth")
     }
+    func animateOpacity() ->Void {
+        let animation = CABasicAnimation(keyPath: "opacity")
+        animation.duration = 0.2
+        self.add(animation, forKey: "opacity")
+    }
     
     func animateBorderColor() ->Void {
         let animation = CABasicAnimation(keyPath: "borderColor")
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
     }
-    func animateCornerRadius() ->Void {
-        let animation = CABasicAnimation(keyPath: "cornerRadius")
-        animation.duration = 0.2
+    func animateCornerRadius(duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut) ->Void {
+        let animation: CABasicAnimation
+        if timingFunction == .spring {
+            animation = makeSpringAnimation("cornerRadius")
+        } else {
+            animation = CABasicAnimation(keyPath: "cornerRadius")
+            animation.timingFunction = .init(name: timingFunction)
+        }
+        animation.duration = duration
         self.add(animation, forKey: "cornerRadius")
     }
     
@@ -450,12 +649,20 @@ public extension CALayer {
 public extension NSView {
     
     var snapshot: NSImage {
-        guard let bitmapRep = bitmapImageRepForCachingDisplay(in: bounds) else { return NSImage() }
-        cacheDisplay(in: bounds, to: bitmapRep)
-        let image = NSImage()
-        image.addRepresentation(bitmapRep)
-        bitmapRep.size = bounds.size
-        return NSImage(data: dataWithPDF(inside: bounds))!
+        guard let rep = bitmapImageRepForCachingDisplay(in: bounds) else { return NSImage() }
+        self.cacheDisplay(in: bounds, to: rep)
+        let image = NSImage(size: bounds.size)
+        image.addRepresentation(rep)
+        return image
+    }
+    
+    func setCenterScale(_ scale: CGFloat) {
+        let rect = self.bounds
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+        fr = CATransform3DScale(fr, scale, scale, 1)
+        fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+        self.layer?.transform = fr
     }
     
     var subviewsSize: NSSize {
@@ -487,6 +694,17 @@ public extension NSView {
         return isInSuperclassView(superclass, view: self)
     }
     
+    
+    func findSubview(at point: CGPoint) -> NSView? {
+        for subview in subviews.reversed() {
+            let convertedPoint = subview.convert(point, from: self)
+            if subview.bounds.contains(convertedPoint) {
+                return subview
+            }
+        }
+        return nil
+    }
+    
     func _mouseInside() -> Bool {
         if let window = self.window {
        
@@ -501,6 +719,8 @@ public extension NSView {
                         return NSPointInRect(location, self.bounds)
                     }
                 } else if let view = view as? ImageView, view.isEventLess {
+                    return NSPointInRect(location, self.bounds)
+                } else if let view = view as? LayerBackedView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
@@ -540,6 +760,9 @@ public extension NSView {
         } else {
             return System.backingScale
         }
+    }
+    var bsc: CGFloat {
+        return backingScaleFactor
     }
     
     func removeAllSubviews() -> Void {
@@ -1003,9 +1226,9 @@ public extension CGSize {
 
 public extension NSImage {
     
-    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(self.size.width, self.size.height), scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
@@ -1054,20 +1277,20 @@ public extension NSImage {
     }
     
     
-    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = System.backingScale, zoom: CGFloat = 1) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: scale, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(size.width * zoom, size.height * zoom), scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
             
             guard let image = self else { return }
             
-            let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
+            let rect = NSMakeRect(0, 0, drawContext.size.width * zoom, drawContext.size.height * zoom)
             ctx.interpolationQuality = .high
             ctx.clear(rect)
             
-            var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
+            var imageRect:CGRect = NSMakeRect(0, 0, image.size.width * zoom, image.size.height * zoom)
 
             let cimage = image.cgImage(forProposedRect: &imageRect, context: nil, hints: nil)
             
@@ -1121,6 +1344,12 @@ public extension CGRect {
         return CGPoint(x: self.maxX, y: self.maxY)
     }
     
+    func makeSize(_ size: NSSize) -> CGRect {
+        var rect = self
+        rect.size = size
+        return rect
+    }
+    
     var center: CGPoint {
         return CGPoint(x: self.midX, y: self.midY)
     }
@@ -1163,7 +1392,11 @@ public enum ImageOrientation {
 public extension CGImage {
     
     var backingSize:NSSize {
-        return NSMakeSize(CGFloat(width) / 2.0, CGFloat(height) / 2.0)
+        return systemSize// NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
+    }
+    
+    var halfSize:NSSize {
+        return  NSMakeSize(CGFloat(width) * 0.5, CGFloat(height) * 0.5)
     }
     
     var size:NSSize {
@@ -1171,7 +1404,7 @@ public extension CGImage {
     }
     
     var systemSize:NSSize {
-        return NSMakeSize(CGFloat(width) / System.backingScale, CGFloat(height) / System.backingScale)
+        return NSMakeSize(CGFloat(width) / scale, CGFloat(height) / scale)
     }
     
     var backingBounds: NSRect {
@@ -1179,13 +1412,26 @@ public extension CGImage {
     }
     
     var scale:CGFloat {
-        return 2.0
+        return System.backingScale
     }
     
     var _NSImage: NSImage {
         return NSImage(cgImage: self, size: backingSize)
     }
 
+    func highlight(color: NSColor) -> CGImage {
+        let image = self
+        let context = DrawingContext(size:image.backingSize, scale: System.backingScale, clear:true)
+        context.withContext { ctx in
+            ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
+            let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
+            
+            ctx.clip(to: imageRect, mask: image)
+            ctx.setFillColor(color.cgColor)
+            ctx.fill(imageRect)
+        }
+        return context.generateImage() ?? image
+    }
     
     func createMatchingBackingDataWithImage(orienation: ImageOrientation) -> CGImage?
     {
@@ -1404,6 +1650,31 @@ public extension CGContext {
 
     }
     
+    
+    func drawRoundedRect(rect: CGRect, topLeftRadius: CGFloat = 0, topRightRadius: CGFloat = 0, bottomLeftRadius: CGFloat = 0, bottomRightRadius: CGFloat = 0) {
+        let context = self
+        context.beginPath()
+        
+        let topLeft = rect.origin
+        let topRight = CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y)
+        let bottomRight = CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height)
+        let bottomLeft = CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height)
+        
+        context.move(to: CGPoint(x: topLeft.x + topLeftRadius, y: topLeft.y))
+        context.addLine(to: CGPoint(x: topRight.x - topRightRadius, y: topRight.y))
+        context.addArc(tangent1End: topRight, tangent2End: bottomRight, radius: topRightRadius)
+        context.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y - bottomRightRadius))
+        context.addArc(tangent1End: bottomRight, tangent2End: bottomLeft, radius: bottomRightRadius)
+        context.addLine(to: CGPoint(x: bottomLeft.x + bottomLeftRadius, y: bottomLeft.y))
+        context.addArc(tangent1End: bottomLeft, tangent2End: topLeft, radius: bottomLeftRadius)
+        context.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y + topLeftRadius))
+        context.addArc(tangent1End: topLeft, tangent2End: topRight, radius: topLeftRadius)
+        
+        context.closePath()
+        
+        context.fillPath()
+    }
+    
     func round(_ frame: NSRect, flags: LayoutPositionFlags) {
         var topLeftRadius: CGFloat = 0
         var bottomLeftRadius: CGFloat = 0
@@ -1498,6 +1769,9 @@ public extension NSRange {
     var max:Int {
         return self.location + self.length
     }
+    var isEmpty: Bool {
+        return self.length == 0
+    }
     func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
     }
@@ -1512,16 +1786,22 @@ public extension NSRange {
 }
 
 public extension NSBezierPath {
-    var cgPath: CGPath {
+    var _cgPath: CGPath {
         let path = CGMutablePath()
-        var points = [CGPoint](repeating: .zero, count: 3)
-        for i in 0 ..< self.elementCount {
-            let type = self.element(at: i, associatedPoints: &points)
-            switch type {
-            case .moveTo: path.move(to: points[0])
-            case .lineTo: path.addLine(to: points[0])
-            case .curveTo: path.addCurve(to: points[2], control1: points[0], control2: points[1])
-            case .closePath: path.closeSubpath()
+        var points = [NSPoint](repeating: .zero, count: 3)
+
+        for i in 0..<self.elementCount {
+            switch self.element(at: i, associatedPoints: &points) {
+            case .moveTo:
+                path.move(to: points[0])
+            case .lineTo:
+                path.addLine(to: points[0])
+            case .curveTo:
+                path.addCurve(to: points[2], control1: points[0], control2: points[1])
+            case .closePath:
+                path.closeSubpath()
+            @unknown default:
+                break
             }
         }
         return path
@@ -1534,6 +1814,24 @@ public extension NSRect {
     
     func apply(multiplier: NSSize) -> NSRect {
         return NSMakeRect(round(minX * multiplier.width), round(minY * multiplier.height), round(width * multiplier.width), round(height * multiplier.height))
+    }
+    
+    func scaleLinear(amount: Double) -> CGRect {
+        guard amount != 1.0, amount > 0.0 else { return self }
+        let ratio = ((1.0 - amount) / 2.0)
+        return insetBy(dx: width * ratio, dy: height * ratio)
+    }
+
+    func scaleArea(amount: Double) -> CGRect {
+        return scaleLinear(percent: sqrt(amount))
+    }
+
+    func scaleLinear(percent: Double) -> CGRect {
+        return scaleLinear(amount: percent / 100)
+    }
+
+    func scaleArea(percent: Double) -> CGRect {
+        return scaleArea(amount: percent / 100)
     }
     
     func rotate90Degress(parentSize: NSSize) -> NSRect {
@@ -1569,11 +1867,7 @@ public extension NSRect {
                 let point = points[0]
                 rect.origin.x = (height - point.x)
                 rect.origin.y = (width - point.y - self.width)
-            case .lineTo:
-                break
-            case .curveTo:
-                break
-            case .closePath:
+            default:
                 break
             }
         }
@@ -1931,6 +2225,45 @@ public extension NSView {
         addConstraint(widthConstraint(relation: relation,
                                       size: size))
     }
+    var effectiveVisibleRect: NSRect {
+        var visibleRect = self.visibleRect
+        if let tableView = self.enclosingScrollView as? TableView {
+            if tableView.contentInsets.top > 0 {
+                let rect = self.convert(self.bounds, to: tableView.documentView)
+                let visible = NSMakeRect(0, tableView.documentOffset.y, tableView.frame.width, tableView.frame.height)
+                if rect.minY < visible.minY {
+                    visibleRect = CGRect(origin: CGPoint(x: 0, y: 0), size: NSMakeSize(rect.width, rect.minY - visible.minY + rect.height))
+                } else {
+                    let height = visible.maxY - rect.minY - tableView.contentInsets.top
+                    visibleRect = CGRect(origin: CGPoint(x: 0, y: rect.height - height), size: NSMakeSize(rect.width, height))
+                }
+            }
+        }
+        return visibleRect
+    }
+    
+    func setAnchorPoint(anchorPoint: CGPoint) {
+        guard let layer = self.layer else {
+            return
+        }
+        
+        var newPoint = CGPoint(x: bounds.size.width * anchorPoint.x, y: bounds.size.height * anchorPoint.y)
+        var oldPoint = CGPoint(x: bounds.size.width * layer.anchorPoint.x, y: bounds.size.height * layer.anchorPoint.y)
+
+        newPoint = newPoint.applying(layer.affineTransform())
+        oldPoint = oldPoint.applying(layer.affineTransform())
+
+        var position = layer.position
+
+        position.x -= oldPoint.x
+        position.x += newPoint.x
+
+        position.y -= oldPoint.y
+        position.y += newPoint.y
+        
+        layer.position = position
+        layer.anchorPoint = anchorPoint
+    }
     
 }
 
@@ -1995,7 +2328,8 @@ public func arc4random64() -> Int64 {
 
 public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
     if animated {
-        view.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
+        let from = view.layer?.presentation()?.opacity ?? view.layer?.opacity ?? 1
+        view.layer?.animateAlpha(from: CGFloat(from), to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
             completed?(finish)
             if checkCompletion {
                 if finish {
@@ -2006,7 +2340,7 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
             }
         })
         if scale {
-            view.layer?.animateScaleCenter(from: 1, to: 0.1, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+            view.layer?.animateScaleCenter(from: 1, to: 0.01, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
         } else if let scaleTo = scaleTo {
             view.layer?.animateScaleCenter(from: 1, to: scaleTo, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
         }
@@ -2017,7 +2351,7 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
 
 public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
     if animated {
-        view.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
+        view.animateAlpha(from: CGFloat(view.opacity), to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
             completed?(finish)
             if checkCompletion {
                 if finish {
@@ -2028,7 +2362,7 @@ public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Do
             }
         })
         if scale {
-            view.animateScale(from: 1, to: 0.1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+            view.animateScale(from: 1, to: 0.01, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         } else if let scaleTo = scaleTo {
             view.animateScale(from: 1, to: scaleTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         }
@@ -2044,5 +2378,559 @@ public func performSubviewPosRemoval(_ view: NSView, pos: NSPoint, animated: Boo
         })
     } else {
         view.removeFromSuperview()
+    }
+}
+
+public extension NSView {
+    override class func accessibilityFocusedUIElement() -> Any? {
+        return nil
+    }
+}
+
+
+
+extension CGPoint {
+    public init(vector: CGVector) {
+        self.init(x: vector.dx, y: vector.dy)
+    }
+    
+    
+    public init(angle: CGFloat) {
+        self.init(x: cos(angle), y: sin(angle))
+    }
+    
+    
+    public mutating func offset(dx: CGFloat, dy: CGFloat) -> CGPoint {
+        x += dx
+        y += dy
+        return self
+    }
+    
+    public func length() -> CGFloat {
+        return sqrt(x*x + y*y)
+    }
+    
+    public func lengthSquared() -> CGFloat {
+        return x*x + y*y
+    }
+    
+    func normalized() -> CGPoint {
+        let len = length()
+        return len>0 ? self / len : CGPoint.zero
+    }
+    
+    public mutating func normalize() -> CGPoint {
+        self = normalized()
+        return self
+    }
+    
+    public func distanceTo(_ point: CGPoint) -> CGFloat {
+        return (self - point).length()
+    }
+    
+    public var angle: CGFloat {
+        return atan2(y, x)
+    }
+    
+    public var cgSize: CGSize {
+        return CGSize(width: x, height: y)
+    }
+    
+    func rotate(origin: CGPoint, angle: CGFloat) -> CGPoint {
+        let point = self - origin
+        let s = sin(angle)
+        let c = cos(angle)
+        return CGPoint(x: c * point.x - s * point.y,
+                       y: s * point.x + c * point.y) + origin
+    }
+}
+
+public extension CGSize {
+    var cgPoint: CGPoint {
+        return CGPoint(x: width, y: height)
+    }
+    
+    init(point: CGPoint) {
+        self.init(width: point.x, height: point.y)
+    }
+    
+    func centered(around position: CGPoint) -> CGRect {
+        return CGRect(origin: CGPoint(x: position.x - self.width / 2.0, y: position.y - self.height / 2.0), size: self)
+    }
+
+}
+
+public func + (left: CGPoint, right: CGPoint) -> CGPoint {
+    return CGPoint(x: left.x + right.x, y: left.y + right.y)
+}
+
+public func += (left: inout CGPoint, right: CGPoint) {
+    left = left + right
+}
+
+public func + (left: CGPoint, right: CGVector) -> CGPoint {
+    return CGPoint(x: left.x + right.dx, y: left.y + right.dy)
+}
+
+public func += (left: inout CGPoint, right: CGVector) {
+    left = left + right
+}
+
+public func - (left: CGPoint, right: CGPoint) -> CGPoint { return CGPoint(x: left.x - right.x, y: left.y - right.y) }
+public func - (left: CGSize, right: CGSize) -> CGSize { return CGSize(width: left.width - right.width, height: left.height - right.height) }
+public func - (left: CGSize, right: CGPoint) -> CGSize { return CGSize(width: left.width - right.x, height: left.height - right.x) }
+public func - (left: CGPoint, right: CGSize) -> CGPoint { return CGPoint(x: left.x - right.width, y: left.y - right.height) }
+
+public func -= (left: inout CGPoint, right: CGPoint) {
+    left = left - right
+}
+
+public func - (left: CGPoint, right: CGVector) -> CGPoint {
+    return CGPoint(x: left.x - right.dx, y: left.y - right.dy)
+}
+
+public func -= (left: inout CGPoint, right: CGVector) {
+    left = left - right
+}
+
+public func *= (left: inout CGPoint, right: CGPoint) {
+    left = left * right
+}
+
+public func * (point: CGPoint, scalar: CGFloat) -> CGPoint { return CGPoint(x: point.x * scalar, y: point.y * scalar) }
+public func * (point: CGSize, scalar: CGFloat) -> CGSize { return CGSize(width: point.width * scalar, height: point.height * scalar) }
+
+public func *= (point: inout CGPoint, scalar: CGFloat) { point = point * scalar }
+
+public func * (left: CGPoint, right: CGVector) -> CGPoint {
+    return CGPoint(x: left.x * right.dx, y: left.y * right.dy)
+}
+
+public func *= (left: inout CGPoint, right: CGVector) {
+    left = left * right
+}
+
+public func / (left: CGPoint, right: CGPoint) -> CGPoint { return CGPoint(x: left.x / right.x, y: left.y / right.y) }
+public func / (left: CGSize, right: CGSize) -> CGSize { return CGSize(width: left.width / right.width, height: left.height / right.height) }
+public func / (left: CGPoint, right: CGSize) -> CGPoint { return CGPoint(x: left.x / right.width, y: left.y / right.height) }
+public func / (left: CGSize, right: CGPoint) -> CGSize { return CGSize(width: left.width / right.x, height: left.height / right.y) }
+public func /= (left: inout CGPoint, right: CGPoint) { left = left / right }
+public func /= (left: inout CGSize, right: CGSize) { left = left / right }
+public func /= (left: inout CGSize, right: CGPoint) { left = left / right }
+public func /= (left: inout CGPoint, right: CGSize) { left = left / right }
+
+
+public func / (point: CGPoint, scalar: CGFloat) -> CGPoint { return CGPoint(x: point.x / scalar, y: point.y / scalar) }
+public func / (point: CGSize, scalar: CGFloat) -> CGSize { return CGSize(width: point.width / scalar, height: point.height / scalar) }
+
+public func /= (point: inout CGPoint, scalar: CGFloat) {
+    point = point / scalar
+}
+
+public func / (left: CGPoint, right: CGVector) -> CGPoint {
+    return CGPoint(x: left.x / right.dx, y: left.y / right.dy)
+}
+
+public func / (left: CGSize, right: CGVector) -> CGSize {
+    return CGSize(width: left.width / right.dx, height: left.height / right.dy)
+}
+
+public func /= (left: inout CGPoint, right: CGVector) {
+    left = left / right
+}
+
+public func * (left: CGPoint, right: CGPoint) -> CGPoint { return CGPoint(x: left.x * right.x, y: left.y * right.y) }
+public func * (left: CGPoint, right: CGSize) -> CGPoint { return CGPoint(x: left.x * right.width, y: left.y * right.height) }
+public func *= (left: inout CGPoint, right: CGSize) { left = left * right }
+public func * (left: CGSize, right: CGSize) -> CGSize { return CGSize(width: left.width * right.width, height: left.height * right.height) }
+public func *= (left: inout CGSize, right: CGSize) { left = left * right }
+public func * (left: CGSize, right: CGPoint) -> CGSize { return CGSize(width: left.width * right.x, height: left.height * right.y) }
+public func *= (left: inout CGSize, right: CGPoint) { left = left * right }
+
+
+public func lerp(start: CGPoint, end: CGPoint, t: CGFloat) -> CGPoint {
+    return start + (end - start) * t
+}
+
+public func abs(_ point: CGPoint) -> CGPoint {
+    return CGPoint(x: abs(point.x), y: abs(point.y))
+}
+
+extension CGSize {
+    var isValid: Bool {
+        return width > 0 && height > 0 && width != .infinity && height != .infinity && width != .nan && height != .nan
+    }
+    
+    var ratio: CGFloat {
+        return width / height
+    }
+}
+
+
+public extension CGRect {
+    static var identity: CGRect {
+        return CGRect(x: 0, y: 0, width: 1, height: 1)
+    }
+    
+    var rounded: CGRect {
+        return CGRect(x: origin.x.rounded(),
+                      y: origin.y.rounded(),
+                      width: width.rounded(.up),
+                      height: height.rounded(.up))
+    }
+    
+    var toScreenPixel: CGRect {
+        return CGRect(x: floorToScreenPixels(origin.x),
+                      y: floorToScreenPixels(origin.y),
+                      width: floorToScreenPixels(width),
+                      height: floorToScreenPixels(height))
+    }
+    
+    var mirroredVertically: CGRect {
+        return CGRect(x: origin.x,
+                      y: 1.0 - (origin.y + height),
+                      width: width,
+                      height: height)
+    }
+}
+
+extension CGAffineTransform {
+    func inverted(with size: CGSize) -> CGAffineTransform {
+        var transform = self
+        let transformedSize = CGRect(origin: .zero, size: size).applying(transform).size
+        transform.tx /= transformedSize.width;
+        transform.ty /= transformedSize.height;
+        transform = transform.inverted()
+        transform.tx *= transformedSize.width;
+        transform.ty *= transformedSize.height;
+        return transform
+    }
+}
+
+
+public extension CGFloat {
+    func rounded(toPlaces places:Int) -> CGFloat {
+        let divisor = pow(10.0, CGFloat(places))
+        return (self * divisor).rounded() / divisor
+    }
+}
+
+
+
+public func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFloat? = nil, tailSize: CGSize = CGSize(width: 20.0, height: 9.0), tailRadius: CGFloat = 4.0, tailPosition: CGFloat? = 0.5, transformTail: Bool = true) -> CGPath {
+    let cornerRadius: CGFloat = cornerRadius ?? rectSize.height / 2.0
+    let tailWidth: CGFloat = tailSize.width
+    let tailHeight: CGFloat = tailSize.height
+
+    let rect = CGRect(origin: CGPoint(x: 0.0, y: tailHeight), size: rectSize)
+    
+    guard let tailPosition = tailPosition else {
+        return CGPath(roundedRect: rect, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
+    }
+
+    let cutoff: CGFloat = 0.27
+    
+    let path = CGMutablePath()
+    path.move(to: CGPoint(x: rect.minX, y: rect.minY + cornerRadius))
+
+    var leftArcEndAngle: CGFloat = .pi / 2.0
+    var leftConnectionArcRadius = tailRadius
+    var tailLeftHalfWidth: CGFloat = tailWidth / 2.0
+    var tailLeftArcStartAngle: CGFloat = -.pi / 4.0
+    var tailLeftHalfRadius = tailRadius
+    
+    var rightArcStartAngle: CGFloat = -.pi / 2.0
+    var rightConnectionArcRadius = tailRadius
+    var tailRightHalfWidth: CGFloat = tailWidth / 2.0
+    var tailRightArcStartAngle: CGFloat = .pi / 4.0
+    var tailRightHalfRadius = tailRadius
+    
+    if transformTail {
+        if tailPosition < 0.5 {
+            let fraction = max(0.0, tailPosition - 0.15) / 0.35
+            leftArcEndAngle *= fraction
+            
+            let connectionFraction = max(0.0, tailPosition - 0.35) / 0.15
+            leftConnectionArcRadius *= connectionFraction
+            
+            if tailPosition < cutoff {
+                let fraction = tailPosition / cutoff
+                tailLeftHalfWidth *= fraction
+                tailLeftArcStartAngle *= fraction
+                tailLeftHalfRadius *= fraction
+            }
+        } else if tailPosition > 0.5 {
+            let tailPosition = 1.0 - tailPosition
+            let fraction = max(0.0, tailPosition - 0.15) / 0.35
+            rightArcStartAngle *= fraction
+            
+            let connectionFraction = max(0.0, tailPosition - 0.35) / 0.15
+            rightConnectionArcRadius *= connectionFraction
+            
+            if tailPosition < cutoff {
+                let fraction = tailPosition / cutoff
+                tailRightHalfWidth *= fraction
+                tailRightArcStartAngle *= fraction
+                tailRightHalfRadius *= fraction
+            }
+        }
+    }
+    
+    path.addArc(
+        center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + cornerRadius),
+        radius: cornerRadius,
+        startAngle: .pi,
+        endAngle: .pi + max(0.0001, leftArcEndAngle),
+        clockwise: true
+    )
+
+    let leftArrowStart = max(rect.minX, rect.minX + rectSize.width * tailPosition - tailLeftHalfWidth - leftConnectionArcRadius)
+    path.addArc(
+        center: CGPoint(x: leftArrowStart, y: rect.minY - leftConnectionArcRadius),
+        radius: leftConnectionArcRadius,
+        startAngle: .pi / 2.0,
+        endAngle: .pi / 4.0,
+        clockwise: false
+    )
+
+    path.addLine(to: CGPoint(x: max(rect.minX, rect.minX + rectSize.width * tailPosition - tailLeftHalfRadius), y: rect.minY - tailHeight))
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + rectSize.width * tailPosition, y: rect.minY - tailHeight + tailRadius / 2.0),
+        radius: tailRadius,
+        startAngle: -.pi / 2.0 + tailLeftArcStartAngle,
+        endAngle: -.pi / 2.0 + tailRightArcStartAngle,
+        clockwise: true
+    )
+    
+    path.addLine(to: CGPoint(x: min(rect.maxX, rect.minX + rectSize.width * tailPosition + tailRightHalfRadius), y: rect.minY - tailHeight))
+
+    let rightArrowStart = min(rect.maxX, rect.minX + rectSize.width * tailPosition + tailRightHalfWidth + rightConnectionArcRadius)
+    path.addArc(
+        center: CGPoint(x: rightArrowStart, y: rect.minY - rightConnectionArcRadius),
+        radius: rightConnectionArcRadius,
+        startAngle: .pi - .pi / 4.0,
+        endAngle: .pi / 2.0,
+        clockwise: false
+    )
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + rectSize.width - cornerRadius, y: rect.minY + cornerRadius),
+        radius: cornerRadius,
+        startAngle: min(-0.0001, rightArcStartAngle),
+        endAngle: 0.0,
+        clockwise: true
+    )
+
+    path.addLine(to: CGPoint(x: rect.minX + rectSize.width, y: rect.minY + rectSize.height - cornerRadius))
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + rectSize.width - cornerRadius, y: rect.minY + rectSize.height - cornerRadius),
+        radius: cornerRadius,
+        startAngle: 0.0,
+        endAngle: .pi / 2.0,
+        clockwise: true
+    )
+
+    path.addLine(to: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + rectSize.height))
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + rectSize.height - cornerRadius),
+        radius: cornerRadius,
+        startAngle: .pi / 2.0,
+        endAngle: .pi,
+        clockwise: true
+    )
+    
+    return path
+}
+
+
+public extension FileManager {
+    
+    func modificationDateForFileAtPath(path:String) -> NSDate? {
+        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
+        return attributes[.modificationDate] as? NSDate
+    }
+    
+    func creationDateForFileAtPath(path:String) -> NSDate? {
+        guard let attributes = try? self.attributesOfItem(atPath: path) else { return nil }
+        return attributes[.creationDate] as? NSDate
+    }
+    
+    
+}
+
+
+
+
+public extension NSCursor  {
+    static var set_windowResizeNorthWestSouthEastCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthWestSouthEastCursor()
+    }
+    static var set_windowResizeNorthEastSouthWestCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthEastSouthWestCursor()
+    }
+}
+
+public extension NSImage {
+    var _cgImage: CGImage? {
+        return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+    
+    var jpegCGImage: CGImage? {
+        guard let tiffData = self.tiffRepresentation,
+              let bitmapImageRep = NSBitmapImageRep(data: tiffData) else {
+            return nil
+        }
+
+        let compressionFactor: CGFloat = 1.0
+        
+        guard let jpegData = bitmapImageRep.representation(using: .jpeg, properties: [.compressionFactor: compressionFactor]),
+              let dataProvider = CGDataProvider(data: jpegData as CFData),
+              let cgImage = CGImage(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else {
+            return nil
+        }
+        
+        return cgImage
+    }
+}
+
+
+public func truncate(double: Double, places : Int)-> Double
+{
+    return Double(floor(pow(10.0, Double(places)) * double)/pow(10.0, Double(places)))
+}
+
+
+public extension NSImage {
+    
+    enum Orientation {
+        case up
+        case down
+    }
+    
+    convenience init(cgImage: CGImage, scale: CGFloat, orientation: UIImage.Orientation) {
+        self.init(cgImage: cgImage, size: cgImage.systemSize)
+    }
+}
+
+
+
+public extension CGImage {
+    var cvPixelBuffer: CVPixelBuffer? {
+        let cgImage = self
+
+        var maybePixelBuffer: CVPixelBuffer? = nil
+        let ioSurfaceProperties = NSMutableDictionary()
+        let options = NSMutableDictionary()
+        options.setObject(ioSurfaceProperties, forKey: kCVPixelBufferIOSurfacePropertiesKey as NSString)
+
+        let _ = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width * self.scale), Int(size.height * self.scale), kCVPixelFormatType_32ARGB, options as CFDictionary, &maybePixelBuffer)
+        guard let pixelBuffer = maybePixelBuffer else {
+            return nil
+        }
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        }
+
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+
+        let context = CGContext(
+            data: baseAddress,
+            width: Int(self.size.width * self.scale),
+            height: Int(self.size.height * self.scale),
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue,
+            releaseCallback: nil,
+            releaseInfo: nil
+        )!
+        context.clear(CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+        context.draw(cgImage, in: CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+
+        return pixelBuffer
+    }
+
+    
+    var cmSampleBuffer: CMSampleBuffer? {
+           guard let pixelBuffer = self.cvPixelBuffer else {
+               return nil
+           }
+           var newSampleBuffer: CMSampleBuffer? = nil
+
+           var timingInfo = CMSampleTimingInfo(
+               duration: CMTimeMake(value: 1, timescale: 30),
+               presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
+               decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
+           )
+
+           var videoInfo: CMVideoFormatDescription? = nil
+           CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+           guard let videoInfo = videoInfo else {
+               return nil
+           }
+           CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
+
+           if let newSampleBuffer = newSampleBuffer {
+               let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
+               let dict = attachments[0] as! NSMutableDictionary
+
+               dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
+           }
+
+           return newSampleBuffer
+       }
+
+}
+
+
+public func mapRange(_ x: Double, inMin: Double, inMax: Double, outMin: Double, outMax: Double) -> Double {
+    let slope = (outMax - outMin) / (inMax - inMin)
+    return outMin + slope * (x - inMin)
+}
+
+
+
+public final class TransformImageResult {
+    public let image: CGImage?
+    public let highQuality: Bool
+    public let sampleBuffer: CMSampleBuffer?
+    public init(_ image: CGImage?, _ highQuality: Bool, _ sampleBuffer: CMSampleBuffer? = nil) {
+        self.image = image
+        self.sampleBuffer = sampleBuffer
+        self.highQuality = highQuality
+    }
+    deinit {
+        
+    }
+}
+
+public func deg2rad(_ number: Float) -> Float {
+    return number * .pi / 180
+}
+
+public func rad2deg(_ number: Float) -> Float {
+    return number * 180.0 / .pi
+}
+
+
+public extension NSAttributedString {
+    var smallDecemial: NSAttributedString {
+        let range = self.string.nsstring.range(of: ".")
+        if range.location != NSNotFound {
+            let attr = self.mutableCopy() as! NSMutableAttributedString
+            
+            let font = attr.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+            if let font = font, let updated = NSFont(name: font.fontName, size: font.pointSize / 1.5) {
+                attr.addAttribute(.font, value: updated, range: NSMakeRange(range.location, attr.range.length - range.lowerBound))
+            }
+            return attr
+
+        } else {
+            return self
+        }
     }
 }

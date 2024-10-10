@@ -37,7 +37,7 @@ class WPMediaContentView: WPContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -49,8 +49,8 @@ class WPMediaContentView: WPContentView {
     }
     
     override func previewMediaIfPossible() -> Bool {
-        guard  let window = self.kitWindow, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let contentNode = contentNode, contentNode.mouseInside() else {return false}
-        _ = startModalPreviewHandle(table, window: window, context: content.context)
+        guard  let window = self._window, let content = content as? WPArticleLayout, content.isFullImageSize, let table = content.table, let contentNode = contentNode, contentNode.mouseInside() else {return false}
+        startModalPreviewHandle(table, window: window, context: content.context)
         return true
     }
     
@@ -67,8 +67,8 @@ class WPMediaContentView: WPContentView {
     }
 
     
-    override func update(with layout: WPLayout) {
-        super.update(with: layout)
+    override func update(with layout: WPLayout, animated: Bool) {
+        super.update(with: layout, animated: animated)
         
         if let layout = layout as? WPMediaLayout {
             if contentNode == nil || !contentNode!.isKind(of: layout.contentNode())  {
@@ -89,13 +89,17 @@ class WPMediaContentView: WPContentView {
     override func layout() {
         super.layout()
         if let contentNode = contentNode, let content = content as? WPMediaLayout {
-            let rect = CGRect(origin: NSMakePoint(0, containerView.frame.height - content.mediaSize.height), size: content.mediaSize)
+            let rect = CGRect(origin: NSMakePoint(0, containerView.frame.height - content.mediaSize.height - (content.action_text != nil ? 36 : 0)), size: content.mediaSize)
             contentNode.frame = rect
         }
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return contentNode?.interactionContentView(for: innerId, animateIn: animateIn) ?? self
+    }
+    
+    override var mediaContentView: NSView? {
+        return contentNode
     }
     
 }

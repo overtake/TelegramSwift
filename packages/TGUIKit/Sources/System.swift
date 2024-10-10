@@ -39,7 +39,13 @@ public struct System {
         
     }
     
-    
+    public static var batterylevel: Float {
+        
+        let device = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPMPowerSource"))
+        let batteryLevel: AnyObject? = IORegistryEntryCreateCFProperty(device, "Current Capacity" as CFString, kCFAllocatorDefault, 0).takeRetainedValue()
+        IOObjectRelease(device)
+        return batteryLevel as! Float
+    }
     
     public static var isRetina:Bool {
         get {
@@ -49,6 +55,10 @@ public struct System {
     
     public static var backingScale:CGFloat {
         return safeScaleFactor
+    }
+    
+    public static var pixel:CGFloat {
+        return 1 / safeScaleFactor
     }
     public static var aspectRatio: CGFloat {
         let frame = NSScreen.main?.frame ?? .zero
@@ -165,3 +175,50 @@ public func delay(_ delay:Double, onQueue queue: DispatchQueue, closure:@escapin
 public func delaySignal(_ value:Double) -> Signal<NoValue, NoError> {
     return .complete() |> delay(value, queue: .mainQueue())
 }
+
+
+
+
+public func link(path:String?, ext:String) -> String? {
+    var realPath:String? = path
+    if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
+        let path = path.nsstring.appendingPathExtension(ext)!
+        if !FileManager.default.fileExists(atPath: path) {
+            try? FileManager.default.removeItem(atPath: path)
+            try? FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
+        }
+        realPath = path
+    }
+    return realPath
+}
+
+public func copyToTemp(path:String?, ext:String) -> String? {
+    var realPath:String? = path
+    if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
+        let new = NSTemporaryDirectory() + path.nsstring.lastPathComponent.nsstring.appendingPathExtension(ext)!
+        try? FileManager.default.copyItem(atPath: path, toPath: new)
+        realPath = new
+    }
+    return realPath
+}
+
+
+public func fs(_ path:String) -> Int32? {
+    
+    if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
+    
+        if attrs["NSFileType"] as? String == "NSFileTypeSymbolicLink" {
+            if let path = try? FileManager.default.destinationOfSymbolicLink(atPath: path) {
+                attrs = (try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary) ?? attrs
+            }
+        }
+        let size = attrs.fileSize()
+    
+        if size > UInt64(INT32_MAX) {
+            return INT32_MAX
+        }
+        return Int32(size)
+    }
+    return nil
+}
+

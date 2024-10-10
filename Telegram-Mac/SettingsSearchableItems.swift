@@ -392,7 +392,7 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
     let icon: SettingsSearchableItemIcon = .privacy
     
     let presentPrivacySettings: (AccountContext, (SettingsSearchableItemPresentation, ViewController?) -> Void, PrivacyAndSecurityEntryTag?) -> Void = { context, present, itemTag in
-        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag))
+        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag, twoStepVerificationConfiguration: nil))
     }
     
     let presentSelectivePrivacySettings: (AccountContext, SelectivePrivacySettingsKind, @escaping (SettingsSearchableItemPresentation, ViewController?) -> Void) -> Void = { context, kind, present in
@@ -433,9 +433,13 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
                     current = info.phoneNumber
                 case .voiceMessages:
                     current = info.voiceMessages
+                case .bio:
+                    current = info.bio
+                case .birthday:
+                    current = info.birthday
                 }
                 
-                present(.push, SelectivePrivacySettingsController(context, kind: kind, current: current, callSettings: kind == .voiceCalls ? info.voiceCallsP2P : nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _ in }))
+                present(.push, SelectivePrivacySettingsController(context, kind: kind, current: current, callSettings: kind == .voiceCalls ? info.voiceCallsP2P : nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _, _ in }))
             })
     }
     
@@ -611,7 +615,7 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     
     var items: [SettingsSearchableItem] = []
     items.append(SettingsSearchableItem(id: .language(0), title: strings().accountSettingsLanguage, alternate: synonyms(strings().settingsSearchSynonymsAppLanguage), icon: icon, breadcrumbs: [], present: { context, _, present in
-        present(.push, LanguageViewController(context))
+        present(.push, LanguageController(context))
     }))
     var index: Int32 = 1
     for localization in localizations {
@@ -730,7 +734,7 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
             
 
             let support = SettingsSearchableItem(id: .support(0), title: strings().accountSettingsAskQuestion, alternate: synonyms(strings().settingsSearchSynonymsSupport), icon: .support, breadcrumbs: [], present: { context, _, present in
-                confirm(for: context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+                verifyAlert_button(for: context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
                         _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: {  peerId in

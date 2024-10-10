@@ -100,11 +100,11 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                     var updateSignal: Signal<ImageDataTransformation, NoError>?
                     var fetchSignal: Signal<Void, NoError>?
                     var dimensions: NSSize = view.frame.size
-                    if let media = entry.message.effectiveMedia as? TelegramMediaImage {
+                    if let media = entry.message.anyMedia as? TelegramMediaImage {
                         updateSignal = chatMessagePhoto(account: context.account, imageReference: .message(message: MessageReference(entry.message), media: media), toRepresentationSize: dimensions, scale: System.backingScale, synchronousLoad: false)
                         fetchSignal = chatMessagePhotoInteractiveFetched(account: context.account, imageReference: .message(message: MessageReference(entry.message), media: media), toRepresentationSize: dimensions)
                         dimensions = media.representationForDisplayAtSize(PixelDimensions(dimensions))?.dimensions.size ?? dimensions
-                    } else if let media = entry.message.effectiveMedia as? TelegramMediaFile {
+                    } else if let media = entry.message.anyMedia as? TelegramMediaFile {
                         updateSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: .message(message: MessageReference(entry.message), media: media), scale: System.backingScale)
                         
                         
@@ -114,7 +114,7 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                     
                     let arguments = TransformImageArguments(corners: .init(radius: view.frame.height / 2), imageSize: dimensions.aspectFilled(view.frame.size), boundingSize: view.frame.size, intrinsicInsets: NSEdgeInsets())
                     
-                    if let updateSignal = updateSignal, let media = entry.message.effectiveMedia {
+                    if let updateSignal = updateSignal, let media = entry.message.anyMedia {
                         view.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale, positionFlags: nil))
                         
                         if !view.isFullyLoaded {
@@ -166,7 +166,7 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                     break
                 }
             } else {
-                if month.components.year! < 2013 || (month.components.year == 2013 && month.components.month! <= 9) {
+                if month.components.year! < calendarArguments.lowYear || (month.components.year == calendarArguments.lowYear && month.components.month! <= 9) {
                     break
                 }
 
@@ -199,7 +199,7 @@ func ChatCalendarModalController(context: AccountContext, sparseCalendar: Sparse
         close?()
     })
 
-    let calendarAguments = CalendarMonthInteractions(selectAction: { selected in
+    let calendarAguments = CalendarMonthInteractions(lowYear: 2013, canBeNoYear: false, selectAction: { selected in
         
     }, backAction: { date in
        
@@ -251,7 +251,7 @@ func ChatCalendarModalController(context: AccountContext, sparseCalendar: Sparse
     
     
         
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.updateAfterInitialize(isFlipped: false, bottomInset: 0, drawBorder: false)
 //        controller.tableView.set(stickClass: ChatCalendarHeaderRowItem.self, handler: { item in
 //            

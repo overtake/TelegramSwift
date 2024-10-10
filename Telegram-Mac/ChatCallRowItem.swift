@@ -28,7 +28,7 @@ class ChatCallRowItem: ChatRowItem {
     
     private let callId: Int64?
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let message = object.message!
         let action = message.media[0] as! TelegramMediaAction
@@ -77,7 +77,7 @@ class ChatCallRowItem: ChatRowItem {
             failed = true
         }
         
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

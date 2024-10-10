@@ -105,7 +105,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
   
     
@@ -149,7 +149,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if state.email != nil  || state.name != nil  || state.phone != nil {
         if state.address != nil {
-            entries.append(.sectionId(sectionId, type: .normal))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoReceiverInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -182,7 +182,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_info_save_info, data: .init(name: strings().checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, action: arguments.toggleSaveInfo)))
@@ -190,7 +190,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoSaveInfoHelp), data: InputDataGeneralTextData.init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -207,6 +207,14 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
+    
+    var getController:(()->ViewController?)? = nil
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
     
     let initialState = State(address: invoice.requestedFields.contains(.shippingAddress) ? State.Address(address1: formInfo.shippingAddress?.streetLine1 ?? "", address2: formInfo.shippingAddress?.streetLine2 ?? "", city: formInfo.shippingAddress?.city ?? "", state: formInfo.shippingAddress?.state ?? "", country: formInfo.shippingAddress?.countryIso2 ?? "", postcode: formInfo.shippingAddress?.postCode ?? "") : nil, name: invoice.requestedFields.contains(.name) ? formInfo.name ?? "" : nil, email: invoice.requestedFields.contains(.email) ? formInfo.email ?? "" : nil, phone: invoice.requestedFields.contains(.phone) ? formInfo.phone ?? "" : nil, saveInfo: true, errors: [:])
     
@@ -229,6 +237,10 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
     }
     
     let controller = InputDataController(dataSignal: signal, title: strings().checkoutInfoTitle)
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -264,7 +276,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
         let formInfo = state.formInfo
         
         return .fail(.doSomething(next: { f in
-            _ = showModalProgress(signal: context.engine.payments.validateBotPaymentForm(saveInfo: state.saveInfo, source: source, formInfo: formInfo), for: context.window).start(next: { result in
+            _ = showModalProgress(signal: context.engine.payments.validateBotPaymentForm(saveInfo: state.saveInfo, source: source, formInfo: formInfo), for: window).start(next: { result in
                 
                 formInfoUpdated(formInfo, result)
                 close?()
@@ -295,7 +307,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
                     case .generic:
                         text = strings().unknownError
                 }
-                alert(for: context.window, info: text)
+                alert(for: window, info: text)
                 if let id = id {
                     f(.fail(.fields([id: .shake])))
                 }
@@ -335,7 +347,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
 

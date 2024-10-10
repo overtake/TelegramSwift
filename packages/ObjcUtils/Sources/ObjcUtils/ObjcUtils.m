@@ -165,7 +165,7 @@
                  @try {
                      NSTextCheckingType type = [match resultType];
                      NSString *scheme = [[[match URL] scheme] lowercaseString];
-                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] || [scheme isEqualToString:@"ton"] || scheme == nil))
+                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] || [scheme isEqualToString:@"ton"] || [scheme isEqualToString:@"mailto"] || scheme == nil))
                      {
                          [results addObject:[NSValue valueWithRange:match.range]];
                      }
@@ -1048,39 +1048,39 @@ double mappingRange(double x, double in_min, double in_max, double out_min, doub
 @end
 
 @implementation NSMutableAttributedString(Extension)
-
--(void)detectBoldColorInStringWithFont:(NSFont *)font  {
-    [self detectBoldColorInStringWithFont:font string:[self.string copy]];
-}
-
--(void)detectBoldColorInStringWithFont:(NSFont *)font string:(NSString *)string {
-    NSRange range;
-    
-    NSUInteger offset = 0;
-    
-    while ((range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)]).location != NSNotFound) {
-        
-        
-        
-        offset = range.location + range.length;
-        
-        
-        range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)];
-        
-        if(range.location != NSNotFound) {
-            [self addAttribute:NSFontAttributeName value:font range:NSMakeRange(offset, range.location - offset)];
-            
-            offset+= (range.location - offset) + range.length;
-            
-        }
-        
-        
-    }
-    
-    while ((range = [self.string rangeOfString:@"**"]).location != NSNotFound) {
-        [self replaceCharactersInRange:range withString:@""];
-    }
-}
+//
+//-(void)detectBoldColorInStringWithFont:(NSFont *)font  {
+//    [self detectBoldColorInStringWithFont:font string:[self.string copy]];
+//}
+//
+//-(void)detectBoldColorInStringWithFont:(NSFont *)font string:(NSString *)string {
+//    NSRange range;
+//    
+//    NSUInteger offset = 0;
+//    
+//    while ((range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)]).location != NSNotFound) {
+//        
+//        
+//        
+//        offset = range.location + range.length;
+//        
+//        
+//        range = [string rangeOfString:@"**" options:0 range:NSMakeRange(offset, string.length - offset)];
+//        
+//        if(range.location != NSNotFound) {
+//            [self addAttribute:NSFontAttributeName value:font range:NSMakeRange(offset, range.location - offset)];
+//            
+//            offset+= (range.location - offset) + range.length;
+//            
+//        }
+//        
+//        
+//    }
+//    
+//    while ((range = [self.string rangeOfString:@"**"]).location != NSNotFound) {
+//        [self replaceCharactersInRange:range withString:@""];
+//    }
+//}
 
 
 @end
@@ -1158,7 +1158,7 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
             
             NSUInteger index = substring.length;
             
-            if(index + inc > message.length) {
+            if(index >= max_length) {
                 
                 NSUInteger idx = giveupString(@"\n\n");
                 if (idx != NSNotFound) {

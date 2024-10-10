@@ -35,18 +35,19 @@ private let _id_input_audio = InputDataIdentifier("_id_input_audio")
 private let _id_output_audio = InputDataIdentifier("_id_output_audio")
 private let _id_micro = InputDataIdentifier("_id_micro")
 
-private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices, arguments: CallSettingsArguments) -> [InputDataEntry] {
+private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices, arguments: CallSettingsArguments, theme: TelegramPresentationTheme) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
         
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     var cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
     var microDevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+    var outputDevice = devices.audioOutput.first(where: { $0.uniqueID == settings.audioOutputDeviceId })
     
     let activeCameraDevice: AVCaptureDevice?
     if let cameraDevice = cameraDevice {
@@ -62,15 +63,17 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
         activeCameraDevice = cameraDevice
     }
     
+    let customTheme = GeneralRowItem.Theme.initialize(theme)
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsCameraTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
         arguments.toggleInputVideoDevice(nil)
     })] + devices.camera.map { value in
-        return SPopoverItem(value.localizedName, {
+        return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleInputVideoDevice(value.uniqueID)
         })
-        }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem)))
+    }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem, theme: customTheme)))
     index += 1
     
     if let activeCameraDevice = activeCameraDevice {
@@ -101,21 +104,37 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsInputTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
         arguments.toggleInputAudioDevice(nil)
     })] + devices.audioInput.map { value in
-        return SPopoverItem(value.localizedName, {
+        return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleInputAudioDevice(value.uniqueID)
         })
-        }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem)))
+        }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem, theme: customTheme)))
     index += 1
     
     if let activeMicroDevice = activeMicroDevice {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(activeMicroDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem)
+            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem, customTheme: customTheme)
         }))
         index += 1
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+       
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsOutput), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: strings().voiceChatSettingsOutputDevice, color: customTheme.textColor, type: .contextSelector(outputDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
+        arguments.toggleOutputAudioDevice(nil)
+    })] + devices.audioOutput.map { value in
+        return ContextMenuItem(value.localizedName, handler: {
+            arguments.toggleOutputAudioDevice(value.uniqueID)
+        })
+    }), viewType: .singleItem, theme: customTheme)))
+    index += 1
+    
     
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -127,7 +146,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
 
 
 
-func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataController {
+func CallSettingsController(sharedContext: SharedAccountContext, presentation: TelegramPresentationTheme = theme) -> InputDataController {
     
     let devicesContext = sharedContext.devicesContext
     
@@ -148,7 +167,7 @@ func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataCon
     })
     
     let signal = combineLatest(voiceCallSettings(sharedContext.accountManager), devicesContext.signal) |> map { settings, devices in
-        return InputDataSignalValue(entries: callSettingsEntries(settings: settings, devices: devices, arguments: arguments))
+        return InputDataSignalValue(entries: callSettingsEntries(settings: settings, devices: devices, arguments: arguments, theme: presentation))
     }
     
     let controller = InputDataController(dataSignal: signal, title: strings().callSettingsTitle, hasDone: false)

@@ -26,7 +26,7 @@ class EditAccountInfoItem: GeneralRowItem {
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
-        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil, nil, state.peer!.isForum) : .Empty
+        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, state.peer!.nameColor, nil, nil, state.peer!.isForum) : .Empty
         
         let height: CGFloat
         switch viewType {
@@ -79,6 +79,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         updoadPhotoCap.backgroundColor = NSColor.black.withAlphaComponent(0.4)
         updoadPhotoCap.setFrameSize(avatar.frame.size)
         updoadPhotoCap.layer?.cornerRadius = updoadPhotoCap.frame.width / 2
+        if #available(macOS 10.15, *) {
+            updoadPhotoCap.layer?.cornerCurve = .circular
+        }
+        
         updoadPhotoCap.set(image: ControlStyle(highlightColor: .white).highlight(image: theme.icons.chatAttachCamera), for: .Normal)
         updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.accentIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
         

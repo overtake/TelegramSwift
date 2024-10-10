@@ -30,13 +30,13 @@ class RecentSessionRowItem: GeneralRowItem {
         let attr = NSMutableAttributedString()
         
                 
-        _ = attr.append(string:session.appName + " " + session.appVersion.prefixWithDots(30) + ", " + session.platform + " " + session.systemVersion, color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: (session.appName + " " + session.appVersion.prefixWithDots(30) + ", " + session.platform + " " + session.systemVersion).trimmed, color: theme.colors.text, font: .normal(.text))
         
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: session.ip + " " + session.country, color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: (session.ip + " " + session.country).trimmed, color: theme.colors.grayText, font: .normal(.text))
         
-        descLayout = TextViewLayout(attr, maximumNumberOfLines: 2, lineSpacing: 2)
+        descLayout = TextViewLayout(attr, maximumNumberOfLines: 0, lineSpacing: 2)
     
         dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? strings().peerStatusOnline : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
         
@@ -54,7 +54,7 @@ class RecentSessionRowItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 75
+        return max(75, headerLayout.layoutSize.height + descLayout.layoutSize.height + viewType.innerInset.top + viewType.innerInset.bottom + 4)
     }
     
     override func viewClass() -> AnyClass {

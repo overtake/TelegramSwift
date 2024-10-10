@@ -15,6 +15,7 @@ import TGUIKit
 enum InputPasswordValueError {
     case generic
     case wrong
+    case custom(String)
 }
 
 
@@ -46,7 +47,7 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -56,7 +57,7 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -93,6 +94,8 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
                     switch error {
                     case .wrong:
                         text = strings().inputPasswordControllerErrorWrongPassword
+                    case let .custom(value):
+                        text = value
                     case .generic:
                         text = strings().unknownError
                     }
@@ -117,15 +120,14 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         checkPassword.dispose()
     }, hasDone: true)
     
+    controller.autoInputAction = true
+    
     let interactions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         
         controller?.validateInputValues()
         
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
-    controller.getBackgroundColor = {
-        theme.colors.listBackground
-    }
     
     let modalController = InputDataModalController(controller, modalInteractions: interactions, size: NSMakeSize(300, 300))
     

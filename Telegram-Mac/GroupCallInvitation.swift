@@ -102,8 +102,9 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     ($0.0.map { $0._asPeer() }, $0.1.mapValues { $0._asPresence() })
                 }
             }
-            contacts = combineLatest(account.postbox.peerView(id: peerId), contacts) |> map { peerView, contacts in
-                if let peer = peerViewMainPeer(peerView) {
+            
+            contacts = combineLatest(getPeerView(peerId: peerId, postbox: account.postbox), contacts) |> map { peer, contacts in
+                if let peer = peer {
                     if peer.groupAccess.canAddMembers {
                         return contacts
                     } else {
@@ -209,13 +210,13 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.groupAccess.canMakeVoiceChat {
                             if peer.isSupergroup, isUnmutedForAll {
-                                entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                             } else {
-                                entries.append(.inviteLink(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                entries.append(.inviteLink(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation, true))
+                                entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation, true))
                             }
-                        } else {
-                            entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                        } else if peer.groupAccess.canAddMembers {
+                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                         }
                     }
                 }
@@ -320,8 +321,8 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     var entries:[Peer] = []
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage() {
+                        case let .MessageEntry(data):
+                            if let peer = data.renderedPeer.chatMainPeer, peer.canSendMessage() {
                                 entries.append(peer)
                             }
                         default:
@@ -398,16 +399,16 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                         if peer.addressName != nil {
                             if peer.groupAccess.canMakeVoiceChat {
                                 if peer.isSupergroup, isUnmutedForAll {
-                                    entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                                 } else {
-                                    entries.append(.inviteLink(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                    entries.append(.inviteLink(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation, true))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation, true))
                                 }
                             } else {
-                                entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                             }
                         } else {
-                            entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation, true))
                         }
                     }
                 }
@@ -475,7 +476,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                     return (user: $0.getPeer(peerId), chat: $0.getPeer(callPeerId))
                 } |> mapToSignal { [weak window] values in
                     if let window = window {
-                        return confirmSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: strings().voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
+                        return verifyAlertSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), ok: strings().voiceChatInviteMemberToGroupFirstAdd, presentation: darkAppearance) |> filter { $0 == .basic }
                             |> take(1)
                         |> mapToSignal { _ in
                             if peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -528,7 +529,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                         }
                         
                         if let third = third {
-                            modernConfirm(for: window, header: strings().voiceChatInviteConfirmHeader, information: strings().voiceChatInviteConfirmText, okTitle: strings().voiceChatInviteConfirmOK, cancelTitle: strings().modalCancel, thridTitle: third, successHandler: { result in
+                            verifyAlert(for: window, header: strings().voiceChatInviteConfirmHeader, information: strings().voiceChatInviteConfirmText, ok: strings().voiceChatInviteConfirmOK, cancel: strings().modalCancel, option: third, successHandler: { result in
                                 
                                 let link: String
                                 switch result {
@@ -538,16 +539,16 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                                     link = links.speakerLink ?? links.listenerLink
                                 }
                                 for peerId in peerIds {
-                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                                 }
                                 
                                 subscriber.putNext(true)
                                 subscriber.putCompletion()
                                 
-                            }, appearance: GroupCallTheme.customTheme.appearance)
+                            }, presentation: darkAppearance)
                         } else {
                             for peerId in peerIds {
-                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                             }
                             subscriber.putNext(true)
                             subscriber.putCompletion()

@@ -48,6 +48,9 @@ private func loadCurrencyFormatterEntries() -> [String: CurrencyFormatterEntry] 
         }
     }
     
+    result["TON"] = .init(symbol: "", thousandsSeparator: ",", decimalSeparator: ".", symbolOnLeft: true, spaceBetweenAmountAndSymbol: false, decimalDigits: 9)
+    result["XTR"] = .init(symbol: "", thousandsSeparator: ",", decimalSeparator: ".", symbolOnLeft: true, spaceBetweenAmountAndSymbol: false, decimalDigits: 0)
+
     return result
 }
 
@@ -156,7 +159,9 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
             }
         }
         result.append("\(integerPart)")
-        result.append(entry.decimalSeparator)
+        if !fractional.isEmpty {
+            result.append(entry.decimalSeparator)
+        }
         for i in 0 ..< fractional.count {
             result.append(fractional[fractional.count - i - 1])
         }
@@ -166,7 +171,8 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
             }
             result.append(entry.symbol)
         }
-        return CurrencyFormatter(currency: currency).formattedStringWithAdjustedDecimalSeparator(from: result) ?? result
+        
+        return result
     } else {
         assertionFailure()
         let formatter = NumberFormatter()
@@ -176,3 +182,4 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
         return formatter.string(from: (Float(amount) * 0.01) as NSNumber) ?? ""
     }
 }
+

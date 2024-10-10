@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import AppKit
+import TelegramMedia
 
 final class EmojiScreenEffect {
     fileprivate let context: AccountContext
@@ -73,7 +74,7 @@ final class EmojiScreenEffect {
     }
     
     private func checkItem(_ item: TableRowItem, _ messageId: MessageId, with emoji: String) -> Bool {
-        if let item = item as? ChatRowItem, item.message?.text == emoji {
+        if let item = item as? ChatRowItem, item.message?.text.withoutColorizer == emoji.withoutColorizer {
             if messageId.peerId.namespace == Namespaces.Peer.CloudUser {
                 return context.sharedContext.baseSettings.bigEmoji
             }
@@ -101,12 +102,14 @@ final class EmojiScreenEffect {
                             
                             if isPremium {
                                 if !animation.mirror {
-                                    point.x += 18
+                                    point.x += 50
                                 } else {
-                                    point.x -= 18
+                                    point.x -= 50
                                 }
-                                point.y -= 2
-                                
+                                point.y -= 10
+                            } else {
+                                point.x -= 10
+                                point.y -= 5
                             }
                         case .reaction:
                             point.x-=subSize.width/2
@@ -154,6 +157,10 @@ final class EmojiScreenEffect {
     
     func addAnimation(_ emoji: String, index: Int?, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
+        if context.isLite(.emoji_effects) {
+            return
+        }
+        
         if !isLimitExceed(messageId), let item = takeTableItem(messageId), checkItem(item, messageId, with: emoji) {
             let signal: Signal<LottieAnimation?, NoError> = context.diceCache.animationEffect(for: emoji.emojiUnmodified)
             |> map { value -> LottieAnimation? in
@@ -180,26 +187,59 @@ final class EmojiScreenEffect {
         let context = self.context
         let onair = animations.filter { $0.key.messageId == messageId }
 
+        if context.isLite(.emoji_effects) {
+            return
+        }
+        
         if onair.isEmpty, let item = takeTableItem(messageId) {
-            let animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
-            let signal: Signal<(LottieAnimation, String)?, NoError> = context.account.postbox.messageAtId(messageId)
-            |> mapToSignal { message in
-                if let message = message, let file = message.effectiveMedia as? TelegramMediaFile {
-                    if let effect = file.premiumEffect {
-                        return context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+            let signal: Signal<(LottieAnimation, String)?, NoError>
+            var animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
+            if let messageEffect = item.messageEffect {
+                let file = messageEffect.effectSticker
+                animationSize = NSMakeSize(200, 200)
+                
+                if let animation = messageEffect.effectAnimation {
+                    signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                        if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                            return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
+                        } else {
+                            return nil
+                        }
+                    }
+                } else {
+                    if let effect = messageEffect.effectSticker.premiumEffect {
+                        signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                 return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
                             } else {
                                 return nil
                             }
                         }
+                    } else {
+                        signal = .single(nil)
                     }
                 }
-                return .single(nil)
+            } else {
+                signal = context.account.postbox.messageAtId(messageId)
+                 |> mapToSignal { message in
+                     if let message = message, let file = message.anyMedia as? TelegramMediaFile {
+                         if let effect = file.premiumEffect {
+                             return context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                                 if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                     return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
+                                 } else {
+                                     return nil
+                                 }
+                             }
+                         }
+                     }
+                     return .single(nil)
+                 }
+                
             }
-            |> deliverOnMainQueue
+           
 
-            dataDisposable.set(signal.start(next: { [weak self, weak parentView] values in
+            dataDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self, weak parentView] values in
                 if let animation = values?.0, let emoji = values?.1, let parentView = parentView {
                     self?.initAnimation(.builtin(animation), mode: .effect(true), emoji: emoji, reaction: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
@@ -212,6 +252,10 @@ final class EmojiScreenEffect {
     func addReactionAnimation(_ value: MessageReaction.Reaction, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
         let context = self.context
+        
+        if context.isLite(.emoji_effects) {
+            return
+        }
         
         switch value {
         case let .custom(fileId):

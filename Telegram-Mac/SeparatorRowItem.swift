@@ -9,11 +9,15 @@
 import Cocoa
 import TGUIKit
 
-enum SeparatorBlockState  {
+enum SeparatorBlockState : Equatable {
+    enum Action : Equatable {
+        case showAsMessages(onlyMy: Bool)
+    }
     case short
     case all
     case none
     case clear
+    case custom(String, Action)
 }
 
 
@@ -71,6 +75,10 @@ class SeparatorRowView: TableRowView {
         return theme.colors.grayBackground
     }
     
+    override var isOpaque: Bool {
+        return false
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -97,13 +105,6 @@ class SeparatorRowView: TableRowView {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        
-        super.draw(layer, in: ctx)
-        
-        if backingScaleFactor == 1.0 {
-            ctx.setFillColor(backdorColor.cgColor)
-            ctx.fill(layer.bounds)
-        }
         
         if let item = self.item as? SeparatorRowItem {
             let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil,false, .left)

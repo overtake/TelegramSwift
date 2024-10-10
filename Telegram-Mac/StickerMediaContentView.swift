@@ -183,11 +183,20 @@ class StickerMediaContentView: ChatMediaContentView {
                 return
             }
             
-            if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
+            if let reference = media.stickerReference, media.fileName != "telegram-animoji.tgs" {
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for: context.window)
             } else if let sticker = media.stickerText, !sticker.isEmpty {
-                self.playIfNeeded(true)
-                parameters?.runEmojiScreenEffect(sticker)
+                let signal = context.diceCache.animationEffect(for: sticker.emojiUnmodified) |> deliverOnMainQueue
+                _ = signal.start(next: { [weak self] files in
+                    if files.isEmpty || media.customEmojiText != nil {
+                        if let reference = media.emojiReference {
+                            showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.emoji(reference)]), for: context.window)
+                        }
+                    } else {
+                        self?.parameters?.runEmojiScreenEffect(sticker)
+                    }
+                    self?.playIfNeeded(true)
+                })
             }
         }
     }
@@ -198,6 +207,7 @@ class StickerMediaContentView: ChatMediaContentView {
     
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        
         
         let prev = self.media as? TelegramMediaFile
         let prevParent = self.parent
@@ -249,6 +259,8 @@ class StickerMediaContentView: ChatMediaContentView {
                 }
             }
         }
+    
+        
         
         needsLayout = true
     }

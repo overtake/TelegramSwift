@@ -12,7 +12,7 @@ import AppKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-
+import TelegramMedia
 
 
 extension PremiumLimitController.LimitType {
@@ -44,6 +44,10 @@ extension PremiumLimitController.LimitType {
             return NSImage(named: "Icon_Premium_Limit_Chats")!.precomposed(NSColor(hexString: "#FFFFFF"))
         case .accounts:
             return NSImage(named: "Icon_Premium_Limit_Accounts")!.precomposed(NSColor(hexString: "#FFFFFF"))
+        case .sharedInvites:
+            return NSImage(named: "Icon_Premium_Limit_Link")!.precomposed(NSColor(hexString: "#FFFFFF"))
+        case .sharedFolders:
+            return NSImage(named: "Icon_Premium_Limit_Folders")!.precomposed(NSColor(hexString: "#FFFFFF"))
         }
     }
     var acceptText: String {
@@ -58,8 +62,8 @@ extension PremiumLimitController.LimitType {
             return strings().premiumLimitReached
         }
     }
-    func descText(_ limits: PremiumLimitConfig) -> String {
-        if limits.premium_purchase_blocked {
+    func descText(_ limits: PremiumLimitConfig, alreadyPremiumLimit: Bool = false) -> String {
+        if limits.premium_purchase_blocked || alreadyPremiumLimit {
             switch self {
             case .pin:
                 return strings().premiumLimitLockedPinInfo(defaultLimit(limits))
@@ -87,6 +91,12 @@ extension PremiumLimitController.LimitType {
                 return strings().premiumLimitLockedAboutInfo("\(defaultLimit(limits))")
             case .accounts:
                 return strings().premiumLimitLockedAccountsInfo("\(defaultLimit(limits))")
+            case .sharedFolders:
+                return strings().premiumLimitLockedSharedFoldersInfo("\(defaultLimit(limits))")
+            case .sharedInvites:
+                return strings().premiumLimitLockedSharedFoldersInvitesInfo("\(defaultLimit(limits))")
+
+
             }
         } else {
             switch self {
@@ -116,6 +126,10 @@ extension PremiumLimitController.LimitType {
                 return strings().premiumLimitAboutInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
             case .accounts:
                 return strings().premiumLimitAccountsInfo("\(defaultLimit(limits))")
+            case .sharedFolders:
+                return strings().premiumLimitSharedFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .sharedInvites:
+                return strings().premiumLimitSharedFoldersInvitesInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
             }
         }
     }
@@ -160,6 +174,10 @@ extension PremiumLimitController.LimitType {
             } else {
                 return CGFloat(limits.upload_max_fileparts_default) / CGFloat(limits.upload_max_fileparts_premium)
             }
+        case .sharedFolders:
+            return 0.5
+        case .sharedInvites:
+            return 0.5
         }
     }
     
@@ -189,6 +207,10 @@ extension PremiumLimitController.LimitType {
             return "\(counts != nil ? count : limits.caption_length_limit_default)"
         case let .about(count):
             return "\(counts != nil ? count : limits.about_length_limit_default)"
+        case .sharedFolders:
+            return "\(limits.communities_joined_limit_default)"
+        case .sharedInvites:
+            return "\(limits.community_invites_limit_default)"
         case let .uploadFile(count):
             if counts != nil, let count = count {
                 return String.prettySized(with: count, afterDot: 1)
@@ -221,6 +243,10 @@ extension PremiumLimitController.LimitType {
             return "\(limits.caption_length_limit_premium)"
         case .accounts:
             return "\(normalAccountsLimit + 1)"
+        case .sharedFolders:
+            return "\(limits.communities_joined_limit_premium)"
+        case .sharedInvites:
+            return "\(limits.community_invites_limit_premium)"
         case .uploadFile:
             return "\(String.prettySized(with: limits.upload_max_fileparts_premium, afterDot: 0, round: true))"
         case .about:
@@ -237,7 +263,7 @@ final class PremiumGradientView : View {
         self.gradient.startPoint = CGPoint(x: 0, y: 1)
         self.gradient.endPoint = CGPoint(x: 1, y: 0)
         
-        gradient.colors = premiumGradient.compactMap { $0?.cgColor }
+        gradient.colors = premiumGradient.compactMap { $0.cgColor }
     }
     
     
@@ -421,7 +447,7 @@ final class PremiumLimitView: View {
                 } else {
                     ctx.clip(to: size.bounds, mask: clipImage)
                     
-                    let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                    let colors = premiumGradient.compactMap { $0.cgColor } as NSArray
                     
                     let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                     
@@ -505,7 +531,7 @@ final class PremiumLimitView: View {
     private let header = View()
     private let dismiss = ImageButton()
     private let accept = AcceptView(frame: .zero)
-    private let acceptOK = TitleButton(frame: .zero)
+    private let acceptOK = TextButton(frame: .zero)
     private let title = TextView()
     private let desc = TextView()
     private let top = TypeView(frame: .zero)
@@ -701,7 +727,8 @@ final class PremiumLimitController : ModalViewController {
         case caption(Int)
         case about(Int)
         case accounts(Int)
-        
+        case sharedFolders
+        case sharedInvites
         var eventSource: PremiumLogEventsSource {
             switch self {
             case .pin:
@@ -730,6 +757,10 @@ final class PremiumLimitController : ModalViewController {
                 return .double_limits(.accounts)
             case .about:
                 return .double_limits(.about)
+            case .sharedFolders:
+                return .double_limits(.communities_joined)
+            case .sharedInvites:
+                return .double_limits(.community_invites)
             }
         }
     }
@@ -853,5 +884,9 @@ final class PremiumLimitController : ModalViewController {
 
 
 func showPremiumLimit(context: AccountContext, type: PremiumLimitController.LimitType) {
-    showModal(with: PremiumLimitController(context: context, type: type), for: context.window)
+    if context.isPremium {
+        alert(for: context.window, info: type.descText(context.premiumLimits, alreadyPremiumLimit: true))
+    } else {
+        showModal(with: PremiumLimitController(context: context, type: type), for: context.window)
+    }
 }

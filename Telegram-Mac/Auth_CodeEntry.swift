@@ -12,14 +12,14 @@ import TelegramCore
 import AppKit
 import KeyboardKey
 import SwiftSignalKit
-
+import TelegramMedia
 
 private final class Auth_CodeEntryHeaderView : View {
     
     enum IconType {
         case phone
         case desktop
-        
+        case pirate
         
         var header: String {
             switch self {
@@ -27,6 +27,8 @@ private final class Auth_CodeEntryHeaderView : View {
                 return strings().loginNewCodeEnterSms
             case .desktop:
                 return strings().loginNewCodeEnterCode
+            case .pirate:
+                return strings().loginNewCodeEnterSms
             }
         }
     }
@@ -36,7 +38,7 @@ private final class Auth_CodeEntryHeaderView : View {
 
     private let header: TextView = TextView()
     private let desc: TextView = TextView()
-    private var type: IconType = .phone
+    private(set) var type: IconType = .phone
     private var descAttr: NSAttributedString?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -68,15 +70,23 @@ private final class Auth_CodeEntryHeaderView : View {
             self.desc.update(layout)
         }
         
-        if let data = LocalAnimatedSticker.code_note.data {
-            var colors:[LottieColor] = []
-            colors.append(.init(keyPath: "Bubble.Group 1.Fill 1", color: theme.colors.accent))
-            colors.append(.init(keyPath: "Note.Path.Fill 1", color: theme.colors.grayText))
-            colors.append(.init(keyPath: "Note.Path-2.Stroke 1", color: theme.colors.grayText))
-            colors.append(.init(keyPath: "Phone.Combined-Shape.Fill 1", color: theme.colors.grayText))
+        switch self.type {
+        case .pirate:
+            if let data = LocalAnimatedSticker.pirate_flag.data {
+                self.playerView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("pirate_flag"), size: Auth_Insets.logoSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: []))
+            }
+        default:
+            if let data = LocalAnimatedSticker.code_note.data {
+                var colors:[LottieColor] = []
+                colors.append(.init(keyPath: "Bubble.Group 1.Fill 1", color: theme.colors.accent))
+                colors.append(.init(keyPath: "Note.Path.Fill 1", color: theme.colors.grayText))
+                colors.append(.init(keyPath: "Note.Path-2.Stroke 1", color: theme.colors.grayText))
+                colors.append(.init(keyPath: "Phone.Combined-Shape.Fill 1", color: theme.colors.grayText))
 
-            self.playerView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("code_note"), size: Auth_Insets.logoSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .onceEnd, colors: colors))
+                self.playerView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("code_note"), size: Auth_Insets.logoSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .onceEnd, colors: colors))
+            }
         }
+        
 
         self.layout()
     }
@@ -117,11 +127,13 @@ final class Auth_CodeEntryView: View {
     private let error: LoginErrorStateView = LoginErrorStateView()
     private let nextView: Auth_NextView = Auth_NextView()
     
-    private let disposable = MetaDisposable()
     
     private var takeResend:(()->Void)?
     
     private var nextTextView: TextView?
+    private let disposable = MetaDisposable()
+
+    private var fragmentUrl: String?
     
     required init(frame frameRect: NSRect) {
         header = Auth_CodeEntryHeaderView(frame: frameRect.size.bounds)
@@ -133,7 +145,11 @@ final class Auth_CodeEntryView: View {
         
 
         nextView.set(handler: { [weak self] _ in
-            self?.control.invoke()
+            if self?.header.type == .pirate {
+                self?.openFragment()
+            } else {
+                self?.control.invoke()
+            }
         }, for: .Click)
         
         addSubview(container)
@@ -161,11 +177,20 @@ final class Auth_CodeEntryView: View {
         nextTextView?.centerX(y: container.frame.maxY + Auth_Insets.betweenHeader)
     }
     
+    func applyExternalLoginCode(_ code: String) {
+        if !code.isEmpty {
+            let chars = Array(code).map { String($0) }
+            self.control.insertAll(chars.compactMap { Int($0) })
+        }
+    }
+    
     func update(locked: Bool, error: AuthorizationCodeVerificationError?, number: String, type: SentAuthorizationCodeType, timeout: Int32?, nextType: AuthorizationCodeNextType?, takeEdit:@escaping()->Void, takeNext:@escaping(String)->Void, takeResend: @escaping()->Void, takeError:@escaping()->Void) {
         
         let info: String
         let iconType: Auth_CodeEntryHeaderView.IconType
         let length: Int32
+        var nextString: String = strings().loginNext
+        var detectBold = true
         switch type {
         case let .otherSession(_length):
             length = _length
@@ -179,15 +204,32 @@ final class Auth_CodeEntryView: View {
             length = _length
             iconType = .phone
             info = strings().loginNewCodeCallInfo(formatPhoneNumber(number))
+        case let .fragment(url, _length):
+            length = _length
+            iconType = .pirate
+            info = strings().loginNewCodeFragmentInfo(formatPhoneNumber(number))
+            nextString = strings().loginNextFragment
+            self.fragmentUrl = url
+        case let .email(pattern, _length, _, _, _, _):
+            length = _length
+            info = strings().loginNewCodeEmail(pattern)
+            iconType = .phone
+            detectBold = false
         default:
             fatalError()
         }
         let attr = parseMarkdownIntoAttributedString(info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: Auth_Insets.infoFont, textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: Auth_Insets.infoFontBold, textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: Auth_Insets.infoFont, textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  { _ in
-                takeEdit()
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  { url in
+                if url.isEmpty {
+                    takeEdit()
+                } else {
+                    execute(inapp: .external(link: url, false))
+                }
             }))
         })).mutableCopy() as! NSMutableAttributedString
-        attr.detectBoldColorInString(with: .medium(.header))
+        if detectBold {
+            attr.detectBoldColorInString(with: .medium(.header))
+        }
         
         self.header.update(desc: attr, type: iconType)
         let size = self.control.update(count: Int(length))
@@ -219,7 +261,7 @@ final class Auth_CodeEntryView: View {
             self.error.state.set(.normal)
         }
         
-        nextView.updateLocked(locked)
+        nextView.updateLocked(locked, string: nextString)
         
         self.takeResend = takeResend
         
@@ -229,6 +271,12 @@ final class Auth_CodeEntryView: View {
             runNextTimer(type, nextType, timeout)
         }
         updateAfterTick(type, nextType, timeout)
+    }
+    
+    private func openFragment() {
+        if let url = self.fragmentUrl {
+            execute(inapp: .external(link: url, false))
+        }
     }
     
     deinit {
@@ -356,6 +404,10 @@ final class Auth_CodeEntryController : GenericViewController<Auth_CodeEntryView>
     
     override func firstResponder() -> NSResponder? {
         return genericView.firstResponder()
+    }
+    
+    func applyExternalLoginCode(_ code: String) {
+        self.genericView.applyExternalLoginCode(code)
     }
     
     func update(locked: Bool, error: AuthorizationCodeVerificationError?, number: String, type: SentAuthorizationCodeType, timeout: Int32?, nextType: AuthorizationCodeNextType?, takeEdit:@escaping()->Void, takeNext:@escaping(String)->Void, takeResend:@escaping()->Void, takeError:@escaping()->Void) {

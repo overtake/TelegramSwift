@@ -23,6 +23,11 @@ import InAppSettings
 import ThemeSettings
 import ColorPalette
 import WebKit
+import System
+import CodeSyntax
+import MetalEngine
+import TelegramMedia
+import RLottie
 
 #if !APP_STORE
 import AppCenter
@@ -30,6 +35,82 @@ import AppCenterCrashes
 #endif
 
 
+
+@available(macOS 13, *)
+class AppIntentObserver : NSObject {
+    
+    private let defaults = UserDefaults(suiteName: ApiEnvironment.intentsBundleId)!
+    
+    private var current: AppIntentDataModel?
+    
+    override init() {
+        super.init()
+        let modelData = defaults.value(forKey: AppIntentDataModel.keyInternal) as? Data
+        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
+            self.current = model
+        }
+        defaults.addObserver(self, forKeyPath: AppIntentDataModel.key, options: .new, context: nil)
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == AppIntentDataModel.key {
+            update()
+        }
+    }
+    
+    deinit {
+        defaults.removeObserver(self, forKeyPath: AppIntentDataModel.key)
+    }
+    
+    var onUpdate:((AppIntentDataModel?)->Void)?
+    
+    func update() {
+        let modelData = defaults.value(forKey: AppIntentDataModel.key) as? Data
+        let model: AppIntentDataModel?
+        if let modelData, let value = AppIntentDataModel.decoded(modelData) {
+            model = value
+        } else {
+            model = nil
+        }
+        if let model = model {
+            defaults.setValue(model.encoded(), forKey: AppIntentDataModel.keyInternal)
+        }
+        if model != self.current {
+            self.onUpdate?(model)
+        }
+        self.current = model
+    }
+    
+    public static let shared: AppIntentObserver = AppIntentObserver()
+}
+
+final class CodeSyntax {
+    private let syntaxer: Syntaxer
+    private init() {
+        let pathFile = Bundle.main.path(forResource: "grammars", ofType: "dat")!
+        let data = try! Data(contentsOf: URL(fileURLWithPath: pathFile))
+        self.syntaxer = Syntaxer(data)!
+    }
+    private static let standart: CodeSyntax = .init()
+    
+    fileprivate static func initialize() {
+        _ = CodeSyntax.standart
+    }
+    
+    
+    static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
+        return standart.syntaxer.syntax(code, language: language, theme: theme)
+    }
+    static func apply(_ code: NSAttributedString, to: NSMutableAttributedString, offset: Int) {
+        code.enumerateAttributes(in: code.range, using: { value, innerRange, _ in
+            if let font = value[.foregroundColor] as? NSColor {
+                to.addAttribute(.foregroundColor, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            } else if let font = value[.font] as? NSFont {
+                to.addAttribute(.font, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            }
+        })
+    }
+}
 
 let enableBetaFeatures = true
 
@@ -56,8 +137,8 @@ private struct AutologinToken : Equatable {
         self.domains = domains
     }
 
-    static func with(appConfiguration: AppConfiguration) -> AutologinToken? {
-        if let data = appConfiguration.data, let value = data["autologin_token"] as? String {
+    static func with(appConfiguration: AppConfiguration, autologinToken: String?) -> AutologinToken? {
+        if let data = appConfiguration.data, let value = autologinToken {
             let dict:[String] = data["autologin_domains"] as? [String] ?? []
             return AutologinToken(token: value, domains: dict)
         } else {
@@ -119,6 +200,10 @@ private final class CtxInstallLayer : SimpleLayer {
 //            DeviceGraphicsContextSettings.install(nil)
 //        }
     }
+}
+
+extension RLottieBridge : R_LottieBridge {
+   
 }
 
 
@@ -190,8 +275,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        UserDefaults.standard.set(false, forKey: "NSTableViewCanEstimateRowHeights")
+        CodeSyntax.initialize()
         
+        
+        
+        
+       // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
+     //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
     
     var allowedDomains: [String] {
@@ -215,24 +305,43 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func updateGraphicContext() {
         ctxLayer?.display()
     }
+
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
+       // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
       
+//        window.styleMask.insert(.fullSizeContentView)
+//        window.styleMask.insert(.unifiedTitleAndToolbar)
+        //window.styleMask.insert(.borderless)
+//        let customToolbar = NSToolbar(identifier: "main")
+//        customToolbar.showsBaselineSeparator = false
+////        window.titlebarAppearsTransparent = true
+////        window.titleVisibility = .hidden
+//        window.toolbar = customToolbar
+        
+        
+        
+//        titleBarAccessoryViewController.view = View()
+//        titleBarAccessoryViewController.view.background = .random
+//
+//        titleBarAccessoryViewController.view.frame = NSMakeRect(0, 0, 0, 100) // Width not used.
+//        window.addTitlebarAccessoryViewController(titleBarAccessoryViewController)
         
         appDelegate = self
         ApiEnvironment.migrate()
         
         initializeSelectManager()
         startLottieCacheCleaner()
-                
-        if #available(OSX 10.12.2, *) {
-            NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
+        
+        makeRLottie = { json, key in
+            return RLottieBridge(json: json, key: key)
         }
         
         guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }
+        
         
         self.containerUrl = containerUrl.path
         
@@ -245,13 +354,19 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView?.autoresizingMask = [.width, .height]
         window.contentView?.autoresizesSubviews = true
         
+
+//        delay(2.0, closure: {
+        #if arch(arm64)
+            v.layer?.addSublayer(MetalEngine.shared.rootLayer)
+        #endif
+//        })
         
-        let ctxLayer = CtxInstallLayer()
-        self.ctxLayer = ctxLayer
-        window.contentView?.layer?.addSublayer(ctxLayer)
+//        let ctxLayer = CtxInstallLayer()
+//        self.ctxLayer = ctxLayer
+//        window.contentView?.layer?.addSublayer(ctxLayer)
         
-        ctxLayer.setNeedsDisplay()
-        ctxLayer.display()
+//        ctxLayer.setNeedsDisplay()
+//        ctxLayer.display()
                 
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
@@ -308,7 +423,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         mw = window
         
-        #if !APP_STORE
+        #if BETA || DEBUG
             if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
                 AppCenter.start(withAppSecret: secret, services: [Crashes.self])
             }
@@ -349,6 +464,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         launchInterface()
         
+        
     }
     
     
@@ -358,6 +474,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
         let rootPath = containerUrl!
         let window = self.window!
+        
         System.updateScaleFactor(window.backingScaleFactor)
         window.minSize = NSMakeSize(380, 500)
         
@@ -375,7 +492,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                  transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
             }) |> deliverOnMainQueue
             
-            data.start(next: { themeSettings, localization in
+            _ = data.startStandalone(next: { themeSettings, localization in
                 System.legacyMenu = themeSettings.legacyMenu
 
                 if let localization = localization {
@@ -443,26 +560,29 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
+        FontCacheKey.initializeCache()
         
+        clearUserDefaultsObject(forKeyPrefix: "dice_")
         
         self.appEncryption = appEncryption
         
         let rootPath = containerUrl!
         let window = self.window!
         System.updateScaleFactor(window.backingScaleFactor)
-        
-        
+                
         window.minSize = NSMakeSize(380, 500)
         
         let networkDisposable = MetaDisposable()
         
         
-        self.window.closeInterceptor = {
-            if !self.terminated {
-                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
-            }
-            return false
-        }
+       
+//
+//        self.window.closeInterceptor = {
+//            if !self.terminated {
+//                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
+//            }
+//            return false
+//        }
         
         let displayUpgrade:(Float?) -> Void = { progress in
             if let progress = progress {
@@ -496,9 +616,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 case let .numericalPassword(value), let .plaintextPassword(value):
                     if !value.isEmpty {
                         appEncryption.change(value)
-                        accountManager.transaction {
+                        _ = accountManager.transaction {
                             $0.setAccessChallengeData(.plaintextPassword(value: ""))
-                        }
+                        }.start()
                     }
                 default:
                     break
@@ -523,7 +643,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     let previousScale = previousBackingScale.swap(backingScale)
                     System.legacyMenu = settings.legacyMenu
                     if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper.wallpaper != settings.wallpaper.wallpaper || previous?.fontSize != settings.fontSize || previousScale != backingScale  {
-                        return updateTheme(with: settings, animated: true && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
+                        return updateTheme(with: settings, animated: ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
                     } else {
                         return nil
                     }
@@ -531,10 +651,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 
                 _ = signal.start(next: { updatedTheme in
                     if let theme = updatedTheme {
-                        self.enumerateApplicationContexts({ context in
-                            telegramUpdateTheme(theme, window: context.context.window, animated: true)
-                            context.applyNewTheme()
-                        })
+                        if self.contextValue == nil {
+                            telegramUpdateTheme(theme, window: window, animated: true)
+                        } else {
+                            self.enumerateApplicationContexts({ context in
+                                telegramUpdateTheme(theme, window: context.context.window, animated: true)
+                                context.applyNewTheme()
+                            })
+                        }
                     }
                 })
                 
@@ -543,7 +667,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 //
                 
                 NotificationCenter.default.addObserver(forName: NSWindow.didChangeBackingPropertiesNotification, object: window, queue: nil, using: { notification in
-                    backingProperties.set(System.backingScale)
+                    System.updateScaleFactor(window.backingScaleFactor)
+                    backingProperties.set(window.backingScaleFactor)
                 })
                 
                 let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in
@@ -551,10 +676,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     } |> deliverOnMainQueue
                 
                 
-                _ = autoNightSignal.start(next: { preference, _ in
+                _ = combineLatest(autoNightSignal, additionalSettings(accountManager: accountManager)).start(next: { value1, value2 in
+                    
+                    let preference = value1.0
+                    let alwaysDarkMode = value2.alwaysDarkMode
                     
                     var isEnabled: Bool
                     var isDark: Bool = false
+                    
 
                     if let schedule = preference.schedule {
                         
@@ -648,11 +777,68 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     return EmptyDisposable
                 } |> runOn(.concurrentBackgroundQueue())
                 
-                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedDeviceName: ApiEnvironment.resolvedDeviceName)
+                
+                var useBetaFeatures: Bool = false
+                #if BETA || DEBUG
+                useBetaFeatures = false
+                #endif
+                
+                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, externalRequestVerificationStream: .single([:]), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
                 
                 let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
                 
                 self.hangKeybind(sharedContext)
+                
+                
+                if #available(macOS 13, *) {
+                    AppIntentObserver.shared.onUpdate = { value in
+                        _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
+                            if value?.alwaysUseDarkMode == true {
+                                return settings.withUpdatedToDefault(dark: true)
+                            } else {
+                                return settings.withUpdatedToDefault(dark: settings.defaultIsDark)
+                            }
+                        }).start()
+                        
+                        if let value = value?.useUnableStatus {
+                            
+                            _ = (sharedContext.activeAccountsWithInfo |> deliverOnMainQueue |> take(1)).startStandalone(next: { accounts in
+                                for account in accounts.1 {
+                                    _ = updateSomeSettingsInteractively(postbox: account.account.postbox, { current in
+                                        var current = current
+                                        if value {
+                                            current.focusIntentStatusFallback = account.peer.emojiStatus?.fileId
+                                        }
+                                        current.focusIntentStatusEnabled = value
+                                        return current
+                                    }).startStandalone()
+                                }
+                            })
+                            
+                            if value {
+                               
+                                
+                                /*
+                                 let files = context.diceCache.top_emojies_status |> deliverOnMainQueue
+                                  _ = files.startStandalone(next: { files in
+                                      if let file = files.first(where: { $0.customEmojiText == "⛔️" }) {
+                                          _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                                      }
+                                  })
+                                 */
+                                
+                                if let context = self.contextValue?.context {
+                                  
+                                }
+                                
+
+                            } else {
+                                
+                            }
+                        }
+                    }
+                    AppIntentObserver.shared.update()
+                }
                 
                 
                 let rawAccounts = sharedContext.activeAccounts
@@ -692,9 +878,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             let navigation = contextValue.context.bindings.rootNavigation()
                             let controller: ChatController
                             if addition {
-                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             } else {
-                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             }
                             navigation.push(controller)
                         }
@@ -704,12 +890,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         let currentInChat = navigation.controller is ChatController
                         let controller = navigation.controller as? ChatController
                         
-                        if controller?.chatInteraction.mode.threadId == threadId {
+                        if controller?.chatLocation.peerId == threadId.peerId,  controller?.chatLocation.threadMsgId == threadId {
                             controller?.scrollup()
                         } else {
                             
                             if let _ = threadData {
-                                _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: contextValue.context).start()
+                                
+                                _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: contextValue.context).start()
                             } else if let fromId = fromId {
                                 let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
                                 
@@ -809,7 +996,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 if let account = account {
                                                                     
                                     let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, account: account)
-                                    return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), folders: folders)
+                                    return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall(), inlinePlayerContext: sharedContext.getCrossInlinePlayer(), folders: folders)
                                     
                                 } else {
                                     return nil
@@ -1065,11 +1252,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func navigateProfile(_ peerId: PeerId, account: Account) {
         if let context = self.contextValue?.context, context.peerId == account.peerId {
-            context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
             context.window.makeKeyAndOrderFront(nil)
             context.window.orderFrontRegardless()
         } else {
-            sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(peerId, necessary: true))
+            let signal = account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+            _ = signal.start(next: { peer in
+                self.sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(EnginePeer(peer), necessary: true))
+            })
         }
     }
     func navigateChat(_ peerId: PeerId, account: Account) {
@@ -1161,7 +1351,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 AppDelegate.eventProcessed = nil
                 
                 let link = inApp(for: url as NSString, context: context, openInfo: { (peerId, isChat, postId, action) in
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId:postId, initialAction:action), true)
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction:action), true)
                 }, applyProxy: { proxy in
                     applyExternalProxy(proxy, accountManager: context.sharedContext.accountManager)
                 })
@@ -1224,12 +1414,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func tryApplyAutologinToken(_ url: String) -> String? {
-        if let config = contextValue?.context.appConfiguration {
-            if let value = AutologinToken.with(appConfiguration: config) {
-                return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+        var result: String?
+        self.enumerateAccountContexts { context in
+            if context.window == NSApp.keyWindow {
+                let config = context.appConfiguration
+                if let value = AutologinToken.with(appConfiguration: config, autologinToken: context.autologinToken) {
+                    result = value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+                }
             }
         }
-        return nil
+        return result
     }
     
     func applicationDidHide(_ notification: Notification) {
@@ -1452,14 +1646,31 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     @IBAction func showQuickSwitcher(_ sender: Any) {
-        
-        if let context = contextValue?.context, authContextValue == nil {
+        if authContextValue == nil {
             _ = sharedContextOnce.start(next: { applicationContext in
                 if !applicationContext.notificationManager.isLocked {
-                    showModal(with: QuickSwitcherModalController(context), for: self.window)
+                    self.enumerateApplicationContexts { applicationContext in
+                        if applicationContext.context.window.isKeyWindow {
+                            if !hasModals(applicationContext.context.window) {
+                                showModal(with: QuickSwitcherModalController(applicationContext.context), for: applicationContext.context.window)
+                                applicationContext.context.window.makeKeyAndOrderFront(sender)
+                            }
+                        }
+                    }
                 }
             })
         }
-        window.makeKeyAndOrderFront(sender)
+        
+    }
+    
+    func applyExternalLoginCode(_ code: String) {
+        if let modal = findModal(ModalController.self) {
+            let controller = modal.controller.controller as? PhoneNumberCodeConfirmController
+            if let controller = controller {
+                controller.applyExternalLoginCode(code)
+                return
+            }
+        }
+        self.authContextValue?.applyExternalLoginCode(code)
     }
 }

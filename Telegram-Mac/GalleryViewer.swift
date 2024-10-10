@@ -33,6 +33,8 @@ final class GalleryInteractions {
     var rotateLeft:()->Void = {}
     
     var fastSave:()->Void = {}
+    
+    var canShare:()->Bool = { true }
 }
 private(set) var viewer:GalleryViewer?
 
@@ -82,6 +84,16 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
                 return nil
             case let .full(media):
                 return media
+            }
+        }
+        if let media = media as? TelegramMediaAction {
+            switch media.action {
+            case let .suggestedProfilePhoto(image):
+                return image
+            case let .photoUpdated(image):
+                return image
+            default:
+                return nil
             }
         }
         if let media = media as? TelegramMediaImage {
@@ -192,15 +204,6 @@ private final class GalleryTouchBarController : ViewController {
         self.transition = transition
         super.init()
     }
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = GalleryTouchBar(interactions: interactions, selectedItemChanged: selectedItemChanged, transition: transition)
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
     
     deinit {
         var bp:Int = 0
@@ -238,6 +241,9 @@ class GalleryViewer: NSResponder {
     let type:GalleryAppearType
     let chatMode: ChatMode?
     private let reversed: Bool
+    
+    private var liveTranslate: ChatLiveTranslateContext?
+    
     private init(context: AccountContext, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType, reversed:Bool = false, chatMode: ChatMode? = nil) {
         self.context = context
         self.delegate = delegate
@@ -340,6 +346,16 @@ class GalleryViewer: NSResponder {
         interactions.fastSave = { [weak self] in
             self?.saveAs(true)
         }
+        interactions.canShare = { [weak self] in
+            let isProtected = self?.pager.selectedItem?.entry.message?.isCopyProtected() ?? false
+            if isProtected {
+                return false
+            } else if let chatMode = chatMode {
+                return !chatMode.isSavedMode && chatMode.customChatContents == nil
+            } else {
+                return false
+            }
+        }
         window.set(handler: { [weak self] event in
             guard let `self` = self else {return .rejected}
             if self.pager.selectedItem is MGalleryVideoItem || self.pager.selectedItem is MGalleryExternalVideoItem {
@@ -436,10 +452,10 @@ class GalleryViewer: NSResponder {
         
         let previous: Atomic<[GalleryEntry]> = Atomic(value: [])
         
-        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(context: context, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected) in
+        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(context: context, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected, publicPhoto) in
             let (deleted, inserted, updated) = proccessEntriesWithoutReverse(previous.swap(entries), right: entries, { entry -> MGalleryItem in
                 switch entry {
-                case let .photo(_, _, photo, _, _, _, _):
+                case let .photo(_, _, photo, _, _, _, _, _, _):
                     if !photo.videoRepresentations.isEmpty {
                         return MGalleryGIFItem(context, entry, pagerSize)
                     } else {
@@ -509,6 +525,44 @@ class GalleryViewer: NSResponder {
             guard let `self` = self else {return}
             self.controls.update(self.pager.selectedItem)
         }))
+    }
+    
+    fileprivate convenience init(context: AccountContext, media:[Media], firstIndex: Int, firstStableId: AnyHashable? = nil, parent: Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
+        self.init(context: context, delegate, contentInteractions, type: .history, reversed: false, chatMode: nil)
+        self.firstStableId = firstStableId
+        let pagerSize = self.pagerSize
+        
+
+        
+        ready.set(.single(true) |> map { [weak self] _ -> Bool in
+            
+            guard let `self` = self else {return false}
+            
+            var inserted: [(Int, MGalleryItem)] = []
+            for i in 0 ..< media.count {
+                let media = media[i]
+                if media is TelegramMediaImage {
+                    inserted.append((i, MGalleryPhotoItem(context, .media(media, i, parent), pagerSize)))
+                } else if let file = media as? TelegramMediaFile {
+                    if file.isVideo && file.isAnimated {
+                        inserted.append((i, MGalleryGIFItem(context, .media(media, i, parent), pagerSize)))
+                    } else if file.isVideo {
+                        inserted.append((i, MGalleryVideoItem(context, .media(media, i, parent), pagerSize)))
+                    }
+                }
+            }
+            _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
+            
+            self.pager.set(index: firstIndex, animated: false)
+            self.controls.update(self.pager.selectedItem)
+            return true
+            
+        })
+        
+        self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
+            guard let `self` = self else {return}
+            self.controls.update(self.pager.selectedItem)
+        }))
         
         
     }
@@ -559,6 +613,10 @@ class GalleryViewer: NSResponder {
         let pagerSize = self.pagerSize
         let indexes:Atomic<(earlierId: MessageIndex?, laterId: MessageIndex?)> = Atomic(value:(nil, nil))
         
+        
+        self.liveTranslate = .init(peerId: message.id.peerId, context: context)
+
+        
         if let item = item, let entry = item.entry.chatEntry {
             _ = current.swap([entry])
             
@@ -568,12 +626,18 @@ class GalleryViewer: NSResponder {
             ready.set(.single(true))
         }
         
-        let signal = request.get()
-            |> distinctUntilChanged
-            |> mapToSignal { index -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
+        let translate: Signal<ChatLiveTranslateContext.State?, NoError>
+        if let liveTranslate {
+            translate = liveTranslate.state |> map(Optional.init)
+        } else {
+            translate = .single(nil)
+        }
+        
+        let signal = combineLatest(request.get() |> distinctUntilChanged, translate |> distinctUntilChanged)
+            |> mapToSignal { index, translate -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                 
                 var type = type
-                let tags = tagsForMessage(message)
+                let tags: HistoryViewInputTag? = tagsForMessage(message).flatMap { .tag($0) }
                 if tags == nil {
                    type = .alone
                 }
@@ -581,18 +645,24 @@ class GalleryViewer: NSResponder {
                 
                 let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
                 switch mode {
-                case .history:
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                case .history, .preview:
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tag: tags, orderStatistics: [.combinedLocation], additionalData: [])
                 case let .thread(data, _):
-                    if data.messageId == message.id {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                    if data.threadId == message.id.id {
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tag: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     } else {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .thread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .thread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tag: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
                 case .pinned:
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: .pinned, orderStatistics: [.combinedLocation], additionalData: [])
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tag: .tag(.pinned), orderStatistics: [.combinedLocation], additionalData: [])
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: message.id.peerId, threadId: nil))
+                case let .customChatContents(contents):
+                    signal = contents.historyView |> map { view in
+                        return (MessageHistoryView(tag: nil, namespaces: .all, entries: view.0.entries, holeEarlier: false, holeLater: false, isLoading: false), ViewUpdateType.Generic, nil)
+                    }
+                case .customLink:
+                    signal = .complete()
                 }
 
             
@@ -605,7 +675,7 @@ class GalleryViewer: NSResponder {
                     
                     inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
 
-                    if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
+                    if let webpage = message.anyMedia as? TelegramMediaWebpage {
                         let instantMedias = instantPageMedias(for: webpage)
                         if instantMedias.count > 1 {
                             for i in 1 ..< instantMedias.count {
@@ -630,7 +700,7 @@ class GalleryViewer: NSResponder {
 
                 case .history:
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
-                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false).filter { entry -> Bool in
+                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false, translate: translate).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
                                 return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
@@ -668,7 +738,7 @@ class GalleryViewer: NSResponder {
                 case .secret:
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
-                        if let message = view.message, !(message.effectiveMedia is TelegramMediaExpiredContent) {
+                        if let message = view.message, !(message.anyMedia is TelegramMediaExpiredContent) {
                             entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
@@ -800,7 +870,7 @@ class GalleryViewer: NSResponder {
         
         var items:[ContextMenuItem] = []
         
-        let isProtected = pager.selectedItem?.entry.message?.containsSecretMedia == true || pager.selectedItem?.entry.message?.isCopyProtected() == true
+        let isProtected = pager.selectedItem?.entry.isProtected == true
         
         if !isProtected {
             items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
@@ -822,14 +892,14 @@ class GalleryViewer: NSResponder {
                 if savedGifs.contains(where: { $0.media.fileId == file.fileId }) {
                     items.append(ContextMenuItem(strings().galleryRemoveGif, handler: { [weak control] in
                         _ = removeSavedGif(postbox: context.account.postbox, mediaId: file.fileId).start()
-                        if let window = control?.kitWindow {
+                        if let window = control?._window {
                             showModalText(for: window, text: strings().chatContextGifRemoved)
                         }
                     }, itemImage: MenuAnimation.menu_remove_gif.value))
                 } else {
                     items.append(ContextMenuItem(strings().gallerySaveGif, handler: { [weak control, weak self] in
                         
-                        guard let window = control?.kitWindow else {
+                        guard let window = control?._window else {
                             return
                         }
                         
@@ -842,7 +912,7 @@ class GalleryViewer: NSResponder {
                             return
                         }
                         let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
-                        if let window = control?.kitWindow {
+                        if let window = control?._window {
                             showModalText(for: window, text: strings().chatContextGifAdded)
                         }
                     }, itemImage: MenuAnimation.menu_add_gif.value))
@@ -856,8 +926,17 @@ class GalleryViewer: NSResponder {
             }, itemImage: MenuAnimation.menu_copy.value))
         }
         
+        let acceptInteractions: Bool
+        switch chatMode {
+        case .customChatContents(let contents):
+            acceptInteractions = false
+        default:
+            acceptInteractions = true
+        }
         
-        if let contentInteractions = self.contentInteractions {
+        let paidMedia = pager.selectedItem?.entry.paidMedia ?? false
+        
+        if let contentInteractions = self.contentInteractions, acceptInteractions {
             if let message = pager.selectedItem?.entry.message, let pageItem = pager.selectedItem {
                 if self.type == .history {
                     items.append(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
@@ -872,8 +951,8 @@ class GalleryViewer: NSResponder {
                     let controller = context.bindings.rootNavigation().controller
 
                     
-                    if let peer = message.peers[message.id.peerId], peer.canSendMessage(), let controller = controller as? ChatController {
-                        if let _ = message.effectiveMedia as? TelegramMediaImage {
+                    if let peer = message.peers[message.id.peerId], peer.canSendMessage(media: message.media.first), let controller = controller as? ChatController {
+                        if let _ = message.anyMedia as? TelegramMediaImage {
                             items.append(ContextMenuItem(strings().gallerySendHere, handler: { [weak self, weak controller] in
                                 
                                 self?.close(false)
@@ -901,7 +980,7 @@ class GalleryViewer: NSResponder {
                 }
                 
                 
-                if canDeleteMessage(message, account: context.account, mode: .history) {
+                if canDeleteMessage(message, account: context.account, mode: chatMode), !paidMedia {
                     if !items.isEmpty {
                         items.append(ContextSeparatorItem())
                     }
@@ -915,7 +994,7 @@ class GalleryViewer: NSResponder {
                         var items:[ContextMenuItem] = []
                         
                         let thisTitle: String
-                        if message.effectiveMedia is TelegramMediaImage {
+                        if message.anyMedia is TelegramMediaImage {
                             thisTitle = strings().galleryContextShareThisPhoto
                         } else {
                             thisTitle = strings().galleryContextShareThisVideo
@@ -925,9 +1004,9 @@ class GalleryViewer: NSResponder {
                         }, itemImage: MenuAnimation.menu_select_messages.value))
                        
                         let allTitle: String
-                        if messages.filter({$0.effectiveMedia is TelegramMediaImage}).count == messages.count {
+                        if messages.filter({$0.anyMedia is TelegramMediaImage}).count == messages.count {
                             allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                        } else if messages.filter({$0.effectiveMedia is TelegramMediaFile}).count == messages.count {
+                        } else if messages.filter({$0.anyMedia is TelegramMediaFile}).count == messages.count {
                             allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
                         } else {
                             allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
@@ -1053,7 +1132,7 @@ class GalleryViewer: NSResponder {
                     
                     
                     if let thrid = thrid {
-                        modernConfirm(for: self.window, account: self.context.account, peerId: nil, header: strings().chatConfirmDeleteMessages1Countable(messages.count), information: nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak self] result in
+                        verifyAlert(for: self.window, header: strings().chatConfirmDeleteMessages1Countable(messages.count), information: nil, ok: strings().confirmDelete, option: thrid, successHandler: { [weak self] result in
                             guard let `self` = self else {return}
                             
                             let type:InteractiveMessagesDeletionType
@@ -1074,7 +1153,7 @@ class GalleryViewer: NSResponder {
     }
     
     private func deleteMessage(_ control: Control) {
-         if let message = self.pager.selectedItem?.entry.message {
+         if let _ = self.pager.selectedItem?.entry.message {
             let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
              self.deleteMessages(messages)
          }
@@ -1083,7 +1162,7 @@ class GalleryViewer: NSResponder {
     private func updateMainPhoto() {
         if let item = self.pager.selectedItem {
             if let index = self.pager.index(for: item) {
-                if case let .photo(_, _, _, reference, _, _, _) = item.entry {
+                if case let .photo(_, _, _, reference, _, _, _, _, _) = item.entry {
                     if let reference = reference {
                         _ = context.engine.accountData.updatePeerPhotoExisting(reference: reference).start()
                         _ = pager.merge(with: UpdateTransition<MGalleryItem>(deleted: [index], inserted: [(0, item)], updated: []))
@@ -1106,7 +1185,7 @@ class GalleryViewer: NSResponder {
                 
                 pager.selectedIndex.set(index)
                 
-                if case let .photo(_, _, _, reference, _, _, _) = item.entry {
+                if case let .photo(_, _, _, reference, _, _, _, _, _) = item.entry {
                     _ = context.engine.accountData.removeAccountPhoto(reference: index == 0 ? nil : reference).start()
                 }
             }
@@ -1144,7 +1223,7 @@ class GalleryViewer: NSResponder {
                     self?.showMessage()
                 }, itemImage: MenuAnimation.menu_show_message.value))
             }
-            if item.entry.message?.isCopyProtected() == true {
+            if item.entry.isProtected == true {
                 
             } else {
                 menu.addItem(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
@@ -1161,7 +1240,9 @@ class GalleryViewer: NSResponder {
     
     func saveAs(_ fast: Bool = false) -> Void {
         if let item = self.pager.selectedItem {
-            if !(item is MGalleryExternalVideoItem) {
+            let isProtected = item.entry.isProtected
+
+            if !(item is MGalleryExternalVideoItem), !isProtected {
                 let isPhoto = item is MGalleryPhotoItem || item is MGalleryPeerPhotoItem
                 operationDisposable.set((item.realStatus |> take(1) |> deliverOnMainQueue).start(next: { [weak self] status in
                     guard let `self` = self else {return}
@@ -1249,21 +1330,22 @@ class GalleryViewer: NSResponder {
     
     func openInfo(_ peerId: PeerId) {
         close()
-        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        closeAllModals()
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
     }
     
     func share(_ control: Control) -> Void {
+        let messages = pager.thumbsControl.items.compactMap { $0.entry.message }
         if let message = self.pager.selectedItem?.entry.message {
-            if message.groupInfo != nil {
-                let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
+            if message.groupInfo != nil, !messages.isEmpty {
                 var items:[ContextMenuItem] = []
                 
                 let thisTitle: String
-                if message.effectiveMedia is TelegramMediaImage {
+                if message.anyMedia is TelegramMediaImage {
                     thisTitle = strings().galleryContextShareThisPhoto
-                } else if message.effectiveMedia!.isVideoFile {
+                } else if message.anyMedia!.isVideoFile {
                     thisTitle = strings().galleryContextShareThisVideo
-                } else if message.effectiveMedia!.isGraphicFile {
+                } else if message.anyMedia!.isGraphicFile {
                     thisTitle = strings().galleryContextShareThisPhoto
                 } else {
                     thisTitle = strings().galleryContextShareThisFile
@@ -1275,11 +1357,11 @@ class GalleryViewer: NSResponder {
                 }, itemImage: MenuAnimation.menu_share.value))
                 
                 let allTitle: String
-                if messages.filter({$0.effectiveMedia is TelegramMediaImage}).count == messages.count {
+                if messages.filter({$0.anyMedia is TelegramMediaImage}).count == messages.count {
                     allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                } else if messages.filter({ $0.effectiveMedia!.isVideoFile }).count == messages.count {
+                } else if messages.filter({ $0.anyMedia!.isVideoFile }).count == messages.count {
                     allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
-                } else if messages.filter({ $0.effectiveMedia!.isGraphicFile }).count == messages.count {
+                } else if messages.filter({ $0.anyMedia!.isGraphicFile }).count == messages.count {
                     allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
                 } else {
                     allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
@@ -1306,13 +1388,22 @@ class GalleryViewer: NSResponder {
     @objc func copy(_ sender:Any? = nil) -> Void {
         
         if let item = self.pager.selectedItem, !self.pager.copySelectedText() {
-            if let message = item.entry.message, message.isCopyProtected() {
+            if let message = item.entry.message, item.entry.isProtected {
                 showProtectedCopyAlert(message, for: self.window)
             } else  if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {
                 operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { path in
                     let pb = NSPasteboard.general
                     pb.clearContents()
-                    pb.writeObjects([NSURL(fileURLWithPath: path)])
+                    var url = NSURL(fileURLWithPath: path)
+                    let image = NSImage(contentsOf: url as URL)
+
+                    let dst = try? FileManager.default.destinationOfSymbolicLink(atPath: path)
+                    if let dst = dst {
+                        let updated = NSTemporaryDirectory() + dst.nsstring.lastPathComponent + "." +  path.nsstring.pathExtension
+                        try? FileManager.default.copyItem(atPath: dst, toPath: updated)
+                        url = NSURL(fileURLWithPath: updated)
+                    }
+                    pb.writeObjects([url, image].compactMap { $0 })
                 }))
             } else if let item = item as? MGalleryExternalVideoItem {
                 let pb = NSPasteboard.general
@@ -1361,7 +1452,7 @@ class GalleryViewer: NSResponder {
                 }, completion:{ [weak strongSelf] in
                     //strongSelf?.backgroundView.alphaValue = 1.0
                     strongSelf?.controls.animateIn()
-                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
+                    strongSelf?.backgroundView._change(opacity: 1, animated: true)
                 }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {
                         //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
@@ -1380,7 +1471,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView._change(opacity: 0, animated: false)
+            backgroundView._change(opacity: 0, animated: true)
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {
@@ -1459,6 +1550,14 @@ func showInstantViewGallery(context: AccountContext, medias:[InstantPageMedia], 
     if viewer == nil {
         viewer?.clean()
         let gallery = GalleryViewer(context: context, instantMedias: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
+        gallery.show()
+    }
+}
+
+func showPaidMedia(context: AccountContext, medias:[Media], parent: Message, firstIndex: Int, firstStableId:AnyHashable? = nil, _ delegate: InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil) {
+    if viewer == nil {
+        viewer?.clean()
+        let gallery = GalleryViewer(context: context, media: medias, firstIndex: firstIndex, firstStableId: firstStableId, parent: parent, delegate, contentInteractions)
         gallery.show()
     }
 }

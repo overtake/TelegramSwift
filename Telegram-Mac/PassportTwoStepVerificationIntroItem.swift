@@ -49,7 +49,7 @@ private final class PassportTwoStepVerificationIntroRowView : TableRowView {
     private let headerView: TextView = TextView()
     private let imageView: ImageView = ImageView()
     private let descView: TextView = TextView()
-    private let button: TitleButton = TitleButton()
+    private let button: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(headerView)

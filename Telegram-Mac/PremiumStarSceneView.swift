@@ -12,19 +12,18 @@ import SceneKit
 import SwiftSignalKit
 import GZIP
 
-private let sceneVersion: Int = 1
+private let sceneVersion: Int = 2
 
 
 
-private func deg2rad(_ number: Float) -> Float {
-    return number * .pi / 180
+protocol PremiumSceneView {
+    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
+    func playAgain()
+    
+    var sceneBackground: NSColor { get set }
 }
 
-private func rad2deg(_ number: Float) -> Float {
-    return number * 180.0 / .pi
-}
-
-final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
+final class PremiumStarSceneView: View, SCNSceneRendererDelegate, PremiumSceneView {
    
     private let sceneView: SCNView
     
@@ -35,6 +34,12 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
         appearanceDelay.dispose()
         tapDelay.dispose()
     }
+    
+    var sceneBackground: NSColor = .clear {
+        didSet {
+            sceneView.backgroundColor = sceneBackground
+        }
+    }
 
     required init(frame: CGRect) {
         self.sceneView = SCNView(frame: frame)
@@ -43,9 +48,10 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
 //        self.sceneView.isUserInteractionEnabled = false
         
         super.init(frame: frame)
-        
+        sceneView.wantsLayer = true
         self.addSubview(self.sceneView)
-        
+        self.layer?.masksToBounds = false
+        sceneView.layer?.masksToBounds = false
         self.setup()
         
         let panGestureRecoginzer = NSPanGestureRecognizer(target: self, action: #selector(self.handlePan(_:)))
@@ -166,26 +172,23 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
     }
     
     private func setup() {
-        guard let url = Bundle.main.url(forResource: "star", withExtension: ""),
-              let compressedData = try? Data(contentsOf: url),
-              let decompressedData = TGGUnzipData(compressedData, 8 * 1024 * 1024) else {
-            return
-        }
-        let fileName = "star_\(sceneVersion).scn"
-        let tmpURL = URL(fileURLWithPath: NSTemporaryDirectory() + fileName)
-        if !FileManager.default.fileExists(atPath: tmpURL.path) {
-            try? decompressedData.write(to: tmpURL)
-        }
-        
-        guard let scene = try? SCNScene(url: tmpURL, options: nil) else {
+        guard let url = Bundle.main.url(forResource: "star2", withExtension: "scn") else {
             return
         }
         
+        guard let scene = try? SCNScene(url: url, options: nil) else {
+            return
+        }
+        
+//        self.sceneView.col = .bgra8Unorm_srgb
+        self.sceneView.backgroundColor = .clear
+        self.sceneView.preferredFramesPerSecond = 60
+        self.sceneView.isJitteringEnabled = true
 
         self.sceneView.scene = scene
         self.sceneView.delegate = self
+                
         
-        let _ = self.sceneView.snapshot()
     }
     
     private var didSetReady = false
@@ -246,12 +249,30 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
         group.repeatCount = .infinity
         
         node.geometry?.materials.first?.emission.addAnimation(group, forKey: "shimmer")
+        
+        if #available(macOS 14.0, *), let material = node.geometry?.materials.first {
+            material.metalness.intensity = 0.2
+        }
+    }
+    
+    func showStar() {
+        guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
+            return
+        }
+        node.isHidden = false
+    }
+    func hideStar() {
+        guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
+            return
+        }
+        node.isHidden = true
     }
     
     private func playAppearanceAnimation(velocity: CGFloat? = nil, smallAngle: Bool = false, mirror: Bool = false, explode: Bool = false) {
         guard let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) else {
             return
         }
+        
         
         if explode, let node = scene.rootNode.childNode(withName: "swirl", recursively: false), let particles = scene.rootNode.childNode(withName: "particles", recursively: false) {
             let particleSystem = particles.particleSystems?.first

@@ -49,6 +49,10 @@ extension AuthorizationCodeRequestError : Equatable {
             if case .timeout = rhs {
                 return true
             }
+        case .appOutdated:
+            if case .appOutdated = rhs {
+                return true
+            }
         }
         return false
     }
@@ -92,8 +96,8 @@ extension ExportAuthTransferTokenResult : Equatable {
 }
 
 final class AuthView : Control {
-    private var continueOn: TitleButton?
-    fileprivate let back = TitleButton()
+    private var continueOn: TextButton?
+    fileprivate let back = TextButton()
     
     fileprivate let proxyButton:ImageButton = ImageButton()
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
@@ -149,11 +153,11 @@ final class AuthView : Control {
     }
     
     func showLanguage(title: String, callback: @escaping()->Void) {
-        let current: TitleButton
+        let current: TextButton
         if let view = self.continueOn {
             current = view
         } else {
-            current = TitleButton()
+            current = TextButton()
             self.continueOn = current
             self.addSubview(current, positioned: .below, relativeTo: back)
             current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -284,7 +288,8 @@ class AuthController : GenericViewController<AuthView> {
     private let email_recovery_c: Auth_EmailController
     private let awaiting_reset_c: Auth_AwaitingResetController
     private let signup_c: Auth_SignupController
-    
+    private let word_c: Auth_WordController
+
     private let otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])
     
     init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
@@ -300,7 +305,8 @@ class AuthController : GenericViewController<AuthView> {
         self.email_recovery_c = .init(frame: NSMakeRect(0, 0, 380, 300))
         self.awaiting_reset_c = .init(frame: NSMakeRect(0, 0, 380, 300))
         self.signup_c = .init(frame: NSMakeRect(0, 0, 380, 300))
-        
+        self.word_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+
         self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
         #if !APP_STORE
         updateController = UpdateTabController(sharedContext)
@@ -309,7 +315,9 @@ class AuthController : GenericViewController<AuthView> {
         bar = .init(height: 0)
     }
     
-    
+    func applyExternalLoginCode(_ code: String) {
+        self.code_entry_c.applyExternalLoginCode(code)
+    }
 
     deinit {
         disposable.dispose()
@@ -355,7 +363,7 @@ class AuthController : GenericViewController<AuthView> {
             guard let window = self?.window, let account = self?.account else {
                 return
             }
-            confirm(for: window, header: appName, information: strings().loginNewCancelConfirm, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
+            verifyAlert_button(for: window, header: appName, information: strings().loginNewCancelConfirm, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { _ in
                 
                 updateState { current in
                     var current = current
@@ -430,7 +438,6 @@ class AuthController : GenericViewController<AuthView> {
                     }
                 }))
             }
-            
         }
         
         
@@ -500,9 +507,10 @@ class AuthController : GenericViewController<AuthView> {
             updateProxy()
         }))
         
-        let delaySignal = unauthorizedConfiguration(accountManager: self.sharedContext.accountManager) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue
+
+        let delaySignal = engine.auth.test() |> take(1) |> timeout(10, queue: .mainQueue(), alternate: .fail("timeout")) |> deliverOnMainQueue
         
-        delayDisposable.set(delaySignal.start(error: {
+        delayDisposable.set(delaySignal.start(error: { _ in
             forceHide = false
             updateProxy()
         }))
@@ -550,9 +558,11 @@ class AuthController : GenericViewController<AuthView> {
         self.exportTokenDisposable.set(nil)
         self.tokenEventsDisposable.set(nil)
 
-        
-        guard let currentState = state.state else {
-            return
+        var currentState: UnauthorizedAccountStateContents
+        if let state = state.state {
+            currentState = state
+        } else {
+            currentState = .empty
         }
         
         if state.lockAfterLogin {
@@ -573,8 +583,8 @@ class AuthController : GenericViewController<AuthView> {
                             }
                         })
                         
-                        let timestamp = Int32(Date().timeIntervalSince1970)
-                        let timeout = max(5, token.validUntil - timestamp)
+                        let timestamp = Int32(account.network.globalTime)
+                        let timeout = min(max(5, token.validUntil - timestamp), 30)
                         self.exportTokenDisposable.set((Signal<Never, NoError>.complete()
                             |> delay(Double(timeout), queue: .mainQueue())).start(completed: refreshToken))
                         
@@ -630,92 +640,184 @@ class AuthController : GenericViewController<AuthView> {
                     }
                 }, takeNext: { [weak self] value in
                     if let window = self?.window {
-                        confirm(for: window, information: strings().authLoginConfirmPhone(formatPhoneNumber(value)), okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                        verifyAlert_button(for: window, information: strings().authLoginConfirmPhone(formatPhoneNumber(value)), ok: strings().alertYes, cancel: strings().alertNO, successHandler: { [weak self] _ in
                             self?.sendCode(value, updateState: updateState)
                         })
                     }
                 })
-            case let .confirmationCodeEntry(number, type, _, timeout, nextType, _):
-                controller = code_entry_c
+            case let .confirmationCodeEntry(number, type, _, timeout, nextType, _, _, _):
+                switch type {
+                case .word,.phrase:
+                    controller = word_c
+                default:
+                    controller = code_entry_c
+                }
                 phone_number_c.set(number: number)
-                code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
-                    updateState { current in
-                        var current = current
-                        current.locked = false
-                        current.codeError = nil
-                        return current
-                    }
-                    if let account = self?.account {
-                        _ = resetAuthorizationState(account: account, to: .empty).start()
-                    }
-                }, takeNext: { [weak self] code in
-                    guard let account = self?.account else {
-                        return
-                    }
-                    updateState { current in
-                        var current = current
-                        current.locked = true
-                        return current
-                    }
-                    
-                    let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
-                        return nil
-                    })
-                    |> deliverOnMainQueue
-                    
-                    _ = signal.start(next: { value in
-                        updateState { current in
-                            var current = current
-                            current.locked = false
-                            current.codeError = nil
-                            current.lockAfterLogin = false
-                            return current
-                        }
-                        switch value {
-                        case let .signUp(data):
-                            _ = beginSignUp(account: account, data: data).start()
-                        case .loggedIn:
-                            break
-                        }
-                    }, error: { [weak self] error in
+                switch type {
+                case .word, .phrase:
+                    word_c.update(locked: state.locked, error: state.codeError, phonenumber: number, timeout: timeout, codeType: type, nextType: nextType, takeNext: { [weak self] code in
                         guard let account = self?.account else {
                             return
                         }
                         updateState { current in
                             var current = current
-                            if case .codeExpired = error {
-                                current.codeError = nil
-                                current.error = .timeout
-                            } else {
-                                current.codeError = error
-                                current.error = nil
-                            }
-                            current.locked = false
+                            current.locked = true
                             return current
                         }
-                        switch error {
-                        case .codeExpired:
+                        
+                        let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                            return nil
+                        })
+                        |> deliverOnMainQueue
+                        
+                        _ = signal.start(next: { value in
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                current.codeError = nil
+                                current.lockAfterLogin = false
+                                return current
+                            }
+                            switch value {
+                            case let .signUp(data):
+                                _ = beginSignUp(account: account, data: data).start()
+                            case .loggedIn:
+                                break
+                            }
+                        }, error: { [weak self] error in
+                            guard let account = self?.account else {
+                                return
+                            }
+                            updateState { current in
+                                var current = current
+                                if case .codeExpired = error {
+                                    current.codeError = nil
+                                    current.error = .timeout
+                                } else {
+                                    current.codeError = error
+                                    current.error = nil
+                                }
+                                current.locked = false
+                                return current
+                            }
+                            switch error {
+                            case .codeExpired:
+                                _ = resetAuthorizationState(account: account, to: .empty).start()
+                            default:
+                                break
+                            }
+                        })
+                    }, takeError: {
+                        updateState { current in
+                            var current = current
+                            current.codeError = nil
+                            return current
+                        }
+                    }, makeError: { error in
+                        updateState { current in
+                            var current = current
+                            current.codeError = error
+                            return current
+                        }
+                    }, takeReset: {
+                        
+                    }, takeResend: { [weak self] in
+                        guard let window = self?.window else {
+                            return
+                        }
+                        verifyAlert_button(for: window, information: L10n.loginSmsAppErr, cancel: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                                           
+                        }, cancelHandler:{
+                            execute(inapp: .external(link: "https://telegram.org", false))
+                        })
+                    }, takeNextType: { [weak self] in
+                        guard let account = self?.account else {
+                            return
+                        }
+                        //accountManager: sharedContext.accountManager, account: account
+                        _ = resendAuthorizationCode(accountManager: sharedContext.accountManager, account: account, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, firebaseSecretStream: .single([:])).startStandalone()
+                    })
+                default:
+                    code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            current.codeError = nil
+                            return current
+                        }
+                        if let account = self?.account {
                             _ = resetAuthorizationState(account: account, to: .empty).start()
-                        default:
-                            break
+                        }
+                    }, takeNext: { [weak self] code in
+                        guard let account = self?.account else {
+                            return
+                        }
+                        updateState { current in
+                            var current = current
+                            current.locked = true
+                            return current
+                        }
+                        
+                        let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                            return nil
+                        })
+                        |> deliverOnMainQueue
+                        
+                        _ = signal.start(next: { value in
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                current.codeError = nil
+                                current.lockAfterLogin = false
+                                return current
+                            }
+                            switch value {
+                            case let .signUp(data):
+                                _ = beginSignUp(account: account, data: data).start()
+                            case .loggedIn:
+                                break
+                            }
+                        }, error: { [weak self] error in
+                            guard let account = self?.account else {
+                                return
+                            }
+                            updateState { current in
+                                var current = current
+                                if case .codeExpired = error {
+                                    current.codeError = nil
+                                    current.error = .timeout
+                                } else {
+                                    current.codeError = error
+                                    current.error = nil
+                                }
+                                current.locked = false
+                                return current
+                            }
+                            switch error {
+                            case .codeExpired:
+                                _ = resetAuthorizationState(account: account, to: .empty).start()
+                            default:
+                                break
+                            }
+                        })
+                    }, takeResend: { [weak self] in
+                        guard let window = self?.window else {
+                            return
+                        }
+                        verifyAlert_button(for: window, information: L10n.loginSmsAppErr, cancel: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                                           
+                        }, cancelHandler:{
+                            execute(inapp: .external(link: "https://telegram.org", false))
+                        })
+                    }, takeError: {
+                        updateState { current in
+                            var current = current
+                            current.codeError = nil
+                            return current
                         }
                     })
-                }, takeResend: { [weak self] in
-                    guard let window = self?.window else {
-                        return
-                    }
-                    confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
-                                       
-                    }, cancelHandler:{
-                        execute(inapp: .external(link: "https://telegram.org", false))
-                    })
-                }, takeError: {
-                    updateState { current in
-                        var current = current
-                        current.codeError = nil
-                        return current
-                    }
-                })
+                }
+                
             case let .passwordEntry(hint, number, _, suggestReset, _):
                 controller = password_entry_c
                 if let number = number {
@@ -768,7 +870,7 @@ class AuthController : GenericViewController<AuthView> {
                     if reset {
                         let info = L10n.loginResetAccountDescription
                         let ok = L10n.loginResetAccount
-                        confirm(for: window, information: info, okTitle: ok, successHandler: { [weak self] _ in
+                        verifyAlert_button(for: window, information: info, ok: ok, successHandler: { [weak self] _ in
                             guard let account = self?.account else {
                                 return
                             }
@@ -810,7 +912,7 @@ class AuthController : GenericViewController<AuthView> {
                     guard let window = self?.window, let account = self?.account else {
                         return
                     }
-                    confirm(for: window, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in
+                    verifyAlert_button(for: window, information: L10n.loginResetAccountDescription, ok: L10n.loginResetAccount, successHandler: { _ in
                         _ = showModalProgress(signal: performAccountReset(account: account) |> deliverOnMainQueue, for: window).start(error: { error in
                             alert(for: window, info: L10n.unknownError)
                         })
@@ -861,7 +963,7 @@ class AuthController : GenericViewController<AuthView> {
                     
                     let signal = performAccountReset(account: engine.account) |> deliverOnMainQueue
 
-                    confirm(for: window, header: appName, information: strings().loginNewEmailAlert, okTitle: strings().loginNewEmailAlertReset, cancelTitle: strings().alertCancel, successHandler: { _ in
+                    verifyAlert_button(for: window, header: appName, information: strings().loginNewEmailAlert, ok: strings().loginNewEmailAlertReset, cancel: strings().alertCancel, successHandler: { _ in
                         
                         updateState { current in
                             var current = current
@@ -938,6 +1040,7 @@ class AuthController : GenericViewController<AuthView> {
         }
     }
     
+    
     private func sendCode(_ phoneNumber: String, updateState:@escaping((State) -> State) -> Void) {
         guard let window = self.window else {
             return
@@ -946,7 +1049,7 @@ class AuthController : GenericViewController<AuthView> {
         let logInNumber = formatPhoneNumber(phoneNumber)
         for (number, accountId, isTestingEnvironment) in self.otherAccountPhoneNumbers.1 {
             if isTestingEnvironment == self.account.testingEnvironment && formatPhoneNumber(number) == logInNumber {
-                confirm(for: window, information: strings().loginPhoneNumberAlreadyAuthorized, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
+                verifyAlert_button(for: window, information: strings().loginPhoneNumberAlreadyAuthorized, ok: strings().modalOK, cancel: "", option: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
                     switch result {
                     case .thrid:
                         _ = (sharedContext.accountManager.transaction({ transaction in
@@ -967,8 +1070,7 @@ class AuthController : GenericViewController<AuthView> {
             current.locked = true
             return current
         }
-
-        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false)
+        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, pushNotificationConfiguration: nil, firebaseSecretStream: .never(), syncContacts: false, forcedPasswordSetupNotice: { _ in return nil })
                                        |> map(Optional.init)
                                        |> mapError(Optional.init)
                                        |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
@@ -977,14 +1079,19 @@ class AuthController : GenericViewController<AuthView> {
                                        |> deliverOnMainQueue
         
 
-        self.actionDisposable.set(signal.start(next: { [weak self] account in
+        self.actionDisposable.set(signal.start(next: { [weak self] result in
             updateState { current in
                 var current = current
                 current.error = nil
                 current.locked = false
                 return current
             }
-            self?.account = account
+            switch result {
+            case let .sentCode(account):
+                self?.account = account
+            default:
+                break
+            }
         }, error: { [weak self] error in
             if let error = error {
                 updateState { current in
@@ -994,7 +1101,7 @@ class AuthController : GenericViewController<AuthView> {
                     return current
                 }
             } else {
-                confirm(for: window, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, okTitle: strings().loginConnectionErrorTryAgain, thridTitle: strings().loginConnectionErrorUseProxy, successHandler: { [weak self] result in
+                verifyAlert_button(for: window, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, ok: strings().loginConnectionErrorTryAgain, option: strings().loginConnectionErrorUseProxy, successHandler: { [weak self] result in
                     switch result {
                     case .basic:
                         self?.sendCode(phoneNumber, updateState: updateState)
@@ -1089,6 +1196,8 @@ class AuthController : GenericViewController<AuthView> {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        NSApp.activate(ignoringOtherApps: true)
+        
     }
     
 }

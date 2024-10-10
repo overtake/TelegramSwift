@@ -13,6 +13,8 @@ import TelegramCore
 import Postbox
 import QuartzCore
 import AppKit
+import TelegramMedia
+
 
 final class PremiumStatusControl : Control {
     private var imageLayer: SimpleLayer?
@@ -21,6 +23,7 @@ final class PremiumStatusControl : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         userInteractionEnabled = false
+        layer?.masksToBounds = false
     }
     
     required init?(coder: NSCoder) {
@@ -29,26 +32,42 @@ final class PremiumStatusControl : Control {
     
     private let disposable = MetaDisposable()
     
-    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = false) {
+    private var lite: Bool = false
+    
+    override func layout() {
+        super.layout()
+        var offset: CGFloat = 0
+        if let imageLayer = imageLayer {
+            var rect = focus(imageLayer.frame.size)
+            rect.origin.x = 0
+            imageLayer.frame = rect
+            offset += rect.maxX - 7
+        }
+        if let animateLayer = self.animateLayer {
+            var rect = focus(animateLayer.frame.size)
+            rect.origin.x = offset
+            animateLayer.frame = rect
+        }
+    }
+    
+    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = true, isLite: Bool) {
         
         
-        
+        self.lite = isLite
         
         if let size = PremiumStatusControl.controlSize(peer, isBig) {
             setFrameSize(size)
         }
         self.layer?.opacity = color != nil && peer.emojiStatus != nil ? 0.4 : 1
 
-        if peer.isFake || peer.isScam || peer.isVerified || (peer.isPremium && peer.emojiStatus == nil)  {
-            if let animateLayer = animateLayer {
-                performSublayerRemoval(animateLayer, animated: animated)
-                self.animateLayer = nil
-            }
+        if peer.isFake || peer.isScam || peer.isPremium || peer.isVerified, (peer.isPremium && peer.emojiStatus == nil) || !peer.isPremium || peer.isFake || peer.isScam {
+
             let current: SimpleLayer
             if let layer = self.imageLayer {
                 current = layer
             } else {
                 current = SimpleLayer()
+                current.masksToBounds = false
                 self.imageLayer = current
                 self.layer?.addSublayer(current)
             }
@@ -61,39 +80,32 @@ final class PremiumStatusControl : Control {
                 image = isSelected ? theme.icons.fakeActive : theme.icons.fake
             } else if peer.isPremium {
                 if isBig {
-                    image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
-                } else {
-                    if let color = color, !isSelected {
-                        let images = [
-                            theme.icons.chat_premium_status_red,
-                            theme.icons.chat_premium_status_orange,
-                            theme.icons.chat_premium_status_violet,
-                            theme.icons.chat_premium_status_green,
-                            theme.icons.chat_premium_status_cyan,
-                            theme.icons.chat_premium_status_light_blue,
-                            theme.icons.chat_premium_status_blue
-                        ]
-                        let colors = [
-                            theme.colors.groupPeerNameRed,
-                            theme.colors.groupPeerNameOrange,
-                            theme.colors.groupPeerNameViolet,
-                            theme.colors.groupPeerNameGreen,
-                            theme.colors.groupPeerNameCyan,
-                            theme.colors.groupPeerNameLightBlue,
-                            theme.colors.groupPeerNameBlue
-                        ]
-                        if let index = colors.firstIndex(where: { $0 == color }) {
-                            image = images[index]
-                        } else {
-                            image = theme.icons.chat_premium_status_blue
-                        }
-                        
+                    let color = color ?? theme.colors.accent
+                    if isSelected {
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(color.rgb + 1000), {
+                            generatePremium(false, color: under)
+                        })
                     } else {
-                        if isBig {
-                            image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
-                        } else {
-                            image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
-                        }
+                        image = theme.resourceCache.image(Int32(color.rgb + 1001), {
+                            generatePremium(false, color: color)
+                        })
+                    }
+                } else {
+                    if isSelected {
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(under.rgb + 1003), {
+                            return generatePremium(false, color: under, small: true)
+                        })
+                    } else if let color = color {
+                        image = theme.resourceCache.image(Int32(color.rgb + 1002), {
+                            return generatePremium(false, color: color, small: true)
+                        })
+                    } else {
+                        let under = theme.colors.accent
+                        image = theme.resourceCache.image(Int32(under.rgb + 1004), {
+                            return generatePremium(false, color: under, small: true)
+                        })
                     }
                 }
             } else {
@@ -101,24 +113,27 @@ final class PremiumStatusControl : Control {
             }
             if let image = image {
                 current.contents = image
+                current.contentsScale = System.backingScale
+                current.contentsGravity = .resizeAspectFill
                 var rect = focus(image.backingSize)
                 rect.origin.x = 0
                 current.frame = rect
             } else {
                 current.contents = nil
             }
-        } else if let status = peer.emojiStatus {
-            if let imageLayer = imageLayer {
-                performSublayerRemoval(imageLayer, animated: animated, scale: true)
-                self.imageLayer = nil
-            }
+        } else if let imageLayer = imageLayer {
+            performSublayerRemoval(imageLayer, animated: animated, scale: true)
+            self.imageLayer = nil
+        }
+        
+        if let status = peer.emojiStatus, !peer.isFake && !peer.isScam {
             let fileId: Int64 = status.fileId
             let current: InlineStickerItemLayer
             
             let getColors:(TelegramMediaFile?)->[LottieColor] = { file in
                 var colors: [LottieColor] = []
                 if let file = file {
-                    if isDefaultStatusesPackId(file.emojiReference) {
+                    if isDefaultStatusesPackId(file.emojiReference) || file.paintToText {
                         if isSelected {
                             colors.append(.init(keyPath: "", color: theme.colors.underSelectedColor))
                         } else {
@@ -135,16 +150,16 @@ final class PremiumStatusControl : Control {
                 if layer.file?.fileId.id == fileId {
                     if !getColors(layer.file).isEmpty {
                         updated = true
-                    } 
+                    }
                 }
             }
             
             if let layer = self.animateLayer, layer.file?.fileId.id == fileId && !updated {
                 current = layer
                 if isDefaultStatusesPackId(layer.file?.emojiReference), color != nil {
-                    self.layer?.opacity = 0.4
+                    self.layer?.opacity = Float(alphaValue)
                 } else {
-                    self.layer?.opacity = 1.0
+                    self.layer?.opacity = Float(alphaValue)
                 }
                 
             } else {
@@ -159,11 +174,14 @@ final class PremiumStatusControl : Control {
                 }
                 current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig && !playTwice ? .loop : .playCount(2), checkStatus: true, getColors: getColors)
                 
-                current.fileDidUpdate = { file in
+                current.fileDidUpdate = { [weak self] file in
+                    guard let `self` = self else {
+                        return
+                    }
                     if isDefaultStatusesPackId(file?.emojiReference), color != nil {
                         self.layer?.opacity = 0.4
                     } else {
-                        self.layer?.opacity = 1.0
+                        self.layer?.opacity = Float(self.alphaValue)
                     }
                 }
                 current.fileDidUpdate?(current.file)
@@ -178,6 +196,9 @@ final class PremiumStatusControl : Control {
                     current.animateScale(from: 0.1, to: 1, duration: 0.2)
                 }
             }
+        } else if let animateLayer = animateLayer {
+            performSublayerRemoval(animateLayer, animated: animated)
+            self.animateLayer = nil
         }
         
         self.statusSelected = isSelected
@@ -185,9 +206,11 @@ final class PremiumStatusControl : Control {
         self.updateAnimatableContent()
         self.updateListeners()
         
+        needsLayout = true
         
-        let updatedPeer = account.postbox.peerView(id: peer.id) |> map {
-            return peerViewMainPeer($0)
+        
+        let updatedPeer = account.postbox.combinedView(keys: [.basicPeer(peer.id)]) |> map { view in
+            return (view.views[.basicPeer(peer.id)] as? BasicPeerView)?.peer
         }
         |> filter { $0 != nil }
         |> map { $0! }
@@ -195,7 +218,7 @@ final class PremiumStatusControl : Control {
         
         self.disposable.set(updatedPeer.start(next: { [weak self] updated in
             if !updated.isEqual(peer) {
-                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice)
+                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite)
             }
         }))
     }
@@ -212,7 +235,7 @@ final class PremiumStatusControl : Control {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            layer.isPlayable = NSIntersectsRect(layer.frame, superview.visibleRect) && isKeyWindow
+            layer.isPlayable = NSIntersectsRect(layer.frame, superview.visibleRect) && isKeyWindow && !lite
         }
     }
     
@@ -229,8 +252,8 @@ final class PremiumStatusControl : Control {
     }
     
     deinit {
-        NotificationCenter.default.removeObserver(self)
         self.disposable.dispose()
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func updateListeners() {
@@ -249,15 +272,16 @@ final class PremiumStatusControl : Control {
     
     static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, playTwice: Bool = false, color: NSColor? = nil, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
         var current: PremiumStatusControl? = nil
-        if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium {
+        if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium || peer.emojiStatus != nil {
             current = cached ?? PremiumStatusControl(frame: .zero)
         }
-        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice)
+                
+        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite(.emoji))
         return current
     }
     
     static func hasControl(_ peer: Peer) -> Bool {
-        return peer.isVerified || peer.isScam || peer.isFake || peer.isPremium
+        return peer.isVerified || peer.isScam || peer.isFake || peer.isPremium || peer.emojiStatus != nil
     }
     static func controlSize(_ peer: Peer, _ isBig: Bool) -> NSSize? {
         if hasControl(peer) {
@@ -265,7 +289,10 @@ final class PremiumStatusControl : Control {
             if peer.isScam || peer.isFake {
                 addition.width += 20
             }
-            return isBig ? NSMakeSize(25 + addition.width, 25 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
+            if peer.isVerified && peer.emojiStatus != nil {
+                addition.width += 18
+            }
+            return isBig ? NSMakeSize(20 + addition.width, 20 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
         } else {
             return nil
         }

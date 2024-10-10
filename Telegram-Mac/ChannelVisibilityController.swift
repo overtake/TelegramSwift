@@ -278,7 +278,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             var peers = importers?.importers.map { $0.peer } ?? []
             peers = Array(peers.prefix(3))
             
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal, menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal(hasUsage: true), menuItems: {
                 
                 var items:[ContextMenuItem] = []
                 if let link = link {
@@ -321,10 +321,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 text = format.description
                 color = theme.colors.redUI
             case let .availability(availability):
-                text = availability.description(for: addressName)
+                text = availability.description(for: addressName, target: .channel)
                 switch availability {
                 case .available:
                     color = theme.colors.accent
+                case .purchaseAvailable:
+                    color = theme.colors.grayText
                 default:
                     color = theme.colors.redUI
                 }
@@ -332,13 +334,18 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 break
             }
             
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { link in
+                if link == "fragment" {
+                    let link: String = "fragment.com/username/\(addressName)"
+                    execute(inapp: inApp(for: link.nsstring))
+                }
+            }), textColor: color, viewType: viewType)
         case let .increaseLimit(_, counts, viewType):
             return PremiumIncreaseLimitItem(initialSize, stableId: stableId, context: arguments.context, type: .publicLink, counts: counts, viewType: viewType, callback: arguments.premiumCallback)
         case let .existingLinksInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .existingLinkPeerItem(_, _, peer, _, _, viewType):
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 20, right: 20), interactionType:.deletable(onRemove: { peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):
@@ -380,7 +387,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 arguments.toggleUsername(username)
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
  
     }
@@ -651,42 +658,61 @@ private func entries(arguments: Arguments, state: State) -> [ChannelVisibilityEn
     }
     
     if let peer = state.peer?.peer  {
+      
+        
+       
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
         
         if let channel = peer as? TelegramChannel, channel.isSupergroup {
             
-            let mode: CurrentChannelJoinToSend
-            if let value = state.joinToSend {
-                mode = value
-            } else {
-                if channel.flags.contains(.joinToSend) {
-                    mode = .members
-                } else {
-                    mode = .everyone
-                }
+            
+            
+            var isDiscussion = false
+            if let cachedData = state.cachedData?.data as? CachedChannelData, case let .known(peerId) = cachedData.linkedDiscussionPeerId, peerId != nil {
+                isDiscussion = true
             }
-            entries.append(.writeHeader(sectionId: sectionId, strings().channelVisibilityMessagesWho, .textTopItem))
-            entries.append(.writeEveryone(sectionId: sectionId, mode == .everyone, .firstItem))
-            entries.append(.writeOnlyMembers(sectionId: sectionId, mode == .members, .lastItem))
             
-            
-            if mode == .members {
+            if  (state.selectedType == .publicChannel || isDiscussion || (state.selectedType == nil && channel.addressName != nil)) {
+                
+                let mode: CurrentChannelJoinToSend
+                if let value = state.joinToSend {
+                    mode = value
+                } else {
+                    if channel.flags.contains(.joinToSend) {
+                        mode = .members
+                    } else {
+                        mode = .everyone
+                    }
+                }
+                
+                if isDiscussion {
+                    entries.append(.writeHeader(sectionId: sectionId, strings().channelVisibilityMessagesWho, .textTopItem))
+                    entries.append(.writeEveryone(sectionId: sectionId, mode == .everyone, .firstItem))
+                    entries.append(.writeOnlyMembers(sectionId: sectionId, mode == .members, .lastItem))
+                }
+                
+                
+                if mode == .members || !isDiscussion {
+                    if isDiscussion {
+                        entries.append(.section(sectionId: sectionId))
+                        sectionId += 1
+                    }
+                    
+                    let approve: Bool
+                    if let value = state.approveMembers {
+                        approve = value
+                    } else {
+                        approve = channel.flags.contains(.requestToJoin)
+                    }
+                    entries.append(.approveNewMembers(sectionId: sectionId, approve, .singleItem))
+                    entries.append(.approveNewMembersInfo(sectionId: sectionId, strings().channelVisibilityMessagesApproveInfo, .textBottomItem))
+                }
+                
                 entries.append(.section(sectionId: sectionId))
                 sectionId += 1
-                
-                let approve: Bool
-                if let value = state.approveMembers {
-                    approve = value
-                } else {
-                    approve = channel.flags.contains(.requestToJoin)
-                }
-                entries.append(.approveNewMembers(sectionId: sectionId, approve, .singleItem))
-                entries.append(.approveNewMembersInfo(sectionId: sectionId, strings().channelVisibilityMessagesApproveInfo, .textBottomItem))
             }
             
-            entries.append(.section(sectionId: sectionId))
-            sectionId += 1
         }
         
                
@@ -895,7 +921,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         let addressNameAssignment: Signal<[Peer]?, NoError> = .single(nil) |> then(context.engine.peers.channelAddressNameAssignmentAvailability(peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
             if case .addressNameLimitReached = result {
                 return context.engine.peers.adminedPublicChannels()
-                    |> map { Optional($0) }
+                |> map { Optional($0.map { $0.peer._asPeer() }) }
             } else {
                 return .single([])
             }
@@ -949,8 +975,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 current.revokingPeerId = peerId
                 return current
             }
-            self?.revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
-                if !result {
+            self?.revokeAddressNameDisposable.set((verifyAlertSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+                if result == nil {
                     return .fail(.generic)
                 } else {
                     return .single(true)
@@ -975,7 +1001,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             copyToClipboard(link)
         }, revokeLink: {
-            confirm(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId), for: context.window).start()
             })
         }, share: { link in
@@ -1036,7 +1062,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             let ok: String = value ? activate_ok : deactivate_ok
             
             
-            confirm(for: context.window, header: title, information: info, okTitle: ok, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
                 _ = context.engine.peers.toggleAddressNameActive(domain: .peer(peerId), name: username.username, active: value).start()
                 
                 updateState { current in
@@ -1217,7 +1243,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                 } else {
                                     text = strings().channelVisibilityConfirmMakePrivateGroup(address)
                                 }
-                                csignal = confirmSignal(for: context.window, information: text) |> filter { $0 } |> take(1) |> map { _ in
+                                csignal = verifyAlertSignal(for: context.window, information: text) |> filter { $0 == .basic } |> take(1) |> map { _ in
                                     
                                     updateState { current in
                                         var current = current

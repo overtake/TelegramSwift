@@ -26,25 +26,17 @@ open class TableAnimationInterface: NSObject {
         self.animate = animate
     }
 
-    public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem], previousRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
+    @discardableResult public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem], previousRange: NSRange = NSMakeRange(NSNotFound, 0)) -> [AnimateItem] {
         
         var height:CGFloat = 0
         
-        table.tile()
-       
-        
-        let contentView = table.contentView
+        let contentView = table.clipView
         let bounds = contentView.bounds
         
         var scrollBelow = self.scrollBelow || (bounds.minY - height) < 0
         var checkBelowAfter: Bool = false
         
-        if scrollBelow {
-            contentView.scroll(to: NSMakePoint(0, min(0, documentOffset.y)))
-            contentView.layer?.removeAllAnimations()
-        } else {
-            checkBelowAfter = true
-        }
+       
         
         var range:NSRange = table.visibleRows(height)
         
@@ -73,13 +65,20 @@ open class TableAnimationInterface: NSObject {
         }
         
         if previousRange.length == 0  {
-            return
+            return []
         }
         
         range = table.visibleRows(height)
         
         if added.isEmpty && removed.isEmpty {
-            return
+            return []
+        }
+        
+        if scrollBelow, documentOffset.y >= 0 {
+            table.tile()
+            contentView.updateBounds(to: NSMakePoint(0, min(0, documentOffset.y)))
+        } else {
+            checkBelowAfter = true
         }
         
         var animatedItems:[AnimateItem] = []
@@ -88,7 +87,7 @@ open class TableAnimationInterface: NSObject {
       
         if height - bounds.height < table.frame.height || bounds.minY > height, scrollBelow {
             
-            contentView.scroll(to: NSMakePoint(0, min(0, documentOffset.y)))
+            contentView.updateBounds(to: NSMakePoint(0, min(0, documentOffset.y)))
             
             if range.length >= added[0].index {
                 for idx in added[0].index ..< range.length {
@@ -134,6 +133,7 @@ open class TableAnimationInterface: NSObject {
         if !animatedItems.isEmpty {
             self.animate(animatedItems)
         }
+        return animatedItems
     }
     
     public func scroll(table:TableView, from:NSRect, to:NSRect) -> Void {

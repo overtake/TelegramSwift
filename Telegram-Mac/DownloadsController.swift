@@ -161,28 +161,28 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
     
     let interaction = ChatInteraction(chatLocation: .peer(.init(0)), context: context)
 
-    interaction.focusMessageId = { _, messageId, animated in
+    interaction.focusMessageId = { _, focusTarget, animated in
         let navigation = context.bindings.rootNavigation()
         if let current = navigation.controller as? ChatController {
-            if current.chatInteraction.peerId == messageId.peerId {
-                current.chatInteraction.focusMessageId(nil, messageId, .center(id: AnyHashable(0), innerId: nil, animated: true, focus: .init(focus: true, action: nil), inset: 0))
+            if current.chatInteraction.peerId == focusTarget.messageId.peerId {
+                current.chatInteraction.focusMessageId(nil, focusTarget, .center(id: AnyHashable(0), innerId: nil, animated: true, focus: .init(focus: true, action: nil), inset: 0))
             } else {
-                navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+                navigation.push(ChatController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
             }
         } else {
-            navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+            navigation.push(ChatController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
         }
         
     }
-    interaction.forwardMessages = { ids in
-        showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: ids)), for: context.window)
+    interaction.forwardMessages = { messages in
+        showModal(with: ShareModalController(ForwardMessagesObject(context, messages: messages)), for: context.window)
     }
     interaction.deleteMessages = { ids in
         let signal = context.account.postbox.transaction { transaction -> [Message] in
             return ids.compactMap { transaction.getMessage($0) }
         } |> mapToSignal { messages ->Signal<Float, NoError> in
             let ids = messages.compactMap { $0.file?.resource.id }
-            return context.account.postbox.mediaBox.removeCachedResources(Set(ids), force: true, notify: true)
+            return context.account.postbox.mediaBox.removeCachedResources(ids, force: true, notify: true)
         }
         _ = signal.start()
     }
@@ -251,7 +251,7 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
     }
     
     
-    controller.didLoaded = { controller, _ in
+    controller.didLoad = { controller, _ in
         controller.tableView.getBackgroundColor = {
             return theme.colors.background
         }

@@ -29,7 +29,9 @@ class GifKeyboardTabRowItem: TableRowItem {
         return _stableId
     }
     let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, selected: Bool, context: AccountContext, source: Source, select: @escaping()->Void) {
+    let theme: PresentationTheme
+    init(_ initialSize: NSSize, stableId: AnyHashable, selected: Bool, context: AccountContext, source: Source, select: @escaping()->Void, theme: PresentationTheme) {
+        self.theme = theme
         self.selected = selected
         self.source = source
         self.select = select
@@ -87,11 +89,18 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
         }
     }
     
 
+    override var isEmojiLite: Bool {
+        if let item = item as? GifKeyboardTabRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
+    }
+    
     override var backdorColor: NSColor {
         return .clear
     }
@@ -144,7 +153,7 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
             current.frame = CGRect(origin: NSMakePoint(4, 4), size: NSMakeSize(28, 28))
         }
         
-        selectView.backgroundColor = theme.colors.grayBackground
+        selectView.backgroundColor = item.theme.colors.grayBackground
         selectView.change(opacity: item.selected ? 1 : 0, animated: animated)
         
         control.frame = bounds

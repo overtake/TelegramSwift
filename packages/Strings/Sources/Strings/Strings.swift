@@ -68,6 +68,19 @@ public extension String {
             return String.init(format: "%02d:%02d", m, s)
         }
     }
+    
+    static func durationTransformed(elapsed: Double) -> String {
+        let elapsed = Int(elapsed)
+        let h = elapsed / 3600
+        let m = (elapsed / 60) % 60
+        let s = elapsed % 60
+        
+        if h > 0 {
+            return String.init(format: "%d:%02d:%02d", h, m, s)
+        } else {
+            return String.init(format: "%02d:%02d", m, s)
+        }
+    }
 }
 
 
@@ -89,16 +102,26 @@ public extension String {
         for skin in emoji.emojiSkinToneModifiers {
             emoji = emoji.replacingOccurrences(of: skin, with: "")
         }
+        emoji = String(emoji.unicodeScalars.filter {
+            $0 != "\u{fe0f}"
+        })
         return emoji
     }
     
     func emojiWithSkinModifier(_ modifier: String) -> String {
-        switch nsstring.length {
-        case 5:
-            return nsstring.substring(to: 2) + modifier + nsstring.substring(from: 2)
-        default:
-            return self + modifier
+        var string = ""
+        var installed: Bool = false
+        for scalar in self.unicodeScalars {
+            if scalar == UnicodeScalar.ZeroWidthJoiner {
+                string.append(modifier)
+                installed = true
+            }
+            string.unicodeScalars.append(scalar)
         }
+        if !installed {
+            string.append(modifier)
+        }
+        return string
     }
     
     var emojiSkin: String {
@@ -145,8 +168,13 @@ public extension String {
             return false
         }
         
-        let modified = self.emojiUnmodified + self.emojiSkinToneModifiers[0]
-        return modified.glyphCount == 1
+        
+        let modified = self.basicEmoji.0.strippedEmoji + self.emojiSkinToneModifiers[0]
+        if modified.glyphCount == 1 {
+            return true
+        }
+        
+        return self.emojiWithSkinModifier(self.emojiSkinToneModifiers[0]).glyphCount == 1
     }
     
     var glyphCount: Int {
@@ -197,7 +225,7 @@ public extension String {
     var emojis: [String] {
         var emojis: [String] = []
         self.enumerateSubstrings(in: self.startIndex ..< self.endIndex, options: .byComposedCharacterSequences) { substring, _, _, _ in
-            if let substring = substring {
+            if let substring = substring, substring.isSingleEmoji {
                 emojis.append(substring)
             }
         }
@@ -298,4 +326,5 @@ public extension UnicodeScalar {
     static var ZeroWidthJoiner = UnicodeScalar(0x200D)!
     static var VariationSelector = UnicodeScalar(0xFE0F)!
 }
+
 

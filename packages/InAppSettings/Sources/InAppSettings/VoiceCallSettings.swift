@@ -93,7 +93,7 @@ public struct VoiceCallSettings: Codable, Equatable {
     public let noiseSuppression: Bool
     public let tooltips:[Tooltip]
     public static var defaultSettings: VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: nil, cameraInputDeviceId: nil, audioOutputDeviceId: nil, mode: .always, pushToTalk: nil, pushToTalkSoundEffects: false, noiseSuppression: true, tooltips: [.camera])
+        return VoiceCallSettings(audioInputDeviceId: nil, cameraInputDeviceId: nil, audioOutputDeviceId: nil, mode: .none, pushToTalk: nil, pushToTalkSoundEffects: false, noiseSuppression: true, tooltips: [.camera])
     }
     
     public init(audioInputDeviceId: String?, cameraInputDeviceId: String?, audioOutputDeviceId: String?, mode: VoiceChatInputMode, pushToTalk: PushToTalkValue?, pushToTalkSoundEffects: Bool, noiseSuppression: Bool, tooltips: [Tooltip]) {
@@ -114,8 +114,8 @@ public struct VoiceCallSettings: Codable, Equatable {
         self.audioInputDeviceId = try container.decodeIfPresent(String.self, forKey: "ai")
         self.cameraInputDeviceId = try container.decodeIfPresent(String.self, forKey: "ci")
         self.audioOutputDeviceId = try container.decodeIfPresent(String.self, forKey: "ao")
-        self.pushToTalk = try container.decodeIfPresent(PushToTalkValue.self, forKey: "ptt3")
-        self.mode = VoiceChatInputMode(rawValue: try container.decodeIfPresent(Int32.self, forKey: "m1") ?? 0) ?? .none
+        self.pushToTalk = try container.decodeIfPresent(PushToTalkValue.self, forKey: "ptt4")
+        self.mode = VoiceChatInputMode(rawValue: try container.decodeIfPresent(Int32.self, forKey: "m2") ?? 0) ?? .none
         self.pushToTalkSoundEffects = try container.decodeIfPresent(Bool.self, forKey: "se") ?? false
         self.noiseSuppression = try container.decodeIfPresent(Bool.self, forKey: "ns") ?? false
         self.tooltips = try container.decode([Int32].self, forKey: "tt").compactMap { Tooltip(rawValue: $0) }
@@ -143,11 +143,11 @@ public struct VoiceCallSettings: Codable, Equatable {
         }
         
         if let pushToTalk = pushToTalk {
-            try container.encode(pushToTalk, forKey: "ptt3")
+            try container.encode(pushToTalk, forKey: "ptt4")
         } else {
-            try container.encodeNil(forKey: "ptt3")
+            try container.encodeNil(forKey: "ptt4")
         }
-        try container.encode(self.mode.rawValue, forKey: "m1")
+        try container.encode(self.mode.rawValue, forKey: "m2")
         
         try container.encode(pushToTalkSoundEffects, forKey: "se")
         

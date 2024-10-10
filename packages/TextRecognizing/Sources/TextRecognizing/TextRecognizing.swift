@@ -133,7 +133,11 @@ public final class TextRecognizing {
                     _ = Cache.set(postbox: postbox, texts: results, stableId: stableId).start()
                 }
             }
+            request.preferBackgroundProcessing = true
+            request.usesLanguageCorrection = true
             request.recognitionLevel = .accurate
+            
+            
             request.progressHandler = { _, progress, _ in
                 subscriber.putNext(.progress(progress))
             }

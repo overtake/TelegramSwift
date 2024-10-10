@@ -35,6 +35,20 @@ open class ImageView: NSView {
             }
         }
     }
+    
+    open var nsImage:NSImage? {
+        didSet {
+            let wasImage = self.layer?.contents != nil
+            self.layer?.contents = nsImage
+            if animates {
+                if !wasImage {
+                    self.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                } else {
+                    animate()
+                }
+            }
+        }
+    }
 
     open var contentGravity: CALayerContentsGravity = .center {
         didSet {
@@ -79,12 +93,15 @@ open class ImageView: NSView {
         super.init(frame: frameRect)
         self.wantsLayer = true
         layerContentsRedrawPolicy = .never
+        layer?.masksToBounds = true
     }
     init() {
         super.init(frame: .zero)
         self.wantsLayer = true
         layerContentsRedrawPolicy = .never
+        layer?.masksToBounds = true
     }
+    
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -98,7 +115,6 @@ open class ImageView: NSView {
 
     override open func viewDidChangeBackingProperties() {
         if let window = self.window {
-            self.layer?.contentsScale = window.backingScaleFactor
         }
     }
     

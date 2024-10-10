@@ -76,8 +76,8 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, _, _, _, _, _, _):
-        if  case let .photo(rhsIndex, _, _, _, _, _, _) = rhs {
+    case let .photo(lhsIndex, _, _, _, _, _, _, _, _):
+        if  case let .photo(rhsIndex, _, _, _, _, _, _, _, _) = rhs {
             return lhsIndex < rhsIndex
         } else {
             return false
@@ -85,6 +85,12 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
     case let  .instantMedia(lhsMedia, _):
         if case let .instantMedia(rhsMedia, _) = rhs {
             return lhsMedia.index < rhsMedia.index
+        } else {
+            return false
+        }
+    case let .media(_, lhsIndex, _):
+        if case let .media(_, rhsIndex, _) = rhs {
+            return lhsIndex < rhsIndex
         } else {
             return false
         }
@@ -105,15 +111,21 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, _, lhsDate):
-        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, _, rhsDate) = rhs {
-            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeer.isEqual(rhsPeer) && lhsDate == rhsDate
+    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, _, lhsDate, lhsCaption, lhsPublicPhoto):
+        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, _, rhsDate, rhsCaption, rhsPublicPhoto) = rhs {
+            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeer.isEqual(rhsPeer) && lhsDate == rhsDate && lhsCaption == rhsCaption && lhsPublicPhoto == rhsPublicPhoto
         } else {
             return false
         }
-    case let  .instantMedia(lhsMedia, _):
+    case let .instantMedia(lhsMedia, _):
         if case let .instantMedia(rhsMedia, _) = rhs {
             return lhsMedia == rhsMedia
+        } else {
+            return false
+        }
+    case let .media(lhsMedia, lhsIndex, _):
+        if case let .media(rhsMedia, rhsIndex, _) = rhs {
+            return lhsMedia.isEqual(to: rhsMedia) && lhsIndex == rhsIndex
         } else {
             return false
         }
@@ -121,17 +133,20 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
 }
 enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
-    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval)
+    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval, caption: String?, publicPhoto: TelegramMediaImage?)
+    case media(Media, Int, Message)
     case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
     var stableId: AnyHashable {
         switch self {
         case let .message(entry):
             return entry.stableId
-        case let .photo(_, stableId, _, _, _, _, _):
+        case let .photo(_, stableId, _, _, _, _, _, _, _):
             return stableId
         case let .instantMedia(media, _):
             return media.index
+        case  let .media(media, index, message):
+            return ChatHistoryEntryId.mediaId(index, message)
         case let .secureIdDocument(document, _):
             return document.stableId
         }
@@ -140,6 +155,7 @@ enum GalleryEntry : Comparable, Identifiable {
     var canShare: Bool {
         return message != nil && !message!.isScheduledMessage && !message!.containsSecretMedia && !message!.isCopyProtected()
     }
+
     
     var interfaceState:(PeerId, TimeInterval)? {
         switch self {
@@ -147,11 +163,13 @@ enum GalleryEntry : Comparable, Identifiable {
             if let peerId = entry.message!.effectiveAuthor?.id {
                 return (peerId, TimeInterval(entry.message!.timestamp))
             }
+        case let .media(_, _, message):
+            return (message.id.peerId, TimeInterval(message.timestamp))
         case let .instantMedia(_, message):
             if let message = message, let peerId = message.effectiveAuthor?.id {
                 return (peerId, TimeInterval(message.timestamp))
             }
-        case let .photo(_, _, _, _, peer, _, date):
+        case let .photo(_, _, _, _, peer, _, date, _, _):
             return (peer.id, date)
         default:
             return nil
@@ -162,7 +180,7 @@ enum GalleryEntry : Comparable, Identifiable {
     var file:TelegramMediaFile? {
         switch self {
         case .message(let entry):
-            if let media = entry.message!.effectiveMedia as? TelegramMediaFile {
+            if let media = entry.message!.anyMedia as? TelegramMediaFile {
                 return media
             } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
                 switch media.content {
@@ -174,6 +192,8 @@ enum GalleryEntry : Comparable, Identifiable {
             }
         case .instantMedia(let media, _):
             return media.media as? TelegramMediaFile
+        case let .media(media, _, _):
+            return media as? TelegramMediaFile
         default:
             return nil
         }
@@ -202,12 +222,14 @@ enum GalleryEntry : Comparable, Identifiable {
             return ImageMediaReference.standalone(media: image)
         case .photo:
             return ImageMediaReference.standalone(media: image)
+        case let .media(_, _, message):
+            return ImageMediaReference.message(message: MessageReference(message), media: image)
         }
     }
     
     var peer: Peer? {
         switch self {
-        case let .photo(_, _, _, _, peer, _, _):
+        case let .photo(_, _, _, _, peer, _, _, _, _):
             return peer
         default:
             return nil
@@ -216,7 +238,7 @@ enum GalleryEntry : Comparable, Identifiable {
     
     func peerPhotoResource() -> MediaResourceReference {
         switch self {
-        case let .photo(_, _, image, _, peer, message, _):
+        case let .photo(_, _, image, _, peer, message, _, _, _):
             if let representation = image.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
                 if let message = message {
                     return .media(media: .message(message: MessageReference(message), media: image), resource: representation.resource)
@@ -244,6 +266,8 @@ enum GalleryEntry : Comparable, Identifiable {
             return FileMediaReference.standalone(media: file)
         case .photo:
             return FileMediaReference.standalone(media: file)
+        case let .media(_, _, message):
+            return FileMediaReference.message(message: MessageReference(message), media: file)
         }
     }
     
@@ -252,10 +276,12 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return "\(entry.message?.stableId ?? 0)"
-        case .photo(_, let stableId, _, _, _, _, _):
+        case .photo(_, let stableId, _, _, _, _, _, _, _):
             return "\(stableId)"
         case .instantMedia:
             return "\(stableId)"
+        case let .media(media, _, _):
+            return "media_\(media.id?.id ?? 0)"
         case let .secureIdDocument(document, _):
             return "secureId: \(document.document.id.hashValue)"
         }
@@ -276,6 +302,42 @@ enum GalleryEntry : Comparable, Identifiable {
             return entry.message
         case let .instantMedia(_, message):
             return message
+        case let .media(_, _, message):
+            return message
+        default:
+            return nil
+        }
+    }
+    
+    var media:Media? {
+        switch self {
+        case let .message(entry):
+            return entry.message?.anyMedia
+        case let .instantMedia(media, _):
+            return media.media
+        case let .media(media, _, _):
+            return media
+        default:
+            return nil
+        }
+    }
+    
+    var isProtected: Bool {
+        return self.message?.containsSecretMedia == true || self.message?.isCopyProtected() == true || paidMedia
+    }
+    
+    var paidMedia: Bool {
+        return self.message?.media.first is TelegramMediaPaidContent
+    }
+    
+    var mediaId:MediaId? {
+        switch self {
+        case let .message(entry):
+            return entry.message?.anyMedia?.id
+        case let .instantMedia(media, _):
+            return media.media.id
+        case let .media(media, _, _):
+            return media.id
         default:
             return nil
         }
@@ -284,7 +346,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, photo, _, _, _, _):
+        case let .photo(_, _, photo, _, _, _, _, _, _):
             return photo
         default:
             return nil
@@ -295,8 +357,18 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, _, reference, _, _, _):
+        case let .photo(_, _, _, reference, _, _, _, _, _):
             return reference
+        default:
+            return nil
+        }
+    }
+    var publicPhoto: TelegramMediaImage? {
+        switch self {
+        case .message:
+            return nil
+        case let .photo(_, _, _, _, _, _, _, _, publicPhoto):
+            return publicPhoto
         default:
             return nil
         }
@@ -310,11 +382,48 @@ func <(lhs: MGalleryItem, rhs: MGalleryItem) -> Bool {
     return lhs.entry < rhs.entry
 }
 
+private class Layer: CALayer {
+    var contentsDidChange: ((NSImage?)->Void)?
+    override var contents: Any? {
+        didSet {
+            let oldValue = oldValue as? NSImage
+            let newValue = contents as? NSImage
+            if oldValue != newValue {
+                contentsDidChange?(newValue)
+            }
+        }
+    }
+}
+
 private final class MGalleryItemView : NSView {
+    private var image: NSImage?
     init() {
         super.init(frame: NSZeroRect)
         self.wantsLayer = true
         self.layerContentsRedrawPolicy = .never
+        
+        let layer = Layer()
+        
+        self.layer = layer
+        
+        
+        layer.contentsDidChange = { [weak self] any in
+            guard let self else {
+                return
+            }
+            self.image = any
+            if self.sampleBuffer == nil, let cmBuffer = any?._cgImage?.cmSampleBuffer {
+                self.sampleBuffer = cmBuffer
+            }
+            if let sampleBuffer = self.sampleBuffer {
+                self.captureProtectedContentLayer?.enqueue(sampleBuffer)
+            }
+            let preventsCapture = self.preventsCapture
+            self.preventsCapture = preventsCapture
+            if preventsCapture {
+                self.layer?.disableActions()
+            }
+        }
     }
     
     required init?(coder decoder: NSCoder) {
@@ -324,10 +433,45 @@ private final class MGalleryItemView : NSView {
         return true
     }
     
+    override func layout() {
+        super.layout()
+        captureProtectedContentLayer?.frame = bounds
+    }
+    
     deinit {
         var bp:Int = 0
         bp += 1
     }
+        
+    private var captureProtectedContentLayer: CaptureProtectedContentLayer?
+    private var sampleBuffer: CMSampleBuffer?
+
+    public var preventsCapture: Bool = false {
+        didSet {
+            if self.preventsCapture {
+                if self.captureProtectedContentLayer == nil, let cmSampleBuffer = self.sampleBuffer {
+                    let captureProtectedContentLayer = CaptureProtectedContentLayer()
+                    captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                    self.layer?.contents = nil
+
+                    captureProtectedContentLayer.frame = self.bounds
+                    if #available(macOS 10.15, *) {
+                        captureProtectedContentLayer.preventsCapture = true
+                    }
+                    
+                    self.layer?.addSublayer(captureProtectedContentLayer)
+                    
+                    self.captureProtectedContentLayer = captureProtectedContentLayer
+                }
+            } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                self.captureProtectedContentLayer = nil
+                captureProtectedContentLayer.removeFromSuperlayer()
+                self.layer?.contents = self.image
+            }
+        }
+    }
+
+    
 }
 
 class MGalleryItem: NSObject, Comparable, Identifiable {
@@ -358,11 +502,17 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             captionSeized = true
         }
         if let caption = caption {
-            pagerSize.height -= min(200, (caption.layoutSize.height + 120))
+            pagerSize.height -= min(200, (caption.size.height + 120))
         }
         return pagerSize
     }
-    let caption: TextViewLayout?
+    let caption: FoldingTextLayout?
+    
+    struct PublicPhoto {
+        let image: TelegramMediaImage
+        let peer: TelegramUser
+    }
+    var publicPhoto: PublicPhoto?
     
     var disableAnimations: Bool = false
     
@@ -418,77 +568,80 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self.entry = entry
         self.context = context
         self._pagerSize = pagerSize
-        if let message = entry.message, !message.text.isEmpty, !(message.effectiveMedia is TelegramMediaWebpage) {
-            let caption = message.text
-            let attr = NSMutableAttributedString()
-            _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
-            let controller = context.bindings.rootNavigation().controller as? ChatController
-
-            if let peer = message.peers[message.id.peerId] {
-                var type: ParsingType = [.Links, .Mentions, .Hashtags]
-                if peer.isGroup || peer.isSupergroup, peer.canSendMessage() {
-                    if let _ = controller {
-                        type.insert(.Commands)
+        if let message = entry.message, !message.text.isEmpty, !(message.anyMedia is TelegramMediaWebpage) {
+            
+            var text: String = message.text
+            var entities: [MessageTextEntity] = message.entities
+            if let translate = entry.chatEntry?.additionalData.translate {
+                switch translate {
+                case .loading:
+                    break
+                case let .complete(toLang: toLang):
+                    if let attribute = message.translationAttribute(toLang: toLang) {
+                        text = attribute.text
+                        entities = attribute.entities
                     }
                 }
-                attr.detectLinks(type: type, context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
-                    let navigation = context.bindings.rootNavigation()
-                    let controller = navigation.controller
-                    if toChat {
-                        if peerId == (controller as? ChatController)?.chatInteraction.peerId {
-                            if let postId = postId {
-                                (controller as? ChatController)?.chatInteraction.focusMessageId(nil, postId, TableScrollState.CenterEmpty)
-                            }
-                        } else {
-                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+            }
+            
+            let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: FontSize.text, openInfo: { peerId, toChat, postId, action in
+                let navigation = context.bindings.rootNavigation()
+                let controller = navigation.controller
+                if toChat {
+                    if peerId == (controller as? ChatController)?.chatInteraction.peerId {
+                        if let postId = postId {
+                            (controller as? ChatController)?.chatInteraction.focusMessageId(nil, .init(messageId: postId, string: nil), TableScrollState.CenterEmpty)
                         }
                     } else {
-                        navigation.push(PeerInfoController(context: context, peerId: peerId))
+                        navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: postId != nil ? .init(messageId: postId!) : nil, initialAction: action))
                     }
-                    viewer?.close()
-                }, hashtag: { hashtag in
-                    context.bindings.globalSearch(hashtag)
-                    viewer?.close()
-                }, command: { commandText in
-                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: peer.id, replyId: nil, atDate: nil).start()
-                    viewer?.close()
-                }, applyProxy: { server in
-                    applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
-                    viewer?.close()
-                })
-                
-            }
-            
-           
-            
-            var spoilers:[TextViewLayout.Spoiler] = []
-            for attr in message.attributes {
-                if let attr = attr as? TextEntitiesMessageAttribute {
-                    for entity in attr.entities {
-                        switch entity.type {
-                        case .Spoiler:
-                            let color: NSColor = NSColor.white
-                            spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: false))
-                        default:
-                            break
-                        }
-                    }
+                } else {
+                    PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
                 }
-            }
+                viewer?.close()
+            }, botCommand: { commandText in
+                _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: message.id.peerId, replyId: nil, threadId: message.threadId, atDate: nil).start()
+                viewer?.close()
+            }, hashtag: { hashtag in
+                context.bindings.globalSearch(hashtag, message.id.peerId)
+                viewer?.close()
+            }, applyProxy: { server in
+                applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
+                viewer?.close()
+            }, textColor: NSColor(0xffffff), isDark: true, bubbled: false).mutableCopy() as! NSMutableAttributedString
             
-            self.caption = TextViewLayout(attr, alignment: .left, spoilers: spoilers)
-            self.caption?.interactions = TextViewInteractions(processURL: { link in
+            InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
+
+
+            self.caption = FoldingTextLayout.make(attr, context: context, revealed: Set(), takeLayout: { attr in
+                return TextViewLayout(attr, alignment: .left, spoilerColor: NSColor.white, isSpoilerRevealed: false)
+            })
+            let interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
                     execute(inapp: link, afterComplete: { value in
                         if value {
                             viewer?.close()
                         }
                     })
-                    
                 }
             })
+            self.caption?.set(interactions)
+            
         } else {
-            self.caption = nil
+            switch entry {
+            case let .photo(_, _, _, _, _, _, _, caption, _):
+                if let caption = caption, !caption.isEmpty {
+                    let attr = NSMutableAttributedString()
+                    _ = attr.append(string: caption, color: .white, font: .normal(.text))
+                    self.caption = .make(attr, context: context, revealed: Set(), takeLayout: { attr in
+                        return TextViewLayout(attr, alignment: .left)
+                    })
+                } else {
+                    self.caption = nil
+                }
+            default:
+                self.caption = nil
+            }
         }
        
         super.init()
@@ -497,6 +650,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
         let image = combineLatest(self.image.get() |> map { $0.value }, view.get()) |> map { [weak self] value, view  in
             guard let `self` = self else {return}
+            
+            if let view = view as? MGalleryItemView {
+                view.preventsCapture = entry.isProtected
+            }
             view.layer?.contents = value.image
             
             if !first && !self.disableAnimations {
@@ -530,7 +687,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     var isGraphicFile: Bool {
-        if self.entry.message?.effectiveMedia is TelegramMediaFile {
+        if self.entry.message?.anyMedia is TelegramMediaFile {
             return true
         } else {
             return false

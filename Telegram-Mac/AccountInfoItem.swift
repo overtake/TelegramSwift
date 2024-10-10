@@ -12,7 +12,7 @@ import Postbox
 import TelegramCore
 import Reactions
 import SwiftSignalKit
-
+import TelegramMedia
 
 
 class AccountInfoItem: GeneralRowItem {
@@ -25,19 +25,29 @@ class AccountInfoItem: GeneralRowItem {
 
     fileprivate let context: AccountContext
     let peer: TelegramUser
+    let storyStats: EngineStorySubscriptions.Item?
     private(set) var photos: [TelegramPeerPhoto] = []
 
+    
     private let peerPhotosDisposable = MetaDisposable()
     
     let setStatus:(Control, TelegramUser)->Void
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void, setStatus: @escaping(Control, TelegramUser)->Void) {
+    let avatarStoryIndicator: AvatarStoryIndicatorComponent?
+    let openStory:(StoryInitialIndex?)->Void
+    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), context: AccountContext, peer: TelegramUser, storyStats: EngineStorySubscriptions.Item?, action: @escaping()->Void, setStatus: @escaping(Control, TelegramUser)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.context = context
         self.peer = peer
+        self.storyStats = storyStats
         self.setStatus = setStatus
-        
+        self.openStory = openStory
         let attr = NSMutableAttributedString()
         
+        if let storyStats = storyStats, storyStats.storyCount > 0 {
+            self.avatarStoryIndicator = .init(story: storyStats, presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
         
         let titleAttr: NSMutableAttributedString = NSMutableAttributedString()
         _ = titleAttr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
@@ -45,7 +55,7 @@ class AccountInfoItem: GeneralRowItem {
         let activeTitle = titleAttr.mutableCopy() as! NSMutableAttributedString
         activeTitle.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: titleAttr.range)
         self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
-
+        
         if let phone = peer.phone {
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
         }
@@ -63,13 +73,27 @@ class AccountInfoItem: GeneralRowItem {
         activeTextlayout = TextViewLayout(active, maximumNumberOfLines: 4)
         super.init(initialSize, height: 90, stableId: stableId, viewType: viewType, action: action, inset: inset)
         
-        self.photos = syncPeerPhotos(peerId: peer.id)
+        self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
         let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
-            self?.photos = photos
-            self?.redraw()
+            self?.photos = photos.map { $0.value }
+            self?.noteHeightOfRow()
         }))
         
+    }
+    
+    func openPeerStory() {
+        let table = self.table
+        self.openStory(.init(peerId: peer.id, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+            var view: NSView?
+            table?.enumerateItems(with: { item in
+                if let item = item as? AccountInfoItem {
+                    view = (item.view as? AccountInfoView)?.takeStoryControl()
+                }
+                return view == nil
+            })
+            return view
+        }))
     }
     
     deinit {
@@ -107,8 +131,10 @@ private class AccountInfoView : GeneralContainableRowView {
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
 
     private let container = View()
+    private let avatarContainer = Control()
     
     fileprivate var statusControl: PremiumStatusControl?
     
@@ -119,25 +145,48 @@ private class AccountInfoView : GeneralContainableRowView {
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         avatarView.animated = true
         
+        avatarContainer.scaleOnClick = true
+        
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
-        addSubview(avatarView)
+        avatarContainer.addSubview(avatarView)
+        addSubview(avatarContainer)
         addSubview(actionView)
         
         container.addSubview(textView)
         container.addSubview(titleView)
         
         addSubview(container)
-        avatarView.set(handler: { [weak self] _ in
-            if let item = self?.item as? AccountInfoItem, let _ = item.peer.largeProfileImage {
-                showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+        avatarContainer.set(handler: { [weak self] _ in
+            if let item = self?.item as? AccountInfoItem {
+                if let stories = item.storyStats, stories.storyCount > 0 {
+                    item.openPeerStory()
+                } else if let _ = item.peer.largeProfileImage {
+                    showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+                }
             }
         }, for: .Click)
         
+        avatarContainer.contextMenu = { [weak self] in
+            if let item = self?.item as? AccountInfoItem, let storyStats = item.storyStats, storyStats.storyCount > 0 {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().peerInfoContextOpenPhoto, handler: { [weak item] in
+                    if let item = item {
+                        if let _ = item.peer.largeProfileImage {
+                            showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+                        }
+                    }
+                }, itemImage: MenuAnimation.menu_shared_media.value))
+                return menu
+            }
+            return nil
+        }
+        
+        self.avatarView.userInteractionEnabled = false
         
         self.containerView.set(handler: { [weak self] _ in
             if let item = self?.item as? GeneralRowItem {
@@ -195,8 +244,8 @@ private class AccountInfoView : GeneralContainableRowView {
     }
     
     deinit {
-        removeNotificationListeners()
         playStatusDisposable.dispose()
+        removeNotificationListeners()
     }
 
 
@@ -276,11 +325,11 @@ private class AccountInfoView : GeneralContainableRowView {
         if let item = item as? AccountInfoItem {
             
             var interactiveStatus: Reactions.InteractiveStatus? = nil
-            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus, !item.context.isLite(.emoji_effects) {
                 interactiveStatus = interactive
             }
             if let view = self.statusControl, interactiveStatus != nil, interactiveStatus?.fileId != nil {
-                performSubviewRemoval(view, animated: true, duration: 0.3)
+                performSubviewRemoval(view, animated: animated, duration: 0.3)
                 self.statusControl = nil
             }
             
@@ -290,7 +339,7 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = control
                 self.container.addSubview(control)
             } else if let view = self.statusControl {
-                performSubviewRemoval(view, animated: true)
+                performSubviewRemoval(view, animated: animated)
                 self.statusControl = nil
             }
             if let interactive = interactiveStatus {
@@ -327,13 +376,13 @@ private class AccountInfoView : GeneralContainableRowView {
                         
                         self.photoVideoView = MediaPlayerView()
                         self.photoVideoView!.layer?.cornerRadius = self.avatarView.frame.height / 2
-                        self.addSubview(self.photoVideoView!)
+                        avatarContainer.addSubview(self.photoVideoView!)
                         self.photoVideoView!.isEventLess = true
                         self.photoVideoView!.frame = self.avatarView.frame
                         
                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                         
-                        let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                        let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: .peer(item.context.peerId), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                         
                         mediaPlayer.actionAtEnd = .loop(nil)
                         
@@ -359,6 +408,53 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.photoVideoView?.removeFromSuperview()
                 self.photoVideoView = nil
             }
+            
+            if let component = item.avatarStoryIndicator {
+                let current: AvatarStoryIndicatorComponent.IndicatorView
+                let isNew: Bool
+                if let view = self.storyStateView {
+                    current = view
+                    isNew = false
+                } else {
+                    current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 60, 60))
+                    self.storyStateView = current
+                    avatarContainer.addSubview(current)
+                    isNew = true
+                }
+                current.update(component: component, availableSize: NSMakeSize(54, 54), transition: .immediate)
+                
+                if animated, isNew {
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                self.avatarView._change(size: NSMakeSize(54, 54), animated: animated)
+                self.photoVideoView?._change(size: NSMakeSize(54, 54), animated: animated)
+                                
+                
+                if let photoVideoView = photoVideoView {
+                    photoVideoView.layer?.cornerRadius = photoVideoView.frame.height / 2
+                }
+                
+                self.avatarView._change(pos: NSMakePoint(3, 3), animated: animated)
+                self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
+
+
+            } else if let view = self.storyStateView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.storyStateView = nil
+                
+                self.avatarView._change(size: NSMakeSize(60, 60), animated: animated)
+                self.photoVideoView?._change(size: NSMakeSize(60, 60), animated: animated)
+                
+                self.avatarView._change(pos: .zero, animated: animated)
+                self.photoVideoView?._change(pos: .zero, animated: animated)
+
+                
+                if let photoVideoView = photoVideoView {
+                    photoVideoView.layer?.cornerRadius = photoVideoView.frame.height / 2
+                }
+            }
+       
             needsDisplay = true
             needsLayout = true
         }
@@ -378,7 +474,8 @@ private class AccountInfoView : GeneralContainableRowView {
     
     override func layout() {
         super.layout()
-        avatarView.centerY(x:16)
+        avatarContainer.setFrameSize(NSMakeSize(60, 60))
+        avatarContainer.centerY(x:16)
         
         let h: CGFloat = statusControl != nil ? 6 : 0
         
@@ -390,7 +487,7 @@ private class AccountInfoView : GeneralContainableRowView {
         container.centerY(x: avatarView.frame.maxX + 25)
         
         if let statusControl = statusControl {
-            statusControl.setFrameOrigin(titleView.frame.maxX + 3, 0)
+            statusControl.setFrameOrigin(titleView.frame.maxX + 3, 3)
         }
         
         actionView.centerY(x: containerView.frame.width - actionView.frame.width - 15)
@@ -404,6 +501,11 @@ private class AccountInfoView : GeneralContainableRowView {
     
     override func copy() -> Any {
         return avatarView.copy()
+    }
+    
+    
+    func takeStoryControl() -> NSView? {
+        return self.avatarView
     }
     
 }

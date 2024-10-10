@@ -24,14 +24,14 @@ class ChatUnreadRowItem: ChatRowItem {
     
     public var text:NSAttributedString;
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let titleAttr:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleAttr.append(string: strings().messagesUnreadMark, color: theme.colors.grayText, font: .normal(.text))
         text = titleAttr.copy() as! NSAttributedString
 
         
-        super.init(initialSize,chatInteraction,entry, downloadSettings, theme: theme)
+        super.init(initialSize,chatInteraction,entry, theme: theme)
     }
     
     override var messageIndex:MessageIndex? {

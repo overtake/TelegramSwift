@@ -171,6 +171,23 @@ public class SliderView: Control {
         }
     }
     
+    public func next(animated: Bool) {
+        var index = self.indexOfDisplayedSlide + 1
+        if index == self.slides.count {
+            index = 0
+        }
+        transitionStyle = index > dotsControl.indexOfHighlightedDot ? .pushHorizontalFromRight : .pushHorizontalFromLeft
+        displaySlide(at: index, animated: animated)
+    }
+    public func prev(animated: Bool) {
+        var index = self.indexOfDisplayedSlide - 1
+        if index == -1 {
+            index = self.slides.count - 1
+        }
+        transitionStyle = index > dotsControl.indexOfHighlightedDot ? .pushHorizontalFromRight : .pushHorizontalFromLeft
+        displaySlide(at: index, animated: animated)
+    }
+    
     public func displaySlide(at aIndex: Int, animated: Bool = true) {
         
         if aIndex < 0 {
@@ -183,7 +200,6 @@ public class SliderView: Control {
         if slideToDisplay === displayedSlide {
             return
         }
-        slideToDisplay.willAppear()
         slideToDisplay.frame = bounds
         slideToDisplay.autoresizingMask = [.width, .height]
         
@@ -191,6 +207,7 @@ public class SliderView: Control {
             contentView.addSubview(slideToDisplay)
             displayedSlide = slideToDisplay
             indexOfDisplayedSlide = aIndex
+            slideToDisplay.willAppear()
             return
         }
         
@@ -203,7 +220,7 @@ public class SliderView: Control {
             contentView.animator().replaceSubview(displayedSlide, with: slideToDisplay)
         }
         NSAnimationContext.endGrouping()
-        
+        slideToDisplay.willAppear()
         displayedSlide = slideToDisplay
         indexOfDisplayedSlide = aIndex
     }

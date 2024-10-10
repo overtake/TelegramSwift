@@ -274,24 +274,24 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().recentSessionsTTLHeader, viewType: viewType)
         case let .revokeOld(_, ttl, viewType):
             
-            var items:[SPopoverItem] = []
-            items.append(.init(strings().timerWeeksCountable(1), {
+            var items:[ContextMenuItem] = []
+            items.append(.init(strings().timerWeeksCountable(1), handler: {
                 arguments.toggleTtl(7)
             }))
             
-            items.append(.init(strings().timerMonthsCountable(1), {
+            items.append(.init(strings().timerMonthsCountable(1), handler: {
                 arguments.toggleTtl(31)
             }))
-            items.append(.init(strings().timerMonthsCountable(3), {
+            items.append(.init(strings().timerMonthsCountable(3), handler: {
                 arguments.toggleTtl(31 * 3)
             }))
-            items.append(.init(strings().timerMonthsCountable(6), {
+            items.append(.init(strings().timerMonthsCountable(6), handler: {
                 arguments.toggleTtl(31 * 6)
             }))
             
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().recentSessionsTTLText, type: .contextSelector(autoremoveLocalized(Int(ttl * 24 * 60 * 60)), items), viewType: viewType)
         case .section(sectionId: _):
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         }
@@ -458,7 +458,7 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            confirm(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
                 _ = showModalProgress(signal: context.activeSessionsContext.removeOther(), for: context.window).start(error: { error in
                     
                 })

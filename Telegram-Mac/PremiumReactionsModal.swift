@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import SwiftSignalKit
+import TelegramMedia
 
 private final class PremiumReactionsView : View {
     private let dismiss:ImageButton = ImageButton()

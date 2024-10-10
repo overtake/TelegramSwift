@@ -18,26 +18,9 @@ import GZIP
 import Svg
 import ColorPalette
 import ThemeSettings
+import RangeSet
 
-public final class ImageDataTransformation {
-    let data: ImageRenderData
-    let execute:(TransformImageArguments, ImageRenderData)->DrawingContext?
-    init(data: ImageRenderData = ImageRenderData(nil, nil, false), execute:@escaping(TransformImageArguments, ImageRenderData)->DrawingContext? = { _, _ in return nil}) {
-        self.data = data
-        self.execute = execute
-    }
-}
 
-final class ImageRenderData {
-    let thumbnailData: Data?
-    let fullSizeData:Data?
-    let fullSizeComplete:Bool
-    init(_ thumbnailData: Data?, _ fullSizeData: Data?, _ fullSizeComplete: Bool) {
-        self.thumbnailData = thumbnailData
-        self.fullSizeData = fullSizeData
-        self.fullSizeComplete = fullSizeComplete
-    }
-}
 
 let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
@@ -66,7 +49,7 @@ func chatMessageFileStatus(context: AccountContext, message: Message, file: Tele
 }
 
 func chatMessageFileInteractiveFetched(account: Account, fileReference: FileMediaReference) -> Signal<FetchResourceSourceType, NoError> {
-    return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: .file, reportResultStatus: true) |> `catch` { _ in return .complete() }  //account.postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file), implNext: true)
+    return fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: .file, reportResultStatus: true) |> `catch` { _ in return .complete() }  //account.postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file), implNext: true)
 }
 
 func chatMessageFileCancelInteractiveFetch(account: Account, file: TelegramMediaFile) {
@@ -81,11 +64,11 @@ func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentat
     return representation.first
 }
 
-public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int?) -> Range<Int>? {
+public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int?) -> Range<Int64>? {
     if representation.progressiveSizes.count > 1, let dimension = dimension {
-        var largestByteSize = Int(representation.progressiveSizes[0])
+        var largestByteSize = Int64(representation.progressiveSizes[0])
         for (maxDimension, byteSizes) in progressiveRangeMap {
-            largestByteSize = Int(representation.progressiveSizes[min(representation.progressiveSizes.count - 1, byteSizes.last!)])
+            largestByteSize = Int64(representation.progressiveSizes[min(representation.progressiveSizes.count - 1, byteSizes.last!)])
             if maxDimension >= dimension {
                 break
             }
@@ -95,9 +78,9 @@ public func representationFetchRangeForDisplayAtSize(representation: TelegramMed
     return nil
 }
 
-func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false) -> Signal<ImageRenderData, NoError> {
+func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false, onlyThumbnail: Bool = false) -> Signal<ImageRenderData, NoError> {
     
-    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count > 1 {
+    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count > 1, !onlyThumbnail {
         enum SizeSource {
             case miniThumbnail(data: Data)
             case image(size: Int64)
@@ -188,9 +171,9 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
             })
             var fetchDisposable: Disposable?
             if autoFetchFullSize {
-                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: imageReference.resourceReference(progressiveRepresentation.resource), range: (0 ..< largestByteSize, .default), statsCategory: .image).start()
+                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: imageReference.resourceReference(progressiveRepresentation.resource), range: (0 ..< largestByteSize, .default), statsCategory: .image).start()
             } else if useMiniThumbnailIfAvailable {
-                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: imageReference.resourceReference(progressiveRepresentation.resource), range: (0 ..< thumbnailByteSize, .default), statsCategory: .image).start()
+                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: imageReference.resourceReference(progressiveRepresentation.resource), range: (0 ..< thumbnailByteSize, .default), statsCategory: .image).start()
             }
             
             return ActionDisposable {
@@ -209,7 +192,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
         let signal = maybeFullSize
             |> take(1)
             |> mapToSignal { maybeData -> Signal<ImageRenderData, NoError> in
-                if maybeData.complete {
+                if maybeData.complete && !onlyThumbnail {
                     let loadedData: Data?
                     if largestRepresentation.resource is EncryptedMediaResource, let secureIdAccessContext = secureIdAccessContext {
                         loadedData = decryptedResourceData(data: maybeData, resource: largestRepresentation.resource, params: secureIdAccessContext)
@@ -231,7 +214,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                         } else {
                             reference = imageReference.resourceReference(smallestRepresentation.resource)
                         }
-                        fetchedThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference, statsCategory: .image) |> `catch` { _ in return .complete() }
+                        fetchedThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: reference, statsCategory: .image) |> `catch` { _ in return .complete() }
                     }
                     let reference: MediaResourceReference
                     if let peer = peer, let peerReference = PeerReference(peer) {
@@ -239,7 +222,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                     } else {
                         reference = imageReference.resourceReference(largestRepresentation.resource)
                     }
-                    let fetchedFullSize = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference, statsCategory: .image)
+                    let fetchedFullSize = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: reference, statsCategory: .image)
 
                     let anyThumbnail: [Signal<MediaResourceData, NoError>]
                     if tryAdditionalRepresentations {
@@ -309,7 +292,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                             if let _ = thumbnailData {
                                 return fullSizeData
                                     |> map { fullSizeData in
-                                        return ImageRenderData(fullSizeData.fullSizeComplete ? nil : thumbnailData, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                                        return ImageRenderData(thumbnailData, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
                                 }
                             } else {
                                 return .single(ImageRenderData(nil, nil, false))
@@ -390,7 +373,7 @@ func svgIconImageFile(account: Account, fileReference: FileMediaReference?, scal
                 }
             }
             
-            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             if stickToTop {
                 fittedRect.origin.y = drawingRect.size.height - fittedSize.height
             }
@@ -445,7 +428,7 @@ private func chatMessageFileDatas(account: Account, fileReference: FileMediaRefe
             let fullData = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path))
             return .single(ImageRenderData(nil, fullData, fullData != nil))
         } else {
-                let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: fileReference.resourceReference(thumbnailResource))
+                let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(thumbnailResource))
                 
                 let thumbnail = Signal<Data?, NoError> { subscriber in
                     let fetchedDisposable = fetchedThumbnail.start()
@@ -488,7 +471,7 @@ private func chatMessageFileDatas(account: Account, fileReference: FileMediaRefe
 }
 
 
-func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, secureIdAccessContext: SecureIdAccessContext? = nil, synchronousLoad: Bool = false) -> Signal<(TransformImageArguments) -> CGImage?, NoError> {
+func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, secureIdAccessContext: SecureIdAccessContext? = nil, synchronousLoad: Bool = false, drawChessboard: Bool = true) -> Signal<(TransformImageArguments) -> CGImage?, NoError> {
     let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize:toRepresentationSize, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext, peer: peer)
     
     return signal |> map { data in
@@ -513,8 +496,11 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                 if data.fullSizeData != nil {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         return generateImage(image.size, contextGenerator: { (size, ctx) in
-                            ctx.setFillColor(theme.colors.transparentBackground.cgColor)
-                            ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            ctx.clear(size.bounds)
+                            if drawChessboard {
+                                ctx.setFillColor(theme.colors.transparentBackground.cgColor)
+                                ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            }
                             ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
                         })
                         
@@ -572,7 +558,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
             default:
                 fittedSize = fittedSize.fitted(arguments.imageSize)
             }
-            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0)), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0))), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -715,7 +701,7 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = data.fullSizeData {
@@ -746,7 +732,7 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.setFillColor(theme.colors.grayBackground.cgColor)
+                   // c.setFillColor(theme.colors.grayBackground.cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -824,11 +810,11 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                 return Signal { subscriber in
                     var fetch: Disposable?
                     if fetched {
-                        fetch = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(resource)).start()
+                        fetch = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: file.userLocation, userContentType: file.userContentType, reference: file.resourceReference(resource)).start()
                     }
 
                     var fetchThumbnail: Disposable?
-                    fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
+                    fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: file.userLocation, userContentType: file.userContentType, reference: file.resourceReference(thumbnailResource)).start()
 
                     let disposable = (combineLatest(thumbnailData, fullSizeData)
                         |> map { thumbnailData, fullSizeData -> ImageRenderData in
@@ -855,46 +841,6 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
 
 
 
-
-
-private func chatMessageStickerThumbnailData(postbox: Postbox, file: TelegramMediaFile, synchronousLoad: Bool) -> Signal<Data?, NoError> {
-    let thumbnailResource = chatMessageStickerResource(file: file, small: true)
-    
-    let maybeFetched = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedStickerAJpegRepresentation(size: nil), complete: false, fetch: false, attemptSynchronously: synchronousLoad)
-    
-    return maybeFetched
-        |> take(1)
-        |> mapToSignal { maybeData in
-            if maybeData.complete {
-                let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
-                return .single(loadedData)
-            } else {
-                let thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedStickerAJpegRepresentation(size: nil), complete: true)
-                
-                return Signal { subscriber in
-                    let fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: stickerPackFileReference(file).resourceReference(thumbnailResource)).start()
-                    
-                    let disposable = (thumbnailData
-                        |> map { thumbnailData -> Data? in
-                            return thumbnailData.complete ? try? Data(contentsOf: URL(fileURLWithPath: thumbnailData.path)) : nil
-                        }).start(next: { next in
-                            subscriber.putNext(next)
-                        }, error: { error in
-                            subscriber.putError(error)
-                        }, completed: {
-                            subscriber.putCompletion()
-                        })
-                    
-                    return ActionDisposable {
-                        fetchThumbnail.dispose()
-                        disposable.dispose()
-                    }
-                }
-            }
-    }
-}
-
-
 public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small: Bool, scale: CGFloat, fetched: Bool = true, onlyFullSize: Bool = false, thumbnail: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
     let signal: Signal<ImageRenderData, NoError>
     signal = chatMessageStickerDatas(postbox: postbox, file: file, small: small, fetched: fetched, onlyFullSize: onlyFullSize, synchronousLoad: synchronousLoad)
@@ -904,7 +850,7 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             //let fittedRect = arguments.drawingRect
             
             var fullSizeImage: CGImage?
@@ -942,15 +888,16 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
             }
             
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
+                c.clear(drawingRect)
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
                     switch color {
                     case let .color(color):
                         c.setFillColor(color.cgColor)
+                        c.fill(drawingRect)
                     default:
                         break
                     }
-                    c.fill(drawingRect)
                 } else {
                     c.setBlendMode(.copy)
                 }
@@ -963,10 +910,13 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
                 
                 if let fullSizeImage = fullSizeImage {
                     let cgImage = fullSizeImage
-                    c.setBlendMode(.normal)
-                    c.interpolationQuality = .medium
-                    
-                    c.draw(cgImage, in: fittedRect)
+                    if case let .fill(color) = arguments.emptyColor {
+                        c.clip(to: fittedRect, mask: cgImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(fittedRect)
+                    } else {
+                        c.draw(cgImage, in: fittedRect)
+                    }
                 }
             })
             
@@ -1004,11 +954,11 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
                 return Signal { subscriber in
                     var fetch: Disposable?
                     if fetched {
-                        fetch = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(resource)).start()
+                        fetch = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: file.userLocation, userContentType: file.userContentType, reference: file.resourceReference(resource)).start()
                     }
                     
                     var fetchThumbnail: Disposable?
-                    fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
+                    fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: file.userLocation, userContentType: file.userContentType, reference: file.resourceReference(thumbnailResource)).start()
 
                     let disposable = (combineLatest(thumbnailData, fullSizeData)
                         |> map { thumbnailData, fullSizeData -> ImageRenderData in
@@ -1053,7 +1003,7 @@ private func chatMessageAnimatedStickerThumbnailData(postbox: Postbox, file: Fil
                 let thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size), complete: false)
                 
                 return Signal { subscriber in
-                    let fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
+                    let fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: file.userLocation, userContentType: file.userContentType, reference: file.resourceReference(thumbnailResource)).start()
                     
                     let disposable = (thumbnailData
                         |> map { thumbnailData -> Data? in
@@ -1084,7 +1034,7 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0)), y: drawingRect.origin.y + floorToScreenPixels(scale, floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0))), size: fittedSize)
             //let fittedRect = arguments.drawingRect
             
             var fullSizeImage: CGImage?
@@ -1187,7 +1137,7 @@ func chatMessageSlotSticker(postbox: Postbox, value: SlotMachineValue, scale: CG
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             //let fittedRect = arguments.drawingRect
             
             var fullSizeImage: CGImage?
@@ -1276,7 +1226,7 @@ public func chatMessageDiceSticker(postbox: Postbox, file: TelegramMediaFile, em
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             //let fittedRect = arguments.drawingRect
             
             var fullSizeImage: CGImage?
@@ -1398,7 +1348,7 @@ public func chatMessageStickerPackThumbnail(postbox: Postbox, representation: Te
                 
                 let drawingRect = arguments.drawingRect
                 let fittedSize = arguments.imageSize
-                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
                 
                 var fullSizeImage: CGImage?
                 if let fullSizeData = fullSizeData {
@@ -1452,7 +1402,7 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
             }))
             //account.postbox.mediaBox.fetchedResource(closestRepresentation.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file)
             
-            disposable.add(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageRefence.resourceReference(closestRepresentation.resource), statsCategory: .file).start())
+            disposable.add(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: imageRefence.userLocation, userContentType: imageRefence.userContentType, reference: imageRefence.resourceReference(closestRepresentation.resource), statsCategory: .file).start())
             return disposable
         }
     } else {
@@ -1460,8 +1410,8 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
     }
 }
 
-func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, autoFetchFullSize: true, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
+func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, autoFetchFullSize: Bool = true) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, autoFetchFullSize: autoFetchFullSize, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
@@ -1477,11 +1427,11 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
             default:
                 fittedSize = fittedSize.fitted(arguments.imageSize)
             }
-            var fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+            var fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0)), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0))), size: fittedSize)
             //
             //            let drawingRect = arguments.drawingRect
             //            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            //            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            //            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -1495,7 +1445,7 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
                         switch arguments.resizeMode {
                         case .none:
                             fittedSize = image.backingSize.aspectFilled(arguments.boundingSize)//.fitted(image.backingSize)
-                            fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                            fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
                         default:
                             break
                         }
@@ -1511,7 +1461,7 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
                         switch arguments.resizeMode {
                         case .none:
                             fittedSize = image.backingSize.aspectFilled(arguments.boundingSize)//.fitted(image.backingSize)
-                            fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                            fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
                         default:
                             break
                         }
@@ -1618,8 +1568,8 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 
-func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largest = photo.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280))) {
+func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false, dimension: NSSize = NSMakeSize(1280, 1280)) -> Signal<MediaResourceStatus, NoError> {
+    if let largest = photo.representationForDisplayAtSize(PixelDimensions(dimension)) {
         if largest.resource is LocalFileReferenceMediaResource {
             return .single(.Local)
         } else {
@@ -1635,20 +1585,27 @@ func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approxi
 func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) -> Signal<Void, NoError> {
     
     if let large = imageReference.media.representationForDisplayAtSize(.init(toRepresentationSize)) {
-        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(large.resource), range: nil, statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
+        let rangeValue = representationFetchRangeForDisplayAtSize(representation: large, dimension: nil)
+        let range: (Range<Int64>, MediaBoxFetchPriority)?
+        if let rangeValue = rangeValue {
+            range = (rangeValue, .elevated)
+        } else {
+            range = nil
+        }
+        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: imageReference.resourceReference(large.resource), range: range, statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
     } else {
         return .never()
     }
 }
 
-func chatMessagePhotoCancelInteractiveFetch(account: Account, photo: TelegramMediaImage) {
-    if let largestRepresentation = largestRepresentationForPhoto(photo) {
-        return account.postbox.mediaBox.cancelInteractiveResourceFetch(largestRepresentation.resource)
+func chatMessagePhotoCancelInteractiveFetch(account: Account, photo: TelegramMediaImage, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) {
+    if let large = photo.representationForDisplayAtSize(.init(toRepresentationSize)) {
+        return account.postbox.mediaBox.cancelInteractiveResourceFetch(large.resource)
     }
 }
 
 func fileInteractiveFetched(account: Account, fileReference: FileMediaReference) -> Signal<Void, NoError> {
-    return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: .file) |> `catch` { _ in return .complete() } |> map {_ in} //account.postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file)) |> map {_ in}
+    return fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), statsCategory: .file) |> `catch` { _ in return .complete() } |> map {_ in}
 }
 
 func fileCancelInteractiveFetch(account: Account, file: TelegramMediaFile) {
@@ -1683,7 +1640,7 @@ public func blurImage(_ data:Data?, _ s:NSSize, cornerRadius:CGFloat = 0) -> CGI
 
         if cornerRadius > 0 {
             
-           let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 2.0)
+            let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: System.backingScale)
 
             thumbnailContext.withContext({ (ctx) in
                 let minx:CGFloat = 0, midx = thumbnailContextSize.width/2.0, maxx = thumbnailContextSize.width
@@ -1728,7 +1685,7 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
                 let decodedThumbnailData = fileReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail)
                 let fetchedThumbnail: Signal<FetchResourceSourceType, NoError>
                 if let smallestRepresentation = smallestImageRepresentation(fileReference.media.previewRepresentations) {
-                    fetchedThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: fileReference.resourceReference(smallestRepresentation.resource), statsCategory: .image) |> `catch` { _ in return .complete() }
+                    fetchedThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(smallestRepresentation.resource), statsCategory: .image) |> `catch` { _ in return .complete() }
                 } else {
                     fetchedThumbnail = .complete()
                 }
@@ -1880,7 +1837,7 @@ private func chatSecretMessageVideoData(account: Account, fileReference: FileMed
     if let smallestRepresentation = smallestImageRepresentation(fileReference.media.previewRepresentations) {
         let thumbnailResource = smallestRepresentation.resource
         
-        let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: fileReference.resourceReference(thumbnailResource), statsCategory: .video)
+        let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(thumbnailResource), statsCategory: .video)
         
         let thumbnail = Signal<ImageRenderData, NoError> { subscriber in
             let fetchedDisposable = fetchedThumbnail.start()
@@ -1913,7 +1870,7 @@ func chatSecretMessageVideo(account: Account, fileReference: FileMediaReference,
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var blurredImage: CGImage?
             
@@ -2175,8 +2132,8 @@ func addCorners(_ context: DrawingContext, arguments: TransformImageArguments, s
 }
 
 
-func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 240, height: 240), autoFetchFullSize: true)
+func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, autoFetchFullSize: Bool = true) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 240, height: 240), autoFetchFullSize: autoFetchFullSize)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
@@ -2189,7 +2146,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -2237,7 +2194,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
             
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
-                c.setFillColor(theme.colors.grayBackground.cgColor)
+             //   c.setFillColor(theme.colors.grayBackground.cgColor)
                 if arguments.boundingSize != arguments.imageSize {
                     c.fill(arguments.drawingRect)
                 }
@@ -2290,7 +2247,7 @@ func chatMessageVideoThumbnail(account: Account, fileReference: FileMediaReferen
                 fittedSize.height = arguments.boundingSize.height
             }
             
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -2380,7 +2337,7 @@ func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, 
             if fittedSize.height < drawingRect.size.height && fittedSize.height >= drawingRect.size.height - 2.0 {
                 fittedSize.height = drawingRect.size.height
             }
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -2594,7 +2551,7 @@ public func filethumb(with url:URL, account:Account, scale:CGFloat) -> Signal<Im
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var thumb: CGImage?
             if let thumbnailData = data.thumbnailData {
@@ -2625,14 +2582,14 @@ public func filethumb(with url:URL, account:Account, scale:CGFloat) -> Signal<Im
 
 
 
-func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad)
+func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, synchronousLoad: Bool = false, onlyThumbnail: Bool = true) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: NSMakeSize(100, 100), synchronousLoad: synchronousLoad, useMiniThumbnailIfAvailable: true, onlyThumbnail: onlyThumbnail)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
             
-            let fullSizeData = data.fullSizeData
+            let fullSizeData: Data? = data.fullSizeData
             let thumbnailData = data.thumbnailData
             let fullSizeComplete = data.fullSizeComplete
             
@@ -2645,11 +2602,11 @@ func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scal
                 fittedSize.height = arguments.boundingSize.height
             }
             
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var blurredImage: CGImage?
             
-            if let fullSizeData = fullSizeData {
+            if let fullSizeData = fullSizeData, !onlyThumbnail || thumbnailData == nil {
                 if fullSizeComplete {
                     let options = NSMutableDictionary()
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
@@ -2753,7 +2710,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
             
             let drawingRect = arguments.drawingRect
             let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize)//.fitted(arguments.imageSize)
-            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: floorToScreenPixels(System.backingScale, drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0)), y: floorToScreenPixels(System.backingScale, drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0))), size: fittedSize)
             
             
             
@@ -2765,7 +2722,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                 options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
                 options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
-                options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+              //  options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
 
                 if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options) {
                     if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
@@ -2862,7 +2819,7 @@ private func chatMessagePhotoThumbnailDatas(account: Account, imageReference: Im
                 
             } else {
                 
-                let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(smallestRepresentation.resource), statsCategory: .image)//account.postbox.mediaBox.fetchedResource(smallestRepresentation.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .image))
+                let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: imageReference.resourceReference(smallestRepresentation.resource), statsCategory: .image)//account.postbox.mediaBox.fetchedResource(smallestRepresentation.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .image))
                 
                 let thumbnail = Signal<Data?, NoError> { subscriber in
                     let fetchedDisposable = fetchedThumbnail.start()
@@ -2923,7 +2880,7 @@ func chatMessagePhotoThumbnail(account: Account,  imageReference: ImageMediaRefe
                 fittedSize.height = arguments.boundingSize.height
             }
             
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
             
             var fullSizeImage: CGImage?
             if let fullSizeData = fullSizeData {
@@ -3006,7 +2963,7 @@ private func builtinWallpaperData() -> Signal<ImageRenderData, NoError> {
     } |> runOn(Queue.concurrentDefaultQueue())
 }
 
-func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Signal<ImageDataTransformation, NoError> {
+func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = System.backingScale) -> Signal<ImageDataTransformation, NoError> {
     return builtinWallpaperData() |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
@@ -3025,7 +2982,7 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
                     fittedSize.height = arguments.boundingSize.height
                 }
                 
-                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
                 
                 
                 context.withFlippedContext { c in
@@ -3074,8 +3031,8 @@ private func chatWallpaperDatas(account: Account, representations: [TelegramMedi
                     fullReference = MediaResourceReference.wallpaper(wallpaper: slug != nil ? .slug(slug!) : nil, resource: largestRepresentation.resource)
                 }
                 
-                let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: smallReference, statsCategory: .image)
-                let fetchedFullSize = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: fullReference, statsCategory: .image)
+                let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: smallReference, statsCategory: .image)
+                let fetchedFullSize = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: fullReference, statsCategory: .image)
                 
                 let thumbnail = Signal<Data?, NoError> { subscriber in
                     let fetchedDisposable = fetchedThumbnail.start()
@@ -3140,14 +3097,14 @@ enum PatternWallpaperDrawMode {
 }
 
 
-func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
+func crossplatformPreview(accountContext: AccountContext, palette: ColorPalette, wallpaper: Wallpaper, webpage: TelegramMediaWebpage? = nil, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = System.backingScale, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: accountContext.account.postbox, wallpaper: wallpaper)
     
     return signal |> map { wallpaper in
         return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
             
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
-            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600))))
+            let preview = generateThemePreview(for: palette, wallpaper: wallpaper, backgroundMode: generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)), emoticonThemes: accountContext.emoticonThemes))
             
             context.withContext { ctx in
                 ctx.draw(preview, in: arguments.drawingRect)
@@ -3159,6 +3116,33 @@ func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wa
         })
     }
 }
+
+func wallpaperPreview(accountContext: AccountContext, palette: ColorPalette, wallpaper: Wallpaper, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = System.backingScale, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: accountContext.account.postbox, wallpaper: wallpaper)
+    
+    return signal |> map { wallpaper in
+        return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
+            
+            let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+            let preview = generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(arguments.boundingSize), emoticonThemes: accountContext.emoticonThemes)
+            
+            
+            context.withContext { ctx in
+                ctx.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                ctx.rotate(by: 180 * CGFloat.pi / -180.0)
+                ctx.scaleBy(x: -1, y: 1)
+                ctx.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                
+                drawBg(preview, palette: palette, bubbled: true, rect: arguments.drawingRect, in: ctx)
+            }
+            
+            addCorners(context, arguments: arguments, scale: arguments.scale)
+            
+            return context
+        })
+    }
+}
+
 
 
 private func patternWallpaperDatas(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false) -> Signal<ImageRenderData, NoError> {
@@ -3180,8 +3164,8 @@ private func patternWallpaperDatas(account: Account, representations: [ImageRepr
                     let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
                     return .single(ImageRenderData(nil, loadedData, true))
                 } else {
-                    let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: representations[smallestIndex].reference)
-                    let fetchedFullSize = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: representations[largestIndex].reference)
+                    let fetchedThumbnail = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: representations[smallestIndex].reference)
+                    let fetchedFullSize = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: representations[largestIndex].reference)
                     
                     let thumbnailData = Signal<Data?, NoError> { subscriber in
                         let fetchedDisposable = fetchedThumbnail.start()
@@ -3262,7 +3246,7 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                 fittedSize.height = arguments.boundingSize.height
             }
             
-            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
         
             
             var thumbnailImage: CGImage?
@@ -3327,38 +3311,39 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                             c.fill(rect)
                         }
                         
-                        if colors.count == 1, let color = colors.first {
-                            c.setFillColor(color.cgColor)
-                            c.fill(arguments.drawingRect)
-                        } else {
-                        
-                            if colors.count <= 2 {
-                                let gradientColors = colors.map { $0.cgColor } as CFArray
-                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-
-                                var locations: [CGFloat] = []
-                                for i in 0 ..< colors.count {
-                                    locations.append(delta * CGFloat(i))
-                                }
-                                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                                
-                                c.saveGState()
-                                c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                                c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
-                                c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-                                
-                                c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                                c.restoreGState()
+                        if !colors.isEmpty {
+                            if colors.count == 1, let color = colors.first {
+                                c.setFillColor(color.cgColor)
+                                c.fill(arguments.drawingRect)
                             } else {
-                                let preview = AnimatedGradientBackgroundView.generatePreview(size: arguments.drawingSize.fitted(.init(width: 30, height: 30)), colors: colors)
+                                if colors.count <= 2 {
+                                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
 
-                                c.saveGState()
-                                c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                                c.scaleBy(x: 1.0, y: -1.0)
-                                c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-                                c.draw(preview, in: arguments.drawingSize.bounds)
-                                c.restoreGState()
+                                    var locations: [CGFloat] = []
+                                    for i in 0 ..< colors.count {
+                                        locations.append(delta * CGFloat(i))
+                                    }
+                                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                    
+                                    c.saveGState()
+                                    c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                                    c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
+                                    c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                                    
+                                    c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                    c.restoreGState()
+                                } else {
+                                    let preview = AnimatedGradientBackgroundView.generatePreview(size: arguments.drawingSize.fitted(.init(width: 30, height: 30)), colors: colors)
+
+                                    c.saveGState()
+                                    c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                                    c.scaleBy(x: 1.0, y: -1.0)
+                                    c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                                    c.draw(preview, in: arguments.drawingSize.bounds)
+                                    c.restoreGState()
+                                }
                             }
                         }
                     }
@@ -3405,7 +3390,7 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
 }
 
 
-func patternWallpaperImage(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, scale: CGFloat = 2.0, autoFetchFullSize: Bool = false, drawPatternOnly: Bool, palette: ColorPalette) -> Signal<ImageDataTransformation, NoError> {
+func patternWallpaperImage(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, scale: CGFloat = System.backingScale, autoFetchFullSize: Bool = false, drawPatternOnly: Bool, palette: ColorPalette) -> Signal<ImageDataTransformation, NoError> {
     var prominent = false
     if case .thumbnail = mode {
         prominent = false
@@ -3414,7 +3399,7 @@ func patternWallpaperImage(account: Account, representations: [ImageRepresentati
 }
 
 
-func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, slug: String? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false, drawPatternOnly: Bool = false, palette: ColorPalette = theme.colors) -> Signal<ImageDataTransformation, NoError> {
+func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, slug: String? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = System.backingScale, isBlurred: Bool = false, synchronousLoad: Bool = false, drawPatternOnly: Bool = false, palette: ColorPalette = theme.colors) -> Signal<ImageDataTransformation, NoError> {
     var prominent = false
     if case .thumbnail = mode {
         prominent = false
@@ -3460,7 +3445,7 @@ func instantPageImageFile(account: Account, fileReference: FileMediaReference, s
                     }
                 }
                 
-                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
                 
                 context.withFlippedContext { c in
                     if var fullSizeImage = fullSizeImage {
@@ -3762,7 +3747,7 @@ public func chatMapSnapshotImage(account: Account, resource: MapSnapshotMediaRes
                         fittedSize.height = arguments.boundingSize.height
                     }
                     
-                    let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                    let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(System.backingScale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(System.backingScale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
                     
                     context.withFlippedContext { c in
                         c.setBlendMode(.copy)
@@ -3806,7 +3791,7 @@ public func chatMapSnapshotImage(account: Account, resource: MapSnapshotMediaRes
 
 
 
-func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
+func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage?, NoError> {
     return Signal { subscriber in
         
         
@@ -3823,7 +3808,7 @@ func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
             ctx.clear(size.bounds)
             node.1.draw(size.bounds, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
             
-        })!
+        })
         
         subscriber.putNext(image)
         subscriber.putCompletion()
@@ -3843,6 +3828,57 @@ func makeTopicIcon(_ title: String, bgColors: [NSColor], strokeColors: [NSColor]
         subscriber.putNext(ImageDataTransformation(data: data, execute: { arguments, data in
             return generateTopicIcon(size: arguments.boundingSize, backgroundColors: bgColors, strokeColors: strokeColors, title: title)
         }))
+        subscriber.putCompletion()
+        return ActionDisposable {
+            
+        }
+    } |> runOn(.concurrentBackgroundQueue())
+}
+
+func makeGeneralTopicIcon(_ resource: LocalBundleResource, scale: CGFloat = System.backingScale) -> Signal<ImageDataTransformation, NoError> {
+    return Signal { subscriber in
+        let data = NSImage(named: resource.name)?.tiffRepresentation
+        if let data = data {
+            let data: ImageRenderData = .init(nil, data, true)
+            subscriber.putNext(ImageDataTransformation(data: data, execute: { arguments, data in
+                let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+                
+                let drawingRect = arguments.drawingRect
+                let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + floorToScreenPixels(scale, (drawingRect.size.width - fittedSize.width) / 2.0), y: drawingRect.origin.y + floorToScreenPixels(scale, (drawingRect.size.height - fittedSize.height) / 2.0)), size: fittedSize)
+                
+                var fullSizeImage: CGImage?
+                if let fullSizeData = data.fullSizeData {
+                    let options = NSMutableDictionary()
+                    options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+                    
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
+                        fullSizeImage = image
+                    }
+                }
+                
+                context.withContext(isHighQuality: fullSizeImage != nil, { c in
+
+                    c.setBlendMode(.copy)
+                    if let fullSizeImage = fullSizeImage {
+                        c.interpolationQuality = .medium
+                        if let color = resource.color {
+                            c.clip(to: fittedRect, mask: fullSizeImage)
+                            c.setFillColor(color.cgColor)
+                            c.fill(fittedRect)
+                        } else {
+                            c.draw(fullSizeImage, in: fittedRect)
+                        }
+                    }
+                    
+                })
+                                
+                return context
+            }))
+        }
+        
         subscriber.putCompletion()
         return ActionDisposable {
             

@@ -17,6 +17,14 @@ final class PremiumLockModalController : ModalViewController {
         return false
     }
     
+    override var containerBackground: NSColor {
+        return .clear
+    }
+    
+    override var modalTheme:Theme {
+        return Theme(text: .clear, grayText: .clear, background: .clear, border: .clear, accent: .clear, grayForeground: .clear, activeBackground: .clear, activeBorder: .clear, listBackground: .clear)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         

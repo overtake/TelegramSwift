@@ -21,7 +21,7 @@ private func generate(_ color: NSColor) -> CGImage {
         ctx.setFillColor(color.cgColor)
         ctx.fillEllipse(in: rect)
         
-        let image = NSImage(named: "Icon_ChatActionsActive")!.precomposed()
+        let image = NSImage(resource: .iconChatActionsActive).precomposed()
         
         ctx.clip(to: rect, mask: image)
         ctx.clear(rect)
@@ -30,7 +30,7 @@ private func generate(_ color: NSColor) -> CGImage {
     }, scale: System.backingScale)!
 }
 
-private let linkIcon: CGImage = NSImage(named: "Icon_ExportedInvitation_Link")!.precomposed(.white)
+private let linkIcon: CGImage = NSImage(resource: .iconExportedInvitationLink).precomposed(.white)
 
 
 
@@ -162,7 +162,7 @@ private final class ProgressView : View {
         if let expiryDate = link.expireDate, !link.isExpired && !link.isRevoked {
             let startDate = link.startDate ?? link.date
             let timeout = expiryDate - startDate
-            progressView.update(color: updateBackgroundColor(), timeout: timeout, deadlineTimestamp: expiryDate)
+            progressView.update(color: updateBackgroundColor(), timeout: Double(timeout), deadlineTimestamp: Double(expiryDate))
 
             progressView.reachedTimeout = {
                 _ = updateBackgroundColor()
@@ -276,7 +276,7 @@ private final class InviteLinkTokenView : Control {
                         text = strings().inviteLinkCanJoinCountable(Int(usageLimit))
                     }
                 } else {
-                    text = strings().inviteLinkJoinedNewZero
+                    text = strings().inviteLinkJoinedNewCountable(0)
                 }
                 if link.requestApproval, let requestedCount = link.requestedCount {
                     var textCount = strings().inviteLinkRequestedCountable(Int(requestedCount))

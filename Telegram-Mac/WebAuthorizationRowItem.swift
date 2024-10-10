@@ -23,7 +23,7 @@ class WebAuthorizationRowItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, authorization: WebAuthorization, peer: Peer, viewType: GeneralViewType, logout:@escaping()->Void) {
         self.logoutInteraction = logout
         self.account = account
-        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil, peer.isForum)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum)
         self.nameLayout = TextViewLayout(.initialize(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         let statusAttr = NSMutableAttributedString()
         
@@ -67,7 +67,7 @@ private class WebAuthorizationRowView : TableRowView, ViewDisplayDelegate {
     private let statusTextView: TextView = TextView()
     private let dateView: TextView = TextView()
     private let photoView: AvatarControl = AvatarControl(font: .avatar(8))
-    private let logoutButton: TitleButton = TitleButton()
+    private let logoutButton: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         botNameView.isSelectable = false

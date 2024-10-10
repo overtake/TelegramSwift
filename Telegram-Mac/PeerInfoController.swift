@@ -13,6 +13,11 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 
+struct UserInfoPersonalChannel : Equatable {
+    let peer: EnginePeer
+    let message: EngineMessage?
+    let subscribers: Int32?
+}
 
 
 class PeerInfoArguments {
@@ -21,8 +26,25 @@ class PeerInfoArguments {
     let isAd: Bool
     let pushViewController:(ViewController) -> Void
     
+    var peer: Peer? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
+    
+    var effectivePeerId: PeerId {
+        if let peer = peer as? TelegramSecretChat {
+            return peer.associatedPeerId ?? peerId
+        } else {
+            return peer?.id ?? peerId
+        }
+    }
+    
     let pullNavigation:()->NavigationViewController?
     let mediaController: ()->PeerMediaController?
+    
+    let getStarsContext:(()->StarsRevenueStatsContext?)?
     
     
     let toggleNotificationsDisposable = MetaDisposable()
@@ -45,9 +67,9 @@ class PeerInfoArguments {
     
     func copy(_ string: String) {
         copyToClipboard(string)
-        pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
+        showModalText(for: context.window, text: strings().shareLinkCopied)
     }
-
+    
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         return true
     }
@@ -57,32 +79,62 @@ class PeerInfoArguments {
     }
     
     func peerInfo(_ peerId:PeerId) {
-        pushViewController(PeerInfoController(context: context, peerId: peerId))
+        if let navigation = pullNavigation() {
+            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
+        }
     }
     
     func peerChat(_ peerId:PeerId, postId: MessageId? = nil) {
-        pushViewController(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId))
+        pushViewController(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId)))
+    }
+    
+    func openStory(_ initialId: StoryInitialIndex?) {
+        StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
+    }
+    
+    func openFragment(_ subject: FragmentItemInfoScreenSubject) {
+        let context = self.context
+        
+        _ = showModalProgress(signal: FragmentItemInitialData(context: context, peerId: peerId, subject: subject), for: context.window).startStandalone(next: { [weak self] data in
+            if let data {
+                showModal(with: FragmentUsernameController(context: context, data: data), for: context.window)
+            } else {
+                switch subject {
+                case .phoneNumber(let string):
+                    self?.copy(formatPhoneNumber(string))
+                case .username(let string):
+                    self?.copy("@\(string)")
+                }
+            }
+            
+        })
     }
     
     func toggleNotifications(_ currentlyMuted: Bool) {
         
-        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId, threadId: nil).start())
+        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: effectivePeerId, threadId: nil).start())
         
         pullNavigation()?.controller.show(toaster: ControllerToaster(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
     
     func delete() {
+        self.delete(force: false)
+    }
+    
+    func delete(force: Bool) {
         let context = self.context
         let peerId = self.peerId
         
-        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil
+        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil || force
         
         let signal = context.account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
-            return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true)
+            return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true, forceRemoveGlobally: peerViewMainPeer(view)?.groupAccess.isCreator == true && force)
         } |> deliverOnMainQueue
         
-        deleteDisposable.set(signal.start(completed: { [weak self] in
-            self?.pullNavigation()?.close()
+        deleteDisposable.set(signal.start(next: { [weak self] result in
+            if result {
+                self?.pullNavigation()?.close()
+            }
         }))
     }
     
@@ -92,7 +144,7 @@ class PeerInfoArguments {
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -101,6 +153,7 @@ class PeerInfoArguments {
         self.pushViewController = pushViewController
         self.pullNavigation = pullNavigation
         self.mediaController = mediaController
+        self.getStarsContext = getStarsContext
     }
 
     
@@ -109,6 +162,7 @@ class PeerInfoArguments {
         deleteDisposable.dispose()
     }
 }
+
 
 struct TemporaryParticipant: Equatable {
     let peer: Peer
@@ -225,11 +279,33 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
 
 final class PeerInfoView : View {
     let tableView: TableView
+    let navigationBarView = NavigationBarView(frame: .zero)
+    private let navBgView = View()
+    private let borderView = View()
     required init(frame frameRect: NSRect) {
         tableView = .init(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
+        addSubview(navBgView)
+        addSubview(navigationBarView)
+        self.addSubview(borderView)
     }
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        navigationBarView.backgroundColor = .clear
+        navBgView.backgroundColor = theme.colors.background
+        borderView.backgroundColor = theme.colors.border
+    }
+    
+//    override func hitTest(_ point: NSPoint) -> NSView? {
+//        var result = super.hitTest(point)
+//        if result == nil {
+//            result = navigationBarView.hitTest(point.offsetBy(dx: 0, dy: -self.frame.minY))
+//        }
+//        return result
+//    }
+//    
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -237,7 +313,34 @@ final class PeerInfoView : View {
     
     override func layout() {
         super.layout()
-        tableView.frame = bounds
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: navigationBarView, frame: NSMakeRect(0, 0, size.width, 50))
+        transition.updateFrame(view: navBgView, frame: navigationBarView.frame)
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 50, size.width, size.height - 50))
+        transition.updateFrame(view: borderView, frame: NSMakeRect(0, navBgView.frame.height - .borderSize, navBgView.frame.width, .borderSize))
+    }
+    
+    func set(leftBar: BarView, centerView: BarView, rightView: BarView, controller: ViewController, animated: Bool) {
+        
+        let transition: ContainedViewLayoutTransition = .immediate
+        navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
+        navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
+        navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
+
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
+    fileprivate func updateScrollState(_ state: PeerInfoController.ScrollState, animated: Bool) {
+        self.navBgView.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
+        borderView.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
+      //  self.navigationBarView.bottomBorder.change(opacity: state == .pageIn ? 1 : 0, animated: animated)
     }
 }
 
@@ -250,6 +353,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
     let peerId:PeerId
+    let peer: Peer
     
     private let arguments:Promise<PeerInfoArguments> = Promise()
     
@@ -263,22 +367,131 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private var argumentsAction: DisposableSet = DisposableSet()
     var disposable:MetaDisposable = MetaDisposable()
-    
+
     private let mediaController: PeerMediaController
+    
+    private let revenueContext: StarsRevenueStatsContext?
     
     let threadInfo: ThreadInfo?
     
     let source: Source
+    let stories: PeerExpiringStoryListContext?
+
+    fileprivate enum ScrollState : Equatable {
+        case pageUp
+        case pageIn
+    }
     
+    private var scrollState: ScrollState = .pageUp
     
+    private func updateScrollState(_ state: ScrollState, animated: Bool) {
+        if state != self.scrollState {
+            self.scrollState = state
+            self.requestUpdateBackBar()
+            self.requestUpdateCenterBar()
+            self.requestUpdateRightBar()
+            genericView.updateScrollState(state, animated: animated)
+        }
+    }
     
+    override func requestUpdateBackBar() {
+//        super.requestUpdateBackBar()
+        if let leftBarView = _leftBar as? BackNavigationBar {
+            leftBarView.requestUpdate()
+        }
+        _leftBar.style = barPresentation
+    }
     
-    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isAd: Bool = false, source: Source = .none) {
-        self.peerId = peerId
+    override func requestUpdateCenterBar() {
+//        super.requestUpdateCenterBar()
+        if scrollState == .pageIn || nameColor == nil {
+            setCenterTitle(defaultBarTitle)
+        } else {
+            setCenterTitle("")
+        }
+        setCenterStatus(defaultBarStatus)
+        _centerBar.style = barPresentation
+    }
+    override func requestUpdateRightBar() {
+//        super.requestUpdateRightBar()
+        _rightBar.style = barPresentation
+    }
+    
+    override func setCenterTitle(_ text:String) {
+        _centerBar.text = .initialize(string: text, color: barPresentation.textColor, font: .medium(.title))
+    }
+    override func setCenterStatus(_ text: String?) {
+        if let text = text {
+            _centerBar.status = .initialize(string: text, color: barPresentation.grayTextColor, font: .normal(.text))
+        } else {
+            _centerBar.status = nil
+        }
+    }
+    
+    var nameColor:  PeerNameColor? {
+        return peer.profileColor
+    }
+    
+    override var barHeight: CGFloat {
+        return 0
+    }
+    
+    override var barPresentation: ControlStyle {
+        if let nameColor = self.nameColor, state == .Normal, scrollState == .pageUp {
+            let backgroundColor = context.peerNameColors.getProfile(nameColor).main
+            let foregroundColor = backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            return .init(foregroundColor: foregroundColor, backgroundColor: .clear, highlightColor: .clear, borderColor: .clear, grayTextColor: theme.colors.grayText, textColor: foregroundColor)
+        }  else {
+            return .init(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear, borderColor: theme.colors.border, grayTextColor: theme.colors.grayText, textColor: theme.colors.text)
+        }
+    }
+    
+    override func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+        if leftView == leftBarView {
+            self.genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar, controller: self, animated: animation == .crossfade)
+        } else {
+            self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
+        }
+    }
+    
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true) {
+        if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
+            controller.view.shake(beep: true)
+            return
+        }
+        let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+        _ = signal.start(next: { [weak navigation] peer in
+            if peer.restrictionText(context.contentSettings) == nil {
+                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source), animated, style: animated ? .push : Optional.none)
+            }
+        })
+    }
+    
+    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
+        let peerId = peer.id
+        self.peerId = peer.id
+        self.peer = peer
         self.source = source
         self.threadInfo = threadInfo
+        
+        if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
+            self.stories = stories ?? .init(account: context.account, peerId: peerId)
+        } else {
+            self.stories = nil
+        }
+        
+        if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
+            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
+        } else if peer.isChannel {
+            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
+        } else {
+            self.revenueContext = nil
+        }
+        
         self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
         super.init(context)
+        
+        bar = .init(height: 50, enableBorder: false)
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
             self?.navigationController?.push(controller)
@@ -294,6 +507,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
              return self?.navigationController
         }, mediaController: { [weak self] in
              return self?.mediaController
+        }, getStarsContext: { [weak self] in
+            return self?.revenueContext
         })
         
         
@@ -303,13 +518,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
               return self?.mediaController
         })
         if let threadInfo = threadInfo {
-            _topicArguments = TopicInfoArguments(context: context, peerId: peerId, state: TopicInfoState(threadId: makeMessageThreadId(threadInfo.message.messageId)), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
+            _topicArguments = TopicInfoArguments(context: context, peerId: peerId, state: TopicInfoState(threadId: threadInfo.message.threadId), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
                 return self?.navigationController
             }, mediaController: { [weak self] in
                   return self?.mediaController
             })
         }
         
+     
         
     }
     
@@ -321,6 +537,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         window?.removeAllHandlers(for: self)
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+    }
+    
+    private var isBirthdayPlayable = true
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -337,7 +558,119 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             }
             return .rejected
         }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
+     
         
+        if isBirthdayPlayable {
+            let birthday = self.peerView.with({ ($0?.cachedData as? CachedUserData)?.birthday })
+            
+            if let item = genericView.tableView.item(stableId: UserInfoEntry.birthday(sectionId: 0, text: "", false, viewType: .legacy).stableId.hashValue), let birthday, birthday.isToday {
+                playBirthdayAnimations(item, birthday: birthday)
+            }
+            isBirthdayPlayable = false
+        }
+        
+        
+    }
+    
+    private func playBirthdayAnimations(_ item: TableRowItem, birthday: TelegramBirthday) {
+        let context = self.context
+        if let emoji = ["🎉", "🎆", "🎈"].randomElement() {
+            
+            let numbers:[Int: String] = [0: "0️⃣",
+                          1: "1️⃣",
+                          2: "2️⃣",
+                          3: "3️⃣",
+                          4: "4️⃣",
+                          5: "5️⃣",
+                          6: "6️⃣",
+                          7: "7️⃣",
+                          8: "8️⃣",
+                          9: "9️⃣"]
+            
+            func separateNumbers(_ number: Int) -> [Int] {
+                let numberString = String(number)
+                var separatedNumbers = [Int]()
+                
+                for char in numberString {
+                    if let digit = Int(String(char)) {
+                        separatedNumbers.append(digit)
+                    }
+                }
+                
+                return separatedNumbers
+            }
+
+            
+            let yearStickers: Signal<[TelegramMediaFile], NoError>
+            if let year = birthday.yearsSince() {
+                yearStickers = context.engine.stickers.loadedStickerPack(reference: .name("FestiveFontEmoji"), forceActualized: false) |> mapToSignal { loaded in
+                    switch loaded {
+                    case let .result(_, items, _):
+                        var list: [TelegramMediaFile] = []
+                        for number in separateNumbers(Int(year)) {
+                            for item in items {
+                                if item.file.customEmojiText == numbers[number] {
+                                    list.append(item.file)
+                                }
+                            }
+                        }
+                        return .single(list)
+                    default:
+                        return .never()
+                    }
+                } |> take(1) |> deliverOnMainQueue
+            } else {
+                yearStickers = .single([])
+            }
+            
+                
+            _ = combineLatest(context.diceCache.animationEffect(for: emoji) |> take(1), yearStickers).startStandalone(next: { [weak item, weak self] values, yearStickers in
+                if let file = values.first, let itemView = item?.view {
+                    
+                    let layer = InlineStickerView(account: context.account, file: file.2, size: NSMakeSize(300, 300), playPolicy: .onceEnd)
+                    
+                    layer.isEventLess = true
+                    layer.userInteractionEnabled = false
+                    
+                    let point: NSPoint = itemView.convert(.zero, to: self?.genericView)
+
+                    layer.setFrameOrigin(point.offsetBy(dx: 0, dy: -layer.frame.height / 2))
+                    
+                    self?.genericView.addSubview(layer)
+                    
+                    layer.animateLayer.triggerOnState = (.stoped, { [weak layer] state in
+                        layer?.removeFromSuperview()
+                    })
+                    
+                    layer.animateLayer.triggerOnState = (.finished, { [weak layer] state in
+                        layer?.removeFromSuperview()
+                    })
+                    
+                    for (i, number) in yearStickers.enumerated() {
+                        
+                        let layer = InlineStickerItemLayer(account: context.account, file: number, size: NSMakeSize(80, 80))
+                        
+                        layer.superview = self?.genericView
+                        layer.isPlayable = true
+                        
+                        let point: NSPoint = itemView.convert(.zero, to: nil)
+
+                        layer.frame = CGRect.init(origin: point.offsetBy(dx: CGFloat(i) * layer.size.width, dy: -layer.size.height / 2), size: layer.size)
+                        
+                        layer.animateScale(from: 0.01, to: 1.0, duration: 0.2)
+                        layer.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+
+                        let windowSize = context.window.frame
+                        
+                        parabollicReactionAnimation(layer, fromPoint: layer.frame.origin, toPoint: NSMakePoint(windowSize.width / 2 + CGFloat(i) * layer.size.width, windowSize.height), window: context.window, completion: { _ in
+                            
+                        }, duration: 3.0)
+                    }
+                    
+                    PlayConfetti(for: context.window)
+                }
+            })
+        }
     }
     
     
@@ -348,10 +681,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.tableView.reloadData()
     }
     
-    
+    override func getLeftBarViewOnce() -> BarView {
+        return BarView(controller: self)
+    }
+    override func getRightBarViewOnce() -> BarView {
+        return BarView(controller: self)
+    }
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let currentEvent = NSApp.currentEvent, state == .Edit {
@@ -364,11 +701,56 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         return .invokeNext
     }
     
+    private func updateNavigationBar() {
+        
+        guard nameColor != nil else {
+            return
+        }
+        
+        let maxY = genericView.tableView.item(at: 1).view?.frame.maxY ?? 0
+        
+        var scrollState: ScrollState
+        if self.genericView.tableView.documentOffset.y <= maxY, state == .Normal {
+            scrollState = .pageUp
+        } else {
+            scrollState = .pageIn
+        }
+        updateScrollState(scrollState, animated: true)
+    }
+    
+    private var _leftBar: BarView!
+    private var _centerBar: TitledBarView!
+    private var _rightBar: BarView!
+
     override func viewDidLoad() -> Void {
+        
+        _leftBar = super.getLeftBarViewOnce()
+        _centerBar = super.getCenterBarViewOnce()
+        _rightBar = super.getRightBarViewOnce()
+        
+        genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
+
         super.viewDidLoad()
+        
+        genericView.updateScrollState(nameColor != nil ? scrollState : .pageIn, animated: false)
+        
+        genericView.tableView.layer?.masksToBounds = false
+        genericView.tableView.documentView?.layer?.masksToBounds = false
+        genericView.tableView.clipView.layer?.masksToBounds = false
+        genericView.layer?.masksToBounds = false
+        
+        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.updateNavigationBar()
+        }))
+        
+        self.genericView.tableView.hasVerticalScroller = false
         
         self.genericView.tableView.getBackgroundColor = {
             theme.colors.listBackground
+        }
+        
+        if peer.isChannel {
+            _ = context.engine.peers.requestRecommendedChannels(peerId: peerId, forceUpdate: true).startStandalone()
         }
         
         
@@ -377,10 +759,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let peerId = self.peerId
         let initialSize = atomicSize
         let onMainQueue: Atomic<Bool> = Atomic(value: true)
-        let threadId = threadInfo?.message.messageId
-                
+        let threadId = threadInfo?.message.threadId
+                        
         mediaController.navigationController = self.navigationController
-        mediaController._frameRect = bounds
+        mediaController._frameRect = NSMakeRect(0, 0, bounds.width, bounds.height)
         mediaController.bar = .init(height: 0)
         
         mediaController.loadViewIfNeeded()
@@ -400,6 +782,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         arguments.set(context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] peer in
             guard let `self` = self else {return .never()}
             
+            self._topicArguments?.peer = peer
+            self._groupArguments?.peer = peer
+            self._channelArguments?.peer = peer
+            self._userArguments?.peer = peer
+
             if peer.isForum && threadId != nil {
                 return .single(self._topicArguments)
             }
@@ -420,22 +807,6 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         var loadMoreControl: PeerChannelMemberCategoryControl?
         
-        let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
-        if peerId.namespace == Namespaces.Peer.CloudChannel {
-            let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
-                channelMembersPromise.set(.single(state.list))
-            })
-            actionsDisposable.add(disposable)
-
-            let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
-                
-            })
-            actionsDisposable.add(contactsDisposable)
-            
-            loadMoreControl = control
-        } else {
-            channelMembersPromise.set(.single([]))
-        }
         
         
         let mediaTabsData: Signal<PeerMediaTabsData, NoError> = mediaController.tabsValue
@@ -444,41 +815,112 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         let source = self.source
         
+        let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
+        if let stories = self.stories {
+            storiesSignal = stories.state |> map(Optional.init)
+        } else {
+            storiesSignal = .single(nil)
+        }
+        
+        let revenueState: Signal<StarsRevenueStatsContextState?, NoError>
+        if let revenueContext {
+            revenueState = revenueContext.state |> map(Optional.init)
+        } else {
+            revenueState = .single(nil)
+        }
+        
+        let personalChannelSignal: Signal<UserInfoPersonalChannel?, NoError>
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            personalChannelSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.PersonalChannel(id: peerId)) |> mapToSignal { value in
+                switch value {
+                case let .known(channel):
+                    if let channel = channel {
+                        let message = context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: channel.peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 10, fixedCombinedReadStates: nil) |> map {
+                            $0.0.entries.last?.message
+                        }
+                        return combineLatest(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: channel.peerId)), message) |> map { peer, message in
+                            if let peer {
+                                return UserInfoPersonalChannel(peer: peer, message: message.flatMap(EngineMessage.init), subscribers: channel.subscriberCount)
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        return .single(nil)
+                    }
+                case .unknown:
+                    return .single(nil)
+                }
+            }
+        } else {
+            personalChannelSignal = .single(nil)
+        }
         
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
             let inviteLinksCount: Signal<Int32, NoError>
-            if let arguments = arguments as? GroupInfoArguments {
-                inviteLinksCount = arguments.linksManager.state |> map {
-                    $0.effectiveCount
-                }
-            } else if let arguments = arguments as? ChannelInfoArguments {
-                inviteLinksCount = arguments.linksManager.state |> map {
-                    $0.effectiveCount
+            if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                if let arguments = arguments as? GroupInfoArguments {
+                    inviteLinksCount = arguments.linksManager.state |> map {
+                        $0.effectiveCount
+                    }
+                } else if let arguments = arguments as? ChannelInfoArguments {
+                    inviteLinksCount = arguments.linksManager.state |> map {
+                        $0.effectiveCount
+                    }
+                } else {
+                    inviteLinksCount = .single(0)
                 }
             } else {
                 inviteLinksCount = .single(0)
             }
             
-            let joinRequestsCount: Signal<Int32, NoError>
-            if let arguments = arguments as? GroupInfoArguments {
-                joinRequestsCount = arguments.requestManager.state |> map {
-                    Int32($0.waitingCount)
+            
+            let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
+            if peerId.namespace == Namespaces.Peer.CloudChannel {
+                if let peer = arguments.peer as? TelegramChannel, peer.isSupergroup || peer.isGigagroup {
+                    let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
+                        channelMembersPromise.set(.single(state.list))
+                    })
+                    actionsDisposable.add(disposable)
+
+                    let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
+                        
+                    })
+                    actionsDisposable.add(contactsDisposable)
+                    
+                    loadMoreControl = control
+                } else {
+                    channelMembersPromise.set(.single([]))
                 }
-            } else if let arguments = arguments as? ChannelInfoArguments {
-                joinRequestsCount = arguments.requestManager.state |> map {
-                    Int32($0.waitingCount)
+            } else {
+                channelMembersPromise.set(.single([]))
+            }
+            
+            let joinRequestsCount: Signal<Int32, NoError>
+            if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                if let arguments = arguments as? GroupInfoArguments {
+                    joinRequestsCount = arguments.requestManager.state |> map {
+                        Int32($0.waitingCount)
+                    }
+                } else if let arguments = arguments as? ChannelInfoArguments {
+                    joinRequestsCount = arguments.requestManager.state |> map {
+                        Int32($0.waitingCount)
+                    }
+                } else {
+                    joinRequestsCount = .single(0)
                 }
             } else {
                 joinRequestsCount = .single(0)
             }
+            
             
             let availableReactions: Signal<AvailableReactions?, NoError> = context.reactions.stateValue
             
             
             let threadData: Signal<MessageHistoryThreadData?, NoError>
             if let threadId = threadId {
-                let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: makeMessageThreadId(threadId))
+                let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: threadId)
                 threadData = context.account.postbox.combinedView(keys: [key]) |> map { views in
                     let view = views.views[key] as? MessageHistoryThreadInfoView
                     let data = view?.info?.data.get(MessageHistoryThreadData.self)
@@ -488,10 +930,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 threadData = .single(nil)
             }
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
+            
+           
+            
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal, personalChannelSignal, revenueState)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories, personalChannel, revenueState -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     
@@ -526,9 +972,15 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         editable = group.groupAccess.canEditGroupInfo || group.groupAccess.canEditMembers
                     }
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
-                    editable = context.account.peerId != peer.id
+                    if peerId.namespace == Namespaces.Peer.SecretChat {
+                        editable = false
+                    } else {
+                        editable = true//context.account.peerId != peer.id
+                    }
+                } else if let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
+                    editable = true
                 } else {
-                    editable = false
+                    editable = context.peerId == peerId
                 }
             } else {
                 editable = false
@@ -537,6 +989,24 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             
             self?.genericView.tableView.merge(with:transition)
             self?.readyOnce()
+            
+            if let peer = peerViewMainPeer(peerView) {
+                if let channel = peer as? TelegramChannel {
+                    switch channel.participationStatus {
+                    case .member, .left:
+                        break
+                    case .kicked:
+                        self?.navigationController?.close()
+                    }
+                } else if let group = peer as? TelegramGroup {
+                    switch group.membership {
+                    case .Member, .Left:
+                        break
+                    case .Removed:
+                        self?.navigationController?.close()
+                    }
+                }
+            }
 
         }))
         
@@ -575,14 +1045,21 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 guard let `self` = self else {
                     return
                 }
-                let updateState = arguments.updateEditable(state == .Edit, peerView: peerView, controller: self)
-                self.genericView.tableView.scroll(to: .up(true))
-                
-                if updateState {
-                    self.applyState(state)
+                if self.peerId == self.context.peerId {
+                    EditAccountInfoController(context: arguments.context, f: { [weak self] controller in
+                        self?.navigationController?.push(controller)
+                    })
+                } else {
+                    let updateState = arguments.updateEditable(state == .Edit, peerView: peerView, controller: self)
+                    self.genericView.tableView.scroll(to: .up(true))
+                    
+                    if updateState {
+                        self.applyState(state)
+                    }
                 }
             })
         }
+        updateNavigationBar()
     }
     
     private func applyState(_ state: ViewControllerState) {

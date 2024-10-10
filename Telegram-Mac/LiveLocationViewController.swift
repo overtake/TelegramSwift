@@ -21,11 +21,6 @@ private final class LocationPreviewArguments {
     }
 }
 
-extension TelegramMediaMap : Equatable {
-    public static func == (lhs: TelegramMediaMap, rhs: TelegramMediaMap) -> Bool {
-        return lhs.heading == rhs.heading && lhs.longitude == rhs.longitude && lhs.latitude == rhs.latitude
-    }
-}
 
 private struct LocationPreviewState : Equatable {
     static func == (lhs: LocationPreviewState, rhs: LocationPreviewState) -> Bool {
@@ -63,14 +58,17 @@ private func entries(_ state:LocationPreviewState, arguments: LocationPreviewArg
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map, equatable: InputDataEquatable(state.map), comparable: nil, item: { initialSize, stableId in
-        return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, map: state.map, peer: state.peer, viewType: .legacy)
+        return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, peer: state.peer, viewType: .legacy, presentation: theme)
     }))
     index += 1
+    
+    entries.append(.sectionId(index, type: .customModern(20)))
+    sectionId += 1
     
     return entries
 }
 @available(macOS 10.13, *)
-func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMediaMap, peer: Peer?, messageId: MessageId) -> InputDataModalController {
+func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMediaMap, peer: Peer?, messageId: MessageId?) -> InputDataModalController {
     
     let initialState = LocationPreviewState(map: mapValue, peer: peer)
     
@@ -82,14 +80,19 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     
     let arguments = LocationPreviewArguments(context: context)
     
-    let messageView = context.account.postbox.messageView(messageId) |> map {
-        $0.message
+    let messageView: Signal<Message?, NoError>
+    if let messageId {
+        messageView = context.account.postbox.messageView(messageId) |> map {
+            $0.message
+        }
+    } else {
+        messageView = .complete()
     }
     
     let disposable = messageView.start(next: { message in
         updateState { value in
             var value = value.withUpdatedPeer(message?.effectiveAuthor)
-            if let map = message?.effectiveMedia as? TelegramMediaMap {
+            if let map = message?.anyMedia as? TelegramMediaMap {
                 value = value.withUpdatedMap(map)
             }
             return value
@@ -100,7 +103,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Location Preview")
+    let controller = InputDataController(dataSignal: signal, title: strings().locationPreviewTitle)
     
     controller.afterDisappear = {
         disposable.dispose()
@@ -108,10 +111,10 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     
     var close: (()->Void)? = nil
     
-    let modalInteractions = ModalInteractions(acceptTitle: "Open in Google Maps", accept: {
+    let modalInteractions = ModalInteractions(acceptTitle: strings().locationPreviewOpenInMaps, accept: {
         close?()
         execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", stateValue.with { $0.map.latitude })),\(String(format:"%f", stateValue.with { $0.map.longitude }))", false))
-    }, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
@@ -123,7 +126,9 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
         return .none
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(300, 330))
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(380, 330))
+    
+    
     
     close = { [weak modalController] in
         modalController?.close()

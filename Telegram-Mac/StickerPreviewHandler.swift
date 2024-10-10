@@ -125,6 +125,9 @@ class ModalPreviewHandler : NSObject {
     }
     
     func startHandler() {
+        guard window.isKeyWindow else {
+            return
+        }
         let initial = global.fileAtLocationInWindow(window.mouseLocationOutsideOfEventStream)
         if let initial = initial {
             modal.update(with: initial.0)
@@ -143,12 +146,12 @@ class ModalPreviewHandler : NSObject {
                     strongSelf.modal.update(with: reference.0)
                 }
                 return .invoked
-            }, with: self, for: .leftMouseDragged, priority: .modal)
+            }, with: self, for: .leftMouseDragged, priority: .supreme)
             
             window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
                 self?.stopHandler()
                 return .invoked
-            }, with: self, for: .leftMouseUp, priority: .modal)
+            }, with: self, for: .leftMouseUp, priority: .supreme)
         }
        
     }
@@ -157,7 +160,7 @@ class ModalPreviewHandler : NSObject {
         window.removeAllHandlers(for: self)
         if let view = self.global.fileAtLocationInWindow(self.window.mouseLocationOutsideOfEventStream)?.1 {
             let content = modal.genericView.contentView?.getContentView() ?? modal.genericView
-            let rect = view.convert(view.bounds, to: modal.genericView.superview?.superview)
+            let rect = view.convert(view.bounds, to: modal.genericView.superview?.superview?.superview)
             modal.close(animationType: .scaleToRect(rect, content))
         } else {
             modal.close()

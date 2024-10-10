@@ -16,7 +16,7 @@ import Postbox
 class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
     let imageView:ImageView = ImageView()
     let textView:TextView = TextView()
-    let button:TitleButton = TitleButton()
+    let button:TextButton = TextButton()
     private let containerView:View = View()
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

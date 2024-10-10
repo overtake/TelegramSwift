@@ -18,12 +18,12 @@ final class DateSelectorModalView : View {
     private let atView = TextView()
     fileprivate let timePicker: TimePicker
     private let containerView = View()
-    fileprivate let sendOn = TitleButton()
-    fileprivate let sendWhenOnline = TitleButton()
-    required init(frame frameRect: NSRect) {
+    fileprivate let sendOn = TextButton()
+    fileprivate let sendWhenOnline = TextButton()
+    required init(frame frameRect: NSRect, hasSeconds: Bool) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: DateSelectorUtil.formatDay(Date()), value: Date()))
-        self.timePicker = TimePicker(selected: TimePickerOption(hours: 0, minutes: 0, seconds: 0))
+        self.timePicker = TimePicker(selected: TimePickerOption(hours: 0, minutes: 0, seconds: hasSeconds ? 0 : nil))
         super.init(frame: frameRect)
         containerView.addSubview(self.dayPicker)
         containerView.addSubview(self.atView)
@@ -32,7 +32,7 @@ final class DateSelectorModalView : View {
         self.addSubview(sendOn)
         self.atView.userInteractionEnabled = false
         self.atView.isSelectable = false
-        self.sendOn.layer?.cornerRadius = .cornerRadius
+        self.sendOn.layer?.cornerRadius = 10
         self.sendOn.disableActions()
         self.addSubview(self.sendWhenOnline)
         self.updateLocalizationAndTheme(theme: theme)
@@ -41,8 +41,10 @@ final class DateSelectorModalView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
+        self.backgroundColor = theme.colors.listBackground
+        
         self.sendOn.set(font: .medium(.text), for: .Normal)
-        self.sendOn.set(color: .white, for: .Normal)
+        self.sendOn.set(color: theme.colors.underSelectedColor, for: .Normal)
         self.sendOn.set(background: theme.colors.accent, for: .Normal)
         self.sendOn.set(background: theme.colors.accent.highlighted, for: .Highlight)
 
@@ -83,24 +85,24 @@ final class DateSelectorModalView : View {
         if let mode = mode {
             switch mode {
             case .date:
-                self.dayPicker.setFrameSize(NSMakeSize(130, 30))
-                self.timePicker.setFrameSize(NSMakeSize(130, 30))
+                self.dayPicker.setFrameSize(NSMakeSize(135, 30))
+                self.timePicker.setFrameSize(NSMakeSize(135, 30))
 
                 let fullWidth = dayPicker.frame.width + 15 + timePicker.frame.width
                 self.containerView.setFrameSize(NSMakeSize(fullWidth, max(dayPicker.frame.height, timePicker.frame.height)))
                 self.dayPicker.centerY(x: 0)
                 self.timePicker.centerY(x: dayPicker.frame.maxX + 15)
-                self.containerView.centerX(y: 30)
+                self.containerView.centerX(y: 10)
             case .schedule:
-                self.dayPicker.setFrameSize(NSMakeSize(115, 30))
-                self.timePicker.setFrameSize(NSMakeSize(115, 30))
+                self.dayPicker.setFrameSize(NSMakeSize(120, 30))
+                self.timePicker.setFrameSize(NSMakeSize(120, 30))
                 let fullWidth = dayPicker.frame.width + 15 + atView.frame.width + 15 + timePicker.frame.width
                 self.containerView.setFrameSize(NSMakeSize(fullWidth, max(dayPicker.frame.height, timePicker.frame.height)))
                 self.dayPicker.centerY(x: 0)
                 self.atView.centerY(x: self.dayPicker.frame.maxX + 15)
                 self.timePicker.centerY(x: self.atView.frame.maxX + 15)
-                self.containerView.centerX(y: 30)
-                _ = self.sendOn.sizeToFit(NSZeroSize, NSMakeSize(fullWidth, 30), thatFit: true)
+                self.containerView.centerX(y: 10)
+                _ = self.sendOn.sizeToFit(NSZeroSize, NSMakeSize(fullWidth, 40), thatFit: true)
                 self.sendOn.centerX(y: containerView.frame.maxY + 30)
                 self.sendWhenOnline.centerX(y: self.sendOn.frame.maxY + 15)
             }
@@ -112,6 +114,10 @@ final class DateSelectorModalView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
 }
 
 
@@ -120,7 +126,7 @@ extension TimePickerOption {
     var interval: TimeInterval {
         let hours = Double(self.hours) * 60.0 * 60
         let minutes = Double(self.minutes) * 60.0
-        let seconds = Double(self.seconds)
+        let seconds = Double(self.seconds ?? 0)
         return hours + minutes + seconds
     }
 }
@@ -137,22 +143,30 @@ class DateSelectorModalController: ModalViewController {
     private var sendWhenOnline: Bool = false
     fileprivate let mode: Mode
     private let disposable = MetaDisposable()
-    init(context: AccountContext, defaultDate: Date? = nil, mode: Mode, selectedAt:@escaping(Date)->Void) {
+    init(context: AccountContext, defaultDate: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 1 * 60 * 60), mode: Mode, selectedAt:@escaping(Date)->Void) {
         self.context = context
         self.defaultDate = defaultDate
         self.selectedAt = selectedAt
         self.mode = mode
         switch mode {
         case .schedule:
-            super.init(frame: NSMakeRect(0, 0, 350, 200))
+            super.init(frame: NSMakeRect(0, 0, 330, 180))
         case .date:
-            super.init(frame: NSMakeRect(0, 0, 350, 90))
+            super.init(frame: NSMakeRect(0, 0, 330, 70))
         }
         self.bar = .init(height: 0)
     }
     
     override func viewClass() -> AnyClass {
         return DateSelectorModalView.self
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
+    }
+    
+    override var containerBackground: NSColor {
+        return presentation.colors.listBackground
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
@@ -176,9 +190,9 @@ class DateSelectorModalController: ModalViewController {
         var height: CGFloat = 0
         switch mode {
         case .date:
-            height = 90
+            height = 70
         case .schedule:
-            height = sendWhenOnline ? 170 : 150
+            height = sendWhenOnline ? 160 : 130
         }
         
         self.modal?.resize(with:NSMakeSize(frame.width, height), animated: false)
@@ -228,12 +242,14 @@ class DateSelectorModalController: ModalViewController {
         var timeinfo: tm = tm()
         localtime_r(&t, &timeinfo)
         
-        genericView.timePicker.selected = TimePickerOption(hours: timeinfo.tm_hour, minutes: timeinfo.tm_min, seconds: timeinfo.tm_sec)
+        genericView.timePicker.selected = TimePickerOption(hours: timeinfo.tm_hour, minutes: timeinfo.tm_min, seconds: hasSeconds ? timeinfo.tm_sec : nil)
 
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
-            genericView.sendOn.set(text: strings().scheduleSendToday(DateSelectorUtil.formatTime(date)), for: .Normal)
+            let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
+            genericView.sendOn.set(text: strings().scheduleSendToday(formatted), for: .Normal)
         } else {
-            genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), DateSelectorUtil.formatTime(date)), for: .Normal)
+            let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
+            genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), formatted), for: .Normal)
         }
     }
     
@@ -283,6 +299,7 @@ class DateSelectorModalController: ModalViewController {
         window?.removeAllHandlers(for: self)
     }
     
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -319,9 +336,19 @@ class DateSelectorModalController: ModalViewController {
         case let .date(_, doneTitle):
             return ModalInteractions(acceptTitle: doneTitle, accept: { [weak self] in
                 self?.select()
-            }, drawBorder: true, height: 50, singleButton: true)
+            }, singleButton: true)
         }
     }
+    
+    var hasSeconds: Bool {
+        switch mode {
+        case .schedule:
+            return false
+        case .date:
+            return true
+        }
+    }
+    
     
     private func initialize() {
         let date = self.defaultDate ?? Date()
@@ -330,8 +357,10 @@ class DateSelectorModalController: ModalViewController {
         var timeinfo: tm = tm()
         localtime_r(&t, &timeinfo)
         
+       
+        
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: DateSelectorUtil.formatDay(date), value: date)
-        self.genericView.timePicker.selected = TimePickerOption(hours: 0, minutes: 0, seconds: 0)
+        self.genericView.timePicker.selected = TimePickerOption(hours: 0, minutes: 0, seconds: hasSeconds ? 0 : nil)
         
         self.genericView.updateWithMode(self.mode, sendWhenOnline: self.sendWhenOnline)
         
@@ -399,5 +428,9 @@ class DateSelectorModalController: ModalViewController {
     
     deinit {
         disposable.dispose()
+    }
+    
+    override func initializer() -> NSView {
+        return DateSelectorModalView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), hasSeconds: hasSeconds);
     }
 }

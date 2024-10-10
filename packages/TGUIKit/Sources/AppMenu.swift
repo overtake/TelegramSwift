@@ -96,6 +96,8 @@ public final class AppMenu {
     public func show(event: NSEvent, view: NSView) {
         
         
+        NSCursor.arrow.set()
+        
         if System.legacyMenu || self.menu.isLegacy {
             NSMenu.popUpContextMenu(self.menu, with: event, for: view)
         } else {
@@ -107,12 +109,14 @@ public final class AppMenu {
             
             controller.onShow = { [weak self, weak view] in
                 if let menu = self?.menu {
-                    self?.menu.onShow(menu)
+                    menu.onShow(menu)
                 }
                 (view as? Control)?.isSelected = true
             }
             controller.onClose = { [weak self, weak view] in
-                self?.menu.onClose()
+                if let menu = self?.menu {
+                    menu.onClose()
+                }
                 (view as? Control)?.isSelected = false
             }
             

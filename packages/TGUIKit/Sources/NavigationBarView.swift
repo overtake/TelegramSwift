@@ -20,7 +20,7 @@ public enum NavigationBarSwapAnimation {
 public struct NavigationBarStyle {
     public let height:CGFloat
     public let enableBorder:Bool
-    public init(height:CGFloat, enableBorder:Bool = true) {
+    public init(height:CGFloat, enableBorder:Bool = true, custom: Bool = false) {
         self.height = height
         self.enableBorder = enableBorder
     }
@@ -32,11 +32,15 @@ public struct NavigationBarStyle {
 
 public class NavigationBarView: View {
     
-    private var bottomBorder:View = View()
+    public private(set) var bottomBorder:View = View()
     
     private var leftView:BarView = BarView(frame: NSZeroRect)
     private var centerView:BarView = BarView(frame: NSZeroRect)
     private var rightView:BarView = BarView(frame: NSZeroRect)
+    
+    weak var navigation: NavigationViewController?
+    
+    
     
     override init() {
         super.init()
@@ -73,7 +77,6 @@ public class NavigationBarView: View {
     
     override public func layout() {
         super.layout()
-        self.bottomBorder.setNeedsDisplay()
         self.bottomBorder.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
 
         self.layout(left: leftView, center: centerView, right: rightView)
@@ -91,6 +94,13 @@ public class NavigationBarView: View {
         return true
     }
     
+    var startPosition: CGFloat {
+//        if let navigation = self.navigation {
+//            return navigation.navigationBarLeftPosition
+//        }
+        return 0
+    }
+    
     
     func layout(left: BarView, center: BarView, right: BarView, force: Bool = false) -> Void {
         
@@ -99,12 +109,14 @@ public class NavigationBarView: View {
         if frame.height > 0 {
             //proportions = 50 / 25 / 25
             
-            let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? frame.width / 3 : frame.width / 4))
-            let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? frame.width / 3 : frame.width / 4))
+            let width = frame.width - startPosition
             
-            left.frame = NSMakeRect(0, 0, leftWidth, frame.height - .borderSize);
-            center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (leftWidth + rightWidth), frame.height - .borderSize);
-            right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height - .borderSize);
+            let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? width / 3 : width / 4))
+            let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? width / 3 : width / 4))
+            
+            left.frame = NSMakeRect(startPosition, 0, leftWidth, frame.height);
+            center.frame = NSMakeRect(left.frame.maxX, 0, width - (leftWidth + rightWidth), frame.height);
+            right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height);
         }
     }
     
@@ -180,7 +192,6 @@ public class NavigationBarView: View {
         switch direction {
         case .right:
             
-            
             //center
             nLeft_to = round(frame.width - left.frame.width)/2.0 - (round(frame.width - left.frame.width)/2.0) * percent
             nCenter_to = left.frame.maxX + right.frame.width - (right.frame.width * percent)
@@ -190,7 +201,6 @@ public class NavigationBarView: View {
             pCenter_to = self.leftView.frame.width * (1.0 - percent)
             pRight_to = self.leftView.frame.width + self.centerView.frame.width
             
-            break
         case .left:
             
             nLeft_to = 0
@@ -200,7 +210,6 @@ public class NavigationBarView: View {
             pLeft_to = self.leftView.frame.minX
             pCenter_to = self.leftView.frame.width + self.centerView.frame.width * percent
             pRight_to = self.leftView.frame.width + self.centerView.frame.width
-            break
         case .none:
             break
         }
@@ -244,7 +253,7 @@ public class NavigationBarView: View {
         
       //  var animationStyle = AnimationStyle.init(duration: 3.0, function: animationStyle.function)
         
-
+        
         
         if !liveSwiping {
             layout(left: left, center: center, right: right)
@@ -300,9 +309,9 @@ public class NavigationBarView: View {
                 
                 //left
                 pLeft_from = liveSwiping ? pLeft.frame.minX : 0
-                pLeft_to = 0
+                pLeft_to = startPosition
                 nLeft_from = liveSwiping ? left.frame.minX : round(frame.width - left.frame.width)/2.0
-                nLeft_to = 0
+                nLeft_to = startPosition
                 
                 //center
                 pCenter_from = liveSwiping ? pCenter.frame.minX : pLeft.frame.width
@@ -322,9 +331,9 @@ public class NavigationBarView: View {
                 
                 //left
                 pLeft_from = liveSwiping ? pLeft.frame.minX : 0
-                pLeft_to = 0
+                pLeft_to = startPosition
                 nLeft_from = liveSwiping ? left.frame.minX : 0
-                nLeft_to = 0
+                nLeft_to = startPosition
                 
                 //center
                 pCenter_from = liveSwiping ? pCenter.frame.minX : center.frame.minX
@@ -416,6 +425,7 @@ public class NavigationBarView: View {
             self.centerView = center
             self.rightView = right
             
+            
             self.addSubview(bottomBorder)
             needsLayout = true
         }
@@ -433,8 +443,8 @@ public class NavigationBarView: View {
         switch animation {
         case .none:
             toView.layer?.opacity = 1.0
-            self.addSubview(toView, positioned: .below, relativeTo: fromView)
             fromView.removeFromSuperview()
+            self.addSubview(toView, positioned: .below, relativeTo: fromView)
             toView.layer?.removeAllAnimations()
             fromView.layer?.removeAllAnimations()
         case .crossfade:
@@ -442,9 +452,10 @@ public class NavigationBarView: View {
             toView.layer?.opacity = 1.0
             toView.layer?.removeAllAnimations()
             toView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            fromView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak fromView] _ in
-                fromView?.removeFromSuperview()
-                fromView?.layer?.removeAllAnimations()
+            fromView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak fromView] completed in
+                if completed {
+                    fromView?.removeFromSuperview()
+                }
             })
         }
     }
@@ -454,17 +465,20 @@ public class NavigationBarView: View {
             applyAnimation(animation, from: self.leftView, to: barView)
             self.leftView = barView
         }
+        layout(left: leftView, center: centerView, right: rightView)
     }
     public func switchCenterView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
         if self.centerView != barView {
             applyAnimation(animation, from: self.centerView, to: barView)
             self.centerView = barView
         }
+        layout(left: leftView, center: centerView, right: rightView)
     }
     public func switchRightView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
         if self.rightView != barView {
             applyAnimation(animation, from: self.rightView, to: barView)
             self.rightView = barView
         }
+        layout(left: leftView, center: centerView, right: rightView)
     }
 }

@@ -36,10 +36,12 @@ private final class QuickReactionRowView : GeneralContainableRowView {
     private var imageLayer: InlineStickerItemLayer?
     private let control = Control(frame: NSMakeRect(0, 0, 25, 25))
     private let textView = TextView()
+    private let imageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(control)
         addSubview(textView)
+        addSubview(imageView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
@@ -95,8 +97,8 @@ private final class QuickReactionRowView : GeneralContainableRowView {
             rect.origin.x = containerView.frame.width - rect.size.width - item.viewType.innerInset.right
             control.frame = rect
             
-            textView.centerY(x: item.viewType.innerInset.left)
-
+            imageView.centerY(x: item.viewType.innerInset.left)
+            textView.centerY(x: imageView.frame.maxX + 10)
         }
     }
     
@@ -107,6 +109,8 @@ private final class QuickReactionRowView : GeneralContainableRowView {
         guard let item = item as? QuickReactionRowItem else {
             return
         }
+        imageView.image = theme.icons.installed_stickers_reactions
+        imageView.sizeToFit()
         
         let textLayout = TextViewLayout.init(.initialize(string: strings().reactionSettingsQuickTitle, color: theme.colors.text, font: .normal(.title)))
         textLayout.measure(width: .greatestFiniteMagnitude)

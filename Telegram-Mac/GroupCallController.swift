@@ -567,7 +567,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
     let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
-    
     if canInvite {
         
         struct Tuple : Equatable {
@@ -817,10 +816,10 @@ final class GroupCallUIController : ViewController {
                 return
             }
             if self.canManageCall {
-                modernConfirm(for: window, account: account, peerId: nil, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, okTitle: strings().voiceChatEndOK, thridTitle: strings().voiceChatEndThird, thridAutoOn: false, successHandler: {
+                verifyAlert(for: window, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, ok: strings().voiceChatEndOK, option: strings().voiceChatEndThird, optionIsSelected: false, successHandler: {
                     [weak self] result in
                     _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
-                }, appearance: darkPalette.appearance)
+                }, presentation: darkAppearance)
             } else {
                 _ = self.data.call.sharedContext.endGroupCall(terminate: false).start()
             }
@@ -839,24 +838,28 @@ final class GroupCallUIController : ViewController {
         }, mute: { [weak self] peerId, isMuted in
             _ = self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
+            if let value = self?.genericView.state?.isMuted {
+                self?.sharing?.updateDefaultMuted(!value)
+            }
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
             guard let window = self?.window, let accountContext = self?.data.call.accountContext else {
                 return
             }
             let isChannel = self?.data.call.peer?.isChannel == true
-            modernConfirm(for: window, account: account, peerId: peer.id, information: isChannel ? strings().voiceChatRemovePeerConfirmChannel(peer.displayTitle) : strings().voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: strings().voiceChatRemovePeerConfirmOK, cancelTitle: strings().voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
+            verifyAlert(for: window, information: isChannel ? strings().voiceChatRemovePeerConfirmChannel(peer.displayTitle) : strings().voiceChatRemovePeerConfirm(peer.displayTitle), ok: strings().voiceChatRemovePeerConfirmOK, cancel: strings().voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
                 if peerId.namespace == Namespaces.Peer.CloudChannel {
                     _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
                 } else if let window = window {
                     _ = showModalProgress(signal: accountContext.engine.peers.removePeerMember(peerId: peerId, memberId: peer.id), for: window).start()
                 }
-            }, appearance: darkPalette.appearance)
+            }, presentation: darkAppearance)
         }, openInfo: { [weak self] peer in
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.data.call.accountContext.bindings.rootNavigation().push(PeerInfoController.init(context: strongSelf.data.call.accountContext, peerId: peer.id))
+            let navigation = strongSelf.data.call.accountContext.bindings.rootNavigation()
+            PeerInfoController.push(navigation: navigation, context: strongSelf.data.call.accountContext, peerId: peer.id)
             strongSelf.data.call.accountContext.window.orderFrontRegardless()
         }, inviteMembers: { [weak self] in
             guard let window = self?.window, let data = self?.data else {
@@ -909,11 +912,11 @@ final class GroupCallUIController : ViewController {
                     case .screencast:
                         let presentingPeer = state.videoActive(.main).first(where: { $0.presentationEndpoint != nil })
                         if let peer = presentingPeer {
-                            confirm(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), okTitle: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
+                            verifyAlert_button(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), ok: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
-                            }, appearance: darkPalette.appearance)
+                            }, presentation: darkAppearance)
                         } else {
                             f(true)
                         }
@@ -977,14 +980,18 @@ final class GroupCallUIController : ViewController {
                     let deviceId = sharedContext.devicesContext.currentCameraId
                     
                     actionsDisposable.add(devicesSignal.start(next: { devices in
-                        let device = devices.camera.first(where: { deviceId == $0.uniqueID })
+                        let preselectedDevice = devices.camera.first(where: { FastSettings.defaultVideoShare() == $0.uniqueID })
+                        let device = preselectedDevice ?? devices.camera.first(where: { deviceId == $0.uniqueID })
                         if let device = device {
                             select(CameraCaptureDevice(device))
                         }
                     }))
                 case .screencast:
                     let screens = DesktopCaptureSourceManagerMac(_s: ())
-                    if let first = screens.list().first {
+                    let windows = DesktopCaptureSourceManagerMac(_w: ())
+                    let sf = screens.list().first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
+                    let wf = windows.list().first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
+                    if let first = sf ?? wf ?? screens.list().first {
                         select(first)
                     }
                 }
@@ -1095,12 +1102,12 @@ final class GroupCallUIController : ViewController {
         }, recordClick: { [weak self] state in
             if let window = self?.window {
                 if state.canManageCall {
-                    confirm(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, okTitle: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
+                    verifyAlert_button(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                         self?.data.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                         if let window = window {
                             showModalText(for: window, text: strings().voiceChatToastStop)
                         }
-                    }, appearance: darkPalette.appearance)
+                    }, presentation: darkAppearance)
                 } else {
                     showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }
@@ -1190,6 +1197,8 @@ final class GroupCallUIController : ViewController {
                 return []
             }
             
+            let isStream = self?.data.call.isStream ?? false
+            
             var firstBlock:[ContextMenuItem] = []
             var secondBlock:[ContextMenuItem] = []
             var thirdBlock: [ContextMenuItem] = []
@@ -1203,8 +1212,14 @@ final class GroupCallUIController : ViewController {
                     arguments.openInfo(state.peer)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 
+                if let about = state.about {
+                    firstBlock.append(ContextMenuItem(about, handler: {
+                        arguments.openInfo(state.peer)
+                    }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                }
+
                 if data.peer.id != data.accountPeerId, state.muteState == nil || state.muteState?.canUnmute == true {
-                    secondBlock.append(GroupCallVolumeMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
+                    secondBlock.append(SliderContextMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
                         if value == 0 {
                             arguments.mute(data.peer.id, true)
                         } else {
@@ -1216,7 +1231,7 @@ final class GroupCallUIController : ViewController {
                     secondBlock.append(ContextMenuItem(strings().voiceChatDownHand, handler: arguments.toggleRaiseHand, itemImage: MenuAnimation.menu_unblock.value))
                 }
                 
-                if let endpointId = data.videoEndpoint {
+                if let endpointId = data.videoEndpoint, !isStream {
                     if !arguments.isPinnedVideo(data.peer.id, .video) {
                         secondBlock.append(ContextMenuItem(strings().voiceChatPinVideo, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .video, .permanent))
@@ -1227,7 +1242,7 @@ final class GroupCallUIController : ViewController {
                         }, itemImage: MenuAnimation.menu_unpin.value))
                     }
                 }
-                if let endpointId = data.presentationEndpoint {
+                if let endpointId = data.presentationEndpoint, !isStream {
                     if !arguments.isPinnedVideo(data.peer.id, .screencast) {
                         secondBlock.append(ContextMenuItem(strings().voiceChatPinScreencast, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .screencast, .permanent))
@@ -1241,16 +1256,16 @@ final class GroupCallUIController : ViewController {
                 
                 
                 
-                if !data.canManageCall, data.peer.id != data.accountPeerId {
+                if !data.canManageCall, data.peer.id != data.accountPeerId, !isStream {
                     if let muteState = state.muteState {
                         if muteState.mutedByYou {
                             secondBlock.append(.init(strings().voiceChatUnmuteForMe, handler: {
                                 arguments.mute(data.peer.id, false)
-                            }, itemImage: MenuAnimation.menu_unmuted.value))
+                            }, itemImage: MenuAnimation.menu_speaker.value))
                         } else {
                             secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }, itemImage: MenuAnimation.menu_mute.value))
+                            }, itemImage: MenuAnimation.menu_speaker_muted.value))
                         }
                     } else {
                         secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
@@ -1259,7 +1274,7 @@ final class GroupCallUIController : ViewController {
                     }
                 }
                 
-                if data.canManageCall, data.peer.id != data.accountPeerId {
+                if data.canManageCall, data.peer.id != data.accountPeerId, !isStream {
                     if data.adminIds.contains(data.peer.id) {
                         if state.muteState == nil {
                             secondBlock.append(.init(strings().voiceChatMutePeer, handler: {
@@ -1777,7 +1792,7 @@ final class GroupCallUIController : ViewController {
         let inputArguments = InputDataArguments(select: { _, _ in }, dataUpdated: {})
         
                 
-        let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> mapToQueue { state, appAppearance in
+        let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> deliverOnPrepareQueue |> mapToQueue { state, appAppearance in
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
             let previous = previousEntries.swap(current)
             let signal = prepareInputDataTransition(left: previous, right: current, animated: abs(current.count - previous.count) <= 10 && state.isWindowVisible && state.isFullScreen == previousIsFullScreen, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputArguments, onMainQueue: false, animateEverything: true)
@@ -1894,14 +1909,14 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            confirm(for: window, information: strings().voiceChatRequestAccess, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+            verifyAlert_button(for: window, information: strings().voiceChatRequestAccess, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
                 default:
                     break
                 }
-            }, appearance: darkPalette.appearance)
+            }, presentation: darkAppearance)
         }
         
         data.call.permissions = { action, f in
@@ -1954,16 +1969,16 @@ final class GroupCallUIController : ViewController {
         }, with: self, for: .mouseExited, priority: .modal)
         
         
-        window.set(handler: { [weak arguments, weak self] event in
-            if self?.data.call.isStream == false {
-                if videoSourcesValue.with ({ $0.screencast == nil }) {
-                    arguments?.shareSource(.screencast, true)
-                } else {
-                    arguments?.cancelShareScreencast()
-                }
-            }
-            return .invokeNext
-        }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
+//        window.set(handler: { [weak arguments, weak self] event in
+//            if self?.data.call.isStream == false {
+//                if videoSourcesValue.with ({ $0.screencast == nil }) {
+//                    arguments?.shareSource(.screencast, true)
+//                } else {
+//                    arguments?.cancelShareScreencast()
+//                }
+//            }
+//            return .invokeNext
+//        }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
         
         window.set(handler: { [weak arguments, weak self] event in
             if self?.data.call.isStream == false {

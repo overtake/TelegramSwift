@@ -10,6 +10,104 @@ import Cocoa
 import Colors
 
 
+
+
+
+
+public final class InputViewTheme: Equatable {
+    public final class Quote: Equatable {
+        public let foreground: PeerNameColors.Colors
+        public let icon: NSImage
+        public let collapse: NSImage
+        public let expand: NSImage
+        public init(foreground: PeerNameColors.Colors,
+                    icon: NSImage,
+                    collapse: NSImage,
+                    expand: NSImage
+        ) {
+            self.foreground = foreground
+            self.collapse = collapse
+            self.expand = expand
+            self.icon = icon
+        }
+        
+        public static func ==(lhs: Quote, rhs: Quote) -> Bool {
+            if lhs.foreground != rhs.foreground {
+                return false
+            }
+            if lhs.icon != rhs.icon {
+                return false
+            }
+            if lhs.collapse != rhs.collapse {
+                return false
+            }
+            if lhs.expand != rhs.expand {
+                return false
+            }
+            return true
+        }
+    }
+    
+    public let quote: Quote
+    public let indicatorColor: NSColor
+    public let backgroundColor: NSColor
+    public let selectingColor: NSColor
+    public let textColor: NSColor
+    public let accentColor: NSColor
+    public let fontSize: CGFloat
+    public let grayTextColor: NSColor
+    public init(quote: Quote, indicatorColor: NSColor, backgroundColor: NSColor, selectingColor: NSColor, textColor: NSColor, accentColor: NSColor, grayTextColor: NSColor, fontSize: CGFloat) {
+        self.quote = quote
+        self.indicatorColor = indicatorColor
+        self.backgroundColor = backgroundColor
+        self.selectingColor = selectingColor
+        self.textColor = textColor
+        self.accentColor = accentColor
+        self.fontSize = fontSize
+        self.grayTextColor = grayTextColor
+    }
+    
+    public static func ==(lhs: InputViewTheme, rhs: InputViewTheme) -> Bool {
+        if lhs.quote != rhs.quote {
+            return false
+        }
+        if lhs.indicatorColor != rhs.indicatorColor {
+            return false
+        }
+        if lhs.backgroundColor != rhs.backgroundColor {
+            return false
+        }
+        if lhs.selectingColor != rhs.selectingColor {
+            return false
+        }
+        if lhs.textColor != rhs.textColor {
+            return false
+        }
+        if lhs.fontSize != rhs.fontSize {
+            return false
+        }
+        if lhs.grayTextColor != rhs.grayTextColor {
+            return false
+        }
+        if lhs.accentColor != rhs.accentColor {
+            return false
+        }
+        return true
+    }
+    
+    public func withUpdatedQuote(_ colors: PeerNameColors.Colors) -> InputViewTheme {
+        return .init(quote: .init(foreground: colors, icon: self.quote.icon, collapse: self.quote.collapse, expand: self.quote.expand), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+    }
+    public func withUpdatedTextColor(_ color: NSColor) -> InputViewTheme {
+        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon, collapse: self.quote.collapse, expand: self.quote.expand), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: color, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+    }
+    public func withUpdatedFontSize(_ fontSize: CGFloat) -> InputViewTheme {
+        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon, collapse: self.quote.collapse, expand: self.quote.expand), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: fontSize)
+    }
+}
+
+
+
 public struct SearchTheme {
     public let backgroundColor: NSColor
     public let searchImage:CGImage
@@ -25,6 +123,7 @@ public struct SearchTheme {
         self.textColor = textColor
         self.placeholderColor = placeholderColor
     }
+    
 }
 
 public enum PaletteWallpaper : Equatable {
@@ -106,6 +205,7 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
     
     return true
 }
+
 
 public struct PaletteAccentColor : Equatable {
     public static func == (lhs: PaletteAccentColor, rhs: PaletteAccentColor) -> Bool {
@@ -1965,7 +2065,7 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             grayForeground: NSColor(0xe4e4e4),
                                             grayIcon: NSColor(0x9e9e9e),
                                             accentIcon: NSColor(0x2481cc),
-                                            badgeMuted: NSColor(0xd7d7d7),
+                                            badgeMuted: NSColor(0xB7B6BD),
                                             badge: NSColor(0x4ba3e2),
                                             indicatorColor: NSColor(0x464a57),
                                             selectMessage: NSColor(0xeaeaea),

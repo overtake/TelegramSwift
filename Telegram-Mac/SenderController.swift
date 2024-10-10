@@ -17,20 +17,22 @@ import TGUIKit
 import libwebp
 import TGGifConverter
 import InAppSettings
-
+import TelegramMedia
 
 class MediaSenderContainer : Equatable {
     let path:String
     let caption:String
     let isFile:Bool
-    public init(path:String, caption:String = "", isFile:Bool = false) {
+    let isOneTime: Bool
+    public init(path:String, caption:String = "", isFile:Bool = false, isOneTime: Bool = false) {
         self.path = path
         self.caption = caption
         self.isFile = isFile
+        self.isOneTime = isOneTime
     }
     
     static func ==(lhs: MediaSenderContainer, rhs: MediaSenderContainer) -> Bool {
-        return lhs.path == rhs.path && lhs.caption == rhs.caption && lhs.isFile == rhs.isFile
+        return lhs.path == rhs.path && lhs.caption == rhs.caption && lhs.isFile == rhs.isFile && lhs.isOneTime == rhs.isOneTime
     }
 }
 
@@ -38,7 +40,7 @@ class ArchiverSenderContainer : MediaSenderContainer {
     let files: [URL]
     public init(path:String, caption:String = "", isFile:Bool = true, files: [URL] = []) {
         self.files = files
-        super.init(path: path, caption: caption, isFile: isFile)
+        super.init(path: path, caption: caption, isFile: isFile, isOneTime: false)
     }
     
     static func ==(lhs: ArchiverSenderContainer, rhs: ArchiverSenderContainer) -> Bool {
@@ -50,11 +52,11 @@ class ArchiverSenderContainer : MediaSenderContainer {
 class VoiceSenderContainer : MediaSenderContainer {
     fileprivate let data:RecordedAudioData
     fileprivate let id:Int64?
-    public init(data:RecordedAudioData, id: Int64?) {
+    public init(data:RecordedAudioData, id: Int64?, isOneTime: Bool) {
         self.data = data
         self.id = id
         let path: String = data.path
-        super.init(path: path)
+        super.init(path: path, isOneTime: isOneTime)
         
     }
 }
@@ -63,11 +65,11 @@ class VideoMessageSenderContainer : MediaSenderContainer {
     fileprivate let duration:Int
     fileprivate let size: CGSize
     fileprivate let id:Int64?
-    public init(path:String, duration: Int, size: CGSize, id: Int64?) {
+    public init(path:String, duration: Int, size: CGSize, id: Int64?, isOneTime: Bool) {
         self.duration = duration
         self.size = size
         self.id = id
-        super.init(path: path, caption: "", isFile: false)
+        super.init(path: path, caption: "", isFile: false, isOneTime: isOneTime)
     }
 }
 
@@ -122,7 +124,7 @@ class Sender: NSObject {
                     if CGImageDestinationFinalize(colorDestination) {
                         let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     }
                 }
             }
@@ -139,7 +141,7 @@ class Sender: NSObject {
             sourceOptions.setValue(320 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
             sourceOptions.setObject(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as NSString)
             sourceOptions.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
-
+            
             if let imageSource = CGImageSourceCreateWithData(thumbData as CFData, sourceOptions) {
                 let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, sourceOptions)
                 if let image = image {
@@ -152,7 +154,7 @@ class Sender: NSObject {
                         if CGImageDestinationFinalize(colorDestination) {
                             let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                             account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         }
                     }
                 }
@@ -162,9 +164,10 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil) -> Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
+        let dynamicEmojiOrder = context.stickerSettings.dynamicPackOrder
         
         var input:ChatTextInputState = input
         
@@ -175,8 +178,8 @@ class Sender: NSObject {
         
         
         if FastSettings.isPossibleReplaceEmojies {
-            let text = input.attributedString.stringEmojiReplacements
-            if text != input.attributedString {
+            let text = input.attributedString().stringEmojiReplacements
+            if text != input.attributedString() {
                 input = ChatTextInputState(inputText: text.string, selectionRange: 0 ..< text.string.length, attributes: chatTextAttributes(from: text))
             }
         }
@@ -193,6 +196,8 @@ class Sender: NSObject {
         if let media = mediaPreview, !disablePreview {
             mediaReference = AnyMediaReference.standalone(media: media)
         }
+        
+        
         
         
         let parsingUrlType: ParsingType
@@ -220,31 +225,44 @@ class Sender: NSObject {
             if let sendAsPeerId = sendAsPeerId {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
             }
+            if let messageEffect {
+                attributes.append(EffectMessageAttribute(id: messageEffect.id))
+            }
+            attributes.append(WebpagePreviewMessageAttribute(leadingPreview: !linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false, isSafe: true))
+
+            
+           
             if !subState.inputText.isEmpty || mediaReference != nil {
-                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: subState.upCollections)
+                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, threadId: threadId, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])
             } else {
                 return nil
             }
         }
         
-        if !mapped.isEmpty {
-            let inlineMedia = input.inlineMedia.map { $0.key }
-            return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
-                if !emojis.isEmpty {
-                    let es = saveUsedEmoji(emojis, postbox: context.account.postbox)
-                    let aes = saveAnimatedUsedEmoji(inlineMedia, postbox: context.account.postbox)
-                    return combineLatest(es, aes) |> map { _ in
-                        return value
-                    }
-                }
-                return .single(value)
-            } |> deliverOnMainQueue
+        if let customChatContents = customChatContents {
+            return customChatContents.enqueueMessages(messages: mapped)
         } else {
-            DispatchQueue.main.async {
-                emptyHandler?()
+            
+            if !mapped.isEmpty {
+                let inlineMedia = input.inlineMedia.map { $0.key }
+                return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
+                    if !emojis.isEmpty {
+                        let es = saveUsedEmoji(emojis, postbox: context.account.postbox)
+                        let aes = saveAnimatedUsedEmoji(inlineMedia, postbox: context.account.postbox)
+                        return combineLatest(es, aes) |> map { _ in
+                            return value
+                        }
+                    }
+                    return .single(value)
+                } |> deliverOnMainQueue
+            } else {
+                DispatchQueue.main.async {
+                    emptyHandler?()
+                }
+                return .complete()
             }
-            return .complete()
         }
+        
     }
     
     public static func enqueue(message:EnqueueMessage, context: AccountContext, peerId:PeerId) ->Signal<[MessageId?],NoError> {
@@ -297,7 +315,7 @@ class Sender: NSObject {
                     }
                     
                     
-                    attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: PixelDimensions(container.size), flags: [.instantRoundVideo]))
+                    attrs.append(TelegramMediaFileAttribute.Video(duration: Double(container.duration), size: PixelDimensions(container.size), flags: [.instantRoundVideo], preloadSize: nil))
                     media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
 
                 } else if mimeType.hasPrefix("image/webp") {
@@ -323,16 +341,19 @@ class Sender: NSObject {
                             if size.width / 10 > size.height || size.height < 40 {
                                 makeFileMedia(true)
                             } else {
-                                let data = compressImageToJPEG(image, quality: 0.83)
+                                let data = compressImageToJPEG(image, quality: 0.73)
                                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
                                 if let data = data {
                                     try? data.write(to: URL(fileURLWithPath: path))
                                 }
                                 
+
+
+                                
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             }
                             
                         } else {
@@ -397,7 +418,7 @@ class Sender: NSObject {
             if let video = video {
                 var size = video.naturalSize.applying(video.preferredTransform)
                 size = NSMakeSize(floor(abs(size.width)), floor(abs(size.height)))
-                attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(size), flags: []))
+                attrs.append(TelegramMediaFileAttribute.Video(duration: Double(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(size), flags: [], preloadSize: nil))
                 attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
                 if !inCollage {
                     if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024), mime.hasSuffix("mp4") {
@@ -413,7 +434,7 @@ class Sender: NSObject {
         }
         
         if mime.hasSuffix("gif"), isMedia {
-            attrs.append(TelegramMediaFileAttribute.Video(duration: 0, size:TGGifConverter.gifDimensionSize(path).pixel, flags: []))
+            attrs.append(TelegramMediaFileAttribute.Video(duration: 0, size:TGGifConverter.gifDimensionSize(path).pixel, flags: [], preloadSize: nil))
             if !inCollage {
                 attrs.append(TelegramMediaFileAttribute.Animated)
             }
@@ -456,7 +477,7 @@ class Sender: NSObject {
         return attrs
     }
     
-    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, replyId: MessageId?, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError> {
+    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError> {
         
         var fwdMessages:[EnqueueMessage] = []
         
@@ -479,7 +500,7 @@ class Sender: NSObject {
         let threadId: Int64?
 
         if let replyId = replyId {
-            threadId = makeMessageThreadId(replyId)
+            threadId = Int64(replyId.messageId.id)
         } else {
             threadId = nil
         }
@@ -489,7 +510,7 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: fwdMessages.reversed())
     }
     
-    public static func shareContact(context: AccountContext, peerId:PeerId, contact:TelegramUser, replyId:MessageId?, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError>  {
+    public static func shareContact(context: AccountContext, peerId:PeerId, media:Media, replyId: EngineMessageReplySubject?, threadId: Int64?, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError>  {
         
         var attributes:[MessageAttribute] = []
         if FastSettings.isChannelMessagesMuted(peerId) {
@@ -499,31 +520,55 @@ class Sender: NSObject {
             attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
         
-        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
+        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: MessageId?, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, leadingText: Bool = false) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
-        var attributes:[MessageAttribute] = []
-        if FastSettings.isChannelMessagesMuted(peerId) || silent {
-            attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
-        }
-        if let date = atDate {
-            attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
-        }
-        if let sendAsPeerId = sendAsPeerId {
-            attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
-        }
-        if let query = query, !query.isEmpty {
-            attributes.append(EmojiSearchQueryMessageAttribute(query: query))
-        }
-        
+       
         
         for path in media {
+            
+            var attributes:[MessageAttribute] = []
+            if FastSettings.isChannelMessagesMuted(peerId) || silent {
+                attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+            }
+            if let date = atDate {
+                attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+            }
+            if let sendAsPeerId = sendAsPeerId {
+                attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
+            }
+            if let query = query, !query.isEmpty {
+                attributes.append(EmojiSearchQueryMessageAttribute(query: query))
+            }
+            
+            if isSpoiler {
+                attributes.append(MediaSpoilerMessageAttribute())
+            }
+            
+            if leadingText {
+                attributes.append(InvertMediaMessageAttribute())
+            }
+
+            
+            if path.isOneTime {
+                attributes.append(AutoremoveTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: 0))
+            }
+            
+            if let messageEffect {
+                attributes.append(EffectMessageAttribute(id: messageEffect.id))
+            }
+            
             senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
-                return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
+                let message = EnqueueMessage.message(text: caption, attributes:attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
+                if let customChatContents  {
+                    return customChatContents.enqueueMessages(messages: [message])
+                } else {
+                    return enqueueMessages(account: context.account, peerId: peerId, messages: [message])
+                }
             })
         }
         
@@ -538,12 +583,13 @@ class Sender: NSObject {
         }  |> take(1) 
     }
     
-    public static func enqueue(media:Media, context: AccountContext, peerId:PeerId, replyId:MessageId?, silent: Bool = false, atDate: Date? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil) ->Signal<[MessageId?],NoError> {
-        return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, silent: silent, atDate: atDate, query: query, collectionId: collectionId)
+    public static func enqueue(media:Media, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, silent: Bool = false, atDate: Date? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, customChatContents: ChatCustomContentsProtocol? = nil) ->Signal<[MessageId?],NoError> {
+        return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, threadId: threadId, replyStoryId: replyStoryId, silent: silent, atDate: atDate, query: query, collectionId: collectionId, customChatContents: customChatContents)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, leadingText: Bool = false) ->Signal<[MessageId?],NoError> {
         
+        let dynamicEmojiOrder: Bool = context.stickerSettings.dynamicPackOrder
         
         let parsingUrlType: ParsingType
         if peerId.namespace != Namespaces.Peer.SecretChat {
@@ -566,11 +612,21 @@ class Sender: NSObject {
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
         }
+        if isSpoiler {
+            attributes.append(MediaSpoilerMessageAttribute())
+        }
+        if let messageEffect {
+            attributes.append(EffectMessageAttribute(id: messageEffect.id))
+        }
+        
+        if leadingText {
+            attributes.append(InvertMediaMessageAttribute())
+        }
                 
         let localGroupingKey = isCollage ? arc4random64() : nil
         
         var upCollections:[ItemCollectionId] = []
-        if let collectionId = collectionId {
+        if let collectionId = collectionId, dynamicEmojiOrder {
             upCollections.append(collectionId)
         }
         
@@ -586,7 +642,7 @@ class Sender: NSObject {
             } else {
                 text = ""
             }
-            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: inlineMdeia, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil, bubbleUpEmojiOrStickersets: upCollections))
+            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: inlineMdeia, mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: localGroupingKey, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? upCollections : []))
         }
         
         if let input = additionText {
@@ -612,11 +668,15 @@ class Sender: NSObject {
                     attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
                 }
                 
-                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: subState.upCollections)
+                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, threadId: threadId, replyToMessageId: replyId, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])
             }
             messages.insert(contentsOf: mapped, at: 0)
         }
-        return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> take(1)
+        if let customChatContents {
+            return customChatContents.enqueueMessages(messages: messages) |> deliverOnMainQueue |> take(1)
+        } else {
+            return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> take(1)
+        }
     }
     
     

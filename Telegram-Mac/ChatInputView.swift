@@ -1,135 +1,248 @@
 //
-//  ChatInputView.swift
-//  Telegram-Mac
+//  Updated_ChatInputView.swift
+//  Telegram
 //
-//  Created by keepcoder on 24/09/2016.
-//  Copyright © 2016 Telegram. All rights reserved.
+//  Created by Mike Renoir on 11.10.2023.
+//  Copyright © 2023 Telegram. All rights reserved.
 //
-import Cocoa
+
+import Foundation
+import TGUIKit
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import TGModernGrowingTextView
+import InputView
 import Postbox
-
-
-
+import ColorPalette
+import TelegramMedia
 
 protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
 }
 
-
-let yInset:CGFloat = 8;
-
-class ChatInputView: View, TGModernGrowingDelegate, Notifable {
+final class InputMessageEffectView : Control {
     
-    private let emojiHolderAnimator = EmojiHolderAnimator()
+    
+    class RadialGradientView: View {
+        
+        override func draw(_ layer: CALayer, in context: CGContext) {
+            super.draw(layer, in: context)
+            
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+
+            let colors = [theme.colors.background.cgColor, theme.colors.background.withAlphaComponent(0).cgColor] as CFArray
+
+            guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0]) else { return }
+
+            let center = CGPoint(x: bounds.midX, y: bounds.midY)
+            let radius = min(bounds.width, bounds.height) / 2
+
+            context.drawRadialGradient(gradient, startCenter: center, startRadius: 0, endCenter: center, endRadius: radius, options: .drawsBeforeStartLocation)
+        }
+    }
+    
+    let view: InlineStickerView
+    private let gradient: RadialGradientView = RadialGradientView(frame: NSMakeRect(0, 0, 20, 20))
+    init(account: Account, file: TelegramMediaFile, size: NSSize) {
+        self.view = .init(account: account, file: file, size: size, playPolicy: .onceEnd)
+        super.init(frame: NSMakeSize(size.width, 20).bounds)
+        self.layer?.masksToBounds = false
+        addSubview(gradient)
+        addSubview(view)
+        scaleOnClick = true
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        gradient.center()
+        view.center()
+    }
+}
+
+class ChatInputView: View, Notifable {
+    
+    private var standart:CGFloat = 50.0
+    private var bottomHeight:CGFloat = 0
+    static let bottomPadding:CGFloat = 10
+
     
     private let sendActivityDisposable = MetaDisposable()
-    
     public let ready = Promise<Bool>()
-    
     weak var delegate:ChatInputDelegate?
-    let accessoryDispose:MetaDisposable = MetaDisposable()
-    
-    
     var chatInteraction:ChatInteraction
-    
     let accessory:ChatInputAccessory
+    private let _ts:View
     
-    private var _ts:View!
+    private let contentView:View
+    private let bottomView:NSScrollView = NSScrollView()
     
-    
-    //containers
-    private var contentView:View!
-    private var bottomView:NSScrollView = NSScrollView()
     
     private var messageActionsPanelView:MessageActionsPanelView?
     private var recordingPanelView:ChatInputRecordingView?
-    private var blockedActionView:TitleButton?
+    private var blockedActionView:TextButton?
+    private var blockText: View?
     private var additionBlockedActionView: ImageButton?
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
+    private var disallowText:Control?
+    private var messageEffect: InputMessageEffectView?
     
-    
-    //views
-    private(set) var textView:TGModernGrowingTextView!
-    private var actionsView:ChatInputActionsView!
-    private(set) var attachView:ChatInputAttachView!
+    private let actionsView:ChatInputActionsView
     
 
     
+    let textView:UITextView!
+    let attachView:ChatInputAttachView!
     
+    private let rtfAttachmentsDisposable = MetaDisposable()
     private let slowModeUntilDisposable = MetaDisposable()
+    private let accessoryDisposable:MetaDisposable = MetaDisposable()
+
     
     private var replyMarkupModel:ReplyMarkupNode?
     override var isFlipped: Bool {
         return false
     }
     
-    private var standart:CGFloat = 50.0
-    private var bottomHeight:CGFloat = 0
-    
-    static let bottomPadding:CGFloat = 10
     static let maxBottomHeight = ReplyMarkupNode.rowHeight * 3 + ReplyMarkupNode.buttonHeight / 2
     
     
-    private let rtfAttachmentsDisposable = MetaDisposable()
     
     private var botMenuView: ChatInputMenuView?
     private var sendAsView: ChatInputSendAsView?
+    
+    private let textInteractions: TextView_Interactions = .init()
+    
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         self.accessory = ChatInputAccessory(chatInteraction:chatInteraction)
+        self.contentView = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), NSHeight(frameRect)))
+        self._ts = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), .borderSize))
+        self.attachView = ChatInputAttachView(frame: NSMakeRect(0, 0, chatInteraction.mode.customChatLink != nil ? 20 : 60, contentView.frame.height), chatInteraction:chatInteraction)
+        self.attachView.isHidden = chatInteraction.mode.customChatLink != nil
+        self.actionsView = ChatInputActionsView(frame: NSMakeRect(contentView.frame.width - 100, 0, 100, contentView.frame.height), chatInteraction:chatInteraction);
+        self.textView = UITextView(frame: NSMakeRect(attachView.isHidden ? 0 : attachView.frame.width, 0, contentView.frame.width - actionsView.frame.width, contentView.frame.height), interactions: self.textInteractions)
+
         super.init(frame: frameRect)
+        
+        self.textView.context = chatInteraction.context
         
         self.animates = true
         
-        _ts = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), .borderSize))
         _ts.backgroundColor = .border;
         
-        
-        contentView = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), NSHeight(frameRect)))
-        
         contentView.flip = false
-        
-        
-        actionsView = ChatInputActionsView(frame: NSMakeRect(contentView.frame.width - 100, 0, 100, contentView.frame.height), chatInteraction:chatInteraction);
-        
-        attachView = ChatInputAttachView(frame: NSMakeRect(0, 0, 60, contentView.frame.height), chatInteraction:chatInteraction)
+
         contentView.addSubview(attachView)
         
         bottomView.scrollerStyle = .overlay
         
-        textView = TGModernGrowingTextView(frame: NSMakeRect(attachView.frame.width, yInset, contentView.frame.width - actionsView.frame.width, contentView.frame.height - yInset * 2.0))
-        textView.textFont = .normal(.text)
-        
-        let context = self.chatInteraction.context
-                
-        textView.installGetAttach({ attachment, size in
-            let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
-            let view = ChatInputAnimatedEmojiAttach(frame: rect)
-            view.set(attachment, size: rect.size, context: context)
-            return view
-        })
         
         contentView.addSubview(textView)
         contentView.addSubview(actionsView)
-        self.background = theme.colors.background
-        
         
         self.addSubview(accessory)
-
-        
         self.addSubview(contentView)
         self.addSubview(bottomView)
-        
+        self.addSubview(_ts)
+
         bottomView.documentView = View()
         
-        self.addSubview(_ts)
+        self.background = theme.colors.background
         updateLocalizationAndTheme(theme: theme)
+        
+        
+        textInteractions.inputDidUpdate = { [weak self] state in
+            guard let `self` = self else {
+                return
+            }
+            self.set(state)
+            self.inputDidUpdateLayout(animated: true)
+        }
+        
+        textInteractions.processEnter = { [weak self] event in
+            return self?.textViewEnterPressed(event) ?? true
+        }
+        textInteractions.processPaste = { [weak self] pasteboard in
+            return self?.processPaste(pasteboard) ?? false
+        }
+        textInteractions.processAttriburedCopy = { attributedString in
+            return globalLinkExecutor.copyAttributedString(attributedString)
+        }
     }
+    
+    func set(_ state: Updated_ChatTextInputState) {
+        self.chatInteraction.update({
+            $0.withUpdatedEffectiveInputState(state.textInputState())
+        })
+    }
+    
+    private var markNextTextChangeToFalseActivity: Bool = false
+
+    public func textViewEnterPressed(_ event: NSEvent) -> Bool {
+        
+        let interaction = self.chatInteraction
+        let context = interaction.context
+        
+        if FastSettings.checkSendingAbility(for: event) {
+            let text = textView.string().trimmed
+            if text.length > interaction.maxInputCharacters {
+                if context.isPremium || context.premiumIsBlocked {
+                    alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(interaction.maxInputCharacters)))
+                } else {
+                    verifyAlert_button(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(interaction.maxInputCharacters)), ok: strings().alertOK, cancel: "", option: strings().premiumGetPremiumDouble, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            showPremiumLimit(context: context, type: .caption(text.length))
+                        default:
+                            break
+                        }
+
+                    })
+                }
+                return true
+            }
+            if !text.isEmpty || !interaction.presentation.interfaceState.forwardMessageIds.isEmpty || interaction.presentation.state == .editing {
+                interaction.sendMessage(false, nil, interaction.presentation.messageEffect)
+                if interaction.peerIsAccountPeer {
+                    interaction.context.account.updateLocalInputActivity(peerId: interaction.activitySpace, activity: .typingText, isPresent: false)
+                }
+                markNextTextChangeToFalseActivity = true
+            } else if text.isEmpty {
+                interaction.scrollToLatest(true)
+            }
+            return true
+        }
+        return false
+    }
+    
+    func height(for width: CGFloat) -> CGFloat {
+        let contentHeight:CGFloat = contentHeight(for: width)
+        var sumHeight:CGFloat = contentHeight + (accessory.isVisibility() ? accessory.size.height + 5 : 0)
+        if let markup = replyMarkupModel  {
+            bottomHeight = min(
+                ChatInputView.maxBottomHeight,
+                markup.size.height + ChatInputView.bottomPadding
+            )
+        } else {
+            bottomHeight = 0
+        }
+        if chatInteraction.presentation.isKeyboardShown {
+            sumHeight += bottomHeight
+        }
+        return sumHeight
+    }
+    
+    
+    
     
     public override var responder:NSResponder? {
         return textView.inputView
@@ -141,27 +254,23 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         needUpdateChatState(with: chatState, false)
         needUpdateReplyMarkup(with: interaction.presentation, false)
         
-        
-        textView.textColor = theme.colors.text
-        textView.selectedTextColor = theme.colors.selectText
-        textView.linkColor = theme.colors.link
-        textView.textFont = .normal(CGFloat(theme.fontSize))
-        
-        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
-        textView.delegate = self
-        
-        self.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
-
+        updateMessageEffect(interaction.presentation.interfaceState.messageEffect, animated: false)
         
         updateAdditions(interaction.presentation, false)
         
         chatInteraction.add(observer: self)
         ready.set(accessory.nodeReady.get() |> map {_ in return true} |> take(1) )
         
+
+        
         updateLayout(size: frame.size, transition: .immediate)
+        
+        self.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
+
     }
     
     private var textPlaceholder: String {
+        
         
         if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
@@ -171,8 +280,49 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 return strings().messagesPlaceholderReply
             case .topic:
                 return strings().messagesPlaceholderSentMessage
+            case .savedMessages, .saved: 
+                break
             }
         }
+        if case let .customChatContents(contents) = chatInteraction.mode {
+            switch contents.kind {
+            case .awayMessageInput:
+                return strings().chatInputBusinessAway
+            case .greetingMessageInput:
+                return strings().chatInputBusinessGreeting
+            case .quickReplyMessageInput:
+                return strings().chatInputBusinessQuickReply
+            case .searchHashtag:
+                return ""
+            }
+        }
+        if case .customLink = chatInteraction.mode {
+            return strings().chatInputBusinessLink
+        }
+        
+        guard let peer = chatInteraction.presentation.peer else {
+            return strings().messagesPlaceholderSentMessage
+        }
+        
+        if let _ = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), chatInteraction.presentation.state == .normal {
+            return strings().channelPersmissionMessageBlock
+        }
+        
+
+            
+        if let cachedData = chatInteraction.presentation.cachedData as? CachedChannelData {
+            let viewForumAsMessages = cachedData.viewForumAsMessages.knownValue
+            if peer.isForum, viewForumAsMessages == true {
+                if let replyMessage = chatInteraction.presentation.interfaceState.replyMessage {
+                    if let threadInfo = replyMessage.associatedThreadInfo {
+                        return strings().messagePlaceholderReplyToTopic(threadInfo.title)
+                    }
+                } else {
+                    return strings().messagePlaceholderMessageInGeneral
+                }
+            }
+        }
+        
         if chatInteraction.presentation.interfaceState.editState != nil {
             return strings().messagePlaceholderEdit
         }
@@ -203,18 +353,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         _ts.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
         contentView.backgroundColor = theme.colors.background
-        textView.background = theme.colors.background
-        textView.textColor = theme.colors.text
-        textView.selectedTextColor = theme.colors.selectText
         actionsView.backgroundColor = theme.colors.background
-        blockedActionView?.disableActions()
-        textView.textFont = .normal(theme.fontSize)
         chatDiscussionView?.updateLocalizationAndTheme(theme: theme)
-        blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
         self.needUpdateReplyMarkup(with: chatInteraction.presentation, false)
@@ -222,8 +365,17 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
         accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
-        textView.setBackgroundColor(theme.colors.background)
-                
+        
+        blockText?.backgroundColor = theme.colors.background
+        
+        let myPeerColor = chatInteraction.context.myPeer?.nameColor
+        let colors: PeerNameColors.Colors
+        if let myPeerColor = myPeerColor {
+            colors = chatInteraction.context.peerNameColors.get(myPeerColor)
+        } else {
+            colors = .init(main: theme.colors.accent)
+        }
+        textView.inputTheme = theme.inputTheme.withUpdatedQuote(colors)
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {
@@ -234,6 +386,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         } else {
             transition = .immediate
         }
+            
         
         updateLayout(size: frame.size, transition: transition)
 
@@ -241,7 +394,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
 
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
-            if value.effectiveInput != oldValue.effectiveInput {
+            if value.effectiveInput != oldValue.effectiveInput || oldValue.state != value.state {
                 updateInput(value, prevState: oldValue, animated: animated)
             }
             updateAttachments(value,animated)
@@ -260,7 +413,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             urlPreviewChanged = urlPreviewChanged || value.interfaceState.composeDisableUrlPreview != oldValue.interfaceState.composeDisableUrlPreview
             
             
-            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions {
+            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia {
                 updateAdditions(value,animated)
             }
             
@@ -284,18 +437,143 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             if updateReplyMarkup {
                 needUpdateReplyMarkup(with: value, animated)
-                textViewHeightChanged(defaultContentHeight, animated: animated)
+                inputDidUpdateLayout(animated: animated)
+            }
+            
+            if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
+                self.updateMessageEffect(value.interfaceState.messageEffect, animated: animated)
             }
             
             self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            
         }
     }
     
+    private func updateMessageEffect(_ messageEffect: ChatInterfaceMessageEffect?, animated: Bool) {
+        let context = self.chatInteraction.context
+        if let messageEffect {
+            if self.messageEffect?.view.animateLayer.fileId != messageEffect.effect.effectSticker.fileId.id {
+                if let view = self.messageEffect {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
+                current.userInteractionEnabled = true
+                current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, 5))
+                
+                
+                let showMenu:(Control)->Void = { [weak self] control in
+                    if let event = NSApp.currentEvent, let chatInteraction = self?.chatInteraction {
+                        let sendMenu = chatInteraction.sendMessageMenu(true) |> deliverOnMainQueue
+                        _ = sendMenu.startStandalone(next: { menu in
+                            if let menu {
+                                AppMenu.show(menu: menu, event: event, for: control)
+                            }
+                        })
+                    }
+                }
+
+                current.set(handler: { control in
+                    showMenu(control)
+                }, for: .Down)
+                
+                current.set(handler: { control in
+                    showMenu(control)
+                }, for: .LongMouseDown)
+                
+ 
+                self.messageEffect = current
+                addSubview(current, positioned: .below, relativeTo: _ts)
+                
+                
+                if let fromRect = messageEffect.fromRect {
+                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker, emoji: ""), size: current.frame.size)
+                    
+                    let toRect = current.convert(current.frame.size.bounds, to: nil)
+                    
+                    let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                    let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                    
+                    let completed: (Bool)->Void = { [weak self] _ in
+                        DispatchQueue.main.async {
+                            if let container = self?.messageEffect {
+                                NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                                container.isHidden = false
+                            }
+                        }
+                    }
+                    current.isHidden = true
+                    parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+                    
+                    DispatchQueue.main.async { [weak self] in
+                        self?.chatInteraction.update {
+                            $0.updatedInterfaceState {
+                                $0.withRemovedEffectRect()
+                            }
+                        }
+                    }
+                    
+                    let messageEffect = messageEffect.effect
+                    let file = messageEffect.effectSticker
+                    let signal: Signal<(LottieAnimation, String)?, NoError>
+                    
+                    let animationSize = NSMakeSize(200, 200)
+                                        
+                    if let animation = messageEffect.effectAnimation {
+                        signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                            if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        if let effect = messageEffect.effectSticker.premiumEffect {
+                            signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                                if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                    return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
+                                } else {
+                                    return nil
+                                }
+                            }
+                        } else {
+                            signal = .single(nil)
+                        }
+                    }
+                    _ = (signal |> deliverOnMainQueue).startStandalone(next: { value in
+                        
+                        if let animation = value?.0 {
+                            let player = LottiePlayerView(frame: NSMakeRect(toRect.minX - animationSize.width / 2 - 50, toRect.minY - animationSize.height / 2 + 30, animationSize.width, animationSize.height))
+
+                            animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak player] in
+                                player?.removeFromSuperview()
+                            }, {})
+                            player.set(animation)
+                            context.window.contentView?.addSubview(player)
+                        }
+                    })
+                }
+            }
+        } else if let view = self.messageEffect {
+            performSubviewRemoval(view, animated: animated)
+            self.messageEffect = nil
+            
+            let players = context.window.contentView?.subviews.compactMap {
+                $0 as? LottiePlayerView
+            }
+            
+            if let players {
+                for view in players {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                }
+            }
+            
+        }
+    }
     
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
-        if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown {
+        if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown || attribute.flags.contains(.persistent) {
             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: keyboardMessage), theme, bottomView.documentView as? View, true)
-            replyMarkupModel?.measureSize(frame.width - 40)
+            replyMarkupModel?.measureSize(frame.width - 30)
             replyMarkupModel?.redraw()
             replyMarkupModel?.layout()
             bottomView.contentView.scroll(to: NSZeroPoint)
@@ -313,14 +591,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return chatInteraction.presentation.state
     }
     
-    var defaultContentHeight:CGFloat {
-        return chatState == .normal || chatState == .editing ? textView.frame.height : CGFloat(textView.min_height)
+    func contentHeight(for width: CGFloat) -> CGFloat {
+        return chatState == .normal || chatState == .editing ? textViewSize(width).0.height : CGFloat(textView.min_height)
     }
     
     func needUpdateChatState(with state:ChatState, _ animated:Bool) -> Void {
         CATransaction.begin()
         if animated {
-            textViewHeightChanged(defaultContentHeight, animated: animated)
+            inputDidUpdateLayout(animated: animated)
         }
         
         recordingPanelView?.removeFromSuperview()
@@ -335,6 +613,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         restrictedView = nil
         messageActionsPanelView?.removeFromSuperview()
         messageActionsPanelView = nil
+        
+        blockText?.removeFromSuperview()
+        blockText = nil
+        
         textView.isHidden = false
         
         let chatInteraction = self.chatInteraction
@@ -355,25 +637,57 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.contentView.change(opacity: 0.0, animated: animated)
             self.accessory.change(opacity: 0.0, animated: animated)
             break
-        case .block(_):
-            break
+        case let .block(string):
+            if !string.isEmpty {
+                let current = Control(frame: NSMakeRect(0, 0, frame.width, frame.height - 1))
+                current.backgroundColor = theme.colors.background
+                addSubview(current)
+                self.blockText = current
+                
+                let context = chatInteraction.context
+                
+                let textView = TextView()
+                textView.isSelectable = false
+                
+                let parsed = parseMarkdownIntoAttributedString(string, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.link), linkAttribute: { link in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
+                        if value == "premium" {
+                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                        }
+                    }))
+                })).detectBold(with: .medium(.text))
+                let layout = TextViewLayout(parsed, alignment: .center)
+                layout.measure(width: frame.width - 40)
+                layout.interactions = globalLinkExecutor
+                textView.update(layout)
+                current.addSubview(textView)
+                textView.center()
+            } else if let view = blockText {
+                performSubviewRemoval(view, animated: animated)
+                blockText = nil
+            }
         case let .action(text, action, addition):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
-            self.blockedActionView = TitleButton(frame: bounds)
-            self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)
-            self.blockedActionView?.set(text: text, for: .Normal)
-            self.blockedActionView?.set(background: theme.colors.grayBackground, for: .Highlight)
+            
+            let blockedActionView = TextButton(frame: bounds)
+            blockedActionView.autoSizeToFit = false
+            blockedActionView.set(color: theme.colors.accent, for: .Normal)
+            blockedActionView.set(font: .normal(.title), for: .Normal)
+            
+            blockedActionView.set(text: text, for: .Normal)
+            blockedActionView.set(background: theme.colors.grayBackground, for: .Highlight)
+            blockedActionView.sizeToFit(.zero, bounds.size, thatFit: true)
             if animated {
-                self.blockedActionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                blockedActionView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            self.blockedActionView?.set(handler: {_ in
+            blockedActionView.set(handler: {_ in
                 action(chatInteraction)
             }, for:.Click)
 
-
-
-            self.addSubview(self.blockedActionView!, positioned: .below, relativeTo: _ts)
+            self.addSubview(blockedActionView, positioned: .below, relativeTo: _ts)
+            
+            self.blockedActionView = blockedActionView
 
             if let addition = addition {
                 additionBlockedActionView = ImageButton()
@@ -389,6 +703,39 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 additionBlockedActionView?.removeFromSuperview()
                 additionBlockedActionView = nil
             }
+
+            self.contentView.isHidden = true
+            self.contentView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
+        case let .botStart(text, action):
+            self.messageActionsPanelView?.removeFromSuperview()
+            self.blockedActionView?.removeFromSuperview()
+            
+            self.blockedActionView = TextButton(frame: bounds.insetBy(dx: 5, dy: 5))
+            self.blockedActionView?.autoSizeToFit = false
+            self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.underSelectedColor)
+            self.blockedActionView?.set(text: text, for: .Normal)
+            self.blockedActionView?.scaleOnClick = true
+            self.blockedActionView?.set(background: theme.colors.accent, for: .Normal)
+            self.blockedActionView?.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+            self.blockedActionView?.sizeToFit(.zero, bounds.insetBy(dx: 5, dy: 5).size, thatFit: true)
+
+            
+            let shimmer = ShimmerEffectView()
+            shimmer.isStatic = true
+            self.blockedActionView?.addSubview(shimmer)
+            
+            self.blockedActionView?.layer?.cornerRadius = 10
+            if animated {
+                self.blockedActionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            self.blockedActionView?.set(handler: {_ in
+                action(chatInteraction)
+            }, for:.Click)
+
+
+
+            self.addSubview(self.blockedActionView!, positioned: .below, relativeTo: _ts)
 
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
@@ -421,59 +768,94 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.accessory.change(opacity: 0.0, animated: animated)
         }
         
+        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText, cachedData: chatInteraction.presentation.cachedData), state == .normal {
+            let context = chatInteraction.context
+            let current: Control
+            if let view = self.disallowText {
+                current = view
+            } else {
+                current = Control(frame: textView.frame)
+                self.contentView.addSubview(current)
+                self.disallowText = current
+            }
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                showModalText(for: context.window, text: text)
+            }, for: .Click)
+            current.set(cursor: .arrow, for: .Normal)
+            current.set(cursor: .arrow, for: .Highlight)
+            current.set(cursor: .arrow, for: .Hover)
+
+        } else if let view = self.disallowText {
+            performSubviewRemoval(view, animated: animated)
+            self.disallowText = nil
+        }
+        
         CATransaction.commit()
     }
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
-        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
-            let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-
-            if !state.effectiveInput.attributes.isEmpty {
-                var bp = 0
-                bp += 1
+        
+        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText, cachedData: state.cachedData), state.state == .normal {
+            textView.inputView.isEditable = false
+            textView.isHidden = false
+        } else {
+            switch state.state {
+            case .normal, .editing:
+                textView.inputView.isEditable = true
+                textView.isHidden = false
+            case let .block(string):
+                textView.isHidden = !string.isEmpty
+            default:
+                textView.inputView.isEditable = false
             }
-            
-            let current = textView.attributedString().copy() as! NSAttributedString
-            let currentRange = textView.selectedRange()
-
-            let item = SimpleUndoItem(attributedString: current, be: state.effectiveInput.attributedString, wasRange: currentRange, be: range)
-            if !initial {
-                self.textView.addSimpleItem(item)
-            } else {
-                self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
-                if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-                    textView.setSelectedRange(range)
-                }
-            }
-
         }
-
+        
+        let input = state.effectiveInput
+        
+        self.textView.interactions.inputIsEnabled = self.isEnabled()
+        self.textView.set(input)
+        self.textView.placeholder = textPlaceholder
+        
         if prevState.effectiveInput.inputText.isEmpty {
             self.textView.scrollToCursor()
         }
-        if initial {
-            self.textView.update(true)
-            self.textViewHeightChanged(self.textView.frame.height, animated: animated)
-        }
+
         if state.effectiveInput != prevState.effectiveInput {
-            self.emojiHolderAnimator.apply(self.textView, chatInteraction: self.chatInteraction, current: state.effectiveInput)
             if state.effectiveInput.inputText.count != prevState.effectiveInput.inputText.count {
                 self.textView.scrollToCursor()
             }
         }
+        
+        if chatInteraction.context.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel && !markNextTextChangeToFalseActivity {
+            sendActivityDisposable.set((Signal<Bool, NoError>.single(!state.effectiveInput.inputText.isEmpty) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
+                if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
+                    if self?.chatInteraction.peerIsAccountPeer == true {
+                        chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: isPresent)
+                    }
+                }
+            }))
+        }
+
+        
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         accessory.update(with: state, context: chatInteraction.context, animated: animated)
         
-        accessoryDispose.set(accessory.nodeReady.get().start(next: { [weak self] animated in
+        accessoryDisposable.set(accessory.nodeReady.get().start(next: { [weak self] animated in
             self?.updateAccesory(animated: animated)
         }))
+        self.textView.placeholder = textPlaceholder
+    }
+    
+    func updatePlaceholder() {
+        self.textView.placeholder = textPlaceholder
     }
     
     private func updateAccesory(animated: Bool) {
         self.accessory.measureSize(self.frame.width - 40.0)
-        self.textViewHeightChanged(self.defaultContentHeight, animated: animated)
+        self.inputDidUpdateLayout(animated: animated)
         self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
         if self.updateFirstTime {
             self.updateFirstTime = false
@@ -481,12 +863,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         }
     }
     
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        textView.setSelectedRange(NSMakeRange(textView.string().length, 0))
-    }
-    
-   
     
     func updateAttachments(_ inputState:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         if let botMenu = inputState.botMenu, !botMenu.isEmpty, inputState.interfaceState.inputState.inputText.isEmpty {
@@ -537,11 +913,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
-        let keyboardWidth = frame.width - 40
+        let keyboardWidth = frame.width - 30
         var leftInset: CGFloat = 0
-
-
-        transition.updateFrame(view: contentView, frame: NSMakeRect(0, bottomInset, frame.width, contentView.frame.height))
+        let contentHeight:CGFloat = contentHeight(for: size.width)
+        
+        transition.updateFrame(view: contentView, frame: NSMakeRect(0, bottomInset, size.width, contentHeight))
         transition.updateFrame(view: bottomView, frame: NSMakeRect(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight, keyboardWidth, bottomHeight))
         
         let actionsSize = actionsView.size(chatInteraction.presentation)
@@ -549,6 +925,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         immediate.updateFrame(view: actionsView, frame: CGRect(origin: CGPoint(x: size.width - actionsSize.width, y: 0), size: actionsSize))
         actionsView.updateLayout(size: actionsSize, transition: immediate)
 
+        
+        if let view = messageEffect {
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, 5, view.frame.width, view.frame.height))
+        }
         
         if let view = botMenuView {
             leftInset += view.frame.width
@@ -564,11 +944,26 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             markup.layout(transition: transition)
         }
         
+        if let current = self.blockText {
+            transition.updateFrame(view: current, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, size.height - 1)))
+            if let subview = current.subviews.first {
+                transition.updateFrame(view: subview, frame: subview.centerFrame())
+            }
+        }
+        
         transition.updateFrame(view: attachView, frame: NSMakeRect(leftInset, 0, attachView.frame.width, attachView.frame.height))
         leftInset += attachView.frame.width
         
-        let textSize = textViewSize(textView)
-        transition.updateFrame(view: textView, frame: NSMakeRect(leftInset, yInset, textSize.width, textSize.height))
+        
+        let (textSize, textHeight) = self.textViewSize(size.width)
+        
+        let viewRect = NSMakeRect(leftInset, 0, textSize.width, textSize.height)
+        transition.updateFrame(view: textView, frame: viewRect)
+        textView.updateLayout(size: viewRect.size, textHeight: textHeight, transition: transition)
+        
+        if let view = disallowText {
+            transition.updateFrame(view: view, frame: textView.frame)
+        }
                 
         if let view = additionBlockedActionView {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))
@@ -581,35 +976,39 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
                 
         if let view = messageActionsPanelView {
-            transition.updateFrame(view: view, frame: bounds)
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         if let view = blockedActionView {
-            transition.updateFrame(view: view, frame: bounds)
+            if view.scaleOnClick {
+                transition.updateFrame(view: view, frame: size.bounds.insetBy(dx: 5, dy: 5))
+            } else {
+                transition.updateFrame(view: view, frame: size.bounds)
+            }
+            for subview in view.subviews {
+                if let shimmer = subview as? ShimmerEffectView {
+                    transition.updateFrame(view: subview, frame: view.bounds)
+                    shimmer.updateAbsoluteRect(view.bounds, within: view.frame.size)
+                    shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: view.bounds, cornerRadius: view.frame.height / 2)], horizontal: true, size: view.frame.size)
+
+                }
+            }
         }
         if let view = chatDiscussionView {
-            transition.updateFrame(view: view, frame: bounds)
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         if let view = restrictedView {
-            transition.updateFrame(view: view, frame: bounds)
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         
-        guard let superview = superview else {return}
-        textView.max_height = Int32(superview.frame.height / 2 + 50)
+        guard let superview = superview else { return }
+        textInteractions.max_height = floorToScreenPixels(backingScaleFactor, superview.frame.height / 2) + 50.0
 
     }
     
-    /*
-     
-     if textView.placeholderAttributedString?.string != self.textPlaceholder {
-         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
-     }
-     
-     */
     
     override func layout() {
         super.layout()
         self.updateLayout(size: self.frame.size, transition: .immediate)
-
     }
     
     
@@ -625,10 +1024,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         fatalError("init(frame:) has not been implemented")
     }
     
-    private var previousHeight:CGFloat = 0
     
-    func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        let contentHeight:CGFloat = defaultContentHeight + yInset * 2.0
+    func inputDidUpdateLayout(animated: Bool) {
+        let contentHeight:CGFloat = contentHeight(for: self.frame.width)
         var sumHeight:CGFloat = contentHeight + (accessory.isVisibility() ? accessory.size.height + 5 : 0)
         if let markup = replyMarkupModel  {
             bottomHeight = min(
@@ -642,66 +1040,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             sumHeight += bottomHeight
         }
                 
-        if previousHeight != sumHeight {
-            previousHeight = sumHeight
-            let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
-            
-            _ts.change(pos: NSMakePoint(0, sumHeight - .borderSize), animated: animated)
-            
-            contentView.change(size: NSMakeSize(NSWidth(frame), contentHeight), animated: animated)
-            contentView.change(pos: NSMakePoint(0, bottomInset), animated: animated)
-            
-            bottomView._change(size: NSMakeSize(frame.width - 40, bottomHeight), animated: animated)
-            bottomView._change(pos: NSMakePoint(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight), animated: animated)
-            
-            accessory.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
-            accessory.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
-            
-            
-            change(size: NSMakeSize(NSWidth(frame), sumHeight), animated: animated)
-            
-            delegate?.inputChanged(height: sumHeight, animated: animated)
-            
-        }
-        
-    }
-    
-    public func textViewEnterPressed(_ event: NSEvent) -> Bool {
-        
-        if FastSettings.checkSendingAbility(for: event) {
-            let text = textView.string().trimmed
-            let context = chatInteraction.context
-            if text.length > chatInteraction.maxInputCharacters {
-                if context.isPremium || context.premiumIsBlocked {
-                    alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
-                } else {
-                    confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
-                        switch result {
-                        case .thrid:
-                            showPremiumLimit(context: context, type: .caption(text.length))
-                        default:
-                            break
-                        }
+        delegate?.inputChanged(height: sumHeight, animated: animated)
 
-                    })
-                }
-                return true
-            }
-            if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
-                chatInteraction.sendMessage(false, nil)
-                if self.chatInteraction.peerIsAccountPeer {
-                    chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.activitySpace, activity: .typingText, isPresent: false)
-                }
-                markNextTextChangeToFalseActivity = true
-            } else if text.isEmpty {
-                chatInteraction.scrollToLatest(true)
-            }
-            
-            return true
-        }
-        return false
     }
-    
     
     var currentActionView: NSView {
         return self.actionsView.currentActionView
@@ -709,108 +1050,51 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     var emojiView: NSView {
         return self.actionsView.entertaiments
     }
-    
     func makeSpoiler() {
-        self.textView.spoilerWord()
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.spoiler))
     }
     func makeUnderline() {
-        self.textView.underlineWord()
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.underline))
+    }
+    func makeQuote() {
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.quote))
     }
     func makeStrikethrough() {
-        self.textView.strikethroughWord()
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.strikethrough))
     }
-    
     func makeBold() {
-        self.textView.boldWord()
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.bold))
     }
     func removeAllAttributes() {
-        self.textView.removeAllAttributes()
+        self.textView.inputApplyTransform(.clear)
     }
     func makeUrl() {
-        self.makeUrl(of: textView.selectedRange())
+        self.textView.inputApplyTransform(.url)
     }
     func makeItalic() {
-        self.textView.italicWord()
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.italic))
     }
     func makeMonospace() {
-        self.textView.codeWord()
+        self.textView.inputApplyTransform(.attribute(TextInputAttributes.monospace))
     }
     
     override func becomeFirstResponder() -> Bool {
-        return self.textView.becomeFirstResponder()
+        return self.textView.inputView.becomeFirstResponder()
     }
     
     func makeFirstResponder()  {
-        self.window?.makeFirstResponder(self.textView.inputView)
-    }
-    private var previousString: String = ""
-    func textViewTextDidChange(_ string: String) {
-
-        
-        let attributed = self.textView.attributedString()
-        let range = self.textView.selectedRange()
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-        
-    }
-    
-    func canTransformInputText() -> Bool {
-        return true
-    }
-    
-    private var markNextTextChangeToFalseActivity: Bool = false
-    
-    public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
-        let attributed = self.textView.attributedString()
-        
-        let attrs = chatTextAttributes(from: attributed)
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: attrs)
-        
-        chatInteraction.update({ current in
-            var current = current
-            current = current.withUpdatedEffectiveInputState(state)
-            if let disabledPreview = current.interfaceState.composeDisableUrlPreview {
-                if !current.effectiveInput.inputText.contains(disabledPreview) {
-
-                    var detectedUrl: String?
-                    current.effectiveInput.attributedString.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: current.effectiveInput.attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
-                        if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
-                            detectedUrl = url
-                        }
-                        let s: ObjCBool = (detectedUrl != nil) ? true : false
-                        stop.pointee = s
-                    })
-                    if detectedUrl == nil {
-                        current = current.updatedUrlPreview(nil).updatedInterfaceState {$0.withUpdatedComposeDisableUrlPreview(nil)}
-                    }
-                }
-            }
-            return current
-        })
-        
-        if chatInteraction.context.peerId != chatInteraction.peerId, let peer = chatInteraction.presentation.peer, !peer.isChannel && !markNextTextChangeToFalseActivity {
-            
-            sendActivityDisposable.set((Signal<Bool, NoError>.single(!state.inputText.isEmpty) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
-                if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
-                    if self?.chatInteraction.peerIsAccountPeer == true {
-                        chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: isPresent)
-                    }
-                }
-            }))
-        }
-        
-        markNextTextChangeToFalseActivity = false
+        self.window?.makeFirstResponder(self.responder)
     }
     
     
     deinit {
-        chatInteraction.remove(observer: self)
-        self.accessoryDispose.dispose()
-        rtfAttachmentsDisposable.dispose()
-        slowModeUntilDisposable.dispose()
+        self.accessoryDisposable.dispose()
+        self.rtfAttachmentsDisposable.dispose()
+        self.slowModeUntilDisposable.dispose()
+        self.chatInteraction.remove(observer: self)
     }
     
-    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
+    func textViewSize(_ width: CGFloat) -> (NSSize, CGFloat) {
         var leftInset: CGFloat = attachView.frame.width
         if let botMenu = self.botMenuView {
             leftInset += botMenu.frame.width
@@ -818,11 +1102,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if let sendAsView = self.sendAsView {
             leftInset += sendAsView.frame.width
         }
-        let size = NSMakeSize(contentView.frame.width - actionsView.size(chatInteraction.presentation).width - leftInset, textView.frame.height)
-        return size
+        let w = width - actionsView.size(chatInteraction.presentation).width - leftInset
+        let height = self.textView.height(for: w)
+        return (NSMakeSize(w, min(max(height, textView.min_height), textView.max_height)), height)
     }
     
-    func textViewIsTypingEnabled() -> Bool {
+    func isEnabled() -> Bool {
         if let editState = chatInteraction.presentation.interfaceState.editState {
             if editState.loadingState != .none {
                 return false
@@ -831,49 +1116,25 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return self.chatState == .normal || self.chatState == .editing
     }
     
-    func makeUrl(of range: NSRange) {
-        guard range.min != range.max, let window = kitWindow else {
-            return
+    
+    func copyAttributedString(_ attributedString: NSAttributedString!) -> Bool {
+        return globalLinkExecutor.copyAttributedString(attributedString)
+    }
+    
+    func processPaste(_ pasteboard: NSPasteboard) -> Bool {
+        
+        let interaction = self.chatInteraction
+        
+        defer {
+            DispatchQueue.main.async { [weak self] in
+                self?.textView.scrollToCursor()
+            }
         }
-        var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        let defaultTag: TGInputTextTag? = self.textView.attributedString().attribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), at: range.location, effectiveRange: &effectiveRange) as? TGInputTextTag
         
-        
-        let defaultUrl = defaultTag?.attachment as? String
-        
-        if effectiveRange.location == NSNotFound || defaultTag == nil {
-            effectiveRange = range
-        }
-        
-        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] url in
-            self?.textView.addLink(url, range: effectiveRange)
-        }), for: window)
-        
-    }
-    
-    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return ChatInteraction.maxInput
-    }
-    
-    @available(OSX 10.12.2, *)
-    func textView(_ textView: NSTextView!, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItem.Identifier]!) -> [NSTouchBarItem.Identifier]! {
-        return inputChatTouchBarItems(presentation: chatInteraction.presentation)
-    }
-    
-    func supportContinuityCamera() -> Bool {
-        return true
-    }
-    
-    func copyText(withRTF rtf: NSAttributedString!) -> Bool {
-        return globalLinkExecutor.copyAttributedString(rtf)
-    }
-    
-    func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        
-        if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
+        if let window = _window, self.chatState == .normal || self.chatState == .editing {
             
             if let string = pasteboard.string(forType: .string) {
-                chatInteraction.update { current in
+                interaction.update { current in
                     if let disabled = current.interfaceState.composeDisableUrlPreview, disabled.lowercased() == string.lowercased() {
                         return current.updatedInterfaceState {$0.withUpdatedComposeDisableUrlPreview(nil)}
                     }
@@ -881,54 +1142,42 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 }
             }
             
-            let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
+            let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction: interaction, window: window)
             if result {
-                
-                if let data = pasteboard.data(forType: .kInApp) {
-                    let decoder = AdaptedPostboxDecoder()
-                    if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                        let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
-                        let current = textView.attributedString().copy() as! NSAttributedString
-                        let currentRange = textView.selectedRange()
-                        let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
-                        let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                        self.textView.addSimpleItem(item)
-                        DispatchQueue.main.async { [weak self] in
-                            self?.textView.scrollToCursor()
+                if let disallowText = disallowText {
+                    disallowText.send(event: .Click)
+                    textView.shake(beep: true)
+                } else {
+                    if let data = pasteboard.data(forType: .kInApp) {
+                        let decoder = AdaptedPostboxDecoder()
+                        if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
+                            let state = decoded.unique(isPremium: interaction.context.isPremium)
+                            
+                            interaction.appendText(state.attributedString())
+                            
+                            return true
                         }
-                        
-                        return true
-                    }
-                } else if let data = pasteboard.data(forType: .rtf) {
-                    if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
-                        
-                        let (attributed, attachments) = attributed.applyRtf()
-                        
-                        if !attachments.isEmpty {
-                            rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
-                                if !urls.isEmpty, let chatInteraction = self?.chatInteraction {
-                                    chatInteraction.showPreviewSender(urls, true, attributed)
-                                }
-                            }))
-                        } else {
-                            let current = textView.attributedString().copy() as! NSAttributedString
-                            let currentRange = textView.selectedRange()
-                            let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
-                            let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                            self.textView.addSimpleItem(item)
+                    } else if let data = pasteboard.data(forType: .rtf) {
+                        if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
+                            
+                            let (attributed, attachments) = attributed.applyRtf()
+                            
+                            if !attachments.isEmpty {
+                                rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
+                                    if !urls.isEmpty, let interaction = self?.chatInteraction {
+                                        interaction.showPreviewSender(urls, true, attributed)
+                                    }
+                                }))
+                            } else {
+                                self.chatInteraction.appendText(attributed)
+                            }
+                            return true
                         }
-                        DispatchQueue.main.async { [weak self] in
-                            self?.textView.scrollToCursor()
-                        }
-                        return true
                     }
                 }
             }
-            
-            
             return !result
         }
-        
         
         return self.chatState != .normal
     }

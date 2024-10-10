@@ -17,6 +17,10 @@ import Postbox
 private enum GeneralSettingsEntry : Comparable, Identifiable {
     case section(sectionId:Int)
     case header(sectionId: Int, uniqueId:Int, text:String)
+    case liteMode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case checkSpellingWhileTyping(sectionId:Int, enabled: Bool, key: String, viewType: GeneralViewType)
+    case checkGrammarWithSpelling(sectionId:Int, enabled: Bool, key: String, viewType: GeneralViewType)
+    case correctSpellingAutomatically(sectionId:Int, enabled: Bool, key: String, viewType: GeneralViewType)
     case sidebar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case inAppSounds(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case shortcuts(sectionId: Int, viewType: GeneralViewType)
@@ -35,46 +39,63 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case forceTouchReact(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchPreviewMedia(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case callSettings(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case previewChats(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case previewChatsInfo(sectionId:Int)
+    case showProfileId(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     var stableId: Int {
         switch self {
         case let .header(_, uniqueId, _):
             return uniqueId
-        case .sidebar:
+        case .liteMode:
             return 1
-        case .emojiReplacements:
+        case .checkSpellingWhileTyping:
             return 2
-        case .predictEmoji:
+        case .checkGrammarWithSpelling:
             return 3
-        case .bigEmoji:
+        case .correctSpellingAutomatically:
             return 4
-        case .showCallsTab:
+        case .sidebar:
             return 5
-        case .statusBar:
+        case .emojiReplacements:
             return 6
-        case .inAppSounds:
+        case .predictEmoji:
             return 7
-        case .shortcuts:
+        case .bigEmoji:
             return 8
-        case .enableRFTCopy:
+        case .showCallsTab:
             return 9
-        case .acceptSecretChats:
+        case .statusBar:
+            return 10
+        case .inAppSounds:
             return 11
-        case .forceTouchReply:
+        case .shortcuts:
             return 12
-        case .forceTouchEdit:
+        case .enableRFTCopy:
             return 13
-        case .forceTouchForward:
+        case .acceptSecretChats:
             return 14
-        case .forceTouchPreviewMedia:
+        case .forceTouchReply:
             return 15
-        case .forceTouchReact:
+        case .forceTouchEdit:
             return 16
-        case .enterBehavior:
+        case .forceTouchForward:
             return 17
-        case .cmdEnterBehavior:
+        case .forceTouchPreviewMedia:
             return 18
-        case .callSettings:
+        case .forceTouchReact:
             return 19
+        case .enterBehavior:
+            return 20
+        case .cmdEnterBehavior:
+            return 21
+        case .callSettings:
+            return 22
+        case .previewChats:
+            return 23
+        case .showProfileId:
+            return 24
+        case .previewChatsInfo:
+            return 25
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -83,6 +104,14 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     var sortIndex:Int {
         switch self {
         case let .header(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .liteMode(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .checkSpellingWhileTyping(sectionId, _, _, _):
+            return (sectionId * 1000) + stableId
+        case let .checkGrammarWithSpelling(sectionId, _, _, _):
+            return (sectionId * 1000) + stableId
+        case let .correctSpellingAutomatically(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
         case let .showCallsTab(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -120,6 +149,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return (sectionId * 1000) + stableId
         case let .callSettings(sectionId, _, _):
             return (sectionId * 1000) + stableId
+        case let .previewChats(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .previewChatsInfo(sectionId):
+            return (sectionId * 1000) + stableId
+        case let .showProfileId(sectionId, _, _):
+            return (sectionId * 1000) + stableId
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -128,9 +163,25 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     func item(_ arguments:GeneralSettingsArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
+        case let .liteMode(_, enabled: enabled, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsLiteMode, type: .nextContext(enabled ? strings().liteModeEnabled : strings().liteModeDisabled), viewType: viewType, action: {
+                arguments.openLiteMode()
+            })
+        case let .checkSpellingWhileTyping(_, enabled, key, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSpellingCheckWhileTyping, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSpellingKey(key)
+            })
+        case let .checkGrammarWithSpelling(_, enabled, key, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSpellingCheckGrammarSpelling, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSpellingKey(key)
+            })
+        case let .correctSpellingAutomatically(_, enabled, key, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSpellingCheckSpellingAutomatically, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSpellingKey(key)
+            })
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCallsTab(!enabled)
@@ -203,6 +254,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
                 arguments.callSettings()
             })
+        case let .showProfileId(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsShowProfileIdText, type: .switchable(value), viewType: viewType, action: arguments.showProfileId)
+        case let .previewChats(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsPreviewChatsText, type: .switchable(value), viewType: viewType, action: arguments.togglePreviewChat)
+        case .previewChatsInfo:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().generalSettingsPreviewChatsInfo, viewType: .textBottomItem)
         }
     }
 }
@@ -229,7 +286,11 @@ private final class GeneralSettingsArguments {
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
     let callSettings: ()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
+    let openLiteMode: ()->Void
+    let toggleSpellingKey:(String)->Void
+    let showProfileId:()->Void
+    let togglePreviewChat:()->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void, toggleSpellingKey:@escaping(String)->Void, showProfileId:@escaping()->Void, togglePreviewChat:@escaping()->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -248,11 +309,15 @@ private final class GeneralSettingsArguments {
         self.toggleWorkMode = toggleWorkMode
         self.openShortcuts = openShortcuts
         self.callSettings = callSettings
+        self.openLiteMode = openLiteMode
+        self.toggleSpellingKey = toggleSpellingKey
+        self.showProfileId = showProfileId
+        self.togglePreviewChat = togglePreviewChat
     }
    
 }
 
-private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSettings: BaseApplicationSettings, appearance: Appearance, launchSettings: LaunchSettings, secretChatSettings: SecretChatSettings) -> [GeneralSettingsEntry] {
+private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSettings: BaseApplicationSettings, appearance: Appearance, launchSettings: LaunchSettings, secretChatSettings: SecretChatSettings, additionalSettings: AdditionalSettings) -> [GeneralSettingsEntry] {
     var sectionId:Int = 1
     var entries:[GeneralSettingsEntry] = []
     
@@ -261,9 +326,32 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEmojiAndStickers))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEnergySaving))
     headerUnique -= 1
     
+    entries.append(.liteMode(sectionId: sectionId, enabled: baseSettings.liteMode.enabled, viewType: .singleItem))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsSpellingTitle))
+    headerUnique -= 1
+    
+    let key1 = "ContinuousSpellCheckingEnabled" + "TGGrowingTextView"
+    let key2 = "GrammarCheckingEnabled" + "TGGrowingTextView"
+    let key3 = "AutomaticSpellingCorrectionEnabled" + "TGGrowingTextView"
+    
+    entries.append(.checkSpellingWhileTyping(sectionId: sectionId, enabled: UserDefaults.standard.bool(forKey: key1), key: key1, viewType: .firstItem))
+    entries.append(.checkGrammarWithSpelling(sectionId: sectionId, enabled: UserDefaults.standard.bool(forKey: key2), key: key2, viewType: .innerItem))
+    entries.append(.correctSpellingAutomatically(sectionId: sectionId, enabled: UserDefaults.standard.bool(forKey: key3), key: key3, viewType: .lastItem))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+
+
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEmoji))
+    headerUnique -= 1
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled, viewType: .firstItem))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies, viewType: .innerItem))
     if !baseSettings.predictEmoji {
@@ -272,15 +360,18 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.bigEmoji(sectionId: sectionId, enabled: baseSettings.bigEmoji, viewType: .lastItem))
 
     
+
+    
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsInterfaceHeader))
     headerUnique -= 1
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab, viewType: .firstItem))
-    entries.append(.statusBar(sectionId: sectionId, enabled: baseSettings.statusBar, viewType: .lastItem))
-//    entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds, viewType: .lastItem))
-    
+    entries.append(.statusBar(sectionId: sectionId, enabled: baseSettings.statusBar, viewType: .innerItem))
+    entries.append(.previewChats(sectionId: sectionId, enabled: additionalSettings.previewChats, viewType: .lastItem))
+    entries.append(.previewChatsInfo(sectionId: sectionId))
+
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -330,6 +421,12 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
+    entries.append(.showProfileId(sectionId: sectionId, enabled: FastSettings.canViewPeerId, viewType: .singleItem))
+
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+
+    
     return entries
 }
 
@@ -345,7 +442,7 @@ class GeneralSettingsViewController: TableViewController {
     
     private let disposable = MetaDisposable()
     override var removeAfterDisapper:Bool {
-        return true
+        return false
     }
     
     override func viewDidLoad() {
@@ -407,6 +504,16 @@ class GeneralSettingsViewController: TableViewController {
             context.bindings.rootNavigation().push(ShortcutListController(context: context))
         }, callSettings: {
             context.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
+        }, openLiteMode: {
+            context.bindings.rootNavigation().push(LiteModeController(context: context))
+        }, toggleSpellingKey: { key in
+            UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: key), forKey: key)
+        }, showProfileId: {
+            FastSettings.canViewPeerId = !FastSettings.canViewPeerId
+        }, togglePreviewChat: {
+            _ = updateAdditionalSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+                $0.withUpdatedPreviewChats(!$0.previewChats)
+            }).startStandalone()
         })
         
         let initialSize = atomicSize
@@ -415,13 +522,13 @@ class GeneralSettingsViewController: TableViewController {
         
         let baseSettingsSignal: Signal<BaseApplicationSettings, NoError> = .single(context.sharedContext.baseSettings) |> then(baseAppSettings(accountManager: context.sharedContext.accountManager))
         
-        let signal = combineLatest(queue: prepareQueue, baseSettingsSignal, inputPromise.get(), forceTouchPromise.get(), appearanceSignal, appLaunchSettings(postbox: context.account.postbox), context.account.postbox.preferencesView(keys: [PreferencesKeys.secretChatSettings])) |> map { settings, _, _, appearance, launchSettings, preferencesView -> TableUpdateTransition in
+        let signal = combineLatest(queue: prepareQueue, baseSettingsSignal, inputPromise.get(), forceTouchPromise.get(), appearanceSignal, appLaunchSettings(postbox: context.account.postbox), context.account.postbox.preferencesView(keys: [PreferencesKeys.secretChatSettings]), additionalSettings(accountManager: context.sharedContext.accountManager)) |> map { settings, _, _, appearance, launchSettings, preferencesView, additionalSettings -> TableUpdateTransition in
             
             let baseSettings: BaseApplicationSettings = settings
             
             let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings]?.get(SecretChatSettings.self) ?? SecretChatSettings.defaultSettings
             
-            let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings, additionalSettings: additionalSettings).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)
             return prepareEntries(left: previous, right: entries, arguments: arguments, initialSize: initialSize.modify({$0}))
             

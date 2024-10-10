@@ -47,7 +47,7 @@ final class Auth_SignupHeader : View {
             let menu = ContextMenu()
             
             menu.addItem(ContextMenuItem(strings().loginNewRegisterSelect, handler: { [weak self] in
-                guard let window = self?.kitWindow else {
+                guard let window = self?._window else {
                     return
                 }
                 filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: window, completion: { paths in
@@ -178,8 +178,8 @@ private final class Auth_SignPhoneInput: View, NSTextFieldDelegate {
         firstText.textColor = theme.colors.text
         lastText.textColor = theme.colors.text
 
-        lastText.placeholderAttributedString = .initialize(string: "Last Name", color: theme.colors.grayText, font: .normal(.header), coreText: false)
-        firstText.placeholderAttributedString = .initialize(string: "First Name", color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        lastText.placeholderAttributedString = .initialize(string: "Last Name", color: theme.colors.grayText, font: .normal(.header))
+        firstText.placeholderAttributedString = .initialize(string: "First Name", color: theme.colors.grayText, font: .normal(.header))
         
         needsLayout = true
     }

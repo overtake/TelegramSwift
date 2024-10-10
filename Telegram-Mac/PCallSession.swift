@@ -167,29 +167,6 @@ public struct CallAuxiliaryServer {
 }
 
 
-private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc  {
-    private let queue: Queue
-    
-    init(queue: Queue) {
-        self.queue = queue
-        
-        super.init()
-    }
-    
-    func dispatch(_ f: @escaping () -> Void) {
-        self.queue.async {
-            f()
-        }
-    }
-    
-    func dispatch(after seconds: Double, block f: @escaping () -> Void) {
-        self.queue.after(seconds, f)
-    }
-    
-    func isCurrent() -> Bool {
-        return self.queue.isCurrent()
-    }
-}
 
 
 let callQueue = Queue(name: "VoIPQueue")
@@ -239,15 +216,14 @@ private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAux
 
 func getPrivateCallSessionData(_ account: Account, accountManager: AccountManager<TelegramAccountManagerTypes>, peerId: PeerId) -> Signal<PCallSession.InitialData, NoError> {
     return combineLatest(
-        account.postbox.preferencesView(keys: [PreferencesKeys.voipConfiguration, ApplicationSpecificPreferencesKeys.voipDerivedState, PreferencesKeys.appConfiguration])
-            |> take(1),
+        account.postbox.preferencesView(keys: [PreferencesKeys.voipConfiguration, ApplicationSpecificPreferencesKeys.voipDerivedState, PreferencesKeys.appConfiguration]),
         account.postbox.transaction { transaction -> Peer? in
             return transaction.getPeer(peerId)
         },
         voiceCallSettings(accountManager),
-        proxySettings(accountManager: accountManager) |> take(1),
-        account.networkType |> take(1)
-    ) |> map { preferences, peer, voiceSettings, proxy, networkType in
+        proxySettings(accountManager: accountManager),
+        account.networkType
+    ) |> take(1) |> map { preferences, peer, voiceSettings, proxy, networkType in
         
         let configuration = preferences.values[PreferencesKeys.voipConfiguration]?.get(VoipConfiguration.self) ?? VoipConfiguration.defaultValue
         let appConfiguration = preferences.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
@@ -283,8 +259,8 @@ class PCallSession {
     private var reception: Int32?
     private var requestedVideoAspect: Float?
     private var receptionDisposable: Disposable?
-
-
+    
+    
     private let serializedData: String?
     private let dataSaving: VoiceCallDataSaving
     private let derivedState: VoipDerivedState
@@ -292,8 +268,8 @@ class PCallSession {
     private let auxiliaryServers: [OngoingCallContext.AuxiliaryServer]
     private let currentNetworkType: NetworkType
     private let updatedNetworkType: Signal<NetworkType, NoError>
-
-
+    
+    
     
     private let stateDisposable = MetaDisposable()
     private let timeoutDisposable = MetaDisposable()
@@ -326,7 +302,7 @@ class PCallSession {
     private let hungUpPromise = ValuePromise<Bool>()
     
     private var activeTimestamp: Double?
-
+    
     
     private var player:CallAudioPlayer? = nil
     private var playingRingtone:Bool = false
@@ -352,16 +328,16 @@ class PCallSession {
     private let enableTCP: Bool
     public let preferredVideoCodec: String?
     
-
+    
     
     private var callWasActive = false
     private var videoWasActive = false
-
+    
     private var previousVideoState: CallState.VideoState?
     private var previousRemoteVideoState: CallState.RemoteVideoState?
     private var previousRemoteAudioState: CallState.RemoteAudioState?
     private var previousRemoteBatteryLevel: CallState.RemoteBatteryLevel?
-
+    
     
     private var delayMuteState: Bool? = nil
     
@@ -377,9 +353,6 @@ class PCallSession {
     let accountContext: AccountContext
     init(accountContext: AccountContext, account: Account, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool, data: PCallSession.InitialData) {
         
-        DispatchQueue.main.async {
-            _ = accountContext.audioPlayer?.pause()
-        }
         self.account = account
         self.accountContext = accountContext
         self.peerId = peerId
@@ -388,8 +361,8 @@ class PCallSession {
         self.updatedNetworkType = account.networkType
         self.isOutgoing = isOutgoing
         
-
-
+        
+        
         self.isScreenCapture = false
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
@@ -419,11 +392,11 @@ class PCallSession {
             isVideoAvailable = true
         }
         
-        self.isVideoAvailable = isVideoAvailable 
+        self.isVideoAvailable = isVideoAvailable
         
-       
+        
         let context = self.accountContext
-
+        
         self.serializedData = data.configuration.serializedData
         self.dataSaving = .never
         self.derivedState = data.derivedState
@@ -469,17 +442,17 @@ class PCallSession {
                 self.ongoingContext?.switchAudioInput(id)
             }
             if let id = values.output {
-                 self.ongoingContext?.switchAudioOutput(id)
+                self.ongoingContext?.switchAudioOutput(id)
             }
         }))
-
+        
         
         var callSessionState: Signal<CallSession, NoError> = .complete()
         if let initialState = initialState {
             callSessionState = .single(initialState)
         }
         callSessionState = callSessionState
-            |> then(callSessionManager.callState(internalId: id))
+        |> then(callSessionManager.callState(internalId: id))
         
         let signal = callSessionState |> deliverOn(callQueue)
         
@@ -550,7 +523,7 @@ class PCallSession {
             if access {
                 self?.acceptAfterAccess()
             } else {
-                confirm(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
+                verifyAlert_button(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
                     switch result {
                     case .thrid:
                         openSystemSettings(.microphone)
@@ -564,7 +537,7 @@ class PCallSession {
         
     }
     
-
+    
     
     private var isOutgoingVideoPaused: Bool = false
     private var isMuted: Bool = false
@@ -633,7 +606,11 @@ class PCallSession {
             case .notAvailable:
                 mappedVideoState = .notAvailable
             case .active:
-                mappedVideoState = .active(self.isVideoAvailable)
+                if videoIsForceDisabled {
+                    mappedVideoState = .inactive(self.isVideoAvailable)
+                } else {
+                    mappedVideoState = .active(self.isVideoAvailable)
+                }
             case .inactive:
                 mappedVideoState = .inactive(self.isVideoAvailable)
             case .paused:
@@ -689,7 +666,7 @@ class PCallSession {
                 mappedRemoteBatteryLevel = .normal
             }
         }
-
+        
         self.remoteAudioState = mappedRemoteAudioState
         self.remoteBatteryLevel = mappedRemoteBatteryLevel
         
@@ -705,7 +682,7 @@ class PCallSession {
             presentationState = CallState(state: .terminated(id, reason, options.contains(.reportRating)), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
         case let .requesting(ringing):
             presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .active(_, _, keyVisualHash, _, _, _, _):
+        case let .active(_, _, keyVisualHash, _, _, _, _, _):
             self.callWasActive = true
             if let callContextState = callContextState {
                 switch callContextState.state {
@@ -741,16 +718,16 @@ class PCallSession {
         switch sessionState.state {
         case .requesting:
             break
-        case let .active(id, key, _, connections, maxLayer, version, allowsP2P):
+        case let .active(id, key, _, connections, maxLayer, version, _, allowsP2P):
             if !wasActive {
                 let logName = "\(id.id)_\(id.accessHash)"
                 
                 let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.internalId, proxyServer: proxyServer, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: sessionState.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowsP2P, enableTCP: self.enableTCP, enableStunMarking: self.enableStunMarking, logName: logName, preferredVideoCodec: self.preferredVideoCodec, inputDeviceId: self.devicesContext.currentMicroId, outputDeviceId: self.devicesContext.currentOutputId)
                 self.ongoingContext = ongoingContext
                 
-//                ongoingContext.switchAudioInput(self.devicesContext.currentMicroId ?? "")
-//                ongoingContext.switchAudioOutput(self.devicesContext.currentOutputId ?? "")
-
+                //                ongoingContext.switchAudioInput(self.devicesContext.currentMicroId ?? "")
+                //                ongoingContext.switchAudioOutput(self.devicesContext.currentOutputId ?? "")
+                
                 self.audioLevelPromise.set(ongoingContext.audioLevel)
                 
                 if let requestedVideoAspect = self.requestedVideoAspect {
@@ -767,26 +744,26 @@ class PCallSession {
                 }
                 
                 self.ongoingContextStateDisposable = (ongoingContext.state
-                    |> deliverOnMainQueue).start(next: { [weak self] contextState in
-                        if let strongSelf = self {
-                            if let sessionState = strongSelf.sessionState {
-                                strongSelf.updateSessionState(sessionState: sessionState, callContextState: contextState, reception: strongSelf.reception)
-                            } else {
-                                strongSelf.callContextState = contextState
-                            }
+                                                      |> deliverOnMainQueue).start(next: { [weak self] contextState in
+                    if let strongSelf = self {
+                        if let sessionState = strongSelf.sessionState {
+                            strongSelf.updateSessionState(sessionState: sessionState, callContextState: contextState, reception: strongSelf.reception)
+                        } else {
+                            strongSelf.callContextState = contextState
                         }
-                    })
+                    }
+                })
                 
                 self.receptionDisposable = (ongoingContext.reception
-                    |> deliverOnMainQueue).start(next: { [weak self] reception in
-                        if let strongSelf = self {
-                            if let sessionState = strongSelf.sessionState {
-                                strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: reception)
-                            } else {
-                                strongSelf.reception = reception
-                            }
+                                            |> deliverOnMainQueue).start(next: { [weak self] reception in
+                    if let strongSelf = self {
+                        if let sessionState = strongSelf.sessionState {
+                            strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: reception)
+                        } else {
+                            strongSelf.reception = reception
                         }
-                    })
+                    }
+                })
                 
             }
         case let .terminated(id, _, options):
@@ -830,7 +807,7 @@ class PCallSession {
             self.presentationState = presentationState
             self.updateTone(presentationState, callContextState: callContextState, previous: previous)
         }
-
+        
     }
     
     private func updateTone(_ state: CallState, callContextState: OngoingCallContextState?, previous: CallSession?) {
@@ -883,7 +860,7 @@ class PCallSession {
         }
     }
     
-
+    
     
     deinit {
         peerDisposable.dispose()
@@ -924,7 +901,7 @@ class PCallSession {
             if let state = self.sessionState {
                 self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
             }
-//            setRequestedVideoAspect(Float(System.cameraAspectRatio))
+            //            setRequestedVideoAspect(Float(System.cameraAspectRatio))
         }
     }
     
@@ -946,7 +923,7 @@ class PCallSession {
         if !requestVideo {
             self.videoCapturer?.switchVideoInput(id)
         }
-//        setRequestedVideoAspect(Float(System.aspectRatio))
+        //        setRequestedVideoAspect(Float(System.aspectRatio))
         
         if let state = self.sessionState {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
@@ -996,14 +973,14 @@ class PCallSession {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
         }
     }
-
+    
     
     public func setRequestedVideoAspect(_ aspect: Float) {
         self.requestedVideoAspect = aspect
         self.ongoingContext?.setRequestedVideoAspect(aspect)
     }
-
-  
+    
+    
     @discardableResult func hangUpCurrentCall() -> Signal<Bool, NoError> {
         return hangUpCurrentCall(false)
     }
@@ -1047,7 +1024,7 @@ class PCallSession {
         case .error:
             dropReason = .disconnect
         }
-
+        
         drop(dropReason)
     }
     
@@ -1123,6 +1100,14 @@ class PCallSession {
     
     func makeOutgoingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
         self.videoCapturer?.makeOutgoingVideoView(completion: completion)
+    }
+    
+    func makeVideo(isIncoming: Bool) -> Signal<OngoingGroupCallContext.VideoFrameData, NoError>? {
+        if isIncoming {
+            return self.ongoingContext?.video(isIncoming: isIncoming)
+        } else {
+            return self.videoCapturer?.video()
+        }
     }
     
 }
@@ -1201,7 +1186,7 @@ func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, 
                 return .success(PCallSession(accountContext: context, account: context.account, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible, data: data))
             }
         } else {
-            confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+            verifyAlert_button(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
@@ -1271,7 +1256,7 @@ func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId, 
                     text = strings().callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             }
-            return confirmSignal(for: accountContext.window, header: header, information: text, okTitle: strings().modalYes, cancelTitle: strings().modalCancel) |> filter { $0 }
+            return verifyAlertSignal(for: accountContext.window, header: header, information: text, ok: strings().modalYes, cancel: strings().modalCancel) |> map { $0 == .basic }
         }
     } else {
         return .single(true)

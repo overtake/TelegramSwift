@@ -35,6 +35,13 @@ open class ContextMenuItem : NSMenuItem {
         }
         return _id!
     }
+    
+    open override func isEqual(_ object: Any?) -> Bool {
+        if let object = object as? ContextMenuItem {
+            return object.title == self.title && object.state == self.state
+        }
+        return false
+    }
 
     public enum KeyEquiavalent: String {
         case none = ""
@@ -60,21 +67,41 @@ open class ContextMenuItem : NSMenuItem {
     
     public var contextObject: Any? = nil
     
-    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
-    public let itemMode: AppMenu.ItemMode
+    public var itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? {
+        didSet {
+            redraw?()
+        }
+    }
+    public var itemMode: AppMenu.ItemMode {
+        didSet {
+            redraw?()
+        }
+    }
+    
+    public internal(set) var redraw:(()->Void)?
+    
+    public var stateOnImage: NSImage? {
+        didSet {
+            redraw?()
+        }
+    }
     
     public let keyEquivalentValue: KeyEquiavalent
+    let overrideWidth: CGFloat?
+    let removeTail: Bool
     
-    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none) {
+    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil) {
         self.handler = handler
         self.hover = hover
         self.dynamicTitle = dynamicTitle
         self.itemMode = itemMode
         self.itemImage = itemImage
+        self.removeTail = removeTail
+        self.overrideWidth = overrideWidth
         self.keyEquivalentValue = keyEquivalent
         super.init(title: title, action: nil, keyEquivalent: "")
         
-        self.title = title.prefixWithDots(cuttail ?? Int.max)
+        self.title = title.prefixWithDots(removeTail ? cuttail ?? Int.max : Int.max)
         self.action = #selector(click)
         self.target = self
         self.isEnabled = true
@@ -109,20 +136,23 @@ open class ContextMenuItem : NSMenuItem {
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
 
-    let presentation: AppMenu.Presentation
+    public let presentation: AppMenu.Presentation
     let betterInside: Bool
+    let bottomAnchor: Bool
     let maxHeight: CGFloat
     let isLegacy: Bool
     public internal(set) var isShown: Bool = false
-    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600, isLegacy: Bool = false) {
+    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600, isLegacy: Bool = false, bottomAnchor: Bool = false) {
         self.presentation = presentation
         self.betterInside = betterInside
         self.maxHeight = maxHeight
         self.isLegacy = isLegacy
+        self.bottomAnchor = bottomAnchor
         super.init(title: "")
     }
     
     public var topWindow: Window?
+    public var closeOutside: Bool = true
     
     public var loadMore: (()->Void)? = nil
 
@@ -192,6 +222,9 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     
     public func menuDidClose(_ menu: NSMenu) {
         onClose()
+    }
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
 }

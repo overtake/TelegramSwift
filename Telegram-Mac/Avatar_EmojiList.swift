@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import TelegramCore
 import Postbox
+import TelegramMedia
 
 final class Avatar_EmojiListView : View {
     
@@ -77,6 +78,8 @@ final class Avatar_EmojiListView : View {
         }, closeInlineFeatured: { _ in
             
         }, openFeatured: { _ in
+            
+        }, selectEmojiCategory: { _ in
             
         }, mode: .common)
         

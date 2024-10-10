@@ -49,7 +49,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     
-    open private(set) weak var item:TableRowItem?
+    open private(set) var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
     // var selected:Bool?
     
@@ -65,6 +65,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.wantsLayer = true
         backgroundColor = .clear
         self.layerContentsRedrawPolicy = .never
+        layer?.masksToBounds = true
         autoresizingMask = []
       //  self.layer?.delegate = self
         autoresizesSubviews = false
@@ -73,6 +74,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
+//    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+//        get {
+//            return false
+//        }
+//        set {
+//
+//        }
+//    }
     
     open func updateColors() {
         self.layer?.backgroundColor = backdorColor.cgColor
@@ -82,12 +91,19 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         super.smartMagnify(with: event)
     }
     
-    open func layerClass() ->AnyClass {
-        return CALayer.self;
-    }
     
     open var backdorColor: NSColor {
+        if let item = self.item {
+            return item.backdorColor
+        }
         return presentation.colors.background
+    }
+    
+    open var borderColor: NSColor {
+        if let item = self.item {
+            return item.borderColor
+        }
+        return presentation.colors.border
     }
     
     open var isSelect: Bool {
@@ -102,10 +118,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         var bp:Int = 0
         bp += 1
     }
+    
     open func updateIsResorting() {
         
     }
 
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
 //        ctx.setFillColor(backdorColor.cgColor)
@@ -114,7 +134,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
         if let border = border {
             
-            ctx.setFillColor(presentation.colors.border.cgColor)
+            ctx.setFillColor(borderColor.cgColor)
             
             if border.contains(.Top) {
                 ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
@@ -163,15 +183,15 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     open override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     open override func mouseExited(with event: NSEvent) {
         super.mouseMoved(with: event)
-        updateMouse()
+        updateMouse(animated: true)
     }
     
     open override func mouseDown(with event: NSEvent) {
@@ -238,6 +258,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
+    open func canAnimateUpdate(_ item: TableRowItem) -> Bool {
+        return true
+    }
     
     open func showContextMenu(_ event:NSEvent) -> Void {
         
@@ -299,7 +322,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    open func updateMouse() {
+    open func updateMouse(animated: Bool) {
         
     }
     
@@ -381,7 +404,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    open func onInsert(_ animation: NSTableView.AnimationOptions) {
+    open func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
         
     }
     
@@ -391,7 +414,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self._updateAnimatableContent()
     }
     
-    open func focusAnimation(_ innerId: AnyHashable?) {
+    open func focusAnimation(_ innerId: AnyHashable?, text: String?) {
         
         if animatedView == nil {
             self.animatedView = RowAnimateView(frame: bounds)
@@ -447,6 +470,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    
     @objc private func _updateAnimatableContent() {
         DispatchQueue.main.async { [weak self] in
             self?.updateAnimatableContent()
@@ -457,7 +481,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    
+    open var isEmojiLite: Bool {
+        return false
+    }
     
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -478,6 +504,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         } else {
             center.removeObserver(self)
         }
+    }
+    
+    open override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
     }
     
     private func removeNotificationListeners() {

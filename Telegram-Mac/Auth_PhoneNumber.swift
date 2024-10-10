@@ -11,13 +11,28 @@ import TGUIKit
 import AppKit
 import TelegramCore
 import SwiftSignalKit
+import TelegramMedia
 
 private func formatNumber(_ number: String, country: Country) -> String {
     var formatted: String = ""
     
-    guard let pattern = country.countryCodes.first?.patterns.first else {
+    var pattern: String?
+    if number.isEmpty {
+        pattern = country.countryCodes.first?.patterns.first(where: { value in
+            return value.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).count == value.count
+        })
+    } else {
+        pattern = country.countryCodes.first?.patterns.first(where: { value in
+            return value.first == number.first
+        })
+    }
+    if pattern == nil {
+        pattern = country.countryCodes.first?.patterns.last
+    }
+    guard let pattern = pattern else {
         return number
     }
+    
     let numberChars = Array(number)
     let patternChars = Array(pattern)
     
@@ -29,8 +44,10 @@ private func formatNumber(_ number: String, country: Country) -> String {
                 formatted.append(char)
             } else {
                 formatted.append("\(pattern)")
-                formatted.append(char)
-                patternIndex += 1
+                if pattern == " " {
+                    formatted.append(char)
+                    patternIndex += 1
+                }
             }
             patternIndex += 1
         } else {
@@ -44,6 +61,11 @@ private func formatNumber(_ number: String, country: Country) -> String {
 }
 
 private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
+    
+    if countryCode == "FT" {
+        return "🏴‍☠️"
+    }
+    
     if countryCode.count != 2 {
         return ""
     }
@@ -51,6 +73,7 @@ private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
     if countryCode == "TG" {
         return "🛰️"
     }
+   
     
     if countryCode == "XG" {
         return "🛰️"
@@ -71,7 +94,7 @@ private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
 }
 
 
-private extension Country {
+extension Country {
     var fullName: String {
         if let code = self.countryCodes.first {
             return "\(emojiFlagForISOCountryCode(self.id))" + " " + name + " +\(code.code)"
@@ -92,17 +115,20 @@ private extension Country {
 final class Auth_CountryManager {
     let list: [Country]
     init(_ countries:[Country]) {
-        self.list = countries.sorted(by: { lhs, rhs in
+        self.list = (countries).sorted(by: { lhs, rhs in
             return lhs.name < rhs.name
         })
     }
     
     private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
     
+
+    
     func items(byCodeNumber codeNumber: String, checkAll: Bool = false) -> [Country] {
         
         var list = self.list
         list.append(global)
+
         
         return list.filter( { value in
             for code in value.countryCodes {
@@ -120,6 +146,9 @@ final class Auth_CountryManager {
         if codeNumber == "999" {
             return global
         }
+//        if codeNumber == "888" {
+//            return fragment
+//        }
         let firstTrip = self.list.first(where: { value in
             for code in value.countryCodes {
                 if code.code == codeNumber {
@@ -227,15 +256,31 @@ final class Auth_LoginHeader : View {
     }
 }
 
+private final class TextField : NSTextField {
+    var didUpdateResponder: (()->Void)? = nil
+    
+    var isFirstResponder: Bool = false
+    override func becomeFirstResponder() -> Bool {
+        isFirstResponder = true
+        self.didUpdateResponder?()
+        return super.becomeFirstResponder()
+    }
+    override func resignFirstResponder() -> Bool {
+        isFirstResponder = false
+        self.didUpdateResponder?()
+        return super.resignFirstResponder()
+    }
+}
+
 final class Auth_PhoneInput: View, NSTextFieldDelegate {
     private let separator = View()
-    private let country: TitleButton = TitleButton()
+    private let country: TextButton = TextButton()
     
     private let country_overlay: Control = Control()
     private let nextView = ImageView()
     
-    private let codeText:NSTextField = NSTextField()
-    private let numberText:NSTextField = NSTextField()
+    private let codeText:TextField = TextField()
+    private let numberText:TextField = TextField()
 
     
     var manager: Auth_CountryManager = .init([]) {
@@ -291,6 +336,13 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         codeText.focusRingType = .none
         codeText.drawsBackground = false
         
+        self.numberText.didUpdateResponder = { [weak self] in
+            self?.needsLayout = true
+        }
+        self.codeText.didUpdateResponder = { [weak self] in
+            self?.needsLayout = true
+        }
+        
         codeText.delegate = self
         codeText.nextResponder = numberText
         codeText.nextKeyView = numberText
@@ -328,7 +380,20 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         let number = numberText.stringValue
         var text: String = number.isEmpty ? strings().loginPhoneFieldPlaceholder : ""
         if let item = selected {
-            if let pattern = item.countryCodes.first?.patterns.first {
+            var pattern: String?
+            if number.isEmpty {
+                pattern = item.countryCodes.first?.patterns.first(where: { value in
+                    return value.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).count == value.count
+                })
+            } else {
+                pattern = item.countryCodes.first?.patterns.first(where: { value in
+                    return value.first == number.first
+                })
+            }
+            if pattern == nil {
+                pattern = item.countryCodes.first?.patterns.last
+            }
+            if let pattern = pattern {
                 text = String(pattern.replacingOccurrences(of: "X", with: "-"))
             }
         }
@@ -356,7 +421,7 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         country.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, backgroundColor: theme.colors.grayBackground)
         country.set(font: .normal(.header), for: .Normal)
         
-        codeText.placeholderAttributedString = .initialize(string: strings().loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        codeText.placeholderAttributedString = .initialize(string: strings().loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header))
         nextView.image = NSImage(named: "Icon_GeneralNext")?.precomposed(theme.colors.border)
         
         self.updatePlaceholder()
@@ -371,8 +436,12 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         codeText.setFrameSize(codeText.frame.width, 18)
         numberText.setFrameSize(frame.width - (10 + codeText.frame.width + 10) - 10, 18)
         self.separator.frame = focus(NSMakeSize(frame.width - 20, .borderSize))
-        codeText.setFrameOrigin(10, frame.height - floor(frame.height / 2 - codeText.frame.height/2))
-        numberText.setFrameOrigin(10 + codeText.frame.width + 10, frame.height - floor(frame.height / 2 - numberText.frame.height/2))
+        
+        let yCode:CGFloat = codeText.currentEditor() != nil ? 1 : 0
+        let yNumber:CGFloat = numberText.currentEditor() != nil ? 1 : 0
+        
+        codeText.setFrameOrigin(10, frame.height - floor(frame.height / 2 - codeText.frame.height/2) + yCode)
+        numberText.setFrameOrigin(10 + codeText.frame.width + 10, frame.height - floor(frame.height / 2 - numberText.frame.height/2) + yNumber)
         placeholder.setFrameOrigin(NSMakePoint(10 + codeText.frame.width + 10 + 2, frame.height - floor(frame.height / 2 - placeholder.frame.height/2) + 2))
 
         country.setFrameOrigin(NSMakePoint(10, 12))
@@ -399,8 +468,8 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         if !hasChanges {
             self.codeText.stringValue = "\(countryCode)"
             self.numberText.stringValue = formatPhoneNumber(number)
-
         }
+        needsLayout = true
     }
     
     private var hasChanges: Bool = false
@@ -542,7 +611,7 @@ final class Auth_PhoneNumberView : View {
     private let container: View = View()
     private let input: Auth_PhoneInput = Auth_PhoneInput(frame: .zero)
     
-    private let qrButton: TitleButton = TitleButton()
+    private let qrButton: TextButton = TextButton()
     private let nextView: Auth_NextView = Auth_NextView()
     
     private var qrEnabled: Bool = false
@@ -642,6 +711,8 @@ final class Auth_PhoneNumberView : View {
             text = strings().loginNewPhoneBannedError
         case .timeout:
             text = "timeout"
+        case .appOutdated:
+            text = "please update your app"
         }
         errorLabel.state.set(.error(text))
     }

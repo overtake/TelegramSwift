@@ -69,10 +69,11 @@ class ChatNavigationScroller: ImageButton {
     func updateCount(_ count: Int32) {
         self.count = count
         if count > 0 {
-            badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.accent)
-            badge!.view = badgeView
+            badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: theme.colors.underSelectedColor, font: .bold(.small)), theme.colors.accent)
             badgeView.setFrameSize(badge!.size)
+            badge!.view = badgeView
             addSubview(badgeView)
+            badgeView.needsDisplay = true
         } else {
             badgeView.removeFromSuperview()
         }

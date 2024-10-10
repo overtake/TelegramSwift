@@ -9,20 +9,33 @@
 import Foundation
 import TelegramCore
 import TGUIKit
+import TelegramMedia
 
 final class SearchTopicRowItem: GeneralRowItem {
     let item: EngineChatList.Item
     fileprivate let context: AccountContext
     fileprivate let nameLayout: TextViewLayout
     fileprivate let nameSelectedLayout: TextViewLayout
-
-    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext, action: @escaping()->Void = {}) {
+    fileprivate let presentation: TelegramPresentationTheme?
+    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext, action: @escaping()->Void = {}, presentation: TelegramPresentationTheme? = nil) {
         self.item = item
         self.context = context
+        self.presentation = presentation
+        
+        let theme = presentation ?? theme
         self.nameLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         self.nameSelectedLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: .legacy, action: action, border: [.Bottom])
         _ = makeSize(initialSize.width)
+    }
+    
+    var threadId: Int64? {
+        switch item.id {
+        case let .forum(threadId):
+            return threadId
+        default:
+            return nil
+        }
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -98,10 +111,18 @@ private class SearchTopicRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
+        guard let item = self.item as? SearchTopicRowItem else {
+            return
+        }
+        let theme = item.presentation ?? theme
         borderView.backgroundColor = theme.colors.border
     }
     
     override var backdorColor: NSColor {
+        guard let item = self.item as? SearchTopicRowItem else {
+            return isSelect ? theme.colors.accentSelect : theme.colors.background
+        }
+        let theme = item.presentation ?? theme
         return isSelect ? theme.colors.accentSelect : theme.colors.background
     }
     
@@ -128,9 +149,9 @@ private class SearchTopicRowView : TableRowView {
                     self.inlineTopicPhotoLayer = nil
                 }
                 if let fileId = info.icon {
-                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
                 } else {
-                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: item.threadId ==  1)
                     current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
                 }
                 current.superview = containerView
@@ -151,6 +172,7 @@ private class SearchTopicRowView : TableRowView {
     }
     
     override func updateAnimatableContent() -> Void {
+        let isLite: Bool = self.isEmojiLite
         let checkValue:(InlineStickerItemLayer)->Void = { value in
             if let superview = value.superview {
                 var isKeyWindow: Bool = false
@@ -161,11 +183,18 @@ private class SearchTopicRowView : TableRowView {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow && !isLite
             }
         }
         if let value = inlineTopicPhotoLayer {
             checkValue(value)
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? SearchTopicRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
     }
 }

@@ -35,7 +35,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func previewMediaIfPossible() -> Bool {
-        guard let context = self.context, let window = self.kitWindow, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
+        guard let context = self.context, let window = self._window, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
         startModalPreviewHandle(table, window: window, context: context)
         return true
     }
@@ -82,7 +82,7 @@ class ChatFileContentView: ChatMediaContentView {
                 parameters?.showMedia(parent)
             } else {
                 if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
-                    confirm(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
                         QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                     })
                 } else {
@@ -120,12 +120,12 @@ class ChatFileContentView: ChatMediaContentView {
                 case .Fetching:
                     if parent != nil {
                         _ = attr.append(string: progress == 0 ? strings().messageStatusArchivePreparing : strings().messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
-                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                         layout.measure()
                         return layout
                     } else {
                         _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
-                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                         layout.measure()
                         return layout
                     }
@@ -135,13 +135,13 @@ class ChatFileContentView: ChatMediaContentView {
                 }
             case .none, .waiting:
                 _ = attr.append(string: strings().messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
-                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                 layout.measure()
                 return layout
             case .done:
                 if parent == nil {
                     _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
-                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                     layout.measure()
                     return layout
                 }
@@ -155,7 +155,7 @@ class ChatFileContentView: ChatMediaContentView {
                         errorText = strings().messageStatusArchiveFailed
                     }
                     _ = attr.append(string: errorText, color: theme.colors.redUI, font: .normal(.text))
-                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                     layout.measure()
                     return layout
                 }
@@ -171,7 +171,7 @@ class ChatFileContentView: ChatMediaContentView {
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
             }
-            let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+            let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
             layout.measure()
             return layout
             
@@ -179,7 +179,7 @@ class ChatFileContentView: ChatMediaContentView {
             if let _ = archiveStatus {
                 let size = strings().messageStatusArchived
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
-                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                 layout.measure()
                 return layout
             }
@@ -221,7 +221,7 @@ class ChatFileContentView: ChatMediaContentView {
                         }
                     }
                     if let pendingStatus = pendingStatus.0 {
-                        return (.Fetching(isActive: true, progress: pendingStatus.progress), archiveStatus)
+                        return (.Fetching(isActive: true, progress: pendingStatus.progress.progress), archiveStatus)
                     } else {
                         return (resourceStatus, archiveStatus)
                     }
@@ -259,9 +259,13 @@ class ChatFileContentView: ChatMediaContentView {
             thumbView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-            thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { result in
-                cacheMedia(result, messageId: stableId, arguments: arguments, scale: System.backingScale)
-            })
+            
+            if !thumbView.isFullyLoaded {
+                thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { result in
+                    cacheMedia(result, messageId: stableId, arguments: arguments, scale: System.backingScale)
+                })
+            }
+            
             
             
             thumbView.set(arguments: arguments)
@@ -406,20 +410,20 @@ class ChatFileContentView: ChatMediaContentView {
                         }
                     }
                     progress = max(progress, 0.1)
-                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
+                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil, blendMode: presentation.blendingMode)
                     
                     let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                     if progress == 1.0, sentGrouped {
                         progressView.state = .Success
                     } else {
-                        progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Fetching(progress: progress, force: false)
+                        progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb) : .Fetching(progress: progress, force: false)
                     }
                 case .Local:
-                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil)
-                    progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb, mode: .normal)
+                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil, blendMode: presentation.blendingMode)
+                    progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb)
                 case .Remote:
-                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
-                    progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Remote
+                    progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil, blendMode: presentation.blendingMode)
+                    progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb) : .Remote
                 }
                 
                 progressView.userInteractionEnabled = status != .Local
@@ -431,18 +435,15 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func layout() {
         super.layout()
-        if let parameters = parameters as? ChatFileLayoutParameters {
-            let center = floorToScreenPixels(backingScaleFactor, (parameters.hasThumb ? 70 : 40) / 2)
-            actionText.setFrameOrigin(leftInset, parameters.hasThumb ? center + 2 : 20)
-            
-            if parameters.hasThumb {
-                if let thumbProgress = thumbProgress {
-                    let f = thumbView.focus(thumbProgress.frame.size)
-                    thumbProgress.setFrameOrigin(f.origin)
-                }
-            } else {
-                progressView?.setFrameOrigin(NSZeroPoint)
+        let center = floorToScreenPixels(backingScaleFactor, frame.height / 2)
+        actionText.setFrameOrigin(leftInset, isHasThumb ? center + 2 : 20)
+        if isHasThumb {
+            if let thumbProgress = thumbProgress {
+                let f = thumbView.focus(thumbProgress.frame.size)
+                thumbProgress.setFrameOrigin(f.origin)
             }
+        } else {
+            progressView?.setFrameOrigin(NSZeroPoint)
         }
         
     }

@@ -8,13 +8,14 @@
 
 import Cocoa
 import TelegramCore
-
 import Postbox
 import SwiftSignalKit
 import TGUIKit
 import AVKit
 import RangeSet
-
+import TelegramMedia
+import AVFoundation
+import MediaPlayer
 
 
 class APSingleWrapper {
@@ -23,8 +24,8 @@ class APSingleWrapper {
     let mimeType: String
     let performer:String?
     let id:AnyHashable
-    let duration: Int32?
-    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, duration: Int32?, id: AnyHashable) {
+    let duration: Double?
+    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, duration: Double?, id: AnyHashable) {
         self.resource = resource
         self.name = name
         self.mimeType = mimeType
@@ -134,7 +135,7 @@ class APSongItem : APItem {
 
     override init(_ entry:APEntry, _ account:Account) {
         if case let .song(message) = entry {
-            let file = (message.effectiveMedia as! TelegramMediaFile)
+            let file = (message.anyMedia as! TelegramMediaFile)
             resource = file.resource
             if let _ = file.mimeType.range(of: "m4a") {
                 self.ext = "m4a"
@@ -235,7 +236,7 @@ class APSongItem : APItem {
     var reference: MediaResourceReference {
         switch entry {
         case let .song(message):
-            return FileMediaReference.message(message: MessageReference(message), media: message.effectiveMedia as! TelegramMediaFile).resourceReference(resource)
+            return FileMediaReference.message(message: MessageReference(message), media: message.anyMedia as! TelegramMediaFile).resourceReference(resource)
         default:
             return MediaResourceReference.standalone(resource: resource)
         }
@@ -243,7 +244,7 @@ class APSongItem : APItem {
     
     var coverImageMediaReference: ImageMediaReference? {
         if let resource = coverResource {
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             
             switch self.entry {
             case let .song(message):
@@ -258,7 +259,7 @@ class APSongItem : APItem {
     var coverResource: TelegramMediaResource? {
         switch entry {
         case let .song(message):
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if file.previewRepresentations.isEmpty {
                     if ext == "mp3" {
                         return ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
@@ -284,17 +285,26 @@ class APSongItem : APItem {
         }
     }
 
-    var duration: Int32? {
+    var duration: Double? {
         switch entry {
         case let .song(message):
-            return (message.effectiveMedia as? TelegramMediaFile)?.duration
+            return (message.anyMedia as? TelegramMediaFile)?.duration
         case let .single(wrapper):
             return wrapper.duration
         }
     }
+    
+    var userLocation: MediaResourceUserLocation {
+        switch entry {
+        case let .song(message):
+            return .peer(message.id.peerId)
+        default:
+            return .other
+        }
+    }
 
     private func fetch() {
-        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: reference).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: userLocation, userContentType: .audio, reference: reference).start())
     }
 
     private func cancelFetching() {
@@ -450,7 +460,7 @@ func ==(lhs:APHistoryLocation, rhs:APHistoryLocation) -> Bool {
     }
 }
 
-protocol APDelegate : class {
+protocol APDelegate : AnyObject {
     func songDidChanged(song:APSongItem, for controller:APController, animated: Bool)
     func songDidChangedState(song:APSongItem, for controller:APController, animated: Bool)
     func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool)
@@ -459,6 +469,143 @@ protocol APDelegate : class {
     func audioDidCompleteQueue(for controller:APController, animated: Bool)
 }
 
+private final class ControlCenter {
+    
+    var nextTrack:()->Bool = { return false }
+    var prevTrack:()->Bool = { return false }
+    var play:()->Bool = { return false }
+    var pause:()->Bool = { return false }
+    var togglePlayPause:()->Bool = { return false }
+    var seek:(TimeInterval)->Bool = { _ in return false }
+
+    private var playCommand: Any?
+    private var pauseCommand: Any?
+    private var nextCommand: Any?
+    private var prevCommand: Any?
+    private var togglePlayPauseCommand: Any?
+    private var playbackPositionCommand: Any?
+    
+    let account: Account
+    
+    init(account: Account) {
+        self.account = account
+        setupRemoteTransportControls()
+    }
+    
+    func setupNowPlaying(_ song: APSongItem) {
+        
+        let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+        
+        var nowPlayingInfo = [String: Any]()
+        nowPlayingInfo[MPMediaItemPropertyTitle] = song.songName
+        nowPlayingInfo[MPMediaItemPropertyArtist] = song.performerName
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = song.status.duration
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = song.status.timestamp
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = song.status.baseRate
+        if let resource = song.coverResource {
+            
+            if let path = copyToTemp(path: account.postbox.mediaBox.resourcePath(resource), ext: "jpeg") {
+                if let artworkImage = NSImage.init(contentsOfFile: path) {
+                    let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { size in
+                        return artworkImage
+                    }
+                    if #available(macOS 10.13.2, *) {
+                        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+                    }
+                }
+            }
+        }
+        nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
+
+        switch song.state {
+        case .playing:
+            nowPlayingInfoCenter.playbackState = .playing
+        default:
+            nowPlayingInfoCenter.playbackState = .paused
+        }
+        
+    }
+    
+    func clearNowPlaying() {
+        let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+        nowPlayingInfoCenter.nowPlayingInfo = nil
+        nowPlayingInfoCenter.playbackState = .stopped
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.removeTarget(playCommand)
+        commandCenter.pauseCommand.removeTarget(pauseCommand)
+        commandCenter.nextTrackCommand.removeTarget(nextCommand)
+        commandCenter.previousTrackCommand.removeTarget(prevCommand)
+        commandCenter.togglePlayPauseCommand.removeTarget(togglePlayPauseCommand)
+        commandCenter.changePlaybackPositionCommand.removeTarget(playbackPositionCommand)
+    }
+    
+    deinit {
+        clearNowPlaying()
+    }
+
+    
+    func updateControlsAvaiability(nextEnabled: Bool, prevEnabled: Bool) {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.previousTrackCommand.isEnabled = prevEnabled
+        commandCenter.nextTrackCommand.isEnabled = prevEnabled
+    }
+    
+    func setupRemoteTransportControls() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        playCommand = commandCenter.playCommand.addTarget { [unowned self] event in
+            if self.play() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+
+        pauseCommand = commandCenter.pauseCommand.addTarget { [unowned self] event in
+            if self.pause() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+
+        nextCommand = commandCenter.nextTrackCommand.addTarget { [unowned self] event in
+            if self.nextTrack() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+
+        prevCommand = commandCenter.previousTrackCommand.addTarget { [unowned self] event in
+            if self.prevTrack() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+        
+        togglePlayPauseCommand = commandCenter.togglePlayPauseCommand.addTarget { [unowned self] event in
+            if self.togglePlayPause() {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+        
+        playbackPositionCommand = commandCenter.changePlaybackPositionCommand.addTarget { [unowned self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            if self.seek(event.positionTime) {
+                return .success
+            } else {
+                return .commandFailed
+            }
+        }
+    }
+}
 
 
 class APController : NSResponder {
@@ -494,6 +641,8 @@ class APController : NSResponder {
     }
     
     private var mediaPlayer: MediaPlayer?
+    
+    private let controlCenter: ControlCenter
    
     private let statusDisposable = MetaDisposable()
     private let readyDisposable = MetaDisposable()
@@ -514,6 +663,8 @@ class APController : NSResponder {
                     mediaPlayer?.setVolume(state.volume)
                 }
                 notifyGlobalStateChanged(animated: true)
+                
+
             }
         }
     }
@@ -616,6 +767,8 @@ class APController : NSResponder {
                 value.songDidChangedState(song: item, for: self, animated: animated)
             }
         }
+        self.controlCenter.setupNowPlaying(item)
+        self.controlCenter.updateControlsAvaiability(nextEnabled: self.nextEnabled, prevEnabled: self.prevEnabled)
     }
 
     private func notifySongChanged(item:APSongItem, animated: Bool) {
@@ -624,6 +777,8 @@ class APController : NSResponder {
                 value.songDidChanged(song: item, for: self, animated: animated)
             }
         }
+        self.controlCenter.setupNowPlaying(item)
+        self.controlCenter.updateControlsAvaiability(nextEnabled: self.nextEnabled, prevEnabled: self.prevEnabled)
     }
 
     private func notifySongDidStartPlaying(item:APSongItem,animated: Bool) {
@@ -679,18 +834,32 @@ class APController : NSResponder {
     }
     fileprivate var _commandCenter: Any? = nil
     
-    @available(macOS 10.12.2, *)
-    private func commandCenter()->AudioCommandCenter? {
-        return self._commandCenter as? AudioCommandCenter
-    }
-    
     init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
         self.state.volume = volume
         self.streamable = streamable
         self.state.baseRate = baseRate
+        self.controlCenter = ControlCenter(account: context.account)
         super.init()
         
+        controlCenter.play = { [unowned self] in
+            return self.play()
+        }
+        controlCenter.pause = { [unowned self] in
+            return self.pause()
+        }
+        controlCenter.togglePlayPause = { [unowned self] in
+            return self.playOrPause()
+        }
+        controlCenter.nextTrack = { [unowned self] in
+            return self.next()
+        }
+        controlCenter.prevTrack = { [unowned self] in
+            return self.prev()
+        }
+        controlCenter.seek = { [unowned self] timestamp in
+            return self.set(seek: timestamp)
+        }
     }
 
     @objc open func windowDidBecomeKey() {
@@ -707,10 +876,7 @@ class APController : NSResponder {
     }
 
     func start() {
-        context.audioPlayer?.stop()
-        context.audioPlayer?.cleanup()
-
-        context.audioPlayer = self
+        
     }
 
 
@@ -789,7 +955,7 @@ class APController : NSResponder {
         return false
     }
 
-    func playOrPause() {
+    func playOrPause() -> Bool {
         if let _ = song {
             if case .playing = state.status {
                 mediaPlayer?.pause()
@@ -801,6 +967,7 @@ class APController : NSResponder {
                 dequeueCurrent()
             }
         }
+        return true
     }
     
     func playOrPause(_ id: APSingleWrapper) -> Bool {
@@ -848,9 +1015,9 @@ class APController : NSResponder {
     }
     
     
-    func next() {
+    @discardableResult func next() -> Bool {
         if !nextEnabled {
-            return
+            return false
         }
         switch self.state.orderState {
         case .normal:
@@ -871,11 +1038,12 @@ class APController : NSResponder {
         }
         
         dequeueCurrent()
+        return true
     }
 
-    func prev() {
+    @discardableResult func prev() -> Bool {
         if !prevEnabled {
-            return
+            return false
         }
         switch self.state.orderState {
         case .normal:
@@ -899,6 +1067,7 @@ class APController : NSResponder {
         }
         
         dequeueCurrent()
+        return true
     }
 
     var nextEnabled:Bool {
@@ -915,9 +1084,10 @@ class APController : NSResponder {
     }
 
     func complete() {
-        notifyCompleteQueue(animated: true)
-        state.status = .stopped
-        cleanup()
+        self.notifyCompleteQueue(animated: true)
+        self.state.status = .stopped
+        self.controlCenter.clearNowPlaying()
+        self.cleanup()
     }
 
     var currentSong:APSongItem? {
@@ -939,7 +1109,7 @@ class APController : NSResponder {
     fileprivate func play(with item:APSongItem) {
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
+        let player = MediaPlayer(postbox: account.postbox, userLocation: item.userLocation, userContentType: .audio, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
         
         player.play()
         state.status = .playing
@@ -948,6 +1118,7 @@ class APController : NSResponder {
                 self?.audioPlayerDidFinishPlaying()
             }
         })
+        
         
         self.mediaPlayer = player
 
@@ -983,14 +1154,15 @@ class APController : NSResponder {
                 if let strongSelf = self {
                     if resource.complete {
                         let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+                        let mediaBox = strongSelf.account.postbox.mediaBox
                         if let index = items.firstIndex(of: item) {
                             let previous = index - 1
                             let next = index + 1
                             if previous >= 0 {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[previous].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: items[previous].userLocation, userContentType: .audio, reference: items[previous].reference, statsCategory: .audio).start())
                             }
                             if next < items.count {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[next].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: items[next].userLocation, userContentType: .audio, reference: items[next].reference, statsCategory: .audio).start())
                             }
                         }
                         
@@ -1068,19 +1240,29 @@ class APController : NSResponder {
         stopTimer()
     }
 
-    func set(trackProgress:Float) {
+    @discardableResult func set(trackProgress:Float) -> Bool {
         if let player = mediaPlayer, let song = song {
             let current: Double = song.status.duration * Double(trackProgress)
             player.seek(timestamp: current)
             song.setProgress(TimeInterval(trackProgress))
             notifyStateChanged(item: song, animated: false)
+            return true
         }
+        return false
+    }
+    
+    @discardableResult func set(seek: TimeInterval) -> Bool {
+        if let player = mediaPlayer, let song = song {
+            player.seek(timestamp: seek)
+            song.setProgress(TimeInterval(song.status.duration / seek))
+            notifyStateChanged(item: song, animated: false)
+            return true
+        }
+        return false
     }
 
     func cleanup() {
         listeners.removeAll()
-        context.audioPlayer = nil
-        mainWindow.applyResponderIfNeeded()
         stop()
     }
 
@@ -1157,7 +1339,7 @@ class APChatController : APController {
 
     override func start() {
         super.start()
-        let tagMask:MessageTags = self.tags
+        let tagMask:HistoryViewInputTag = .tag(self.tags)
         let list = self.entries
         let items = self.items
         let account = self.context.account
@@ -1173,9 +1355,9 @@ class APChatController : APController {
                 default:
                     switch location {
                     case .initial:
-                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tag: tagMask, orderStatistics: [], additionalData: [])
                     case let .index(index):
-                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                        return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tag: tagMask, orderStatistics: [], additionalData: [])
                     }
                 }
                
@@ -1183,8 +1365,10 @@ class APChatController : APController {
                 } |> map { view -> (APHistory?,APHistory) in
                     var entries:[APEntry] = []
                     for viewEntry in view.0.entries {
-                        if let media = viewEntry.message.effectiveMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
-                            entries.append(.song(viewEntry.message))
+                        if let media = viewEntry.message.anyMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
+                            if viewEntry.message.id.peerId.isSecretChat || viewEntry.message.autoclearTimeout == nil {
+                                entries.append(.song(viewEntry.message))
+                            }
                         }
                     }
                     
@@ -1244,9 +1428,6 @@ class APChatMusicController : APChatController {
 
     init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, volume: Float = 1.0, messages: [Message] = []) {
         super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index: index, streamable: true, baseRate: baseRate, volume: volume, messages: messages)
-        if #available(macOS 10.12.2, *) {
-            self._commandCenter = AudioCommandCenter(self)
-        }
     }
 
     required init?(coder: NSCoder) {

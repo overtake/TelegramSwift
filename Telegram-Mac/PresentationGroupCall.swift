@@ -6,7 +6,7 @@ import SwiftSignalKit
 import AVFoundation
 import TelegramVoip
 import TGUIKit
-
+import TelegramMedia
 
 func groupCallLogsPath(account: Account) -> String {
     return account.basePath + "/group-calls"
@@ -588,6 +588,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var isMutedValue: PresentationGroupCallMuteAction = .muted(isPushToTalkActive: false) {
         didSet {
             if self.isMutedValue != oldValue {
+                var bp = 0
+                bp += 1
             }
         }
     }
@@ -782,15 +784,25 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.hasScreencast = false
 
         self.devicesContext = accountContext.sharedContext.devicesContext
+        
+        struct DevicesData: Equatable {
+            let networkState: PresentationGroupCallState.NetworkState
+            let input: String?
+            let output: String?
+            let sampleUpdateIndex: Int?
+        }
+        let signal: Signal<DevicesData, NoError> = combineLatest(queue: .mainQueue(), devicesContext.updater(), state) |> map { devices, state in
+            return .init(networkState: state.networkState, input: devices.input, output: devices.output, sampleUpdateIndex: devices.sampleUpdateIndex)
+        } |> filter { $0.networkState == .connected } |> distinctUntilChanged
 
-        devicesDisposable.set(devicesContext.updater().start(next: { [weak self] values in
+        devicesDisposable.set(signal.start(next: { [weak self] data in
             guard let `self` = self else {
                 return
             }
-            if let id = values.input {
+            if let id = data.input {
                 self.genericCallContext?.switchAudioInput(id)
             }
-            if let id = values.output {
+            if let id = data.output {
                 self.genericCallContext?.switchAudioOutput(id)
             }
         }))
@@ -1164,7 +1176,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             if let current = self.genericCallContext {
                 genericCallContext = current
             } else {
-                genericCallContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "", video: self.videoCapturer, requestMediaChannelDescriptions: { [weak self] ssrcs, completion in
+                genericCallContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "", audioSessionActive: .single(true), video: self.videoCapturer, requestMediaChannelDescriptions: { [weak self] ssrcs, completion in
                     let disposable = MetaDisposable()
                     Queue.mainQueue().async {
                         guard let strongSelf = self else {
@@ -1182,7 +1194,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false, logPath: allocateCallLogPath(account: self.account))
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false, logPath: allocateCallLogPath(account: self.account), onMutedSpeechActivityDetected: { _ in })
+                
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
                     self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuppression)
@@ -1665,27 +1678,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 strongSelf.stateValue.raisedHand = participant.hasRaiseHand
                             }
 
-                            if let muteState = filteredMuteState {
-                                if muteState.canUnmute {
-                                    switch strongSelf.isMutedValue {
-                                    case let .muted(isPushToTalkActive):
-                                        if !isPushToTalkActive {
-                                            strongSelf.genericCallContext?.setIsMuted(true)
-                                        }
-                                    case .unmuted:
-                                        strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                        strongSelf.genericCallContext?.setIsMuted(true)
-                                    }
-                                } else {
-                                    strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                    strongSelf.genericCallContext?.setIsMuted(true)
-                                }
-                                strongSelf.stateValue.muteState = muteState
-                            } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
-                                strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
-                                strongSelf.genericCallContext?.setIsMuted(true)
-                            }
+                            
                         } else {
                             if let ssrc = participant.ssrc {
                                 if let volume = participant.volume {
@@ -2237,6 +2230,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         
+        
+        
         switch self.isMutedValue {
         case .muted:
             self.setIsMuted(action: .unmuted)
@@ -2279,12 +2274,21 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
             self.genericCallContext?.setIsMuted(isEffectivelyMuted)
             
+
             if isVisuallyMuted {
                 self.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
             } else {
                 self.stateValue.muteState = nil
             }
             
+            if !isEffectivelyMuted {
+                if let id = self.devicesContext.currentMicroId {
+                    self.genericCallContext?.switchAudioInput(id)
+                }
+                if let id = self.devicesContext.currentOutputId {
+                    self.genericCallContext?.switchAudioOutput(id)
+                }
+            }
         })
     }
     
@@ -2350,19 +2354,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             strongSelf.participantsContext?.updateVideoState(peerId: strongSelf.joinAsPeerId, isVideoMuted: nil, isVideoPaused: false, isPresentationPaused: paused)
         })
 
-        let screencastCallContext = OngoingGroupCallContext(
-            video: self.screenCapturer,
-            requestMediaChannelDescriptions: { _, completion in
-                completion([])
-                return EmptyDisposable
-            },
+        let screencastCallContext = OngoingGroupCallContext(audioSessionActive: .single(true), video: self.screenCapturer, requestMediaChannelDescriptions: { _, completion in
+            completion([])
+            return EmptyDisposable
+        },
             rejoinNeeded: {},
             outgoingAudioBitrateKbit: nil,
             videoContentType: .screencast,
             enableNoiseSuppression: false,
             disableAudioInput: true,
             preferX264: false,
-            logPath: ""
+            logPath: "",
+            onMutedSpeechActivityDetected: { _ in }
         )
 
         self.screencastCallContext = screencastCallContext
@@ -2473,6 +2476,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         if found && sync {
             self.participantsContext?.updateMuteState(peerId: peerId, muteState: nil, volume: volume, raiseHand: nil)
         }
+        
     }
 
     public func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo]) {
@@ -2749,7 +2753,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     func switchVideoInput(_ deviceId: String) {
         videoCapturer?.switchVideoInput(deviceId)
     }
-
+    
+   
     func makeVideoView(endpointId: String, videoMode: GroupCallVideoMode, completion: @escaping (PresentationCallVideoView?) -> Void) {
         let context: OngoingGroupCallContext?
         switch videoMode {
@@ -2758,7 +2763,33 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         case .screencast:
             context = self.screencastCallContext
         }
-        context?.makeIncomingVideoView(endpointId: endpointId, requestClone: false, completion: { view, _ in
+        
+        guard let context = context else {
+            return
+        }
+        
+#if arch(arm64)
+        let videoView = MetalVideoMakeView(videoStreamSignal: context.video(endpointId: endpointId))
+        
+        completion(PresentationCallVideoView(holder: videoView, view: videoView, setOnFirstFrameReceived: { [weak videoView] f in
+            videoView?.firstFrameRendered = {
+                f?(0)
+            }
+        }, getOrientation: {
+            .rotation0
+        }, getAspect: {
+            return 0
+        }, setVideoContentMode: { [weak videoView] gravity in
+            videoView?.setGravity(gravity)
+        }, setOnOrientationUpdated: { f in
+            
+        }, setOnIsMirroredUpdated: { f in
+        }, setIsPaused: { paused in
+        }, renderToSize: { [weak videoView] size, animated in
+            videoView?.updateLayout(size: size, transition: animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate)
+        }))
+#else
+        context.makeIncomingVideoView(endpointId: endpointId, requestClone: false, completion: { view, _ in
             if let view = view {
                 let setOnFirstFrameReceived = view.setOnFirstFrameReceived
                 let setOnOrientationUpdated = view.setOnOrientationUpdated
@@ -2768,7 +2799,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     view: view.view,
                     setOnFirstFrameReceived: { f in
                         setOnFirstFrameReceived(f)
-                        
+
                     },
                     getOrientation: { [weak view] in
                         if let view = view {
@@ -2827,6 +2858,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 completion(nil)
             }
         })
+#endif
     }
 
     func loadMore() {

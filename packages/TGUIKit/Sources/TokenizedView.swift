@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKit
-
+import ColorPalette
 
 public struct SearchToken : Equatable {
     public let name:String
@@ -142,6 +142,17 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         let accentSelectColor: NSColor
         let redColor: NSColor
         
+        public init(_ colors: ColorPalette) {
+            self.background = colors.background
+            self.textColor = colors.text
+            self.grayBackground = colors.grayBackground
+            self.grayTextColor = colors.grayText
+            self.underSelectColor = colors.underSelectedColor
+            self.accentColor = colors.accent
+            self.accentSelectColor = colors.accentSelect
+            self.redColor = colors.redUI
+        }
+        
         public init(background: NSColor = presentation.colors.background,
              grayBackground: NSColor = presentation.colors.grayBackground,
              textColor: NSColor = presentation.colors.text,
@@ -199,7 +210,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         self.tokens.append(contentsOf: tokens)
         
         for token in tokens {
-            let view = TokenView(token, maxSize: NSMakeSize(80, 22), onDismiss: { [weak self] in
+            let view = TokenView(token, maxSize: NSMakeSize(frame.width - 10, 22), onDismiss: { [weak self] in
                 self?.removeTokens(uniqueIds: [token.uniqueId], animated: true)
             }, onSelect: { [weak self] in
                 self?.selectedIndex = self?.tokens.firstIndex(of: token)
@@ -383,6 +394,10 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         //layoutContainer(animated: false)
     }
     
+    public override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
     
     private let localizationFunc: (String)->String
     private let placeholderKey: String
@@ -473,6 +488,12 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     public var responder: NSResponder? {
         return input
+    }
+    
+    public func setString(_ string: String) {
+        input.string = string
+        self._textUpdater.set(string)
+        textDidChange(Notification(name: NSTextView.didChangeNotification))
     }
     
     public func updateLocalizationAndTheme(theme: PresentationTheme) {

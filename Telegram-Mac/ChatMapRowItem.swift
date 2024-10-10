@@ -31,7 +31,7 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         self.execute = execute
         self.defaultImageSize = isVenue ? NSMakeSize(60, 60) : NSMakeSize(320, 120)
         self.url = "https://maps.google.com/maps?q=\(String(format:"%f", map.latitude)),\(String(format:"%f", map.longitude))"
-        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(defaultImageSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
+        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(defaultImageSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
         
         self.image = TelegramMediaImage(imageId: map.id ?? MediaId(namespace: 0, id: arc4random64()), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         
@@ -56,19 +56,15 @@ func ==(lhs:ChatMediaMapLayoutParameters, rhs:ChatMediaMapLayoutParameters) -> B
 class ChatMapRowItem: ChatMediaItem {
     fileprivate var liveText: TextViewLayout?
     fileprivate var updatedText: TextViewLayout?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
         let map = media as! TelegramMediaMap
       //  let isVenue = map.venue != nil
         let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2, zoom: 15)
         //let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
         self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), execute: {
             
-            if #available(OSX 10.13, *) {
-                showModal(with: LocationModalPreview(context, map: map, peer: object.message!.effectiveAuthor, messageId: object.message!.id), for: context.window)
-            } else {
-                execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", map.latitude)),\(String(format:"%f", map.longitude))", false))
-            }
+            showModal(with: LocationModalPreview(context, map: map, peer: object.message!.effectiveAuthor, messageId: object.message!.id), for: context.window)
         })
         
         if isLiveLocationView {
@@ -118,11 +114,16 @@ class ChatMapRowItem: ChatMediaItem {
     var isLiveLocationView: Bool {
         if let media = media as? TelegramMediaMap, let message = message {
             if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
-                var time:TimeInterval = Date().timeIntervalSince1970
-                time -= context.timeDifference
-                if Int32(time) < message.timestamp + liveBroadcastingTimeout {
+                if liveBroadcastingTimeout == .max {
                     return true
+                } else {
+                    var time:TimeInterval = Date().timeIntervalSince1970
+                    time -= context.timeDifference
+                    if Int(time) < Int(message.timestamp) + Int(liveBroadcastingTimeout) {
+                        return true
+                    }
                 }
+                
             }
         }
         return false

@@ -40,9 +40,9 @@ private final class WidgetNavigationButton : Control {
         super.updateLocalizationAndTheme(theme: theme)
         
         let theme = theme as! TelegramPresentationTheme
-        self.background = theme.shouldBlurService ? .clear : theme.chatServiceItemColor
+        self.background = theme.shouldBlurService && !isLite(.blur) ? .clear : theme.chatServiceItemColor
         self.visualEffect.bgColor = theme.blurServiceColor
-        self.visualEffect.isHidden = !theme.shouldBlurService
+        self.visualEffect.isHidden = !theme.shouldBlurService || isLite(.blur)
     }
     
     private var direction: Direction?
@@ -286,7 +286,7 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
         
         controllers.append(WidgetAppearanceController(context))
         controllers.append(WidgetRecentPeersController(context))
-        controllers.append(WidgetStorageController(context))
+//        controllers.append(WidgetStorageController(context))
         controllers.append(WidgetStickersController(context))
 
         let current = controllers[selected]

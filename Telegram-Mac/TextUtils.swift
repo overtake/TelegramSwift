@@ -13,6 +13,8 @@ import Postbox
 import TGUIKit
 import SwiftSignalKit
 import CurrencyFormat
+import ColorPalette
+import InputView
 
 enum MessageTextMediaViewType {
     case emoji
@@ -20,8 +22,16 @@ enum MessageTextMediaViewType {
     case none
 }
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> NSString {
+let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
+
+
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
+    
+    if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
+        return (string: "", justSpoiled: "")
+    }
+    
     for attr in message.attributes {
         if let attr = attr as? TextEntitiesMessageAttribute {
             for entity in attr.entities {
@@ -34,6 +44,24 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             }
         }
     }
+    
+    
+    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
+        let regexPattern = #"[\d\-]{5,7}"#
+        do {
+            let regex = try NSRegularExpression(pattern: regexPattern, options: [])
+            let range = NSRange(location: 0, length: messageText.utf16.count)
+            
+            let matches = regex.matches(in: messageText, range: range)
+            for match in matches {
+                messageText = messageText.spoiler(match.range)
+            }
+        } catch {
+            print("Error creating regular expression: \(error.localizedDescription)")
+        }
+    }
+    
+    let justSpoiled = messageText
     
     for media in message.media {
         switch media {
@@ -57,9 +85,33 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             }
         case let dice as TelegramMediaDice:
             messageText = dice.emoji
+        case _ as TelegramMediaGiveaway:
+            if let forwardInfo = message.forwardInfo, let author = forwardInfo.author {
+                messageText = strings().messageGiveawayStartedOther(author.displayTitle)
+            } else {
+                messageText = strings().messageGiveawayStarted
+            }
+        case let media as TelegramMediaPaidContent:
+            if message.text.isEmpty {
+                let hasVideo = media.extendedMedia.contains {
+                    switch $0 {
+                    case let .full(media):
+                        return media is TelegramMediaFile
+                    case let .preview(_, _, videoDuration):
+                        return videoDuration != nil
+                    }
+                }
+                if hasVideo {
+                    messageText = strings().chatListVideo1Countable(media.extendedMedia.count)
+                } else {
+                    messageText = strings().chatListPhoto1Countable(media.extendedMedia.count)
+                }
+            }
+        case _ as TelegramMediaGiveawayResults:
+            messageText = strings().messageGiveawayResult
         case let fileMedia as TelegramMediaFile:
             if fileMedia.probablySticker {
-                messageText = strings().chatListSticker(fileMedia.stickerText ?? "")
+                messageText = strings().chatListSticker(fileMedia.stickerText?.normalizedEmoji ?? "")
             } else if fileMedia.isVoice {
                 if !message.text.isEmpty {
                     messageText = ("🎤" + " " + messageText)
@@ -122,6 +174,28 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             messageText = invoice.title
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
+        case let story as TelegramMediaStory:
+            if message.isExpiredStory {
+                if story.isMention {
+                    if message.flags.contains(.Incoming) {
+                        messageText = strings().chatServiceStoryExpiredMentionTextIncoming
+                    } else if let peer = message.peers[message.id.peerId] {
+                        messageText = strings().chatServiceStoryExpiredMentionTextOutgoing(peer.compactDisplayTitle)
+                    }
+                } else {
+                    messageText = strings().chatListStoryExpired
+                }
+            } else if let peer = message.peers[message.id.peerId] {
+                if story.isMention {
+                    if message.flags.contains(.Incoming) {
+                        messageText = strings().chatServiceStoryMentioned(peer.compactDisplayTitle)
+                    } else {
+                        messageText = strings().chatServiceStoryMentionedYou(peer.compactDisplayTitle)
+                    }
+                } else {
+                    messageText = strings().chatListStory
+                }
+            }
         case let webpage as TelegramMediaWebpage:
             if case let .Loaded(content) = webpage.content {
                 if let _ = content.image {
@@ -159,11 +233,17 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
-    return messageText.nsstring
+    
+
+    if message.storyAttribute != nil, notifications, message.flags.contains(.Incoming) {
+        return (string: strings().notificationStoryReply(messageText).nsstring, justSpoiled: justSpoiled)
+    }
+    
+    return (string: messageText.nsstring, justSpoiled: justSpoiled)
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false) -> NSAttributedString {
     
     
     if let draft = draft, !draft.text.isEmpty {
@@ -183,7 +263,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
     }
         
     if let renderedPeer = renderedPeer {
-        if let peer = renderedPeer.peers[renderedPeer.peerId] as? TelegramSecretChat {
+        if let peer = renderedPeer.peers[renderedPeer.peerId]?._asPeer() as? TelegramSecretChat {
             let subAttr = NSMutableAttributedString()
             switch peer.embeddedState {
             case .terminated:
@@ -192,7 +272,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             _ = subAttr.append(string: strings().chatListSecretChatExKeys, color: theme.chatList.grayTextColor, font: .normal(.text))
             case .active:
                 if message == nil {
-                    let title:String = renderedPeer.chatMainPeer?.displayTitle ?? strings().peerDeletedUser
+                    let title:String = renderedPeer.chatMainPeer?._asPeer().displayTitle ?? strings().peerDeletedUser
                     switch peer.role {
                     case .creator:
                         _ = subAttr.append(string: strings().chatListSecretChatJoined(title), color: theme.chatList.grayTextColor, font: .normal(.text))
@@ -245,7 +325,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
+        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         
@@ -260,6 +340,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                     
                     peerText += (folder ? ": " : "\r")
                     _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                    _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
                 } else if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
                     var peerText: String = (author.id == account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
@@ -274,32 +355,59 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
             
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
+            
+            if let media = message.media.first as? TelegramMediaPoll, !notifications {
+                InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
+            }
+            
+//            var replacements:[String: TelegramMediaFile] = [:]
+//            replacements["📊"] = LocalAnimatedSticker.chatlist_poll.file
+//            replacements["🎮"] = LocalAnimatedSticker.chatlist_game.file
+//            replacements["🎵"] = LocalAnimatedSticker.chatlist_music.file
+//            replacements["🎤"] = LocalAnimatedSticker.chatlist_voice.file
+//
+//            for (key, value) in replacements {
+//                let range = attributedText.string.nsstring.range(of: key)
+//                if range.location == 0, !message.media.isEmpty {
+//                    attributedText.insertEmbedded(.embeddedAnimated(value, playPolicy: .once), for: key)
+//                }
+//            }
            
-        } else if message.effectiveMedia is TelegramMediaAction {
+        } else if let action = message.extendedMedia as? TelegramMediaAction {
             let service = serviceMessageText(message, account:account, isReplied: isReplied)
             _ = attributedText.append(string: service.0, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.detectBoldColorInString(with: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
             
+            if case let .paymentSent(currency, _, _, _, _) = action.action {
+                if currency == XTR {
+                    attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
+                }
+            }
+            
             InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
             
-        } else if let media = message.effectiveMedia as? TelegramMediaExpiredContent {
+        } else if let media = message.anyMedia as? TelegramMediaExpiredContent {
             let text:String
             switch media.data {
             case .image:
                 text = strings().serviceMessageExpiredPhoto
             case .file:
                 text = strings().serviceMessageExpiredVideo
+            case .voiceMessage:
+                text = strings().serviceMessageExpiredVoiceMessage
+            case .videoMessage:
+                text = strings().serviceMessageExpiredVideoMessage
             }
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor,range: attributedText.range)
         }
         
         var effective: Message = message
-        if !(message.effectiveMedia is TelegramMediaAction) {
+        if !(message.extendedMedia is TelegramMediaAction) {
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                    if let action = message.effectiveMedia as? TelegramMediaAction {
+                    if let action = message.extendedMedia as? TelegramMediaAction {
                         switch action.action {
                         case .pinnedMessageUpdated:
                             effective = message
@@ -311,9 +419,104 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         if !applyUserName {
-            let range = attributedText.string.nsstring.range(of: effective.text)
+            let range = attributedText.string.nsstring.range(of: justSpoiled)
+        
             if range.location != NSNotFound {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
+                
+                var fontAttributes: [(NSRange, ChatTextFontAttributes)] = []
+                
+                for entity in effective.entities {
+                    let lower = entity.range.lowerBound + range.location
+                    let upper = entity.range.upperBound + range.location
+                    let range = NSRange(location: lower, length: upper - lower)
+                    
+                    inner: switch entity.type {
+                    case .Strikethrough:
+                        let intersection = attributedText.range.intersection(range)
+                        if let range = intersection {
+                            attributedText.addAttribute(.strikethroughStyle, value: true, range: range)
+                        }
+                    case .Underline:
+//                        let intersection = attributedText.range.intersection(range)
+//                        if let range = intersection {
+//                            attributedText.addAttribute(.underlineStyle, value: true, range: range)
+//                        }
+                        break
+                    case .Bold:
+                       // fontAttributes.append((range, .bold))
+                        break
+                    case .Italic:
+                        fontAttributes.append((range, .italic))
+                        break
+                    case .Code, .Pre:
+                        fontAttributes.append((range, .monospace))
+                        break
+                    default:
+                        break inner
+                    }
+                    
+                }
+                
+                for (i, (range, attr)) in fontAttributes.enumerated() {
+                    var font: NSFont?
+                    var intersects:[(NSRange, ChatTextFontAttributes)] = []
+                    
+                    for (j, value) in fontAttributes.enumerated() {
+                        if j != i {
+                            if let intersection = value.0.intersection(range) {
+                                intersects.append((intersection, value.1))
+                            }
+                        }
+                    }
+                                
+                    switch attr {
+                    case .monospace, .blockQuote:
+                        font = .code(.text)
+                    case .italic:
+                        font = .italic(.text)
+                    case .bold:
+                        font = .bold(.text)
+                    default:
+                        break
+                    }
+                    if let font = font {
+                        let intersection = attributedText.range.intersection(range)
+                        if let range = intersection {
+                            attributedText.addAttribute(.font, value: font, range: range)
+                        }
+                    }
+                    
+                     for intersect in intersects {
+                         var font: NSFont? = nil
+                         loop: switch intersect.1 {
+                         case .italic:
+                             switch attr {
+                             case .bold:
+                                 font = .boldItalic(.text)
+                             default:
+                                 break loop
+                             }
+                         case .bold:
+                            switch attr {
+                            case .bold:
+                                font = .boldItalic(.text)
+                            default:
+                                break loop
+                            }
+                         default:
+                             break loop
+                             
+                         }
+                         if let font = font {
+                             let intersection = attributedText.range.intersection(range)
+                             if let range = intersection {
+                                 attributedText.addAttribute(.font, value: font, range: range)
+                             }
+                         }
+                     }
+                }
+                
             }
             return attributedText.trimNewLinesToSpace
         } else {
@@ -341,12 +544,16 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
     var entities: [MessageTextEntity] = []
     var media: [MediaId : Media] = [:]
     
-    if let media = message.effectiveMedia as? TelegramMediaExpiredContent {
+    if let media = message.anyMedia as? TelegramMediaExpiredContent {
         switch media.data {
         case .image:
             text = strings().chatListPhoto
         case .file:
             text = strings().chatListVideo
+        case .voiceMessage:
+            text = strings().chatListVoice
+        case .videoMessage:
+            text = strings().chatListInstantVideo
         }
         return (text, [], [:])
     }
@@ -354,7 +561,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
     
     let authorId:PeerId? = message.author?.id
     
-    if let action = message.effectiveMedia as? TelegramMediaAction, let peer = coreMessageMainPeer(message) {
+    if let action = message.extendedMedia as? TelegramMediaAction, let peer = coreMessageMainPeer(message) {
         switch action.action {
         case let .addedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
@@ -384,7 +591,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceGroupJoinedByLink(authorName)
             }
-        case let .messageAutoremoveTimeoutUpdated(seconds):
+        case let .messageAutoremoveTimeoutUpdated(seconds, _):
             if seconds > 0 {
                 text = strings().chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))
             } else {
@@ -413,7 +620,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 var replyMessageText = ""
                 for attribute in message.attributes {
                     if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                        replyMessageText = pullText(from: message) as String
+                        replyMessageText = pullText(from: message).string as String
                     }
                 }
                 text = strings().chatServiceGroupUpdatedPinnedMessage1(authorName, replyMessageText.prefixWithDots(15))
@@ -438,27 +645,28 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 } else {
                     text = isVideo ? strings().chatListServiceVideoCallIncoming(.stringForShortCallDurationSeconds(for: duration)) : strings().chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
                 }
-            }
-            
-            if let reason = reason {
-                let outgoing = !message.flags.contains(.Incoming)
-                
-                switch reason {
-                case .busy:
-                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
-                case .disconnect:
-                    text = isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed
-                case .hangup:
-                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
-                case .missed:
-                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+            } else {
+                if let reason = reason {
+                    let outgoing = !message.flags.contains(.Incoming)
+                    
+                    switch reason {
+                    case .busy:
+                        text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    case .disconnect:
+                        text = isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed
+                    case .hangup:
+                        text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    case .missed:
+                        text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    }
                 }
             }
+           
         case let .gameScore(gameId: _, score: score):
             var gameName:String = ""
             for attr in message.attributes {
                 if let attr = attr as? ReplyMessageAttribute {
-                    if let message = message.associatedMessages[attr.messageId], let gameMedia = message.effectiveMedia as? TelegramMediaGame {
+                    if let message = message.associatedMessages[attr.messageId], let gameMedia = message.anyMedia as? TelegramMediaGame {
                         gameName = gameMedia.name
                     }
                 }
@@ -473,10 +681,12 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             text = strings().chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
         case .unknown:
             break
-        case .customText(let value, _):
+        case .customText(let value, _, _):
             text = value
         case let .botDomainAccessGranted(domain):
             text = strings().chatServiceBotPermissionAllowed(domain)
+        case  let .botAppAccessGranted(appName, _):
+            text = strings().authSessionsMessageApp(appName ?? "")
         case let .botSentSecureValues(types):
             let permissions = types.map({$0.rawValue}).joined(separator: ", ")
             text = strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
@@ -570,16 +780,24 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .webViewData(data):
             text = strings().chatServiceWebData(data)
-        case let .giftPremium(currency, amount, _):
+        case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount):
+            let formatted = formatCurrencyAmount(amount, currency: currency)
             if authorId == account.peerId {
-                text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+                text = strings().chatServicePremiumGiftSentYou(formatted)
             } else {
-                text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+                text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
+            if authorId == account.peerId {
+                text = strings().chatServiceGiftLinkSent
+            } else {
+                text = strings().chatServiceGiftLink
+            }
+        case .giveawayLaunched:
+            text = strings().chatServiceGiveawayStarted(authorName)
         case let .topicEdited(components):
             var fileId: Int64?
-            if components.count == 1 {
-                let component = components[0]
+            if let component = components.first {
                 switch component {
                 case let .title(title):
                     if authorId == account.peerId {
@@ -616,6 +834,20 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                             text = strings().chatServiceGroupTopicEditedResumed(authorName)
                         }
                     }
+                case let .isHidden(isHidden):
+                    if authorId == account.peerId {
+                        if isHidden {
+                            text = strings().chatServiceGroupTopicEditedYouHided
+                        } else {
+                            text = strings().chatServiceGroupTopicEditedYouUnhided
+                        }
+                    } else {
+                        if isHidden {
+                            text = strings().chatServiceGroupTopicEditedHided(authorName)
+                        } else {
+                            text = strings().chatServiceGroupTopicEditedUnhided(authorName)
+                        }
+                    }
                 }
             } else {
                 var title: String = ""
@@ -627,6 +859,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     case let .iconFileId(value):
                         iconFileId = value
                     case .isClosed:
+                        break
+                    case .isHidden:
                         break
                     }
                 }
@@ -666,8 +900,66 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     entities.append(.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: iconFileId)))
                 }
             }
-            
-            
+        case .suggestedProfilePhoto:
+            if authorId == account.peerId {
+                text = strings().chatServiceYouSuggestedPhoto
+            } else {
+                text = strings().chatServiceSuggestedPhoto(authorName)
+            }
+        case .attachMenuBotAllowed:
+            text = strings().chatServiceBotWriteAllowed
+        case let .requestedPeer(_, peerIds):
+            if let botPeer = message.peers[message.id.peerId] {
+                if peerIds.count == 1, let peer = message.peers[peerIds[0]] {
+                    text = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
+                } else {
+                    let string: String = peerIds.compactMap { message.peers[$0]?.displayTitle }.joined(separator: ", ")
+                    text = strings().chatServicePeerRequestedMultiple(string, botPeer.displayTitle)
+                }
+            }
+        case .setChatWallpaper:
+            if authorId == account.peerId {
+                text = strings().chatServiceYouChangedWallpaper
+            } else {
+                text = strings().chatServiceChangedWallpaper(authorName)
+            }
+        case .setSameChatWallpaper:
+            if authorId == account.peerId {
+                text = strings().chatServiceYouChangedToSameWallpaper
+            } else {
+                text = strings().chatServiceChangedToSameWallpaper(authorName)
+            }
+        case .joinedChannel:
+            text = strings().chatServiceJoinedChannel
+        case let .giveawayResults(winners, unclaimed):
+            if winners == 0 {
+                text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+            } else if unclaimed > 0 {
+                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                text = winnersString + "\n" + unclaimedString
+            } else {
+                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+            }
+        case let .boostsApplied(boosts):
+            if message.author?.id == account.peerId {
+                if boosts == 1 {
+                    text = strings().notificationBoostSingleYou
+                } else {
+                    let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
+                    text = strings().notificationBoostMultipleYou(boostsString)
+                }
+            } else {
+                let peerName = message.author?.compactDisplayTitle ?? ""
+                if boosts == 1 {
+                    text = strings().notificationBoostSingle(peerName)
+                } else {
+                    let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
+                    text = strings().notificationBoostMultiple(peerName, boostsString)
+                }
+            }
+
         }
     }
     return (text, entities, media)
@@ -686,6 +978,15 @@ struct PeerStatusStringTheme {
         self.statusFont = statusFont
         self.statusColor = statusColor
         self.highlightColor = highlightColor
+        self.highlightIfActivity = highlightIfActivity
+    }
+    
+    init(_ colors: ColorPalette, titleFont:NSFont = .normal(.title), statusFont:NSFont = .normal(.short), highlightIfActivity:Bool = true) {
+        self.titleFont = .normal(.title)
+        self.titleColor = colors.text
+        self.statusFont = statusFont
+        self.statusColor = colors.grayText
+        self.highlightColor = colors.accent
         self.highlightIfActivity = highlightIfActivity
     }
 }
@@ -728,7 +1029,7 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
     return true
 }
 
-func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false) -> PeerStatusStringResult {
+func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false, ignoreActivity: Bool = false) -> PeerStatusStringResult {
     if let peer = peerViewMainPeer(peerView) {
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
@@ -741,7 +1042,7 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
                 return PeerStatusStringResult(title, .initialize(string: strings().presenceSupport,  color: theme.statusColor, font: theme.statusFont))
             } else if let _ = user.botInfo {
                 return PeerStatusStringResult(title, .initialize(string: strings().presenceBot,  color: theme.statusColor, font: theme.statusFont))
-            } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence {
+            } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence, !ignoreActivity {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 let (string, activity, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp), expanded: expanded)
                 

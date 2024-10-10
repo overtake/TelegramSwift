@@ -1,4 +1,6 @@
 import Foundation
+import WebKit
+import UserNotifications
 import TGUIKit
 import SwiftSignalKit
 import Postbox
@@ -6,6 +8,9 @@ import TelegramCore
 import Localization
 import InAppSettings
 import IOKit
+import CodeSyntax
+import Dock
+import PrivateCallScreen
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -35,10 +40,12 @@ final class UnauthorizedApplicationContext {
     let sharedContext: SharedAccountContext
     
     private let updatesDisposable: DisposableSet = DisposableSet()
+    private let authController: AuthController
     
     var rootView: NSView {
         return rootController.view
     }
+    
     
     init(window:Window, sharedContext: SharedAccountContext, account: UnauthorizedAccount, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
 
@@ -53,11 +60,11 @@ final class UnauthorizedApplicationContext {
             window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
             window.center()
         }
-        
+        self.authController = AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers)
         self.account = account
         self.window = window
         self.sharedContext = sharedContext
-        self.rootController = MajorNavigationController(AuthController.self, AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers), window)
+        self.rootController = MajorNavigationController(AuthController.self, self.authController, window)
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
 
         self.modal = AuthModalController(rootController)
@@ -69,6 +76,11 @@ final class UnauthorizedApplicationContext {
  
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
         
+    }
+    
+    
+    func applyExternalLoginCode(_ code: String) {
+        authController.applyExternalLoginCode(code)
     }
     
     deinit {
@@ -166,7 +178,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
-    private let updatesDisposable = MetaDisposable()
     private let updateFoldersDisposable = MetaDisposable()
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -181,7 +192,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, folders: ChatListFolders?) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, inlinePlayerContext: InlineAudioPlayerView.ContextObject?, folders: ChatListFolders?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -245,10 +256,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         super.init()
         
 
-        
-        
-        updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
-        
+                
         context.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
                 return MajorNavigationController(ViewController.self, ViewController(), window)
@@ -264,12 +272,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.rightController.controller.show(toaster: toaster, animated: animated)
-        }, globalSearch: { [weak self] search in
+        }, globalSearch: { [weak self] search, peerId in
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.leftController.tabController.select(index: self.leftController.chatIndex)
-            self.leftController.globalSearch(search)
+            self.leftController.globalSearch(search, peerId: peerId)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
             guard let `self` = self else {
                 return EntertainmentViewController.init(size: NSZeroSize, context: context)
@@ -298,6 +306,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             }
         }))
         
+        closeAllPopovers(for: context.window)
+        closeAllModals(window: context.window)
+        AppMenu.closeAll()
       
        // var forceNotice:Bool = false
         if FastSettings.isMinimisize {
@@ -310,12 +321,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.view.splitView.delegate = self;
         self.view.splitView.update(false)
         
-       
-        
+
         let accountId = context.account.id
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
                 let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+                FastSettings.clear_uuid(context.account.id.int64)
             }
         }))
         
@@ -398,12 +409,21 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         window.set(handler: { _ -> KeyHandlerResult in
             
+            
             appDelegate?.sharedApplicationContextValue?.notificationManager.updatePasslock(context.sharedContext.accountManager.transaction { transaction -> Bool in
                 switch transaction.getAccessChallengeData() {
                 case .none:
                     return false
                 default:
                     return true
+                }
+            })
+            
+            let hasPasscode = context.sharedContext.accountManager.transaction { $0.getAccessChallengeData() != .none } |> deliverOnMainQueue
+            
+            _ = hasPasscode.startStandalone(next: { value in
+                if !value {
+                    context.bindings.rootNavigation().push(PasscodeSettingsViewController(context))
                 }
             })
                         
@@ -509,31 +529,24 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
-                
+              
+        
         
         #if DEBUG
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
             
-//            context.bindings.rootNavigation().push(ForumTopicInfoController(context: context, purpose: .create))
+            //showModal(with: StoryFoundListController(context: context, source: .hashtag("#telegram"), presentation: theme), for: context.window)
             
-//            let rect = self!.window.contentView!.frame.focus(NSMakeSize(160, 160))
-//            self!.window.contentView!.addSubview(CustomReactionEffectView(frame: rect, context: context, fileId: 5415816441561619011))
+            showModal(with: Star_ReactionsController(context: context), for: context.window)
             
-//            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: 5415816441561619011, file: nil, emoji: ""), size: NSMakeSize(30, 30))
-//            testParabolla(layer, window: context.window)
-
-//            showModal(with: PremiumLimitController.init(context: context, type: .pin), for: context.window)
-//            showModal(with: PremiumBoardingController(context: context), for: context.window)
-//            showInactiveChannels(context: context, source: .create)
-//            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
+           // showModal(with: Star_TransactionScreen(context: context, peer: .init(context.myPeer!), transaction: StarsContext.State.Transaction.init(id: "kqwjeflklqwkejflqwkejflqkwejflqkwejf", count: 1000, date: Int32(Date().timeIntervalSince1970), peer: StarsContext.State.Transaction.Peer.appStore)), for: context.window)
+//            showModal(with: FactCheckController(context: context), for: context.window)
+          //  showModal(with: Star_PurschaseInApp(context: context, peerId: context.peerId), for: context.window)
+            
+            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
-            showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         
@@ -600,13 +613,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 self.launchAction = .preferences
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
-            case let .profile(peerId, necessary):
+            case let .profile(peer, necessary):
                 
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
 
                 if (necessary || context.layout != .single) {
-                    let controller = PeerInfoController(context: context, peerId: peerId)
+                    let controller = PeerInfoController(context: context, peer: peer._asPeer())
                     controller.navigationController = self.rightController
                     controller.loadViewIfNeeded(self.rightController.bounds)
 
@@ -644,7 +657,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 if let fromId = fromId {
                     context.navigateToThread(threadId, fromId: fromId)
                 } else if let _ = threadData {
-                    _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context).start()
+                    _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: context).start()
                 }
             }
         } else {
@@ -661,15 +674,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if let groupCallContext = groupCallContext {
             rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
-        
+        if let inlinePlayerContext = inlinePlayerContext {
+            rightController.header?.show(true, contextObject: inlinePlayerContext)
+        }
         self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutValue).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
-        
-        
-        if let controller = context.audioPlayer, let _ = self.rightController.header {
-            self.rightController.header?.show(false, contextObject: InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: nil, supportTableView: nil))
-        }
         
        // _ready.set(.single(true))
     }
@@ -678,9 +688,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var previousLayout: SplitViewState?
     private let foldersReadyDisposable = MetaDisposable()
     private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
+        
+        if let window = self.window as? AppWindow {
+            if (folders.sidebar && !folders.isEmpty) || layout == .minimisize {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = 0
+                window.initialButtonPoint = .system
+            } else {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = layout == .single ? Window.controlsInset : 0
+                window.initialButtonPoint = .app
+            }
+        }
+
                 
-        let currentSidebar = !folders.isEmpty && (folders.sidebar || layout == .minimisize)
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
+        let currentSidebar = !folders.isEmpty && (folders.sidebar)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar)
 
         let readySignal: Signal<Bool, NoError>
         
@@ -875,7 +896,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
         appUpdateDisposable.dispose()
-        updatesDisposable.dispose()
         updateFoldersDisposable.dispose()
         foldersReadyDisposable.dispose()
         context.cleanup()

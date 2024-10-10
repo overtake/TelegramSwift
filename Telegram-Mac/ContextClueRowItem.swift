@@ -36,22 +36,20 @@ class ContextClueRowItem: TableRowItem {
     fileprivate let callback:((Source)->Void)?
     fileprivate let selected: Source?
     let animated: [TelegramMediaFile]
+    fileprivate let presentation: TelegramPresentationTheme?
     
+    let sources: [ContextClueRowItem.Source]
     
-    var sources: [ContextClueRowItem.Source] {
-        return self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
-    }
-    
-    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], animated: [TelegramMediaFile], selected: Source?, canDisablePrediction: Bool, callback:((Source)->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], animated: [TelegramMediaFile], selected: Source?, canDisablePrediction: Bool, callback:((Source)->Void)? = nil, presentation: TelegramPresentationTheme?) {
         self.animated = context.isPremium ? Array(animated.prefix(30)) : Array(animated.filter { !$0.isPremiumEmoji }.prefix(30))
         self._stableId = stableId
         self.clues = clues
         self.context = context
         self.callback = callback
         self.selected = selected
+        self.presentation = presentation
         
-        
-        let sources:[ContextClueRowItem.Source] = self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
+        self.sources = self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
 
         if let selected = selected, let index = sources.firstIndex(of: selected) {
             self.selectedIndex = index
@@ -80,9 +78,11 @@ final class AnimatedClueRowItem : TableRowItem {
     }
     let clue: TelegramMediaFile
     let context: AccountContext
-    init(_ initialSize: NSSize, context: AccountContext, clue: TelegramMediaFile) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, context: AccountContext, clue: TelegramMediaFile, presentation: TelegramPresentationTheme = theme) {
         self.clue = clue
         self.context = context
+        self.presentation = presentation
         super.init(initialSize)
     }
     
@@ -112,6 +112,9 @@ private final class AnimatedClueRowView: HorizontalRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var backdorColor: NSColor {
+        return .clear
+    }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
@@ -147,8 +150,12 @@ private final class AnimatedClueRowView: HorizontalRowView {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        return isLite(.emoji)
     }
     
     
@@ -159,7 +166,10 @@ private final class AnimatedClueRowView: HorizontalRowView {
     
     override func updateColors() {
         super.updateColors()
-        containerView.backgroundColor = item?.isSelected == true ? theme.colors.accent : theme.colors.background
+        guard let item = self.item as? AnimatedClueRowItem else {
+            return
+        }
+        containerView.backgroundColor = item.isSelected ? item.presentation.colors.accent : .clear
     }
 }
 
@@ -170,9 +180,10 @@ private final class ClueRowItem : TableRowItem {
         return _stableId
     }
     let layout: TextViewLayout
-    
-    init(_ initialSize: NSSize, clue: String) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, clue: String, presentation: TelegramPresentationTheme) {
         self.layout = TextViewLayout(.initialize(string: clue, color: nil, font: .normal(24)))
+        self.presentation = presentation
         super.init(initialSize)
         layout.measure(width: .greatestFiniteMagnitude)
     }
@@ -203,12 +214,15 @@ private final class ClueRowView : HorizontalRowView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
     }
     
     override func updateColors() {
         super.updateColors()
-        containerView.backgroundColor = item?.isSelected == true ? theme.colors.accent : theme.colors.background
+        guard let item = item as? ClueRowItem else {
+            return
+        }
+        containerView.backgroundColor = item.isSelected ? item.presentation.colors.accent : .clear
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -256,12 +270,12 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             }
         }
         
-        func makeItem(_ size: NSSize, context: AccountContext) -> TableRowItem {
+        func makeItem(_ size: NSSize, context: AccountContext, presentation: TelegramPresentationTheme) -> TableRowItem {
             switch self {
             case let .common(clue, _):
-                return ClueRowItem(size, clue: clue)
+                return ClueRowItem(size, clue: clue, presentation: presentation)
             case let .animated(file, _):
-                return AnimatedClueRowItem(size, context: context, clue: file)
+                return AnimatedClueRowItem(size, context: context, clue: file, presentation: presentation)
             }
         }
     }
@@ -271,11 +285,13 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             clues.selectedIndex = row
             if byClick, let window = window as? Window {
                 if let callback = clues.callback {
-                    let sources:[ContextClueRowItem.Source] = clues.animated.map { .animated($0) } + clues.clues.map { .emoji($0) }
+                    let sources:[ContextClueRowItem.Source] = clues.sources
                     callback(sources[row])
                 } else {
                     window.sendKeyEvent(.Return, modifierFlags: [])
                 }
+            } else if !byClick {
+                tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0), toVisible: true)
             }
         }
     }
@@ -301,6 +317,10 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         tableView.delegate = self
         addSubview(button)
         
+        tableView.getBackgroundColor = {
+            .clear
+        }
+        
         button.set(handler: { [weak self] _ in
             self?.disablePrediction()
         }, for: .Click)
@@ -309,7 +329,7 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
     private func disablePrediction() {
         guard let window = self.window as? Window, let item = item as? ContextClueRowItem else { return }
         let sharedContext = item.context.sharedContext
-        confirm(for: window, information: strings().generalSettingsEmojiPredictionDisableText, okTitle: strings().generalSettingsEmojiPredictionDisable, successHandler: { _ in
+        verifyAlert_button(for: window, information: strings().generalSettingsEmojiPredictionDisableText, ok: strings().generalSettingsEmojiPredictionDisable, successHandler: { _ in
             _ = updateBaseAppSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedPredictEmoji(false)
             }).start()
@@ -318,16 +338,13 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
     
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-    }
     
     override func layout() {
         super.layout()
@@ -346,11 +363,14 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         
         
         
-        button.set(image: theme.icons.disableEmojiPrediction, for: .Normal)
-        _ = button.sizeToFit(NSZeroSize, NSMakeSize(40, 40), thatFit: true)
-        
        
         if let item = item as? ContextClueRowItem {
+            
+            let presentation = item.presentation ?? theme
+
+            
+            button.set(image: presentation.icons.disableEmojiPrediction, for: .Normal)
+            _ = button.sizeToFit(NSZeroSize, NSMakeSize(40, 40), thatFit: true)
             
             button.isHidden = !item.canDisablePrediction
             
@@ -361,10 +381,12 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
                 items.append(.animated(clue, index))
                 index += 1
             }
+            
             for clue in item.clues {
                 items.append(.common(clue, index))
                 index += 1
             }
+            
             
             let context = item.context
             
@@ -380,12 +402,12 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             }
             
             for (idx, item, _) in indicesAndItems {
-                _ = tableView.insert(item: item.makeItem(bounds.size, context: context), at: idx, animation: animated ? .effectFade : .none)
+                _ = tableView.insert(item: item.makeItem(bounds.size, context: context, presentation: presentation), at: idx, animation: animated ? .effectFade : .none)
                 self.items.insert(item, at: idx)
             }
             for (idx, item, _) in updateIndices {
                 let item =  item
-                tableView.replace(item: item.makeItem(bounds.size, context: context), at: idx, animated: animated)
+                tableView.replace(item: item.makeItem(bounds.size, context: context, presentation: presentation), at: idx, animated: animated)
                 self.items[idx] = item
             }
   
@@ -396,11 +418,13 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
                 if let item = item {
                     _ = tableView.select(item: item)
                 }
+            } else {
+                tableView.cancelSelection()
             }
         }
         
         if let selectedItem = tableView.selectedItem() {
-            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0), toVisible: true)
         }
         
         needsLayout = true

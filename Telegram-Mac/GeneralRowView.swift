@@ -19,6 +19,10 @@ class GeneralContainableRowView : TableRowView {
         containerView.addSubview(borderView)
     }
     
+    override var firstResponder: NSResponder? {
+        return nil
+    }
+    
     deinit {
         self.containerView.removeAllSubviews()
     }
@@ -31,6 +35,10 @@ class GeneralContainableRowView : TableRowView {
         self.containerView.addSubview(view, positioned: place, relativeTo: otherView)
     }
     
+    func addBasicSubview(_ view: NSView, positioned place: NSWindow.OrderingMode) {
+        subviews.insert(view, at: place == .below ? 0 : 1)
+    }
+    
     override var backdorColor: NSColor {
         return theme.colors.background
     }
@@ -39,7 +47,7 @@ class GeneralContainableRowView : TableRowView {
         return false
     }
     
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         return theme.colors.border
     }
     
@@ -64,7 +72,7 @@ class GeneralContainableRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -73,11 +81,12 @@ class GeneralContainableRowView : TableRowView {
         guard let item = item as? GeneralRowItem else {
             return
         }
-        let blockWidth = min(maxBlockWidth, frame.width - item.inset.left - item.inset.right)
+        let blockWidth = min(item.viewType == .legacy ? size.width : maxBlockWidth, size.width - item.inset.left - item.inset.right)
         
-        transition.updateFrame(view: self.containerView, frame:  NSMakeRect(floorToScreenPixels(backingScaleFactor, (maxWidth - blockWidth) / 2), item.inset.top, blockWidth, maxHeight - item.inset.bottom - item.inset.top))
+        let rect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (size.width - blockWidth) / 2), item.inset.top, blockWidth, size.height - item.inset.bottom - item.inset.top)
+        transition.updateFrame(view: self.containerView, frame: rect)
         
-        self.containerView.setCorners(item.viewType.corners)
+        self.containerView.setCorners(item.viewType.corners, animated: transition.isAnimated, frame: rect)
 
         transition.updateFrame(view: borderView, frame: NSMakeRect(item.viewType.innerInset.left + additionBorderInset, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - additionBorderInset, .borderSize))
     }
@@ -186,6 +195,10 @@ class GeneralRowContainerView : Control {
         setCorners(corners, animated: animated, frame: NSMakeRect(0, 0, size.width, size.height))
     }
     
+    override func scrollWheel(with event: NSEvent) {
+        superview?.scrollWheel(with: event)
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -259,15 +272,6 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         self.needsDisplay = true
         self.needsLayout = true
     }
-
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        if backingScaleFactor == 1.0 {
-            ctx.setFillColor(backdorColor.cgColor)
-            ctx.fill(layer.bounds)
-        }
-        super.draw(layer, in: ctx)
-    }
-    
 
 
     required init?(coder: NSCoder) {
