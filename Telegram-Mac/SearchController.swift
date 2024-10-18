@@ -156,7 +156,7 @@ enum ChatListSearchEntryStableId: Hashable {
     case separator(Int)
     case emptySearch
     case foundStories
-    
+    case disclaimer
     func hash(into hasher: inout Hasher) {
         switch self {
         case let .localPeerId(peerId):
@@ -196,6 +196,8 @@ enum ChatListSearchEntryStableId: Hashable {
             hasher.combine(-1)
         case .foundStories:
             hasher.combine("foundStories")
+        case .disclaimer:
+            hasher.combine("disclaimer")
         }
     }
 }
@@ -217,6 +219,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case foundStories(StoryListContext.State, index: Int, query: String)
     case emptySearch(isLoading: Bool)
     case emptyList(listType: SearchTags.ListType)
+    case disclaimer(String)
     var stableId: ChatListSearchEntryStableId {
         switch self {
         case let .localPeer(peer, _, secretChat, _, _, _, _):
@@ -247,6 +250,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .emptySearch
         case .foundStories:
             return .foundStories
+        case .disclaimer:
+            return .disclaimer
         }
     }
     
@@ -274,6 +279,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return 0
         case .foundStories:
             return 0
+        case .disclaimer:
+            return 100000000
         }
     }
     
@@ -369,6 +376,12 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             }
         case let .foundStories(state, index, query):
             if case .foundStories(state, index, query) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .disclaimer(text):
+            if case .disclaimer(text) = rhs {
                 return true
             } else {
                 return false
@@ -599,6 +612,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             return SearchStoryFoundItem(initialSize, stableId: entry.stableId, list: state, context: arguments.context, query: query, action: {
                 arguments.openStorySearch(state)
             })
+        case let .disclaimer(text):
+            return GeneralTextRowItem(initialSize, stableId: entry.stableId, height: 50, text: .markdown(text, linkHandler: { link in
+                if link == "grossing" {
+                    alert(for: arguments.context.window, header: strings().botGrossingDisclaimerAlertHeader, info: strings().botGrossingDisclaimerAlertText, ok: strings().botGrossingDisclaimerAlertOk)
+                }
+            }), alignment: .center, centerViewAlignment: true)
         }
     })
     
@@ -723,6 +742,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private var globalStorySearchContext: SearchStoryListContext?
     private let globalStorySearchState:Promise<StoryListContext.State?> = Promise(nil)
     
+    let searchMessagesState: ValuePromise<CachedSearchMessages?> = ValuePromise()
+    let searchMessagesStateValue: Atomic<CachedSearchMessages?> = Atomic(value: nil)
+
+    
     var setPeerAsTag: ((Peer?)->Void)? = nil
     
     var pinnedItems:[PinnedItemId] = [] {
@@ -738,6 +761,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self._messagesValue.set(.single((ExternalSearchMessages(), false)))
         self.globalTagsValue.set(globalTags)
         self.searchTags = globalTags
+    }
+    
+    func setCachedMessages(_ cached: CachedSearchMessages) {
+        self.searchMessagesState.set(cached)
+        _ = self.searchMessagesStateValue.modify({ _ in return cached })
     }
     
     private var _messagesValue:Promise<(ExternalSearchMessages?, Bool)> = Promise()
@@ -765,9 +793,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let context = self.context
         let options = self.options
         let target = self.target
+        
+        let searchMessagesState = self.searchMessagesState
+        let searchMessagesStateValue = self.searchMessagesStateValue
 
-        let searchMessagesState: ValuePromise<SearchMessagesState?> = ValuePromise()
-        let searchMessagesStateValue: Atomic<SearchMessagesState?> = Atomic(value: nil)
 
         let isRevealed = self.isRevealed.get()
         let isChannelsRevealed = self.isChannelsRevealed.get()
@@ -861,7 +890,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 let location: SearchMessagesLocation
                 switch target {
                 case let .common(groupId):
-                    foundLocalPeers = query.hasPrefix("#") || !options.contains(.chats) || !globalTags.isEmpty ? .single([]) : combineLatest(localPeers, context.account.postbox.loadedPeerWithId(context.peerId), foundQueryPeers.get())
+                    foundLocalPeers = query.hasPrefix("#") || query.hasPrefix("$") || !options.contains(.chats) || !globalTags.isEmpty ? .single([]) : combineLatest(localPeers, context.account.postbox.loadedPeerWithId(context.peerId), foundQueryPeers.get())
                         |> map { peers, accountPeer, inLinkPeer -> [ChatListSearchEntry] in
                             var entries: [ChatListSearchEntry] = []
                             
@@ -905,7 +934,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     } else {
                         location = globalTags.location
                         if globalTags.isEmpty {
-                            foundRemotePeers = query.hasPrefix("#") || !options.contains(.chats) || !globalTags.isEmpty || globalTags.listType == .bots ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.scope)
+                            foundRemotePeers = query.hasPrefix("#") || query.hasPrefix("$") || !options.contains(.chats) || !globalTags.isEmpty || globalTags.listType == .bots ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.scope)
                                 |> delay(0.2, queue: prepareQueue)
                                 |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                     
@@ -1029,21 +1058,25 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                 }
                 
-                searchMessagesState.set(nil)
-                
                 
                 let remoteSearch = searchMessagesState.get() |> mapToSignal { state -> Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
                     
-                    let signal: Signal<(SearchMessagesResult, SearchMessagesState), NoError>
+                    var signal: Signal<(SearchMessagesResult, SearchMessagesState), NoError>
+                    
                     if globalTags.publicPosts {
                         let text = (globalTags.text ?? query)
-                        signal = context.engine.messages.searchHashtagPosts(hashtag: text.replacingOccurrences(of: "#", with: ""), state: state, limit: 100)
+                        signal = context.engine.messages.searchHashtagPosts(hashtag: text.replacingOccurrences(of: "[#$]", with: "", options: .regularExpression), state: state?.state, limit: 100)
+                        |> delay(0.2, queue: prepareQueue)
                     } else {
-                        signal = context.engine.messages.searchMessages(location: location, query: globalTags.text ?? query, state: state)
+                        signal = context.engine.messages.searchMessages(location: location, query: globalTags.text ?? query, state: state?.state)
+                        |> delay(0.2, queue: prepareQueue)
+                    }
+                    
+                    if let state {
+                        signal = .single((state.result, state.state)) |> then(signal)
                     }
                     
                     return signal
-                        |> delay(0.2, queue: prepareQueue)
                         |> map { result -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                             
                             var entries: [ChatListSearchEntry] = []
@@ -1069,12 +1102,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     }
                 }
                 
-                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
+                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError>
+                
+                foundRemoteMessages = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
+
                 
                 
-                let hashtagSearch: Signal<([ChatListSearchEntry], Bool), NoError>
-                if globalTags.isEmpty, query.hasPrefix("#") {
-                    hashtagSearch = .single(([], false)) |> then(context.engine.messages.searchHashtagPosts(hashtag: query.replacingOccurrences(of: "#", with: ""), state: nil, limit: 3) |> map { result in
+                let hashtagSearch: Signal<([ChatListSearchEntry], Bool, CachedSearchMessages?), NoError>
+                if globalTags.isEmpty, query.hasPrefix("#") || query.hasPrefix("$") {
+                    hashtagSearch = .single(([], false, nil)) |> then(context.engine.messages.searchHashtagPosts(hashtag: query.replacingOccurrences(of: "[#$]", with: "", options: .regularExpression), state: nil, limit: 100) |> map { result in
                         var entries: [ChatListSearchEntry] = []
                         var index = 20001
                         for message in result.0.messages {
@@ -1093,10 +1129,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             }
                             
                         }
-                        return (entries, result.0.totalCount > 3)
+                        return (entries, result.0.totalCount > 3, CachedSearchMessages(result: result.0, state: result.1))
                     } |> delay(0.2, queue: .mainQueue()))
                 } else {
-                    hashtagSearch = .single(([], false))
+                    hashtagSearch = .single(([], false, nil))
                 }
                 
                 return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState, hashtagSearch)
@@ -1111,7 +1147,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                        
                         var entries:[ChatListSearchEntry] = []
                         
-                        if let storySearchState, !storySearchState.items.isEmpty, globalTags.publicPosts {
+                        if let storySearchState, !storySearchState.items.isEmpty, globalTags.publicPosts || query.hasPrefix("#") || query.hasPrefix("$") {
                             entries.append(.foundStories(storySearchState, index: 0, query: query))
                         }
                         
@@ -1157,9 +1193,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             }
                         }
                         
-                        if !hashtagSearch.0.isEmpty {
-                            entries.append(.separator(text: strings().chatHashtagPublicPosts, index: 15000, state: hashtagSearch.1 ? .custom(strings().separatorShowMore, .showPublicPosts) : .none))
-                            entries += hashtagSearch.0
+                        if !hashtagSearch.0.isEmpty, let cached = hashtagSearch.2 {
+                            entries.append(.separator(text: strings().chatHashtagPublicPosts, index: 15000, state: hashtagSearch.1 ? .custom(strings().separatorShowMore, .showPublicPosts(cached)) : .none))
+                            entries += hashtagSearch.0.prefix(3)
                         }
                         
                         
@@ -1314,6 +1350,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         if entries.isEmpty {
                             entries.append(.emptyList(listType: listType))
+                        } else {
+                            entries.append(.disclaimer(strings().botGrossingDisclaimer))
                         }
                         
                     case .channels:
@@ -1543,7 +1581,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 self.scrollup()
             }
             self.scrollupOnNextTransition = false
-            _ = searchMessagesStateValue.swap(searchMessagesState)
+            if let searchMessagesResult, let searchMessagesState {
+                _ = searchMessagesStateValue.swap(.init(result: searchMessagesResult, state: searchMessagesState))
+            }
             
             if let searchMessagesState, let searchMessagesResult {
                 self.currentMessagesSearchState = (searchMessagesResult, searchMessagesState)
@@ -1789,16 +1829,22 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     func request(with query:String?) -> Void {
         setHighlightEvents()
+        
+        if query == self.query {
+            return
+        }
         self.query = query
         self.scrollupOnNextTransition = true
         
+        
         if let query = query, !query.isEmpty {
             searchQuery.set(query)
+            searchMessagesState.set(nil)
         } else {
             searchQuery.set(nil)
         }
         
-        if let query, query.hasPrefix("#"), query.length > 1 {
+        if let query, query.hasPrefix("#") || query.hasPrefix("$"), query.length > 1, self.searchTags?.publicPosts == true {
             let globalStorySearchContext = SearchStoryListContext(account: context.account, source: .hashtag(query))
             
             self.globalStorySearchContext = globalStorySearchContext
@@ -1884,9 +1930,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 switch item.state {
                 case let .custom(_, action):
                     switch action {
-                    case .showPublicPosts:
+                    case let .showPublicPosts(cached):
                         let query = self.query ?? ""
-                        context.bindings.globalSearch(query, nil)
+                        context.bindings.globalSearch(query, nil, cached)
                     default:
                         break
                     }
@@ -1898,7 +1944,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 case let .custom(_, action):
                     switch action {
                     case let .showAsMessages(onlyMy):
-                        let query = (self.query ?? "").replacingOccurrences(of: "#", with: "")
+                        let query = (self.query ?? "").replacingOccurrences(of: "[#$]", with: "", options: .regularExpression)
                         
                         let customChatContents = HashtagSearchGlobalChatContents(context: context, kind: .searchHashtag(hashtag: query, onlyMy: onlyMy), query: query, onlyMy: onlyMy, initialState: self.currentMessagesSearchState)
                         let current = context.bindings.rootNavigation().controller as? ChatController
@@ -1980,7 +2026,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
         if let message, let tags = self.searchTags {
             let current = context.bindings.rootNavigation().controller as? ChatController
-            let query = (self.query ?? "").replacingOccurrences(of: "#", with: "")
+            let query = (self.query ?? "").replacingOccurrences(of: "[#$]", with: "", options: .regularExpression)
             
             if case .searchHashtag(query, tags.myMessages) = current?.mode.customChatContents?.kind, tags.publicPosts || tags.myMessages {
                 current?.focusExistingMessage(message)

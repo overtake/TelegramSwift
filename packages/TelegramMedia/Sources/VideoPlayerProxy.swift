@@ -115,4 +115,13 @@ final class VideoPlayerProxy {
             nodeRef.release()
         }
     }
+    
+    func flush() {
+        self.withContext { context in
+            if let context = context {
+                context.node?.reset()
+            }
+        }
+    }
+
 }

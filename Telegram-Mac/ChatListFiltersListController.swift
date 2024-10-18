@@ -258,7 +258,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     }, toggleTags: { value in
         if !context.isPremium {
             showModalText(for: context.window, text: strings().chatListFolderPremiumAlert, button: strings().alertLearnMore, callback: { _ in
-                showModal(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
             })
         } else {
             context.engine.peers.updateChatListFiltersDisplayTags(isEnabled: value)

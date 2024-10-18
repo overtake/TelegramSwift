@@ -20,8 +20,8 @@ import TelegramMedia
 
 private func makePlayer(account: Account, reference: FileMediaReference, fetchAutomatically: Bool = false) -> (UniversalVideoContentView & NSView) {
     let player: (UniversalVideoContentView & NSView)
-    if #available(macOS 14.0, *), !reference.media.alternativeRepresentations.isEmpty {
-        player = HLSVideoContent(id: .message(MessageId(peerId: PeerId(0), namespace: 0, id: 0), arc4random(), reference.media.fileId), userLocation: reference.userLocation, fileReference: reference).makeContentView(accountId: account.id, postbox: account.postbox)
+    if #available(macOS 14.0, *), isHLSVideo(file: reference.media) {
+        player = HLSVideoJSNativeContentView(accountId: account.id, postbox: account.postbox, userLocation: reference.userLocation, fileReference: reference, streamVideo: true, loopVideo: false, enableSound: true, baseRate: FastSettings.playingVideoRate, fetchAutomatically: false, volume: FastSettings.volumeRate)
     } else {
         player = NativeMediaPlayer(postbox: account.postbox, reference: reference, fetchAutomatically: fetchAutomatically)
     }
@@ -63,11 +63,24 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private var updateControls: SwiftSignalKit.Timer?
     
-    private var videoFramePreview: MediaPlayerFramePreview {
+    private var videoFramePreview: MediaPlayerFramePreview? {
         if let videoFramePreview = _videoFramePreview {
             return videoFramePreview
         } else {
-            self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: reference)
+            let qualityState = self.genericView.mediaPlayer.videoQualityState()
+            if let qualityState = qualityState, !qualityState.available.isEmpty {
+                if #available(macOS 14.0, *) {
+                    if let minQuality = HLSVideoContent.minimizedHLSQuality(file: reference)?.file {
+                        self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: minQuality)
+                    } else {
+                        _videoFramePreview = nil
+                    }
+                } else {
+                    _videoFramePreview = nil
+                }
+            } else {
+                self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: reference)
+            }
         }
         return _videoFramePreview!
     }
@@ -421,16 +434,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }, scrobbling: { [weak self] timecode in
             guard let `self` = self else { return }
 
-            if let timecode = timecode {
+            if let timecode = timecode, let videoFramePreview = self.videoFramePreview {
                 if !self.scrubbingFrames {
                     self.scrubbingFrames = true
-                    self.scrubbingFrame.set(self.videoFramePreview.generatedFrames
+                    self.scrubbingFrame.set(videoFramePreview.generatedFrames
                         |> map(Optional.init))
                 }
-                self.videoFramePreview.generateFrame(at: timecode)
+                videoFramePreview.generateFrame(at: timecode)
             } else {
                 self.scrubbingFrame.set(.single(nil))
-                self.videoFramePreview.cancelPendingFrames()
+                self.videoFramePreview?.cancelPendingFrames()
                 self.scrubbingFrames = false
             }
         }, volume: { [weak self] value in

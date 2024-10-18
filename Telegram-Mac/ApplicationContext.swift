@@ -264,12 +264,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.rightController.controller.show(toaster: toaster, animated: animated)
-        }, globalSearch: { [weak self] search, peerId in
+        }, globalSearch: { [weak self] search, peerId, cached in
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.leftController.tabController.select(index: self.leftController.chatIndex)
-            self.leftController.globalSearch(search, peerId: peerId)
+            self.leftController.globalSearch(search, peerId: peerId, cached: cached)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
             guard let `self` = self else {
                 return EntertainmentViewController.init(size: NSZeroSize, context: context)

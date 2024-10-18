@@ -166,7 +166,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
                 
             }
         } else {
-            showModal(with: PremiumBoardingController(context: context, source: .gift(from: fromId, to: toId, months: data.months, slug: data.slug, unclaimed: data.unclaimed)), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .gift(from: fromId, to: toId, months: data.months, slug: data.slug, unclaimed: data.unclaimed)), for: context.window)
         }
     }
     

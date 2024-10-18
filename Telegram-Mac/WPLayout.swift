@@ -379,6 +379,8 @@ class WPLayout: Equatable {
                 return strings().chatMessageBoostChannel
             case .comments:
                 return strings().chatMessageActionShowMessage
+            case .joinchat:
+                return strings().chatMessageActionRequestToJoin
             default:
                 break
             }
@@ -398,7 +400,7 @@ class WPLayout: Equatable {
             chatInteraction.removeAd(opaqueId)
             showModalText(for: context.window, text: strings().chatDisableAdTooltip)
         } else {
-            showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
         }
     }
     

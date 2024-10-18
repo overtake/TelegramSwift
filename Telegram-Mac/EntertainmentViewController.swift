@@ -615,7 +615,7 @@ final class EntertainmentView : View {
             }
         }
         current.set(file: file, context: context, callback: { [weak self] in
-            showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
             self?.closePremium()
         })
         current.close = { [weak self] in

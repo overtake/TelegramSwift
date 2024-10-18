@@ -1857,7 +1857,7 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
                 })
             } else {
                 showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
             }
         }

@@ -959,7 +959,7 @@ protocol PeerMediaSearchable : AnyObject {
             }
             if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
-            } else if let cachedData = view.cachedData as? CachedChannelData {
+            } else if let _ = view.cachedData as? CachedChannelData {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup {
                     return (exist: true, loaded: true)
                 } else {
@@ -1057,7 +1057,7 @@ protocol PeerMediaSearchable : AnyObject {
             return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(location, count: 3, tag: .tag(tags.tagsValue))
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 1 || (!view.isLoading)
-                return (tag: tags, exists: !view.entries.isEmpty && (!isProfileIntended || (context.peerId != peerId && threadInfo == nil)), hasLoaded: hasLoaded)
+                return (tag: tags, exists: !view.entries.isEmpty && (!isProfileIntended || (context.peerId != peerId)), hasLoaded: hasLoaded)
             }
         }
         

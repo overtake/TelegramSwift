@@ -1785,7 +1785,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                     arguments?.peerInfo(peerId)
                 }
             }, hashtag: { hashtag in
-                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+                arguments.context.bindings.globalSearch(hashtag, arguments.peerId, nil)
             }, canTranslate: true)
         case let .addressName(_, value, viewType):
             let link = "@\(value[0].username)"

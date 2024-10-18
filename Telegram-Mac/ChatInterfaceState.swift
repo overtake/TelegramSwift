@@ -1009,8 +1009,9 @@ final class ChatEditState : Equatable {
     let loadingState: EditStateLoading
     let editedData: EditedImageData?
     let invertMedia: Bool
+    let addedMedia: Bool
 
-    init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil, invertMedia: Bool? = nil) {
+    init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil, invertMedia: Bool? = nil, addedMedia: Bool = false) {
         self.message = message
         if originalMedia == nil {
             self.originalMedia = message.anyMedia
@@ -1044,30 +1045,31 @@ final class ChatEditState : Equatable {
         self.loadingState = loadingState
         self.editMedia = editMedia
         self.editedData = editedData
+        self.addedMedia = addedMedia
     }
 
     var canEditMedia: Bool {
         return !message.media.isEmpty && (message.media[0] is TelegramMediaImage || message.media[0] is TelegramMediaFile)
     }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
-        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.anyMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData, invertMedia: self.invertMedia)
+        return ChatEditState(message: self.message.withUpdatedMedia([media]).withUpdatedStableVersion(stableVersion: self.message.stableVersion + 1), originalMedia: self.originalMedia ?? self.message.anyMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData, invertMedia: self.invertMedia, addedMedia: self.message.media.isEmpty || self.addedMedia)
     }
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
-        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData, invertMedia: self.invertMedia)
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData, invertMedia: self.invertMedia, addedMedia: self.addedMedia)
     }
     func withUpdated(state:ChatTextInputState) -> ChatEditState {
-        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: state, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData, invertMedia: self.invertMedia)
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: state, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData, invertMedia: self.invertMedia, addedMedia: self.addedMedia)
     }
 
     func withUpdatedEditedData(_ editedData: EditedImageData?) -> ChatEditState {
-        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: self.loadingState, editMedia: self.editMedia, editedData: editedData, invertMedia: self.invertMedia)
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: self.loadingState, editMedia: self.editMedia, editedData: editedData, invertMedia: self.invertMedia, addedMedia: self.addedMedia)
     }
     func withUpdatedInvertMedia(_ invertMedia: Bool) -> ChatEditState {
-        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: self.loadingState, editMedia: self.editMedia, editedData: self.editedData, invertMedia: invertMedia)
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: self.loadingState, editMedia: self.editMedia, editedData: self.editedData, invertMedia: invertMedia, addedMedia: self.addedMedia)
     }
 
     static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
-        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia && lhs.editedData == rhs.editedData && lhs.invertMedia == rhs.invertMedia
+        return lhs.message.id == rhs.message.id && lhs.message.stableId == rhs.message.stableId && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia && lhs.editedData == rhs.editedData && lhs.invertMedia == rhs.invertMedia && lhs.addedMedia == rhs.addedMedia
     }
 
 }

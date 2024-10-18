@@ -817,6 +817,22 @@ public final class L10n {
   public static func boostReassignStatusExpiresOn(_ p1: String) -> String {
     return L10n.tr("Localizable", "BoostReassign.Status.ExpiresOn", p1)
   }
+  /// Allow **%@** to send me messages.
+  public static func botAllowSendMessages(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Bot.AllowSendMessages", p1)
+  }
+  /// Launch
+  public static var botLaunchApp: String  { return L10n.tr("Localizable", "Bot.LaunchApp") }
+  /// [More about this bot >](info)
+  public static var botMoreAbout: String  { return L10n.tr("Localizable", "Bot.MoreAbout") }
+  /// Which apps are included here? [Learn >](grossing)
+  public static var botGrossingDisclaimer: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer") }
+  /// Top Mini Apps
+  public static var botGrossingDisclaimerAlertHeader: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer.Alert.Header") }
+  /// Understood
+  public static var botGrossingDisclaimerAlertOk: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer.Alert.ok") }
+  /// This catalogue ranks mini apps based on their daily revenue, measured in Stars. To be listed, developers must set their main mini app in [@botfather](https://t.me/botfather) (as described [here](https://core.telegram.org/api/bots/webapps)), have over **1,000** daily users, and earn a daily revenue above **1,000** Stars, based on the weekly average.
+  public static var botGrossingDisclaimerAlertText: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer.Alert.Text") }
   /// Open Link
   public static var botInlineAuthHeader: String  { return L10n.tr("Localizable", "Bot.InlineAuth.Header") }
   /// Open
@@ -3307,6 +3323,12 @@ public final class L10n {
   public static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
   public static var chatTitleFeed: String  { return L10n.tr("Localizable", "Chat.TitleFeed") }
+  /// This quote is from a private channel
+  public static var chatToastQuoteChatUnavailbalePrivateChannel: String  { return L10n.tr("Localizable", "Chat.ToastQuoteChatUnavailbalePrivateChannel") }
+  /// This quote is from a private chat
+  public static var chatToastQuoteChatUnavailbalePrivateChat: String  { return L10n.tr("Localizable", "Chat.ToastQuoteChatUnavailbalePrivateChat") }
+  /// This quote is from a private group
+  public static var chatToastQuoteChatUnavailbalePrivateGroup: String  { return L10n.tr("Localizable", "Chat.ToastQuoteChatUnavailbalePrivateGroup") }
   /// topic creator
   public static var chatTopicBadge: String  { return L10n.tr("Localizable", "Chat.TopicBadge") }
   /// %d
@@ -5037,6 +5059,8 @@ public final class L10n {
   public static var chatMessageSponsoredLink: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.Link") }
   /// What are sponsored messages?
   public static var chatMessageSponsoredWhat: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.What") }
+  /// REQUEST TO JOIN
+  public static var chatMessageActionRequestToJoin: String  { return L10n.tr("Localizable", "Chat.MessageAction.RequestToJoin") }
   /// SHOW MESSAGE
   public static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
   /// Message doesn't exist
@@ -6361,6 +6385,22 @@ public final class L10n {
   public static var chatListBirthdayInfoTwo: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfo_two") }
   /// Gift them Telegram Premium.
   public static var chatListBirthdayInfoZero: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfo_zero") }
+  /// %d
+  public static func chatListBirthdayInfoNewCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_countable", p1)
+  }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewFew: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_few") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewMany: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_many") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewOne: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_one") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewOther: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_other") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewTwo: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_two") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewZero: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_zero") }
   /// %d
   public static func chatListBirthdayMultipleTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.BirthdayMultipleTitle_countable", p1)
@@ -13777,6 +13817,8 @@ public final class L10n {
   public static var previewSenderMoveTextDown: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextDown") }
   /// Move Caption Up
   public static var previewSenderMoveTextUp: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextUp") }
+  /// Remove Media
+  public static var previewSenderRemoveMedia: String  { return L10n.tr("Localizable", "PreviewSender.RemoveMedia") }
   /// Remove Paid Content
   public static var previewSenderRemovePaid: String  { return L10n.tr("Localizable", "PreviewSender.RemovePaid") }
   /// Without Compression
@@ -16749,6 +16791,12 @@ public final class L10n {
   }
   /// Convert
   public static var starTransactionConvertAlertOK: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.OK") }
+  /// Sorry, you cant convert this gift to stars anymore.
+  public static var starTransactionConvertAlertTooLate: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.TooLate") }
+  /// Do you want to convert this gift from **%1$@** to **%2$@**?\n\nConversion option available until %3$@.\n\nThis action cannot be undone.
+  public static func starTransactionConvertAlertInfoUntil(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Info.Until", p1, p2, p3)
+  }
   /// Giveaway
   public static var starTransactionReasonGiveaway: String  { return L10n.tr("Localizable", "Star.Transaction.Reason.Giveaway") }
   /// Only you can see the sender's name and message.

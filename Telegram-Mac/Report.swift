@@ -42,7 +42,7 @@ import TGUIKit
  }, error: { error in
      switch error {
      case .premiumRequired:
-         showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+         prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
      case .generic:
          break
      }

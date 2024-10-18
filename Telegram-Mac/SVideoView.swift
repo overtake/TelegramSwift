@@ -14,6 +14,35 @@ import RangeSet
 import TelegramMedia
 import TelegramMediaPlayer
 
+private func selectBestQualityIcon(for quality: UniversalVideoContentVideoQuality) -> NSImage {
+    
+    
+    enum VideoIcon: Int {
+        case auto = 0
+        case hd = 1
+        case sd = 2
+    }
+
+    let icons: [NSImage] = [
+        NSImage(resource: .iconVideoSettingsAuto),
+        NSImage(resource: .iconVideoSettingsHD),
+        NSImage(resource: .iconVideoSettingsSD)
+    ]
+    
+    switch quality {
+    case .auto:
+        return icons[VideoIcon.auto.rawValue]
+    case let .quality(size):
+        let quality = roundToStandardQuality(size: size)
+        if quality >= 720 {
+            return icons[VideoIcon.hd.rawValue]
+        } else {
+            return icons[VideoIcon.sd.rawValue]
+        }
+    }
+    
+}
+
 private func roundToStandardQuality(size: Int) -> Int {
     // List of standard video qualities
     let standardQualities = [360, 480, 720, 1080, 1440, 2160]
@@ -681,8 +710,10 @@ private final class SVideoControlsView : Control {
     
     func updateBaseRate() {
         let image: CGImage
+        
+        
         if let mediaPlayer, let quality = mediaPlayer.videoQualityState(), !quality.available.isEmpty {
-            image = NSImage(resource: .iconVideoSettings).precomposed(.white)
+            image = selectBestQualityIcon(for: quality.preferred).precomposed(.white)
         } else {
             image = optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true)
         }
@@ -742,6 +773,11 @@ private final class SVideoControlsView : Control {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 

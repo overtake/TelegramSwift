@@ -495,7 +495,7 @@ private final class ChatSearchTagsView: View {
             
             self.set(handler: { [weak self] _ in
                 if let context = self?.context {
-                    showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                 }
             }, for: .Click)
             
@@ -714,6 +714,10 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         Queue.mainQueue().justDispatch { [weak self] in
             self?.applySearchResponder(false)
         }
+    }
+    
+    func measure(_ width: CGFloat) {
+        
     }
     
     func remove(animated: Bool) {
@@ -1073,7 +1077,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                                 self.parentInteractions.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: selected.tag.reaction), nil))
                             }
                         } else {
-                            showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                         }
                         
                     }

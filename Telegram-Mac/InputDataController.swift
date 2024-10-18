@@ -552,7 +552,7 @@ extension InputDataController : PeerMediaSearchable {
 class InputDataController: GenericViewController<InputDataView> {
 
     fileprivate var modalTransitionHandler:((Bool)->Void)? = nil
-    fileprivate var prepareAllItems: Bool = false
+    var prepareAllItems: Bool = false
     
     private let values: Promise<InputDataSignalValue> = Promise()
     private let disposable = MetaDisposable()

@@ -1261,7 +1261,7 @@ class GalleryViewer: NSResponder {
                 }, itemImage: MenuAnimation.menu_copy_media.value))
             }
             
-            if let recognition = self.pager.recognition {
+            if let recognition = self.pager.recognition, self.pager.selectedText == nil {
                 if #available(macOS 10.15, *) {
                     if recognition.canTranslate() {
                         let text: String = !recognition.hasTranslation() ? strings().galleryTranslate : strings().galleryHideTranslation

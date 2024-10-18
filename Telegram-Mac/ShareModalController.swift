@@ -1558,7 +1558,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                 $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace
             }
             
-            if let limit = self.share.limit, selected.count > limit {
+            if let limit = self.share.limit, selected.count > limit, added.count == 1 {
                 DispatchQueue.main.async { [unowned self] in
                     self.selectInteractions.update(animated: true, { current in
                         var current = current
@@ -2000,7 +2000,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
             _ = peer.startStandalone(next: { peer in
                 showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
             })
             self?.genericView.tableView.cancelSelection()

@@ -944,7 +944,7 @@ class PrivacyAndSecurityViewController: TableViewController {
             
 //            if !context.isPremium {
 //                showModalText(for: context.window, text: strings().privacySettingsVoicePremiumError, button: strings().alertLearnMore, callback: { _ in
-//                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+//                    prem(with: PremiumBoardingController(context: context), for: context.window)
 //                })
 //                return
 //            }

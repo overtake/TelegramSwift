@@ -1094,7 +1094,7 @@ private final class NameContainer : View {
             control.removeAllHandlers()
             control.set(handler: { control in
                 if item.peer?.emojiStatus != nil {
-                    showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
                 } else {
                     let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, contents)
@@ -1103,7 +1103,7 @@ private final class NameContainer : View {
                         let interactions = TextViewInteractions(processURL: { content in
                             if let content = content as? String {
                                 if content == "premium" {
-                                    showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                                    prem(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
                                 }
                             }
                         })
@@ -1384,8 +1384,13 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         emojiSpawn?.centerX(y: 0)
         
-        nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
-        statusView.centerX(y: nameView.frame.maxY + 4)
+        if item.isTopic {
+            nameView.centerX(y: photoContainer.frame.maxY - 12)
+            statusView.centerX(y: nameView.frame.maxY + 8)
+        } else {
+            nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
+            statusView.centerX(y: nameView.frame.maxY + 4)
+        }
         actionsView.centerX(y: self.frame.height - actionsView.frame.height - (item.nameColor != nil ? 20 : 0))
         
         if let photo = self.topicPhotoView {
@@ -1533,17 +1538,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             self.videoRepresentation = nil
         }
         
-//        
-//        if item.editing || !item.colorfulProfile {
-//            photoContainer.shadow = nil
-//        } else {
-//            let shadow = NSShadow()
-//            shadow.shadowBlurRadius = 64
-//            shadow.shadowColor = NSColor.white.withAlphaComponent(0.5)
-//            shadow.shadowOffset = NSMakeSize(0, 0)
-//            photoContainer.shadow = shadow
-//        }
-        
+
         if let emoji = item.peer?.profileBackgroundEmojiId, !item.editing {
             let current: PeerInfoSpawnEmojiView
             if let view = self.emojiSpawn {

@@ -498,7 +498,7 @@ class UserInfoArguments : PeerInfoArguments {
                 showModalText(for: context.window, text: strings().loginFloodWait)
             case let .premiumRequired(peer):
                 showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
             }
         }))
@@ -1819,7 +1819,7 @@ enum UserInfoEntry: PeerInfoEntry {
                         arguments.peerInfo(peerId)
                     }
                 }, hashtag: { hashtag in
-                    arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+                    arguments.context.bindings.globalSearch(hashtag, arguments.peerId, nil)
                 }, launchApp: launchApp ? arguments.openApp : nil, canTranslate: true)
             }
         case let .aboutInfo(_, text, viewType):
@@ -1834,7 +1834,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     arguments.peerInfo(peerId)
                 }
             }, hashtag: { value in
-                arguments.context.bindings.globalSearch(value, nil)
+                arguments.context.bindings.globalSearch(value, nil, nil)
             }, canTranslate: true)
         case let .birthday(_, text, canBirth, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)

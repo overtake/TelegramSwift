@@ -868,8 +868,15 @@ struct BrowserTabData : Comparable, Identifiable {
                 } else {
                     return .webapp(arc4random64())
                 }
-            case .simple:
-                return .webapp(arc4random64())
+            case let .simple(bot, _, _, source):
+                switch source {
+                case .generic:
+                    return .webapp(arc4random64())
+                case .inline:
+                    return .webapp(bot.id.toInt64())
+                case .settings:
+                    return .webapp(bot.id.toInt64())
+                }
             case .straight:
                 return .webapp(arc4random64())
             case let .tonsite(url):
@@ -1989,8 +1996,8 @@ final class WebappBrowserController : ViewController {
             return
         }
         
-        if let tab = tabs.first(where: { $0.selected }) {
-            let controller = webpages[tab.unique]!
+        if let tab = tabs.first(where: { $0.selected }), let controller = webpages[tab.unique] {
+            
             if current != controller {
                 controller._frameRect = genericView.contentView.bounds
                 current?.viewWillDisappear(animated)

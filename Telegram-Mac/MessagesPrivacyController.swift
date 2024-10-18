@@ -91,12 +91,12 @@ func MessagesPrivacyController(context: AccountContext, globalSettings: GlobalPr
     let arguments = Arguments(context: context, alert: {
         if !context.isPremium {
             showModalText(for: context.window, text: strings().privacySettingsMessagesPremiumError, button: strings().alertLearnMore, callback: { _ in
-                showModal(with: PremiumBoardingController(context: context, source: .message_privacy, openFeatures: true), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .message_privacy, openFeatures: true), for: context.window)
             })
             return
         }
     }, premium: {
-        showModal(with: PremiumBoardingController(context: context, source: .message_privacy, openFeatures: true), for: context.window)
+        prem(with: PremiumBoardingController(context: context, source: .message_privacy, openFeatures: true), for: context.window)
     }, toggle: { value in
         updateState { current in
             var current = current

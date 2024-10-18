@@ -817,7 +817,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         var isInline: Bool {
             switch self {
             case let .simple(_, _, source):
-                return source == .inline
+                switch source {
+                case .inline:
+                    return true
+                default:
+                    return false
+                }
             case .normal:
                 return false
             }

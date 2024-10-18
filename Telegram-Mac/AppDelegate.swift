@@ -318,7 +318,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
 
     var currentContext:AccountContext? {
-        return contextValue?.context
+        var context: AccountContext?
+        self.enumerateAccountContexts({ ctx in
+            if ctx.isCurrent {
+                context = ctx
+            }
+        })
+        return context
     }
     
     private var ctxLayer: CtxInstallLayer?

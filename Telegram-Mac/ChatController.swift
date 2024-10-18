@@ -801,6 +801,7 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
         if let currentView = header.currentView {
+            header.measure(frame.width)
             transition.updateFrame(view: currentView, frame: NSMakeRect(0, 0, frame.width, currentView.frame.height))
         }
         
@@ -1055,9 +1056,22 @@ class ChatControllerView : View, ChatInputDelegate {
             translate = nil
         }
         
+        var botAd: Message? = nil
+        
+        #if DEBUG
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil)
+        
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil)
         
         
-        let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.chatMode == .preview ? nil : interfaceState.connectedBot)
+        
+        botAd = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 18 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: "Red Dead Redemption and Undead Nightmare hit PC on October 29 with 4K resolution, Ultrawide, Super Ultrawide monitor support, and more PC-specific features.", attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+
+        #endif
+                
+        var state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.chatMode == .preview ? nil : interfaceState.connectedBot, botAd: botAd.flatMap { .init(message: $0, chatInteraction: chatInteraction) })
+
+        state.measure(frame.width)
 
         header.updateState(state, animated: animated, for: self)
         
@@ -2452,7 +2466,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
             showModalText(for: context.window, text: text, title: title, callback: { _ in
-                showModal(with: PremiumBoardingController(context: context, source: .upload_limit, openFeatures: true), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .upload_limit, openFeatures: true), for: context.window)
             })
             
         })
@@ -3774,7 +3788,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let link = theme.colors.link.withAlphaComponent(0.8)
                 let attributed = parseMarkdownIntoAttributedString(aboveText, attributes: .init(body: .init(font: .normal(.text), textColor: color), bold: .init(font: .medium(.text), textColor: color), link: .init(font: .normal(.text), textColor: link), linkAttribute: { link in
                     return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     }))
                 })).detectBold(with: .medium(.text))
                 let aboveLayout = TextViewLayout(attributed, maximumNumberOfLines: 2, alignment: .center)
@@ -3959,10 +3973,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.hashtag = { [weak self] hashtag in
-            context.bindings.globalSearch(hashtag, peerId)
-            
-            //self?.navigationController?.push(HashtagSearchController(context, hashtag: hashtag, peerId: peerId))
+        chatInteraction.hashtag = { hashtag in
+            context.bindings.globalSearch(hashtag, peerId, nil)
         }
         
         chatInteraction.sendLocation = { [weak self] coordinate, venue in
@@ -4698,7 +4710,41 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                
                 if focusTarget.messageId.peerId != strongSelf.chatInteraction.peerId {
-                    strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
+                    let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: focusTarget.messageId.peerId)) |> deliverOnMainQueue
+                    _ = peer.startStandalone(next: { [weak strongSelf] value in
+                        let accept: Bool
+                        if let value = value {
+                            switch value {
+                            case let .channel(channel):
+                                accept = channel.participationStatus == .member || value.addressName != nil
+                            case let .legacyGroup(group):
+                                accept = group.membership == .Member || value.addressName != nil
+                            default:
+                                accept = false
+                            }
+                            
+                        } else {
+                            accept = false
+                        }
+                        if accept {
+                            strongSelf?.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
+                        } else {
+                            let text: String
+                            if let peer = value {
+                                if peer._asPeer().isChannel {
+                                    text = strings().chatToastQuoteChatUnavailbalePrivateChannel
+                                } else if peer._asPeer().isGroup || peer._asPeer().isSupergroup {
+                                    text = strings().chatToastQuoteChatUnavailbalePrivateGroup
+                                } else {
+                                    text = strings().chatToastQuoteChatUnavailbalePrivateChat
+                                }
+                            } else {
+                                text = strings().chatToastQuoteChatUnavailbalePrivateChat
+                            }
+                            showModalText(for: context.window, text: text)
+                        }
+                    })
+                    return
                 }
                 
                 switch strongSelf.mode {
@@ -4906,7 +4952,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.toggleTranslate = { [weak self] in
             if !context.isPremium {
-                showModal(with: PremiumBoardingController(context: context, source: .translations, openFeatures: true), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .translations, openFeatures: true), for: context.window)
             } else {
                 self?.liveTranslate?.toggleTranslate()
             }
@@ -4974,33 +5020,38 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let last = slowMode.sendingIds.last {
                         self.chatInteraction.focusMessageId(nil, .init(messageId: last, string: nil), .CenterEmpty)
                     }
-                } else {
-                    filePanel(canChooseDirectories: true, for: window, completion:{ result in
-                        if let result = result {
-                            
-                            let previous = result.count
-                            var exceedSize: Int64?
-                            let result = result.filter { path -> Bool in
-                                if let size = fileSize(path) {
-                                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
-                                    if exceed {
-                                        exceedSize = size
+                } else if let peer = self.chatInteraction.peer {
+                    
+                    let canSend = peer.canSendMessage(self.mode.isThreadMode, threadData: self.chatInteraction.presentation.threadInfo, cachedData: self.chatInteraction.presentation.cachedData)
+
+                    if canSend {
+                        filePanel(canChooseDirectories: true, for: window, completion:{ result in
+                            if let result = result {
+                                
+                                let previous = result.count
+                                var exceedSize: Int64?
+                                let result = result.filter { path -> Bool in
+                                    if let size = fileSize(path) {
+                                        let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                                        if exceed {
+                                            exceedSize = size
+                                        }
+                                        return exceed
                                     }
-                                    return exceed
+                                    return false
                                 }
-                                return false
+                                
+                                let afterSizeCheck = result.count
+                                
+                                if afterSizeCheck == 0 && previous != afterSizeCheck {
+                                    showFileLimit(context: context, fileSize: exceedSize)
+                                } else {
+                                    self.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, asMedia, nil)
+                                }
+                                
                             }
-                            
-                            let afterSizeCheck = result.count
-                            
-                            if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                showFileLimit(context: context, fileSize: exceedSize)
-                            } else {
-                                self.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, asMedia, nil)
-                            }
-                            
-                        }
-                    })
+                        })
+                    }
                 }
             }
             
@@ -5434,7 +5485,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         let waitString = strings().conversationFreeTranscriptionWaitOrSubscribe(time)
                         let fullString = "\(usedString) \(waitString)"
                         showModalText(for: context.window, text: fullString, callback: { _ in
-                            showModal(with: PremiumBoardingController(context: context, source: .translations), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .translations), for: context.window)
                         })
                         return
                     } else {
@@ -8442,16 +8493,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
         
-       
-    
-/*
- #if DEBUG
- self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-     _ = showSaveModal(for: context.window, context: context, animation: LocalAnimatedSticker.success_saved, text: .init(.init()), delay: 3.0).start()
-     return .invoked
- }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
- #endif
- */
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.chatInteraction.attachFile(true)
+            return .invoked
+        }, with: self, for: .O, priority: .medium, modifierFlags: [.command])
       
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeBold()

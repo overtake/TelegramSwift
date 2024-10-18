@@ -2070,7 +2070,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             case .emoji, .stories:
                 if !ignorePremium, !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                     })
                 } else {
                     self?.interactions?.sendAnimatedEmoji(item, info, nil, rect)
@@ -2100,7 +2100,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return current
             }
         }, openPremium: { [weak self] in
-            showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
             self?.closeCurrent?()
         }, installPack: { info, items in
             _ = scrollToOnNextTransaction.swap(info)

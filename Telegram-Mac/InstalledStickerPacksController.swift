@@ -469,7 +469,7 @@ class InstalledStickerPacksController: TableViewController {
                         context.reactions.updateQuick(.custom(file.fileId.id))
                     } else {
                         showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
-                            showModal(with: PremiumBoardingController(context: context, source: .infinite_reactions), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .infinite_reactions), for: context.window)
                         })
                     }
                 }

@@ -140,7 +140,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     
     let showPremiumAlert:()->Void = {
         showModalText(for: context.window, text: strings().customEmojiPremiumAlert, callback: { _ in
-            showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
         })
     }
     

@@ -838,7 +838,7 @@ class SelectivePrivacySettingsController: TableViewController {
         let arguments = SelectivePrivacySettingsControllerArguments(context: context, updateType: { type in
             if kind == .voiceMessages, !context.isPremium {
                 showModalText(for: context.window, text: strings().privacySettingsVoicePremiumError, button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
                 return
             }
@@ -980,7 +980,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 return current
             }
         }, openPremium: {
-            showModal(with: PremiumBoardingController(context: context, source: .last_seen, openFeatures: true), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .last_seen, openFeatures: true), for: context.window)
         }, setupBirthday: {
             let controller = CalendarController(NSMakeRect(0, 0, 300, 300), context.window, current: Date(), lowYear: 1900, canBeNoYear: true, selectHandler: { date in
                 editAccountUpdateBirthday(date, context: context)

@@ -728,7 +728,7 @@ final class ChatInteraction : InterfaceObserver  {
         
         let tab: BrowserTabData.Data
         if simple {
-            tab = .simple(bot: .init(bot), url: url, buttonText: buttonText, source: inline ? .inline : .generic)
+            tab = .simple(bot: .init(bot), url: url, buttonText: buttonText, source: inline ? .inline(startParam: nil) : .generic)
         } else {
             tab = .webapp(bot: .init(bot), peerId: peerId, buttonText: buttonText, url: url, payload: nil, threadId: threadId, replyTo: replyTo, fromMenu: false)
         }

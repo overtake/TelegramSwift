@@ -42,41 +42,53 @@ class ChatInputAttachView: ImageButton, Notifable {
             if let peer = chatInteraction.presentation.peer {
                 
                 var items:[ContextMenuItem] = []
-                if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
-                    if editState.message.groupingKey == nil {
-                        items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
-                            self?.chatInteraction.updateEditingMessageMedia(nil, true)
-                        }, itemImage: MenuAnimation.menu_shared_media.value))
-                        
-                        items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
-                            self?.chatInteraction.updateEditingMessageMedia(nil, false)
-                        }, itemImage: MenuAnimation.menu_file.value))
-                        
-                        if media is TelegramMediaImage {
-                            items.append(ContextMenuItem(strings().editMessageEditCurrentPhoto, handler: { [weak self] in
-                                self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
-                            }, itemImage: MenuAnimation.menu_edit.value))
-                        }
-                    } else {
-                        if let _ = editState.message.anyMedia as? TelegramMediaImage {
+                if let editState = chatInteraction.presentation.interfaceState.editState {
+                    if let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
+                        if editState.message.groupingKey == nil {
                             items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
-                                self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                            }, itemImage: MenuAnimation.menu_edit.value))
-                        } else if let file = editState.message.anyMedia as? TelegramMediaFile {
-                            if file.isVideoFile {
+                                self?.chatInteraction.updateEditingMessageMedia(nil, true)
+                            }, itemImage: MenuAnimation.menu_shared_media.value))
+                            
+                            items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
+                                self?.chatInteraction.updateEditingMessageMedia(nil, false)
+                            }, itemImage: MenuAnimation.menu_file.value))
+                            
+                            if media is TelegramMediaImage {
+                                items.append(ContextMenuItem(strings().editMessageEditCurrentPhoto, handler: { [weak self] in
+                                    self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
+                                }, itemImage: MenuAnimation.menu_edit.value))
+                            }
+                        } else {
+                            if let _ = editState.message.anyMedia as? TelegramMediaImage {
                                 items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                                }, itemImage: MenuAnimation.menu_shared_media.value))
+                                }, itemImage: MenuAnimation.menu_edit.value))
+                            } else if let file = editState.message.anyMedia as? TelegramMediaFile {
+                                if file.isVideoFile {
+                                    items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
+                                        self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                                    }, itemImage: MenuAnimation.menu_shared_media.value))
+                                }
+                                if file.isMusic {
+                                    items.append(ContextMenuItem(strings().inputAttachPopoverMusic, handler: { [weak self] in
+                                        self?.chatInteraction.updateEditingMessageMedia(audioExts, false)
+                                    }, itemImage: MenuAnimation.menu_music.value))
+                                } else {
+                                    items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
+                                        self?.chatInteraction.updateEditingMessageMedia(nil, false)
+                                    }, itemImage: MenuAnimation.menu_file.value))
+                                }
                             }
-                            if file.isMusic {
-                                items.append(ContextMenuItem(strings().inputAttachPopoverMusic, handler: { [weak self] in
-                                    self?.chatInteraction.updateEditingMessageMedia(audioExts, false)
-                                }, itemImage: MenuAnimation.menu_music.value))
-                            } else {
-                                items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
-                                    self?.chatInteraction.updateEditingMessageMedia(nil, false)
-                                }, itemImage: MenuAnimation.menu_file.value))
-                            }
+                        }
+                    } else {
+                        if editState.message.media.isEmpty {
+                            items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
+                                self?.chatInteraction.updateEditingMessageMedia(nil, true)
+                            }, itemImage: MenuAnimation.menu_shared_media.value))
+                            
+                            items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
+                                self?.chatInteraction.updateEditingMessageMedia(nil, false)
+                            }, itemImage: MenuAnimation.menu_file.value))
                         }
                     }
                 } else if chatInteraction.presentation.interfaceState.editState == nil {

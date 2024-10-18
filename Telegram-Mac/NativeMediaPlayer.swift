@@ -150,5 +150,4 @@ final class NativeMediaPlayer : View, UniversalVideoContentView {
         fetchDisposable.dispose()
     }
     
-    
 }

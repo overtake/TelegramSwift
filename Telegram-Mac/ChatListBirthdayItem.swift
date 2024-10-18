@@ -69,7 +69,7 @@ final class ChatListBirthdayItem : GeneralRowItem {
         titleAttr.detectBoldColorInString(with: .medium(.text), color: theme.colors.accent)
         
         self.title = .init(titleAttr, maximumNumberOfLines: 1)
-        self.info = .init(.initialize(string: strings().chatListBirthdayInfoCountable(birthdays.count), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2)
+        self.info = .init(.initialize(string: strings().chatListBirthdayInfoNewCountable(birthdays.count), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2)
 
         super.init(initialSize, stableId: stableId)
     }

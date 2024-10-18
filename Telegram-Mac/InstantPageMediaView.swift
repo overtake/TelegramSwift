@@ -72,7 +72,7 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
         self.context = context
         self.media = media
         self.arguments = arguments
-        
+                
         switch arguments {
         case .image:
              self.imageView = TransformImageView()
@@ -96,6 +96,7 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
         addSubview(progressView)
         
 
+        
         
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
             guard let `self` = self else {return}

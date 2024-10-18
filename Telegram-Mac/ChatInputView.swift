@@ -652,7 +652,7 @@ class ChatInputView: View, Notifable {
                 let parsed = parseMarkdownIntoAttributedString(string, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.link), linkAttribute: { link in
                     return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
                         if value == "premium" {
-                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            prem(with: PremiumBoardingController(context: context), for: context.window)
                         }
                     }))
                 })).detectBold(with: .medium(.text))

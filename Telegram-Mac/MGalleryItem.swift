@@ -607,7 +607,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: message.id.peerId, replyId: nil, threadId: message.threadId, atDate: nil).start()
                 viewer?.close()
             }, hashtag: { hashtag in
-                context.bindings.globalSearch(hashtag, message.id.peerId)
+                context.bindings.globalSearch(hashtag, message.id.peerId, nil)
                 viewer?.close()
             }, applyProxy: { server in
                 applyExternalProxy(server, accountManager: context.sharedContext.accountManager)

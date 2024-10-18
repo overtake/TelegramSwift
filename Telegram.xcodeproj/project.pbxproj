@@ -56,11 +56,8 @@
 		2703762C2CA1FDFB003EC235 /* libbz2.1.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */; };
 		2703762F2CA1FEE4003EC235 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
 		270376322CA2DB59003EC235 /* HLSVideoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376312CA2DB59003EC235 /* HLSVideoContent.swift */; };
-		270376352CA2DBE7003EC235 /* UniversalVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376342CA2DBE7003EC235 /* UniversalVideo.swift */; };
-		270376382CA2E395003EC235 /* HLSVideoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376372CA2E394003EC235 /* HLSVideoController.swift */; };
 		2703763F2CA43E04003EC235 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2703763E2CA43E04003EC235 /* Report.swift */; };
 		270376412CA59398003EC235 /* NativeMediaPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376402CA59398003EC235 /* NativeMediaPlayer.swift */; };
-		270376452CAA78FA003EC235 /* HLSVideoJSContentNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376442CAA78FA003EC235 /* HLSVideoJSContentNode.swift */; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
 		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
@@ -329,7 +326,7 @@
 		276154932C1A0D440090BFFC /* menu_paid.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276154922C1A0D430090BFFC /* menu_paid.tgs */; };
 		276154992C1B221A0090BFFC /* MediaPaidSetterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154982C1B221A0090BFFC /* MediaPaidSetterController.swift */; };
 		2761549B2C2060D70090BFFC /* CheckAppStoreUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761549A2C2060D70090BFFC /* CheckAppStoreUpdate.swift */; };
-		2761549E2C2081DF0090BFFC /* WebappWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761549D2C2081DF0090BFFC /* WebappWindow.swift */; };
+		2761549E2C2081DF0090BFFC /* BrowserState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2761549D2C2081DF0090BFFC /* BrowserState.swift */; };
 		276154A82C234CD50090BFFC /* ChatMediaPaidContentItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276154A72C234CD50090BFFC /* ChatMediaPaidContentItem.swift */; };
 		276279D6298D32EF0096F904 /* menu_more.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276279D5298D32EF0096F904 /* menu_more.tgs */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
@@ -552,6 +549,9 @@
 		279DF4612B9A010C00E644A7 /* FragmentMonetizationPromoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279DF4602B9A010C00E644A7 /* FragmentMonetizationPromoController.swift */; };
 		279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECA274259EE000E1BD5 /* TGVideoCameraMovie */; };
 		279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECD27425CBD000E1BD5 /* InAppVideoServices */; };
+		279FA42D2CBE9A5100E4F64C /* runtime.bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = 279FA42C2CBE9A5100E4F64C /* runtime.bundle.js */; };
+		279FA42E2CBE9A5100E4F64C /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 279FA42A2CBE9A5100E4F64C /* index.html */; };
+		279FA42F2CBE9A5100E4F64C /* index.bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = 279FA42B2CBE9A5100E4F64C /* index.bundle.js */; };
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
 		279FD2A7273C1251004F08A1 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A6273C1251004F08A1 /* Zip */; };
 		279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2AC273C1291004F08A1 /* TgVoipWebrtc */; };
@@ -1681,11 +1681,8 @@
 		2703762D2CA1FE62003EC235 /* libSystem.B.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libSystem.B.tbd; path = usr/lib/libSystem.B.tbd; sourceTree = SDKROOT; };
 		2703762E2CA1FEC4003EC235 /* libiconv.2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.2.tbd; path = usr/lib/libiconv.2.tbd; sourceTree = SDKROOT; };
 		270376312CA2DB59003EC235 /* HLSVideoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSVideoContent.swift; sourceTree = "<group>"; };
-		270376342CA2DBE7003EC235 /* UniversalVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalVideo.swift; sourceTree = "<group>"; };
-		270376372CA2E394003EC235 /* HLSVideoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HLSVideoController.swift; sourceTree = "<group>"; };
 		2703763E2CA43E04003EC235 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
 		270376402CA59398003EC235 /* NativeMediaPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMediaPlayer.swift; sourceTree = "<group>"; };
-		270376442CAA78FA003EC235 /* HLSVideoJSContentNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HLSVideoJSContentNode.swift; sourceTree = "<group>"; };
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270595D72B6941C400E05493 /* ChatSearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchHeader.swift; sourceTree = "<group>"; };
 		270595E32B6BDCF500E05493 /* menu_boost.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost.tgs; sourceTree = "<group>"; };
@@ -1950,7 +1947,7 @@
 		276154922C1A0D430090BFFC /* menu_paid.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_paid.tgs; sourceTree = "<group>"; };
 		276154982C1B221A0090BFFC /* MediaPaidSetterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPaidSetterController.swift; sourceTree = "<group>"; };
 		2761549A2C2060D70090BFFC /* CheckAppStoreUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckAppStoreUpdate.swift; sourceTree = "<group>"; };
-		2761549D2C2081DF0090BFFC /* WebappWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebappWindow.swift; sourceTree = "<group>"; };
+		2761549D2C2081DF0090BFFC /* BrowserState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserState.swift; sourceTree = "<group>"; };
 		276154A72C234CD50090BFFC /* ChatMediaPaidContentItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaPaidContentItem.swift; sourceTree = "<group>"; };
 		276279D5298D32EF0096F904 /* menu_more.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_more.tgs; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
@@ -2184,6 +2181,9 @@
 		279DF4602B9A010C00E644A7 /* FragmentMonetizationPromoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentMonetizationPromoController.swift; sourceTree = "<group>"; };
 		279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGVideoCameraMovie; path = packages/TGVideoCameraMovie; sourceTree = "<group>"; };
 		279E8ECC27425BAE000E1BD5 /* InAppVideoServices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppVideoServices; path = packages/InAppVideoServices; sourceTree = "<group>"; };
+		279FA42A2CBE9A5100E4F64C /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
+		279FA42B2CBE9A5100E4F64C /* index.bundle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.bundle.js; sourceTree = "<group>"; };
+		279FA42C2CBE9A5100E4F64C /* runtime.bundle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = runtime.bundle.js; sourceTree = "<group>"; };
 		279FD29C273C106C004F08A1 /* minizip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = minizip; path = submodules/minizip; sourceTree = "<group>"; };
 		279FD29E273C10AD004F08A1 /* BuildConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BuildConfig; path = submodules/BuildConfig; sourceTree = "<group>"; };
 		279FD2A5273C124B004F08A1 /* Zip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Zip; path = submodules/Zip; sourceTree = "<group>"; };
@@ -3446,9 +3446,7 @@
 		270376302CA2DB4B003EC235 /* hls */ = {
 			isa = PBXGroup;
 			children = (
-				270376442CAA78FA003EC235 /* HLSVideoJSContentNode.swift */,
 				270376312CA2DB59003EC235 /* HLSVideoContent.swift */,
-				270376342CA2DBE7003EC235 /* UniversalVideo.swift */,
 			);
 			name = hls;
 			sourceTree = "<group>";
@@ -3720,7 +3718,7 @@
 			isa = PBXGroup;
 			children = (
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
-				2761549D2C2081DF0090BFFC /* WebappWindow.swift */,
+				2761549D2C2081DF0090BFFC /* BrowserState.swift */,
 				270FD5912C4C21D3000070E6 /* WebappBrowser.swift */,
 				270FD59F2C54620A000070E6 /* WebsiteController.swift */,
 				270FD5A52C57C34B000070E6 /* InstantViewInBrowser.swift */,
@@ -3920,6 +3918,16 @@
 				27916F21287D77600046DB44 /* symbols.tgs */,
 			);
 			path = emojies;
+			sourceTree = "<group>";
+		};
+		279FA4292CBE9A4500E4F64C /* hls */ = {
+			isa = PBXGroup;
+			children = (
+				279FA42A2CBE9A5100E4F64C /* index.html */,
+				279FA42B2CBE9A5100E4F64C /* index.bundle.js */,
+				279FA42C2CBE9A5100E4F64C /* runtime.bundle.js */,
+			);
+			path = hls;
 			sourceTree = "<group>";
 		};
 		27A01AD42B9AF75200C59661 /* fragment */ = {
@@ -5571,6 +5579,7 @@
 		C252532B1DF043D800ADBC98 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				279FA4292CBE9A4500E4F64C /* hls */,
 				27B836172B5FC11F00E82683 /* emoji */,
 				27E6DB092689C71E003D6164 /* MetalFunctions.metal */,
 				2703407B282CFC0900D0156C /* premium */,
@@ -6263,7 +6272,6 @@
 			children = (
 				A7F28336239A808500742C20 /* TemplateController.swift */,
 				275E85202B219011007A72CA /* MetalEngineTestController.swift */,
-				270376372CA2E394003EC235 /* HLSVideoController.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -7159,6 +7167,9 @@
 				277C208927A2858D0070B3BF /* menu_speaker.tgs in Resources */,
 				27D91314283646CA007CF40F /* text_to_voice.tgs in Resources */,
 				2773A54425FA324B00AB45E9 /* voice_chat_unmute.tgs in Resources */,
+				279FA42D2CBE9A5100E4F64C /* runtime.bundle.js in Resources */,
+				279FA42E2CBE9A5100E4F64C /* index.html in Resources */,
+				279FA42F2CBE9A5100E4F64C /* index.bundle.js in Resources */,
 				27CE1565297966D8001F8CE8 /* emoji_category_tongue.tgs in Resources */,
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,
 				2763A168261DF60A00C12762 /* voice_chat_cancel_reminder_to_raise_hand.tgs in Resources */,
@@ -7560,7 +7571,6 @@
 				2719D8162A1F555500081079 /* StoryChatContent.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				27307E9C2ADEB45800D970EE /* SelectColorController.swift in Sources */,
-				270376452CAA78FA003EC235 /* HLSVideoJSContentNode.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				278E86D7265D49100006685D /* MicroListenerController.swift in Sources */,
 				2748C56127BA477900F05503 /* Auth_Token.swift in Sources */,
@@ -7588,7 +7598,7 @@
 				27F674142971504E0014DCB9 /* CreateChannelController.swift in Sources */,
 				270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */,
 				2738A2E0289D5DD700EC1010 /* PremiumGiftStarSceneView.swift in Sources */,
-				2761549E2C2081DF0090BFFC /* WebappWindow.swift in Sources */,
+				2761549E2C2081DF0090BFFC /* BrowserState.swift in Sources */,
 				275E85212B219011007A72CA /* MetalEngineTestController.swift in Sources */,
 				C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */,
 				9F0368012277091800456348 /* LAnimationButton.swift in Sources */,
@@ -7835,7 +7845,6 @@
 				C2F9C4481F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift in Sources */,
 				C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */,
 				C2E8BA071FB5EF4C00DEB5E2 /* GalleryThumbsControl.swift in Sources */,
-				270376352CA2DBE7003EC235 /* UniversalVideo.swift in Sources */,
 				2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */,
 				2778409F2BAC0B1D0026CC3A /* MultiGiftPremium.swift in Sources */,
 				C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */,
@@ -8221,7 +8230,6 @@
 				C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */,
 				276B5D182C8897BE00DB82E2 /* GiftingController.swift in Sources */,
 				D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */,
-				270376382CA2E395003EC235 /* HLSVideoController.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
 				C2E8BA0A1FB5F15900DEB5E2 /* GalleryThumbsControlView.swift in Sources */,
 				C2DF47E21DE846B8003AA6C0 /* ChatMusicContentView.swift in Sources */,

@@ -570,7 +570,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                 let month = String(current.card.date.prefix(2))
                 var yearState = STPCardValidator.validationState(forExpirationYear: year, inMonth: month)
                 var monthState = STPCardValidator.validationState(forExpirationMonth: month)
-                if isRussia, let year = Int32(year), let month = Int32(month) {
+                if let year = Int32(year), let month = Int32(month) {
                     if year >= 22 && month >= 1 {
                         yearState = .valid
                         monthState = .valid

@@ -1485,16 +1485,16 @@ class ChatListController : PeersListController {
     }
     
     
-    func globalSearch(_ query: String, peer: EnginePeer?) {
+    func globalSearch(_ query: String, peer: EnginePeer?, cached: CachedSearchMessages?, isSuperTag: Bool) {
         let context = self.context
         
         let invoke = { [weak self] in
             if let peer {
                 let peerId = peer.id
-                let mode: PeerListState.SelectedSearchTag = peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
-                self?.makeHashtag(.init(mode: mode, peerId: peerId, text: query))
+                let mode: PeerListState.SelectedSearchTag = isSuperTag ? .hashtagThisChat : peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
+                self?.makeHashtag(.init(mode: mode, peer: peer, text: query), cached: cached)
             } else {
-                self?.makeHashtag(.init(mode: .hashtagPublicPosts, peerId: nil, text: query))
+                self?.makeHashtag(.init(mode: .hashtagPublicPosts, peer: nil, text: query), cached: cached)
             }
             self?.genericView.searchView.change(state: .Focus, false)
         }
