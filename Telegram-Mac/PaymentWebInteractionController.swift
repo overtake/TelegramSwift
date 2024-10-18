@@ -94,6 +94,11 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
             "var TelegramWebviewProxy = new TelegramWebviewProxyProto();"
                
             let configuration = WKWebViewConfiguration()
+            
+            if FastSettings.debugWebApp {
+                configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
+            }
+            
             let userController = WKUserContentController()
                
             let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
@@ -110,7 +115,12 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
             webView.allowsLinkPreview = false
 
         case .externalVerification:
-            webView = WKWebView()
+            
+            let configuration = WKWebViewConfiguration()
+            if FastSettings.debugWebApp {
+                configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
+            }
+            webView = WKWebView(frame: CGRect(), configuration: configuration)
             webView.allowsLinkPreview = false
             webView.navigationDelegate = self
         }

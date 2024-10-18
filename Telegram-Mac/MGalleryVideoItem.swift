@@ -56,6 +56,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     deinit {
         updateMagnifyDisposable.dispose()
+        
     }
         
     override func singleView() -> NSView {

@@ -195,7 +195,7 @@ public final class TextViewBlockQuoteData: NSObject {
     
     var minimumHeaderSize: CGFloat {
         if let header = header {
-            return header.0.size.width + 20
+            return header.0.size.width
         } else {
             return 0
         }

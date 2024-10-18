@@ -175,8 +175,8 @@ final class ChatReactionsLayout {
                             selectedColor = isStars ? GOLD : theme.colors.accent
                             textSelectedColor = isStars ? NSColor(0xffffff) : theme.colors.underSelectedColor
                         } else {
-                            bgColor = isStars ? gold_alpha : theme.blurServiceColor
-                            textColor = isStars ? GOLD : theme.chatServiceItemTextColor
+                            bgColor = theme.blurServiceColor
+                            textColor = theme.chatServiceItemTextColor
                             borderColor = .clear
                             selectedColor = isStars ? GOLD : theme.colors.accent
                             textSelectedColor = isStars ? NSColor(0xffffff) : selectedColor.underTextColor

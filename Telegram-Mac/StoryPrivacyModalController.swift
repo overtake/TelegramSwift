@@ -954,7 +954,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                     showModalText(for: window, text: strings().storyPrivacySaveRepost)
                     close?()
                 default:
-                    showModal(with: PremiumBoardingController(context: context), for: window)
+                    prem(with: PremiumBoardingController(context: context), for: window)
                 }
                 
             }))
@@ -983,7 +983,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                         showModalText(for: window, text: strings().storyPrivacySaveRepost)
                         close?()
                     default:
-                        showModal(with: PremiumBoardingController(context: context), for: window)
+                        prem(with: PremiumBoardingController(context: context), for: window)
                     }
                 }))
             }

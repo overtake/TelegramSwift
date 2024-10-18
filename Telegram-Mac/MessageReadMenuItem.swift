@@ -694,7 +694,7 @@ extension ContextMenuItem {
                     item?.stateOnImage = image
                     item?.handler = {
                         showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            prem(with: PremiumBoardingController(context: context), for: context.window)
                         })
                     }
                     item?.redraw?()

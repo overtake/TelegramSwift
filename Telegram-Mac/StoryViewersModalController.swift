@@ -839,7 +839,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             return current
         }
     }, openPremium: {
-        showModal(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: darkAppearance), for: context.window)
+        prem(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: darkAppearance), for: context.window)
     }, openRepostStory: { storyId in
         StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: storyId.peerId, id: storyId.id, messageId: nil, takeControl: { [] peerId, _, storyId in
             return getControl?(peerId, storyId)

@@ -869,6 +869,15 @@ public extension Message {
         return nil
     }
     
+    var quoteAttribute: QuotedReplyMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? QuotedReplyMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var boostAttribute: BoostCountMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? BoostCountMessageAttribute {

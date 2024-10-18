@@ -12,7 +12,7 @@ import Postbox
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
-
+import DateUtils
 
 private final class GallerySupplyment : InteractionContentViewProtocol {
     private weak var tableView: TableView?
@@ -279,7 +279,7 @@ private final class HeaderItem : GeneralRowItem {
         var height = 10 + 10 + headerLayout.layoutSize.height + 5 + infoLayout.layoutSize.height + 10
         
         if isGift {
-            height += 100
+            height += 120
         } else {
             height += 80
         }
@@ -612,12 +612,12 @@ private final class HeaderView : GeneralContainableRowView {
         
         avatar?.center()
         photo?.center()
-        giftView?.centerX(y: -20)
+        giftView?.centerX(y: -10)
         outgoingView?.center()
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2)))
         
         
-        headerView.centerX(y: (giftView != nil ? 110 : 90) + 20)
+        headerView.centerX(y: (giftView != nil ? 130 : 90) + 20)
         
         infoContainer.centerX(y: headerView.frame.maxY + 5)
         infoView.centerY(x: 0)
@@ -815,30 +815,34 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         }
                     }
                 }
+                switch state.purpose {
+                case .starGift:
+                    break
+                default:
+                    rows.append(.init(left: .init(.initialize(string: strings().starTransactionTo, color: theme.colors.text, font: .normal(.text))), right: .init(name: to, leftView: { previous in
+                        if peer.id == servicePeerId {
+                            let control: ImageView
+                            if let previous = previous as? ImageView {
+                                control = previous
+                            } else {
+                                control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
+                            }
+                            control.image = NSImage(resource: .iconStarTransactionAnonymous).precomposed()
+                            return control
+                        } else {
+                            let control: AvatarControl
+                            if let previous = previous as? AvatarControl {
+                                control = previous
+                            } else {
+                                control = AvatarControl(font: .avatar(6))
+                            }
+                            control.setFrameSize(NSMakeSize(20, 20))
+                            control.setPeer(account: arguments.context.account, peer: peer._asPeer())
+                            return control
+                        }
+                    })))
+                }
                 
-                rows.append(.init(left: .init(.initialize(string: strings().starTransactionTo, color: theme.colors.text, font: .normal(.text))), right: .init(name: to, leftView: { previous in
-                    if peer.id == servicePeerId {
-                        let control: ImageView
-                        if let previous = previous as? ImageView {
-                            control = previous
-                        } else {
-                            control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
-                        }
-                        control.image = NSImage(resource: .iconStarTransactionAnonymous).precomposed()
-                        return control
-                    } else {
-                        let control: AvatarControl
-                        if let previous = previous as? AvatarControl {
-                            control = previous
-                        } else {
-                            control = AvatarControl(font: .avatar(6))
-                        }
-                        control.setFrameSize(NSMakeSize(20, 20))
-                        control.setPeer(account: arguments.context.account, peer: peer._asPeer())
-                        return control
-                    }
-                    
-                })))
             default:
                 break
             }
@@ -916,13 +920,26 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         rows.append(.init(left: .init(.initialize(string: strings().starTransactionReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionReasonGiveaway, color: theme.colors.text, font: .normal(.text))))))
     }
     
+    if case .unavailableGift = state.purpose {
+    } else {
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionDate, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.transaction.date), color: theme.colors.text, font: .normal(.text))))))
+    }
     
-    rows.append(.init(left: .init(.initialize(string: strings().starTransactionDate, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.transaction.date), color: theme.colors.text, font: .normal(.text))))))
 
     
     switch state.purpose {
     case .unavailableGift:
         if let gift = state.transaction.starGift {
+            
+            if let soldOut = gift.soldOut {
+                rows.append(.init(left: .init(.initialize(string: "First Sale", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.firstSale), color: theme.colors.text, font: .normal(.text))))))
+                
+                rows.append(.init(left: .init(.initialize(string: "Last Sale", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.lastSale), color: theme.colors.text, font: .normal(.text))))))
+
+            }
+
+            
+            
             rows.append(.init(left: .init(.initialize(string: strings().starTransactionValue, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: gift.price.formattedWithSeparator, color: theme.colors.text, font: .normal(.text))), leftView: { previous in
                 
                 let imageView = previous as? ImageView ?? ImageView()
@@ -1122,16 +1139,32 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         if let messageId, let peer = peer {
             switch purpose {
             case .starGift(_, let convertStars, _, _, _, _, _, _):
-                verifyAlert(for: window, header: strings().starTransactionConvertAlertHeader, information: strings().starTransactionConvertAlertInfo(peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(convertStars))), ok: strings().starTransactionConvertAlertOK, successHandler: { _ in
-                    if let profileContext {
-                        profileContext.convertStarGift(messageId: messageId)
-                    } else {
-                        _ = context.engine.payments.convertStarGift(messageId: messageId).start()
-                    }
-                    close?()
-                    showModalText(for: window, text: strings().starTransactionStarGiftConvertToStarsAlert)
-                    PlayConfetti(for: window, stars: true)
-                })
+                
+                let period_max = context.appConfiguration.getGeneralValue("stargifts_convert_period_max", orElse: 300) + (transaction.date - Int32(context.timeDifference))
+                
+                let dateFormatter = makeNewDateFormatter()
+                dateFormatter.dateStyle = .medium
+                dateFormatter.timeStyle = .none
+
+                let until = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(period_max)))
+
+                if period_max > context.timestamp {
+                    verifyAlert(for: window, header: strings().starTransactionConvertAlertHeader, information: strings().starTransactionConvertAlertInfoUntil(peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(convertStars)), until), ok: strings().starTransactionConvertAlertOK, successHandler: { _ in
+                        
+                        if let profileContext {
+                            profileContext.convertStarGift(messageId: messageId)
+                        } else {
+                            _ = context.engine.payments.convertStarGift(messageId: messageId).start()
+                        }
+                        close?()
+                        showModalText(for: window, text: strings().starTransactionStarGiftConvertToStarsAlert)
+                        PlayConfetti(for: window, stars: true)
+                    })
+                } else {
+                    showModalText(for: window, text: strings().starTransactionConvertAlertTooLate)
+                }
+                                
+               
             default:
                 break
             }

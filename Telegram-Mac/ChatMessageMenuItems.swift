@@ -354,7 +354,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }, error: { error in
                         switch error {
                         case .premiumRequired:
-                            showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
                         case .generic:
                             break
                         }
@@ -379,7 +379,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             if !context.premiumIsBlocked {
                 items.append(ContextMenuItem(strings().chatContextHideAd, handler: {
-                    showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
                 }, itemImage: MenuAnimation.menu_clear_history.value))
             }
             
@@ -999,17 +999,6 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message, availableReactions: data.availableReactions))
             }
         }
-        
-        #if DEBUG
-        if let file = message.media.first as? TelegramMediaFile, file.alternativeRepresentations.count > 0 {
-            fourthBlock.append(ContextMenuItem("HSL TEST", handler: {
-                showModal(with: HLSVideoController(context: context, message: message), for: context.window)
-                
-            }))
-        }
-        
-        
-        #endif
         
         
         if let peer = peer, peer.isChannel, !peer.isAdmin {

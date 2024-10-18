@@ -949,7 +949,7 @@ private final class StoryViewController: Control, Notifable {
             layout.interactions = .init(processURL: { url in
                 if let url = url as? String {
                     if url == "premium" {
-                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: darkAppearance), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: darkAppearance), for: context.window)
                     }
                 }
             })
@@ -2521,7 +2521,7 @@ final class StoryModalController : ModalViewController, Notifable {
             case let .custom(_, file):
                 if let file = file, file.isPremiumEmoji, !context.isPremium {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                     })
                 } else {
                     self?.genericView.like(reaction)
@@ -2542,7 +2542,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     if let file = file, let text = file.customEmojiText {
                         if file.isPremiumEmoji, !context.isPremium {
                             showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
+                                prem(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                             })
                         } else {
                             sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil)]), entryId, id, .reaction(reaction))
@@ -2723,7 +2723,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         }, itemImage: hq ? MenuAnimation.menu_sd.value : MenuAnimation.menu_hd.value))
                     } else {
                         menu.addItem(ContextMenuItem(strings().storyContextIncreaseQuality, handler: {
-                            showModal(with: PremiumBoardingController(context: context, source: .stories_quality, openFeatures: true, presentation: darkAppearance), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .stories_quality, openFeatures: true, presentation: darkAppearance), for: context.window)
                         }, itemImage: MenuAnimation.menu_hd_lock.value))
                     }
                 }

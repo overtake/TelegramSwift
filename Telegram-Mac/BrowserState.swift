@@ -406,12 +406,22 @@ final class BrowserStateContext {
                     } else {
                         window = self?.context.window
                     }
-                    if let window {
+                    if let window, let context = self?.context {
                         let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
-                        verifyAlert_button(for: window, header: peer._asPeer().displayTitle, information: strings().webAppFirstOpenTerms(privacyUrl), successHandler: { _ in
+                                                
+                        let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+                            return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
+                                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                closeAllModals(window: context.window)
+                            })
+                        }))
+                        
+                        showModalAlert(for: window, data: data, completion: { result in
                             invoke()
                             FastSettings.markWebAppAsConfirmed(peerId)
                         })
+                        
+
                     }
                 })
                 

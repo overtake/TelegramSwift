@@ -591,7 +591,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         }
     }
     
-    func openStats(_ ton: Int64, _ stars: Int64, _ canSeeTon: Bool, _ canSeeStars: Bool) {
+    func openStats(canSeeTon: Bool, canSeeStars: Bool) {
         self.pushViewController(ChannelStatsSegmentController(context, peerId: peerId, isChannel: true, monetization: canSeeTon, stars: canSeeStars && !canSeeTon, onlyMonetization: true))
     }
     
@@ -700,7 +700,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, starsAllowed: Bool?, viewType: GeneralViewType)
     case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
     case stats(section: ChannelInfoSection, datacenterId: Int32, monetization: Bool, stars: Bool, viewType: GeneralViewType)
-    case balance(section: ChannelInfoSection, ton: Int64, stars: Int64, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
+    case balance(section: ChannelInfoSection, ton: String?, stars: Int64, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -1136,7 +1136,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                     arguments.peerInfo(peerId)
                 }
             }, hashtag: { hashtag in
-                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
+                arguments.context.bindings.globalSearch(hashtag, arguments.peerId, nil)
             }, canTranslate: true)
         case let .userName(_, value, viewType):
             let link = "@\(value[0].username)"
@@ -1216,7 +1216,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .balance(_, ton, stars, canSeeTon, canSeeStars, viewType):
             let icon = generateTonAndStarBalanceIcon(ton: ton, stars: stars)
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoBalance, type: .nextImage(icon), viewType: viewType, action: {
-                arguments.openStats(ton, stars, canSeeTon, canSeeStars)
+                arguments.openStats(canSeeTon: canSeeTon, canSeeStars: canSeeStars)
             })
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
@@ -1399,9 +1399,14 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 
                 
                 let stars: Int64 = revenueState?.stats?.balances.availableBalance ?? 0
-                let ton: Int64 = Int64(formatCurrencyAmount(tonRevenueState?.stats?.balances.availableBalance ?? 0, currency: TON)) ?? 0
+                let ton: String?
+                if let tonBalance = tonRevenueState?.stats?.balances.availableBalance {
+                    ton = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
+                } else {
+                    ton = nil
+                }
                 
-                if cachedData.flags.contains(.canViewRevenue) || cachedData.flags.contains(.canViewStarsRevenue), stars > 0 || ton > 0 {
+                if cachedData.flags.contains(.canViewRevenue) || cachedData.flags.contains(.canViewStarsRevenue), stars > 0 || ton != nil {
                     entries.append(.balance(section: .manage, ton: ton, stars: stars, canSeeTon: cachedData.flags.contains(.canViewRevenue), canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))
                 }
 

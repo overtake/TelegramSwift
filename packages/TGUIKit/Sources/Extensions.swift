@@ -3044,3 +3044,57 @@ public func fontSizeThatFits(text: String, in rect: CGRect, initialFont: NSFont,
 
     return currentFont
 }
+
+
+public func extractHashtagAndUsername(from query: String) -> (hashtag: String, username: String)? {
+    // Regular expression to match hashtag followed by username
+    let pattern = "^([#$])([a-zA-Z0-9_]+)@([a-zA-Z0-9_]+)$"
+       
+       // Create regular expression object
+       guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+       
+       // Search for matches
+       let matches = regex.matches(in: query, range: NSRange(query.startIndex..., in: query))
+       
+       // Ensure we have a match
+       guard let match = matches.first, match.numberOfRanges == 4 else { return nil }
+       
+       // Extract symbol (# or $), tag, and username from the match
+       if let symbolRange = Range(match.range(at: 1), in: query),
+          let tagRange = Range(match.range(at: 2), in: query),
+          let usernameRange = Range(match.range(at: 3), in: query) {
+           
+           let symbol = String(query[symbolRange])
+           let tag = String(query[tagRange])
+           let fullTag = symbol + tag
+           let username = String(query[usernameRange])
+           
+           return (fullTag, username)
+       }
+       
+       return nil
+}
+public func extractAnchor(from text: String, matching url: String) -> String? {
+    // Escape the URL to safely use it in a regex
+    let escapedURL = NSRegularExpression.escapedPattern(for: url)
+    
+    // Regular expression pattern to match the given URL with optional anchor (#)
+    let pattern = "\(escapedURL)(#[a-zA-Z0-9_-]+)?"
+    
+    // Create regular expression object
+    guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+    
+    // Search for matches in the text
+    let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
+    
+    // Ensure there is at least one match
+    guard let match = matches.first else { return nil }
+    
+    // Extract the anchor if it exists (the part after #)
+    if match.numberOfRanges > 1, let anchorRange = Range(match.range(at: 1), in: text) {
+        return String(text[anchorRange].dropFirst()) // Drop the # symbol
+    }
+    
+    // If no anchor is found, return nil
+    return nil
+}

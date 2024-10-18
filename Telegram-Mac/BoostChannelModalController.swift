@@ -1173,7 +1173,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                 if context.isPremium {
                     alert(for: context.window, header: strings().boostGiftToGetMoreTitle, info: strings().boostGiftToGetMoreInfo(peer.displayTitle))
                 } else {
-                    showModal(with: PremiumBoardingController(context: context, source: .channel_boost(peerId)), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .channel_boost(peerId)), for: context.window)
                 }
             }
         } else {

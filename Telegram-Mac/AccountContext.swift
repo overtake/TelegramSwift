@@ -333,17 +333,22 @@ enum ApplyThemeUpdate {
     case cloud(TelegramTheme)
 }
 
+struct CachedSearchMessages : Equatable {
+    var result: SearchMessagesResult
+    var state: SearchMessagesState
+}
+
 final class AccountContextBindings {
     #if !SHARE
     let rootNavigation: () -> MajorNavigationController
     let mainController: () -> MainViewController
     let showControllerToaster: (ControllerToaster, Bool) -> Void
-    let globalSearch:(String, PeerId?)->Void
+    let globalSearch:(String, PeerId?, CachedSearchMessages?)->Void
     let switchSplitLayout:(SplitViewState)->Void
     let entertainment:()->EntertainmentViewController
     let needFullsize:()->Void
     let displayUpgradeProgress:(CGFloat)->Void
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String, PeerId?) -> Void = { _, _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String, PeerId?, CachedSearchMessages?) -> Void = { _, _, _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -1295,7 +1300,7 @@ final class AccountContext {
                 showModalText(for: context.window, text: strings().loginFloodWait)
             case let .premiumRequired(peer):
                 showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
             }
         })

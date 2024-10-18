@@ -716,7 +716,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if state.source != .business_standalone {
-        for (i, value) in state.values.enumerated() {
+        for (i, value) in state.values.uniqueElements.enumerated() {
             let viewType = bestGeneralViewType(state.values, for: i)
             
             struct Tuple : Equatable {
@@ -1165,7 +1165,7 @@ private final class PremiumBoardingView : View {
 
 final class PremiumBoardingController : ModalViewController {
 
-    private let context: AccountContext
+    fileprivate let context: AccountContext
     private let source: PremiumLogEventsSource
     private let openFeatures: Bool
     private let presentation: TelegramPresentationTheme
@@ -1751,3 +1751,10 @@ final class PremiumBoardingController : ModalViewController {
 
 
 
+func prem(with controller: PremiumBoardingController, for window: Window) {
+    if controller.context.premiumIsBlocked {
+        showModalText(for: window, text: strings().premiumBoardingPaymentNotAvailalbe)
+    } else {
+        showModal(with: controller, for: window)
+    }
+}

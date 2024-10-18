@@ -64,7 +64,7 @@ final class WidgetAppIconController : TelegramGenericViewController<WidgetView<W
         
         self.genericView.dataView?.selectIcon = { icon in
             if icon.isPremium, !context.isPremium {
-                showModal(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
                 return
             }
             let resourcePath = icon.resourcePath(context)

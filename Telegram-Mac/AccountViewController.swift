@@ -941,7 +941,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     navigation.push(PremiumBoardingController(context: context, source: .business_standalone), false)
                 }
             } else {
-                showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
             }
         }, giftPremium: {
             multigift(context: context)

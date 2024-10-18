@@ -132,7 +132,7 @@ func SimilarChannelsController(context: AccountContext, peerId: PeerId, recommen
             addAppLogEvent(postbox: context.account.postbox, type: "channels.open_recommended_channel", data: json)
         }
     }, premium: {
-        showModal(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
+        prem(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

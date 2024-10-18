@@ -849,6 +849,9 @@ class ChatRowItem: TableRowItem {
                 } else {
                     chatInteraction.focusMessageId(message.id, .init(messageId: replyAttribute.messageId, string: replyAttribute.quote?.text), .CenterEmpty)
                 }
+            } else if let quote = message.quoteAttribute {
+                let id = MessageId(peerId: .init(0), namespace: 0, id: 0)
+                chatInteraction.focusMessageId(id, .init(messageId: id, string: nil), .CenterEmpty)
             }
         }
     }
@@ -1281,6 +1284,9 @@ class ChatRowItem: TableRowItem {
         if let message = message, let media = message.anyMedia {
             
             
+            if message.adAttribute != nil {
+                return true
+            }
             
             if let file = media as? TelegramMediaFile {
                 if file.isStaticSticker {
@@ -1660,7 +1666,7 @@ class ChatRowItem: TableRowItem {
                     chatInteraction?.runReactionEffect(value, message.id)
                 }, tagAction: { [weak chatInteraction] reaction in
                     if !context.isPremium {
-                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
                         chatInteraction?.setLocationTag(.customTag(ReactionsMessageAttribute.messageTag(reaction: reaction), nil))
                     }
@@ -3599,7 +3605,7 @@ class ChatRowItem: TableRowItem {
                     let link = theme.colors.link.withAlphaComponent(0.8)
                     let attributed = parseMarkdownIntoAttributedString(aboveText, attributes: .init(body: .init(font: .normal(.text), textColor: color), bold: .init(font: .medium(.text), textColor: color), link: .init(font: .normal(.text), textColor: link), linkAttribute: { link in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                            showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                         }))
                     })).detectBold(with: .medium(.text))
                     aboveLayout = TextViewLayout(attributed, maximumNumberOfLines: 2, alignment: .center)
@@ -3664,11 +3670,11 @@ class ChatRowItem: TableRowItem {
                             }
                             
                             if isTags, !context.isPremium {
-                                showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                                prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                             } else {
                                 if case .custom = value, !context.isPremium && sticker.file.isPremiumEmoji, !contains {
                                     showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
-                                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                                        prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                                     })
                                 } else {
                                     let updated = message.newReactions(with: value, isTags: isTags)
@@ -3688,7 +3694,7 @@ class ChatRowItem: TableRowItem {
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
                     if isTags, !context.isPremium {
-                        showModal(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
                         if value == .stars {
                             context.reactions.sendStarsReaction(message.id, count: 1, isAnonymous: nil, fromRect: fromRect)

@@ -787,7 +787,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                 
                             case let .makeWebview(appname, command):
                                 
-                                if !appname.isEmpty {
+                                if !appname.isEmpty  {
                                     let botApp = context.engine.messages.getBotApp(botId: peer.id, shortName: appname)
                                     
                                     let chat = context.bindings.rootNavigation().first {
@@ -837,13 +837,21 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                         } else {
                                             
                                             var options: [ModalAlertData.Option] = []
-                                            options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                            if botApp.flags.contains(.requiresWriteAccess) {
+                                                options.append(.init(string: strings().botAllowSendMessages(peer.displayTitle), isSelected: true, mandatory: true))
+                                            }
                                             
-                                            let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                            let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(strings().botInfoLaunchInfoPrivacyUrl), description: nil, ok: strings().botLaunchApp, options: options, mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+                                                return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: .init(peer), info: strings().botMoreAbout, callback: { _ in
+                                                    invokeCallback(peer, nil, nil)
+                                                    closeAllModals(window: getWindow(context))
+                                                })
+                                            }))
+                                            
                                             showModalAlert(for: getWindow(context), data: data, completion: { result in
                                                 FastSettings.markWebAppAsConfirmed(peer.id)
                                                 
-                                                let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: getWindow(context))
+                                                let signal = showModalProgress(signal: makeRequestAppWebView(botApp, result.selected[0] ?? false), for: getWindow(context))
                                                 
                                                 _ = signal.start(next: { botApp, result in
                                                     if let result = result {
@@ -864,7 +872,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                         }
                                     })
                                 } else {
-                                    BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .generic))
+                                    BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .inline(startParam: command)))
                                 }
                                 
                                
@@ -1248,7 +1256,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 if let modal = findModal(PremiumBoardingController.self) {
                     modal.buy()
                 } else {
-                    showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: getWindow(context))
+                    prem(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: getWindow(context))
                 }
             }
         }
@@ -1611,7 +1619,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message"]
 
 
 let ton_scheme:String = "ton://"
@@ -1928,8 +1936,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
             }
             
             
-             if string.range(of: "/") == nil {
-                let userAndVariables = string.components(separatedBy: "?")
+             if string.range(of: "/") == nil || string.range(of: "/?") != nil {
+                let userAndVariables: [String]
+                 if string.range(of: "/?") != nil {
+                     userAndVariables = string.components(separatedBy: "/?")
+                 } else {
+                     userAndVariables = string.components(separatedBy: "?")
+                 }
                 let username:String = userAndVariables[0]
                 var action:ChatInitialAction? = nil
                 if userAndVariables.count == 2 {
@@ -2001,8 +2014,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                        
-
-                        if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
+                        if let startapp = vars[keyURLStartapp] {
+                            action = .makeWebview(appname: "", command: startapp)
+                        } else if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
                             let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
                             //?? vars[keyURLAttach].map(Array.init(_:))
@@ -2016,6 +2030,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         
                         let forceProfile = components.contains("profile")
                         
+                      
                         if components.count == 2, components[1] == "boost" {
                             return .boost(link: urlString, username: username, context: context)
                         } else if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
@@ -2413,6 +2428,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[22]:
                     if let context = context, let amount = vars[keyURLBalance].flatMap ({ Int64($0) }), let purpose = vars[keyURLPurpose] {
                         return .starsTopup(link: urlString, amount: amount, purpose: purpose, context: context)
+                    }
+                case known_scheme[23]:
+                    if let context = context, let slug = vars[keyURLSlug] {
+                        return .businessLink(link: urlString, slug: slug, context: context)
                     }
                 default:
                     break

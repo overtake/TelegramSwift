@@ -112,12 +112,14 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         let contextMenu:(()->[ContextMenuItem])?
         let blockInput: Bool
         let isTextTied: Bool
-        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false, isTextTied: Bool = false) {
+        let isVisible: Bool
+        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false, isTextTied: Bool = false, isVisible: Bool = true) {
             self.text = text
             self.image = image
             self.contextMenu = contextMenu
             self.blockInput = blockInput
             self.isTextTied = isTextTied
+            self.isVisible = isVisible
         }
     }
     
@@ -143,7 +145,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         var x: CGFloat = 35
         
-        for tag in tags {
+        for tag in tags.filter(\.isVisible) {
             let tagView = TextButton()
             tagView.animates = false
             tagView.set(font: .normal(12), for: .Normal)

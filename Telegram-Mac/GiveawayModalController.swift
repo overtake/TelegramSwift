@@ -1147,7 +1147,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         }), for: context.window)
     }, execute: { link in
         if link == "premium" {
-            showModal(with: PremiumBoardingController(context: context), for: context.window)
+            prem(with: PremiumBoardingController(context: context), for: context.window)
         }
     }, toggleOption: { value in
         updateState { current in

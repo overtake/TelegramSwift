@@ -30,14 +30,16 @@ class DisplayLink
        if let timer = timerRef
        {
            
-           successLink = CVDisplayLinkSetOutputCallback(timer, { (timer : CVDisplayLink, currentTime : UnsafePointer<CVTimeStamp>, outputTime : UnsafePointer<CVTimeStamp>, _ : CVOptionFlags, _ : UnsafeMutablePointer<CVOptionFlags>, sourceUnsafeRaw : UnsafeMutableRawPointer?) -> CVReturn in
-                                                           
-                if let sourceUnsafeRaw = sourceUnsafeRaw {
+           successLink = CVDisplayLinkSetOutputCallback(timer, { (timer: CVDisplayLink, currentTime: UnsafePointer<CVTimeStamp>, outputTime: UnsafePointer<CVTimeStamp>, _ : CVOptionFlags, _ : UnsafeMutablePointer<CVOptionFlags>, sourceUnsafeRaw : UnsafeMutableRawPointer?) -> CVReturn in
+               
+               if let sourceUnsafeRaw = sourceUnsafeRaw {
                    let sourceUnmanaged = Unmanaged<DispatchSourceUserDataAdd>.fromOpaque(sourceUnsafeRaw)
+                   // Use takeUnretainedValue only if you are sure source is not being deallocated
                    sourceUnmanaged.takeUnretainedValue().add(data: 1)
-                }
+               }
                return kCVReturnSuccess
            }, Unmanaged.passUnretained(source).toOpaque())
+
            
            guard successLink == kCVReturnSuccess else
            {

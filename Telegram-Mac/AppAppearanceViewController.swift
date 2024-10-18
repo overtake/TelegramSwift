@@ -744,7 +744,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, selectAppIcon: { icon in
         
         if icon.isPremium, !context.isPremium {
-            showModal(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
             return
         }
         

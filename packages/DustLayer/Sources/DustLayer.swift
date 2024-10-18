@@ -2,6 +2,38 @@ import TGUIKit
 import MetalEngine
 import MetalKit
 
+private func isChipM2OrHigher() -> Bool {
+    // Get the CPU brand string
+    var size = 0
+    sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+    
+    var cpuBrand = [CChar](repeating: 0, count: size)
+    sysctlbyname("machdep.cpu.brand_string", &cpuBrand, &size, nil, 0)
+    
+    let cpuName = String(cString: cpuBrand)
+    
+    // Match the chip type (e.g., "M1", "M2", "M3")
+    if let chipNumber = extractChipGeneration(from: cpuName) {
+        return chipNumber >= 2 // M2 or higher
+    }
+    
+    return false // Not a valid Apple Silicon chip or below M2
+}
+
+private func extractChipGeneration(from cpuName: String) -> Int? {
+    // Regular expression to extract the chip number (e.g., "M1", "M2", "M3")
+    let pattern = #"M(\d+)"#
+    let regex = try? NSRegularExpression(pattern: pattern)
+    
+    if let match = regex?.firstMatch(in: cpuName, range: NSRange(cpuName.startIndex..., in: cpuName)) {
+        if let range = Range(match.range(at: 1), in: cpuName) {
+            return Int(cpuName[range]) // Convert the matched chip number to Int
+        }
+    }
+    
+    return nil // No match found
+}
+
 private final class BundleMarker: NSObject {
 }
 
@@ -335,9 +367,10 @@ public class DustLayerView : View {
 }
 
 public func ApplyDustAnimation(for currentView: NSView) {
-    guard let window = currentView.window else {
+    guard let window = currentView.window, isChipM2OrHigher() else {
         return
     }
+    
     #if arch(arm64)
 //    if MetalEngine.shared.rootLayer.superlayer == nil {
     window.contentView?.layer?.addSublayer(MetalEngine.shared.rootLayer)
@@ -359,7 +392,7 @@ public func ApplyDustAnimation(for currentView: NSView) {
 }
 
 public func ApplyDustAnimations(for views: [NSView], superview: DustLayerView? = nil) -> DustLayerView? {
-    guard let window = views.first?.window else {
+    guard let window = views.first?.window, isChipM2OrHigher() else {
         return nil
     }
     #if arch(arm64)

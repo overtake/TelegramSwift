@@ -1484,7 +1484,7 @@ class WallpaperPreviewController: ModalViewController {
     private func applyAndClose(bothPeer: Bool = false) {
        
         if case .chat = source, !context.isPremium, bothPeer {
-            showModal(with: PremiumBoardingController(context: context, openFeatures: true), for: context.window)
+            prem(with: PremiumBoardingController(context: context, openFeatures: true), for: context.window)
             return
         }
         

@@ -58,7 +58,7 @@ class ChatServiceItem: ChatRowItem {
         }
         
         var height: CGFloat {
-            var height = 150 + text.layoutSize.height + 15
+            var height = 170 + text.layoutSize.height + 15
             if let info {
                 height += 4 + info.layoutSize.height
             }
@@ -163,7 +163,7 @@ class ChatServiceItem: ChatRowItem {
         if let giftData {
             switch giftData.source {
             case let .premium(months):
-                showModal(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
                 let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: .gift), for: context.window)
@@ -1359,7 +1359,7 @@ class ChatServiceItem: ChatRowItem {
         let limit = context.appConfiguration.getGeneralValue("recommended_channels_limit_premium", orElse: 0)
 
         showModalText(for: context.window, text: strings().similarChannelAlertText(Int(limit)), callback: { _ in
-            showModal(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .recommended_channels), for: context.window)
         })
     }
     func dismissRecommendedChannels() {
@@ -1603,7 +1603,7 @@ class ChatServiceRowView: TableRowView {
             button.userInteractionEnabled = false
             button.set(font: .medium(.text), for: .Normal)
             button.set(color: item.presentation.chatServiceItemTextColor, for: .Normal)
-            button.set(background: item.shouldBlurService ? item.presentation.blurServiceColor : item.presentation.chatServiceItemColor, for: .Normal)
+            button.set(background: item.shouldBlurService ? item.presentation.blurServiceColor.withAlphaComponent(0.2) : item.presentation.chatServiceItemColor, for: .Normal)
             button.set(text: strings().chatServiceGiftView, for: .Normal)
             button.sizeToFit(NSMakeSize(20, 14))
             button.layer?.cornerRadius = button.frame.height / 2
@@ -1684,8 +1684,8 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            stickerView.centerX(y: 0)
-            textView.centerX(y: stickerView.frame.height)
+            stickerView.centerX(y: 10)
+            textView.centerX(y: stickerView.frame.maxY + 10)
             if let infoView {
                 infoView.centerX(y: textView.frame.maxY + 4)
             }

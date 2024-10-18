@@ -638,24 +638,39 @@ class MainViewController: TelegramViewController {
         }
     }
     
-    func globalSearch(_ query: String, peerId: PeerId?) {
+    func globalSearch(_ query: String, peerId: PeerId?, cached: CachedSearchMessages?) {
+        
+        var query = query
+        
+        let result = extractHashtagAndUsername(from: query)
+        
+        let peerSignal: Signal<EnginePeer?, NoError>
+        
+        if let username = result?.username {
+            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { value in
+                switch value {
+                case let .result(peer):
+                    return .single(peer)
+                case .progress:
+                    return .never()
+                }
+            } |> deliverOnMainQueue
+            query = result?.hashtag ?? query
+        } else if let peerId {
+            peerSignal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+        } else {
+            peerSignal = .single(nil)
+        }
+        
         let controller = navigation.empty
         if let controller = controller as? ChatListController {
-            if let peerId {
-                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
-                    controller?.globalSearch(query, peer: value)
-                })
-            } else {
-                controller.globalSearch(query, peer: nil)
-            }
+            _ = peerSignal.startStandalone(next: { [weak controller] value in
+                controller?.globalSearch(query, peer: value, cached: cached, isSuperTag: result != nil)
+            })
         } else if let tabbar = controller as? TabBarController, let controller = tabbar.current as? ChatListController {
-            if let peerId {
-                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
-                    controller?.globalSearch(query, peer: value)
-                })
-            } else {
-                controller.globalSearch(query, peer: nil)
-            }
+            _ = peerSignal.startStandalone(next: { [weak controller] value in
+                controller?.globalSearch(query, peer: value, cached: cached, isSuperTag: result != nil)
+            })
         }
     }
     

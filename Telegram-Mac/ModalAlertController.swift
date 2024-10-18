@@ -10,6 +10,7 @@ import Foundation
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import TelegramCore
 
 private final class Arguments {
     let presentation: TelegramPresentationTheme
@@ -39,6 +40,117 @@ private struct State : Equatable {
     }
 }
 
+final class AlertHeaderItem : TableRowItem {
+    fileprivate let context: AccountContext
+    fileprivate let title: TextViewLayout
+    fileprivate let info: TextViewLayout?
+    fileprivate let peer: EnginePeer
+    init(_ initialSize: NSSize, stableId: AnyHashable, presentation: TelegramPresentationTheme, context: AccountContext, peer: EnginePeer, info: String?, callback:((String)->Void)? = nil) {
+        self.context = context
+        self.peer = peer
+        self.title = .init(.initialize(string: peer._asPeer().displayTitle, color: presentation.colors.text, font: .medium(.header)), alignment: .center)
+        
+        if let info {
+            let infoAttr = parseMarkdownIntoAttributedString(info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.darkGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.darkGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })).mutableCopy() as! NSMutableAttributedString
+            
+            infoAttr.detectBoldColorInString(with: .medium(.text))
+
+            self.info = .init(infoAttr, alignment: .center)
+            
+            self.info?.interactions.processURL = { url in
+                callback?(url as! String)
+            }
+        } else {
+            self.info = nil
+        }
+        
+        super.init(initialSize, stableId: stableId)
+        
+        self.title.measure(width: initialSize.width - 40)
+        self.info?.measure(width: initialSize.width - 40)
+    }
+    
+    override var height: CGFloat {
+        var height = 20 + 50 + 10 + title.layoutSize.height
+        if let info {
+            height += 5 + info.layoutSize.height
+        }
+        return height
+    }
+    
+    override func viewClass() -> AnyClass {
+        return AlertHeaderView.self
+    }
+}
+
+private final class AlertHeaderView : TableRowView {
+    private let avatar = AvatarControl(font: .avatar(18))
+    private let titleView = TextView()
+    private let infoView = TextView()
+    private let titleContainer = View()
+    private var statusControl: PremiumStatusControl?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        avatar.setFrameSize(NSMakeSize(50, 50))
+        addSubview(avatar)
+        
+        titleView.isSelectable = false
+        infoView.isSelectable = false
+        
+        titleContainer.addSubview(titleView)
+        addSubview(titleContainer)
+        addSubview(infoView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? AlertHeaderItem else {
+            return
+        }
+        
+        let control = PremiumStatusControl.control(item.peer._asPeer(), account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        if let control = control {
+            self.statusControl = control
+            titleContainer.addSubview(control)
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
+        }
+        
+        
+        self.avatar.setPeer(account: item.context.account, peer: item.peer._asPeer())
+        titleView.update(item.title)
+        infoView.update(item.info)
+        
+        titleContainer.setFrameSize(titleContainer.subviewsWidthSize)
+        titleContainer.layer?.masksToBounds = false
+
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        avatar.centerX(y: 20)
+        titleContainer.centerX(y: avatar.frame.maxY + 10)
+        titleView.setFrameOrigin(NSMakePoint(0, 0))
+        
+        statusControl?.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 4, titleView.frame.minY))
+        
+        infoView.centerX(y: titleContainer.frame.maxY + 5)
+    }
+}
 
 
 private final class RowItem : TableRowItem {
@@ -76,12 +188,20 @@ private final class RowItem : TableRowItem {
         self.secondAction = secondAction
         if !state.data.info.isEmpty {
             let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.darkGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.darkGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
-                return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
+                return (NSAttributedString.Key.link.rawValue, inApp(for: contents.nsstring, context: appDelegate?.currentContext, openInfo: { peerId, _, _, _ in
+                    if let context = appDelegate?.currentContext {
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
+                    }
+                }))
             })).mutableCopy() as! NSMutableAttributedString
             
             info.detectBoldColorInString(with: .medium(.text))
             self.info = .init(info, alignment: .center, alwaysStaticItems: true)
-            self.info?.interactions = globalLinkExecutor
+            self.info?.interactions.processURL = { url in
+                globalLinkExecutor.processURL(url)
+                closeAllModals()
+            }
+            
 
         } else {
             self.info = nil
@@ -513,6 +633,12 @@ private final class RowView : TableRowView {
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
+    if let header = state.data.header {
+        entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("header"), equatable: .init(header), comparable: nil, item: { initialSize, stableId in
+            return header.value(initialSize, stableId, arguments.presentation)
+        }))
+    }
+    
     entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return RowItem(initialSize, presentation: arguments.presentation, state: state, toggle: arguments.toggle, action: arguments.action, secondAction: arguments.secondAction)
     }))
@@ -522,6 +648,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
 struct ModalAlertData : Equatable {
+    
+    struct Header : Equatable {
+        var value:(NSSize, AnyHashable, TelegramPresentationTheme)->TableRowItem
+        
+        static func ==(lhs: Header, rhs: Header) -> Bool {
+            return true
+        }
+    }
+    
     enum Mode : Equatable {
         case alert
         case confirm(text: String, isThird: Bool)
@@ -544,6 +679,8 @@ struct ModalAlertData : Equatable {
     var mode: Mode = .alert
     
     var disclaimer: String?
+    
+    var header: Header?
     
     var hasClose: Bool {
         switch mode {

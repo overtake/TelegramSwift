@@ -114,7 +114,7 @@ struct PeerListState : Equatable {
             case .apps:
                 return SearchTags(messageTags: nil, peerTag: nil, listType: .bots)
             case .hashtagThisChat:
-                return SearchTags(messageTags: nil, peerTag: hashtag?.peerId, text: hashtag?.text, publicPosts: false, myMessages: false)
+                return SearchTags(messageTags: nil, peerTag: hashtag?.peer?.id, text: hashtag?.text, publicPosts: false, myMessages: false)
             case .hashtagMyMessages:
                 return SearchTags(messageTags: nil, peerTag: nil, text: hashtag?.text, publicPosts: false, myMessages: true)
             case .hashtagPublicPosts:
@@ -280,6 +280,7 @@ struct PeerListState : Equatable {
     var connectionStatus: ConnectionStatus
     var splitState: SplitViewState
     var searchState: SearchFieldState = .None
+    var searchQuery: String = ""
     var peer: PeerEquatable?
     var forumPeer: ForumData?
     var mode: PeerListMode
@@ -302,7 +303,7 @@ struct PeerListState : Equatable {
     
     struct Hashtag : Equatable {
         var mode: SelectedSearchTag
-        var peerId: PeerId?
+        var peer: EnginePeer?
         var text: String
     }
     
@@ -1297,13 +1298,13 @@ class PeerListContainerView : Control {
         
        
         var tags: [SearchView.TagInfo] = []
-        if let peerTag = state.peerTag {
-            tags.append(.init(text: peerTag._asPeer().compactDisplayTitle.prefixWithDots(10)))
-        }
-        if let hashtag = state.hashtag {
-            tags.append(.init(text: hashtag.text, blockInput: true, isTextTied: true))
-        }
-        self.searchView.updateTags(tags, theme.search.searchImage)
+//        if let peerTag = state.peerTag {
+//            tags.append(.init(text: peerTag._asPeer().compactDisplayTitle.prefixWithDots(10)))
+//        }
+//        if let hashtag = state.hashtag {
+//            tags.append(.init(text: hashtag.text, isVisible: false))
+//        }
+//        self.searchView.updateTags(tags, theme.search.searchImage)
         
         if state.mode.groupId == .archive || (state.selectedForum != nil && state.splitState != .minimisize) || state.mode.isForumLike  || state.appear == .short {
             let current: ImageButton
@@ -2019,10 +2020,16 @@ private class SearchContainer : Control {
             let insets = NSEdgeInsets(left: 10, right: 10)
             var index: Int = 0
             
-            if state.hashtag?.peerId != nil {
+            if let peer = state.hashtag?.peer {
                 let tags: [PeerListState.SelectedSearchTag] = [.hashtagThisChat, .hashtagMyMessages, .hashtagPublicPosts]
                 for tag in tags {
-                    items.append(.init(title: tag.title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    let title: String
+                    if tag == .hashtagThisChat {
+                        title = peer._asPeer().compactDisplayTitle
+                    } else {
+                        title = tag.title
+                    }
+                    items.append(.init(title: title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                 }
             } else {
@@ -2219,17 +2226,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    
-    private func updateSearchRequest(_ string: String) {
-        if let searchSection {
-            for section in searchSection.sections {
-                if let controller = section.controller as? SearchController, controller.isLoaded() {
-                    controller.request(with: string)
-                }
-            }
-        }
-    }
-    
     func updatePinnedItems(_ items: [PinnedItemId]) {
         if let searchSection {
             for section in searchSection.sections {
@@ -2250,16 +2246,28 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    func makeHashtag(_ hashtag: PeerListState.Hashtag) {
+    func makeHashtag(_ hashtag: PeerListState.Hashtag, cached: CachedSearchMessages? = nil) {
         self.updateState { current in
             var current = current
             current.hashtag = hashtag
             current.selectedTag = hashtag.mode
             return current
         }
-        if hashtag.peerId == nil {
+
+        self.genericView.searchView.setString(hashtag.text)
+
+        if hashtag.peer == nil {
+                        
+            if let cached {
+                let section = self.searchSection?.sections.first(where:  {
+                    $0.title() == "\(PeerListState.SelectedSearchTag.hashtagPublicPosts.rawValue)"
+                })?.controller as? SearchController
+                
+                section?.setCachedMessages(cached)
+            }
+            
             self.takeArguments()?.selectSearchTag(.hashtagPublicPosts)
-            self.genericView.searchView.setString("")
+
         }
     }
     
@@ -2545,13 +2553,29 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
             }
         }
-
-        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+        
+        let updateSearch:(SearchState)->Void = { [weak self] state in
             updateState { current in
                 var current = current
                 current.searchState = state.state
+                current.searchQuery = state.request
+                if !current.searchQuery.hasPrefix("#") && !current.searchQuery.hasPrefix("$"), current.hashtag != nil {
+                    current.hashtag = nil
+                    current.peerTag = nil
+                    current.selectedTag = .chats
+                }
                 return current
             }
+            let selected = self?.state?.selectedTag ?? .chats
+            let sectionIndex = self?.searchSection?.sections.firstIndex(where: { $0.title() == "\(selected.rawValue)" })
+            
+            if let sectionIndex {
+                self?.searchSection?.select(sectionIndex, true)
+            }
+        }
+
+        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+            updateSearch(state)
             switch state.state {
             case .Focus:
                 self?.showSearchController(animated: animated)
@@ -2559,14 +2583,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             case .None:
                 self?.hideSearchController(animated: animated)
             }
-        }, { [weak self] state in
-            updateState { current in
-                var current = current
-                current.searchState = state.state
-                return current
-            }
-            self?.updateSearchRequest(state.request)
-        }, responderModified: { [weak self] state in
+        }, updateSearch, responderModified: { [weak self] state in
             self?.context.isInGlobalSearch = state.responder
         })
         
@@ -2838,6 +2855,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 if let controller = section.controller as? SearchController {
                     if let tagRawValue = Int32(section.title()), let tag = PeerListState.SelectedSearchTag(rawValue: tagRawValue) {
                         controller.updateSearchTags(tag.searchTags(state.peerTag?.id, hashtag: state.hashtag))
+                        if tag == state.selectedTag {
+                            controller.request(with: state.searchQuery)
+                        }
                     }
                 }
             }
@@ -2937,7 +2957,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         self?.genericView.searchView.cancel(true)
                     }
                 }, options: self.searchOptions, frame: rect, target: target, tags: initialTags)
-                searchController.defaultQuery = self.genericView.searchView.query
+//                searchController.defaultQuery = self.genericView.searchView.query
                 searchController.pinnedItems = self.collectPinnedItems
                     
                 searchController.setPeerAsTag = { [weak self] peer in
@@ -2964,7 +2984,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                             self?.genericView.searchView.cancel(true)
                         }
                     }, options: tag.searchOptions, frame: rect, target: target, tags: tag.searchTags(state.peerTag?.id, hashtag: state.hashtag))
-                    searchController.defaultQuery = self.genericView.searchView.query
+//                    searchController.defaultQuery = self.genericView.searchView.query
                     searchController.pinnedItems = self.collectPinnedItems
                     
                     searchController.navigationController = self.navigationController

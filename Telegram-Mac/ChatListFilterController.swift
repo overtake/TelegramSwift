@@ -1522,7 +1522,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     }, toggleColor: { color in
         if let _ = color, !context.isPremium {
             showModalText(for: context.window, text: strings().chatListFolderPremiumAlert, button: strings().alertLearnMore, callback: { _ in
-                showModal(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
             })
         } else {
             updateState { current in

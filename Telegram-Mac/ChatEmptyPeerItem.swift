@@ -184,7 +184,7 @@ class ChatEmptyPeerItem: TableRowItem {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
                         attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
-                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil, nil)
                         }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
@@ -195,7 +195,7 @@ class ChatEmptyPeerItem: TableRowItem {
                         _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
                         attr.detectBoldColorInString(with: .medium(.text))
                         attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
-                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil, nil)
                         }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .center)
@@ -453,7 +453,7 @@ class ChatEmptyPeerView : TableRowView {
                     
                     current.set(handler: { [weak item] _ in
                         if let context = item?.chatInteraction.context {
-                            showModal(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
                         }
                     }, for: .Click)
                 }
@@ -478,7 +478,7 @@ class ChatEmptyPeerView : TableRowView {
                     
                     current.set(handler: { [weak item] _ in
                         if let context = item?.chatInteraction.context {
-                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            prem(with: PremiumBoardingController(context: context), for: context.window)
                         }
                     }, for: .Click)
                 }

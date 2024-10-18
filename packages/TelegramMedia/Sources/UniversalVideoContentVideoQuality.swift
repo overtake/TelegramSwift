@@ -1,3 +1,4 @@
+
 //
 //  UniversalVideo.swift
 //  Telegram
@@ -7,7 +8,6 @@
 //
 
 import Foundation
-import TelegramMedia
 import MediaPlayer
 import SwiftSignalKit
 import TelegramMediaPlayer
@@ -15,6 +15,7 @@ import RangeSet
 import TGUIKit
 import Postbox
 import TelegramCore
+import AppKit
 
 public enum UniversalVideoContentVideoQuality: Equatable {
     case auto
@@ -56,8 +57,6 @@ public protocol UniversalVideoContent {
     var dimensions: CGSize { get }
     var duration: Double { get }
     
-    func makeContentView(accountId: AccountRecordId, postbox: Postbox) -> (NSView & UniversalVideoContentView)
-
     func isEqual(to other: UniversalVideoContent) -> Bool
 }
 

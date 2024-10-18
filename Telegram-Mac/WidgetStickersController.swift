@@ -88,7 +88,7 @@ final class WidgetStickersContainer : View {
         self.context = context
         
         
-        runTimer()
+      //  runTimer()
         
         if !animated || stickers.subviews.isEmpty {
             self.reload(state, context: context, animated: animated)
@@ -97,18 +97,17 @@ final class WidgetStickersContainer : View {
         updateLocalizationAndTheme(theme: theme)
     }
     
-    private func runTimer() {
-        timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
-            guard let context = self?.context, let state = self?.state else {
-                return
-            }
-            self?.reload(state, context: context, animated: true)
-        }, queue: .mainQueue())
-        timer?.start()
-    }
+//    private func runTimer() {
+//        timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
+//            guard let context = self?.context, let state = self?.state else {
+//                return
+//            }
+//            self?.reload(state, context: context, animated: true)
+//        }, queue: .mainQueue())
+//        timer?.start()
+//    }
     
     func reload(ignore: Int? = nil) {
-        runTimer()
         guard let context = self.context, let state = self.state else {
             return
         }
