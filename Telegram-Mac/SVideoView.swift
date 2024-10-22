@@ -13,6 +13,7 @@ import ColorPalette
 import RangeSet
 import TelegramMedia
 import TelegramMediaPlayer
+import TelegramCore
 
 private func selectBestQualityIcon(for quality: UniversalVideoContentVideoQuality) -> NSImage {
     
@@ -43,7 +44,7 @@ private func selectBestQualityIcon(for quality: UniversalVideoContentVideoQualit
     
 }
 
-private func roundToStandardQuality(size: Int) -> Int {
+func roundToStandardQuality(size: Int) -> Int {
     // List of standard video qualities
     let standardQualities = [360, 480, 720, 1080, 1440, 2160]
     
@@ -1161,18 +1162,6 @@ class SVideoView: NSView {
             }
             menu.delegate = menu
             
-            if let mediaPlayer = self?.mediaPlayer, let quality = mediaPlayer.videoQualityState() {
-                menu.addItem(ContextMenuItem(strings().videoQualityAuto, handler: { [weak mediaPlayer] in
-                    mediaPlayer?.setVideoQuality(.auto)
-                }, state: quality.preferred == .auto ? .on : nil))
-                
-                for value in quality.available {
-                    menu.addItem(ContextMenuItem("\(roundToStandardQuality(size: value))p", handler: { [weak mediaPlayer] in
-                        mediaPlayer?.setVideoQuality(.quality(value))
-                    }, state: quality.preferred == .quality(value) ? .on : nil))
-                }
-                menu.addItem(ContextSeparatorItem())
-            }
             
             let customItem = ContextMenuItem(String(format: "%.1fx", FastSettings.playingVideoRate), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
             
@@ -1191,6 +1180,22 @@ class SVideoView: NSView {
                     self?.controls.updateBaseRate()
                 }, itemImage: MenuAnimation.menu_reset.value))
             }
+            
+            menu.addItem(ContextSeparatorItem())
+
+            
+            if let mediaPlayer = self?.mediaPlayer, let quality = mediaPlayer.videoQualityState() {
+                menu.addItem(ContextMenuItem(strings().videoQualityAuto, handler: { [weak mediaPlayer] in
+                    mediaPlayer?.setVideoQuality(.auto)
+                }, state: quality.preferred == .auto ? .on : nil))
+                
+                for value in quality.available {
+                    menu.addItem(ContextMenuItem("\(roundToStandardQuality(size: value))p", handler: { [weak mediaPlayer] in
+                        mediaPlayer?.setVideoQuality(.quality(value))
+                    }, state: quality.preferred == .quality(value) ? .on : nil))
+                }
+            }
+
             
             menu.appearance = darkPalette.appearance
             return menu

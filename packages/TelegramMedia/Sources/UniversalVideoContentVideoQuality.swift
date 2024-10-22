@@ -30,6 +30,8 @@ public protocol UniversalVideoContentView: AnyObject {
     var status: Signal<MediaPlayerStatus, NoError> { get }
     var bufferingStatus: Signal<(RangeSet<Int64>, Int64)?, NoError> { get }
         
+    var fileRef: FileMediaReference { get }
+    
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
     
     func play()
@@ -51,6 +53,17 @@ public protocol UniversalVideoContentView: AnyObject {
     
     
 }
+public func isHLSVideo(file: TelegramMediaFile) -> Bool {
+    for alternativeRepresentation in file.alternativeRepresentations {
+        if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
+            if alternativeFile.mimeType == "application/x-mpegurl" {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 
 public protocol UniversalVideoContent {
     var id: AnyHashable { get }

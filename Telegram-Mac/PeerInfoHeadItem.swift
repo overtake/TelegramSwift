@@ -1212,7 +1212,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 if let stories = item.stories, !stories.items.isEmpty {
                     item.openPeerStory()
                 } else {
-                    if let peer = item.peer, let _ = peer.largeProfileImage {
+                    if let peer = item.peer, let _ = peer.largeProfileImage, self?.topicPhotoView == nil {
                         showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
                     }
                 }

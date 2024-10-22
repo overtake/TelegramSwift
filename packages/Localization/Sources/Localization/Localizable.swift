@@ -8595,6 +8595,10 @@ public final class L10n {
   public static var errorUsernameUnderscopeEnd: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeEnd") }
   /// A username can't start with an underscore.
   public static var errorUsernameUnderscopeStart: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeStart") }
+  /// %@ added media:
+  public static func eventLogServiceAddedMedia(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.AddedMedia", p1)
+  }
   /// %1$@ and %2$@
   public static func eventLogServiceAnd(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.And", p1, p2)
@@ -9077,12 +9081,20 @@ public final class L10n {
   public static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
   /// Set As Main Photo
   public static var galleryContextMainPhoto: String  { return L10n.tr("Localizable", "Gallery.Context.MainPhoto") }
+  /// Original
+  public static var galleryContextOriginal: String  { return L10n.tr("Localizable", "Gallery.Context.Original") }
   /// Save As...
   public static var galleryContextSaveAs: String  { return L10n.tr("Localizable", "Gallery.Context.SaveAs") }
+  /// Save Video
+  public static var galleryContextSaveVideo: String  { return L10n.tr("Localizable", "Gallery.Context.SaveVideo") }
   /// Shared Media
   public static var galleryContextShowGallery: String  { return L10n.tr("Localizable", "Gallery.Context.ShowGallery") }
   /// Show Message
   public static var galleryContextShowMessage: String  { return L10n.tr("Localizable", "Gallery.Context.ShowMessage") }
+  /// Downloaded. [Show in Finder](finder)
+  public static var galleryContextAlertDownloaded: String  { return L10n.tr("Localizable", "Gallery.Context.Alert.Downloaded") }
+  /// Downloading. [Show in Manager](manager)
+  public static var galleryContextAlertDownloading: String  { return L10n.tr("Localizable", "Gallery.Context.Alert.Downloading") }
   /// %d
   public static func galleryContextShareAllItemsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Gallery.Context.Share.AllItems_countable", p1)
@@ -10069,6 +10081,14 @@ public final class L10n {
   public static var inputAttachPopoverPoll: String  { return L10n.tr("Localizable", "InputAttach.Popover.Poll") }
   /// Video
   public static var inputAttachPopoverVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.Video") }
+  /// searches posts from all channels
+  public static var inputContextHashtashHelpBasic: String  { return L10n.tr("Localizable", "InputContext.HashtashHelp.Basic") }
+  /// searches only posts from this channel
+  public static var inputContextHashtashHelpChannel: String  { return L10n.tr("Localizable", "InputContext.HashtashHelp.Channel") }
+  /// Use #%@
+  public static func inputContextHashtashHelpUse(_ p1: String) -> String {
+    return L10n.tr("Localizable", "InputContext.HashtashHelp.Use", p1)
+  }
   /// Day:
   public static var inputDataDateDayPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Day.Placeholder") }
   /// Day

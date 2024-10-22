@@ -56,8 +56,6 @@ public enum PlatformVideoContentId: Hashable {
 
 
 
-
-@available(macOS 14.0, *)
 public final class HLSVideoContent : UniversalVideoContent {
     public let id: AnyHashable
     public let nativeId: PlatformVideoContentId
@@ -99,116 +97,116 @@ public final class HLSVideoContent : UniversalVideoContent {
     }
     
     public static func minimizedHLSQuality(file: FileMediaReference) -> (playlist: FileMediaReference, file: FileMediaReference)? {
-           guard let qualitySet = HLSQualitySet(baseFile: file) else {
-               return nil
-           }
-           for (quality, qualityFile) in qualitySet.qualityFiles.sorted(by: { $0.key < $1.key }) {
-               if quality >= 400 {
-                   guard let playlistFile = qualitySet.playlistFiles[quality] else {
-                       return nil
-                   }
-                   return (playlistFile, qualityFile)
-               }
-           }
-           return nil
-       }
+        guard let qualitySet = HLSQualitySet(baseFile: file) else {
+            return nil
+        }
+        for (quality, qualityFile) in qualitySet.qualityFiles.sorted(by: { $0.key < $1.key }) {
+            if quality >= 400 {
+                guard let playlistFile = qualitySet.playlistFiles[quality] else {
+                    return nil
+                }
+                return (playlistFile, qualityFile)
+            }
+        }
+        return nil
+    }
        
-       public static func minimizedHLSQualityPreloadData(postbox: Postbox, file: FileMediaReference, userLocation: MediaResourceUserLocation, prefixSeconds: Int, autofetchPlaylist: Bool) -> Signal<(FileMediaReference, Range<Int64>)?, NoError> {
-           guard let fileSet = minimizedHLSQuality(file: file) else {
-               return .single(nil)
-           }
-           
-           let playlistData: Signal<Range<Int64>?, NoError> = Signal { subscriber in
-               var fetchDisposable: Disposable?
-               if autofetchPlaylist {
-                   
-                   
-                   fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: userLocation, userContentType: MediaResourceUserContentType(file: fileSet.playlist.media), reference: fileSet.playlist.resourceReference(fileSet.playlist.media.resource)).start()
-               }
-               let dataDisposable = postbox.mediaBox.resourceData(fileSet.playlist.media.resource).start(next: { data in
-                   if !data.complete {
-                       return
-                   }
-                   guard let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) else {
-                       subscriber.putNext(nil)
-                       subscriber.putCompletion()
-                       return
-                   }
-                   guard let playlistString = String(data: data, encoding: .utf8) else {
-                       subscriber.putNext(nil)
-                       subscriber.putCompletion()
-                       return
-                   }
-                   
-                   var durations: [Int] = []
-                   var byteRanges: [Range<Int>] = []
-                   
-                   let extinfRegex = try! NSRegularExpression(pattern: "EXTINF:(\\d+)", options: [])
-                   let byteRangeRegex = try! NSRegularExpression(pattern: "EXT-X-BYTERANGE:(\\d+)@(\\d+)", options: [])
-                   
-                   let extinfResults = extinfRegex.matches(in: playlistString, range: NSRange(playlistString.startIndex..., in: playlistString))
-                   for result in extinfResults {
-                       if let durationRange = Range(result.range(at: 1), in: playlistString) {
-                           if let duration = Int(String(playlistString[durationRange])) {
-                               durations.append(duration)
-                           }
-                       }
-                   }
-                   
-                   let byteRangeResults = byteRangeRegex.matches(in: playlistString, range: NSRange(playlistString.startIndex..., in: playlistString))
-                   for result in byteRangeResults {
-                       if let lengthRange = Range(result.range(at: 1), in: playlistString), let upperBoundRange = Range(result.range(at: 2), in: playlistString) {
-                           if let length = Int(String(playlistString[lengthRange])), let lowerBound = Int(String(playlistString[upperBoundRange])) {
-                               byteRanges.append(lowerBound ..< (lowerBound + length))
-                           }
-                       }
-                   }
-                   
-                   if durations.count != byteRanges.count {
-                       subscriber.putNext(nil)
-                       subscriber.putCompletion()
-                       return
-                   }
-                   
-                   var rangeUpperBound: Int64 = 0
-                   var remainingSeconds = prefixSeconds
-                   
-                   for i in 0 ..< durations.count {
-                       if remainingSeconds <= 0 {
-                           break
-                       }
-                       let duration = durations[i]
-                       let byteRange = byteRanges[i]
-                       
-                       remainingSeconds -= duration
-                       rangeUpperBound = max(rangeUpperBound, Int64(byteRange.upperBound))
-                   }
-                   
-                   if rangeUpperBound != 0 {
-                       subscriber.putNext(0 ..< rangeUpperBound)
-                       subscriber.putCompletion()
-                   } else {
-                       subscriber.putNext(nil)
-                       subscriber.putCompletion()
-                   }
-                   
-                   return
-               })
-               
-               return ActionDisposable {
-                   fetchDisposable?.dispose()
-                   dataDisposable.dispose()
-               }
-           }
-           
-           return playlistData
-           |> map { range -> (FileMediaReference, Range<Int64>)? in
-               guard let range else {
-                   return nil
-               }
-               return (fileSet.file, range)
-           }
-       }
+    public static func minimizedHLSQualityPreloadData(postbox: Postbox, file: FileMediaReference, userLocation: MediaResourceUserLocation, prefixSeconds: Int, autofetchPlaylist: Bool) -> Signal<(FileMediaReference, Range<Int64>)?, NoError> {
+        guard let fileSet = minimizedHLSQuality(file: file) else {
+            return .single(nil)
+        }
+        
+        let playlistData: Signal<Range<Int64>?, NoError> = Signal { subscriber in
+            var fetchDisposable: Disposable?
+            if autofetchPlaylist {
+                
+                
+                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: userLocation, userContentType: MediaResourceUserContentType(file: fileSet.playlist.media), reference: fileSet.playlist.resourceReference(fileSet.playlist.media.resource)).start()
+            }
+            let dataDisposable = postbox.mediaBox.resourceData(fileSet.playlist.media.resource).start(next: { data in
+                if !data.complete {
+                    return
+                }
+                guard let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) else {
+                    subscriber.putNext(nil)
+                    subscriber.putCompletion()
+                    return
+                }
+                guard let playlistString = String(data: data, encoding: .utf8) else {
+                    subscriber.putNext(nil)
+                    subscriber.putCompletion()
+                    return
+                }
+                
+                var durations: [Int] = []
+                var byteRanges: [Range<Int>] = []
+                
+                let extinfRegex = try! NSRegularExpression(pattern: "EXTINF:(\\d+)", options: [])
+                let byteRangeRegex = try! NSRegularExpression(pattern: "EXT-X-BYTERANGE:(\\d+)@(\\d+)", options: [])
+                
+                let extinfResults = extinfRegex.matches(in: playlistString, range: NSRange(playlistString.startIndex..., in: playlistString))
+                for result in extinfResults {
+                    if let durationRange = Range(result.range(at: 1), in: playlistString) {
+                        if let duration = Int(String(playlistString[durationRange])) {
+                            durations.append(duration)
+                        }
+                    }
+                }
+                
+                let byteRangeResults = byteRangeRegex.matches(in: playlistString, range: NSRange(playlistString.startIndex..., in: playlistString))
+                for result in byteRangeResults {
+                    if let lengthRange = Range(result.range(at: 1), in: playlistString), let upperBoundRange = Range(result.range(at: 2), in: playlistString) {
+                        if let length = Int(String(playlistString[lengthRange])), let lowerBound = Int(String(playlistString[upperBoundRange])) {
+                            byteRanges.append(lowerBound ..< (lowerBound + length))
+                        }
+                    }
+                }
+                
+                if durations.count != byteRanges.count {
+                    subscriber.putNext(nil)
+                    subscriber.putCompletion()
+                    return
+                }
+                
+                var rangeUpperBound: Int64 = 0
+                var remainingSeconds = prefixSeconds
+                
+                for i in 0 ..< durations.count {
+                    if remainingSeconds <= 0 {
+                        break
+                    }
+                    let duration = durations[i]
+                    let byteRange = byteRanges[i]
+                    
+                    remainingSeconds -= duration
+                    rangeUpperBound = max(rangeUpperBound, Int64(byteRange.upperBound))
+                }
+                
+                if rangeUpperBound != 0 {
+                    subscriber.putNext(0 ..< rangeUpperBound)
+                    subscriber.putCompletion()
+                } else {
+                    subscriber.putNext(nil)
+                    subscriber.putCompletion()
+                }
+                
+                return
+            })
+            
+            return ActionDisposable {
+                fetchDisposable?.dispose()
+                dataDisposable.dispose()
+            }
+        }
+        
+        return playlistData
+        |> map { range -> (FileMediaReference, Range<Int64>)? in
+            guard let range else {
+                return nil
+            }
+            return (fileSet.file, range)
+        }
+    }
 
 
 }

@@ -362,7 +362,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 private extension SearchStoryListContext.Source {
     var title: String {
         switch self {
-        case .hashtag(let string):
+        case .hashtag(_, let string):
             return string
         case .mediaArea:
             return strings().storyLocationTitle

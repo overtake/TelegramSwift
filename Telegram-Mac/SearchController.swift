@@ -1806,7 +1806,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             StoryModalController.ShowStories(context: context, isHidden: false, initialId: index, singlePeer: true)
         }, openStorySearch: { [weak self] state in
             if let query = self?.query {
-                showModal(with: StoryFoundListController(context: context, source: .hashtag(query), presentation: theme, existingsContext: self?.globalStorySearchContext), for: context.window)
+                showModal(with: StoryFoundListController(context: context, source: .hashtag(self?.searchTags?.peerTag, query), presentation: theme, existingsContext: self?.globalStorySearchContext), for: context.window)
             }
         })
         
@@ -1844,8 +1844,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             searchQuery.set(nil)
         }
         
-        if let query, query.hasPrefix("#") || query.hasPrefix("$"), query.length > 1, self.searchTags?.publicPosts == true {
-            let globalStorySearchContext = SearchStoryListContext(account: context.account, source: .hashtag(query))
+        if let query, query.hasPrefix("#") || query.hasPrefix("$"), query.length > 1, self.searchTags?.publicPosts == true || self.searchTags?.peerTag != nil {
+            let globalStorySearchContext = SearchStoryListContext(account: context.account, source: .hashtag(self.searchTags?.peerTag, query))
             
             self.globalStorySearchContext = globalStorySearchContext
             self.globalStorySearchState.set(globalStorySearchContext.state |> map(Optional.init))

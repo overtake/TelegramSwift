@@ -28,6 +28,10 @@ final class NativeMediaPlayer : View, UniversalVideoContentView {
     private let reference: FileMediaReference
     private let playbackCompletedListeners = Bag<() -> Void>()
     private let fetchDisposable = MetaDisposable()
+    
+    public var fileRef: FileMediaReference {
+        return self.reference
+    }
 
     init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false) {
         self.postbox = postbox
@@ -38,6 +42,16 @@ final class NativeMediaPlayer : View, UniversalVideoContentView {
         mediaPlayer.attachPlayerView(mediaPlayerView)
         
         addSubview(mediaPlayerView)
+        
+        mediaPlayer.actionAtEnd = .action({ [weak self] in
+            self?.performActionAtEnd()
+        })
+    }
+    
+    private func performActionAtEnd() {
+        for listener in self.playbackCompletedListeners.copyItems() {
+            listener()
+        }
     }
     
     

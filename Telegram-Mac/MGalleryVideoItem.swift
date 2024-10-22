@@ -15,6 +15,7 @@ import SwiftSignalKit
 import TGUIKit
 import AVFoundation
 import AVKit
+import TelegramMedia
 
 class MGalleryVideoItem: MGalleryItem {
     var startTime: TimeInterval = 0
@@ -38,6 +39,11 @@ class MGalleryVideoItem: MGalleryItem {
             }
         } |> deliverOnMainQueue
     }
+    
+    func videoQualityState() -> (current: Int, preferred: UniversalVideoContentVideoQuality, available: [Int])? {
+        return controller.mediaPlayer.videoQualityState()
+    }
+    
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         controller = SVideoController(account: context.account, reference: entry.fileReference(entry.file!), isProtected: entry.isProtected, isControlsLimited: entry.message?.adAttribute != nil)
         super.init(context, entry, pagerSize)

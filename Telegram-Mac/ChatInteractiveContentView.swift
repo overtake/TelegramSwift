@@ -632,12 +632,15 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         let isStreamable: Bool
         if let parent = parent {
-            isStreamable = !parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) && file.isStreamable
+            isStreamable = !parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) && file.isStreamable && !isHLSVideo(file: file)
         } else {
-            isStreamable = file.isStreamable
+            isStreamable = file.isStreamable && !isHLSVideo(file: file)
         }
         
-        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil || file.isAnimated || frame.width < 200, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
+        let isCompact = parent?.groupingKey != nil || file.isAnimated || frame.width < 200 || isHLSVideo(file: file)
+        
+        
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: isCompact, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
             self?.fetch(userInitiated: true)
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
@@ -1029,12 +1032,22 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         
                         
                         if let file = strongSelf.media as? TelegramMediaFile, strongSelf.autoplayVideo {
+                            
+                           
+                            
                             if strongSelf.autoplayVideoView == nil, !isSpoiler {
                                 let autoplay: ChatVideoAutoplayView
                                 
-                                let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
+                                var fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
                                 
-                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+
+                                let isHLS: Bool = isHLSVideo(file: fileReference.media)
+                                
+                                if isHLS {
+                                    fileReference = HLSVideoContent.minimizedHLSQuality(file: fileReference)?.file ?? fileReference
+                                }
+                                
+                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable && !isHLS, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: false), view: MediaPlayerView(backgroundThread: true))
                                 
                                 strongSelf.autoplayVideoView = autoplay
                                 if !strongSelf.blurBackground {
@@ -1230,7 +1243,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     override func preloadStreamblePart() {
         if let context = context {
             if let media = media as? TelegramMediaFile, let parent = parent {
-                if isHLSVideo(file: media),  #available(macOS 14.0, *) {
+                if isHLSVideo(file: media) {
                     let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: .message(message: MessageReference(parent), media: media), userLocation: .peer(parent.id.peerId), prefixSeconds: 10, autofetchPlaylist: true)
                     |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
                         guard let fileAndRange else {

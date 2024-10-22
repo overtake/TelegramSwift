@@ -2649,7 +2649,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile(peer._asPeer()) : .addedToProfile(peer._asPeer()))
             }
         }, hashtag: { string in
-            showModal(with: StoryFoundListController(context: context, source: .hashtag(string), presentation: darkAppearance), for: context.window)
+            showModal(with: StoryFoundListController(context: context, source: .hashtag(nil, string), presentation: darkAppearance), for: context.window)
         },
         toggleHide: toggleHide,
         showFriendsTooltip: { [weak self] _, story in

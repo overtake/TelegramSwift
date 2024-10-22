@@ -738,8 +738,24 @@ class MediaVideoCell : MediaCell {
             let context = layoutItem.context
             if context.autoplayMedia.preloadVideos {
                 if let fileMedia = layoutItem.fileMedia {
-                    let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.peerId), userContentType: .init(file: fileMedia.media), resourceReference: fileMedia.resourceReference(fileMedia.media.resource), duration: 2.5)
-                    partDisposable.set(preload.start())
+                    
+                    if isHLSVideo(file: fileMedia.media) {
+                        let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: fileMedia, userLocation: .peer(layoutItem.peerId), prefixSeconds: 10, autofetchPlaylist: true)
+                        |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
+                            guard let fileAndRange else {
+                                return .complete()
+                            }
+                            return freeMediaFileResourceInteractiveFetched(postbox: context.account.postbox, userLocation: .peer(layoutItem.peerId), fileReference: fileAndRange.0, resource: fileAndRange.0.media.resource, range: (fileAndRange.1, .default))
+                            |> ignoreValues
+                            |> `catch` { _ -> Signal<Never, NoError> in
+                                return .complete()
+                            }
+                        }
+                        partDisposable.set(fetchSignal.start())
+                    } else {
+                        let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.peerId), userContentType: .init(file: fileMedia.media), resourceReference: fileMedia.resourceReference(fileMedia.media.resource), duration: 2.5)
+                        partDisposable.set(preload.start())
+                    }
                 }
             }
         }

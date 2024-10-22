@@ -1437,35 +1437,27 @@ func escape(with link:String, addPercent: Bool = true) -> String {
 }
 
 
-func urlVars(with url:String) -> ([String:String], Set<String>) {
-    var vars:[String:String] = [:]
+func urlVars(with url: String) -> ([String: String], Set<String>) {
+    var vars: [String: String] = [:]
     let range = url.nsstring.range(of: "?")
-    let ns:NSString = range.location != NSNotFound ? url.nsstring.substring(from: range.location + 1).nsstring : url.nsstring
-    
-    
+    let ns: NSString = range.location != NSNotFound ? url.nsstring.substring(from: range.location + 1).nsstring : url.nsstring
+
     let hashes = ns.components(separatedBy: "&")
-    var emptyVars:Set<String> = Set()
+    var emptyVars: Set<String> = Set()
     for hash in hashes {
-       
         let param = hash.components(separatedBy: "=")
         if param.count > 1 {
-            if hashes.count == 1 {
-                var value: String = param[1]
-                for (i, p) in param.enumerated() {
-                    if i > 1 {
-                        value += "=\(p)"
-                    }
-                }
-                vars[param[0].lowercased()] = value
-            } else {
-                vars[param[0].lowercased()] = param[1]
-            }
+            let key = param[0].lowercased()
+            // Reconstruct the value by joining the remaining parts
+            let value = param[1...].joined(separator: "=")
+            vars[key] = value
         } else if param.count == 1 {
             emptyVars.insert(param[0])
         }
     }
     return (vars, emptyVars)
 }
+
 
 
 enum SecureIdPermission : String {
