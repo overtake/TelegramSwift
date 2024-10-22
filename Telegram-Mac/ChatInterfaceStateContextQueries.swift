@@ -70,7 +70,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     result.append(hashtag)
                 }
             }
-            return { _ in return .hashtags(result) }
+            return { _ in return .hashtags(query, result, chatPresentationInterfaceState.peer.flatMap(EnginePeer.init)) }
         }
         
         return (inputQuery, signal |> then(hashtags))

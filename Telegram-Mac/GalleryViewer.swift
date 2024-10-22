@@ -15,6 +15,8 @@ import Postbox
 import AVFoundation
 import ColorPalette
 import Translate
+import TelegramMediaPlayer
+import TelegramMedia
 
 final class GalleryInteractions {
     var dismiss:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
@@ -890,14 +892,83 @@ class GalleryViewer: NSResponder {
         var items:[ContextMenuItem] = []
         
         let isProtected = pager.selectedItem?.entry.isProtected == true
+        var keepSaveAs: Bool = true
+        let context = self.context
         
         if !isProtected {
-            items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
-                self?.saveAs()
-            }, itemImage: MenuAnimation.menu_save_as.value))
+            
+            
+            if let item = pager.selectedItem as? MGalleryVideoItem, let message = item.entry.message {
+                if let quality = item.videoQualityState() {
+                    
+                    let download = ContextMenuItem(strings().galleryContextSaveVideo, itemImage: MenuAnimation.menu_save_as.value)
+                    let downloadMenu = ContextMenu()
+                    
+                    let downloadOrShow:(TelegramMediaFile)->Void = { [weak self] file in
+                        
+                        let status = chatMessageFileStatus(context: context, message: message, file: file)
+                        |> take(1)
+                        |> deliverOnMainQueue
+                        
+                        _ = status.startStandalone(next: { status in
+                            if let window = self?.window {
+                                let text: String
+                                if status == .Local {
+                                    text = strings().galleryContextAlertDownloaded
+                                } else {
+                                    _ = messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).startStandalone()
+                                    text = strings().galleryContextAlertDownloading
+                                }
+                                showModalText(for: window, text: text, callback: { _ in
+                                    self?.close()
+                                    if status == .Local {
+                                        showInFinder(file, account: context.account)
+                                    } else {
+                                        context.bindings.mainController().makeDownloadSearch()
+                                    }
+                                })
+                            }
+                            
+                        })
+                        
+                       
+                    }
+                    
+                    
+                    if context.isPremium {
+                        if let size = item.media.size {
+                            downloadMenu.addItem(ContextMenuItem(strings().galleryContextOriginal + " (\(String.prettySized(with: size)))", handler: {
+                                downloadOrShow(item.media)
+                            }))
+                        }
+                    }
+                    for value in quality.available {
+                        let q = "\(roundToStandardQuality(size: value))p"
+                        
+                        let file = item.media.alternativeRepresentations.compactMap({
+                            $0 as? TelegramMediaFile
+                        }).first(where: {
+                            $0.dimensions?.height == Int32(value)
+                        })
+                                                
+                        if let file = file, let size = file.size {
+                            downloadMenu.addItem(ContextMenuItem(q + " (\(String.prettySized(with: size)))", handler: {
+                                downloadOrShow(file)
+                            }))
+                        }
+                    }
+                    download.submenu = downloadMenu
+                    items.append(download)
+                    keepSaveAs = false
+                }
+            }
+            if keepSaveAs {
+                items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
+                    self?.saveAs()
+                }, itemImage: MenuAnimation.menu_save_as.value))
+            }
         }
         
-        let context = self.context
         
         var chatMode: ChatMode = self.chatMode ?? .history
         if let message = pager.selectedItem?.entry.message, message.isScheduledMessage {
@@ -939,7 +1010,7 @@ class GalleryViewer: NSResponder {
             }
         }
         
-        if !isProtected {
+        if !isProtected, keepSaveAs {
             items.append(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
                 self?.copy(nil)
             }, itemImage: MenuAnimation.menu_copy.value))

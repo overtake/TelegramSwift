@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 
@@ -206,7 +206,7 @@ class GalleryModernControlsView: View {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
-                    fastSaveControl.isHidden = cantSave
+                    fastSaveControl.isHidden = cantSave || isHLSVideo(file: file)
                 } else if !file.isGraphicFile {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false

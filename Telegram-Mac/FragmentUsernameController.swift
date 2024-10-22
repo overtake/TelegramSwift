@@ -182,6 +182,7 @@ private final class RowView: GeneralContainableRowView {
         dismiss.setFrameOrigin(NSMakePoint(0, 0))
         iconView.centerX(y: 0)
         stickerView.center()
+        stickerView.frame = stickerView.frame.offsetBy(dx: 0, dy: 2)
         headerView.centerX(y: stickerView.frame.maxY + 20)
         peerView.centerX(y: headerView.frame.maxY + 20)
         infoView.centerX(y: peerView.frame.maxY + 20)

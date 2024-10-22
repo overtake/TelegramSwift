@@ -5283,8 +5283,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     if !updated.isEmpty {
-                        if let _ = self.chatInteraction.presentation.interfaceState.editState {
-                            alert(for: context.window, info: strings().chatEditAttachError)
+                        if let editState = self.chatInteraction.presentation.interfaceState.editState {
+                            if editState.message.media.isEmpty, updated.count == 1 {
+                                
+                                if let media = updated.first {
+                                    self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: media.path, isFile: false), account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
+                                        self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
+                                    }))
+                                }
+
+                            } else {
+                                alert(for: context.window, info: strings().chatEditAttachError)
+                            }
                         } else {
                             showModal(with: PreviewSenderController(urls: updated, chatInteraction: self.chatInteraction, asMedia: asMedia, attributedString: attributedString), for: context.window)
                         }

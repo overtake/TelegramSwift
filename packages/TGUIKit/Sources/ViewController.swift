@@ -232,10 +232,10 @@ open class BackgroundView: View {
                     var shouldTile = false
                     if let colors = colors, !colors.isEmpty {
                         
-                        shouldTile = true
+                        shouldTile = colors.count > 1
                         let intense = Float((abs(intensity ?? 50))) / 100.0
                         
-                        let invertPattern = presentation.colors.isDark && checkDarkPattern
+                        let invertPattern = presentation.colors.isDark && checkDarkPattern || colors.count == 1
                         if invertPattern {
                             self.imageView.compositingFilter = nil
                             imageView.opacity = 1.0

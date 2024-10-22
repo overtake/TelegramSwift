@@ -269,7 +269,7 @@ private final class MediaPlayerContext {
             self.playerStatus.set(status)
         }
         
-        let frameSource = FFMpegMediaFrameSource(queue: self.queue, postbox: self.postbox, userLocation: self.userLocation, userContentType: self.userContentType, resourceReference: self.resourceReference, tempFilePath: nil, streamable: self.streamable, isSeekable: self.isSeekable, video: self.video, preferSoftwareDecoding: self.preferSoftwareDecoding, fetchAutomatically: self.fetchAutomatically)
+        let frameSource = FFMpegMediaFrameSource(queue: self.queue, postbox: self.postbox, userLocation: self.userLocation, userContentType: self.userContentType, resourceReference: self.resourceReference, tempFilePath: nil, limitedFileRange: nil, streamable: self.streamable, isSeekable: self.isSeekable, video: self.video, preferSoftwareDecoding: self.preferSoftwareDecoding, fetchAutomatically: self.fetchAutomatically)
         let disposable = MetaDisposable()
         self.state = .seeking(frameSource: frameSource, timestamp: timestamp, disposable: disposable, action: action, enableSound: self.enableSound)
         

@@ -177,8 +177,18 @@ class FastSettings {
     
     private static let kStoryMuted = "kStoryMuted"
     private static let kStoryHD = "kStoryHD"
+    
+    private static let kHashtagChannel = "kHashtagChannel";
 
 
+    public static var hasHashtagChannelBadge: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: kHashtagChannel)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: kHashtagChannel)
+        }
+    }
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String

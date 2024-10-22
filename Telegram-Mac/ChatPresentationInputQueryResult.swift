@@ -12,7 +12,7 @@ import TelegramCore
 import Postbox
 
 enum ChatPresentationInputQueryResult: Equatable {
-    case hashtags([String])
+    case hashtags(String, [String], EnginePeer?)
     case mentions([Peer])
     case commands([PeerCommand])
     case shortcut([ShortcutMessageList.Item], String)
@@ -23,9 +23,9 @@ enum ChatPresentationInputQueryResult: Equatable {
     
     static func ==(lhs: ChatPresentationInputQueryResult, rhs: ChatPresentationInputQueryResult) -> Bool {
         switch lhs {
-        case let .hashtags(lhsResults):
-            if case let .hashtags(rhsResults) = rhs {
-                return lhsResults == rhsResults
+        case let .hashtags(query, list, peer):
+            if case .hashtags(query, list, peer) = rhs {
+                return true
             } else {
                 return false
             }

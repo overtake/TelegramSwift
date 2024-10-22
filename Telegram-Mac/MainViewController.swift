@@ -674,6 +674,17 @@ class MainViewController: TelegramViewController {
         }
     }
     
+    func makeDownloadSearch() {
+        if self.tabController.current == navigation {
+            let controller = navigation.controller
+            if let controller = controller as? ChatListController {
+                controller.makeDownloadSearch()
+            } else if let controller = controller as? TabBarController {
+                (controller.current as? ChatListController)?.makeDownloadSearch()
+            }
+        }
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigation.viewWillAppear(animated)

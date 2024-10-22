@@ -144,7 +144,12 @@ final class GalleryRecognition {
                     for idx in toRemove.reversed() {
                         filtered.remove(at: idx)
                     }
-                    self?.applyResult(result, translate: .success(translated: texts, original: .finish(image: image, text: filtered)))
+                    if translated == nil || translated?.result.isEmpty == true || translated?.1.isEmpty == true {
+                        self?.applyResult(result, translate: nil)
+                        return
+                    } else {
+                        self?.applyResult(result, translate: .success(translated: texts, original: .finish(image: image, text: filtered)))
+                    }
                 }, error: { [weak self] _ in
                     self?.applyResult(result)
                 }))

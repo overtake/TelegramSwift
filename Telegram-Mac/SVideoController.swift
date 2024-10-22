@@ -20,7 +20,7 @@ import TelegramMedia
 
 private func makePlayer(account: Account, reference: FileMediaReference, fetchAutomatically: Bool = false) -> (UniversalVideoContentView & NSView) {
     let player: (UniversalVideoContentView & NSView)
-    if #available(macOS 14.0, *), isHLSVideo(file: reference.media) {
+    if isHLSVideo(file: reference.media) {
         player = HLSVideoJSNativeContentView(accountId: account.id, postbox: account.postbox, userLocation: reference.userLocation, fileReference: reference, streamVideo: true, loopVideo: false, enableSound: true, baseRate: FastSettings.playingVideoRate, fetchAutomatically: false, volume: FastSettings.volumeRate)
     } else {
         player = NativeMediaPlayer(postbox: account.postbox, reference: reference, fetchAutomatically: fetchAutomatically)
@@ -44,7 +44,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     var style: SVideoStyle = .regular
     private var fullScreenWindow: Window?
     private var fullScreenRestoreState: (rect: NSRect, view: NSView)?
-    private var mediaPlayer: (UniversalVideoContentView & NSView)!
+    private(set) var mediaPlayer: (UniversalVideoContentView & NSView)!
     private let reference: FileMediaReference
     private let statusDisposable = MetaDisposable()
     private let bufferingDisposable = MetaDisposable()
@@ -69,12 +69,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         } else {
             let qualityState = self.genericView.mediaPlayer.videoQualityState()
             if let qualityState = qualityState, !qualityState.available.isEmpty {
-                if #available(macOS 14.0, *) {
-                    if let minQuality = HLSVideoContent.minimizedHLSQuality(file: reference)?.file {
-                        self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: minQuality)
-                    } else {
-                        _videoFramePreview = nil
-                    }
+                if let minQuality = HLSVideoContent.minimizedHLSQuality(file: reference)?.file {
+                    self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: minQuality)
                 } else {
                     _videoFramePreview = nil
                 }
@@ -130,14 +126,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     func playOrPause() {
         self.isPaused = !self.isPaused
         mediaPlayer.togglePlayPause()
-        if let status = genericView.status {
-            switch status.status {
-            case .buffering:
-                mediaPlayer.seek(status.timestamp / status.duration)
-            default:
-                break
-            }
-        }
     }
     
     func pause() {
@@ -170,7 +158,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             let hide = !self.genericView.isInMenu && !self.genericView.insideControls
             self.hideControls.set(hide)
             if !self.pictureInPicture, !self.isPaused, hide {
-                NSCursor.hide()
+                if !contextMenuOnScreen() {
+                    NSCursor.hide()
+                }
             }
         }))
     }
@@ -191,7 +181,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
                 if !self.isPaused {
-                    NSCursor.hide()
+                    if !contextMenuOnScreen() {
+                        NSCursor.hide()
+                    }
                 }
             }
             if contextMenuOnScreen() {
@@ -345,7 +337,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         
         let account = self.account
         
-        if isHLSVideo(file: reference.media),  #available(macOS 14.0, *) {
+        if isHLSVideo(file: reference.media) {
             let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: account.postbox, file: reference, userLocation: .other, prefixSeconds: 10, autofetchPlaylist: true)
             |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
                 guard let fileAndRange else {
@@ -476,6 +468,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             endPlaybackId = mediaPlayer.addPlaybackCompleted { [weak self] in
                 Queue.mainQueue().async {
                     self?.mediaPlayer.seek(0)
+                    self?.mediaPlayer.play()
                     self?.updateIdleTimer()
                 }
             }
@@ -484,6 +477,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 DispatchQueue.main.async {
                     if let duration = self?.mediaPlayer.duration, duration < 30 {
                         self?.mediaPlayer.seek(0)
+                        self?.mediaPlayer.play()
                     }
                     self?.hideControls.set(false)
                     self?.updateIdleTimer()

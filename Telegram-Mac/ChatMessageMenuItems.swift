@@ -16,6 +16,7 @@ import ObjcUtils
 import Translate
 import InAppSettings
 import InputView
+import TelegramMedia
 
 final class ChatMenuItemsData {
     let chatInteraction: ChatInteraction
@@ -940,9 +941,59 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }
                     }
                     if !data.isMediaStory {
-                        thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
-                            saveAs(file, account: account)
-                        }, itemImage: MenuAnimation.menu_save_as.value, keyEquivalent: .cmds))
+                        
+                        if isHLSVideo(file: file), let quality = HLSQualitySet(baseFile: FileMediaReference.message(message: .init(message), media: file)) {
+                            
+                            let download = ContextMenuItem(strings().galleryContextSaveVideo, itemImage: MenuAnimation.menu_save_as.value)
+                            let downloadMenu = ContextMenu()
+
+                            let downloadOrShow:(TelegramMediaFile)->Void = { file in
+                                
+                                let status = chatMessageFileStatus(context: context, message: message, file: file)
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                
+                                _ = status.startStandalone(next: { status in
+                                    let text: String
+                                    if status == .Local {
+                                        text = strings().galleryContextAlertDownloaded
+                                    } else {
+                                        _ = messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).startStandalone()
+                                        text = strings().galleryContextAlertDownloading
+                                    }
+                                    showModalText(for: context.window, text: text, callback: { _ in
+                                        if status == .Local {
+                                            showInFinder(file, account: context.account)
+                                        } else {
+                                            context.bindings.mainController().makeDownloadSearch()
+                                        }
+                                    })
+                                })
+                            }
+                            if context.isPremium {
+                                if let size = file.size {
+                                    downloadMenu.addItem(ContextMenuItem(strings().galleryContextOriginal + " (\(String.prettySized(with: size)))", handler: {
+                                        downloadOrShow(file)
+                                    }))
+                                }
+                            }
+                            let sorted = quality.qualityFiles.sorted(by: { $0.key < $1.key })
+                            for (key, value) in sorted {
+                                let q = "\(roundToStandardQuality(size: key))p"
+                                if let size = value.media.size {
+                                    downloadMenu.addItem(ContextMenuItem(q + " (\(String.prettySized(with: size)))", handler: {
+                                        downloadOrShow(value.media)
+                                    }))
+                                }
+                            }
+                            download.submenu = downloadMenu
+                            thirdBlock.append(download)
+                        } else {
+                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
+                                saveAs(file, account: account)
+                            }, itemImage: MenuAnimation.menu_save_as.value, keyEquivalent: .cmds))
+                        }
+                       
                     }
                     
                     if let downloadPath = data.fileFinderPath {
