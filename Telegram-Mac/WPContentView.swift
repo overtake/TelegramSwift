@@ -256,7 +256,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             
             current.removeAllHandlers()
             current.set(handler: { _ in
-                showModal(with: FragmentAdsInfoController(context: layout.context), for: layout.context.window)
+                showModal(with: FragmentAdsInfoController(context: layout.context, message: layout.parent, interactions: layout.chatInteraction), for: layout.context.window)
             }, for: .Click)
             
             let text = TextViewLayout(.initialize(string: strings().chatAdWhatThis, color: layout.presentation.activity.main, font: .normal(.small)), alignment: .center)

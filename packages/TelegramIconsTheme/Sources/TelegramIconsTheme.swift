@@ -5010,6 +5010,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var peerInfoTonBalance: CGImage {
+      if let image = cached.with({ $0["peerInfoTonBalance"] }) {
+          return image
+      } else {
+          let image = _peerInfoTonBalance()
+          _ = cached.modify { current in 
+              var current = current
+              current["peerInfoTonBalance"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var peerInfoBotUsername: CGImage {
       if let image = cached.with({ $0["peerInfoBotUsername"] }) {
           return image
@@ -10986,6 +10999,7 @@ public final class TelegramIconsTheme {
   private let _peerInfoMembers: ()->CGImage
   private let _peerInfoStarsBalance: ()->CGImage
   private let _peerInfoBalance: ()->CGImage
+  private let _peerInfoTonBalance: ()->CGImage
   private let _peerInfoBotUsername: ()->CGImage
   private let _chatUndoAction: ()->CGImage
   private let _appUpdate: ()->CGImage
@@ -11803,6 +11817,7 @@ public final class TelegramIconsTheme {
       peerInfoMembers: @escaping()->CGImage,
       peerInfoStarsBalance: @escaping()->CGImage,
       peerInfoBalance: @escaping()->CGImage,
+      peerInfoTonBalance: @escaping()->CGImage,
       peerInfoBotUsername: @escaping()->CGImage,
       chatUndoAction: @escaping()->CGImage,
       appUpdate: @escaping()->CGImage,
@@ -12619,6 +12634,7 @@ public final class TelegramIconsTheme {
       self._peerInfoMembers = peerInfoMembers
       self._peerInfoStarsBalance = peerInfoStarsBalance
       self._peerInfoBalance = peerInfoBalance
+      self._peerInfoTonBalance = peerInfoTonBalance
       self._peerInfoBotUsername = peerInfoBotUsername
       self._chatUndoAction = chatUndoAction
       self._appUpdate = appUpdate

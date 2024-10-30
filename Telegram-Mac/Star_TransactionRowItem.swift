@@ -59,6 +59,8 @@ final class Star_TransactionItem : GeneralRowItem {
             name = strings().starListTransactionAds
         case .unknown:
             name = strings().starListTransactionUnknown
+        case .apiLimitExtension:
+            name = strings().starsIntroTransactionTelegramBotApiTitle
         }
         
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
@@ -81,6 +83,8 @@ final class Star_TransactionItem : GeneralRowItem {
             descString = strings().starsTransactionReceivedPrize
         } else if transaction.native.starGift != nil {
             descString = strings().starsTransactionGift
+        } else if let floodskipNumber = transaction.native.floodskipNumber {
+            descString = strings().starTransactionBroadcastMessagesCountable(Int(floodskipNumber)).replacingOccurrences(of: "\(floodskipNumber)", with: floodskipNumber.formattedWithSeparator)
         } else {
             if transaction.native.flags.contains(.isGift) {
                 descString = strings().starsTransactionReceivedGift
@@ -320,7 +324,7 @@ private final class TransactionView : GeneralContainableRowView {
             if let view = self.avatarImage {
                 current = view
             } else {
-                current = ImageView(frame: NSMakeRect(0, 0, 44, 44))
+                current = ImageView(frame: NSMakeRect(0, 0, 40, 40))
                 self.avatarImage = current
                 addSubview(current)
             }
@@ -339,6 +343,8 @@ private final class TransactionView : GeneralContainableRowView {
                 current.image = NSImage(resource: .iconStarTransactionRowPremiumBot).precomposed()
             case .unknown:
                 current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
+            case .apiLimitExtension:
+                current.image = NSImage(resource: .iconStarTransactionRowPaidBroadcast).precomposed()
             }
         }
 

@@ -102,7 +102,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId) -> InputD
         let toPeer = stateValue.with { $0.peer }
         let fromPeer = option.fromPeer
         
-        let transaction = StarsContext.State.Transaction(flags: [], id: "", count: option.gift.price, date: option.date, peer: toPeer.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.gift)
+        let transaction = StarsContext.State.Transaction(flags: [], id: "", count: option.gift.price, date: option.date, peer: toPeer.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.gift, floodskipNumber: nil)
         
         
         let purpose: Star_TransactionPurpose = .starGift(gift: option.gift, convertStars: option.convertStars ?? 0, text: option.text, entities: option.entities, nameHidden: option.fromPeer != nil, savedToProfile: option.savedToProfile, converted: option.convertStars == nil, fromProfile: true)

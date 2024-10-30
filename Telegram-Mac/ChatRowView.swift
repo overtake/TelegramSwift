@@ -375,7 +375,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     if item.isFailed,  let messageId = item.message?.id {
                         item.resendFailed(messageId)
                     } else {
-                        forceSelectItem(item, onRightClick: true)
+                        if item.message?.pendingProcessingAttribute != nil {
+                            tooltip(for: rightView, text: strings().chatVideoProccessingTooltip)
+                        } else {
+                            forceSelectItem(item, onRightClick: true)
+                        }
                     }
                 }
             }

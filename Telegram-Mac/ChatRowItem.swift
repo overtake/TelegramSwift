@@ -2310,14 +2310,28 @@ class ChatRowItem: TableRowItem {
                 }
                 
             }
-            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil, chatInteraction.mode.customChatContents == nil {
+            
+            let dateFormatter = DateSelectorUtil.chatDateFormatter
+            let dateColor = isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble))
+            
+            let dateFont: NSFont = renderType == .bubble ? .italic(.small) : .normal(.short)
+
+            
+            if let attribute = message.pendingProcessingAttribute {
+                var time:TimeInterval = TimeInterval(attribute.approximateCompletionTime)
+                time -= context.timeDifference
+                
+                let dateText = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time)))
+                
+                let attr: NSMutableAttributedString = NSAttributedString.initialize(string: strings().chatVideoProccessingMessageTime(dateText), color: dateColor, font: dateFont).mutableCopy() as! NSMutableAttributedString
+                
+                self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
+                self.date?.measure(width: .greatestFiniteMagnitude)
+
+            } else  if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil, chatInteraction.mode.customChatContents == nil {
                 var time:TimeInterval = TimeInterval(message.timestamp)
                 time -= context.timeDifference
                 
-                let dateFormatter = DateSelectorUtil.chatDateFormatter
-                let dateColor = isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble))
-                
-                let dateFont: NSFont = renderType == .bubble ? .italic(.small) : .normal(.short)
                 
                 let attr: NSMutableAttributedString = NSAttributedString.initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: dateColor, font: dateFont).mutableCopy() as! NSMutableAttributedString
                 

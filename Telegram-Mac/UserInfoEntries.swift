@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import CurrencyFormat
 import SwiftSignalKit
 import Postbox
 import TGUIKit
@@ -182,6 +182,12 @@ class UserInfoArguments : PeerInfoArguments {
     func openStarsBalance() {
         if let revenueContext = getStarsContext?() {
             self.pullNavigation()?.push(FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: revenueContext))
+        }
+    }
+    
+    func openTonBalance() {
+        if let revenueContext = getTonContext?() {
+            self.pullNavigation()?.push(FragmentMonetizationController(context: context, peerId: peerId, onlyTonContext: revenueContext))
         }
     }
     
@@ -999,6 +1005,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case about(sectionId:Int, text: String, launchApp: Bool, viewType: GeneralViewType)
     case aboutInfo(sectionId:Int, text: String, viewType: GeneralViewType)
     case botStarsBalance(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botTonBalance(sectionId:Int, text: String, viewType: GeneralViewType)
     case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
     case botEditIntro(sectionId:Int, viewType: GeneralViewType)
     case botEditCommands(sectionId:Int, viewType: GeneralViewType)
@@ -1054,6 +1061,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case .aboutInfo(_, _, let viewType):
             return viewType
         case .botStarsBalance(_, _, let viewType):
+            return viewType
+        case .botTonBalance(_, _, let viewType):
             return viewType
         case .botEditUsername(_, _, let viewType):
             return viewType
@@ -1140,6 +1149,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setFirstName(sectionId, text, _): return .setFirstName(sectionId: sectionId, text: text, viewType: viewType)
         case let .setLastName(sectionId, text, placeholder, _): return .setLastName(sectionId: sectionId, text: text, placeholder: placeholder, viewType: viewType)
         case let .botStarsBalance(sectionId, text, _): return .botStarsBalance(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botTonBalance(sectionId, text, _): return .botTonBalance(sectionId: sectionId, text: text, viewType: viewType)
         case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
         case let .botEditIntro(sectionId, _): return .botEditIntro(sectionId: sectionId, viewType: viewType)
         case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
@@ -1275,6 +1285,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botStarsBalance(sectionId, text, viewType):
             switch entry {
             case .botStarsBalance(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botTonBalance(sectionId, text, viewType):
+            switch entry {
+            case .botTonBalance(sectionId, text, viewType):
                 return true
             default:
                 return false
@@ -1576,80 +1593,82 @@ enum UserInfoEntry: PeerInfoEntry {
             return 105
         case .botStarsBalance:
             return 106
-        case .botEditIntro:
+        case .botTonBalance:
             return 107
+        case .botEditIntro:
+            return 108
         case .botEditCommands:
             return 108
         case .botEditSettings:
-            return 109
-        case .botEditInfo:
             return 110
-        case .userName:
+        case .botEditInfo:
             return 111
-        case .scam:
+        case .userName:
             return 112
-        case .about:
+        case .scam:
             return 113
-        case .aboutInfo:
+        case .about:
             return 114
-        case .bio:
+        case .aboutInfo:
             return 115
-        case .phoneNumber:
+        case .bio:
             return 116
-        case .birthday:
+        case .phoneNumber:
             return 117
-        case .peerId:
+        case .birthday:
             return 118
-        case .businessHours:
+        case .peerId:
             return 119
-        case .businessLocation:
+        case .businessHours:
             return 120
-        case .sendMessage:
+        case .businessLocation:
             return 121
-        case .botAddToGroup:
+        case .sendMessage:
             return 122
-        case .botAddToGroupInfo:
+        case .botAddToGroup:
             return 123
-        case .botShare:
+        case .botAddToGroupInfo:
             return 124
-        case .botSettings:
+        case .botShare:
             return 125
-        case .botHelp:
+        case .botSettings:
             return 126
-        case .botPrivacy:
+        case .botHelp:
             return 127
-        case .shareContact:
+        case .botPrivacy:
             return 128
-        case .shareMyInfo:
+        case .shareContact:
             return 129
-        case .addContact:
+        case .shareMyInfo:
             return 130
-        case .startSecretChat:
+        case .addContact:
             return 131
-        case .sharedMedia:
+        case .startSecretChat:
             return 132
-        case .notifications:
+        case .sharedMedia:
             return 133
-        case .encryptionKey:
+        case .notifications:
             return 134
-        case .groupInCommon:
+        case .encryptionKey:
             return 135
+        case .groupInCommon:
+            return 136
         case let .setPhoto(_, _, type, _, _):
-            return 136 + type.rawValue
+            return 137 + type.rawValue
         case .resetPhoto:
-            return 140
-        case .setPhotoInfo:
             return 141
-        case .block:
+        case .setPhotoInfo:
             return 142
-        case .reportReaction:
+        case .block:
             return 143
-        case .deleteChat:
+        case .reportReaction:
             return 144
-        case .deleteContact:
+        case .deleteChat:
             return 145
-        case .media:
+        case .deleteContact:
             return 146
+        case .media:
+            return 147
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1670,6 +1689,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botEditUsername(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botStarsBalance(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botTonBalance(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botEditIntro(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -1791,7 +1812,10 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
         case let .botStarsBalance(_, text, viewType):
             let icon = generateStarBalanceIcon(text)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openStarsBalance)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalanceNew, icon: theme.icons.peerInfoStarsBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openStarsBalance)
+        case let .botTonBalance(_, text, viewType):
+            let icon = generateTonBalanceIcon(text)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditTonBalance, icon: theme.icons.peerInfoTonBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openTonBalance)
         case let .botEditIntro(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.editBot("intro")
@@ -1993,7 +2017,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -2184,12 +2208,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     
                     if peer.botInfo?.flags.contains(.canEdit) == true {
                         
-                        if let stats = revenueState?.stats, stats.balances.currentBalance > 0 {
-                            entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
-                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.currentBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.currentBalance)), viewType: .lastItem))
-                        } else {
-                            entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
-                        }
+                        entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
 
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1
@@ -2232,6 +2251,33 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             }
             
             
+            if let cachedData = (view.cachedData as? CachedUserData) {
+                
+               
+                
+                let starBalance = (revenueState?.stats?.balances.currentBalance ?? 0)
+                let tonBalance = (tonRevenueState?.stats?.balances.currentBalance ?? 0)
+
+                let hasStars = (revenueState?.stats?.balances.overallRevenue ?? 0) > 0
+                let hasTon = (tonRevenueState?.stats?.balances.overallRevenue ?? 0) > 0 
+
+                
+                if hasStars || hasTon {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    
+
+                    if hasStars {
+                        entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: starBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(starBalance)), viewType: hasTon ? .firstItem : .singleItem))
+                    }
+                    
+                    if hasTon {
+                        let balance = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
+                        entries.append(UserInfoEntry.botTonBalance(sectionId: sectionId, text: "\(balance)", viewType: hasStars ? .lastItem : .singleItem))
+                    }
+                }
+                
+            }
             
             if FastSettings.canViewPeerId {
                 entries.append(UserInfoEntry.section(sectionId: sectionId))

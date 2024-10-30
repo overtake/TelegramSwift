@@ -39,7 +39,7 @@ final class InputDataTableBasedItem : GeneralRowItem {
                 additional = 0
             }
             if left == nil {
-                right.name.measure(width: basic - additional)
+                right.name.measure(width: basic - additional - 20)
             } else {
                 right.name.measure(width: width - 20 - additional)
             }

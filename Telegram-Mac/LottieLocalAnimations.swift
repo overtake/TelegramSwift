@@ -140,6 +140,8 @@ enum LocalAnimatedSticker : String {
     case browser_back_to_close
     case browser_close_to_back
     case browser_more
+    
+    case improving_video
 
     case menu_add_to_folder
     case menu_archive

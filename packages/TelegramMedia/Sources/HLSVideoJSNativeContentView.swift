@@ -294,16 +294,28 @@ public final class HLSQualitySet {
         func isNativeVideoCodecSupported(videoCodec: String) -> Bool {
             return videoCodec == "h264" || videoCodec == "h265" || videoCodec == "avc" || videoCodec == "hevc"
         }
-
+        
         var qualityFiles: [Int: FileMediaReference] = [:]
         for alternativeRepresentation in baseFile.media.alternativeRepresentations {
             if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
                 for attribute in alternativeFile.attributes {
                     if case let .Video(_, size, _, _, _, videoCodec) = attribute {
-                        let _ = size
-                        
                         if let videoCodec, isNativeVideoCodecSupported(videoCodec: videoCodec) {
-                            qualityFiles[Int(size.height)] = baseFile.withMedia(alternativeFile)
+                            let key = Int(min(size.width, size.height))
+                            if let currentFile = qualityFiles[key] {
+                                var currentCodec: String?
+                                for attribute in currentFile.media.attributes {
+                                    if case let .Video(_, _, _, _, _, videoCodec) = attribute {
+                                        currentCodec = videoCodec
+                                    }
+                                }
+                                if let currentCodec, currentCodec == "av1" {
+                                } else {
+                                    qualityFiles[key] = baseFile.withMedia(alternativeFile)
+                                }
+                            } else {
+                                qualityFiles[key] = baseFile.withMedia(alternativeFile)
+                            }
                         }
                     }
                 }
@@ -338,7 +350,6 @@ public final class HLSQualitySet {
         }
     }
 }
-
 
 private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
     private final class ContextReference {
@@ -1094,15 +1105,18 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     private var playerStatusDisposable: Disposable?
     
     private var contextDisposable: Disposable?
+    private let initialQuality: UniversalVideoContentVideoQuality
 
     
-    public init(accountId: AccountRecordId, postbox: Postbox, userLocation: MediaResourceUserLocation, fileReference: FileMediaReference, streamVideo: Bool, loopVideo: Bool, enableSound: Bool, baseRate: Double, fetchAutomatically: Bool, volume: Float) {
+    public init(accountId: AccountRecordId, postbox: Postbox, userLocation: MediaResourceUserLocation, fileReference: FileMediaReference, streamVideo: Bool, loopVideo: Bool, enableSound: Bool, baseRate: Double, fetchAutomatically: Bool, volume: Float, initialQuality: UniversalVideoContentVideoQuality) {
         self.postbox = postbox
         self.fileReference = fileReference
         self.approximateDuration = fileReference.media.duration ?? 0.0
         self.userLocation = userLocation
         self.requestedBaseRate = baseRate
         self.volume = volume
+        self.preferredVideoQuality = initialQuality
+        self.initialQuality = initialQuality
         
         self.instanceId = HLSVideoJSNativeContentView.nextInstanceId
         HLSVideoJSNativeContentView.nextInstanceId += 1
@@ -1274,7 +1288,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
             if !self.hasRequestedPlayerLoad {
                 if !self.playerAvailableLevels.isEmpty {
                     var selectedLevelIndex: Int?
-                    if let minimizedQualityFile = HLSVideoContent.minimizedHLSQuality(file: self.fileReference)?.file {
+                    if let minimizedQualityFile = HLSVideoContent.minimizedHLSQuality(file: self.fileReference, initialQuality: initialQuality)?.file {
                         if let dimensions = minimizedQualityFile.media.dimensions {
                             for (index, level) in self.playerAvailableLevels {
                                 if level.height == Int(dimensions.height) {
@@ -1523,7 +1537,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
         case .auto:
             self.requestedLevelIndex = nil
         case let .quality(quality):
-            if let level = self.playerAvailableLevels.first(where: { $0.value.height == quality }) {
+            if let level = self.playerAvailableLevels.first(where: { min($0.value.width, $0.value.height) == quality }) {
                 self.requestedLevelIndex = level.key
             } else {
                 self.requestedLevelIndex = nil
@@ -1544,10 +1558,10 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
             return nil
         }
         
-        var available = self.playerAvailableLevels.values.map(\.height)
+        var available = self.playerAvailableLevels.values.map { min($0.width, $0.height) }
         available.sort(by: { $0 > $1 })
         
-        return (currentLevel.height, self.preferredVideoQuality, available)
+        return (min(currentLevel.width, currentLevel.height), self.preferredVideoQuality, available)
     }
     
     public func addPlaybackCompleted(_ f: @escaping () -> Void) -> Int {

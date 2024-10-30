@@ -126,6 +126,8 @@ private final class HeaderItem : GeneralRowItem {
                 } else {
                     header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
                 }
+            case .apiLimitExtension:
+                header = strings().starsIntroTransactionTelegramBotApiTitle
             }
             amount = transaction.count
         }
@@ -175,6 +177,10 @@ private final class HeaderItem : GeneralRowItem {
                 }
             }
             self.descLayout = .init(.initialize(string: description, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        } else if let floodskipNumber = transaction.floodskipNumber {
+            let string = strings().starTransactionBroadcastMessagesCountable(Int(floodskipNumber)).replacingOccurrences(of: "\(floodskipNumber)", with: floodskipNumber.formattedWithSeparator)
+            self.descLayout = .init(.initialize(string: string, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+
         } else if let desc = transaction.description {
             self.descLayout = .init(.initialize(string: desc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         } else if isGift && purpose.isGift {
@@ -559,6 +565,8 @@ private final class HeaderView : GeneralContainableRowView {
                 current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
             case .ads:
                 current.image = NSImage(resource: .iconStarTransactionPreviewFragment).precomposed()
+            case .apiLimitExtension:
+                current.image = NSImage(resource: .iconStarTransactionRowPaidBroadcast).precomposed()
             }
             current.setFrameSize(NSMakeSize(80, 80))
         } else if let view = self.outgoingView {

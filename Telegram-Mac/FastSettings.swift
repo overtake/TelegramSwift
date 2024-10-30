@@ -15,6 +15,7 @@ import ObjcUtils
 import InAppSettings
 import TGUIKit
 import WebKit
+import TelegramMedia
 
 func clearUserDefaultsObject(forKeyPrefix prefix: String) {
     let defaults = UserDefaults.standard
@@ -26,6 +27,35 @@ func clearUserDefaultsObject(forKeyPrefix prefix: String) {
         }
     }
 }
+
+
+// Extension to handle rawValue conversion
+extension UniversalVideoContentVideoQuality {
+    public typealias RawValue = Int
+    
+    public init?(rawValue: Int) {
+        switch rawValue {
+        case -1: // Use -1 to represent auto
+            self = .auto
+        case let quality where quality >= 0:
+            self = .quality(quality)
+        default:
+            return nil
+        }
+    }
+    
+    public var rawValue: Int {
+        switch self {
+        case .auto:
+            return -1 // Use -1 to represent auto
+        case .quality(let value):
+            return value
+        }
+    }
+}
+
+
+
 
 enum SendingType :String {
     case enter = "enter"
@@ -131,6 +161,7 @@ func getAppTooltip(for value: AppTooltip, callback: (String) -> Void) {
 }
 
 class FastSettings {
+    private static let kVideoQuality = "kVideoQuality"
 
     private static let kSendingType = "kSendingType"
     private static let kEntertainmentType = "kEntertainmentType"
@@ -196,6 +227,17 @@ class FastSettings {
             return SendingType(rawValue: type) ?? .enter
         }
         return .enter
+    }
+    
+    static var videoQuality: UniversalVideoContentVideoQuality {
+        get {
+            let rawValue = UserDefaults.standard.integer(forKey: kVideoQuality)
+            return UniversalVideoContentVideoQuality(rawValue: rawValue) ?? .auto
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: kVideoQuality)
+            UserDefaults.standard.synchronize()
+        }
     }
     
     static var entertainmentState:EntertainmentState {

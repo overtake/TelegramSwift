@@ -24,6 +24,7 @@ enum Star_TransactionType : Equatable {
         case premiumbot
         case unknown
         case ads
+        case apiLimitExtension
     }
     case incoming(Source)
     case outgoing(Source)
@@ -1120,6 +1121,8 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                     source = .ads
                 case .unsupported:
                     source = .unknown
+                case .apiLimitExtension:
+                    source = .apiLimitExtension
                 }
                 if incoming {
                     type = .incoming(source)

@@ -26,6 +26,9 @@ class ChatMediaLayoutParameters : Equatable {
     var payAmount: Int64? = nil
     var isProtected: Bool = false
     var canReveal: Bool = true
+    
+    var colors: [LottieColor]
+
 
     var revealMedia:(Message)->Void = { _ in }
     
@@ -96,12 +99,13 @@ class ChatMediaLayoutParameters : Equatable {
     
     var fillContent: Bool? = nil
     
-    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil) {
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil, colors: [LottieColor] = []) {
         self.automaticDownloadFunc = { _ in
             return automaticDownload
         }
         self.presentation = presentation
         self.media = media
+        self.colors = colors
         self.isRevealed = isRevealed ?? false
         self.autoplayMedia = autoplayMedia
         self._automaticDownload = automaticDownload
@@ -781,6 +785,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
             }
            
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
+            
             
             let transition: ContainedViewLayoutTransition
             if animated {

@@ -3563,6 +3563,12 @@ public final class L10n {
   }
   /// Reset
   public static var chatAlertUnsavedReset: String  { return L10n.tr("Localizable", "Chat.Alert.Unsaved.Reset") }
+  /// Ad
+  public static var chatBotAd: String  { return L10n.tr("Localizable", "Chat.Bot.Ad") }
+  /// remove
+  public static var chatBotRemove: String  { return L10n.tr("Localizable", "Chat.Bot.Remove") }
+  /// Ad
+  public static var chatBotAdAd: String  { return L10n.tr("Localizable", "Chat.BotAd.Ad") }
   /// bot manages this chat
   public static var chatBotManagerFullAccess: String  { return L10n.tr("Localizable", "Chat.BotManager.FullAccess") }
   /// bot stopped
@@ -6193,6 +6199,32 @@ public final class L10n {
   public static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
   /// Outgoing Video Call
   public static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
+  /// The video will be published once converted and optimized.
+  public static var chatVideoProccessingContext: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Context") }
+  /// Improving Video...
+  public static var chatVideoProccessingImproving: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Improving") }
+  /// appx. %@
+  public static func chatVideoProccessingMessageTime(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.VideoProccessing.MessageTime", p1)
+  }
+  /// Video published.
+  public static var chatVideoProccessingPublished: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Published") }
+  /// The video will be published once converted and optimized
+  public static var chatVideoProccessingService: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Service") }
+  /// Processing video may take a few minutes.
+  public static var chatVideoProccessingTooltip: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Tooltip") }
+  /// The video will be published after it's optimized for the best viewing experience.
+  public static var chatVideoProccessingImprovingInfo: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Improving.Info") }
+  /// The forwarded video will be published after it's optimized for the best viewing experience.
+  public static var chatVideoProccessingImprovingInfoForward: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Improving.Info.Forward") }
+  /// View
+  public static var chatVideoProccessingPublishedView: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Published.View") }
+  /// Wait!
+  public static var chatVideoProccessingSendNowHeader: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.SendNow.Header") }
+  /// This video hasn't been converted and optimized yet. If you send it now, the viewers of the video may experience slow download speed.
+  public static var chatVideoProccessingSendNowInfo: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.SendNow.Info") }
+  /// Send Anyway
+  public static var chatVideoProccessingSendNowOK: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.SendNow.OK") }
   /// Close
   public static var chatVoiceSingleClose: String  { return L10n.tr("Localizable", "Chat.Voice.Single.Close") }
   /// Delete and Close
@@ -10085,7 +10117,7 @@ public final class L10n {
   public static var inputContextHashtashHelpBasic: String  { return L10n.tr("Localizable", "InputContext.HashtashHelp.Basic") }
   /// searches only posts from this channel
   public static var inputContextHashtashHelpChannel: String  { return L10n.tr("Localizable", "InputContext.HashtashHelp.Channel") }
-  /// Use #%@
+  /// Use %@
   public static func inputContextHashtashHelpUse(_ p1: String) -> String {
     return L10n.tr("Localizable", "InputContext.HashtashHelp.Use", p1)
   }
@@ -11255,6 +11287,10 @@ public final class L10n {
   public static var monetizationBalanceWithdrawStars: String  { return L10n.tr("Localizable", "Monetization.BalanceWithdraw.Stars") }
   /// Withdraw via Fragment
   public static var monetizationBalanceWithdrawTon: String  { return L10n.tr("Localizable", "Monetization.BalanceWithdraw.Ton") }
+  /// Telegram shares 50%@ of the revenue from ads displayed in your bot. [Learn More >]()
+  public static func monetizationHeaderBot(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Monetization.Header.Bot", p1)
+  }
   /// Earn From Your Channel
   public static var monetizationIntroTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Title") }
   /// Understood
@@ -11279,6 +11315,10 @@ public final class L10n {
   public static var monetizationIntroWithdrawalText: String  { return L10n.tr("Localizable", "Monetization.Intro.Withdrawal.Text") }
   /// Flexible Withdrawals
   public static var monetizationIntroWithdrawalTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Withdrawal.Title") }
+  /// Earn From Your Bot
+  public static var monetizationIntroBotTitle: String  { return L10n.tr("Localizable", "Monetization.IntroBot.Title") }
+  /// Telegram can display ads in your bot.
+  public static var monetizationIntroBotAdsText: String  { return L10n.tr("Localizable", "Monetization.IntroBot.Ads.Text") }
   /// Balance Available to Withdraw
   public static var monetizationOverviewAvailable: String  { return L10n.tr("Localizable", "Monetization.Overview.Available") }
   /// Proceeds Since Last Withdrawal
@@ -12613,8 +12653,8 @@ public final class L10n {
   public static var peerInfoBotEditIntro: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Intro") }
   /// Change Bot Settings
   public static var peerInfoBotEditSettings: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Settings") }
-  /// Balance
-  public static var peerInfoBotEditStarsBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsBalance") }
+  /// Stars Balance
+  public static var peerInfoBotEditStarsBalanceNew: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsBalance_New") }
   /// %d
   public static func peerInfoBotEditStarsCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_countable", p1)
@@ -12643,6 +12683,8 @@ public final class L10n {
   public static func peerInfoBotEditStarsCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_zero", p1)
   }
+  /// TON Balance
+  public static var peerInfoBotEditTonBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.TonBalance") }
   /// Username
   public static var peerInfoBotEditUsername: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Username") }
   /// has access to messages
@@ -16741,6 +16783,34 @@ public final class L10n {
   }
   /// Availability
   public static var starTransactionAvailability: String  { return L10n.tr("Localizable", "Star.Transaction.Availability") }
+  /// %d
+  public static func starTransactionBroadcastMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_countable", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_few", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_many", p1)
+  }
+  /// %d Message
+  public static func starTransactionBroadcastMessagesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_one", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_other", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_two", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_zero", p1)
+  }
   /// Transaction ID copied to clipboard.
   public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }
   /// Date
@@ -16761,27 +16831,27 @@ public final class L10n {
   public static func starTransactionSaleForCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_countable", p1)
   }
-  /// sale for %d stars
+  /// sell for %d stars
   public static func starTransactionSaleForFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_few", p1)
   }
-  /// sale for %d stars
+  /// sell for %d stars
   public static func starTransactionSaleForMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_many", p1)
   }
-  /// sale for %d star
+  /// sell for %d star
   public static func starTransactionSaleForOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_one", p1)
   }
-  /// sale for %d stars
+  /// sell for %d stars
   public static func starTransactionSaleForOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_other", p1)
   }
-  /// sale for %d stars
+  /// sell for %d stars
   public static func starTransactionSaleForTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_two", p1)
   }
-  /// sale for %d stars
+  /// sell for %d stars
   public static func starTransactionSaleForZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_zero", p1)
   }
@@ -16871,6 +16941,10 @@ public final class L10n {
   public static func starsGiftPreviewHideMyNameInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Stars.GiftPreview.HideMyName.Info", p1, p2)
   }
+  /// Bot API
+  public static var starsIntroTransactionTelegramBotApiSubtitle: String  { return L10n.tr("Localizable", "Stars.Intro.Transaction.TelegramBotApi.Subtitle") }
+  /// Paid Broadcast
+  public static var starsIntroTransactionTelegramBotApiTitle: String  { return L10n.tr("Localizable", "Stars.Intro.Transaction.TelegramBotApi.Title") }
   /// What are Stars?
   public static var starsPromoHeader: String  { return L10n.tr("Localizable", "Stars.Promo.Header") }
   /// Buy Stars on Telegram that let you do following:
@@ -17365,6 +17439,8 @@ public final class L10n {
   public static var statsStars: String  { return L10n.tr("Localizable", "Stats.Stars") }
   /// Statistics
   public static var statsStatistics: String  { return L10n.tr("Localizable", "Stats.Statistics") }
+  /// TON
+  public static var statsTon: String  { return L10n.tr("Localizable", "Stats.Ton") }
   /// %d
   public static func statsBoostsBoostersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.Boosts.Boosters_countable", p1)

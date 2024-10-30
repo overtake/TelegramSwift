@@ -761,7 +761,8 @@ private func _id_transaction(_ transaction: Star_Transaction) -> InputDataIdenti
 }
 
 
-private let _id_balance = InputDataIdentifier("_id_balance")
+private let _id_balance_stars = InputDataIdentifier("_id_stars_balance")
+private let _id_balance_ton = InputDataIdentifier("_id_ton_balance")
 
 private let _id_top_hours_graph = InputDataIdentifier("_id_top_hours_graph")
 private let _id_revenue_graph = InputDataIdentifier("_id_revenue_graph")
@@ -783,7 +784,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().monetizationHeader("%"), linkHandler: { _ in
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(state.peer?._asPeer().isBot == true ? strings().monetizationHeaderBot("%") : strings().monetizationHeader("%"), linkHandler: { _ in
         arguments.promo()
     }), data: .init(color: theme.colors.listGrayText, viewType: .singleItem)))
     index += 1
@@ -951,7 +952,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance_ton, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.ton, usd: state.balance.usd, currency: .ton), canWithdraw: state.canWithdraw, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
@@ -973,7 +974,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance_stars, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
                 if let url = state.adsUrl {
                     arguments.executeLink(url)
@@ -1093,17 +1094,19 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let premiumConfiguration = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration)
     
-    let afterNameImage = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(premiumConfiguration.minChannelRestrictAdsLevel)))
+    if state.peer?._asPeer().isChannel == true {
+        let premiumConfiguration = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration)
+        
+        let afterNameImage = generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevel(Int(premiumConfiguration.minChannelRestrictAdsLevel)))
 
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_switch_ad, data: .init(name: strings().monetizationSwitchOffAds, color: theme.colors.text, type: .switchable(state.adsRestricted), viewType: .singleItem, action: arguments.toggleAds, afterNameImage: afterNameImage, autoswitch: false)))
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationSwitchOffAdsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_switch_ad, data: .init(name: strings().monetizationSwitchOffAds, color: theme.colors.text, type: .switchable(state.adsRestricted), viewType: .singleItem, action: arguments.toggleAds, afterNameImage: afterNameImage, autoswitch: false)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationSwitchOffAdsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
 
-    
-    
+    }
+
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -1111,7 +1114,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     return entries
 }
 
-func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func FragmentMonetizationController(context: AccountContext, peerId: PeerId, onlyTonContext: RevenueStatsContext? = nil) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     
@@ -1130,32 +1133,47 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
     class ContextObject {
         let stats: RevenueStatsContext
         let transactions: RevenueStatsTransactionsContext
-        let starsRevenue: StarsRevenueStatsContext
-        let starsTransactions: StarsTransactionsContext
+        let starsRevenue: StarsRevenueStatsContext?
+        let starsTransactions: StarsTransactionsContext?
 
-        init(stats: RevenueStatsContext, transactions: RevenueStatsTransactionsContext, starsRevenue: StarsRevenueStatsContext, starsTransactions: StarsTransactionsContext) {
+        init(stats: RevenueStatsContext, transactions: RevenueStatsTransactionsContext, starsRevenue: StarsRevenueStatsContext?, starsTransactions: StarsTransactionsContext?) {
             self.stats = stats
             self.transactions = transactions
             self.starsRevenue = starsRevenue
             self.starsTransactions = starsTransactions
         }
+        
+        var starsStateValue: Signal<StarsRevenueStatsContextState?, NoError> {
+            if let starsRevenue {
+                return starsRevenue.state |> map(Optional.init)
+            } else {
+                return .single(nil)
+            }
+        }
+        var starsTransactionsValue: Signal<StarsTransactionsContext.State?, NoError> {
+            if let starsTransactions {
+                return starsTransactions.state |> map(Optional.init)
+            } else {
+                return .single(nil)
+            }
+        }
     }
     
-    let stats = RevenueStatsContext(account: context.account, peerId: peerId)
+    let stats = onlyTonContext ?? RevenueStatsContext(account: context.account, peerId: peerId)
     let transactions = RevenueStatsTransactionsContext(account: context.account, peerId: peerId)
-    let starsTransactions = context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .all)
+    let starsTransactions = onlyTonContext != nil ? nil : context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .all)
     
-    starsTransactions.loadMore()
+    starsTransactions?.loadMore()
     
-    let revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
-    revenueContext.reload()
+    let revenueContext = onlyTonContext != nil ? nil : StarsRevenueStatsContext(account: context.account, peerId: peerId)
+    revenueContext?.reload()
     
     let contextObject = ContextObject(stats: stats, transactions: transactions, starsRevenue: revenueContext, starsTransactions: starsTransactions)
         
     let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
     let adsUrl: Signal<String?, NoError> = .single(nil) |> then(context.engine.peers.requestStarsRevenueAdsAccountlUrl(peerId: peerId))
 
-    actionsDisposable.add(combineLatest(contextObject.stats.state, contextObject.transactions.state, peer, contextObject.starsRevenue.state, contextObject.starsTransactions.state, adsUrl).start(next: { state, transactions, peer, starsRevenue, starsTransactions, adsUrl in
+    actionsDisposable.add(combineLatest(contextObject.stats.state, contextObject.transactions.state, peer, contextObject.starsStateValue, contextObject.starsTransactionsValue, adsUrl).start(next: { state, transactions, peer, starsRevenue, starsTransactions, adsUrl in
         if let stats = state.stats {
             updateState { current in
                 var current = current
@@ -1198,7 +1216,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                 
                 
                 
-                if let revenue = starsRevenue.stats {
+                if let revenue = starsRevenue?.stats {
                     var starsState = StarsState(config_withdraw: false)
                     starsState.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
                     starsState.overview.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
@@ -1210,7 +1228,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                     starsState.adsUrl = adsUrl
                     
                     starsState.revenueGraph = revenue.revenueGraph
-                    starsState.transactions = starsTransactions.transactions.map { value in
+                    starsState.transactions = starsTransactions?.transactions.map { value in
                         let type: Star_TransactionType
                         var botPeer: EnginePeer?
                         let incoming: Bool = value.count > 0
@@ -1231,6 +1249,8 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                             source = .unknown
                         case .ads:
                             source = .ads
+                        case .apiLimitExtension:
+                            source = .apiLimitExtension
                         }
                         if incoming {
                             type = .incoming(source)
@@ -1239,7 +1259,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
                         }
                         
                         return Star_Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
-                    }
+                    } ?? []
                     current.starsState = starsState
                 }
                 
@@ -1366,7 +1386,8 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
             }
         }
     }, promo: {
-        showModal(with: FragmentMonetizationPromoController(context: context, peerId: peerId), for: context.window)
+        let isBot = stateValue.with { $0.peer?._asPeer().isBot ?? false }
+        showModal(with: FragmentMonetizationPromoController(context: context, peerId: peerId, isBot: isBot), for: context.window)
     }, loadDetailedGraph: { [weak contextObject] graph, x in
         return contextObject?.stats.loadDetailedGraph(graph, x: x) ?? .complete()
     }, transaction: { transaction in
@@ -1399,7 +1420,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         case .ton:
             contextObject?.transactions.loadMore()
         case .xtr:
-            contextObject?.starsTransactions.loadMore()
+            contextObject?.starsTransactions?.loadMore()
         }
     }, toggleTransactionType: { mode in
         updateState { current in
@@ -1427,7 +1448,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId) -> 
         return InputDataSignalValue(entries: entries(state, arguments: arguments, detailedDisposable: detailedDisposable))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().statsMonetization, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: onlyTonContext == nil ?  strings().statsMonetization : strings().statsTon, hasDone: false)
     
     controller.contextObject = contextObject
     

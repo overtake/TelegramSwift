@@ -862,10 +862,6 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true)  {
             width += size.width + 5
         }
-        if statusIsHidden {
-            width += 5
-            width += 40
-        }
         return NSMakeSize(width, stateHeight)
     }
     
@@ -1038,7 +1034,6 @@ private final class PeerInfoPhotoEditableView : Control {
 private final class NameContainer : View {
     let nameView = TextView()
     var statusControl: PremiumStatusControl?
-    var showStatusView: TextButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(nameView)
@@ -1063,30 +1058,6 @@ private final class NameContainer : View {
             self.statusControl = nil
         }
         
-        if item.statusIsHidden {
-            let current: TextButton
-            if let view = self.showStatusView {
-                current = view
-            } else {
-                current = TextButton()
-                current.set(font: .medium(.small), for: .Normal)
-                current.scaleOnClick = true
-                addSubview(current)
-                self.showStatusView = current
-            }
-            current.set(color: item.accentColor, for: .Normal)
-            current.set(background: item.accentColor.withAlphaComponent(0.2), for: .Normal)
-            current.set(text: strings().peerStatusShow, for: .Normal)
-            current.sizeToFit(NSMakeSize(5, 5))
-            current.layer?.cornerRadius = current.frame.height * 0.5
-            current.removeAllHandlers()
-            current.set(handler: { [weak item] _ in
-                item?.showStatusUnlocker()
-            }, for: .Click)
-        } else if let view = showStatusView {
-            performSubviewRemoval(view, animated: animated)
-            self.showStatusView = nil
-        }
         
         if let stateText = item.stateText, let control = statusControl, let peerId = item.peer?.id {
             control.userInteractionEnabled = item.peer?.isScam == false && item.peer?.isFake == false
@@ -1128,9 +1099,6 @@ private final class NameContainer : View {
             control.centerY(x: inset, addition: -1)
             inset = control.frame.maxX + 8
         }
-        if let showStatusView {
-            showStatusView.centerY(x: inset)
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -1152,6 +1120,10 @@ private final class PeerInfoHeadView : GeneralRowView {
     
     private let nameView = NameContainer(frame: .zero)
     private let statusView = TextView()
+    
+    private let statusContainer = View()
+    private var showStatusView: TextButton?
+
     private let actionsView = View()
     private var photoEditableView: PeerInfoPhotoEditableView?
     
@@ -1194,8 +1166,11 @@ private final class PeerInfoHeadView : GeneralRowView {
         photoContainer.addSubview(photoView)
         addSubview(photoContainer)
         addSubview(nameView)
-        addSubview(statusView)
         addSubview(actionsView)
+        
+        
+        statusContainer.addSubview(statusView)
+        addSubview(statusContainer)
         
         listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateSpawnerFraction()
@@ -1386,10 +1361,10 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         if item.isTopic {
             nameView.centerX(y: photoContainer.frame.maxY - 12)
-            statusView.centerX(y: nameView.frame.maxY + 8)
+            statusContainer.centerX(y: nameView.frame.maxY + 8)
         } else {
             nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
-            statusView.centerX(y: nameView.frame.maxY + 4)
+            statusContainer.centerX(y: nameView.frame.maxY + 4)
         }
         actionsView.centerX(y: self.frame.height - actionsView.frame.height - (item.nameColor != nil ? 20 : 0))
         
@@ -1399,6 +1374,10 @@ private final class PeerInfoHeadView : GeneralRowView {
         }
         backgroundView.frame = NSMakeRect(0, -130, frame.width, frame.height + 130)
 
+        if let showStatusView {
+            showStatusView.centerY(x: statusView.frame.maxX + 4)
+        }
+        
     }
     
     required init?(coder: NSCoder) {
@@ -1565,7 +1544,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         nameView.change(pos: NSMakePoint(self.focus(item.nameSize).minX, nameView.frame.minY), animated: animated)
         
         nameView.change(opacity: item.editing ? 0 : 1, animated: animated)
-        statusView.change(opacity: item.editing ? 0 : 1, animated: animated)
+        statusContainer.change(opacity: item.editing ? 0 : 1, animated: animated)
         
         backgroundView.change(opacity: item.editing || !item.colorfulProfile ? 0 : 1, animated: animated)
 
@@ -1581,6 +1560,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 }
             }, for: .Click)
         }
+        
         
         
         layoutActionItems(item.items, animated: animated)
@@ -1640,6 +1620,34 @@ private final class PeerInfoHeadView : GeneralRowView {
             self.photoVideoView?._change(size: NSMakeSize(item.photoDimension, item.photoDimension), animated: animated)
             self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
         }
+        
+
+        if item.statusIsHidden {
+            let current: TextButton
+            if let view = self.showStatusView {
+                current = view
+            } else {
+                current = TextButton()
+                current.set(font: .medium(.small), for: .Normal)
+                current.scaleOnClick = true
+                statusContainer.addSubview(current)
+                self.showStatusView = current
+            }
+            current.set(color: item.accentColor, for: .Normal)
+            current.set(background: item.accentColor.withAlphaComponent(0.2), for: .Normal)
+            current.set(text: strings().peerStatusShow, for: .Normal)
+            current.sizeToFit(NSMakeSize(5, 5))
+            current.layer?.cornerRadius = current.frame.height * 0.5
+            current.removeAllHandlers()
+            current.set(handler: { [weak item] _ in
+                item?.showStatusUnlocker()
+            }, for: .Click)
+        } else if let view = showStatusView {
+            performSubviewRemoval(view, animated: animated)
+            self.showStatusView = nil
+        }
+        
+        statusContainer.setFrameSize(NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height))
 
         
         needsLayout = true

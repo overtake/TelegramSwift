@@ -165,10 +165,10 @@ class ChatServiceItem: ChatRowItem {
             case let .premium(months):
                 prem(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil)
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: .gift), for: context.window)
             case let .starGift(amount, date, from, to, purpose):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift)
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: amount, date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil)
                 showModal(with: Star_TransactionScreen(context: context, peer: from, transaction: transaction, purpose: purpose, messageId: message?.id), for: context.window)
             }
         }
@@ -524,7 +524,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: -media.totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil)
                                         showModal(with: Star_TransactionScreen(context: context, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -1130,7 +1130,7 @@ class ChatServiceItem: ChatRowItem {
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: totalAmount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, peer: .init(peer), transaction: transaction), for: context.window)
                         })

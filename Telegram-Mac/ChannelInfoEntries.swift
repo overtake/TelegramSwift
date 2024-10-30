@@ -1215,7 +1215,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             })
         case let .balance(_, ton, stars, canSeeTon, canSeeStars, viewType):
             let icon = generateTonAndStarBalanceIcon(ton: ton, stars: stars)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoBalance, type: .nextImage(icon), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditBalance, icon: theme.icons.peerInfoBalance, type: .nextImage(icon), viewType: viewType, action: {
                 arguments.openStats(canSeeTon: canSeeTon, canSeeStars: canSeeStars)
             })
         case let .setTitle(_, text, viewType):

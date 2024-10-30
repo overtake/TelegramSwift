@@ -1049,7 +1049,7 @@ final class ChatEditState : Equatable {
     }
 
     var canEditMedia: Bool {
-        return !message.media.isEmpty && (message.media[0] is TelegramMediaImage || message.media[0] is TelegramMediaFile)
+        return !message.media.isEmpty && (message.media[0] is TelegramMediaImage || message.media[0] is TelegramMediaFile) && message.pendingProcessingAttribute == nil
     }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
         return ChatEditState(message: self.message.withUpdatedMedia([media]).withUpdatedStableVersion(stableVersion: self.message.stableVersion + 1), originalMedia: self.originalMedia ?? self.message.anyMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData, invertMedia: self.invertMedia, addedMedia: self.message.media.isEmpty || self.addedMedia)

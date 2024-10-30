@@ -45,7 +45,8 @@ class PeerInfoArguments {
     let mediaController: ()->PeerMediaController?
     
     let getStarsContext:(()->StarsRevenueStatsContext?)?
-    
+    let getTonContext:(()->RevenueStatsContext?)?
+
     
     let toggleNotificationsDisposable = MetaDisposable()
     private let deleteDisposable = MetaDisposable()
@@ -144,7 +145,7 @@ class PeerInfoArguments {
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->RevenueStatsContext?)? = nil) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -154,6 +155,7 @@ class PeerInfoArguments {
         self.pullNavigation = pullNavigation
         self.mediaController = mediaController
         self.getStarsContext = getStarsContext
+        self.getTonContext = getTonContext
     }
 
     
@@ -483,9 +485,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             self.stories = nil
         }
         
-        if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
+        var test: Bool = false
+        #if DEBUG
+        test = true
+        #endif
+        
+        if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) || test {
             self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
-            self.tonRevenueContext = nil
+            self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
         } else if peer.isChannel {
             if peer.isAdmin {
                 self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
@@ -520,6 +527,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
              return self?.mediaController
         }, getStarsContext: { [weak self] in
             return self?.revenueContext
+        }, getTonContext: { [weak self] in
+            return self?.tonRevenueContext
         })
         
         
