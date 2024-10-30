@@ -18,7 +18,6 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
     let alwaysAccept: Bool?
     let cache: ASCachePurpose?
     let hidePlayer: Bool?
-    var colors: [LottieColor]
     let playOnHover: Bool?
     let thumbAtFrame: Int
     let shimmer: Bool
@@ -28,12 +27,11 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
         self.alwaysAccept = alwaysAccept
         self.cache = cache
         self.hidePlayer = hidePlayer
-        self.colors = colors
         self.playOnHover = playOnHover
         self.shimmer = shimmer
         self.thumbAtFrame = thumbAtFrame
         self.noThumb = noThumb
-        super.init(presentation: .empty, media: media, automaticDownload: true, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
+        super.init(presentation: .empty, media: media, automaticDownload: true, autoplayMedia: AutoplayMediaPreferences.defaultSettings, colors: colors)
     }
 }
 
@@ -54,5 +52,8 @@ class ChatAnimatedStickerItem: ChatMediaItem {
         }
         parameters?.mirror = mirror && isPremiumSticker
 
+        if file.isCustomTemplateEmoji {
+            parameters?.colors = [.init(keyPath: "", color: theme.colors.text)]
+        }
     }
 }

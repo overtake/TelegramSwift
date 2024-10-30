@@ -96,12 +96,58 @@ public final class HLSVideoContent : UniversalVideoContent {
         return false
     }
     
-    public static func minimizedHLSQuality(file: FileMediaReference) -> (playlist: FileMediaReference, file: FileMediaReference)? {
+    public static func minimizedHLSQuality(file: FileMediaReference, initialQuality: UniversalVideoContentVideoQuality? = nil) -> (playlist: FileMediaReference, file: FileMediaReference)? {
         guard let qualitySet = HLSQualitySet(baseFile: file) else {
             return nil
         }
-        for (quality, qualityFile) in qualitySet.qualityFiles.sorted(by: { $0.key < $1.key }) {
-            if quality >= 400 {
+        
+        let sorted = qualitySet.qualityFiles.sorted(by: { $0.key < $1.key })
+        
+        // If initialQuality is specified, find the closest match
+        if let initialQuality = initialQuality {
+            let targetQuality: Int
+            switch initialQuality {
+            case .auto:
+                // For auto, use the default behavior of finding first quality >= 400
+                return findFirstQualityAbove(400, in: sorted, qualitySet: qualitySet)
+            case .quality(let quality):
+                targetQuality = quality
+                // Find the closest quality
+                return findClosestQuality(to: targetQuality, in: sorted, qualitySet: qualitySet)
+            }
+        } else {
+            // Original behavior: find first quality >= 400
+            return findFirstQualityAbove(400, in: sorted, qualitySet: qualitySet)
+        }
+    }
+
+    // Helper function to find closest quality
+    private static func findClosestQuality(
+        to targetQuality: Int,
+        in sorted: [(key: Int, value: FileMediaReference)],
+        qualitySet: HLSQualitySet
+    ) -> (playlist: FileMediaReference, file: FileMediaReference)? {
+        guard !sorted.isEmpty else { return nil }
+        
+        // Find the quality with minimal difference from target
+        let closestQuality = sorted.min(by: { abs($0.key - targetQuality) < abs($1.key - targetQuality) })
+        
+        guard let closestQuality = closestQuality,
+              let playlistFile = qualitySet.playlistFiles[closestQuality.key] else {
+            return nil
+        }
+        
+        return (playlistFile, closestQuality.value)
+    }
+
+    // Helper function to find first quality above threshold
+    private static func findFirstQualityAbove(
+        _ threshold: Int,
+        in sorted: [(key: Int, value: FileMediaReference)],
+        qualitySet: HLSQualitySet
+    ) -> (playlist: FileMediaReference, file: FileMediaReference)? {
+        for (quality, qualityFile) in sorted {
+            if quality >= threshold {
                 guard let playlistFile = qualitySet.playlistFiles[quality] else {
                     return nil
                 }
@@ -111,8 +157,8 @@ public final class HLSVideoContent : UniversalVideoContent {
         return nil
     }
        
-    public static func minimizedHLSQualityPreloadData(postbox: Postbox, file: FileMediaReference, userLocation: MediaResourceUserLocation, prefixSeconds: Int, autofetchPlaylist: Bool) -> Signal<(FileMediaReference, Range<Int64>)?, NoError> {
-        guard let fileSet = minimizedHLSQuality(file: file) else {
+    public static func minimizedHLSQualityPreloadData(postbox: Postbox, file: FileMediaReference, userLocation: MediaResourceUserLocation, prefixSeconds: Int, autofetchPlaylist: Bool, initialQuality: UniversalVideoContentVideoQuality? = nil) -> Signal<(FileMediaReference, Range<Int64>)?, NoError> {
+        guard let fileSet = minimizedHLSQuality(file: file, initialQuality: initialQuality) else {
             return .single(nil)
         }
         

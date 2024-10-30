@@ -740,7 +740,7 @@ class MediaVideoCell : MediaCell {
                 if let fileMedia = layoutItem.fileMedia {
                     
                     if isHLSVideo(file: fileMedia.media) {
-                        let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: fileMedia, userLocation: .peer(layoutItem.peerId), prefixSeconds: 10, autofetchPlaylist: true)
+                        let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: fileMedia, userLocation: .peer(layoutItem.peerId), prefixSeconds: 10, autofetchPlaylist: true, initialQuality: FastSettings.videoQuality)
                         |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
                             guard let fileAndRange else {
                                 return .complete()

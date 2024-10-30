@@ -1120,6 +1120,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             if strongSelf.isStory || (isSensitive && isSpoiler) {
                                 removeProgress = true
                             }
+                            if let media = media as? TelegramMediaFile {
+                                if isHLSVideo(file: media) {
+                                    removeProgress = true
+                                }
+                            }
                             
                             if removeProgress {
                                  if let progressView = strongSelf.progressView {
@@ -1244,7 +1249,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let context = context {
             if let media = media as? TelegramMediaFile, let parent = parent {
                 if isHLSVideo(file: media) {
-                    let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: .message(message: MessageReference(parent), media: media), userLocation: .peer(parent.id.peerId), prefixSeconds: 10, autofetchPlaylist: true)
+                    let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: .message(message: MessageReference(parent), media: media), userLocation: .peer(parent.id.peerId), prefixSeconds: 10, autofetchPlaylist: true, initialQuality: FastSettings.videoQuality)
                     |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
                         guard let fileAndRange else {
                             return .complete()

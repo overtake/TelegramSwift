@@ -195,11 +195,11 @@ struct HighlightFoundText : Equatable {
     }
 }
 
-final class ChatHistoryEntryData : Equatable {
+struct ChatHistoryEntryData : Equatable {
     let location: MessageHistoryEntryLocation?
     let additionData: MessageEntryAdditionalData
     let autoPlay: AutoplayMediaPreferences?
-    init(_ location: MessageHistoryEntryLocation?, _ additionData: MessageEntryAdditionalData, _ autoPlay: AutoplayMediaPreferences?) {
+    init(_ location: MessageHistoryEntryLocation? = nil, _ additionData: MessageEntryAdditionalData = .init(), _ autoPlay: AutoplayMediaPreferences? = nil) {
         self.location = location
         self.additionData = additionData
         self.autoPlay = autoPlay
@@ -610,6 +610,17 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         return true
     }
     
+    let insertPendingProccessing:(ChatHistoryEntry)->Void = { entry in
+        if let message = entry.firstMessage, message.pendingProcessingAttribute != nil {
+            let action = TelegramMediaAction(action: .customText(text: strings().chatVideoProccessingService, entities: [], additionalAttributes: nil))
+            let service = message.withUpdatedMedia([action]).withUpdatedStableId(0).withUpdatedTimestamp(message.timestamp - 1)
+            
+            
+            entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData()))
+        }
+    }
+    
+    
     for (i, entry) in messagesEntries.enumerated() {
         var message = entry.message
         
@@ -995,7 +1006,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         }
 
         
-        
+ 
         let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(timestamp)), isRead, renderType, itemType, fwdType, data)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
@@ -1008,9 +1019,12 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                 if groupedPhotos.count > 0 {
                     if let groupInfo = groupInfo {
                         if groupedPhotos.count > 1 {
-                            entries.append(.groupedPhotos(groupedPhotos, groupInfo: groupInfo))
+                            let entry: ChatHistoryEntry = .groupedPhotos(groupedPhotos, groupInfo: groupInfo)
+                            entries.append(entry)
+                            insertPendingProccessing(entry)
                         } else {
                             entries.append(groupedPhotos[0])
+                            insertPendingProccessing(groupedPhotos[0])
                         }
                     }
                     groupedPhotos.removeAll()
@@ -1021,6 +1035,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             }
         } else {
             entries.append(entry)
+            insertPendingProccessing(entry)
         }
         
         prev = nil
@@ -1040,6 +1055,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: 0), timestamp: Int32(dateId))
             entries.append(.DateEntry(index, renderType, chatTheme))
         }
+        
+       
         
         if let next = next, dayGrouping {
             let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
@@ -1097,8 +1114,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
     if !groupedPhotos.isEmpty, let key = groupInfo {
         if groupedPhotos.count == 1 {
             entries.append(groupedPhotos[0])
+            insertPendingProccessing(groupedPhotos[0])
         } else {
-            entries.append(.groupedPhotos(groupedPhotos, groupInfo: key))
+            let entry: ChatHistoryEntry = .groupedPhotos(groupedPhotos, groupInfo: key)
+            entries.append(entry)
+            insertPendingProccessing(entry)
         }
     }
     

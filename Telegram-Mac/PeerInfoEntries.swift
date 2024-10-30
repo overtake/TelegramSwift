@@ -84,7 +84,7 @@ func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, argu
     if let threadData = threadData {
         return topicInfoEntries(view: view, threadData: threadData, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if peerViewMainPeer(view) is TelegramUser {
-        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState)
+        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState, tonRevenueState: tonRevenueState)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:

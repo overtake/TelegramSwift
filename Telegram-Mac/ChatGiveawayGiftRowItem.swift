@@ -156,7 +156,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
                 case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
                     if let transactionId, let boostPeerId, let peer = message.peers[boostPeerId] {
                         
-                        let transaction = StarsContext.State.Transaction(flags: [.isGift], id: transactionId, count: amount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: giveawayMessageId, media: [], subscriptionPeriod: nil, starGift: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isGift], id: transactionId, count: amount, date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: giveawayMessageId, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil)
                         
                         showModal(with: Star_TransactionScreen(context: context, peer: .init(peer), transaction: transaction), for: context.window)
                     }

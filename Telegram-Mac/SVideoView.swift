@@ -56,6 +56,9 @@ func roundToStandardQuality(size: Int) -> Int {
     return closestQuality
 }
 
+
+
+
 private final class SVideoPipControls : Control {
     
     var bufferingRanges:[Range<CGFloat>] = [] {
@@ -1186,11 +1189,13 @@ class SVideoView: NSView {
             
             if let mediaPlayer = self?.mediaPlayer, let quality = mediaPlayer.videoQualityState() {
                 menu.addItem(ContextMenuItem(strings().videoQualityAuto, handler: { [weak mediaPlayer] in
+                    FastSettings.videoQuality = .auto
                     mediaPlayer?.setVideoQuality(.auto)
                 }, state: quality.preferred == .auto ? .on : nil))
                 
                 for value in quality.available {
                     menu.addItem(ContextMenuItem("\(roundToStandardQuality(size: value))p", handler: { [weak mediaPlayer] in
+                        FastSettings.videoQuality = .quality(value)
                         mediaPlayer?.setVideoQuality(.quality(value))
                     }, state: quality.preferred == .quality(value) ? .on : nil))
                 }

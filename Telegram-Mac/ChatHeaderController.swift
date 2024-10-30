@@ -99,21 +99,24 @@ struct ChatHeaderState : Identifiable, Equatable {
         let header: TextViewLayout
         let text: TextViewLayout
         let dismissLayout: TextViewLayout
+        let adHeader: TextViewLayout
         let message: Message
         init(message: Message, chatInteraction: ChatInteraction) {
             self.message = message
             
-            let dismissLayout = TextViewLayout(.initialize(string: "remove", color: theme.colors.accent, font: .normal(.small)), alignment: .center)
+            let dismissLayout = TextViewLayout(.initialize(string: strings().chatAdWhatThis, color: theme.colors.accent, font: .normal(.small)), alignment: .center)
             dismissLayout.measure(width: .greatestFiniteMagnitude)
 
             self.dismissLayout = dismissLayout
             
             let context = chatInteraction.context
             
+            adHeader = .init(.initialize(string: strings().chatBotAdAd, color: theme.colors.accent, font: .medium(.text)))
+            adHeader.measure(width: .greatestFiniteMagnitude)
+            
             let headerAttr = NSMutableAttributedString()
-            headerAttr.append(string: "Ad", color: theme.colors.accent, font: .medium(.text))
-            headerAttr.append(string: " ", color: theme.colors.accent, font: .medium(.text))
-            headerAttr.append(string: "Rockstar Games", color: theme.colors.text, font: .medium(.text))
+            
+            headerAttr.append(string: message.author?.displayTitle ?? "", color: theme.colors.text, font: .medium(.text))
             
             let headerLayout = TextViewLayout(headerAttr)
             self.header = headerLayout
@@ -132,6 +135,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         
         var height: CGFloat {
             var height: CGFloat = 10
+            height += adHeader.layoutSize.height + 4
             height += header.layoutSize.height
             height += 4
             height += text.layoutSize.height
@@ -344,20 +348,22 @@ class ChatHeaderController {
                 viewInfos.insert(("fourth", fourth, previousFourth, state.fourthHeight), at: 0)
             }
 
-            // Calculate cumulative positions
             var cumulativeY: CGFloat = 0
             var positions: [String: NSPoint] = [:]
             for info in viewInfos {
                 positions[info.name] = NSMakePoint(0, cumulativeY)
-                cumulativeY += info.height
+                if info.current != nil {
+                    cumulativeY += info.height
+                }
             }
 
-            // Calculate cumulative heights below each view
             var cumulativeHeightsBelow: [String: CGFloat] = [:]
             var cumulativeHeightBelow: CGFloat = 0
             for info in viewInfos.reversed() {
                 cumulativeHeightsBelow[info.name] = cumulativeHeightBelow
-                cumulativeHeightBelow += info.height
+                if info.current != nil {
+                    cumulativeHeightBelow += info.height
+                }
             }
 
             var lastView: View? = nil
@@ -426,6 +432,7 @@ class ChatHeaderController {
                 }
 
                 for (view, fromPosition, toPosition, aboveView) in added {
+                    let justAdded = view.superview == nil
                     if let aboveView = aboveView {
                         current.addSubview(view, positioned: .below, relativeTo: aboveView)
                     } else {
@@ -437,6 +444,8 @@ class ChatHeaderController {
                         view.layer?.animatePosition(from: fromPosition, to: toPosition, duration: 0.2)
                         // Uncomment the following line if you need to animate alpha
                         // view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    } else if justAdded, current.superview != nil {
+                         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
             
@@ -2582,31 +2591,61 @@ private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
     private var botAd: ChatHeaderState.BotAdMessage?
     private let header: TextView = TextView()
+    private let adHeaderView = TextView()
     private let text = InteractiveTextView()
-    private let dismiss = TextView()
+    private let whatsThis = TextView()
+    private var dismiss: ImageButton?
     private var state: ChatHeaderState
+    
+    private var imageView: ChatInteractiveContentView?
+    
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
         self.state = state
         super.init(frame: frame)
         
+        addSubview(adHeaderView)
         addSubview(header)
         addSubview(text)
         
-        addSubview(dismiss)
+        addSubview(whatsThis)
         
-        dismiss.scaleOnClick = true
-        dismiss.isSelectable = false
+        whatsThis.scaleOnClick = true
+        whatsThis.isSelectable = false
         
         header.userInteractionEnabled = false
         header.isSelectable = false
         
         text.userInteractionEnabled = false
         
+        adHeaderView.userInteractionEnabled = false
+        adHeaderView.isSelectable = false
         
+
         self.set(handler: { [weak self] _ in
-           
+            if let interactions = self?.chatInteraction, let adAttribute = self?.state.botAd?.message.adAttribute {
+                let context = interactions.context
+                let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+                execute(inapp: link)
+                interactions.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
+            }
         }, for: .Click)
+        
+        let menu:(Control)->Void = { [weak self] control in
+            if let message = self?.state.botAd?.message, let interactions = self?.chatInteraction {
+                let signal = chatMenuItems(for: message, entry: nil, textLayout: nil, chatInteraction: interactions) |> deliverOnMainQueue
+                if let event = NSApp.currentEvent {
+                    _ = signal.startStandalone(next: { items in
+                        let menu = ContextMenu()
+                        menu.items = items
+                        AppMenu.show(menu: menu, event: event, for: control)
+                    })
+                }
+            }
+        }
+        
+        whatsThis.set(handler: menu, for: .Click)
+        self.set(handler: menu, for: .RightDown)
         
         update(with: state, animated: false)
 
@@ -2630,23 +2669,70 @@ private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
         guard let botAd = state.botAd else {
             return
         }
+        
+        adHeaderView.update(botAd.adHeader)
                 
         let context = self.chatInteraction.context
         
-        self.dismiss.update(botAd.dismissLayout)
-        self.dismiss.setFrameSize(NSMakeSize(botAd.dismissLayout.layoutSize.width + 8, botAd.dismissLayout.layoutSize.height + 4))
+        self.whatsThis.update(botAd.dismissLayout)
+        self.whatsThis.setFrameSize(NSMakeSize(botAd.dismissLayout.layoutSize.width + 8, botAd.dismissLayout.layoutSize.height + 4))
         
-        self.dismiss.layer?.cornerRadius = self.dismiss.frame.height / 2
-        self.dismiss.backgroundColor = theme.colors.accent.withAlphaComponent(0.2)
+        self.whatsThis.layer?.cornerRadius = self.whatsThis.frame.height / 2
+        self.whatsThis.backgroundColor = theme.colors.accent.withAlphaComponent(0.2)
         
-        let headerAttr = NSMutableAttributedString()
-        headerAttr.append(string: "Ad", color: theme.colors.accent, font: .medium(.text))
-        headerAttr.append(string: " ", color: theme.colors.accent, font: .medium(.text))
-        headerAttr.append(string: "Rockstar Games", color: theme.colors.text, font: .medium(.text))
-                
         self.header.update(botAd.header)
         
         self.text.set(text: botAd.text, context: context)
+        
+        
+        if let media = botAd.message.media.first {
+            let current: ChatInteractiveContentView
+            if let view = self.imageView {
+                current = view
+            } else {
+                current = ChatInteractiveContentView(frame: NSMakeRect(0, 0, 40, 40))
+                self.addSubview(current)
+                self.imageView = current
+            }
+            current.layer?.cornerRadius = 4
+            current.update(with: media, size: current.frame.size, context: self.chatInteraction.context, parent: botAd.message, table: nil, animated: false)
+        } else if let view = self.imageView {
+            performSubviewRemoval(view, animated: animated)
+            self.imageView = nil
+        }
+        
+        if botAd.message.media.first == nil {
+            let current: ImageButton
+            if let view = self.dismiss {
+                current = view
+            } else {
+                current = ImageButton()
+                self.dismiss = current
+                addSubview(current)
+                current.autohighlight = false
+                current.scaleOnClick = true
+            }
+            
+            current.set(image: NSImage(resource: .iconStoryClose).precomposed(theme.colors.grayIcon), for: .Normal)
+            current.setSingle(handler: { [weak self] _ in
+                if let interactions = self?.chatInteraction {
+                    let context = interactions.context
+                    if context.isPremium, let opaqueId = self?.botAd?.message.adAttribute?.opaqueId {
+                        _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+                        interactions.removeAd(opaqueId)
+                        showModalText(for: context.window, text: strings().chatDisableAdTooltip)
+                    } else {
+                        prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                    }
+                }
+            }, for: .Click)
+            
+            current.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+        } else if let dismiss {
+            performSubviewRemoval(dismiss, animated: animated)
+            self.dismiss = nil
+            
+        }
         
         
         updateLocalizationAndTheme(theme: theme)
@@ -2661,9 +2747,12 @@ private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        self.header.setFrameOrigin(NSMakePoint(20, 10))
-        self.dismiss.setFrameOrigin(NSMakePoint(self.header.frame.maxX + 2, self.header.frame.minY + 1))
+        self.adHeaderView.setFrameOrigin(NSMakePoint(20, 10))
+        self.header.setFrameOrigin(NSMakePoint(20, adHeaderView.frame.maxY + 4))
+        self.whatsThis.setFrameOrigin(NSMakePoint(self.adHeaderView.frame.maxX + 5, self.adHeaderView.frame.minY))
         self.text.setFrameOrigin(NSMakePoint(20, self.header.frame.maxY + 4))
+        self.imageView?.centerY(x: frame.width - 50 - 10)
+        dismiss?.centerY(x: frame.width - 30 - 20)
     }
     
     override func setFrameSize(_ newSize: NSSize) {

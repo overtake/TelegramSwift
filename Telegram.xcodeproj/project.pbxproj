@@ -201,6 +201,8 @@
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
 		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
 		2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4AF2CABC4260065186B /* libopenh264.a */; };
+		273AF9922CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273AF9912CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift */; };
+		273AF9942CCB7E4F00C2067E /* improving_video.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 273AF9932CCB7E4F00C2067E /* improving_video.tgs */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
 		273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273C04042C2B75E900AF2751 /* MediaPlayer.framework */; };
@@ -1831,6 +1833,8 @@
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
 		2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRequestJoinRowItem.swift; sourceTree = "<group>"; };
 		2739A4AF2CABC4260065186B /* libopenh264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopenh264.a; path = "core-xprojects/OpenH264/build/output/lib/libopenh264.a"; sourceTree = "<group>"; };
+		273AF9912CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatVideoProcessingTooltip.swift; sourceTree = "<group>"; };
+		273AF9932CCB7E4F00C2067E /* improving_video.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = improving_video.tgs; sourceTree = "<group>"; };
 		273C04042C2B75E900AF2751 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
 		2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRecentPeersController.swift; sourceTree = "<group>"; };
@@ -4873,6 +4877,7 @@
 				27CCE83B2B83D6B100F7C687 /* AutomaticBusinessMessageSetupChatContents.swift */,
 				276143362BD93AE00034338C /* InlineAvatarLayer.swift */,
 				27819CE52C738462005B3F13 /* ChatStarReactionUndo.swift */,
+				273AF9912CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -6302,6 +6307,7 @@
 				27CE375C276095DA007E6F1B /* menu */,
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
+				273AF9932CCB7E4F00C2067E /* improving_video.tgs */,
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				270375F02C9CDF20003EC235 /* duck_passcode.tgs */,
 				270376032CA1A760003EC235 /* duck_uploads.tgs */,
@@ -6961,6 +6967,7 @@
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
 				27672EB426F8D63300297DB4 /* 6.m4a in Resources */,
 				27CE1566297966D8001F8CE8 /* emoji_category_arrow_to_search.tgs in Resources */,
+				273AF9942CCB7E4F00C2067E /* improving_video.tgs in Resources */,
 				271892162B18D9CD0008B238 /* transcription_locked.tgs in Resources */,
 				2751E7A527F72078003E3937 /* menu_note_slash.tgs in Resources */,
 				27672EB526F8D63500297DB4 /* 7.m4a in Resources */,
@@ -7695,6 +7702,7 @@
 				27F7EED22940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift in Sources */,
 				27BCE41D2A49D0F10015E5EE /* ChatListEmptyItem.swift in Sources */,
 				C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */,
+				273AF9922CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift in Sources */,
 				2747969828F9645900A891F3 /* SearchTopicRowItem.swift in Sources */,
 				D014AA242316CE0700CE5362 /* NewThemeController.swift in Sources */,
 				C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */,
@@ -8643,7 +8651,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.2.2;
+				MARKETING_VERSION = 11.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (
@@ -8698,7 +8706,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.2;
+				MARKETING_VERSION = 11.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8749,7 +8757,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.2;
+				MARKETING_VERSION = 11.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib";
@@ -8869,7 +8877,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 11.2.2;
+				MARKETING_VERSION = 11.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = (

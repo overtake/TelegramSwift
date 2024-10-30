@@ -670,6 +670,12 @@ final class InlineStickerItemLayer : SimpleLayer {
                 mediaResource = reference.resourceReference(file.resource)
             }
             
+            if file.isAnimatedSticker || file.isVideoSticker {
+                fetchDisposable.set(freeMediaFileResourceInteractiveFetched(account: self.account, userLocation: .other, fileReference: reference, resource: reference.media.resource).start())
+            } else {
+                fetchDisposable.set(nil)
+            }
+            
             let data: Signal<MediaResourceData, NoError>
             if let resource = file.resource as? LocalBundleResource {
                 data = Signal { subscriber in
@@ -859,9 +865,9 @@ final class InlineStickerItemLayer : SimpleLayer {
                         cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                     })
                 }
+                
             }
             
-           
         }
     }
     

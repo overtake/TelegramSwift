@@ -387,6 +387,7 @@ func initialize() -> [String] {
     array.append("peerInfoMembers")
     array.append("peerInfoStarsBalance")
     array.append("peerInfoBalance")
+    array.append("peerInfoTonBalance")
     array.append("peerInfoBotUsername")
     array.append("chatUndoAction")
     array.append("appUpdate")
@@ -956,6 +957,7 @@ func initialize() -> [String] {
     array.append("avatar_star_badge_large_gray")
 
     array.append("chatlist_apps")
+    
 
     return array
 }

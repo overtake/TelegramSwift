@@ -42,7 +42,7 @@ class ChatInputAttachView: ImageButton, Notifable {
             if let peer = chatInteraction.presentation.peer {
                 
                 var items:[ContextMenuItem] = []
-                if let editState = chatInteraction.presentation.interfaceState.editState {
+                if let editState = chatInteraction.presentation.interfaceState.editState, editState.message.pendingProcessingAttribute == nil {
                     if let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                         if editState.message.groupingKey == nil {
                             items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
@@ -80,7 +80,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 }
                             }
                         }
-                    } else {
+                    } else if editState.message.pendingProcessingAttribute == nil {
                         if editState.message.media.isEmpty {
                             items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                                 self?.chatInteraction.updateEditingMessageMedia(nil, true)
@@ -347,7 +347,7 @@ class ChatInputAttachView: ImageButton, Notifable {
         if value?.interfaceState.editState != oldValue?.interfaceState.editState {
             if let editState = value?.interfaceState.editState {
                 let isMedia = editState.message.anyMedia is TelegramMediaFile || editState.message.anyMedia is TelegramMediaImage
-                editMediaAccessory.change(opacity: isMedia ? 1 : 0)
+                editMediaAccessory.change(opacity: isMedia && editState.canEditMedia ? 1 : 0)
                 self.highlightHovered = false
                 self.autohighlight = false
             } else {

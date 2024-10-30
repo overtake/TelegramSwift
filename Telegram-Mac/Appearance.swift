@@ -492,6 +492,11 @@ func generateStarBalanceIcon(_ text: String) -> CGImage {
     return generateBalanceIcon(text: text, icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
 }
 
+
+func generateTonBalanceIcon(_ text: String) -> CGImage {
+    return generateBalanceIcon(text: text, icon: NSImage(resource: .iconTonCurrency).precomposed(flipVertical: true, zoom: 0.75))
+}
+
 private func generateBalanceIcon(text: String, icon: CGImage) -> CGImage {
     let textNode = TextNode.layoutText(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     let icon = icon
@@ -2873,6 +2878,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerInfoMembers: { NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true) },
                                                peerInfoStarsBalance: { NSImage(resource: .iconPeerInfoStarsBalance).precomposed(flipVertical: true) },
                                                peerInfoBalance: { NSImage(resource: .iconPeerInfoBalance).precomposed(flipVertical: true) },
+                                               peerInfoTonBalance: { NSImage(resource: .iconPeerInfoTonBalance).precomposed(flipVertical: true) },
                                                peerInfoBotUsername: { NSImage(resource: .iconPeerInfoBotUsername).precomposed(flipVertical: true) },
                                                chatUndoAction: { NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF)) },
                                                appUpdate: { NSImage(named: "Icon_AppUpdate")!.precomposed() },
@@ -3448,19 +3454,22 @@ func generateSyntaxThemeParams(_ presentationTheme: TelegramPresentationTheme, b
     var redColor = presentationTheme.chat.redUI(isIncoming, bubbled)
     var greenColor = presentationTheme.chat.greenUI(isIncoming, bubbled)
     var blueColor = presentationTheme.chat.linkColor(isIncoming, bubbled)
-    
+    var purpleColor = presentationTheme.colors.peerAvatarVioletTop
+
     if presentationTheme.colors.isDark {
         textColor = textColor.lighter(amount: 0.05)
         grayColor = grayColor.lighter(amount: 0.05)
         redColor = redColor.lighter(amount: 0.05)
         greenColor = greenColor.lighter(amount: 0.05)
         blueColor = blueColor.lighter(amount: 0.05)
+        purpleColor = purpleColor.lighter(amount: 0.05)
     } else {
         textColor = textColor.darker(amount: 0.15)
         grayColor = grayColor.darker(amount: 0.15)
         redColor = redColor.darker(amount: 0.15)
         greenColor = greenColor.darker(amount: 0.15)
         blueColor = blueColor.darker(amount: 0.15)
+        purpleColor = blueColor.darker(amount: 0.15)
     }
     return [
         "comment": grayColor,
@@ -3469,7 +3478,7 @@ func generateSyntaxThemeParams(_ presentationTheme: TelegramPresentationTheme, b
         "doctype": grayColor,
         "cdata": grayColor,
         "punctuation": grayColor,
-        "property": redColor,
+        "property": purpleColor,
         "tag": greenColor,
         "boolean": greenColor,
         "number": greenColor,
@@ -3479,7 +3488,7 @@ func generateSyntaxThemeParams(_ presentationTheme: TelegramPresentationTheme, b
         "selector": redColor,
         "attr-name": redColor,
         "string": textColor,
-        "char": textColor,
+        "char": purpleColor,
         "builtin": textColor,
         "inserted": greenColor,
         "operator": blueColor,

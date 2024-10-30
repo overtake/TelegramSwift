@@ -230,7 +230,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 }
 
 
-func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true) -> Signal<[ContextMenuItem], NoError> {
+func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true, fromAdPromo: Bool = false) -> Signal<[ContextMenuItem], NoError> {
 
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
         
@@ -258,7 +258,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fourthBlock:[ContextMenuItem] = []
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
-        
+        var sevenBlock:[ContextMenuItem] = []
+
         if !isService, let edited = message.editedAttribute {
             let string = stringForRelativeTimestamp(relativeTimestamp: edited.date, relativeTo: context.timestamp)
             zeroBlock.append(ContextMenuItem(strings().chatContextEditedAt(string), itemImage: MenuAnimation.menu_edited.value))
@@ -320,13 +321,22 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             if adAttribute.canReport {
                 
-                items.append(ContextMenuItem(strings().chatMessageSponsoredAbout, handler: {
-                    showModal(with: FragmentAdsInfoController(context: context), for: context.window)
-                }, itemImage: MenuAnimation.menu_show_info.value))
-                
-                items.append(ContextSeparatorItem())
+                if !fromAdPromo {
+                    items.append(ContextMenuItem(strings().chatMessageSponsoredAbout, handler: {
+                        showModal(with: FragmentAdsInfoController(context: context, message: message, interactions: chatInteraction), for: context.window)
+                    }, itemImage: MenuAnimation.menu_show_info.value))
+                    
+                    items.append(ContextSeparatorItem())
+                }
+               
                 
                 items.append(ContextMenuItem(strings().chatMessageSponsoredReport, handler: {
+                    
+                    
+                    if fromAdPromo {
+                        closeAllModals(window: context.window)
+                    }
+                    
                     _ = showModalProgress(signal: context.engine.messages.reportAdMessage(peerId: data.peerId, opaqueId: adAttribute.opaqueId, option: nil), for: context.window).startStandalone(next: { result in
                         switch result {
                         case .reported:
@@ -377,10 +387,15 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 
             }
             
-            
             if !context.premiumIsBlocked {
                 items.append(ContextMenuItem(strings().chatContextHideAd, handler: {
-                    prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                    if context.isPremium, let opaqueId = message.adAttribute?.opaqueId {
+                        _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+                        chatInteraction.removeAd(opaqueId)
+                        showModalText(for: context.window, text: strings().chatDisableAdTooltip)
+                    } else {
+                        prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                    }
                 }, itemImage: MenuAnimation.menu_clear_history.value))
             }
             
@@ -415,15 +430,24 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemImage: MenuAnimation.menu_restrict.value))
         }
 
-        if data.message.isScheduledMessage, let peer = data.peer, !isService {
+        if data.message.isScheduledMessage, let peer = data.peer, !isService  {
             firstBlock.append(ContextMenuItem(strings().chatContextScheduledSendNow, handler: {
-                _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: messageId).start()
+                if data.message.pendingProcessingAttribute != nil {
+                    verifyAlert(for: context.window, header: strings().chatVideoProccessingSendNowHeader, information: strings().chatVideoProccessingSendNowInfo, ok: strings().chatVideoProccessingSendNowOK, successHandler: { _ in
+                        _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: messageId).start()
+                    })
+                } else {
+                    _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: messageId).start()
+                }
             }, itemImage: MenuAnimation.menu_send_now.value))
-            firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
-                showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, inlineStickers: data.message.associatedMedia, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
-               }), for: context.window)
-            }, itemImage: MenuAnimation.menu_schedule_message.value))
+
+            if data.message.pendingProcessingAttribute == nil {
+                firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
+                    showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
+                        _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, inlineStickers: data.message.associatedMedia, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
+                   }), for: context.window)
+                }, itemImage: MenuAnimation.menu_schedule_message.value))
+            }
         }
         
         
@@ -835,7 +859,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 
         
         
-        if data.chatMode.threadId != data.message.id, !isService {
+        if data.chatMode.threadId != data.message.id, !isService, message.pendingProcessingAttribute == nil {
             secondBlock.append(ContextMenuItem(strings().messageContextSelect, handler: {
                 data.chatInteraction.withToggledSelectedMessage({
                     $0.withToggledSelectedMessage(data.message.id)
@@ -940,7 +964,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             }, itemImage: MenuAnimation.menu_note_slash.value))
                         }
                     }
-                    if !data.isMediaStory {
+                    if !data.isMediaStory, data.message.pendingProcessingAttribute == nil {
                         
                         if isHLSVideo(file: file), let quality = HLSQualitySet(baseFile: FileMediaReference.message(message: .init(message), media: file)) {
                             
@@ -1169,12 +1193,13 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }, packs: references, context: context)
                 
                 sixBlock.append(item)
-                
-//                sixBlock.append(ContextMenuItem(strings().chatContextViewEmojiSetNewCountable(sources.count), handler: {
-//                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: sources), for: context.window)
-//                }, itemImage: MenuAnimation.menu_smile.value))
             }
         }
+        
+        if let attribute = message.pendingProcessingAttribute {
+            sevenBlock.append(ContextMenuItem(strings().chatVideoProccessingContext, removeTail: false))
+        }
+        
         
         let blocks:[[ContextMenuItem]] = [zeroBlock, firstBlock,
                                           add_secondBlock,
@@ -1182,7 +1207,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                                           secondBlock,
                                           fourthBlock,
                                           fifthBlock,
-                                          sixBlock].filter { !$0.isEmpty }
+                                          sixBlock, sevenBlock].filter { !$0.isEmpty }
         
         for (i, block) in blocks.enumerated() {
             if i == 0 {
