@@ -2251,6 +2251,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             var current = current
             current.hashtag = hashtag
             current.selectedTag = hashtag.mode
+            current.searchQuery = hashtag.text
             return current
         }
 
@@ -2854,7 +2855,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             for section in searchSection.sections {
                 if let controller = section.controller as? SearchController {
                     if let tagRawValue = Int32(section.title()), let tag = PeerListState.SelectedSearchTag(rawValue: tagRawValue) {
-                        controller.updateSearchTags(tag.searchTags(state.peerTag?.id, hashtag: state.hashtag))
+                        controller.updateSearchTags(tag.searchTags(state.peerTag?.id, hashtag: state.hashtag), search: state.searchQuery)
                         if tag == state.selectedTag {
                             controller.request(with: state.searchQuery)
                         }

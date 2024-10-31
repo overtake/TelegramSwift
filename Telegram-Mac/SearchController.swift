@@ -742,7 +742,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private var globalStorySearchContext: SearchStoryListContext?
     private let globalStorySearchState:Promise<StoryListContext.State?> = Promise(nil)
     
-    let searchMessagesState: ValuePromise<CachedSearchMessages?> = ValuePromise()
+    let searchMessagesState: ValuePromise<CachedSearchMessages?> = ValuePromise(nil)
     let searchMessagesStateValue: Atomic<CachedSearchMessages?> = Atomic(value: nil)
 
     
@@ -757,7 +757,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     let isLoading = Promise<Bool>(false)
     private(set) var searchTags: SearchTags?
     
-    public func updateSearchTags(_ globalTags: SearchTags) {
+    public func updateSearchTags(_ globalTags: SearchTags, search: String) {
+        self.query = search
         self._messagesValue.set(.single((ExternalSearchMessages(), false)))
         self.globalTagsValue.set(globalTags)
         self.searchTags = globalTags
