@@ -210,7 +210,7 @@ final class MenuView: Control, TableViewDelegate {
             if isSeparator, i == 0 {
                 copy.removeFirst()
             } else if isSeparator, i == items.count - 1 {
-                copy.removeFirst()
+                copy.removeLast()
             }
             if i > 0 && i != items.count - 1 {
                 let prev = items[i - 1] is ContextSeparatorItem
