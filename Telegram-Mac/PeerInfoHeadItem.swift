@@ -221,7 +221,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             if peer.id != item.context.peerId, item.peerView.peerIsContact, peer.phone != nil {
                 items.append(ActionItem(text: strings().peerInfoActionShare, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_forward, action: arguments.shareContact))
             }
-            if peer.id != item.context.peerId {
+            if peer.id != item.context.peerId, !peer.isDeleted {
                 items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: {
                     arguments.giftPremium()
                 }))

@@ -368,7 +368,7 @@ class ChatHeaderController {
 
             var lastView: View? = nil
             for info in viewInfos {
-                let (name, currentView, previousView, height) = info
+                let (name, currentView, previousView, _) = info
                 let toPosition = positions[name]!
                 let aboveView = lastView
 
