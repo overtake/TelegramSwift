@@ -13,6 +13,7 @@ import SwiftSignalKit
 import TGUIKit
 import InputView
 import InAppPurchaseManager
+import ColorPalette
 
 private final class LimitedRowItem : GeneralRowItem {
     fileprivate let availability: StarGift.Availability
@@ -285,7 +286,7 @@ private final class PreviewRowItem : GeneralRowItem {
         self.context = context
         self.peer = peer
         self.source = source
-        self.presentation = theme.withUpdatedChatMode(true)
+        self.presentation = theme.withUpdatedChatMode(true).withUpdatedWallpaper(.init(wallpaper: .builtin, associated: nil)).withUpdatedColors(dayClassicPalette)
         
         let titleAttr = NSMutableAttributedString()
         
