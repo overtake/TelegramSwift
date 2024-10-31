@@ -757,8 +757,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     let isLoading = Promise<Bool>(false)
     private(set) var searchTags: SearchTags?
     
-    public func updateSearchTags(_ globalTags: SearchTags, search: String) {
-        self.query = search
+    public func updateSearchTags(_ globalTags: SearchTags) {
+       // self.query = search
         self._messagesValue.set(.single((ExternalSearchMessages(), false)))
         self.globalTagsValue.set(globalTags)
         self.searchTags = globalTags
