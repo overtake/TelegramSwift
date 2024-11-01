@@ -445,7 +445,7 @@ class ChatHeaderController {
                         // Uncomment the following line if you need to animate alpha
                         // view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     } else if justAdded, current.superview != nil {
-                         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        // view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
             
