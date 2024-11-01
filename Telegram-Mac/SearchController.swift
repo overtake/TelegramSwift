@@ -1829,11 +1829,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private var currentMessagesSearchState: (SearchMessagesResult, SearchMessagesState)?
     
     func request(with query:String?) -> Void {
-        setHighlightEvents()
         
         if query == self.query {
             return
         }
+        
+        setHighlightEvents()
+        
         self.query = query
         self.scrollupOnNextTransition = true
         

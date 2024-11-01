@@ -83,7 +83,7 @@ class SuggestionLocalizationViewController: ModalViewController {
                 _ = engine.markSuggestedLocalizationAsSeenInteractively(languageCode: strongSelf.suggestionInfo.languageCode).start()
                 _ = showModalProgress(signal: engine.downloadAndApplyLocalization(accountManager: strongSelf.context.sharedContext.accountManager, languageCode: strongSelf.languageCode), for: strongSelf.context.window).start()
             }
-        }, drawBorder: true, height: 40)
+        }, singleButton: true)
     }
     
     private var genericView:SuggestionControllerView {

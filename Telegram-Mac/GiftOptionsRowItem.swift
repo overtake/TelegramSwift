@@ -56,7 +56,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
         }
         struct Badge {
             let text: String
-            let color: NSColor
+            let colors: [NSColor]
             let textColor: NSColor
         }
         let file: TelegramMediaFile
@@ -71,15 +71,35 @@ final class GiftOptionsRowItem : GeneralRowItem {
         var nativeProfileGift: ProfileGiftsContext.State.StarGift?
         
         static func initialize(_ option: PremiumPaymentOption) -> Option {
-            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, color: theme.colors.redUI, textColor: .white )}, peer: nil, invisible: false, nativePayment: option)
+            
+            var colors: [NSColor] = []
+            if theme.colors.isDark {
+                colors = [NSColor(0x522124), NSColor(0x653634)]
+            } else {
+                colors = [theme.colors.redUI.withMultipliedBrightnessBy(1.1), theme.colors.redUI.withMultipliedBrightnessBy(0.9)]
+            }
+            
+            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, colors: colors, textColor: .white )}, peer: nil, invisible: false, nativePayment: option)
         }
         static func initialize(_ option: PeerStarGift) -> Option {
             let badge: Badge?
+            
+            var redColor: [NSColor] = []
+            var blueColor: [NSColor] = []
+            
+            if theme.colors.isDark {
+                redColor = [NSColor(0x522124), NSColor(0x653634)]
+                blueColor = [NSColor(0x142e42), NSColor(0x354f5b)]
+            } else {
+                redColor = [theme.colors.redUI.withMultipliedBrightnessBy(1.1), theme.colors.redUI.withMultipliedBrightnessBy(0.9)]
+                blueColor = [theme.colors.accent.withMultipliedBrightnessBy(1.1), theme.colors.accent.withMultipliedBrightnessBy(0.9)]
+            }
+            
             if let availability = option.native.availability {
                 if availability.remains == 0 {
-                    badge = .init(text: strings().giftSoldOut, color: theme.colors.redUI, textColor: .white)
+                    badge = .init(text: strings().giftSoldOut, colors: redColor, textColor: .white)
                 } else {
-                    badge = .init(text: strings().starGiftLimited, color: theme.colors.accent, textColor: theme.colors.underSelectedColor)
+                    badge = .init(text: strings().starGiftLimited, colors: blueColor, textColor: theme.colors.underSelectedColor)
                 }
             } else {
                 badge = nil
@@ -87,9 +107,18 @@ final class GiftOptionsRowItem : GeneralRowItem {
             return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, nativeStarGift: option)
         }
         static func initialize(_ option: ProfileGiftsContext.State.StarGift) -> Option {
+            
+            var blueColor: [NSColor] = []
+            
+            if theme.colors.isDark {
+                blueColor = [NSColor(0x142e42), NSColor(0x354f5b)]
+            } else {
+                blueColor = [theme.colors.accent.withMultipliedBrightnessBy(1.1), theme.colors.accent.withMultipliedBrightnessBy(0.9)]
+            }
+            
             let badge: Badge?
             if let availability = option.gift.availability {
-                badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), color: theme.colors.accent, textColor: theme.colors.underSelectedColor)
+                badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), colors: blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
@@ -352,7 +381,7 @@ private final class GiftOptionsRowView:  GeneralRowView {
                     self.badgeView = current
                 }
                                 
-                let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: [badge.color.withMultipliedBrightnessBy(1.1), badge.color.withMultipliedBrightnessBy(0.9)], direction: .diagonal)!
+                let ribbon = generateGradientTintedImage(image: NSImage(named: "GiftRibbon")?.precomposed(), colors: badge.colors, direction: .diagonal)!
                 
                 
                 current.image = generateGiftBadgeBackground(background: ribbon, text: badge.text, textColor: badge.textColor)

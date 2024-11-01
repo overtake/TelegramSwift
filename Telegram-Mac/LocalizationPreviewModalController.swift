@@ -78,7 +78,9 @@ class LocalizationPreviewModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: strings().applyLanguageApplyLanguageAction, accept: { [weak self] in
             self?.applyLocalization()
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, height: 50, singleButton: true, customTheme: {
+            .init(background: theme.colors.background, listBackground: theme.colors.background)
+        })
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {

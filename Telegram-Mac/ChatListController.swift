@@ -1488,27 +1488,33 @@ class ChatListController : PeersListController {
     func globalSearch(_ query: String, peer: EnginePeer?, cached: CachedSearchMessages?, isSuperTag: Bool) {
         let context = self.context
         
-        let invoke = { [weak self] in
-            if let peer {
-                let peerId = peer.id
-                let mode: PeerListState.SelectedSearchTag = isSuperTag ? .hashtagThisChat : peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
-                self?.makeHashtag(.init(mode: mode, peer: peer, text: query), cached: cached)
-            } else {
-                self?.makeHashtag(.init(mode: .hashtagPublicPosts, peer: nil, text: query), cached: cached)
+        if query.isEmpty {
+            self.genericView.searchView.change(state: .Focus, true)
+        } else {
+            
+            let invoke = { [weak self] in
+                if let peer {
+                    let peerId = peer.id
+                    let mode: PeerListState.SelectedSearchTag = isSuperTag ? .hashtagThisChat : peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
+                    self?.makeHashtag(.init(mode: mode, peer: peer, text: query), cached: cached)
+                } else {
+                    self?.makeHashtag(.init(mode: .hashtagPublicPosts, peer: nil, text: query), cached: cached)
+                }
+                self?.genericView.searchView.change(state: .Focus, false)
             }
-            self?.genericView.searchView.change(state: .Focus, false)
+            
+            switch context.layout {
+            case .single:
+                context.bindings.rootNavigation().back()
+                Queue.mainQueue().justDispatch(invoke)
+            case .minimisize:
+                context.bindings.needFullsize()
+                Queue.mainQueue().justDispatch(invoke)
+            default:
+                invoke()
+            }
         }
         
-        switch context.layout {
-        case .single:
-            context.bindings.rootNavigation().back()
-            Queue.mainQueue().justDispatch(invoke)
-        case .minimisize:
-            context.bindings.needFullsize()
-            Queue.mainQueue().justDispatch(invoke)
-        default:
-            invoke()
-        }
     }
     
     

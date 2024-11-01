@@ -77,7 +77,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 self._videoFramePreview = MediaPlayerFramePreview(postbox: account.postbox, fileReference: reference)
             }
         }
-        return _videoFramePreview!
+        return _videoFramePreview
     }
     
     

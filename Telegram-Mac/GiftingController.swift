@@ -689,7 +689,7 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
                 current.starGifts = gifts.map {
                     .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: $0)
                 }
-                let customFilters: [State.StarGiftFilter] = gifts.map { $0.price }.uniqueElements.map { .stars($0) }
+                let customFilters: [State.StarGiftFilter] = gifts.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
                 current.starFilters = [.emptyLeft, .all, .limited] + customFilters + [.emptyRight]
             }
             return current

@@ -768,7 +768,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var resortController: TableResortController? {
         didSet {
-            
+            if let oldValue {
+                resortController?.resortView = oldValue.resortView
+                resortController?.resortRow = oldValue.resortRow
+                
+                resortController?.startLocation = oldValue.startLocation
+                resortController?.startRowLocation = oldValue.startRowLocation
+                
+                resortController?.currentHoleIndex = oldValue.currentHoleIndex
+                resortController?.prevHoleIndex = oldValue.prevHoleIndex
+            }
+          
         }
     }
    
@@ -1777,6 +1787,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     point.x = 0
                     let difference = (controller.startLocation.y - point.y)
                 
+                    
                     if view.superview != self {
                         view.frame = self.convert(view.frame, from: view.superview)
                         let item = self.item(at: range.location)

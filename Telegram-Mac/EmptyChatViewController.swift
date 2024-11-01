@@ -203,7 +203,18 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        let context = self.context
         context.globalPeerHandler.set(.single(nil))
+        
+        window?.set(handler: { _ in
+            context.bindings.globalSearch("", nil, nil)
+            return .invoked
+        }, with: self, for: .F, priority: .modal, modifierFlags: [.command])
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
     }
     
     override func backKeyAction() -> KeyHandlerResult {
@@ -237,6 +248,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
             self?.genericView.toggleTips(FastSettings.emptyTips, animated: true, view: cards)
         }, for: .Click)
     }
+    
     
 //    override func firstResponder() -> NSResponder? {
 //        return context.bindings.mainController().chatList.firstResponder()

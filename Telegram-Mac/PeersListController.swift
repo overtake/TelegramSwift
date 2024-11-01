@@ -13,6 +13,7 @@ import TelegramCore
 import Reactions
 import SwiftSignalKit
 import InAppSettings
+import FetchManager
 
 struct PeerListHiddenItems : Equatable {
     var archive: ItemHideStatus
@@ -210,7 +211,9 @@ struct PeerListState : Equatable {
             var list: [SelectedSearchTag] = []
             if state.searchState == .Focus {
                 if state.peerTag == nil, state.forumPeer == nil, !state.mode.isForumLike {
-                    list.append(.downloads)
+                    if state.hasDownloads {
+                        list.append(.downloads)
+                    }
                     list.append(.channels)
                     list.append(.apps)
                 }
@@ -300,6 +303,8 @@ struct PeerListState : Equatable {
     
     var selectedTag: SelectedSearchTag = .chats
     var peerTag: EnginePeer? = nil
+    
+    var hasDownloads = false
     
     struct Hashtag : Equatable {
         var mode: SelectedSearchTag
@@ -2484,7 +2489,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
        
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, BrowserStateContext.get(context).fullState()).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState in
+        let hasRecentDownload = recentDownloadItems(postbox: context.account.postbox) |> map { $0.count > 0 }
+        let hasDownloading = (context.fetchManager as! FetchManagerImpl).entriesSummary |> map { $0.count > 0 }
+        
+        let hasDownloads = combineLatest(hasRecentDownload, hasDownloading) |> map { $0 && $1 }
+        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, BrowserStateContext.get(context).fullState(), hasDownloads).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState, hasDownloads in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0
@@ -2501,6 +2511,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.presentation = appearance.presentation
                 current.privacy = privacy
                 current.webapps = webappsState
+                current.hasDownloads = hasDownloads
                 return current
             }
         }))
