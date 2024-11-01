@@ -379,7 +379,7 @@ class ChatHeaderController {
                     }
                     if let currentView = currentView {
                         // Adjust the fromPosition based on your animation requirements
-                        let fromPositionY = cumulativeHeightsBelow[name]! - state.secondaryHeight
+                        let fromPositionY = cumulativeHeightsBelow[name]! - state.secondaryHeight - currentView.frame.height
                         let fromPosition = NSMakePoint(0, fromPositionY)
                         added.append((view: currentView, fromPosition: fromPosition, toPosition: toPosition, aboveView: aboveView))
                         lastView = currentView

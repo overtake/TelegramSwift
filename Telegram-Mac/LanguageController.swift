@@ -127,13 +127,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if !listState.availableSavedLocalizations.isEmpty || !listState.availableOfficialLocalizations.isEmpty {
         
         
-        let availableSavedLocalizations = listState.availableSavedLocalizations.filter({ info in !listState.availableOfficialLocalizations.contains(where: { $0.languageCode == info.languageCode }) }).filter { value in
-            if state.searchState.request.isEmpty {
-                return true
-            } else {
-                return (value.title.lowercased().range(of: state.searchState.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.searchState.request.lowercased()) != nil)
-            }
-        }
+        let availableSavedLocalizations = listState.availableSavedLocalizations.filter({ info in !listState.availableOfficialLocalizations.contains(where: { $0.languageCode == info.languageCode }) })
         
         let availableOfficialLocalizations = listState.availableOfficialLocalizations.filter { value in
             if state.searchState.request.isEmpty {
@@ -151,12 +145,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if existingIds.contains(value.languageCode) {
                 return false
             }
-            
-            var accept: Bool = true
-            if !state.searchState.request.isEmpty {
-                accept = (value.title.lowercased().range(of: state.searchState.request.lowercased()) != nil) || (value.localizedTitle.lowercased().range(of: state.searchState.request.lowercased()) != nil)
-            }
-            return accept
+
+            return true
         }
         
         struct Tuple : Equatable {
@@ -228,6 +218,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
             }
         } else if !state.searchState.request.isEmpty {
+            
+            if !availableSavedLocalizations.isEmpty {
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+            }
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search, equatable: .init(state.searchState), comparable: nil, item: { initialSize, stableId in
                 return SearchRowItem(initialSize, stableId: stableId, searchInteractions: arguments.searchInteractions, viewType: .singleItem)

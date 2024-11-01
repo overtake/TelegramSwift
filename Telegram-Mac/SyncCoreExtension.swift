@@ -59,12 +59,7 @@ extension Peer {
             return false
         }
         if let peer = self as? TelegramGroup {
-            switch peer.role {
-            case .admin, .creator:
-                return true
-            default:
-                break
-            }
+            return true
         }
         return false
     }
