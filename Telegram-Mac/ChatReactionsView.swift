@@ -1028,7 +1028,7 @@ final class ChatReactionsView : View {
             let tooltip = reaction.avatars.map { $0.peer.displayTitle }.joined(separator: ", ")
             
             if tooltip.isEmpty {
-                self.toolTip = nil
+                self.toolTip = "\(reaction.value.count.formattedWithSeparator)"
             } else {
                 self.toolTip = tooltip
             }
