@@ -231,7 +231,9 @@ private final class RowItem : TableRowItem {
         for option in state.data.options {
             let text = parseMarkdownIntoAttributedString(option.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
-            }))
+            })).mutableCopy() as! NSMutableAttributedString
+            
+            text.detectBoldColorInString(with: .medium(.text))
             
             let layout = TextViewLayout(text)
             

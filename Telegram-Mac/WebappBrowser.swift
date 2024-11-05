@@ -151,6 +151,7 @@ private func createCombinedPath(leftPath: CGPath, rightPath: CGPath, totalWidth:
 
 final class WebappBrowser : Window {
     let containerView = View()
+    private let shadow = SimpleShapeLayer()
     init(parent: Window) {
         
         containerView.wantsLayer = true
@@ -172,6 +173,7 @@ final class WebappBrowser : Window {
         self.contentView?.wantsLayer = true
         self.contentView?.autoresizesSubviews = false
         
+        
         self.modalInset = 10
        
         self.isOpaque = false
@@ -192,12 +194,10 @@ final class WebappBrowser : Window {
         shadow.shadowRadius = 5
         shadow.shadowOpacity = 0.7
         shadow.fillColor = NSColor.black.cgColor
-        shadow.path = CGPath(roundedRect: size.bounds.insetBy(dx: 11, dy: 11).size.bounds, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
-        shadow.frame = size.bounds.insetBy(dx: 11, dy: 11)
+        
         
         self.contentView?.layer?.addSublayer(shadow)
 
-        containerView.frame = size.bounds.insetBy(dx: 10, dy: 10)
 
         containerView.backgroundColor = theme.colors.listBackground
         
@@ -219,6 +219,7 @@ final class WebappBrowser : Window {
 
         self.makeKeyAndOrderFront(nil)
         
+        
         self.contentView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, removeOnCompletion: false)
         self.contentView?.layer?.animateScaleSpring(from: 0.8, to: 1.0, duration: 0.2)
         
@@ -231,6 +232,21 @@ final class WebappBrowser : Window {
     deinit {
         var bp = 0
         bp += 1
+    }
+    
+    override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+
+        shadow.path = CGPath(roundedRect: bounds.insetBy(dx: 11, dy: 11).size.bounds, cornerWidth: 14, cornerHeight: 14, transform: nil)
+        shadow.frame = bounds.insetBy(dx: 11, dy: 11)
+        
+        containerView.frame = bounds.insetBy(dx: 10, dy: 10)
+
+        self.contentView?.subviews.last?.frame = bounds.insetBy(dx: 10, dy: 10)
+        
+        self.standardWindowButton(.closeButton)?.isHidden = !isFullScreen
+        self.standardWindowButton(.miniaturizeButton)?.isHidden = !isFullScreen
+        self.standardWindowButton(.zoomButton)?.isHidden = !isFullScreen
     }
 }
 
@@ -770,6 +786,11 @@ private final class ContentController: View {
             }
             current = newView
         }
+    }
+    
+    override func layout() {
+        super.layout()
+        current?.frame = bounds
     }
 }
 
@@ -1685,6 +1706,8 @@ final class WebappBrowserController : ViewController {
             return .invoked
         }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
         
+        
+        
     }
     
     func hide(_ completion: @escaping()->Void, close: Bool = true) {
@@ -1702,6 +1725,12 @@ final class WebappBrowserController : ViewController {
             }
             completion()
         })
+    }
+    
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        self.genericView.updateLayout(size: size, transition: .immediate)
     }
     
     override func viewDidLoad() {

@@ -24,7 +24,7 @@ private final class Webapp : Window {
         
         let rect = screen.frame.focus(controller.view.frame.insetBy(dx: -10, dy: -10).size)
         
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless], backing: .buffered, defer: true)
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless, .fullScreen, .resizable], backing: .buffered, defer: true)
         
         self.contentView?.wantsLayer = true
         self.contentView?.autoresizesSubviews = false
