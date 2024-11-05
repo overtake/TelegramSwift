@@ -323,7 +323,7 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
     return entries
 }
 
-func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
+func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerId, isChannel: Bool, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
     
     let actionsDisposable = DisposableSet()
     
@@ -347,7 +347,7 @@ func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerI
         })
     }, editLink: { [weak manager] link in
         getModalController?()?.close()
-        showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
+        showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), isChannel: isChannel, save: { [weak manager] updated in
             let signal = manager?.editPeerExportedInvitation(link: link, title: updated.title, expireDate: updated.date == .max ? 0 : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? 0 : updated.count)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: accountContext.window).start()

@@ -257,7 +257,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func openInviteLinks() {
-        pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
+        pushViewController(InviteLinksController(context: context, peerId: peerId, isChannel: false, manager: linksManager))
     }
     func openRequests() {
         pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
@@ -419,7 +419,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func invation() {
-        pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
+        pushViewController(InviteLinksController(context: context, peerId: peerId, isChannel: false, manager: linksManager))
     }
     
     func stats(_ datacenterId: Int32) {

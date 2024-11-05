@@ -1007,10 +1007,10 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         }, share: { link in
             showModal(with: ShareModalController(ShareLinkObject.init(context, link: link)), for: context.window)
         }, manageLinks: { [weak self] in
-            self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: self?.linksManager))
+            self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, isChannel: self?.isChannel == true, manager: self?.linksManager))
         }, open: { [weak self] invitation in
             if let manager = self?.linksManager {
-                showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
+                showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, isChannel: self?.isChannel == true, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
             }
         }, toggleForwarding: { value in
             updateState { current in

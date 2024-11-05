@@ -80,7 +80,7 @@ private let _id_request_approval = InputDataIdentifier("_id_request_approval")
 private let _id_request_monthly_fee = InputDataIdentifier("_id_request_monthly_fee")
 private let _id_monthly_fee_input = InputDataIdentifier("_id_monthly_fee_input")
 
-private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteLinkArguments) -> [InputDataEntry] {
+private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteLinkArguments, isChannel: Bool) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -319,7 +319,7 @@ enum InviteLinkClosureMode : Equatable {
     }
 }
 
-func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: InviteLinkClosureMode, save:@escaping(ClosureInviteLinkState)->Void) -> InputDataModalController {
+func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: InviteLinkClosureMode, isChannel: Bool, save:@escaping(ClosureInviteLinkState)->Void) -> InputDataModalController {
     var initialState = ClosureInviteLinkState(isEditing: mode != .new, date: 0, count: 0, requestApproval: false)
     let week: Int32 = 60 * 60 * 24 * 1 * 7
     switch mode {
@@ -447,7 +447,7 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in
-        return inviteLinkEntries(state: state, arguments: arguments)
+        return inviteLinkEntries(state: state, arguments: arguments, isChannel: isChannel)
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }

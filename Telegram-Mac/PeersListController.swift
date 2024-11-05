@@ -2630,7 +2630,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             if let importersContext = self?.tempImportersContext, case let .forum(peerId, _, _) = mode {
                 let navigation = context.bindings.rootNavigation()
                 navigation.push(RequestJoinMemberListController(context: context, peerId: peerId, manager: importersContext, openInviteLinks: { [weak navigation] in
-                    navigation?.push(InviteLinksController(context: context, peerId: peerId, manager: nil))
+                    navigation?.push(InviteLinksController(context: context, peerId: peerId, isChannel: false,  manager: nil))
                 }))
             }
         }, dismissPendingRequests: { peerIds in

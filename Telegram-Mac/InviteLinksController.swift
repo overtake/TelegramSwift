@@ -617,7 +617,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     return entries
 }
 
-func InviteLinksController(context: AccountContext, peerId: PeerId, manager: InviteLinkPeerManager?) -> InputDataController {
+func InviteLinksController(context: AccountContext, peerId: PeerId, isChannel: Bool, manager: InviteLinkPeerManager?) -> InputDataController {
 
     
     let initialState = InviteLinksState(permanent: nil, permanentImporterState: nil, list: nil, creators: nil, isAdmin: manager?.adminId != nil, totalCount: 0)
@@ -644,7 +644,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             }
         })
     }, editLink: { [weak manager] link in
-        showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
+        showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .edit(link), isChannel: isChannel, save: { [weak manager] updated in
             let signal = manager?.editPeerExportedInvitation(link: link, title: updated.title, expireDate: updated.date == .max ? nil : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? nil : updated.count, requestNeeded: updated.requestApproval)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: context.window).start(completed:{
@@ -653,7 +653,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             }
         }), for: context.window)
     }, newLink: { [weak manager] in
-        showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, save: { [weak manager] link in
+        showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, isChannel: isChannel, save: { [weak manager] link in
             let signal = manager?.createPeerExportedInvitation(title: link.title, expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval, pricing: link.pricing)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: context.window).start(next: { invitation in
@@ -681,11 +681,11 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         
     }, open: { [weak manager] invitation in
         if let manager = manager {
-            showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
+            showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, isChannel: isChannel, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
         }
     }, openAdminLinks: { creator in
         let manager = InviteLinkPeerManager(context: context, peerId: peerId, adminId: creator.peer.peerId)
-        getController?()?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: manager))
+        getController?()?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, isChannel: isChannel, manager: manager))
     })
         
     let actionsDisposable = DisposableSet()
