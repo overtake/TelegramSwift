@@ -1897,7 +1897,25 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 })
             }
-            
+        case "web_app_set_emoji_status":
+            if let json = json, let emojiId = (json["custom_emoji_id"] as? String).flatMap(Int64.init) {
+                let expirationDate = (json["expiration_date"] as? Int32).flatMap(Int32.init)
+                if let bot {
+                    showModal(with: WebbotEmojisetModal(context: context, bot: .init(bot), emojiId: emojiId, expirationDate: expirationDate, completed: { [weak self] result in
+                        
+                        if result == .fail {
+                            self?.sendEvent(name: "emoji_status_failed", data: nil)
+                        } else {
+                            self?.sendEvent(name: "emoji_status_set", data: nil)
+                        }
+                        if result == .success {
+                            showModalText(for: window, text: strings().emojiContextSetStatusSuccess)
+                        }
+                        
+                        
+                    }), for: window)
+                }
+            }
         default:
             break
         }

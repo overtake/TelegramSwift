@@ -384,6 +384,8 @@
 		276E767B2B3BEA9B00440A4F /* ChannelWallpapersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */; };
 		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
 		276F9B8A2935FD7800E35997 /* pirate_flag.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B892935FD7800E35997 /* pirate_flag.tgs */; };
+		277113652CD9BCA7008087E9 /* WebbotEmojisetModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277113642CD9BC96008087E9 /* WebbotEmojisetModal.swift */; };
+		277113672CDA2856008087E9 /* WebbotShareMessageModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277113662CDA284C008087E9 /* WebbotShareMessageModal.swift */; };
 		27716D2C2B7E95CD00244412 /* CallScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27716D2B2B7E95CD00244412 /* CallScreenController.swift */; };
 		2771FC522BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2771FC512BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift */; };
 		2771FC542BC53F54009A5DDE /* InputTextDataRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2771FC532BC53F54009A5DDE /* InputTextDataRowItem.swift */; };
@@ -2015,6 +2017,8 @@
 		276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelWallpapersController.swift; sourceTree = "<group>"; };
 		276F9B872931155D00E35997 /* menu_bio.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_bio.tgs; sourceTree = "<group>"; };
 		276F9B892935FD7800E35997 /* pirate_flag.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = pirate_flag.tgs; sourceTree = "<group>"; };
+		277113642CD9BC96008087E9 /* WebbotEmojisetModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebbotEmojisetModal.swift; sourceTree = "<group>"; };
+		277113662CDA284C008087E9 /* WebbotShareMessageModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebbotShareMessageModal.swift; sourceTree = "<group>"; };
 		27716D2B2B7E95CD00244412 /* CallScreenController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallScreenController.swift; sourceTree = "<group>"; };
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
 		2771FC512BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteGroupMessagesController.swift; sourceTree = "<group>"; };
@@ -3718,6 +3722,8 @@
 		2761549C2C2081CA0090BFFC /* mini-apps */ = {
 			isa = PBXGroup;
 			children = (
+				277113662CDA284C008087E9 /* WebbotShareMessageModal.swift */,
+				277113642CD9BC96008087E9 /* WebbotEmojisetModal.swift */,
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
 				2761549D2C2081DF0090BFFC /* BrowserState.swift */,
 				270FD5912C4C21D3000070E6 /* WebappBrowser.swift */,
@@ -7956,6 +7962,8 @@
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */,
 				2775025327A924CE00B46456 /* ChatInlineReactionMenuItem.swift in Sources */,
+				277113652CD9BCA7008087E9 /* WebbotEmojisetModal.swift in Sources */,
+				277113672CDA2856008087E9 /* WebbotShareMessageModal.swift in Sources */,
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
 				276790AD2AFE02E100E9975C /* ChatChannelSuggestView.swift in Sources */,
 				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,

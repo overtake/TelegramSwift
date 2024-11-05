@@ -4276,7 +4276,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.chatInteraction.openPendingRequests = { [weak self] in
             if let importersContext = self?.tempImportersContext {
                 self?.navigationController?.push(RequestJoinMemberListController(context: context, peerId: peerId, manager: importersContext, openInviteLinks: { [weak self] in
-                    self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: nil))
+                    self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, isChannel: false, manager: nil))
                 }))
             }
         }

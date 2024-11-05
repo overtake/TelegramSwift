@@ -232,7 +232,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(setup)
     }
     func openInviteLinks() {
-        pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
+        pushViewController(InviteLinksController(context: context, peerId: peerId, isChannel: true, manager: linksManager))
     }
     func openNameColor(peer: Peer) {
         pushViewController(SelectColorController(context: context, peer: peer))
