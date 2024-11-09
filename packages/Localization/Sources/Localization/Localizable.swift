@@ -12021,6 +12021,8 @@ public final class L10n {
   }
   /// Warning
   public static var paymentsWarninTitle: String  { return L10n.tr("Localizable", "Payments.WarninTitle") }
+  /// Subscription is already active
+  public static var paymentsInvoiceAlreadyActive: String  { return L10n.tr("Localizable", "Payments.Invoice.AlreadyActive") }
   /// Invoice doesn't exist
   public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
   /// I accept the [Terms of Service]() of **%1$@**.
@@ -12687,6 +12689,12 @@ public final class L10n {
   public static var peerInfoBotEditTonBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.TonBalance") }
   /// Username
   public static var peerInfoBotEditUsername: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Username") }
+  /// Geolocation
+  public static var peerInfoBotPermissionsGeo: String  { return L10n.tr("Localizable", "PeerInfo.BotPermissions.Geo") }
+  /// ALLOW ACCESS TO
+  public static var peerInfoBotPermissionsHeader: String  { return L10n.tr("Localizable", "PeerInfo.BotPermissions.Header") }
+  /// Emoji Status
+  public static var peerInfoBotPermissionsStatus: String  { return L10n.tr("Localizable", "PeerInfo.BotPermissions.Status") }
   /// has access to messages
   public static var peerInfoBotStatusHasAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasAccess") }
   /// has no access to messages
@@ -16739,6 +16747,8 @@ public final class L10n {
   }
   /// Subscription
   public static var starSubScreenTitle: String  { return L10n.tr("Localizable", "Star.SubScreen.Title") }
+  /// Open Bot
+  public static var starSubScreenActionBot: String  { return L10n.tr("Localizable", "Star.SubScreen.Action.Bot") }
   /// Join Channel
   public static var starSubScreenActionJoin: String  { return L10n.tr("Localizable", "Star.SubScreen.Action.Join") }
   /// Open Channel
@@ -16751,6 +16761,8 @@ public final class L10n {
   public static var starSubScreenRowRenew: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.Renew") }
   /// Subscription
   public static var starSubScreenRowSub: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.Sub") }
+  /// Bot
+  public static var starSubScreenRowSubBot: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.SubBot") }
   /// Subscribed
   public static var starSubScreenRowSubd: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.Subd") }
   /// If you cancel now, you can still access your subscription until %@.
@@ -16969,8 +16981,54 @@ public final class L10n {
   public static var starsPromoOption5Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option5.Info") }
   /// Create giveaways in channels
   public static var starsPromoOption5Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option5.Title") }
+  /// Subscribe to the Bot
+  public static var starsPurchaseBotSubscribe: String  { return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe") }
   /// Subscribe to the Channel
   public static var starsPurchaseSubscribe: String  { return L10n.tr("Localizable", "Stars.Purchase.Subscribe") }
+  /// %1$@ %2$@ %3$d
+  public static func starsPurchaseBotSubscribeInfoCountable(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_countable", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoFew(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_few", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoMany(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_many", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoOne(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_one", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoOther(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_other", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoTwo(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_two", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoZero(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_zero", p1, p2, p3)
+  }
+  /// You have successfully subscribed to **%@** in **%@**
+  public static func starsPurchaseBotSubscribeSuccess(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Success", p1, p2)
+  }
+  /// Subscribe for %@ / month
+  public static func starsPurchaseBotSubscribeAcceptMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Accept.Month", p1)
+  }
+  /// Subscribe for %@ / six month
+  public static func starsPurchaseBotSubscribeAcceptSixMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Accept.SixMonth", p1)
+  }
+  /// Subscribe for %@ / year
+  public static func starsPurchaseBotSubscribeAcceptYear(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Accept.Year", p1)
+  }
   /// Subscribe
   public static var starsPurchaseSubscribeAction: String  { return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Action") }
   /// %@ %d
@@ -20427,6 +20485,28 @@ public final class L10n {
   }
   /// Allow Sending Messages?
   public static var webappAllowMessagesTitle: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.Title") }
+  /// Download Document
+  public static var webappDocumentDownload: String  { return L10n.tr("Localizable", "Webapp.Document.Download") }
+  /// %1$@ suggests you download %2$@.
+  public static func webappDocumentDownloadInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Webapp.Document.Download.Info", p1, p2)
+  }
+  /// Download
+  public static var webappDocumentDownloadOK: String  { return L10n.tr("Localizable", "Webapp.Document.Download.OK") }
+  /// %@ can now set your emoji status anytime.
+  public static func webappEmojiStatusAllowed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.EmojiStatus.Allowed", p1)
+  }
+  /// Emoji Status Not Found
+  public static var webappEmojiStatusNotExists: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.NotExists") }
+  /// **%1$@** requests access to set your **emoji status**. You will be able to revoke this access in the profile page of **%2$@**.
+  public static func webappEmojiStatusRequested(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested", p1, p2)
+  }
+  /// Allow
+  public static var webappEmojiStatusRequestedAllow: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested.Allow") }
+  /// Decline
+  public static var webappEmojiStatusRequestedDecline: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested.Decline") }
   /// Changes that you made may not be saved.
   public static var webpageConfirmClose: String  { return L10n.tr("Localizable", "Webpage.Confirm.Close") }
   /// Close Anyway

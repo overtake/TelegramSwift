@@ -65,6 +65,10 @@ private final class HeaderView : GeneralContainableRowView {
     private let infoView = InteractiveTextView()
     private let infoContainer: View = View()
     private let badgeView = ImageView()
+    
+    private var photo: TransformImageView?
+
+    
     required init(frame frameRect: NSRect) {
         self.sceneView = GoldenStarSceneView(frame: NSMakeRect(0, 0, frameRect.width, 150))
         super.init(frame: frameRect)
@@ -102,17 +106,53 @@ private final class HeaderView : GeneralContainableRowView {
         guard let item = item as? HeaderItem else {
             return
         }
+        self.badgeView.isHidden = item.subscription.native.photo != nil
         
-        let current: AvatarControl
-        if let view = self.avatar {
-            current = view
+        if let photo = item.subscription.native.photo {
+            
+            if let view = self.avatar {
+                performSubviewRemoval(view, animated: animated)
+                self.avatar = nil
+            }
+            
+            let current: TransformImageView
+            if let view = self.photo {
+                current = view
+            } else {
+                current = TransformImageView(frame: NSMakeRect(0, 0, 80, 80))
+                current.layer?.cornerRadius = floor(current.frame.height / 2)
+                if #available(macOS 10.15, *) {
+                    current.layer?.cornerCurve = .continuous
+                }
+                control.addSubview(current, positioned: .below, relativeTo: badgeView)
+                self.photo = current
+            }
+            
+            current.setSignal(chatMessageWebFilePhoto(account: item.context.account, photo: photo, scale: backingScaleFactor))
+    
+            _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
+    
+            current.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: photo.dimensions?.size ?? NSMakeSize(80, 80), boundingSize: current.frame.size, intrinsicInsets: .init()))
         } else {
-            current = AvatarControl(font: .avatar(20))
-            current.setFrameSize(NSMakeSize(80, 80))
-            self.avatar = current
-            control.addSubview(current, positioned: .below, relativeTo: badgeView)
+            
+            if let view = self.photo {
+                performSubviewRemoval(view, animated: animated)
+                self.photo = nil
+            }
+            
+            
+            let current: AvatarControl
+            if let view = self.avatar {
+                current = view
+            } else {
+                current = AvatarControl(font: .avatar(20))
+                current.setFrameSize(NSMakeSize(80, 80))
+                self.avatar = current
+                control.addSubview(current, positioned: .below, relativeTo: badgeView)
+            }
+            current.setPeer(account: item.context.account, peer: item.subscription.peer._asPeer())
         }
-        current.setPeer(account: item.context.account, peer: item.subscription.peer._asPeer())
+       
         
         badgeView.image = theme.icons.avatar_star_badge_large_gray
         badgeView.sizeToFit()
@@ -140,6 +180,10 @@ private final class HeaderView : GeneralContainableRowView {
         
         if let avatar {
             badgeView.setFrameOrigin(avatar.frame.maxX - 25, avatar.frame.midY + 8)
+        }
+        
+        if let photo {
+            badgeView.setFrameOrigin(photo.frame.maxX - 25, photo.frame.midY + 8)
         }
         
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2) - 10))
@@ -196,6 +240,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     let peer = state.subscription.peer
     
+    
     let from: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(peer._asPeer().displayTitle)](\(peer.id.toInt64()))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
         return (NSAttributedString.Key.link.rawValue, contents)
     })), maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -204,7 +249,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         arguments.openPeer(peer.id)
     }
 
-    rows.append(.init(left: .init(.initialize(string: strings().starSubScreenRowSub, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+    rows.append(.init(left: .init(.initialize(string: peer._asPeer().isBot ? strings().starSubScreenRowSubBot : strings().starSubScreenRowSub, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
         let control: AvatarControl
         if let previous = previous as? AvatarControl {
             control = previous
@@ -215,6 +260,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         control.setPeer(account: arguments.context.account, peer: peer._asPeer())
         return control
     })))
+    
+    if let title = state.subscription.native.title {
+        rows.append(.init(left: .init(.initialize(string: strings().starSubScreenRowSub, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: title, color: theme.colors.text, font: .normal(.text))))))
+    }
 
     rows.append(.init(left: .init(.initialize(string: strings().starSubScreenRowSubd, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: state.subscription.date), color: theme.colors.text, font: .normal(.text))))))
 
@@ -320,7 +369,8 @@ func Star_SubscriptionScreen(context: AccountContext, subscription: Star_Subscri
     
     switch subscription.state {
     case let .active(refulfil):
-        modalInteractions = ModalInteractions(acceptTitle: refulfil ? strings().starSubScreenActionJoin : strings().starSubScreenActionOpen, accept: {
+        
+        modalInteractions = ModalInteractions(acceptTitle: subscription.peer._asPeer().isBot ? strings().starSubScreenActionBot : (refulfil ? strings().starSubScreenActionJoin : strings().starSubScreenActionOpen), accept: {
             if refulfil {
                 _ = context.engine.payments.fulfillStarsSubscription(peerId: context.peerId, subscriptionId: subscription.id).start()
             }

@@ -814,7 +814,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                     }
                                     
                                     let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, RequestWebViewResult?), RequestWebViewError> = { botApp, allowWrite in
-                                        return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, allowWrite: allowWrite) |> map {
+                                        return context.engine.messages.requestAppWebView(peerId: peerId, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), compact: false, fullscreen: false, allowWrite: allowWrite) |> map {
                                             return (botApp, $0)
                                         }
                                     }
@@ -1239,12 +1239,19 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         
         _ = signal.start(next: { invoice in
             if invoice.currency == XTR {
-                showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug)), for: getWindow(context))
+                showModal(with: Star_PurschaseInApp(context: context, invoice: invoice, source: .slug(slug), type: invoice.subscriptionPeriod != nil ? .botSubscription(invoice) : .bot), for: getWindow(context))
             } else {
                 showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: getWindow(context))
             }
         }, error: { error in
-            showModalText(for: getWindow(context), text: strings().paymentsInvoiceNotExists)
+            let text: String
+            switch error {
+            case .alreadyActive:
+                text = strings().paymentsInvoiceAlreadyActive
+            case .generic:
+                text = strings().paymentsInvoiceNotExists
+            }
+            showModalText(for: getWindow(context), text: text)
         })
         
         afterComplete(true)

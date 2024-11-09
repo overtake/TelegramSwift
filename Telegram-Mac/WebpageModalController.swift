@@ -18,6 +18,135 @@ import ColorPalette
 
 
 
+private final class BotEmojiStatusPermissionRowItem : GeneralRowItem {
+    fileprivate let context: AccountContext
+    fileprivate let peer: EnginePeer
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, context: AccountContext) {
+        self.context = context
+        self.peer = peer
+        
+        super.init(initialSize, height: 50, stableId: stableId)
+        
+    }
+    override func viewClass() -> AnyClass {
+        return BotEmojiStatusPermissionRowView.self
+    }
+}
+
+private final class BotEmojiStatusPermissionRowView : GeneralRowView {
+    private final class PeerView: Control {
+        private let avatarView = AvatarControl(font: .avatar(10))
+        private let nameView: TextView = TextView()
+        private var stickerView: InlineStickerView?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(avatarView)
+            addSubview(nameView)
+            
+            nameView.userInteractionEnabled = false
+            
+            self.avatarView.setFrameSize(NSMakeSize(26, 26))
+            
+            layer?.cornerRadius = 13
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(_ peer: EnginePeer, _ context: AccountContext, file: TelegramMediaFile, maxWidth: CGFloat) {
+            self.avatarView.setPeer(account: context.account, peer: peer._asPeer())
+            
+            let nameLayout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
+            nameLayout.measure(width: maxWidth)
+            
+            nameView.update(nameLayout)
+            
+            if let stickerView {
+                performSubviewRemoval(stickerView, animated: true)
+            }
+            
+            let current: InlineStickerView = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: NSMakeSize(20, 20))
+            addSubview(current)
+            self.stickerView = current
+            
+            setFrameSize(NSMakeSize(avatarView.frame.width + 10 + nameLayout.layoutSize.width + (stickerView != nil ? 20 : 0) + 10, 26))
+            
+            self.background = theme.colors.grayForeground
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            nameView.centerY(x: self.avatarView.frame.maxX + 10, addition: -1)
+            stickerView?.centerY(x: self.nameView.frame.maxX + 7)
+        }
+    }
+    
+    private let peerView: PeerView = .init(frame: .zero)
+    
+    private var timer: SwiftSignalKit.Timer?
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(peerView)
+    }
+    
+     required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? BotEmojiStatusPermissionRowItem else {
+            return
+        }
+        
+        let signal = item.context.engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false) |> map { value in
+            switch value {
+            case let .result(_, items, installed: _):
+                return items
+            default:
+                return []
+            }
+        } |> deliverOnMainQueue
+        
+        _ = signal.start(next: { [weak self, weak item] items in
+            var index: Int = 0
+            
+            let invokeNext:()->Void = {
+                if let item = item, let self, items.count > 0 {
+                    let file = items[index].file
+                    self.peerView.set(item.peer, item.context, file: file, maxWidth: self.frame.width - 40)
+                    self.needsLayout = true
+                }
+                index += 1
+                
+                if items.count <= index {
+                    index = 0
+                }
+            }
+            self?.timer = .init(timeout: 2, repeat: true, completion: invokeNext, queue: .mainQueue())
+            
+            self?.timer?.start()
+            invokeNext()
+        })
+    }
+    
+    
+    
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        peerView.centerX(y: frame.height - peerView.frame.height)
+    }
+}
+
 
 //
 //private class SelectChatRequired : SelectPeersBehavior {
@@ -1899,21 +2028,97 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
         case "web_app_set_emoji_status":
             if let json = json, let emojiId = (json["custom_emoji_id"] as? String).flatMap(Int64.init) {
-                let expirationDate = (json["expiration_date"] as? Int32).flatMap(Int32.init)
+                let expirationDate = (json["expiration_date"] as? String).flatMap(Int32.init)
                 if let bot {
-                    showModal(with: WebbotEmojisetModal(context: context, bot: .init(bot), emojiId: emojiId, expirationDate: expirationDate, completed: { [weak self] result in
-                        
-                        if result == .fail {
-                            self?.sendEvent(name: "emoji_status_failed", data: nil)
+                    _ = showModalProgress(signal: context.inlinePacksContext.load(fileId: emojiId) |> take(1), for: window).start(next: { file in
+                        if let file {
+                            showModal(with: WebbotEmojisetModal(context: context, bot: .init(bot), file: file, expirationDate: expirationDate, completed: { [weak self] result in
+                                if result == .fail {
+                                    self?.sendEvent(name: "emoji_status_failed", data: nil)
+                                } else {
+                                    self?.sendEvent(name: "emoji_status_set", data: nil)
+                                }
+                                if result == .success {
+                                    showModalText(for: window, text: strings().emojiContextSetStatusSuccess)
+                                }
+                            }), for: window)
                         } else {
-                            self?.sendEvent(name: "emoji_status_set", data: nil)
+                            showModalText(for: window, text: strings().webappEmojiStatusNotExists)
+                            self.sendEvent(name: "emoji_status_failed", data: nil)
                         }
-                        if result == .success {
-                            showModalText(for: window, text: strings().emojiContextSetStatusSuccess)
+                    })
+                }
+            }
+        case "web_app_request_emoji_status_access":
+            if let bot {
+                let data = ModalAlertData(title: nil, info: strings().webappEmojiStatusRequested(bot.displayTitle, bot.displayTitle), description: nil, ok: strings().webappEmojiStatusRequestedAllow, options: [], mode: .confirm(text: strings().webappEmojiStatusRequestedDecline, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+                    return BotEmojiStatusPermissionRowItem(initialSize, stableId: stableId, peer: .init(context.myPeer!), context: context)
+                }))
+                
+                showModalAlert(for: window, data: data, completion: { result in
+                    if !context.isPremium {
+                        prem(with: PremiumBoardingController(context: context), for: window)
+                    } else {
+                        _ = context.engine.peers.toggleBotEmojiStatusAccess(peerId: bot.id, enabled: true).start()
+                        showModalText(for: window, text: strings().webappEmojiStatusAllowed(bot.displayTitle))
+                    }
+                }, onDeinit: {
+                    self.sendEvent(name: "emoji_status_access_requested", data: nil)
+                })
+            }
+        case "web_app_request_file_download":
+            if let json = json, let url = (json["url"] as? String), let fileName = json["file_name"] as? String {
+                if let bot = bot {
+                    verifyAlert(for: window, header: strings().webappDocumentDownload, information: strings().webappDocumentDownloadInfo(bot.displayTitle, fileName), ok: strings().webappDocumentDownloadOK, successHandler: { [weak self] _ in
+                        
+                        self?.sendEvent(name: "file_download_requested", data: "{status: \"downloading\"}")
+
+                        
+                        enum FetchResult {
+                            case result(Data)
+                            case progress(Float)
                         }
                         
+                        let signal = (showModalProgress(signal: fetchHttpResource(url: url), for: window)
+                        |> map(Optional.init)
+                        |> `catch` { error in
+                            return .single(nil)
+                        }
+                        |> mapToSignal { value -> Signal<FetchResult, NoError> in
+                            if case let .dataPart(_, data, _, complete) = value, complete {
+                                return .single(.result(data))
+                            } else if case let .progressUpdated(progress) = value {
+                                return .single(.progress(progress))
+                            } else {
+                                return .complete()
+                            }
+                        })
                         
-                    }), for: window)
+                        _ = signal.startStandalone(next: { result in
+                            switch result {
+                            case let .result(data):
+                                let tempFile = TempBox.shared.tempFile(fileName: fileName)
+                                try? data.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic)
+                                savePanel(file: tempFile.path, named: fileName, for: window)
+                            default:
+                                break
+                            }
+                        })
+                        
+                    }, cancelHandler: { [weak self] in
+                        self?.sendEvent(name: "file_download_requested", data: "{status: \"cancelled\"}")
+
+                    })
+                }
+            }
+        case "web_app_send_prepared_message":
+            if let json = json, let id = (json["id"] as? String) {
+                if let bot = bot {
+                    _ = showModalProgress(signal: context.engine.messages.getPreparedInlineMessage(botId: bot.id, id: id), for: window).startStandalone(next: { preparedMessage in
+                        if let preparedMessage {
+                            showModal(with: WebbotShareMessageModal(context: context, preparedMessage: preparedMessage), for: window)
+                        }
+                    })
                 }
             }
         default:
@@ -2132,12 +2337,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     func contextMenu() -> ContextMenu {
         var items:[ContextMenuItem] = []
 
-        #if DEBUG
         //TODOLANG
         items.append(.init("Fullscreen", handler: { [weak self] in
             self?.window?.toggleFullScreen(nil)
         }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
-        #endif
 
         
         items.append(.init(strings().webAppReload, handler: { [weak self] in
@@ -2309,6 +2512,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self.backButtonPressed()
             return .invoked
         }
+        
         return super.escapeKeyAction()
     }
     

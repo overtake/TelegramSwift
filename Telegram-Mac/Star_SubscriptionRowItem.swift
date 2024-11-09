@@ -25,6 +25,8 @@ final class Star_SubscriptionRowItem : GeneralRowItem {
 
     fileprivate let callback: (Star_Subscription)->Void
     
+    private(set) var productNameLayout: TextViewLayout?
+    
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, subscription: Star_Subscription, callback: @escaping(Star_Subscription)->Void) {
         self.context = context
         self.subscription = subscription
@@ -66,8 +68,17 @@ final class Star_SubscriptionRowItem : GeneralRowItem {
         }
         self.dateLayout = .init(.initialize(string: dateText, color: theme.colors.grayText, font: .normal(.text)))
         
+        
+        if let title = subscription.native.title {
+            self.productNameLayout = .init(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
+        } else {
+            self.productNameLayout = nil
+        }
                 
         super.init(initialSize, stableId: stableId, viewType: viewType)
+        
+        
+      
     }
     
     override func viewClass() -> AnyClass {
@@ -75,7 +86,11 @@ final class Star_SubscriptionRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        let height = 7 + nameLayout.layoutSize.height + 4 + dateLayout.layoutSize.height + 7
+        var height = 7 + nameLayout.layoutSize.height + 4 + dateLayout.layoutSize.height + 7
+        
+        if productNameLayout != nil {
+            height += 20
+        }
         return max(50, height)
     }
     
@@ -87,6 +102,10 @@ final class Star_SubscriptionRowItem : GeneralRowItem {
         dateLayout.measure(width: blockWidth - 20 - amountLayout.layoutSize.width - 10 - 50)
 
         perMonthLayout?.measure(width: blockWidth - 20 - amountLayout.layoutSize.width - 10 - 50)
+        
+        if let productNameLayout {
+            productNameLayout.measure(width: blockWidth - 20 - amountLayout.layoutSize.width - 10 - 40 - 5 - (perMonthLayout != nil ? perMonthLayout!.layoutSize.width + 5 : 0))
+        }
         return true
     }
 }
@@ -97,8 +116,10 @@ private final class Star_SubscriptionRowView : GeneralContainableRowView {
     private let dateView = TextView()
     private let avatar: AvatarControl = AvatarControl(font: .avatar(15))
     
-    private var perMonth: TextView?
+     var productTextView: TextView?
+    private var productImageView: TransformImageView?
 
+    private var perMonth: TextView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(amountView)
@@ -178,6 +199,48 @@ private final class Star_SubscriptionRowView : GeneralContainableRowView {
             self.perMonth = nil
         }
         
+        if let productNameLayout = item.productNameLayout {
+            let current: TextView
+            if let view = self.productTextView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+
+                self.productTextView = current
+                addSubview(current)
+            }
+            current.update(productNameLayout)
+        } else if let view = self.productTextView {
+            performSubviewRemoval(view, animated: animated)
+            self.productTextView = nil
+        }
+        
+        if let photo = item.subscription.native.photo {
+            let current: TransformImageView
+            if let view = self.productImageView {
+                current = view
+            } else {
+                current = TransformImageView(frame: NSMakeRect(0, 0, 20, 20))
+                current.layer?.cornerRadius = floor(current.frame.height / 2)
+                self.productImageView = current
+                if #available(macOS 10.15, *) {
+                    current.layer?.cornerCurve = .continuous
+                }
+                self.addSubview(current)
+            }
+            current.setSignal(chatMessageWebFilePhoto(account: item.context.account, photo: photo, scale: backingScaleFactor))
+            _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
+            current.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: photo.dimensions?.size ?? NSMakeSize(20, 20), boundingSize: current.frame.size, intrinsicInsets: .init()))
+        } else if let view = self.productImageView {
+            performSubviewRemoval(view, animated: animated)
+            self.productImageView = nil
+        }
+        
+        
+       
+        
         avatar.setPeer(account: item.context.account, peer: item.subscription.peer._asPeer())
 
         
@@ -188,7 +251,7 @@ private final class Star_SubscriptionRowView : GeneralContainableRowView {
         super.layout()
         
         if let perMonth {
-            amountView.setFrameOrigin(NSMakePoint(containerView.frame.width - amountView.frame.width - 12, 9))
+            amountView.setFrameOrigin(NSMakePoint(containerView.frame.width - amountView.frame.width - 12, productTextView != nil ? 19 : 9))
             perMonth.setFrameOrigin(NSMakePoint(containerView.frame.width - perMonth.frame.width - 12, amountView.frame.maxY))
         } else {
             amountView.centerY(x: containerView.frame.width - amountView.frame.width - 12)
@@ -197,6 +260,19 @@ private final class Star_SubscriptionRowView : GeneralContainableRowView {
         nameView.setFrameOrigin(NSMakePoint(10 + 44 + 10, 7))
         dateView.setFrameOrigin(NSMakePoint(nameView.frame.minX, containerView.frame.height - dateView.frame.height - 7))
         
+        if let productImageView {
+            productImageView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 2))
+        }
+        
+        if let productTextView {
+            if let productImageView {
+                productTextView.setFrameOrigin(NSMakePoint(productImageView.frame.maxX + 4, nameView.frame.maxY + 2))
+            } else {
+                productTextView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 2))
+            }
+        }
+
+
     }
     
     override var additionBorderInset: CGFloat {
