@@ -25,7 +25,7 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let headerLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
 
-    
+    private(set) var badge: BadgeNode?
 
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: EnginePeer, myBalance: Int64, request: State.Request, viewType: GeneralViewType, action:@escaping()->Void, close:@escaping()->Void) {
         self.context = context
@@ -46,6 +46,8 @@ private final class HeaderItem : GeneralRowItem {
             headerText = strings().starPurchaseConfirm
         case .subscription:
             headerText = strings().starsPurchaseSubscribe
+        case let .botSubscription(invoice):
+            headerText = invoice.title
         }
         
         self.headerLayout = .init(.initialize(string: headerText, color: theme.colors.text, font: .medium(.title)), alignment: .center)
@@ -56,6 +58,8 @@ private final class HeaderItem : GeneralRowItem {
             infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
         case .subscription:
             infoAttr.append(string: strings().starsPurchaseSubscribeInfoCountable(peer._asPeer().displayTitle, Int(request.count)), color: theme.colors.text, font: .normal(.text))
+        case let .botSubscription(invoice):
+            infoAttr.append(string: strings().starsPurchaseBotSubscribeInfoCountable(invoice.title, peer._asPeer().displayTitle, Int(request.count)), color: theme.colors.text, font: .normal(.text))
         case let .paidMedia(_, count):
             
             var description: String = ""
@@ -85,6 +89,20 @@ private final class HeaderItem : GeneralRowItem {
         self.infoLayout = .init(infoAttr, alignment: .center)
         
         
+        if case let .botSubscription(invoice) = request.type {
+            
+            var under = theme.colors.underSelectedColor
+
+            let badgeText: String
+            let color: NSColor
+            badgeText = "\(invoice.totalAmount)"
+            color = NSColor(0xFFAC04)
+            under = .white
+            
+            badge = .init(.initialize(string: badgeText, color: under, font: .avatar(.small)), color, aroundFill: theme.colors.background, additionSize: NSMakeSize(16, 7))
+            
+        }
+        
         super.init(initialSize, stableId: stableId, viewType: viewType, action: action, inset: .init())
     }
     
@@ -100,7 +118,12 @@ private final class HeaderItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 10 + 80 + 10 + headerLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10 + 40 + 10 + 10
+        var height = 10 + 80 + 10 + headerLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10 + 40 + 10 + 10
+        
+        if case .botSubscription = request.type {
+            height += 30
+        }
+        return height
     }
     
     override func viewClass() -> AnyClass {
@@ -129,6 +152,9 @@ private final class AcceptView : Control {
             attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
         case .subscription:
             attr.append(string: strings().starsPurchaseSubscribeAction, color: theme.colors.underSelectedColor, font: .medium(.text))
+        case let .botSubscription(invoice):
+            attr.append(string: strings().starsPurchaseBotSubscribeAcceptMonth("\(XTRSTAR)\(TINY_SPACE)\(invoice.totalAmount.formattedWithSeparator)"), color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
         }
         
         
@@ -235,6 +261,44 @@ private class PreviewMediaView: Control {
 }
 
 private final class HeaderItemView : GeneralContainableRowView {
+ 
+    
+    private final class PeerView: Control {
+        private let avatarView = AvatarControl(font: .avatar(13))
+        private let nameView: TextView = TextView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(avatarView)
+            addSubview(nameView)
+            
+            nameView.userInteractionEnabled = false
+            self.avatarView.setFrameSize(NSMakeSize(26, 26))
+            
+            layer?.cornerRadius = 12.5
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(_ peer: EnginePeer, _ context: AccountContext, maxWidth: CGFloat) {
+            self.avatarView.setPeer(account: context.account, peer: peer._asPeer())
+            
+            let nameLayout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
+            nameLayout.measure(width: maxWidth)
+            
+            nameView.update(nameLayout)
+
+            setFrameSize(NSMakeSize(avatarView.frame.width + 10 + nameLayout.layoutSize.width + 10, 26))
+            
+            self.background = theme.colors.grayForeground
+        }
+        
+        override func layout() {
+            super.layout()
+            nameView.centerY(x: self.avatarView.frame.maxX + 10)
+        }
+    }
     
     private let dismiss = ImageButton()
     private let balance = InteractiveTextView()
@@ -246,6 +310,10 @@ private final class HeaderItemView : GeneralContainableRowView {
     private let sceneView: GoldenStarSceneView
     
     private var subBadgeView: ImageView?
+    
+    private var subscribeBadge: View?
+    
+    private var subPeerView: PeerView?
     
     private let accept: AcceptView = AcceptView(frame: .zero)
     
@@ -348,6 +416,7 @@ private final class HeaderItemView : GeneralContainableRowView {
             current.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: photo.dimensions?.size ?? NSMakeSize(80, 80), boundingSize: current.frame.size, intrinsicInsets: .init()))
 
             
+            
         } else {
             if let view = self.photo {
                 performSubviewRemoval(view, animated: animated)
@@ -386,6 +455,38 @@ private final class HeaderItemView : GeneralContainableRowView {
         }
         
         
+        if let badge = item.badge {
+            let current: View
+            if let view = self.subscribeBadge {
+                current = view
+            } else {
+                current = View()
+                self.subscribeBadge = current
+                addSubview(current)
+            }
+            badge.view = current
+            current.setFrameSize(badge.size)
+        } else if let subscribeBadge = subscribeBadge {
+            performSubviewRemoval(subscribeBadge, animated: animated)
+            self.subscribeBadge = nil
+        }
+        
+        if case .botSubscription(_) = item.request.type {
+            let current: PeerView
+            if let view = self.subPeerView {
+                current = view
+            } else {
+                current = PeerView(frame: .zero)
+                self.subPeerView = current
+                addSubview(current)
+            }
+            current.set(item.peer, item.context, maxWidth: frame.width - 40)
+        } else if let view = self.subPeerView {
+            performSubviewRemoval(view, animated: animated)
+            self.subPeerView = nil
+        }
+        
+        
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         dismiss.sizeToFit()
         dismiss.scaleOnClick = true
@@ -411,16 +512,25 @@ private final class HeaderItemView : GeneralContainableRowView {
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2) - 10))
         if let photo {
             photo.centerX(y: 10)
+            
+            if let subscribeBadge {
+                subscribeBadge.centerX(y: photo.frame.maxY - subscribeBadge.frame.height)
+            }
         }
         if let avatar {
             avatar.centerX(y: 10)
             if let subBadgeView {
                 subBadgeView.setFrameOrigin(avatar.frame.maxX - 25, avatar.frame.midY + 8)
             }
+            
+            if let subscribeBadge {
+                subscribeBadge.centerX(y: avatar.frame.maxY - subscribeBadge.frame.height / 2)
+            }
         }
         if let paidPreview {
             paidPreview.centerX(y: 10)
         }
+        
         sceneView.centerX(y: -10)
         balance.setFrameOrigin(NSMakePoint(frame.width - 12 - balance.frame.width, floorToScreenPixels((50 - balance.frame.height) / 2) - 10))
         
@@ -429,6 +539,11 @@ private final class HeaderItemView : GeneralContainableRowView {
         header.centerX(y: headerY + 10)
         info.centerX(y: header.frame.maxY + 10)
         accept.centerX(y: frame.height - accept.frame.height - 10)
+        
+        if let subPeerView {
+            subPeerView.centerX(y: info.frame.maxY + 10)
+        }
+        
     }
 }
 
@@ -474,6 +589,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return HeaderItem(initialSize, stableId: stableId, context: arguments.context, peer: peer, myBalance: myBalance, request: state.request, viewType: .legacy, action: arguments.buy, close: arguments.dismiss)
         }))
+        
+        if case .botSubscription = state.request.type {
+            //TODOLANG
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("By subscribing you agree to the [Terms of Service](https://telegram.org).", linkHandler: { url in
+                execute(inapp: .external(link: url, false))
+            }), data: .init(color: theme.colors.listGrayText, viewType: .legacy, centerViewAlignment: true, alignment: .center)))
+            sectionId += 1
+
+        }
+        
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return LoadingTableItem(initialSize, height: 219, stableId: stableId, backgroundColor: theme.colors.background)
@@ -502,6 +627,7 @@ enum StarPurchaseType : Equatable {
     case bot
     case paidMedia(TelegramMediaImage, PaidMediaCount)
     case subscription(ExternalJoiningChatState.Invite)
+    case botSubscription(TelegramMediaInvoice)
 }
 
 enum StarPurchaseCompletionStatus : Equatable {
@@ -631,6 +757,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
                                 text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
                             case let .subscription(invite):
                                 text = strings().starsPurchaseSubscribeSuccess(invite.title)
+                            case let .botSubscription(invoice):
+                                text = strings().starsPurchaseBotSubscribeSuccess(invoice.title, peer._asPeer().displayTitle)
                             }
                             showModalText(for: window, text: text)
                             

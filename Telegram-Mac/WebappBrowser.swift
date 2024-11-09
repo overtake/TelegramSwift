@@ -37,7 +37,7 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
         let themeParams = generateWebAppThemeParams(theme)
         switch data {
         case let .mainapp(_, source):
-            signal = context.engine.messages.requestMainWebView(botId: bot.id, source: source, themeParams: themeParams) |> map {
+            signal = context.engine.messages.requestMainWebView(peerId: context.peerId, botId: bot.id, source: source, themeParams: themeParams) |> map {
                 return ($0.url, .simple(url: $0.url, botdata: .init(queryId: $0.queryId, bot: bot, peerId: nil, buttonText: "", keepAliveSignal: $0.keepAliveSignal), source: source))
             }
         case .webapp(_, let peerId, let buttonText, let url, let payload, let threadId, let replyTo, let fromMenu):
@@ -168,7 +168,7 @@ final class WebappBrowser : Window {
         let originY = windowFrame.origin.y + (windowFrame.height - size.height) / 2
         let rect = NSRect(origin: NSPoint(x: originX, y: originY), size: size)
 
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless], backing: .buffered, defer: true)
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless, .resizable], backing: .buffered, defer: true)
         
         self.contentView?.wantsLayer = true
         self.contentView?.autoresizesSubviews = false
@@ -1924,7 +1924,11 @@ final class WebappBrowserController : ViewController {
                    invoke()
                 })
             } else {
-                invoke()
+                if self?.window?.isFullScreen == true {
+                    self?.window?.toggleFullScreen(nil)
+                } else {
+                    invoke()
+                }
             }
             
         }, selectAtIndex: { index in

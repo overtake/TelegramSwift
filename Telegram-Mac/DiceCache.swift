@@ -145,6 +145,10 @@ class DiceCache {
     var availableMessageEffects: Signal<AvailableMessageEffects?, NoError> {
         return engine.stickers.availableMessageEffects()
     }
+    
+    var emojies_status_featured: Signal<ItemCollectionsView, NoError> {
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 6)
+    }
 
     
     var emojies_status: Signal<ItemCollectionsView, NoError> {

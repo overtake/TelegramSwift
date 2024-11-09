@@ -114,11 +114,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func WebbotShareMessageModal(context: AccountContext) -> InputDataModalController {
+func WebbotShareMessageModal(context: AccountContext, preparedMessage: PreparedInlineMessage) -> InputDataModalController {
 
     var close:(()->Void)? = nil
     
     let actionsDisposable = DisposableSet()
+    
+    
     
     let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil)
     

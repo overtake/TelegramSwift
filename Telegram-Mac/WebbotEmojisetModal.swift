@@ -75,7 +75,7 @@ private final class HeaderView: GeneralRowView {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func set(_ peer: EnginePeer, _ context: AccountContext, emoji: Int64, maxWidth: CGFloat) {
+        func set(_ peer: EnginePeer, _ context: AccountContext, file: TelegramMediaFile, maxWidth: CGFloat) {
             self.avatarView.setPeer(account: context.account, peer: peer._asPeer())
             
             let nameLayout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
@@ -84,7 +84,7 @@ private final class HeaderView: GeneralRowView {
             nameView.update(nameLayout)
             
             if stickerView == nil {
-                let current: InlineStickerView = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: emoji, file: nil, emoji: ""), size: NSMakeSize(18, 18))
+                let current: InlineStickerView = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: NSMakeSize(18, 18))
                 addSubview(current)
                 self.stickerView = current
             }
@@ -141,13 +141,13 @@ private final class HeaderView: GeneralRowView {
         dismiss.scaleOnClick = true
         dismiss.sizeToFit()
         
-        peerView.set(.init(item.context.myPeer!), item.context, emoji: item.state.emojiId, maxWidth: item.width - 40)
+        peerView.set(.init(item.context.myPeer!), item.context, file: item.state.file, maxWidth: item.width - 40)
         
         infoText.update(item.info)
         textView.update(item.header)
         
         if stickerView == nil {
-            let current: InlineStickerView = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: item.state.emojiId, file: nil, emoji: ""), size: NSMakeSize(100, 100))
+            let current: InlineStickerView = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: item.state.file.fileId.id, file: item.state.file, emoji: ""), size: NSMakeSize(100, 100))
             addSubview(current)
             self.stickerView = current
         }
@@ -176,9 +176,8 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var emojiId: Int64
     let peer: EnginePeer
-    var file: TelegramMediaFile?
+    let file: TelegramMediaFile
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -208,7 +207,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     case fail
 }
 
-func WebbotEmojisetModal(context: AccountContext, bot: EnginePeer, emojiId: Int64, expirationDate: Int32?, completed:@escaping(EmojiSetResultStatus)->Void) -> InputDataModalController {
+func WebbotEmojisetModal(context: AccountContext, bot: EnginePeer, file: TelegramMediaFile, expirationDate: Int32?, completed:@escaping(EmojiSetResultStatus)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -216,7 +215,7 @@ func WebbotEmojisetModal(context: AccountContext, bot: EnginePeer, emojiId: Int6
     
     var close:(()->Void)? = nil
 
-    let initialState = State(emojiId: emojiId, peer: bot)
+    let initialState = State(peer: bot, file: file)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -225,13 +224,6 @@ func WebbotEmojisetModal(context: AccountContext, bot: EnginePeer, emojiId: Int6
     }
     
     
-    actionsDisposable.add(context.inlinePacksContext.load(fileId: emojiId).start(next: { file in
-        updateState { current in
-            var current = current
-            current.file = file
-            return current
-        }
-    }))
     
     var getController:(()->ViewController?)? = nil
     
@@ -261,12 +253,17 @@ func WebbotEmojisetModal(context: AccountContext, bot: EnginePeer, emojiId: Int6
     }
     
     controller.validateData = { _ in
-        let file = stateValue.with { $0.file }
-        if let file {
+        
+        if context.isPremium {
+            let file = stateValue.with { $0.file }
             context.reactions.setStatus(file, peer: context.myPeer!, timestamp: context.timestamp, timeout: expirationDate, fromRect: nil, handleInteractive: false)
+
+            status = .success
+            close?()
+        } else {
+            prem(with: PremiumBoardingController(context: context), for: window)
         }
-        status = .success
-        close?()
+       
         return .none
     }
 

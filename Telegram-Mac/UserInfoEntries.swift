@@ -202,6 +202,12 @@ class UserInfoArguments : PeerInfoArguments {
         }))
     }
     
+    func togglePermissionsStatus() {
+        _ = self.context.engine.peers.toggleBotEmojiStatusAccess(peerId: self.peerId, enabled: false).start()
+    }
+    func togglePermissionsGeo() {
+        
+    }
     
     func shareMyInfo() {
         
@@ -1006,6 +1012,9 @@ enum UserInfoEntry: PeerInfoEntry {
     case aboutInfo(sectionId:Int, text: String, viewType: GeneralViewType)
     case botStarsBalance(sectionId:Int, text: String, viewType: GeneralViewType)
     case botTonBalance(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botPermissionsHeader(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botPermissionsStatus(sectionId:Int, value: Bool, viewType: GeneralViewType)
+    case botPermissionsGeo(sectionId:Int, value: Bool, viewType: GeneralViewType)
     case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
     case botEditIntro(sectionId:Int, viewType: GeneralViewType)
     case botEditCommands(sectionId:Int, viewType: GeneralViewType)
@@ -1063,6 +1072,12 @@ enum UserInfoEntry: PeerInfoEntry {
         case .botStarsBalance(_, _, let viewType):
             return viewType
         case .botTonBalance(_, _, let viewType):
+            return viewType
+        case .botPermissionsHeader(_, _, let viewType):
+            return viewType
+        case .botPermissionsStatus(_, _, let viewType):
+            return viewType
+        case .botPermissionsGeo(_, _, let viewType):
             return viewType
         case .botEditUsername(_, _, let viewType):
             return viewType
@@ -1150,6 +1165,9 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setLastName(sectionId, text, placeholder, _): return .setLastName(sectionId: sectionId, text: text, placeholder: placeholder, viewType: viewType)
         case let .botStarsBalance(sectionId, text, _): return .botStarsBalance(sectionId: sectionId, text: text, viewType: viewType)
         case let .botTonBalance(sectionId, text, _): return .botTonBalance(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botPermissionsHeader(sectionId, text, _): return .botPermissionsHeader(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botPermissionsStatus(sectionId, value, _): return .botPermissionsStatus(sectionId: sectionId, value: value, viewType: viewType)
+        case let .botPermissionsGeo(sectionId, value, _): return .botPermissionsGeo(sectionId: sectionId, value: value, viewType: viewType)
         case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
         case let .botEditIntro(sectionId, _): return .botEditIntro(sectionId: sectionId, viewType: viewType)
         case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
@@ -1292,6 +1310,27 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botTonBalance(sectionId, text, viewType):
             switch entry {
             case .botTonBalance(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botPermissionsHeader(sectionId, text, viewType):
+            switch entry {
+            case .botPermissionsHeader(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botPermissionsStatus(sectionId, value, viewType):
+            switch entry {
+            case .botPermissionsStatus(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botPermissionsGeo(sectionId, value, viewType):
+            switch entry {
+            case .botPermissionsGeo(sectionId, value, viewType):
                 return true
             default:
                 return false
@@ -1595,80 +1634,86 @@ enum UserInfoEntry: PeerInfoEntry {
             return 106
         case .botTonBalance:
             return 107
-        case .botEditIntro:
+        case .botPermissionsHeader:
             return 108
-        case .botEditCommands:
-            return 108
-        case .botEditSettings:
+        case .botPermissionsStatus:
+            return 109
+        case .botPermissionsGeo:
             return 110
-        case .botEditInfo:
+        case .botEditIntro:
             return 111
-        case .userName:
+        case .botEditCommands:
             return 112
-        case .scam:
+        case .botEditSettings:
             return 113
-        case .about:
+        case .botEditInfo:
             return 114
-        case .aboutInfo:
+        case .userName:
             return 115
-        case .bio:
+        case .scam:
             return 116
-        case .phoneNumber:
+        case .about:
             return 117
-        case .birthday:
+        case .aboutInfo:
             return 118
-        case .peerId:
+        case .bio:
             return 119
-        case .businessHours:
+        case .phoneNumber:
             return 120
-        case .businessLocation:
+        case .birthday:
             return 121
-        case .sendMessage:
+        case .peerId:
             return 122
-        case .botAddToGroup:
+        case .businessHours:
             return 123
-        case .botAddToGroupInfo:
+        case .businessLocation:
             return 124
-        case .botShare:
+        case .sendMessage:
             return 125
-        case .botSettings:
+        case .botAddToGroup:
             return 126
-        case .botHelp:
+        case .botAddToGroupInfo:
             return 127
-        case .botPrivacy:
+        case .botShare:
             return 128
-        case .shareContact:
+        case .botSettings:
+            return 128
+        case .botHelp:
             return 129
-        case .shareMyInfo:
+        case .botPrivacy:
             return 130
-        case .addContact:
+        case .shareContact:
             return 131
-        case .startSecretChat:
+        case .shareMyInfo:
             return 132
-        case .sharedMedia:
+        case .addContact:
             return 133
-        case .notifications:
+        case .startSecretChat:
             return 134
-        case .encryptionKey:
+        case .sharedMedia:
             return 135
-        case .groupInCommon:
+        case .notifications:
             return 136
+        case .encryptionKey:
+            return 137
+        case .groupInCommon:
+            return 138
         case let .setPhoto(_, _, type, _, _):
-            return 137 + type.rawValue
+            return 139 + type.rawValue
         case .resetPhoto:
-            return 141
-        case .setPhotoInfo:
             return 142
-        case .block:
+        case .setPhotoInfo:
             return 143
-        case .reportReaction:
+        case .block:
             return 144
-        case .deleteChat:
+        case .reportReaction:
             return 145
-        case .deleteContact:
+        case .deleteChat:
             return 146
-        case .media:
+        case .deleteContact:
             return 147
+        case .media:
+            return 148
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1691,6 +1736,12 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botStarsBalance(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botTonBalance(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botPermissionsHeader(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botPermissionsStatus(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botPermissionsGeo(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botEditIntro(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -1816,6 +1867,18 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botTonBalance(_, text, viewType):
             let icon = generateTonBalanceIcon(text)
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditTonBalance, icon: theme.icons.peerInfoTonBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openTonBalance)
+        case let .botPermissionsHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .plain(text), viewType: viewType)
+        case let .botPermissionsStatus(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotPermissionsStatus, icon: NSImage(named: "Icon_PeerInfo_BotStatus")?.precomposed(flipVertical: true), type: .switchable(value), viewType: viewType, action: {
+                arguments.togglePermissionsStatus()
+                //arguments.editBot("intro")
+            })
+        case let .botPermissionsGeo(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotPermissionsGeo, icon: NSImage(named: "Icon_PeerInfo_BotLocation")?.precomposed(flipVertical: true), type: .switchable(value), viewType: viewType, action: {
+                arguments.togglePermissionsGeo()
+                //arguments.editBot("intro")
+            })
         case let .botEditIntro(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.editBot("intro")
@@ -2275,6 +2338,16 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         let balance = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
                         entries.append(UserInfoEntry.botTonBalance(sectionId: sectionId, text: "\(balance)", viewType: hasStars ? .lastItem : .singleItem))
                     }
+                }
+                
+                
+                if cachedData.flags.contains(.botCanManageEmojiStatus) {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    
+                    entries.append(UserInfoEntry.botPermissionsHeader(sectionId: sectionId, text: strings().peerInfoBotPermissionsHeader, viewType: .textTopItem))
+                    entries.append(UserInfoEntry.botPermissionsStatus(sectionId: sectionId, value: cachedData.flags.contains(.botCanManageEmojiStatus), viewType: .singleItem))
+                  //  entries.append(UserInfoEntry.botPermissionsGeo(sectionId: sectionId, value: true, viewType: .lastItem))
                 }
                 
             }

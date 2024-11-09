@@ -527,9 +527,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-            
-            showModal(with: WebbotShareMessageModal(context: context), for: context.window)
-            
+                        
             //BrowserStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"))
             
             

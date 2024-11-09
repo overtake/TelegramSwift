@@ -751,6 +751,8 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         switch error {
         case .generic:
             alert(for: window(), info: strings().unknownError)
+        case .alreadyActive:
+            alert(for: window(), info: strings().unknownError)
         }
     }))
     
