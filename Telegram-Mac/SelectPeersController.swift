@@ -914,9 +914,10 @@ class SelectChatsBehavior: SelectPeersBehavior {
 
     
     var premiumBlock: Bool
-    
-    init(settings: SelectPeerSettings = [.contacts, .remote], excludePeerIds: [PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping () -> GeneralRowItem.Theme = { GeneralRowItem.Theme() }, premiumBlock: Bool = false) {
+    var miniappsBlock: Bool
+    init(settings: SelectPeerSettings = [.contacts, .remote], excludePeerIds: [PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping () -> GeneralRowItem.Theme = { GeneralRowItem.Theme() }, premiumBlock: Bool = false, miniappsBlock: Bool = false) {
         self.premiumBlock = premiumBlock
+        self.miniappsBlock = miniappsBlock
         super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
     }
     
@@ -930,6 +931,18 @@ class SelectChatsBehavior: SelectPeersBehavior {
             index += 1
 
             entries.append(.peer(SelectPeerValue(peer: TelegramFilterCategory(category: .premiumUsers), presence: nil, subscribers: nil, ignoreStatus: true), index, true))
+            index += 1
+            
+            entries.append(.separator(index, customTheme(), strings().selectPeersChats))
+            index += 1
+
+        }
+        
+        if miniappsBlock {
+            entries.append(.separator(index, customTheme(), strings().selectPeersUserTypes))
+            index += 1
+
+            entries.append(.peer(SelectPeerValue(peer: TelegramFilterCategory(category: .miniApps), presence: nil, subscribers: nil, ignoreStatus: true), index, true))
             index += 1
             
             entries.append(.separator(index, customTheme(), strings().selectPeersChats))

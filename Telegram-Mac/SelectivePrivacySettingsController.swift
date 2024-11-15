@@ -23,6 +23,7 @@ enum SelectivePrivacySettingsKind {
     case voiceMessages
     case bio
     case birthday
+    case gifts
 }
 
 private enum SelectivePrivacySettingType {
@@ -81,8 +82,11 @@ private enum SelectivePrivacySettingsSection: Int32 {
     case peers
 }
 
-private func stringForUserCount(_ count: Int, enableForPremium: Bool = false) -> String {
+private func stringForUserCount(_ count: Int, enableForPremium: Bool = false, enableForBots: Bool = false) -> String {
     if count == 0 {
+        if enableForBots {
+            return strings().privacySettingsGiftsEnableForBots
+        }
         if enableForPremium {
             return strings().privacySettingsPremiumUsers
         } else {
@@ -309,8 +313,8 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
     var hideReadTime: Bool?
     
     var hasBirthday: Bool
-
-    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?, fallbackPhoto: TelegramMediaImage?, updatePhotoState: PeerInfoUpdatingPhotoState?, hideReadTime: Bool?, enableForPremium: Bool, hasBirthday: Bool) {
+    var enableForBots: Bool
+    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?, fallbackPhoto: TelegramMediaImage?, updatePhotoState: PeerInfoUpdatingPhotoState?, hideReadTime: Bool?, enableForPremium: Bool, hasBirthday: Bool, enableForBots: Bool) {
         self.setting = setting
         self.enableFor = enableFor
         self.disableFor = disableFor
@@ -324,6 +328,7 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
         self.hideReadTime = hideReadTime
         self.enableForPremium = enableForPremium
         self.hasBirthday = hasBirthday
+        self.enableForBots = enableForBots
     }
 }
 
@@ -393,7 +398,11 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
         settingTitle = strings().privacySettingsControllerPhoneNumberWhoCanSeePhoneNumber
         disableForText = strings().privacySettingsControllerNeverShareWith
         enableForText = strings().privacySettingsControllerAlwaysShareWith
-
+    case .gifts:
+        settingTitle = strings().privacySettingsControllerGiftsWhoCanSee
+        settingInfoText = strings().privacySettingsControllerGiftsCustomHelp
+        disableForText = strings().privacySettingsControllerNeverAllow
+        enableForText = strings().privacySettingsControllerAlwaysAllow
     }
     
     switch kind {
@@ -437,12 +446,12 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
     if kind != .voiceMessages || context.isPremium {
         switch state.setting {
         case .everybody:
-            entries.append(.disableFor(sectionId, disableForText, stringForUserCount(countForSelectivePeers(state.disableFor), enableForPremium: false), .singleItem))
+            entries.append(.disableFor(sectionId, disableForText, stringForUserCount(countForSelectivePeers(state.disableFor), enableForPremium: false, enableForBots: false), .singleItem))
         case .contacts:
-            entries.append(.disableFor(sectionId, disableForText, stringForUserCount(countForSelectivePeers(state.disableFor), enableForPremium: false), .firstItem))
-            entries.append(.enableFor(sectionId, enableForText, stringForUserCount(countForSelectivePeers(state.enableFor), enableForPremium: state.enableForPremium), .lastItem))
+            entries.append(.disableFor(sectionId, disableForText, stringForUserCount(countForSelectivePeers(state.disableFor), enableForPremium: false, enableForBots: false), .firstItem))
+            entries.append(.enableFor(sectionId, enableForText, stringForUserCount(countForSelectivePeers(state.enableFor), enableForPremium: state.enableForPremium, enableForBots: state.enableForBots), .lastItem))
         case .nobody:
-            entries.append(.enableFor(sectionId, enableForText, stringForUserCount(countForSelectivePeers(state.enableFor), enableForPremium: state.enableForPremium), .singleItem))
+            entries.append(.enableFor(sectionId, enableForText, stringForUserCount(countForSelectivePeers(state.enableFor), enableForPremium: state.enableForPremium, enableForBots: state.enableForBots), .singleItem))
         }
         entries.append(.peersInfo(sectionId, .textBottomItem))
     }
@@ -558,15 +567,18 @@ class SelectivePrivacySettingsController: TableViewController {
         var initialEnableFor: [PeerId: SelectivePrivacyPeer] = [:]
         var initialDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
         var enableForPremium = false
+        var enableForBots = false
 
         switch current {
-        case let .disableEveryone(enableFor, enableForCloseFriends, _enableForPremium):
+        case let .disableEveryone(enableFor, enableForCloseFriends, _enableForPremium, _enableForBots):
             initialEnableFor = enableFor
             enableForPremium = _enableForPremium
-        case let .enableContacts(enableFor, disableFor, _enableForPremium):
+            enableForBots = _enableForBots
+        case let .enableContacts(enableFor, disableFor, _enableForPremium, _enableForBots):
             initialEnableFor = enableFor
             initialDisableFor = disableFor
             enableForPremium = _enableForPremium
+            enableForBots = _enableForBots
         case let .enableEveryone(disableFor):
             initialDisableFor = disableFor
         }
@@ -575,10 +587,10 @@ class SelectivePrivacySettingsController: TableViewController {
         var initialCallP2PDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
         if let callCurrent = callSettings {
             switch callCurrent {
-            case let .disableEveryone(enableFor, enableForCloseFriends, _):
+            case let .disableEveryone(enableFor, enableForCloseFriends, _, _):
                 initialCallP2PEnableFor = enableFor
                 initialCallP2PDisableFor = [:]
-            case let .enableContacts(enableFor, disableFor, _):
+            case let .enableContacts(enableFor, disableFor, _, _):
                 initialCallP2PEnableFor = enableFor
                 initialCallP2PDisableFor = disableFor
             case let .enableEveryone(disableFor):
@@ -589,7 +601,7 @@ class SelectivePrivacySettingsController: TableViewController {
         }
 
 
-        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled, fallbackPhoto: nil, updatePhotoState: nil, hideReadTime: self.globalSettings?.hideReadTime, enableForPremium: enableForPremium, hasBirthday: true)
+        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled, fallbackPhoto: nil, updatePhotoState: nil, hideReadTime: self.globalSettings?.hideReadTime, enableForPremium: enableForPremium, hasBirthday: true, enableForBots: enableForBots)
 
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -868,14 +880,15 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerAlwaysShare
             case .birthday:
                 title = strings().privacySettingsControllerAlwaysShare
-
+            case .gifts:
+                title = strings().privacySettingsControllerAlwaysShare
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
                 peerIds = state.enableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, premiumUsers: kind == .groupInvitations ? stateValue.with { $0.enableForPremium } : nil, updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, premiumUsers: kind == .groupInvitations ? stateValue.with { $0.enableForPremium } : nil, enableForBots: kind == .gifts ? stateValue.with { $0.enableForBots } : nil, updated: { updatedPeerIds in
                 updateState { current in
                     var current = current
                     switch target {
@@ -885,6 +898,8 @@ class SelectivePrivacySettingsController: TableViewController {
                             disableFor.removeValue(forKey: key)
                         }
                         current.enableForPremium = updatedPeerIds.contains (where: { $0.key.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace })
+                        current.enableForBots = updatedPeerIds.contains (where: { $0.key.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace })
+
                         current.enableFor = updatedPeerIds.filter({ $0.key.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace })
                         current.disableFor = disableFor
                     case .callP2P:
@@ -920,13 +935,15 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerNeverShareWith
             case .birthday:
                 title = strings().privacySettingsControllerNeverShareWith
+            case .gifts:
+                title = strings().privacySettingsControllerNeverShareWith
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
                 peerIds = state.disableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, premiumUsers: nil, updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, premiumUsers: nil, enableForBots: nil, updated: { updatedPeerIds in
                 updateState { current in
                     var current = current
                     switch target {
@@ -1007,9 +1024,9 @@ class SelectivePrivacySettingsController: TableViewController {
                 case .everybody:
                     settings = SelectivePrivacySettings.enableEveryone(disableFor: current.disableFor)
                 case .contacts:
-                    settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor, enableForPremium: current.enableForPremium)
+                    settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor, enableForPremium: current.enableForPremium, enableForBots: current.enableForBots)
                 case .nobody:
-                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: false, enableForPremium: current.enableForPremium)
+                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: false, enableForPremium: current.enableForPremium, enableForBots: current.enableForBots)
                 }
 
                 if let mode = current.callP2PMode {
@@ -1017,9 +1034,9 @@ class SelectivePrivacySettingsController: TableViewController {
                     case .everybody:
                         callSettings = SelectivePrivacySettings.enableEveryone(disableFor: current.callP2PDisableFor)
                     case .contacts:
-                        callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor, enableForPremium: current.enableForPremium)
+                        callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor, enableForPremium: current.enableForPremium, enableForBots: current.enableForBots)
                     case .nobody:
-                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: false, enableForPremium: current.enableForPremium)
+                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: false, enableForPremium: current.enableForPremium, enableForBots: current.enableForBots)
                     }
                 }
                 current.saving = true
@@ -1047,6 +1064,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     type = .bio
                 case .birthday:
                     type = .birthday
+                case .gifts:
+                    type = .giftsAutoSave
                 }
                 
                 var updatePhoneDiscoverySignal: Signal<Void, NoError> = Signal.complete()
@@ -1071,9 +1090,11 @@ class SelectivePrivacySettingsController: TableViewController {
                         current.saving = false
                         return current
                     }
-                    updated(settings, callSettings, phoneDiscoveryEnabled, gSettings)
                     dismissImpl?()
                 }))
+                
+                updated(settings, callSettings, phoneDiscoveryEnabled, gSettings)
+
             }
         }
 
@@ -1101,6 +1122,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     title = strings().privacySettingsBio
                 case .birthday:
                     title = strings().privacySettingsBirthday
+                case .gifts:
+                    title = strings().privacySettingsGifts
                 }
 
                 self?.setCenterTitle(title)

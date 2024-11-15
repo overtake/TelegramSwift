@@ -769,14 +769,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var resortController: TableResortController? {
         didSet {
             if let oldValue {
-                resortController?.resortView = oldValue.resortView
-                resortController?.resortRow = oldValue.resortRow
-                
-                resortController?.startLocation = oldValue.startLocation
-                resortController?.startRowLocation = oldValue.startRowLocation
-                
-                resortController?.currentHoleIndex = oldValue.currentHoleIndex
-                resortController?.prevHoleIndex = oldValue.prevHoleIndex
+//                resortController?.resortView = oldValue.resortView
+//                resortController?.resortRow = oldValue.resortRow
+//                
+//                resortController?.startLocation = oldValue.startLocation
+//                resortController?.startRowLocation = oldValue.startRowLocation
+//                
+//                resortController?.currentHoleIndex = oldValue.currentHoleIndex
+//                resortController?.prevHoleIndex = oldValue.prevHoleIndex
             }
           
         }

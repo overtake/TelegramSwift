@@ -351,7 +351,7 @@ public final class HLSQualitySet {
     }
 }
 
-private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
+private final class SharedHLSVideoJSContext: NSObject {
     private final class ContextReference {
         weak var contentNode: HLSVideoJSNativeContentView?
         
@@ -375,67 +375,51 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                return (500, "Internal Server Error")
            }
        }
-   }
+    }
     
-    static let shared: SharedHLSVideoWebView = SharedHLSVideoWebView()
+    static let shared: SharedHLSVideoJSContext = SharedHLSVideoJSContext()
     
     private var contextReferences: [Int: ContextReference] = [:]
     
-    let webView: WKWebView
+    var jsContext: HLSJSContext?
     
     var videoElements: [Int: VideoElement] = [:]
     var mediaSources: [Int: MediaSource] = [:]
     var sourceBuffers: [Int: SourceBuffer] = [:]
     
-    private var isWebViewReady: Bool = false
+    private var isJsContextReady: Bool = false
     private var pendingInitializeInstanceIds: [(id: Int, urlPrefix: String)] = []
     
     private var tempTasks: [Int: URLSessionTask] = [:]
     
+    private var emptyTimer: Foundation.Timer?
+    
     override init() {
-        let config = WKWebViewConfiguration()
-        config.mediaTypesRequiringUserActionForPlayback = []
-        
-        let userController = WKUserContentController()
-        
-        var handleScriptMessage: ((WKScriptMessage) -> Void)?
-        userController.add(WeakScriptMessageHandler { message in
-            handleScriptMessage?(message)
-        }, name: "performAction")
-        
-        config.userContentController = userController
-        
-        self.webView = WKWebView(frame: CGRect(origin: CGPoint(), size: CGSize(width: 100.0, height: 100.0)), configuration: config)
-        self.webView.allowsLinkPreview = false
-        self.webView.allowsBackForwardNavigationGestures = false
-        self.webView.alphaValue = 1
-        
-
-        
         super.init()
-        
-        self.webView.navigationDelegate = self
-        
-        handleScriptMessage = { [weak self] message in
+    }
+    
+    deinit {
+        self.emptyTimer?.invalidate()
+    }
+    
+    private func createJsContext() {
+        let handleScriptMessage: ([String: Any]) -> Void = {  [weak self] message in
             Queue.mainQueue().async {
                 guard let self else {
                     return
                 }
-                guard let body = message.body as? [String: Any] else {
-                    return
-                }
                 
-                guard let eventName = body["event"] as? String else {
+                guard let eventName = message["event"] as? String else {
                     return
                 }
                 
                 switch eventName {
                 case "windowOnLoad":
-                    self.isWebViewReady = true
+                    self.isJsContextReady = true
                     
                     self.initializePendingInstances()
                 case "bridgeInvoke":
-                    guard let eventData = body["data"] as? [String: Any] else {
+                    guard let eventData = message["data"] as? [String: Any] else {
                         return
                     }
                     guard let bridgeId = eventData["bridgeId"] as? Int else {
@@ -464,31 +448,31 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                             }
                             let jsonResult = try! JSONSerialization.data(withJSONObject: result)
                             let jsonResultString = String(data: jsonResult, encoding: .utf8)!
-                            self.webView.evaluateJavaScript("bridgeInvokeCallback(\(callbackId), \(jsonResultString));", completionHandler: nil)
+                            self.jsContext?.evaluateJavaScript("window.bridgeInvokeCallback(\(callbackId), \(jsonResultString));")
                         }
                     )
                 case "playerStatus":
-                    guard let instanceId = body["instanceId"] as? Int else {
+                    guard let instanceId = message["instanceId"] as? Int else {
                         return
                     }
                     guard let instance = self.contextReferences[instanceId]?.contentNode else {
                         self.contextReferences.removeValue(forKey: instanceId)
                         return
                     }
-                    guard let eventData = body["data"] as? [String: Any] else {
+                    guard let eventData = message["data"] as? [String: Any] else {
                         return
                     }
                     
                     instance.onPlayerStatusUpdated(eventData: eventData)
                 case "playerCurrentTime":
-                    guard let instanceId = body["instanceId"] as? Int else {
+                    guard let instanceId = message["instanceId"] as? Int else {
                         return
                     }
                     guard let instance = self.contextReferences[instanceId]?.contentNode else {
                         self.contextReferences.removeValue(forKey: instanceId)
                         return
                     }
-                    guard let eventData = body["data"] as? [String: Any] else {
+                    guard let eventData = message["data"] as? [String: Any] else {
                         return
                     }
                     guard let value = eventData["value"] as? Double else {
@@ -509,11 +493,20 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
             }
         }
         
-        let bundlePath = Bundle.main.bundlePath + "/Contents/Resources"
-        self.webView.loadFileURL(URL(fileURLWithPath: bundlePath + "/index.html"), allowingReadAccessTo: URL(fileURLWithPath: bundlePath))
+        self.isJsContextReady = false
+        
+        //#if DEBUG
+        self.jsContext = WebViewNativeJSContextImpl(handleScriptMessage: handleScriptMessage)
+        /*#else
+        self.jsContext = WebViewHLSJSContextImpl(handleScriptMessage: handleScriptMessage)
+        #endif*/
     }
     
-    deinit {
+    private func disposeJsContext() {
+        if let _ = self.jsContext {
+            self.jsContext = nil
+        }
+        self.isJsContextReady = false
     }
     
     private func bridgeInvoke(
@@ -530,7 +523,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     return
                 }
                 let videoElement = VideoElement(instanceId: instanceId)
-                SharedHLSVideoWebView.shared.videoElements[bridgeId] = videoElement
+                SharedHLSVideoJSContext.shared.videoElements[bridgeId] = videoElement
                 completion([:])
             } else if (methodName == "setMediaSource") {
                 guard let instanceId = params["instanceId"] as? Int else {
@@ -541,7 +534,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     assertionFailure()
                     return
                 }
-                guard let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.instanceId == instanceId }) else {
+                guard let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.instanceId == instanceId }) else {
                     return
                 }
                 videoElement.mediaSourceId = mediaSourceId
@@ -601,14 +594,14 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
         } else if (className == "MediaSource") {
             if (methodName == "constructor") {
                 let mediaSource = MediaSource()
-                SharedHLSVideoWebView.shared.mediaSources[bridgeId] = mediaSource
+                SharedHLSVideoJSContext.shared.mediaSources[bridgeId] = mediaSource
                 completion([:])
             } else if (methodName == "setDuration") {
                 guard let duration = params["duration"] as? Double else {
                     assertionFailure()
                     return
                 }
-                guard let mediaSource = SharedHLSVideoWebView.shared.mediaSources[bridgeId] else {
+                guard let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[bridgeId] else {
                     assertionFailure()
                     return
                 }
@@ -618,7 +611,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     durationUpdated = true
                 }
                 
-                guard let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.mediaSourceId == bridgeId }) else {
+                guard let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.mediaSourceId == bridgeId }) else {
                     return
                 }
                 
@@ -633,13 +626,13 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     assertionFailure()
                     return
                 }
-                guard let mediaSource = SharedHLSVideoWebView.shared.mediaSources[bridgeId] else {
+                guard let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[bridgeId] else {
                     assertionFailure()
                     return
                 }
                 mediaSource.sourceBufferIds = ids
                 
-                guard let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.mediaSourceId == bridgeId }) else {
+                guard let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.mediaSourceId == bridgeId }) else {
                     return
                 }
                 
@@ -658,7 +651,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     return
                 }
                 let sourceBuffer = SourceBuffer(mediaSourceId: mediaSourceId, mimeType: mimeType)
-                SharedHLSVideoWebView.shared.sourceBuffers[bridgeId] = sourceBuffer
+                SharedHLSVideoJSContext.shared.sourceBuffers[bridgeId] = sourceBuffer
                 
                 completion([:])
             } else if (methodName == "appendBuffer") {
@@ -670,7 +663,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     assertionFailure()
                     return
                 }
-                guard let sourceBuffer = SharedHLSVideoWebView.shared.sourceBuffers[bridgeId] else {
+                guard let sourceBuffer = SharedHLSVideoJSContext.shared.sourceBuffers[bridgeId] else {
                     assertionFailure()
                     return
                 }
@@ -682,7 +675,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     assertionFailure()
                     return
                 }
-                guard let sourceBuffer = SharedHLSVideoWebView.shared.sourceBuffers[bridgeId] else {
+                guard let sourceBuffer = SharedHLSVideoJSContext.shared.sourceBuffers[bridgeId] else {
                     assertionFailure()
                     return
                 }
@@ -690,7 +683,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     completion(["ranges": serializeRanges(bufferedRanges)])
                 })
             } else if methodName == "abort" {
-                guard let sourceBuffer = SharedHLSVideoWebView.shared.sourceBuffers[bridgeId] else {
+                guard let sourceBuffer = SharedHLSVideoJSContext.shared.sourceBuffers[bridgeId] else {
                     assertionFailure()
                     return
                 }
@@ -745,51 +738,38 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                         let filePath = String(requestPath[firstSlash.upperBound...])
                         if filePath == "master.m3u8" {
                             let _ = (source.masterPlaylistData()
-                            |> deliverOn(.mainQueue())
-                            |> take(1)).start(next: { [weak self] result in
-                                guard let self else {
-                                    return
-                                }
-                                
-                                self.sendResponseAndClose(id: id, data: result.data(using: .utf8)!, completion: completion)
+                            |> take(1)).start(next: { result in
+                                SharedHLSVideoJSContext.sendResponseAndClose(id: id, data: result.data(using: .utf8)!, completion: completion)
                             })
                         } else if filePath.hasPrefix("hls_level_") && filePath.hasSuffix(".m3u8") {
                             guard let levelIndex = Int(String(filePath[filePath.index(filePath.startIndex, offsetBy: "hls_level_".count) ..< filePath.index(filePath.endIndex, offsetBy: -".m3u8".count)])) else {
-                                self.sendErrorAndClose(id: id, error: .notFound, completion: completion)
+                                SharedHLSVideoJSContext.sendErrorAndClose(id: id, error: .notFound, completion: completion)
                                 return
                             }
                             
                             let _ = (source.playlistData(quality: levelIndex)
                             |> deliverOn(.mainQueue())
-                            |> take(1)).start(next: { [weak self] result in
-                                guard let self else {
-                                    return
-                                }
-                                
-                                self.sendResponseAndClose(id: id, data: result.data(using: .utf8)!, completion: completion)
+                            |> take(1)).start(next: { result in
+                                SharedHLSVideoJSContext.sendResponseAndClose(id: id, data: result.data(using: .utf8)!, completion: completion)
                             })
                         } else if filePath.hasPrefix("partfile") && filePath.hasSuffix(".mp4") {
                             let fileId = String(filePath[filePath.index(filePath.startIndex, offsetBy: "partfile".count) ..< filePath.index(filePath.endIndex, offsetBy: -".mp4".count)])
                             guard let fileIdValue = Int64(fileId) else {
-                                self.sendErrorAndClose(id: id, error: .notFound, completion: completion)
+                                SharedHLSVideoJSContext.sendErrorAndClose(id: id, error: .notFound, completion: completion)
                                 return
                             }
                             guard let requestRange else {
-                                self.sendErrorAndClose(id: id, error: .badRequest, completion: completion)
+                                SharedHLSVideoJSContext.sendErrorAndClose(id: id, error: .badRequest, completion: completion)
                                 return
                             }
                             let _ = (source.fileData(id: fileIdValue, range: requestRange.lowerBound ..< requestRange.upperBound + 1)
                             |> deliverOn(.mainQueue())
                             //|> timeout(5.0, queue: self.queue, alternate: .single(nil))
-                            |> take(1)).start(next: { [weak self] result in
-                                guard let self else {
-                                    return
-                                }
-                                
+                            |> take(1)).start(next: { result in
                                 if let (tempFile, tempFileRange, totalSize) = result {
-                                    self.sendResponseFileAndClose(id: id, file: tempFile, fileRange: tempFileRange, range: requestRange, totalSize: totalSize, completion: completion)
+                                    SharedHLSVideoJSContext.sendResponseFileAndClose(id: id, file: tempFile, fileRange: tempFileRange, range: requestRange, totalSize: totalSize, completion: completion)
                                 } else {
-                                    self.sendErrorAndClose(id: id, error: .internalServerError, completion: completion)
+                                    SharedHLSVideoJSContext.sendErrorAndClose(id: id, error: .internalServerError, completion: completion)
                                 }
                             })
                         }
@@ -801,58 +781,6 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                 if (!handlerFound) {
                     completion(["error": 1])
                 }
-                
-                /*var request = URLRequest(url: URL(string: url)!)
-                for (key, value) in requestHeaders {
-                    request.setValue(value, forHTTPHeaderField: key)
-                }
-                
-                let isCompleted = Atomic<Bool>(value: false)
-                let task = URLSession.shared.dataTask(with: request, completionHandler: { [weak self] data, response, error in
-                    Queue.mainQueue().async {
-                        guard let self else {
-                            return
-                        }
-                        if isCompleted.swap(true) {
-                            return
-                        }
-                        
-                        self.tempTasks.removeValue(forKey: id)
-                        
-                        if let _ = error {
-                            completion([
-                                "error": 1
-                            ])
-                        } else {
-                            if let response = response as? HTTPURLResponse {
-                                completion([
-                                    "status": response.statusCode,
-                                    "statusText": "OK",
-                                    "responseData": data?.base64EncodedString() ?? "",
-                                    "responseHeaders": response.allHeaderFields as? [String: String] ?? [:]
-                                ])
-                                
-                                let _ = response
-                                /*if let response = response as? HTTPURLResponse, let requestUrl {
-                                    if let updatedResponse = HTTPURLResponse(
-                                        url: requestUrl,
-                                        statusCode: response.statusCode,
-                                        httpVersion: "HTTP/1.1",
-                                        headerFields: response.allHeaderFields as? [String: String] ?? [:]
-                                    ) {
-                                        sourceTask.didReceive(updatedResponse)
-                                    } else {
-                                        sourceTask.didReceive(response)
-                                    }
-                                } else {
-                                    sourceTask.didReceive(response)
-                                }*/
-                            }
-                        }
-                    }
-                })
-                self.tempTasks[id] = task
-                task.resume()*/
             } else if methodName == "abort" {
                 guard let id = params["id"] as? Int else {
                     assertionFailure()
@@ -868,7 +796,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
         }
     }
     
-    private func sendErrorAndClose(id: Int, error: ResponseError, completion: @escaping ([String: Any]) -> Void) {
+    private static func sendErrorAndClose(id: Int, error: ResponseError, completion: @escaping ([String: Any]) -> Void) {
         let (code, status) = error.httpStatus
         completion([
             "status": code,
@@ -880,7 +808,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
         ])
     }
     
-    private func sendResponseAndClose(id: Int, data: Data, contentType: String = "application/octet-stream", completion: @escaping ([String: Any]) -> Void) {
+    private static func sendResponseAndClose(id: Int, data: Data, contentType: String = "application/octet-stream", completion: @escaping ([String: Any]) -> Void) {
         completion([
             "status": 200,
             "statusText": "OK",
@@ -892,26 +820,37 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
         ])
     }
     
-    private func sendResponseFileAndClose(id: Int, file: TempBoxFile, fileRange: Range<Int>, range: Range<Int>, totalSize: Int, completion: @escaping ([String: Any]) -> Void) {
-        if let data = try? Data(contentsOf: URL(fileURLWithPath: file.path), options: .mappedIfSafe).subdata(in: fileRange) {
-            completion([
-                "status": 200,
-                "statusText": "OK",
-                "responseData": data.base64EncodedString(),
-                "responseHeaders": [
-                    "Content-Type": "application/octet-stream",
-                    "Content-Range": "bytes \(range.lowerBound)-\(range.upperBound)/\(totalSize)",
-                    "Content-Length": "\(fileRange.upperBound - fileRange.lowerBound)"
-                ] as [String: String]
-            ])
-        } else {
-            self.sendErrorAndClose(id: id, error: .internalServerError, completion: completion)
+    private static func sendResponseFileAndClose(id: Int, file: TempBoxFile, fileRange: Range<Int>, range: Range<Int>, totalSize: Int, completion: @escaping ([String: Any]) -> Void) {
+        Queue.concurrentDefaultQueue().async {
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: file.path), options: .mappedIfSafe).subdata(in: fileRange) {
+                completion([
+                    "status": 200,
+                    "statusText": "OK",
+                    "responseData": data.base64EncodedString(),
+                    "responseHeaders": [
+                        "Content-Type": "application/octet-stream",
+                        "Content-Range": "bytes \(range.lowerBound)-\(range.upperBound)/\(totalSize)",
+                        "Content-Length": "\(fileRange.upperBound - fileRange.lowerBound)"
+                    ] as [String: String]
+                ])
+            } else {
+                SharedHLSVideoJSContext.sendErrorAndClose(id: id, error: .internalServerError, completion: completion)
+            }
         }
     }
     
     func register(context: HLSVideoJSNativeContentView) -> Disposable {
         let contextInstanceId = context.instanceId
         self.contextReferences[contextInstanceId] = ContextReference(contentNode: context)
+        
+        if self.jsContext == nil {
+            self.createJsContext()
+        }
+        
+        if let emptyTimer = self.emptyTimer {
+            self.emptyTimer = nil
+            emptyTimer.invalidate()
+        }
         
         return ActionDisposable { [weak self, weak context] in
             Queue.mainQueue().async {
@@ -930,7 +869,23 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
                     }
                 }
                 
-                self.webView.evaluateJavaScript("window.hlsPlayer_destroyInstance(\(contextInstanceId));")
+                self.jsContext?.evaluateJavaScript("window.hlsPlayer_destroyInstance(\(contextInstanceId));")
+                
+                if self.contextReferences.isEmpty {
+                    if self.emptyTimer == nil {
+                        self.emptyTimer = Foundation.Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { [weak self] timer in
+                            guard let self else {
+                                return
+                            }
+                            if self.emptyTimer === timer {
+                                self.emptyTimer = nil
+                            }
+                            if self.contextReferences.isEmpty {
+                                self.disposeJsContext()
+                            }
+                        })
+                    }
+                }
             }
         }
     }
@@ -938,7 +893,7 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
     func initializeWhenReady(context: HLSVideoJSNativeContentView, urlPrefix: String) {
         self.pendingInitializeInstanceIds.append((context.instanceId, urlPrefix))
         
-        if self.isWebViewReady {
+        if self.isJsContextReady {
             self.initializePendingInstances()
         }
     }
@@ -974,9 +929,10 @@ private final class SharedHLSVideoWebView: NSObject, WKNavigationDelegate {
             """)
         }
         
-        self.webView.evaluateJavaScript(userScriptJs)
+        self.jsContext?.evaluateJavaScript(userScriptJs)
     }
 }
+
 
 
 
@@ -1177,7 +1133,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
         
         super.init(frame: .zero)
         
-        self.contextDisposable = SharedHLSVideoWebView.shared.register(context: self)
+        self.contextDisposable = SharedHLSVideoJSContext.shared.register(context: self)
 
         
         self.playerView.frame = CGRect(origin: CGPoint(), size: self.intrinsicDimensions)
@@ -1212,13 +1168,14 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
                 guard let self else {
                     return
                 }
-                SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerNotifySeekedOnNextStatusUpdate();", completionHandler: nil)
+                SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerNotifySeekedOnNextStatusUpdate();")
+
             }
         }
 
         
         if let playerSource {
-            SharedHLSVideoWebView.shared.initializeWhenReady(context: self, urlPrefix: "http://server/\(playerSource.id)/")
+            SharedHLSVideoJSContext.shared.initializeWhenReady(context: self, urlPrefix: "http://server/\(playerSource.id)/")
         }
         
         player.actionAtEnd = .action({ [weak self] in
@@ -1303,11 +1260,11 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
                     }
                     if let selectedLevelIndex {
                         self.hasRequestedPlayerLoad = true
-                        SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerLoad(\(selectedLevelIndex));", completionHandler: nil)
+                        SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerLoad(\(selectedLevelIndex));")
                     }
                 }
             }
-            SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetBaseRate(\(self.requestedBaseRate));", completionHandler: nil)
+            SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetBaseRate(\(self.requestedBaseRate));")
         }
         
         self.updateStatus()
@@ -1336,13 +1293,13 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     }
     
     fileprivate func onMediaSourceDurationUpdated() {
-        guard let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) else {
+        guard let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) else {
             return
         }
-        guard let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoWebView.shared.mediaSources[mediaSourceId] else {
+        guard let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[mediaSourceId] else {
             return
         }
-        guard let sourceBufferId = mediaSource.sourceBufferIds.first, let sourceBuffer = SharedHLSVideoWebView.shared.sourceBuffers[sourceBufferId] else {
+        guard let sourceBufferId = mediaSource.sourceBufferIds.first, let sourceBuffer = SharedHLSVideoJSContext.shared.sourceBuffers[sourceBufferId] else {
             return
         }
         
@@ -1350,13 +1307,13 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     }
     
     fileprivate func onMediaSourceBuffersUpdated() {
-        guard let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) else {
+        guard let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) else {
             return
         }
-        guard let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoWebView.shared.mediaSources[mediaSourceId] else {
+        guard let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[mediaSourceId] else {
             return
         }
-        guard let sourceBufferId = mediaSource.sourceBufferIds.first, let sourceBuffer = SharedHLSVideoWebView.shared.sourceBuffers[sourceBufferId] else {
+        guard let sourceBufferId = mediaSource.sourceBufferIds.first, let sourceBuffer = SharedHLSVideoJSContext.shared.sourceBuffers[sourceBufferId] else {
             return
         }
 
@@ -1367,7 +1324,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
                 guard let self, let sourceBuffer else {
                     return
                 }
-                guard let mediaSource = SharedHLSVideoWebView.shared.mediaSources[sourceBuffer.mediaSourceId] else {
+                guard let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[sourceBuffer.mediaSourceId] else {
                     return
                 }
                 self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, parts: sourceBuffer.items)))
@@ -1397,7 +1354,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     private func updatePlayerStatus(status: MediaPlayerStatus) {
         self._status.set(status)
         
-        if let (bridgeId, _) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) {
+        if let (bridgeId, _) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) {
             var isPlaying: Bool = false
             var isBuffering = false
             switch status.status {
@@ -1418,36 +1375,40 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
             
             let jsonResult = try! JSONSerialization.data(withJSONObject: result)
             let jsonResultString = String(data: jsonResult, encoding: .utf8)!
-            SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.bridgeObjectMap[\(bridgeId)].bridgeUpdateStatus(\(jsonResultString));", completionHandler: nil)
+            SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.bridgeObjectMap[\(bridgeId)].bridgeUpdateStatus(\(jsonResultString));")
         }
     }
 
     
     private func updateBuffered() {
-        guard let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) else {
-            return
-        }
-        guard let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoWebView.shared.mediaSources[mediaSourceId] else {
-            return
-        }
-        guard let sourceBufferId = mediaSource.sourceBufferIds.first, let sourceBuffer = SharedHLSVideoWebView.shared.sourceBuffers[sourceBufferId] else {
-            return
-        }
-        
-        let bufferedRanges = sourceBuffer.ranges
-        
-        if let (_, videoElement) = SharedHLSVideoWebView.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) {
-            if let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoWebView.shared.mediaSources[mediaSourceId] {
-                if let duration = mediaSource.duration {
-                    var mappedRanges = RangeSet<Int64>()
-                    for range in bufferedRanges.ranges {
-                        mappedRanges.formUnion(RangeSet<Int64>(Int64(range.lowerBound * 1000.0) ..< Int64(range.upperBound * 1000.0)))
-                    }
-                    self._bufferingStatus.set(.single((mappedRanges, Int64(duration * 1000.0))))
-                }
-            }
-        }
-    }
+         guard let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) else {
+             return
+         }
+         guard let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[mediaSourceId] else {
+             return
+         }
+         guard let sourceBufferId = mediaSource.sourceBufferIds.first, let sourceBuffer = SharedHLSVideoJSContext.shared.sourceBuffers[sourceBufferId] else {
+             return
+         }
+         
+         let bufferedRanges = sourceBuffer.ranges
+         
+         if let (_, videoElement) = SharedHLSVideoJSContext.shared.videoElements.first(where: { $0.value.instanceId == self.instanceId }) {
+             if let mediaSourceId = videoElement.mediaSourceId, let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[mediaSourceId] {
+                 if let duration = mediaSource.duration {
+                     var mappedRanges = RangeSet<Int64>()
+                     for range in bufferedRanges.ranges {
+                         let rangeLower = max(0.0, range.lowerBound - 0.2)
+                         let rangeUpper = min(duration, range.upperBound + 0.2)
+                         mappedRanges.formUnion(RangeSet<Int64>(Int64(rangeLower * 1000.0) ..< Int64(rangeUpper * 1000.0)))
+                     }
+                     self._bufferingStatus.set(.single((mappedRanges, Int64(duration * 1000.0))))
+                 }
+             }
+         }
+     }
+     
+
 
 
 
@@ -1512,19 +1473,19 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
         assert(Queue.mainQueue().isCurrent())
         self.seekId += 1
         
-        SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSeek(\(timestamp));", completionHandler: nil)
+        SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSeek(\(timestamp));")
     }
     
     
     public func setSoundMuted(soundMuted: Bool) {
-        SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetIsMuted(\(soundMuted));", completionHandler: nil)
+        SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetIsMuted(\(soundMuted));")
     }
 
 
     public func setBaseRate(_ baseRate: Double) {
         self.requestedBaseRate = baseRate
         if self.playerIsReady {
-            SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetBaseRate(\(self.requestedBaseRate));", completionHandler: nil)
+            SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetBaseRate(\(self.requestedBaseRate));")
         }
         self.updateStatus()
     }
@@ -1545,7 +1506,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
         }
         
         if self.playerIsReady {
-            SharedHLSVideoWebView.shared.webView.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetLevel(\(self.requestedLevelIndex ?? -1));", completionHandler: nil)
+            SharedHLSVideoJSContext.shared.jsContext?.evaluateJavaScript("window.hlsPlayer_instances[\(self.instanceId)].playerSetLevel(\(self.requestedLevelIndex ?? -1));")
         }
     }
 
@@ -1589,14 +1550,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     }
 }
 
-private func serializeRanges(_ ranges: RangeSet<Double>) -> [Double] {
-    var result: [Double] = []
-    for range in ranges.ranges {
-        result.append(range.lowerBound)
-        result.append(range.upperBound)
-    }
-    return result
-}
+
 
 private final class VideoElement {
     let instanceId: Int
@@ -1614,6 +1568,16 @@ private final class MediaSource {
     
     init() {
     }
+}
+
+
+private func serializeRanges(_ ranges: RangeSet<Double>) -> [Double] {
+    var result: [Double] = []
+    for range in ranges.ranges {
+        result.append(range.lowerBound)
+        result.append(range.upperBound)
+    }
+    return result
 }
 
 
@@ -1694,7 +1658,7 @@ private final class SourceBuffer {
                 return
             }
             
-            if let fragmentInfo = extractFFMpegMediaInfo(path: tempFile.path) {
+            if let fragmentInfoSet = extractFFMpegMediaInfo(path: tempFile.path), let fragmentInfo = fragmentInfoSet.audio ?? fragmentInfoSet.video {
                 Queue.mainQueue().async {
                     guard let self else {
                         completion(RangeSet())
@@ -1710,10 +1674,13 @@ private final class SourceBuffer {
                         
                         completion(self.ranges)
                     } else {
+                        let videoCodecName: String? = fragmentInfoSet.video?.codecName
+                        
                         let item = ChunkMediaPlayerPart(
                             startTime: fragmentInfo.startTime.seconds,
                             endTime: fragmentInfo.startTime.seconds + fragmentInfo.duration.seconds,
-                            file: tempFile
+                            file: tempFile,
+                            codecName: videoCodecName
                         )
                         self.items.append(item)
                         self.updateRanges()
@@ -1739,6 +1706,7 @@ private final class SourceBuffer {
                 }
                 return
             }
+
         }
     }
     
@@ -1765,7 +1733,6 @@ private final class SourceBuffer {
         }
     }
 }
-
 
 private func parseFragment(filePath: String) -> (offset: CMTime, duration: CMTime)? {
     let source = SoftwareVideoSource(path: filePath, hintVP9: false, unpremultiplyAlpha: false)

@@ -144,8 +144,8 @@ class UserInfoArguments : PeerInfoArguments {
     private let updatePhotoDisposable = MetaDisposable()
 
     
-    func giftPremium() {
-        showModal(with: GiftingController(context: context, peerId: self.effectivePeerId), for: context.window)
+    func giftPremium(_ isBirthday: Bool) {
+        showModal(with: GiftingController(context: context, peerId: self.effectivePeerId, isBirthday: isBirthday), for: context.window)
     }
     
     func editBot(_ payload: String?, action: Bool = true) -> Void {

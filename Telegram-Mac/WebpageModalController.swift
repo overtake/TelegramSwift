@@ -2028,11 +2028,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
         case "web_app_set_emoji_status":
             if let json = json, let emojiId = (json["custom_emoji_id"] as? String).flatMap(Int64.init) {
-                let expirationDate = (json["expiration_date"] as? String).flatMap(Int32.init)
+                let duration = (json["duration"] as? String).flatMap(Int32.init)
                 if let bot {
                     _ = showModalProgress(signal: context.inlinePacksContext.load(fileId: emojiId) |> take(1), for: window).start(next: { file in
                         if let file {
-                            showModal(with: WebbotEmojisetModal(context: context, bot: .init(bot), file: file, expirationDate: expirationDate, completed: { [weak self] result in
+                            showModal(with: WebbotEmojisetModal(context: context, bot: .init(bot), file: file, expirationDate: duration != nil ? context.timestamp + duration! : nil, completed: { [weak self] result in
                                 if result == .fail {
                                     self?.sendEvent(name: "emoji_status_failed", data: nil)
                                 } else {
@@ -2069,46 +2069,22 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_request_file_download":
             if let json = json, let url = (json["url"] as? String), let fileName = json["file_name"] as? String {
                 if let bot = bot {
-                    verifyAlert(for: window, header: strings().webappDocumentDownload, information: strings().webappDocumentDownloadInfo(bot.displayTitle, fileName), ok: strings().webappDocumentDownloadOK, successHandler: { [weak self] _ in
-                        
-                        self?.sendEvent(name: "file_download_requested", data: "{status: \"downloading\"}")
-
-                        
-                        enum FetchResult {
-                            case result(Data)
-                            case progress(Float)
-                        }
-                        
-                        let signal = (showModalProgress(signal: fetchHttpResource(url: url), for: window)
-                        |> map(Optional.init)
-                        |> `catch` { error in
-                            return .single(nil)
-                        }
-                        |> mapToSignal { value -> Signal<FetchResult, NoError> in
-                            if case let .dataPart(_, data, _, complete) = value, complete {
-                                return .single(.result(data))
-                            } else if case let .progressUpdated(progress) = value {
-                                return .single(.progress(progress))
-                            } else {
-                                return .complete()
+                    
+                    if #available(macOS 10.15, *) {
+                        let _ = (FileDownload.getFileSize(url: url)
+                                 |> deliverOnMainQueue).start(next: { [weak self] fileSize in
+                            guard let self else {
+                                return
                             }
-                        })
-                        
-                        _ = signal.startStandalone(next: { result in
-                            switch result {
-                            case let .result(data):
-                                let tempFile = TempBox.shared.tempFile(fileName: fileName)
-                                try? data.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic)
-                                savePanel(file: tempFile.path, named: fileName, for: window)
-                            default:
-                                break
+                            var fileSizeString = ""
+                            if let fileSize {
+                                fileSizeString = " (\(fileSize.prettyNumber))"
                             }
-                        })
-                        
-                    }, cancelHandler: { [weak self] in
-                        self?.sendEvent(name: "file_download_requested", data: "{status: \"cancelled\"}")
+                            downloadFile(url: url, fileName: fileName, fileSize: fileSizeString, bot: bot, window: window)
 
-                    })
+                        })
+                    }
+                    
                 }
             }
         case "web_app_send_prepared_message":
@@ -2116,7 +2092,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 if let bot = bot {
                     _ = showModalProgress(signal: context.engine.messages.getPreparedInlineMessage(botId: bot.id, id: id), for: window).startStandalone(next: { preparedMessage in
                         if let preparedMessage {
-                            showModal(with: WebbotShareMessageModal(context: context, preparedMessage: preparedMessage), for: window)
+                            showModal(with: WebbotShareMessageModal(context: context, bot: .init(bot), preparedMessage: preparedMessage, window: window, callback: { status in
+                                switch status {
+                                case .success:
+                                    self.sendEvent(name: "prepared_message_sent", data: nil)
+                                case .failed:
+                                    self.sendEvent(name: "prepared_message_failed", data: nil)
+                                }
+                            }), for: window)
                         }
                     })
                 }
@@ -2125,6 +2108,98 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             break
         }
 
+    }
+    
+
+
+    private func downloadFile(url: String, fileName: String, fileSize: String, bot: Peer, window: Window) {
+        var isMedia = true
+        var title: String?
+        let photoExtensions = [".jpg", ".png", ".gif", ".tiff"]
+        let videoExtensions = [".mp4", ".mov"]
+        var downloadedText: String = strings().webappDocumentDownloadImage
+        let lowercasedFilename = fileName.lowercased()
+        for ext in photoExtensions {
+            if lowercasedFilename.hasSuffix(ext) {
+                title = "Download Photo"
+                downloadedText = strings().webappDocumentDownloadImage
+                break
+            }
+        }
+        if title == nil {
+            for ext in videoExtensions {
+                if lowercasedFilename.hasSuffix(ext) {
+                    title = "Download Video"
+                    downloadedText = strings().webappDocumentDownloadVideo
+                    break
+                }
+            }
+        }
+        if title == nil {
+            title = "Download Document"
+            isMedia = false
+        }
+        let context = self.context
+        
+        verifyAlert(for: window, header: title!, information: strings().webappDocumentDownloadInfo(bot.displayTitle, "**\(fileName)**\(fileSize)"), ok: strings().webappDocumentDownloadOK, successHandler: { [weak self] _ in
+            
+            self?.sendEvent(name: "file_download_requested", data: "{status: \"downloading\"}")
+
+            
+            enum FetchResult {
+                case result(Data)
+                case progress(Float)
+            }
+            
+            let signal = (showModalProgress(signal: fetchHttpResource(url: url), for: window)
+            |> map(Optional.init)
+            |> `catch` { error in
+                return .single(nil)
+            }
+            |> mapToSignal { value -> Signal<FetchResult, NoError> in
+                if case let .dataPart(_, data, _, complete) = value, complete {
+                    return .single(.result(data))
+                } else if case let .progressUpdated(progress) = value {
+                    return .single(.progress(progress))
+                } else {
+                    return .complete()
+                }
+            })
+            
+            _ = signal.startStandalone(next: { [weak self, weak window] result in
+                guard let strongSelf = self, let window = window else {
+                    return
+                }
+                switch result {
+                case let .result(data):
+                    let tempFile = TempBox.shared.tempFile(fileName: fileName)
+                    try? data.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic)
+                    
+    
+                    savePanel(file: tempFile.path, named: fileName, for: window, completion: { [weak window] path  in
+                        if let window {
+                            
+                            let attributedText = parseMarkdownIntoAttributedString(downloadedText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(15), textColor: .white), bold: MarkdownAttributeSet(font: .bold(15), textColor: .white), link: MarkdownAttributeSet(font: .bold(15), textColor: .link), linkAttribute: { contents in
+                                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in }))
+                            })).mutableCopy() as! NSMutableAttributedString
+                            
+                            let layout = TextViewLayout(attributedText, alignment: .center, lineSpacing: 5.0, alwaysStaticItems: true)
+                            layout.interactions = TextViewInteractions(processURL: { _ in 
+                                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+                            })
+                            layout.measure(width: 160)
+                            _ = showSaveModal(for: window, context: context, animation: LocalAnimatedSticker.success_saved, shouldBlur: false, text: layout, delay: 3.0).start()
+                        }
+                    })
+                default:
+                    break
+                }
+            })
+            
+        }, cancelHandler: { [weak self] in
+            self?.sendEvent(name: "file_download_requested", data: "{status: \"cancelled\"}")
+
+        })
     }
     
     fileprivate func requestWriteAccess() {

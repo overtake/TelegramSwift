@@ -195,11 +195,13 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
     private let statePromise = ValuePromise(SelectivePrivacyPeersControllerState(), ignoreRepeated: true)
     private let stateValue = Atomic(value: SelectivePrivacyPeersControllerState())
     private let premiumUsers: Bool?
-    init(_ context: AccountContext, title: String, initialPeers: [PeerId: SelectivePrivacyPeer], premiumUsers: Bool?, updated: @escaping ([PeerId: SelectivePrivacyPeer]) -> Void) {
+    private let enableForBots: Bool?
+    init(_ context: AccountContext, title: String, initialPeers: [PeerId: SelectivePrivacyPeer], premiumUsers: Bool?, enableForBots: Bool?, updated: @escaping ([PeerId: SelectivePrivacyPeer]) -> Void) {
         self.title = title
         self.initialPeers = initialPeers
         self.updated = updated
         self.premiumUsers = premiumUsers
+        self.enableForBots = enableForBots
         super.init(context)
     }
     
@@ -224,6 +226,11 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
             initialPeers.insert(.init(peer: premium, participantCount: nil), at: 0)
         }
         
+        if let enableForBots, enableForBots {
+            let enableForBots = TelegramFilterCategory(category: .miniApps)
+            initialPeers.insert(.init(peer: enableForBots, participantCount: nil), at: 0)
+        }
+        
         let updated = self.updated
         let initialSize = self.atomicSize
 
@@ -231,6 +238,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         let stateValue = self.stateValue
         
         let premiumUsers = self.premiumUsers
+        let enableForBots = self.enableForBots
 
         let actionsDisposable = DisposableSet()
 
@@ -274,7 +282,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         }, addPeer: {
             
 
-            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote, .bots], premiumBlock: premiumUsers != nil), confirmation: {_ in return .single(true) }, selectedPeerIds: Set(currentPeerIds)).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote, .bots], premiumBlock: premiumUsers != nil, miniappsBlock: enableForBots != nil), confirmation: {_ in return .single(true) }, selectedPeerIds: Set(currentPeerIds)).start(next: { peerIds in
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[SelectivePrivacyPeer], NoError> in

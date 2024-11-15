@@ -662,6 +662,31 @@ class SharefilterCallbackObject : ShareObject {
     }
 }
 
+//                    let value =
+
+class ShareChatContextResult : ShareObject {
+    private let preparedMessage: PreparedInlineMessage
+    init(_ context: AccountContext, preparedMessage: PreparedInlineMessage) {
+        self.preparedMessage = preparedMessage
+        super.init(context)
+    }
+    
+    override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        for peerId in peerIds {
+            _ = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: peerId, threadId: optionalMessageThreadId(threadId), botId: preparedMessage.botId, result: preparedMessage.result, replyToMessageId: nil)
+        }
+        return .complete()
+    }
+    
+    override var hasCaptionView: Bool {
+        return false
+    }
+    
+    override var multipleSelection: Bool {
+        return false
+    }
+    
+}
 
 class ShareLinkObject : ShareObject {
     let link:String
@@ -2032,7 +2057,9 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             _ = signal.start(error: { error in
                alert(for: context.window, info: error)
             }, completed: { [weak self] in
+                self?.success = true
                 self?.close()
+                self?.showSuccess()
             })
         }
         
@@ -2556,6 +2583,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                     self.genericView.tokenizedView.removeAllFailed(animated: true)
                     _ = share.perform(to: Array(ids), threadId: nil, comment: self.contextChatInteraction.presentation.interfaceState.inputState).start()
                     self.emoji.popover?.hide()
+                    self.success = true
                     self.close()
                     if !ids.isEmpty {
                         self.showSuccess()
@@ -2620,9 +2648,13 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
 
     private let emoji: EmojiesController
     private let presentation: TelegramPresentationTheme?
+    private var completion:((Bool)->Void)? = nil
     
-    init(_ share:ShareObject, presentation: TelegramPresentationTheme? = nil) {
+    private var success: Bool = false
+    
+    init(_ share:ShareObject, presentation: TelegramPresentationTheme? = nil, completion:((Bool)->Void)? = nil) {
         self.share = share
+        self.completion = completion
         self.presentation = presentation
         self.share.presentation = presentation
         emoji = EmojiesController(share.context, presentation: presentation)
@@ -2638,7 +2670,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     }
     
     override func didResizeView(_ size: NSSize, animated: Bool) {
-        self.genericView.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+      //  self.genericView.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     func inputDidUpdateLayout(animated: Bool) {
@@ -2684,7 +2716,9 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
     }
     
     func showSuccess() {
-        showModalText(for: share.context.window, text: share.successText)
+        if let window = self.window {
+            showModalText(for: window, text: share.successText)
+        }
     }
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
@@ -2693,6 +2727,8 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         }
         
         super.close(animationType: animationType)
+        
+        self.completion?(success)
     }
     
     deinit {

@@ -223,7 +223,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
             if peer.id != item.context.peerId, !peer.isDeleted {
                 items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: {
-                    arguments.giftPremium()
+                    arguments.giftPremium((item.peerView.cachedData as? CachedUserData)?.birthday?.isEligble == true)
                 }))
             }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {

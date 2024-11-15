@@ -231,6 +231,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var toggleQuote: (QuoteMessageIndex)->Void = { _ in }
     
+    var markAdAsSeen:(Data)->Void = { _ in }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())

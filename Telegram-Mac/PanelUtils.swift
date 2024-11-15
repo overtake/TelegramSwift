@@ -104,7 +104,7 @@ func savePanel(file:String, ext:String, for window:Window, defaultName: String? 
     })
 }
 
-func savePanel(file:String, named:String, for window:Window) {
+func savePanel(file:String, named:String, for window:Window, completion:((String)->Void)? = nil) {
     
     delay(0.01, closure: {
         let savePanel:NSSavePanel = NSSavePanel()
@@ -115,6 +115,7 @@ func savePanel(file:String, named:String, for window:Window) {
             
             if result == NSApplication.ModalResponse.OK, let saveUrl = savePanel.url {
                 try? FileManager.default.copyItem(atPath: file, toPath: saveUrl.path)
+                completion?(saveUrl.path)
             }
         })
     })
