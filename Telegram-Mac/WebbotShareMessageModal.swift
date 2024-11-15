@@ -16,6 +16,7 @@ private final class Arguments {
 
 private struct State : Equatable {
     var message: EngineMessage
+    var peer: EnginePeer
 }
 
 private final class HeaderItem : GeneralRowItem {
@@ -25,7 +26,8 @@ private final class HeaderItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, message: Message) {
         self.context = context
         self.message = message
-        messageItem = ChatRowItem.item(initialSize, from: .MessageEntry(message, .init(message), true, theme.bubbled ? .bubble : .list, .Full(rank: nil, header: .normal), nil, .init()), interaction: ChatInteraction.init(chatLocation: .peer(context.peerId), context: context), theme: theme)
+        let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context, isLogInteraction: true)
+        messageItem = ChatRowItem.item(initialSize, from: .MessageEntry(message, .init(message), true, theme.bubbled ? .bubble : .list, .Full(rank: nil, header: .normal), nil, .init()), interaction: interactions, theme: theme)
         super.init(initialSize, stableId: stableId, viewType: .singleItem)
     }
     
@@ -38,7 +40,7 @@ private final class HeaderItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 100 + messageItem.height
+        return  messageItem.height + 20
     }
     
     override func viewClass() -> AnyClass {
@@ -69,6 +71,9 @@ private final class HeaderRowView: GeneralContainableRowView {
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
+        
+        self.layout()
+        
         backgroundView.backgroundMode = theme.backgroundMode
         
         guard let item = item as? HeaderItem else {
@@ -81,8 +86,10 @@ private final class HeaderRowView: GeneralContainableRowView {
     
     override func layout() {
         super.layout()
+        
         self.backgroundView.frame = containerView.bounds
         self.tableView.frame = containerView.bounds
+
     }
 }
 
@@ -100,36 +107,99 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MESSAGE PREVIEW"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_custom, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_custom, equatable: nil, comparable: nil, item: { initialSize, stableId in
         return HeaderItem(initialSize, stableId: stableId, context: arguments.context, message: state.message._asMessage())
     }))
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Bums mini app suggests you to send this message to a chat you select."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    //TODOLANG
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(state.peer._asPeer().displayTitle) mini app suggests you to send this message to a chat you select."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
 
     // entries
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    
     return entries
 }
 
-func WebbotShareMessageModal(context: AccountContext, preparedMessage: PreparedInlineMessage) -> InputDataModalController {
+enum WebbotShareMessageStatus {
+    case success
+    case failed
+}
+
+func WebbotShareMessageModal(context: AccountContext, bot: EnginePeer, preparedMessage: PreparedInlineMessage, window: Window, callback: @escaping(WebbotShareMessageStatus)->Void) -> InputDataModalController {
 
     var close:(()->Void)? = nil
     
     let actionsDisposable = DisposableSet()
     
     
+    var text: String = ""
+    var entities: TextEntitiesMessageAttribute?
+    var media: [Media] = []
     
-    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil)
+    switch preparedMessage.result {
+    case let .internalReference(reference):
+        switch reference.message {
+        case let .auto(textValue, entitiesValue, _):
+            text = textValue
+            entities = entitiesValue
+            if let file = reference.file {
+                media = [file]
+            } else if let image = reference.image {
+                media = [image]
+            }
+        case let .text(textValue, entitiesValue, disableUrlPreview, previewParameters, _):
+            text = textValue
+            entities = entitiesValue
+            let _ = disableUrlPreview
+            let _ = previewParameters
+        case let .contact(contact, _):
+            media = [contact]
+        case let .mapLocation(map, _):
+            media = [map]
+        case let .invoice(invoice, _):
+            media = [invoice]
+        default:
+            break
+        }
+    case let .externalReference(reference):
+        switch reference.message {
+        case let .auto(textValue, entitiesValue, _):
+            text = textValue
+            entities = entitiesValue
+            if let content = reference.content {
+                media = [content]
+            }
+        case let .text(textValue, entitiesValue, disableUrlPreview, previewParameters, _):
+            text = textValue
+            entities = entitiesValue
+            let _ = disableUrlPreview
+            let _ = previewParameters
+        case let .contact(contact, _):
+            media = [contact]
+        case let .mapLocation(map, _):
+            media = [map]
+        case let .invoice(invoice, _):
+            media = [invoice]
+        default:
+            break
+        }
+    }
+
+    var attributes: [MessageAttribute] = []
     
-    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil)
+    attributes.append(InlineBotMessageAttribute.init(peerId: bot.id, title: bot._asPeer().displayTitle))
+    if let entities {
+        attributes.append(entities)
+    }
     
-    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 18 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: strings().appearanceSettingsChatPreview1, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+    
+    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: bot.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: context.timestamp, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: bot._asPeer(), text: text, attributes: attributes, media: media, peers:SimpleDictionary([bot.id : bot._asPeer()]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
 
 
-    let initialState = State(message: .init(firstMessage))
+
+    let initialState = State(message: .init(firstMessage), peer: bot)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -139,26 +209,39 @@ func WebbotShareMessageModal(context: AccountContext, preparedMessage: PreparedI
     
     var getController:(()->ViewController?)? = nil
     
-    var window:Window {
-        get {
-            return bestWindow(context, getController?())
-        }
-    }
-
     let arguments = Arguments(context: context)
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
-    
+    //TODOLANG
     let controller = InputDataController(dataSignal: signal, title: "Share Message")
     
     getController = { [weak controller] in
         return controller
     }
     
+    
+    var closedFromShare = false
+    
+    
     controller.onDeinit = {
         actionsDisposable.dispose()
+        if !closedFromShare {
+            callback(.failed)
+        }
+    }
+    
+    controller.validateData = { [weak window] _ in
+        if let window {
+            showModal(with: ShareModalController(ShareChatContextResult(context, preparedMessage: preparedMessage), completion: { value in
+                closedFromShare = true
+                callback(value ? .success : .failed)
+                closeAllModals(window: window)
+            }), for: window)
+        }
+        
+        return .none
     }
 
     let modalInteractions = ModalInteractions(acceptTitle: "Share With...", accept: { [weak controller] in

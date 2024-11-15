@@ -838,6 +838,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 privacy?.bio = updated
             case .birthday:
                 privacy?.birthday = updated
+            case .gifts:
+                privacy?.giftsAutoSave = updated
             }
             DispatchQueue.main.async {
                 self?.settings.set(.single((privacy, web, proxy, value)))

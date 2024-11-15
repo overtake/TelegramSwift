@@ -199,26 +199,31 @@ private final class HeaderItem : GeneralRowItem {
                     default:
                         displayTitle = peer?._asPeer().compactDisplayTitle ?? ""
                     }
-                    let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
-                    fromProfile = _fromProfile
-                    nameHidden = _nameHidden
-                    if incoming {
-                        if savedToProfile {
-                            text = strings().starsStarGiftTextKeptOnPageIncoming
-                        } else if convertedToStars {
-                            text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
+                    if let convertStars {
+                        let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
+                        fromProfile = _fromProfile
+                        nameHidden = _nameHidden
+                        if incoming {
+                            if savedToProfile {
+                                text = strings().starsStarGiftTextKeptOnPageIncoming
+                            } else if convertedToStars {
+                                text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
+                            } else {
+                                text = strings().starsStarGiftTextIncoming(convertStarsString)
+                            }
                         } else {
-                            text = strings().starsStarGiftTextIncoming(convertStarsString)
+                            if savedToProfile {
+                                text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
+                            } else if convertedToStars {
+                                text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
+                            } else {
+                                text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
+                            }
                         }
                     } else {
-                        if savedToProfile {
-                            text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
-                        } else if convertedToStars {
-                            text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
-                        } else {
-                            text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
-                        }
+                        text = strings().starsStarGiftTextKeepOrHide
                     }
+                    
                 default:
                     text = strings().starsExampleAppsText
                 }
@@ -1033,7 +1038,7 @@ enum Star_TransactionPurpose : Equatable {
     case payment
     case gift
     case unavailableGift
-    case starGift(gift: StarGift, convertStars: Int64, text: String?, entities: [MessageTextEntity]?, nameHidden: Bool, savedToProfile: Bool, converted: Bool, fromProfile: Bool)
+    case starGift(gift: StarGift, convertStars: Int64?, text: String?, entities: [MessageTextEntity]?, nameHidden: Bool, savedToProfile: Bool, converted: Bool, fromProfile: Bool)
     
     var isGift: Bool {
         switch self {
@@ -1148,30 +1153,31 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
             switch purpose {
             case .starGift(_, let convertStars, _, _, _, _, _, _):
                 
-                let period_max = context.appConfiguration.getGeneralValue("stargifts_convert_period_max", orElse: 300) + (transaction.date - Int32(context.timeDifference))
-                
-                let dateFormatter = makeNewDateFormatter()
-                dateFormatter.dateStyle = .medium
-                dateFormatter.timeStyle = .none
+                if let convertStars {
+                    let period_max = context.appConfiguration.getGeneralValue("stargifts_convert_period_max", orElse: 300) + (transaction.date - Int32(context.timeDifference))
+                    
+                    let dateFormatter = makeNewDateFormatter()
+                    dateFormatter.dateStyle = .medium
+                    dateFormatter.timeStyle = .none
 
-                let until = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(period_max)))
+                    let until = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(period_max)))
 
-                if period_max > context.timestamp {
-                    verifyAlert(for: window, header: strings().starTransactionConvertAlertHeader, information: strings().starTransactionConvertAlertInfoUntil(peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(convertStars)), until), ok: strings().starTransactionConvertAlertOK, successHandler: { _ in
-                        
-                        if let profileContext {
-                            profileContext.convertStarGift(messageId: messageId)
-                        } else {
-                            _ = context.engine.payments.convertStarGift(messageId: messageId).start()
-                        }
-                        close?()
-                        showModalText(for: window, text: strings().starTransactionStarGiftConvertToStarsAlert)
-                        PlayConfetti(for: window, stars: true)
-                    })
-                } else {
-                    showModalText(for: window, text: strings().starTransactionConvertAlertTooLate)
+                    if period_max > context.timestamp {
+                        verifyAlert(for: window, header: strings().starTransactionConvertAlertHeader, information: strings().starTransactionConvertAlertInfoUntil(peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(convertStars)), until), ok: strings().starTransactionConvertAlertOK, successHandler: { _ in
+                            
+                            if let profileContext {
+                                profileContext.convertStarGift(messageId: messageId)
+                            } else {
+                                _ = context.engine.payments.convertStarGift(messageId: messageId).start()
+                            }
+                            close?()
+                            showModalText(for: window, text: strings().starTransactionStarGiftConvertToStarsAlert)
+                            PlayConfetti(for: window, stars: true)
+                        })
+                    } else {
+                        showModalText(for: window, text: strings().starTransactionConvertAlertTooLate)
+                    }
                 }
-                                
                
             default:
                 break
@@ -1202,7 +1208,7 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         closeAllModals(window: window)
         PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: context.peerId, mediaMode: .gifts)
     }, sendGift: { peerId in
-        showModal(with: GiftingController(context: context, peerId: peerId), for: window)
+        showModal(with: GiftingController(context: context, peerId: peerId, isBirthday: false), for: window)
         close?()
     })
     

@@ -616,7 +616,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
+func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let paymentDisposable = MetaDisposable()
@@ -678,7 +678,9 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
 
     let peer = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
     
-    actionsDisposable.add(combineLatest(productsAndDefaultPrice, peer, premiumPromo, context.engine.payments.cachedStarGifts()).start(next: { products, peer, premiumPromo, gifts in
+    let birtday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: peerId))
+    
+    actionsDisposable.add(combineLatest(productsAndDefaultPrice, peer, premiumPromo, context.engine.payments.cachedStarGifts(), birtday).start(next: { products, peer, premiumPromo, gifts, birthday in
         updateState { current in
             var current = current
             current.products = products.0
@@ -688,6 +690,15 @@ func GiftingController(context: AccountContext, peerId: PeerId) -> InputDataModa
             if let gifts {
                 current.starGifts = gifts.map {
                     .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: $0)
+                }
+                if birthday?.isEligble == true || isBirthday {
+                    current.starGifts = current.starGifts.sorted { gift1, gift2 in
+                        switch (gift1.native.flags.contains(.isBirthdayGift), gift2.native.flags.contains(.isBirthdayGift)) {
+                        case (true, false): return true
+                        case (false, true): return false
+                        default: return false
+                        }
+                    }
                 }
                 let customFilters: [State.StarGiftFilter] = gifts.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
                 current.starFilters = [.emptyLeft, .all, .limited] + customFilters + [.emptyRight]

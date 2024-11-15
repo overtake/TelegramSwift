@@ -6745,6 +6745,8 @@ public final class L10n {
   public static var chatListFilterInviteLink: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink") }
   /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
   public static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
+  /// Mini-Apps
+  public static var chatListFilterMiniApps: String  { return L10n.tr("Localizable", "ChatList.Filter.MiniApps") }
   /// Mute All
   public static var chatListFilterMuteAll: String  { return L10n.tr("Localizable", "ChatList.Filter.MuteAll") }
   /// Muted
@@ -14127,6 +14129,8 @@ public final class L10n {
   public static var privacySettingsDeleteAccountHeader: String  { return L10n.tr("Localizable", "PrivacySettings.DeleteAccountHeader") }
   /// Forwarded Messages
   public static var privacySettingsForwards: String  { return L10n.tr("Localizable", "PrivacySettings.Forwards") }
+  /// Gifts
+  public static var privacySettingsGifts: String  { return L10n.tr("Localizable", "PrivacySettings.Gifts") }
   /// Auto-Delete Messages
   public static var privacySettingsGlobalTimer: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer") }
   /// %d
@@ -14209,6 +14213,8 @@ public final class L10n {
   public static var privacySettingsVoiceCalls: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceCalls") }
   /// Voice Messages
   public static var privacySettingsVoiceMessages: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceMessages") }
+  /// Mini-apps
+  public static var privacySettingsGiftsEnableForBots: String  { return L10n.tr("Localizable", "PrivacySettings.Gifts.EnableForBots") }
   /// Disable
   public static var privacySettingsGlobalTimerDisable: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Disable") }
   /// Automatically delete messages sent in this group for everyone after a period of time
@@ -14341,6 +14347,10 @@ public final class L10n {
   public static var privacySettingsControllerForwardsAlwaysAllowTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.AlwaysAllow.Title") }
   /// Never Allow
   public static var privacySettingsControllerForwardsNeverAllowTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.NeverAllow.Title") }
+  /// Choose whether gifts from specific senders need your approval before they've visible to others on your profile.
+  public static var privacySettingsControllerGiftsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gifts.CustomHelp") }
+  /// WHO CAN DISPLAY GIFTS ON MY PROFILE
+  public static var privacySettingsControllerGiftsWhoCanSee: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gifts.WhoCanSee") }
   /// Always
   public static var privacySettingsControllerP2pAlways: String  { return L10n.tr("Localizable", "PrivacySettingsController.P2p.Always") }
   /// My Contacts
@@ -17137,6 +17147,8 @@ public final class L10n {
   public static func starsStarGiftTextIncoming(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stars.StarGift.Text.Incoming", p1)
   }
+  /// You can keep this gift in your Profile or hide it.
+  public static var starsStarGiftTextKeepOrHide: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.KeepOrHide") }
   /// [More about Stars >](stars)
   public static var starsStarGiftTextLink: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.Link") }
   /// %1$@ can keep this gift in Profile or convert it to %2$@.
@@ -20487,12 +20499,18 @@ public final class L10n {
   public static var webappAllowMessagesTitle: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.Title") }
   /// Download Document
   public static var webappDocumentDownload: String  { return L10n.tr("Localizable", "Webapp.Document.Download") }
-  /// %1$@ suggests you download %2$@.
+  /// Document saved\n[Show In Finder]()
+  public static var webappDocumentDownloadDocument: String  { return L10n.tr("Localizable", "Webapp.Document.Download.Document") }
+  /// Photo saved\n[Show In Finder]()
+  public static var webappDocumentDownloadImage: String  { return L10n.tr("Localizable", "Webapp.Document.Download.Image") }
+  /// %1$@ suggests you to download %2$@.
   public static func webappDocumentDownloadInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Webapp.Document.Download.Info", p1, p2)
   }
   /// Download
   public static var webappDocumentDownloadOK: String  { return L10n.tr("Localizable", "Webapp.Document.Download.OK") }
+  /// Video saved\n[Show In Finder]()
+  public static var webappDocumentDownloadVideo: String  { return L10n.tr("Localizable", "Webapp.Document.Download.Video") }
   /// %@ can now set your emoji status anytime.
   public static func webappEmojiStatusAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Webapp.EmojiStatus.Allowed", p1)

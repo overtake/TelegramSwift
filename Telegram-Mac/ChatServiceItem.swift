@@ -1188,7 +1188,7 @@ class ChatServiceItem: ChatRowItem {
 
                         info.append(attr)
 
-                    } else {
+                    } else if let convertStars {
                         let text: String
                         let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle ?? ""
                         let convertStarsString = strings().starListItemCountCountable(Int(convertStars))

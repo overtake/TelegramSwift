@@ -2733,7 +2733,9 @@ private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
             self.dismiss = nil
             
         }
-        
+        if let adAttribute = botAd.message.adAttribute {
+            chatInteraction.markAdAsSeen(adAttribute.opaqueId)
+        }
         
         updateLocalizationAndTheme(theme: theme)
         needsLayout = true

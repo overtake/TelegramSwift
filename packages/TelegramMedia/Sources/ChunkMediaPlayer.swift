@@ -116,6 +116,7 @@ private final class MediaPlayerAudioRendererContext {
     }
 }
 
+
 public final class ChunkMediaPlayerPart {
     public struct Id: Hashable {
         public var rawValue: String
@@ -128,15 +129,19 @@ public final class ChunkMediaPlayerPart {
     public let startTime: Double
     public let endTime: Double
     public let file: TempBoxFile
+    public let clippedStartTime: Double?
+    public let codecName: String?
     
     public var id: Id {
         return Id(rawValue: self.file.path)
     }
     
-    public init(startTime: Double, endTime: Double, file: TempBoxFile) {
+    public init(startTime: Double, clippedStartTime: Double? = nil, endTime: Double, file: TempBoxFile, codecName: String?) {
         self.startTime = startTime
+        self.clippedStartTime = clippedStartTime
         self.endTime = endTime
         self.file = file
+        self.codecName = codecName
     }
 }
 

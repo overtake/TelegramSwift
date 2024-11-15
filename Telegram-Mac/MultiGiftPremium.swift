@@ -110,7 +110,7 @@ func multigift(context: AccountContext, type: MultigiftType = .both, selected: [
                     }
                 })
             case .both:
-                showModal(with: GiftingController(context: context, peerId: peerIds[0]), for: context.window)
+                showModal(with: GiftingController(context: context, peerId: peerIds[0], isBirthday: true), for: context.window)
             }
         })
     })

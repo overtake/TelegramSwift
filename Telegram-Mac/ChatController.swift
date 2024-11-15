@@ -5852,6 +5852,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.adMessages?.markAction(opaqueId: opaqueId, media: media)
         }
         
+        chatInteraction.markAdAsSeen = { [weak self] opaqueId in
+            self?.adMessages?.markAsSeen(opaqueId: opaqueId)
+        }
+        
         chatInteraction.toggleSidebar = { [weak self] in
             FastSettings.toggleSidebarShown(!FastSettings.sidebarShown)
             self?.updateSidebar()
