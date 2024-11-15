@@ -591,8 +591,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         
         if case .botSubscription = state.request.type {
-            //TODOLANG
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("By subscribing you agree to the [Terms of Service](https://telegram.org).", linkHandler: { url in
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionBotTos, linkHandler: { url in
                 execute(inapp: .external(link: url, false))
             }), data: .init(color: theme.colors.listGrayText, viewType: .legacy, centerViewAlignment: true, alignment: .center)))
             sectionId += 1

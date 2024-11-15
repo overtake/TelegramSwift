@@ -16805,6 +16805,8 @@ public final class L10n {
   }
   /// Availability
   public static var starTransactionAvailability: String  { return L10n.tr("Localizable", "Star.Transaction.Availability") }
+  /// By subscribing you agree to the [Terms of Service](https://telegram.org)
+  public static var starTransactionBotTos: String  { return L10n.tr("Localizable", "Star.Transaction.BotTos") }
   /// %d
   public static func starTransactionBroadcastMessagesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_countable", p1)
@@ -16837,12 +16839,16 @@ public final class L10n {
   public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }
   /// Date
   public static var starTransactionDate: String  { return L10n.tr("Localizable", "Star.Transaction.Date") }
+  /// First Sale
+  public static var starTransactionFirstSale: String  { return L10n.tr("Localizable", "Star.Transaction.FirstSale") }
   /// From
   public static var starTransactionFrom: String  { return L10n.tr("Localizable", "Star.Transaction.From") }
   /// Gift
   public static var starTransactionGift: String  { return L10n.tr("Localizable", "Star.Transaction.Gift") }
   /// Transaction ID
   public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
+  /// Last Sale
+  public static var starTransactionLastSale: String  { return L10n.tr("Localizable", "Star.Transaction.LastSale") }
   /// Media
   public static var starTransactionMessageId: String  { return L10n.tr("Localizable", "Star.Transaction.MessageId") }
   /// Message
@@ -16887,6 +16893,8 @@ public final class L10n {
   public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
   /// Value
   public static var starTransactionValue: String  { return L10n.tr("Localizable", "Star.Transaction.Value") }
+  /// Visibility
+  public static var starTransactionVisibility: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility") }
   /// %1$d of %2$@
   public static func starTransactionAvailabilityOf(_ p1: Int, _ p2: String) -> String {
     return L10n.tr("Localizable", "Star.Transaction.Availability.Of", p1, p2)
@@ -16929,6 +16937,10 @@ public final class L10n {
   public static var starTransactionStarGiftDisplayOnPageAlert: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.DisplayOnPage.Alert") }
   /// The gift is no longer displayed in your profile.
   public static var starTransactionStarGiftHideFromMyPageAlert: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.HideFromMyPage.Alert") }
+  /// hide
+  public static var starTransactionVisibilityHide: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility.Hide") }
+  /// Visible on your page
+  public static var starTransactionVisibilityInfo: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility.Info") }
   /// Send a Gift
   public static var starGiftPreviewTitle: String  { return L10n.tr("Localizable", "StarGift.Preview.Title") }
   /// %@ Gift Stars to Friends
@@ -20385,6 +20397,8 @@ public final class L10n {
   }
   /// Close
   public static var webAppClose: String  { return L10n.tr("Localizable", "WebApp.Close") }
+  /// Fullscreen
+  public static var webAppFullscreen: String  { return L10n.tr("Localizable", "WebApp.Fullscreen") }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
   /// QR Codes for bots are not supported on Desktop. Please use one of Telegram’s mobile apps.
@@ -20525,6 +20539,20 @@ public final class L10n {
   public static var webappEmojiStatusRequestedAllow: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested.Allow") }
   /// Decline
   public static var webappEmojiStatusRequestedDecline: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested.Decline") }
+  /// Set Emoji Status
+  public static var webappSetEmojiHeader: String  { return L10n.tr("Localizable", "Webapp.SetEmoji.Header") }
+  /// Do you want to set this emoji status suggested by %@?
+  public static func webappSetEmojiInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.SetEmoji.Info", p1)
+  }
+  /// %@ mini app suggests you to send this message to a chat you select.
+  public static func webappShareMessageBotInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.ShareMessage.BotInfo", p1)
+  }
+  /// MESSAGE PREVIEW
+  public static var webappShareMessagePreview: String  { return L10n.tr("Localizable", "Webapp.ShareMessage.Preview") }
+  /// Share Message
+  public static var webappShareMessageShare: String  { return L10n.tr("Localizable", "Webapp.ShareMessage.Share") }
   /// Changes that you made may not be saved.
   public static var webpageConfirmClose: String  { return L10n.tr("Localizable", "Webpage.Confirm.Close") }
   /// Close Anyway

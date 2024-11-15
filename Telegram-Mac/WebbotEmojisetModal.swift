@@ -27,9 +27,8 @@ private final class HeaderItem : GeneralRowItem {
         self.state = state
         self.close = close
         self.context = context
-        //TODOLANG
-        self.header = .init(.initialize(string: "Set Emoji Status", color: theme.colors.text, font: .medium(.header)), alignment: .center)
-        self.info = .init(.initialize(string: "Do you want to set this emoji status suggested by \(state.peer._asPeer().displayTitle)?", color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
+        self.header = .init(.initialize(string: strings().webappSetEmojiHeader, color: theme.colors.text, font: .medium(.header)), alignment: .center)
+        self.info = .init(.initialize(string: strings().webappSetEmojiInfo(state.peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         super.init(initialSize, stableId: stableId)
     }
     

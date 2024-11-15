@@ -2331,7 +2331,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     
 
                     if hasStars {
-                        entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: starBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(starBalance)), viewType: hasTon ? .firstItem : .singleItem))
+                        entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: starBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(starBalance)).replacingOccurrences(of: "\(starBalance)", with: starBalance.formattedWithSeparator), viewType: hasTon ? .firstItem : .singleItem))
                     }
                     
                     if hasTon {

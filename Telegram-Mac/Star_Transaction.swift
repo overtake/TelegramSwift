@@ -945,9 +945,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if let gift = state.transaction.starGift {
             
             if let soldOut = gift.soldOut {
-                rows.append(.init(left: .init(.initialize(string: "First Sale", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.firstSale), color: theme.colors.text, font: .normal(.text))))))
+                rows.append(.init(left: .init(.initialize(string: strings().starTransactionFirstSale, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.firstSale), color: theme.colors.text, font: .normal(.text))))))
                 
-                rows.append(.init(left: .init(.initialize(string: "Last Sale", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.lastSale), color: theme.colors.text, font: .normal(.text))))))
+                rows.append(.init(left: .init(.initialize(string: strings().starTransactionLastSale, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.lastSale), color: theme.colors.text, font: .normal(.text))))))
 
             }
 
@@ -961,6 +961,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 imageView.contentGravity = .resizeAspectFill
                 return imageView
             })))
+            
+            
         }
     case let .starGift(gift, _, text, entities, _, _, _, _):
         
@@ -976,6 +978,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if let availability = gift.availability {
             rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOfLeft(Int(availability.remains).formattedWithSeparator, Int(availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
         }
+        
+        if savedToProfile {
+            
+            let badge: InputDataTableBasedItem.Row.Right.Badge = .init(text: strings().starTransactionVisibilityHide, callback: arguments.displayOnMyPage)
+            
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionVisibility, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: strings().starTransactionVisibilityInfo, color: theme.colors.text, font: .normal(.text))), badge: badge)))
+        }
+        
+
+        
+        
         
         if let text {
             
@@ -994,6 +1007,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    
+
   
     if done != strings().modalDone, savedToProfile {
         
