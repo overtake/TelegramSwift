@@ -2412,8 +2412,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     func contextMenu() -> ContextMenu {
         var items:[ContextMenuItem] = []
 
-        //TODOLANG
-        items.append(.init("Fullscreen", handler: { [weak self] in
+        items.append(.init(strings().webAppFullscreen, handler: { [weak self] in
             self?.window?.toggleFullScreen(nil)
         }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
 

@@ -104,14 +104,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MESSAGE PREVIEW"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().webappShareMessagePreview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_custom, equatable: nil, comparable: nil, item: { initialSize, stableId in
         return HeaderItem(initialSize, stableId: stableId, context: arguments.context, message: state.message._asMessage())
     }))
-    //TODOLANG
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(state.peer._asPeer().displayTitle) mini app suggests you to send this message to a chat you select."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().webappShareMessageBotInfo(state.peer._asPeer().displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
 
     // entries
     
@@ -214,8 +213,7 @@ func WebbotShareMessageModal(context: AccountContext, bot: EnginePeer, preparedM
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Share Message")
+    let controller = InputDataController(dataSignal: signal, title: strings().webappShareMessageShare)
     
     getController = { [weak controller] in
         return controller
