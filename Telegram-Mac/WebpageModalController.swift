@@ -2104,6 +2104,18 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     })
                 }
             }
+        case "web_app_request_fullscreen":
+            if !window.isFullScreen {
+                window.toggleFullScreen(nil)
+                self.sendEvent(name: "fullscreen_changed", data: nil)
+            } else {
+                self.sendEvent(name: "fullscreen_failed", data: nil)
+            }
+        case "web_app_exit_fullscreen":
+            if window.isFullScreen {
+                window.toggleFullScreen(nil)
+                self.sendEvent(name: "fullscreen_changed", data: nil)
+            }
         default:
             break
         }
