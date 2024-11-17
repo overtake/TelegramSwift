@@ -170,6 +170,8 @@ final class WebappBrowser : Window {
 
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless, .resizable], backing: .buffered, defer: true)
         
+        self.minSize = rect.size
+        
         self.contentView?.wantsLayer = true
         self.contentView?.autoresizesSubviews = false
         
