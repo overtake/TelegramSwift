@@ -26,6 +26,8 @@ private final class Webapp : Window {
         
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless, .fullScreen, .resizable], backing: .buffered, defer: true)
         
+        self.minSize = rect.size
+        
         self.contentView?.wantsLayer = true
         self.contentView?.autoresizesSubviews = false
         
@@ -379,7 +381,10 @@ final class BrowserStateContext {
     }
     
     func open(tab: BrowserTabData.Data, uniqueId: BrowserTabData.Unique? = nil) {
-        let invoke:()->Void = { [weak self] in
+        
+        let context = self.context
+        
+        let invoke:(BotAppSettings?)->Void = { [weak self] settings in
             guard let self else {
                 return
             }
@@ -395,42 +400,45 @@ final class BrowserStateContext {
         
         
         if let peer = tab.peer {
+            
+            
             let peerId = peer.id
-            if FastSettings.shouldConfirmWebApp(peerId) {
-                
-                let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
-                _ = signal.startStandalone(next: { [weak self] privacyUrl in
-                    var window: Window?
-                    if self?.browser?.markAsDeinit == false {
-                        window = self?.browser?.window
-                    } else {
-                        window = self?.context.window
-                    }
-                    if let window, let context = self?.context {
-                        let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
-                                                
-                        let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
-                            return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
-                                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
-                                closeAllModals(window: context.window)
+            let botData = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotAppSettings(id: peerId)) |> deliverOnMainQueue
+            
+            _ = botData.startStandalone(next: { botSettings in
+                if FastSettings.shouldConfirmWebApp(peerId) {
+                    
+                    let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
+                    _ = signal.startStandalone(next: { [weak self] privacyUrl in
+                        var window: Window?
+                        if self?.browser?.markAsDeinit == false {
+                            window = self?.browser?.window
+                        } else {
+                            window = self?.context.window
+                        }
+                        if let window, let context = self?.context {
+                            let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                                                    
+                            let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+                                return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
+                                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                    closeAllModals(window: context.window)
+                                })
+                            }))
+                            
+                            showModalAlert(for: window, data: data, completion: { result in
+                                invoke(botSettings)
+                                FastSettings.markWebAppAsConfirmed(peerId)
                             })
-                        }))
-                        
-                        showModalAlert(for: window, data: data, completion: { result in
-                            invoke()
-                            FastSettings.markWebAppAsConfirmed(peerId)
-                        })
-                        
-
-                    }
-                })
-                
-                
-            } else {
-                invoke()
-            }
+                        }
+                    })
+                } else {
+                    invoke(botSettings)
+                }
+            })
+            
         } else {
-            invoke()
+            invoke(nil)
         }
         
     }
