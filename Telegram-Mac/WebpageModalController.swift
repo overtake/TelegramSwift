@@ -15,6 +15,7 @@ import Postbox
 import WebKit
 import HackUtils
 import ColorPalette
+import Svg
 
 
 
@@ -391,8 +392,7 @@ private final class WebpageView : View {
         super.setFrameSize(newSize)
     }
     
-    private var placeholderIcon: (CGImage, Bool)?
-    private var placeholderNode: ShimmerEffectView?
+    var placeholderIcon: (CGImage, Bool)?
 
     override var mouseDownCanMoveWindow: Bool {
         return true
@@ -629,12 +629,19 @@ private final class WebpageView : View {
         addSubview(loading)
         addSubview(headerView)
         
-      //  webview.setValue(false, forKey: "drawsBackground")
+        webview.setValue(false, forKey: "drawsBackground")
 
         webview.wantsLayer = true
-                
+                        
         updateLocalizationAndTheme(theme: theme)
 
+    }
+    
+    override var backgroundColor: NSColor {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
     }
     
     
@@ -663,8 +670,8 @@ private final class WebpageView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
-        self.backgroundColor = _backgroundColor ?? theme.colors.background
-        webview.background = theme.colors.background
+        self.backgroundColor = state?.backgroundColor ?? theme.colors.background
+        webview.background = state?.backgroundColor ?? theme.colors.background
         buttonsBlock?.background = _bottomBarColor ?? theme.colors.grayForeground
         
         if let key = _headerColorKey {
@@ -689,10 +696,28 @@ private final class WebpageView : View {
     
     func update(inProgress: Bool, preload: (TelegramMediaFile, AccountContext)?, animated: Bool) {
         self.webview._change(opacity: inProgress ? 0 : 1, animated: animated)
+        
+        
         if inProgress {
             
             if let placeholderIcon = placeholderIcon {
-                
+                let current: ImageView
+                if let view = self.indicator as? ImageView {
+                    current = view
+                } else {
+                    current = .init(frame: NSMakeRect(0, 0, 50, 50))
+                    current.frame = focus(current.frame.size)
+                    self.indicator = current
+                    self.addSubview(current)
+                }
+                current.image = placeholderIcon.0
+
+                if let animation = current.layer?.makeAnimation(from: NSNumber(value: 1.0), to: NSNumber(value: 0.2), keyPath: "opacity", timingFunction: .easeOut, duration: 2.0) {
+                    animation.repeatCount = 1000
+                    animation.autoreverses = true
+                    
+                    current.layer?.add(animation, forKey: "opacity")
+                }
             } else if let preload = preload {
                 let current: MediaAnimatedStickerView
                 if let view = self.indicator as? MediaAnimatedStickerView {
@@ -895,7 +920,7 @@ struct WebpageModalState : Equatable {
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate, BrowserPage {
     
-    private let statePromise = ValuePromise(WebpageModalState(), ignoreRepeated: true)
+    private let statePromise = ValuePromise<WebpageModalState>(WebpageModalState(), ignoreRepeated: true)
     private let stateValue = Atomic(value: WebpageModalState())
     private func updateState(_ f:(WebpageModalState) -> WebpageModalState) {
         statePromise.set(stateValue.modify (f))
@@ -997,7 +1022,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var _backgroundColor: NSColor? {
         didSet {
-            genericView._backgroundColor = _backgroundColor
+            genericView._backgroundColor = .clear
             updateState { current in
                 var current = current
                 current.backgroundColor = _backgroundColor
@@ -1060,7 +1085,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private let stateDisposable = MetaDisposable()
     private let backDisposable = MetaDisposable()
     
-    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil, fromMenu: Bool? = nil, hasSettings: Bool = false, browser: BrowserLinkManager? = nil) {
+    private let settings: BotAppSettings?
+    
+    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, thumbFile: TelegramMediaFile? = nil, botPeer: Peer? = nil, fromMenu: Bool? = nil, hasSettings: Bool = false, browser: BrowserLinkManager? = nil, settings: BotAppSettings? = nil) {
         self.url = url
         self.requestData = requestData
         self.data = nil
@@ -1072,7 +1099,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.effectiveSize = effectiveSize
         self.thumbFile = thumbFile
         self.botPeer = botPeer
+        self.settings = settings
+        
+        
         super.init(frame: NSMakeRect(0,0,380,450))
+        
+        if let settings {
+            let isDark = theme.colors.isDark
+            self.updateState { current in
+                var current = current
+                current.backgroundColor = isDark ? settings.backgroundDarkColor.flatMap { NSColor(rgb: UInt32($0)) } : settings.backgroundColor.flatMap { NSColor(rgb: UInt32($0)) }
+                current.headerColor = isDark ? settings.headerDarkColor.flatMap { NSColor(rgb: UInt32($0)) } : settings.headerColor.flatMap { NSColor(rgb: UInt32($0)) }
+                return current
+            }
+        }
     }
     
     private let _fromMenu: Bool?
@@ -1102,6 +1142,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     override func viewClass() -> AnyClass {
         return WebpageView.self
+    }
+    
+    var safeInsets: NSEdgeInsets {
+        return NSEdgeInsets(top: 50, left: 0, bottom: 50, right: 50)
     }
     
     override func initializer() -> NSView {
@@ -1196,8 +1240,27 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         apperanceDisposable.set(nil)
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        
+        updateSafeInsets()
+       
+    }
+    
+    func updateSafeInsets() {
+        let isFullscreen = window?.isFullScreen ?? false
+        
+        let contentInsetsData = "{top:\(isFullscreen ? 60 : 0), bottom:0.0, left:0.0, right:0.0}"
+        sendEvent(name: "content_safe_area_changed", data: contentInsetsData)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let data = self.settings?.placeholderData, let svg = generateStickerPlaceholderImage(data: data, size: NSMakeSize(50, 50), scale: System.backingScale, imageSize: NSMakeSize(512, 512), backgroundColor: nil, foregroundColor: theme.colors.grayText) {
+            self.genericView.placeholderIcon = (svg, true)
+        }
+        
         if let peerId = bot?.id {
             FastSettings.markWebAppAsConfirmed(peerId)
         }
@@ -1210,6 +1273,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         genericView.standalone = self.browser == nil
         
+        
+        genericView._holder.background = .clear
         genericView._holder.uiDelegate = self
         genericView._holder.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: [], context: nil)
         genericView._holder.navigationDelegate = self
@@ -2116,6 +2181,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 window.toggleFullScreen(nil)
                 self.sendEvent(name: "fullscreen_changed", data: nil)
             }
+        case "web_app_request_safe_area":
+            updateSafeInsets()
+        case "web_app_request_content_safe_area":
+            updateSafeInsets()
         default:
             break
         }
@@ -2423,8 +2492,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     func contextMenu() -> ContextMenu {
         var items:[ContextMenuItem] = []
+        
+        let inFullscreen = window?.isFullScreen == true
 
-        items.append(.init(strings().webAppFullscreen, handler: { [weak self] in
+        items.append(.init(!inFullscreen ? strings().webAppFullscreen : strings().webAppExitFullscreen, handler: { [weak self] in
             self?.window?.toggleFullScreen(nil)
         }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
 

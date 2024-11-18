@@ -20397,6 +20397,8 @@ public final class L10n {
   }
   /// Close
   public static var webAppClose: String  { return L10n.tr("Localizable", "WebApp.Close") }
+  /// Exit Fullscreen
+  public static var webAppExitFullscreen: String  { return L10n.tr("Localizable", "WebApp.ExitFullscreen") }
   /// Fullscreen
   public static var webAppFullscreen: String  { return L10n.tr("Localizable", "WebApp.Fullscreen") }
   /// Install Bot

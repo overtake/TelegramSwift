@@ -498,7 +498,7 @@ open class PathSegment: Equatable {
     }
 }
 
-private func renderPath(_ segments: [PathSegment], context: CGContext) {
+func renderPath(_ segments: [PathSegment], context: CGContext) {
     var currentPoint: CGPoint?
     var cubicPoint: CGPoint?
     var quadrPoint: CGPoint?
