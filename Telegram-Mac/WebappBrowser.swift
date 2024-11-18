@@ -67,10 +67,16 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
         } else {
             attach = .single(nil)
         }
-        let disposable = combineLatest(signal, attach).start(next: { values in
+        
+        let settings: Signal<BotAppSettings?, RequestWebViewError>
+        settings = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotAppSettings(id: bot.id)) |> deliverOnMainQueue |> castError(RequestWebViewError.self)
+
+        
+        let disposable = combineLatest(signal, attach, settings).start(next: { values in
             let url = values.0.0
             let requestData = values.0.1
             let attach = values.1
+            let settings = values.2
             
             var thumbFile: TelegramMediaFile = MenuAnimation.menu_folder_bot.file
             let hasSettings = attach?.flags.contains(.hasSettings) ?? false
@@ -81,7 +87,7 @@ private func makeWebViewController(context: AccountContext, data: BrowserTabData
                     thumbFile = MenuAnimation.menu_folder_bot.file
                 }
             }
-            subscriber.putNext(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: requestData, thumbFile: thumbFile, fromMenu: true, hasSettings: hasSettings, browser: makeLinkManager(unique)))
+            subscriber.putNext(WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: requestData, thumbFile: thumbFile, fromMenu: true, hasSettings: hasSettings, browser: makeLinkManager(unique), settings: settings))
 
             subscriber.putCompletion()
         }, error: { error in
@@ -115,7 +121,8 @@ private final class Arguments {
     let insertTab:(BrowserTabData.Data)->Void
     let shake:(BrowserTabData.Unique)->Void
     let getExternalState: (BrowserTabData.Unique)->WebpageModalState?
-    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData.Unique)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void, getExternalState: @escaping(BrowserTabData.Unique)->WebpageModalState?) {
+    let updateFullscreen:(Bool)->Void
+    init(context: AccountContext, add: @escaping(Control)->Void, close:@escaping()->Void, select:@escaping(BrowserTabData.Unique)->Void, setLoadingState:@escaping(BrowserTabData.Unique, BrowserTabData.LoadingState)->Void, setExternalState:@escaping(BrowserTabData.Unique, WebpageModalState)->Void, closeTab:@escaping(BrowserTabData.Unique?, Bool)->Void, selectAtIndex:@escaping(Int)->Void, makeLinkManager:@escaping(BrowserTabData.Unique)->BrowserLinkManager, contextMenu:@escaping(BrowserTabData)->ContextMenu?, insertTab:@escaping(BrowserTabData.Data)->Void, shake:@escaping(BrowserTabData.Unique)->Void, getExternalState: @escaping(BrowserTabData.Unique)->WebpageModalState?, updateFullscreen:@escaping(Bool)->Void) {
         self.context = context
         self.add = add
         self.close = close
@@ -129,6 +136,7 @@ private final class Arguments {
         self.insertTab = insertTab
         self.shake = shake
         self.getExternalState = getExternalState
+        self.updateFullscreen = updateFullscreen
     }
 }
 
@@ -152,6 +160,7 @@ private func createCombinedPath(leftPath: CGPath, rightPath: CGPath, totalWidth:
 final class WebappBrowser : Window {
     let containerView = View()
     private let shadow = SimpleShapeLayer()
+    private let testLayer = SimpleLayer()
     init(parent: Window) {
         
         containerView.wantsLayer = true
@@ -174,7 +183,7 @@ final class WebappBrowser : Window {
         
         self.contentView?.wantsLayer = true
         self.contentView?.autoresizesSubviews = false
-        
+        self.contentView?.layer?.masksToBounds = false
         
         self.modalInset = 10
        
@@ -190,20 +199,22 @@ final class WebappBrowser : Window {
         
         let cornerRadius: CGFloat = 14.0
 
-        shadow.masksToBounds = false
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.35).cgColor
-        shadow.shadowOffset = CGSize(width: 0.0, height: 1)
-        shadow.shadowRadius = 5
-        shadow.shadowOpacity = 0.7
-        shadow.fillColor = NSColor.black.cgColor
+       
         
         
         self.contentView?.layer?.addSublayer(shadow)
 
+//        
+//        
 
+        self.contentView?.layer?.addSublayer(testLayer)
+
+        
         containerView.backgroundColor = theme.colors.listBackground
         
         self.contentView?.addSubview(containerView)
+        
+      //  self.contentView?.background = .random
         
         if #available(macOS 10.15, *) {
             containerView.layer?.cornerCurve = .continuous
@@ -239,10 +250,31 @@ final class WebappBrowser : Window {
     override func layoutIfNeeded() {
         super.layoutIfNeeded()
 
-        shadow.path = CGPath(roundedRect: bounds.insetBy(dx: 11, dy: 11).size.bounds, cornerWidth: 14, cornerHeight: 14, transform: nil)
-        shadow.frame = bounds.insetBy(dx: 11, dy: 11)
+        
+        testLayer.masksToBounds = false
+        testLayer.shadowColor = NSColor.black.withAlphaComponent(1).cgColor
+        testLayer.shadowOffset = CGSize(width: 0.0, height: 0)
+        testLayer.shadowRadius = 5
+        testLayer.shadowOpacity = 1
+
+        testLayer.cornerRadius = 14
+        testLayer.frame = bounds.insetBy(dx: 13, dy: 13)
+        testLayer.backgroundColor = NSColor.black.withAlphaComponent(0.7).cgColor
+        
         
         containerView.frame = bounds.insetBy(dx: 10, dy: 10)
+
+//        shadow.masksToBounds = false
+//        shadow.shadowColor = NSColor.random.withAlphaComponent(1).cgColor
+//        shadow.shadowOffset = CGSize(width: 0.0, height: 1)
+//        shadow.shadowRadius = 5
+//        shadow.shadowOpacity = 0.7
+//        shadow.fillColor = NSColor.random.cgColor
+//        shadow.backgroundColor = NSColor.black.withAlphaComponent(1).cgColor
+//        
+//        shadow.frame = bounds.insetBy(dx: 11, dy: 11)
+//        shadow.path = CGPath(roundedRect: bounds.insetBy(dx: 11, dy: 11).size.bounds, cornerWidth: 14, cornerHeight: 14, transform: nil)
+        
 
         self.contentView?.subviews.last?.frame = bounds.insetBy(dx: 10, dy: 10)
         
@@ -1197,14 +1229,106 @@ private final class MoreControl : Control {
     }
 }
 
+private final class FullscreenControls : View {
+    
+    fileprivate final class MoreButton : Control {
+        private let visual = VisualEffect()
+        let more = MoreControl(frame: NSMakeRect(0, 0, 30, 30))
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(visual)
+            addSubview(more)
+            visual.bgColor = theme.colors.grayForeground.withAlphaComponent(0.6)
+            self.layer?.cornerRadius = frameRect.height / 2
+        }
+        
+         required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            visual.frame = bounds
+        }
+    }
+    
+    
+    fileprivate final class BackCloseButton : Control {
+        private let visual = VisualEffect()
+        let close = BackOrClose(frame: NSMakeRect(0, 0, 30, 30))
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(visual)
+            addSubview(close)
+            visual.bgColor = theme.colors.grayForeground.withAlphaComponent(0.6)
+            self.layer?.cornerRadius = frameRect.height / 2
+        }
+        
+         required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            visual.frame = bounds
+        }
+    }
+    fileprivate let more = MoreButton(frame: NSMakeRect(0, 0, 30, 30))
+    fileprivate let close: BackCloseButton = BackCloseButton(frame: NSMakeRect(0, 0, 30, 30))
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(close)
+        addSubview(more)
+        
+        more.more.userInteractionEnabled = false
+        more.more.isEventLess = true
+        
+        close.close.userInteractionEnabled = false
+        close.close.isEventLess = true
+
+        close.scaleOnClick = true
+        more.scaleOnClick = true
+    }
+    
+     required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        close.centerY(x: 30)
+        more.centerY(x: frame.width - more.frame.width - 30)
+    }
+    
+    func updateState(state: BackOrClose.State, animated: Bool) {
+        self.close.close.updateState(state: state, animated: animated)
+    }
+    func set(color: NSColor) {
+        self.more.more.set(color: color)
+    }
+}
+
 private final class BrowserView : View {
     fileprivate var tabsView: TabsView?
     fileprivate let more = MoreControl(frame: NSMakeRect(0, 0, 50, 50))
     fileprivate let close = BackOrClose(frame: NSMakeRect(0, 0, 50, 50))
     
     let header = View()
+    
+    weak var arguments: Arguments?
+    
+    var state: State? {
+        didSet {
+            if oldValue?.fullscreen != state?.fullscreen {
+                updateFullscreenControls()
+            }
+        }
+    }
 
     fileprivate let contentView: ContentController = .init(frame: .zero)
+    
+    private var fullscreenControls: FullscreenControls?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         layer?.cornerRadius = 10
@@ -1233,19 +1357,32 @@ private final class BrowserView : View {
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
+    private var fullscreen: Bool = false
+    
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        guard let tabsView else {
+        guard let tabsView, let state else {
             return
         }
-        transition.updateFrame(view: header, frame: NSMakeRect(0, 0, size.width, 50))
+        
+        let transition: ContainedViewLayoutTransition = fullscreen != state.fullscreen ? .immediate : transition
+        
+        let startY: CGFloat = state.fullscreen ? -50 : 0
+        
+        transition.updateFrame(view: header, frame: NSMakeRect(0, startY, size.width, 50))
 
-        transition.updateFrame(view: tabsView, frame: NSMakeRect(40, 0, size.width - 80, header.frame.height))
+        transition.updateFrame(view: tabsView, frame: NSMakeRect(40, startY, size.width - 80, header.frame.height))
 
         transition.updateFrame(view: close, frame: close.centerFrameY(x: 0))
         transition.updateFrame(view: more, frame: more.centerFrameY(x: size.width - more.frame.width))
 
-        transition.updateFrame(view: contentView, frame: NSMakeRect(0, header.frame.height, size.width, size.height - header.frame.height))
+        transition.updateFrame(view: contentView, frame: NSMakeRect(0, header.frame.maxY, size.width, size.height - header.frame.maxY))
+        
+        if let current = fullscreenControls {
+            transition.updateFrame(view: current, frame: NSMakeRect(0, 0, size.width, 60))
+        }
+        
+        self.fullscreen = state.fullscreen
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1258,13 +1395,43 @@ private final class BrowserView : View {
         let isBackButton = tab.external?.isBackButton ?? false
         let color = theme.colors.text.withAlphaComponent(0.5)
         self.close.updateState(state: isBackButton ? .back(color) : .close(color), animated: animated)
+        
+        updateFullscreenControls()
+        
+        self.fullscreenControls?.updateState(state: isBackButton ? .back(NSColor(0xffffff)) : .close(NSColor(0xffffff)), animated: animated)
+        self.fullscreenControls?.set(color: NSColor(0xffffff))
+    }
+    
+    private func updateFullscreenControls() {
+        if self.state?.fullscreen == true {
+            let current: FullscreenControls
+            if let view = self.fullscreenControls {
+                current = view
+            } else {
+                current = FullscreenControls(frame: NSMakeRect(0, 0, frame.width, 60))
+                self.fullscreenControls = current
+                addSubview(current)
+            }
+            
+            current.close.setSingle(handler: { [weak self] _ in
+                self?.arguments?.close()
+            }, for: .Click)
+            
+            current.more.setSingle(handler: { [weak self] control in
+                self?.arguments?.add(control)
+            }, for: .Click)
+            
+        } else if let view = self.fullscreenControls {
+            performSubviewRemoval(view, animated: false)
+            self.fullscreenControls = nil
+        }
     }
 }
 
 
 private struct State : Equatable {
     var tabs: [BrowserTabData] = []
-    
+    var fullscreen: Bool = false
     
     var selected: BrowserTabData? {
         return tabs.first(where: { $0.selected })
@@ -1288,7 +1455,7 @@ private struct State : Equatable {
             tabs.append(new)
         }
         
-        return (.init(tabs: tabs), newData)
+        return (.init(tabs: tabs, fullscreen: self.fullscreen), newData)
     }
     
     func select(_ item: BrowserTabData) -> State {
@@ -1296,7 +1463,7 @@ private struct State : Equatable {
         for i in 0 ..< tabs.count {
             tabs[i].selected = tabs[i].unique == item.unique
         }
-        return .init(tabs: tabs)
+        return .init(tabs: tabs, fullscreen: self.fullscreen)
     }
     
     func select(_ unique: BrowserTabData.Unique) -> State {
@@ -1304,7 +1471,7 @@ private struct State : Equatable {
         for i in 0 ..< tabs.count {
             tabs[i].selected = tabs[i].unique == unique
         }
-        return .init(tabs: tabs)
+        return .init(tabs: tabs, fullscreen: self.fullscreen)
     }
     
     func selectAt(_ index: Int) -> State {
@@ -1317,7 +1484,7 @@ private struct State : Equatable {
             }
         }
         
-        return .init(tabs: tabs)
+        return .init(tabs: tabs, fullscreen: self.fullscreen)
     }
     
     func setIsLoading(_ unqiue: BrowserTabData.Unique, loadingState: BrowserTabData.LoadingState) -> State {
@@ -1325,14 +1492,14 @@ private struct State : Equatable {
         if let index = tabs.firstIndex(where: { $0.unique == unqiue }) {
             tabs[index].loadingState = loadingState
         }
-        return .init(tabs: tabs)
+        return .init(tabs: tabs, fullscreen: self.fullscreen)
     }
     func setExternal(_ unique: BrowserTabData.Unique, external: WebpageModalState) -> State {
         var tabs = self.tabs
         if let index = tabs.firstIndex(where: { $0.unique == unique }) {
             tabs[index].external = external
         }
-        return .init(tabs: tabs)
+        return .init(tabs: tabs, fullscreen: self.fullscreen)
     }
     
     func closeTab(_ unique: BrowserTabData.Unique) -> State {
@@ -1353,7 +1520,7 @@ private struct State : Equatable {
             }
         }
        
-        return .init(tabs: tabs)
+        return .init(tabs: tabs, fullscreen: self.fullscreen)
     }
 }
 
@@ -1370,6 +1537,8 @@ private final class WebpageContainerView : View {
     }
     
     func update(data: BrowserTabData, arguments: Arguments, animated: Bool) {
+        
+        self.backgroundColor = data.external?.backgroundColor ?? theme.colors.background
         
         let error: RequestWebViewError?
         switch data.loadingState {
@@ -1644,6 +1813,10 @@ final class WebappBrowserController : ViewController {
         browser.contentView?.addSubview(self.view)
         browser.show()
         
+        browser.onToggleFullScreen = { [weak self] value in
+            self?.arguments?.updateFullscreen(value)
+        }
+        
 
         browser.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.current?.reloadPage()
@@ -1911,8 +2084,13 @@ final class WebappBrowserController : ViewController {
                 return
             }
             let invoke:()->Void = {
+                
                 if count == 1, let window = self?.window, !hasModals(window) {
-                    BrowserStateContext.get(context).hide()
+                    if window.isFullScreen == true {
+                        window.toggleFullScreen(nil)
+                    } else {
+                        BrowserStateContext.get(context).hide()
+                    }
                 } else {
                     updateState {
                         $0.closeTab(unique)
@@ -1926,11 +2104,7 @@ final class WebappBrowserController : ViewController {
                    invoke()
                 })
             } else {
-                if self?.window?.isFullScreen == true {
-                    self?.window?.toggleFullScreen(nil)
-                } else {
-                    invoke()
-                }
+                invoke()
             }
             
         }, selectAtIndex: { index in
@@ -1973,6 +2147,12 @@ final class WebappBrowserController : ViewController {
             return stateValue.with {
                 $0.tabs.first(where: { $0.unique == unique })?.external
             }
+        }, updateFullscreen: { value in
+            updateState { current in
+                var current = current
+                current.fullscreen = value
+                return current
+            }
         })
         
         self.arguments = arguments
@@ -1993,6 +2173,9 @@ final class WebappBrowserController : ViewController {
             let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.35, curve: .spring) : .immediate
             
             let tabs = layoutTabs(state.tabs, width: self.genericView.frame.width - 80 - 80)
+            
+            self.genericView.state = state
+            self.genericView.arguments = self.arguments
             
             self.tabs.merge(tabs, arguments: arguments, transition: transition)
             if let tab = state.tabs.first(where: { $0.selected }) {

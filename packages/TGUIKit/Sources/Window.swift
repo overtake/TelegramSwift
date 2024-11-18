@@ -943,7 +943,6 @@ open class Window: NSWindow {
     open override func toggleFullScreen(_ sender: Any?) {
         let newValue = !isFullScreen
         self.onToggleFullScreen?(newValue)
-        
         if let process = processFullScreen {
             process(newValue, { [weak self] value in
                 self?.invokeFullScreen(nil)

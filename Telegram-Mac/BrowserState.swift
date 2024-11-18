@@ -24,7 +24,7 @@ private final class Webapp : Window {
         
         let rect = screen.frame.focus(controller.view.frame.insetBy(dx: -10, dy: -10).size)
         
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless, .fullScreen, .resizable], backing: .buffered, defer: true)
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .titled, .borderless], backing: .buffered, defer: true)
         
         self.minSize = rect.size
         
@@ -384,7 +384,7 @@ final class BrowserStateContext {
         
         let context = self.context
         
-        let invoke:(BotAppSettings?)->Void = { [weak self] settings in
+        let invoke:()->Void = { [weak self] in
             guard let self else {
                 return
             }
@@ -405,40 +405,38 @@ final class BrowserStateContext {
             let peerId = peer.id
             let botData = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotAppSettings(id: peerId)) |> deliverOnMainQueue
             
-            _ = botData.startStandalone(next: { botSettings in
-                if FastSettings.shouldConfirmWebApp(peerId) {
-                    
-                    let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
-                    _ = signal.startStandalone(next: { [weak self] privacyUrl in
-                        var window: Window?
-                        if self?.browser?.markAsDeinit == false {
-                            window = self?.browser?.window
-                        } else {
-                            window = self?.context.window
-                        }
-                        if let window, let context = self?.context {
-                            let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
-                                                    
-                            let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
-                                return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
-                                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
-                                    closeAllModals(window: context.window)
-                                })
-                            }))
-                            
-                            showModalAlert(for: window, data: data, completion: { result in
-                                invoke(botSettings)
-                                FastSettings.markWebAppAsConfirmed(peerId)
+            if FastSettings.shouldConfirmWebApp(peerId) {
+                
+                let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
+                _ = signal.startStandalone(next: { [weak self] privacyUrl in
+                    var window: Window?
+                    if self?.browser?.markAsDeinit == false {
+                        window = self?.browser?.window
+                    } else {
+                        window = self?.context.window
+                    }
+                    if let window, let context = self?.context {
+                        let privacyUrl = privacyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                                                
+                        let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+                            return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
+                                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                closeAllModals(window: context.window)
                             })
-                        }
-                    })
-                } else {
-                    invoke(botSettings)
-                }
-            })
+                        }))
+                        
+                        showModalAlert(for: window, data: data, completion: { result in
+                            invoke()
+                            FastSettings.markWebAppAsConfirmed(peerId)
+                        })
+                    }
+                })
+            } else {
+                invoke()
+            }
             
         } else {
-            invoke(nil)
+            invoke()
         }
         
     }
