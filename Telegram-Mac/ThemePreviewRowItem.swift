@@ -21,7 +21,7 @@ class ThemePreviewRowItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType) {
         self.theme = theme.withUpdatedBackgroundSize(WallpaperDimensions.aspectFilled(NSMakeSize(200, 200)))
         
-        let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context, disableSelectAbility: true)
+        let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context, isLogInteraction: true, disableSelectAbility: true)
         
       
         
