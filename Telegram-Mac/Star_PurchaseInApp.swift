@@ -810,6 +810,9 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+        if !procced {
+            completion(.cancelled)
+        }
     }
     
     controller.contextObject = starsContext
@@ -818,10 +821,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
     
     close = { [weak modalController] in
         modalController?.modal?.close()
-        if !procced {
-            completion(.cancelled)
-        }
     }
+    
     
     return modalController
 }
