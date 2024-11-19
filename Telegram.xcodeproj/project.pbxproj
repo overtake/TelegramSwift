@@ -122,6 +122,7 @@
 		271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
+		27264B972CEC5176003E5BAD /* WebAppPermissionsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */; };
 		2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDCE2863258E0044D260 /* ChatAvatarView.swift */; };
 		2726BDD52869DCB00044D260 /* InlineStickersContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDD42869DCB00044D260 /* InlineStickersContext.swift */; };
 		2726BDD9286A3B700044D260 /* PremiumGiftController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDD8286A3B700044D260 /* PremiumGiftController.swift */; };
@@ -1757,6 +1758,7 @@
 		271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSwapSuggestionsPanel.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
+		27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppPermissionsState.swift; sourceTree = "<group>"; };
 		2726BDCE2863258E0044D260 /* ChatAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAvatarView.swift; sourceTree = "<group>"; };
 		2726BDD42869DCB00044D260 /* InlineStickersContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineStickersContext.swift; sourceTree = "<group>"; };
 		2726BDD8286A3B700044D260 /* PremiumGiftController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumGiftController.swift; sourceTree = "<group>"; };
@@ -3738,6 +3740,7 @@
 		2761549C2C2081CA0090BFFC /* mini-apps */ = {
 			isa = PBXGroup;
 			children = (
+				27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */,
 				27352DDE2CE378C900220A87 /* FileDownload.swift */,
 				277113662CDA284C008087E9 /* WebbotShareMessageModal.swift */,
 				277113642CD9BC96008087E9 /* WebbotEmojisetModal.swift */,
@@ -8339,6 +8342,7 @@
 				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
+				27264B972CEC5176003E5BAD /* WebAppPermissionsState.swift in Sources */,
 				276885032770D7BE0021C891 /* AddReactionManager.swift in Sources */,
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
 				9F18908D2237B5A400665EF5 /* InputURLFormatterModalController.swift in Sources */,

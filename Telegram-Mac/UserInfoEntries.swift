@@ -206,7 +206,9 @@ class UserInfoArguments : PeerInfoArguments {
         _ = self.context.engine.peers.toggleBotEmojiStatusAccess(peerId: self.peerId, enabled: false).start()
     }
     func togglePermissionsGeo() {
-        
+        let _ = updateWebAppPermissionsStateInteractively(context: context, peerId: peerId) { current in
+            return WebAppPermissionsState(location: WebAppPermissionsState.Location(isRequested: true, isAllowed: !(current?.location?.isAllowed ?? false)), emojiStatus: nil)
+        }.start()
     }
     
     func shareMyInfo() {
@@ -2080,7 +2082,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?, webAppPermissionsState: WebAppPermissionsState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -2340,14 +2342,25 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     }
                 }
                 
+                var addHeader: Bool = true
                 
-                if cachedData.flags.contains(.botCanManageEmojiStatus) {
+                let addPermissionHeader:()->Void = {
                     entries.append(UserInfoEntry.section(sectionId: sectionId))
                     sectionId += 1
                     
                     entries.append(UserInfoEntry.botPermissionsHeader(sectionId: sectionId, text: strings().peerInfoBotPermissionsHeader, viewType: .textTopItem))
-                    entries.append(UserInfoEntry.botPermissionsStatus(sectionId: sectionId, value: cachedData.flags.contains(.botCanManageEmojiStatus), viewType: .singleItem))
-                  //  entries.append(UserInfoEntry.botPermissionsGeo(sectionId: sectionId, value: true, viewType: .lastItem))
+                }
+                if cachedData.flags.contains(.botCanManageEmojiStatus) {
+                    addPermissionHeader()
+                    addHeader = false
+                    entries.append(UserInfoEntry.botPermissionsStatus(sectionId: sectionId, value: cachedData.flags.contains(.botCanManageEmojiStatus), viewType: webAppPermissionsState?.location == nil ? .singleItem : .firstItem))
+                }
+                
+                if let location = webAppPermissionsState?.location {
+                    if addHeader {
+                        addPermissionHeader()
+                    }
+                    entries.append(UserInfoEntry.botPermissionsGeo(sectionId: sectionId, value: location.isAllowed, viewType: addHeader ? .singleItem : .lastItem))
                 }
                 
             }

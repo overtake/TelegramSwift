@@ -69,6 +69,7 @@ private enum ApplicationSpecificItemCacheCollectionIdValues: Int8 {
     case translationState = 2
     case pendingInAppPurchaseState = 3
     case storyPostState = 5
+    case webAppPermissionsState = 6
 
 }
 
@@ -78,7 +79,7 @@ public struct ApplicationSpecificItemCacheCollectionId {
     public static let translationState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.translationState.rawValue)
     public static let pendingInAppPurchaseState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.pendingInAppPurchaseState.rawValue)
     public static let storyPostState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.storyPostState.rawValue)
-    
+    public static let webAppPermissionsState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.webAppPermissionsState.rawValue)
 
 }
 private enum ApplicationSpecificOrderedItemListCollectionIdValues: Int32 {

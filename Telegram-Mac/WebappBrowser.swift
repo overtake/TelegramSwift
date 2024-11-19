@@ -2123,13 +2123,18 @@ final class WebappBrowserController : ViewController {
             
             if item.selected {
                 items.append(contentsOf: webpageItems)
-                items.append(ContextMenuItem(strings().webAppClose, handler: {
-                    getArguments?()?.closeTab(unique, true)
-                }, itemImage: MenuAnimation.menu_clear_history.value))
+                if self?.window?.isFullScreen == false {
+                    items.append(ContextMenuItem(strings().webAppClose, handler: {
+                        getArguments?()?.closeTab(unique, true)
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                }
+                
             } else {
-                items.append(ContextMenuItem(strings().webAppClose, handler: {
-                    getArguments?()?.closeTab(unique, true)
-                }, itemImage: MenuAnimation.menu_clear_history.value))
+                if self?.window?.isFullScreen == false {
+                    items.append(ContextMenuItem(strings().webAppClose, handler: {
+                        getArguments?()?.closeTab(unique, true)
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                }
             }
             if !items.isEmpty {
                 let menu = ContextMenu(betterInside: true)
