@@ -2059,7 +2059,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             }, completed: { [weak self] in
                 self?.success = true
                 self?.close()
-                self?.showSuccess()
+               // self?.showSuccess()
             })
         }
         
