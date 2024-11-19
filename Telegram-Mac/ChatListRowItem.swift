@@ -573,6 +573,7 @@ class ChatListRowItem: TableRowItem {
         } else {
             let textString = NSMutableAttributedString(string: "")
             var isFirst = true
+            var wasRead: Bool = false
             for item in groupItems {
                 if let chatMainPeer = item.peer.chatMainPeer?._asPeer() {
                     let peerTitle = chatMainPeer.compactDisplayTitle
@@ -580,9 +581,10 @@ class ChatListRowItem: TableRowItem {
                         if isFirst {
                             isFirst = false
                         } else {
-                            textString.append(.initialize(string: ", ", color: theme.chatList.textColor, font: .normal(.text)))
+                            textString.append(.initialize(string: ", ", color: !wasRead ? theme.chatList.textColor : theme.chatList.grayTextColor, font: .normal(.text)))
                         }
                         textString.append(.initialize(string: peerTitle, color: item.isUnread ? theme.chatList.textColor : theme.chatList.grayTextColor, font: .normal(.text)))
+                        wasRead = !item.isUnread
                     }
                 }
             }

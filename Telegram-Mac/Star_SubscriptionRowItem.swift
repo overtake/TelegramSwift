@@ -266,9 +266,9 @@ private final class Star_SubscriptionRowView : GeneralContainableRowView {
         
         if let productTextView {
             if let productImageView {
-                productTextView.setFrameOrigin(NSMakePoint(productImageView.frame.maxX + 4, nameView.frame.maxY + 2))
+                productTextView.setFrameOrigin(NSMakePoint(productImageView.frame.maxX + 4, nameView.frame.maxY + 5))
             } else {
-                productTextView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 2))
+                productTextView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 5))
             }
         }
 

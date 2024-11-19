@@ -20475,6 +20475,24 @@ public final class L10n {
   }
   /// Open Web App
   public static var webAppFirstOpenTitle: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.Title") }
+  /// Allow
+  public static var webAppLocationPermissionAllow: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.Allow") }
+  /// Decline
+  public static var webAppLocationPermissionDecline: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.Decline") }
+  /// Permission Denied
+  public static var webAppLocationPermissionDeniedError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.DeniedError") }
+  /// Location service is not available
+  public static var webAppLocationPermissionDisabledError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.DisabledError") }
+  /// **%@** can now have access to your location.
+  public static func webAppLocationPermissionSucceed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.LocationPermission.Succeed", p1)
+  }
+  /// **%1$@** requests access to your **location**. You will be able to revoke this access in the profile page of **%2$@**.
+  public static func webAppLocationPermissionText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "WebApp.LocationPermission.Text", p1, p2)
+  }
+  /// Wi-Fi required for location service
+  public static var webAppLocationPermissionWifiError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.WifiError") }
   /// Disconnect
   public static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites

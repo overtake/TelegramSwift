@@ -206,6 +206,7 @@ final class EmojiScreenEffect {
                             return nil
                         }
                     }
+                    let _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: animation.resource)).start()
                 } else {
                     if let effect = messageEffect.effectSticker.premiumEffect {
                         signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
@@ -215,10 +216,13 @@ final class EmojiScreenEffect {
                                 return nil
                             }
                         }
+                        let _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: effect.resource)).start()
                     } else {
                         signal = .single(nil)
                     }
                 }
+                
+
             } else {
                 signal = context.account.postbox.messageAtId(messageId)
                  |> mapToSignal { message in

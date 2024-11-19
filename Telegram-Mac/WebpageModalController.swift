@@ -2185,11 +2185,162 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             updateSafeInsets()
         case "web_app_request_content_safe_area":
             updateSafeInsets()
+        case "web_app_request_location":
+            self.requestLocation()
+        case "web_app_check_location":
+            self.checkLocation()
+        case "web_app_open_location_settings":
+            self.openLocationSettings()
         default:
             break
         }
 
     }
+    
+    fileprivate func openLocationSettings() {
+        guard let botId = self.bot?.id else {
+            return
+        }
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: botId)
+        context.window.makeKeyAndOrderFront(nil)
+    }
+    
+    fileprivate func checkLocation() {
+        guard let botId = self.bot?.id else {
+            return
+        }
+        let _ = (webAppPermissionsState(context: self.context, peerId: botId)
+        |> take(1)
+        |> deliverOnMainQueue).start(next: { [weak self] state in
+            guard let self else {
+                return
+            }
+            var data: [String: Any] = [:]
+            data["available"] = true
+            if let location = state?.location {
+                data["access_requested"] = location.isRequested
+                if location.isRequested {
+                    data["access_granted"] = location.isAllowed
+                }
+            } else {
+                data["access_requested"] = false
+            }
+            if let serializedData = JSON(dictionary: data)?.string {
+                self.sendEvent(name: "location_checked", data: serializedData)
+            }
+        })
+
+    }
+    
+    fileprivate func requestLocation() {
+        
+        let context = self.context
+        
+        guard let bot = self.bot else {
+            return
+        }
+        
+        let botId = bot.id
+        
+        _ = requestUserLocation().start(next: { result in
+            
+            
+            switch result {
+            case let .success(location):
+                let _ = (webAppPermissionsState(context: context, peerId: botId)
+                         |> take(1)
+                         |> deliverOnMainQueue).start(next: { [weak self] state in
+                    guard let self else {
+                        return
+                    }
+                    
+                    var shouldRequest = false
+                    
+                    if let request = state?.location {
+                        if request.isRequested {
+                            if request.isAllowed {
+                                var data: [String: Any] = [:]
+                                data["available"] = true
+                                data["latitude"] = location.coordinate.latitude
+                                data["longitude"] = location.coordinate.longitude
+                                data["altitude"] = location.altitude
+                                data["course"] = location.course
+                                data["speed"] = location.speed
+                                data["horizontal_accuracy"] = location.horizontalAccuracy
+                                data["vertical_accuracy"] = location.verticalAccuracy
+                                
+                                if #available(macOS 10.15.4, *) {
+                                    data["course_accuracy"] = location.courseAccuracy
+                                } else {
+                                    data["course_accuracy"] = NSNull()
+                                }
+                                
+                                if #available(macOS 10.15, *) {
+                                    data["speed_accuracy"] = location.speedAccuracy
+                                } else {
+                                    data["speed_accuracy"] = NSNull()
+                                }
+                                if let serializedData = JSON(dictionary: data)?.string {
+                                    self.sendEvent(name: "location_requested", data: serializedData)
+                                }
+                            } else {
+                                var data: [String: Any] = [:]
+                                data["available"] = false
+                                self.sendEvent(name: "location_requested", data: JSON(dictionary: data)?.string)
+                            }
+                        } else {
+                            shouldRequest = true
+                        }
+                    } else {
+                        shouldRequest = true
+                    }
+                    
+                    if shouldRequest, let window = self.window {
+                        verifyAlert(for: window, information: strings().webAppLocationPermissionText(bot.displayTitle, bot.displayTitle), ok: strings().webAppLocationPermissionAllow, cancel: strings().webAppLocationPermissionDecline, successHandler: { [weak self] _ in
+                            
+                            let _ = updateWebAppPermissionsStateInteractively(context: context, peerId: botId) { current in
+                                return WebAppPermissionsState(location: WebAppPermissionsState.Location(isRequested: true, isAllowed: true), emojiStatus: nil)
+                            }.start()
+                            
+                            showModalText(for: window, text: strings().webAppLocationPermissionSucceed(bot.displayTitle))
+                            
+                            Queue.mainQueue().after(0.1, {
+                                self?.requestLocation()
+                            })
+
+                        }, cancelHandler: { [weak self] in
+                            var data: [String: Any] = [:]
+                            data["available"] = false
+                            self?.sendEvent(name: "location_requested", data: JSON(dictionary: data)?.string)
+                            
+                            let _ = updateWebAppPermissionsStateInteractively(context: context, peerId: botId) { current in
+                                return WebAppPermissionsState(location: WebAppPermissionsState.Location(isRequested: true, isAllowed: false), emojiStatus: nil)
+                            }.start()
+
+                            
+                        })
+                    }
+                })
+            }
+            
+        }, error: { [weak self] error in
+            let text: String
+            switch error {
+            case .denied, .restricted:
+                text = strings().webAppLocationPermissionDeniedError
+            case .disabled, .notDetermined:
+                text = strings().webAppLocationPermissionDisabledError
+            case .wifiRequired:
+                text = strings().webAppLocationPermissionWifiError
+            }
+            if let window = self?.window {
+                showModalText(for: window, text: text)
+            }
+        })
+    }
+
+      
+
     
 
 
