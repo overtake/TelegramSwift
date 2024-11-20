@@ -2099,7 +2099,7 @@ final class WebappBrowserController : ViewController {
                 }
             }
             let needAdmit = data.external?.needConfirmation ?? false
-            if needAdmit, checkAdmission, let window = self?.browser {
+            if needAdmit, checkAdmission, let window = self?.browser, window.isFullScreen == false {
                 verifyAlert_button(for: window, information: strings().webpageConfirmClose, ok: strings().webpageConfirmOk, successHandler: { _ in
                    invoke()
                 })
