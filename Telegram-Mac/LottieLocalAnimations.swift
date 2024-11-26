@@ -46,6 +46,8 @@ enum LocalAnimatedSticker : String {
     case duck_empty
     case ton_logo
     
+    case affiliate_link
+    
     case voice_chat_raise_hand_1
     case voice_chat_raise_hand_2
     case voice_chat_raise_hand_3
@@ -514,7 +516,8 @@ enum LocalAnimatedSticker : String {
             playPolicy = .onceEnd
         case .ton_logo:
             playPolicy = .onceEnd
-
+        case .affiliate_link:
+            playPolicy = .onceEnd
         default:
             playPolicy = .loop
             hidePlayer = false

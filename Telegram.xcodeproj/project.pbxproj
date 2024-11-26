@@ -843,6 +843,11 @@
 		27D91321283BC0EB007CF40F /* shine.png in Resources */ = {isa = PBXBuildFile; fileRef = 27D9131C283BC0E9007CF40F /* shine.png */; };
 		27D91322283BC0EB007CF40F /* particles.png in Resources */ = {isa = PBXBuildFile; fileRef = 27D9131D283BC0EA007CF40F /* particles.png */; };
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
+		27DEA2242CEF258400C25800 /* Affiliate_StartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2232CEF257400C25800 /* Affiliate_StartController.swift */; };
+		27DEA2262CEF664200C25800 /* Affiliate_PeerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2252CEF663000C25800 /* Affiliate_PeerController.swift */; };
+		27DEA2282CF07FBA00C25800 /* Affiliate_ProgramPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2272CF07F9700C25800 /* Affiliate_ProgramPreview.swift */; };
+		27DEA22A2CF09B3D00C25800 /* Affiliate_LinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2292CF09B3700C25800 /* Affiliate_LinkPreview.swift */; };
+		27DEA22C2CF0A2E700C25800 /* affiliate_link.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27DEA22B2CF0A2E700C25800 /* affiliate_link.tgs */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
 		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
 		27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */; };
@@ -2432,6 +2437,11 @@
 		27D9131C283BC0E9007CF40F /* shine.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shine.png; sourceTree = "<group>"; };
 		27D9131D283BC0EA007CF40F /* particles.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = particles.png; sourceTree = "<group>"; };
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
+		27DEA2232CEF257400C25800 /* Affiliate_StartController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_StartController.swift; sourceTree = "<group>"; };
+		27DEA2252CEF663000C25800 /* Affiliate_PeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_PeerController.swift; sourceTree = "<group>"; };
+		27DEA2272CF07F9700C25800 /* Affiliate_ProgramPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_ProgramPreview.swift; sourceTree = "<group>"; };
+		27DEA2292CF09B3700C25800 /* Affiliate_LinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_LinkPreview.swift; sourceTree = "<group>"; };
+		27DEA22B2CF0A2E700C25800 /* affiliate_link.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = affiliate_link.tgs; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
 		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
 		27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSendAsMenuItem.swift; sourceTree = "<group>"; };
@@ -4304,6 +4314,17 @@
 				27D60451295D745800588C21 /* StorageUsageMediaCells.swift */,
 			);
 			name = usage;
+			sourceTree = "<group>";
+		};
+		27DEA2222CEF256B00C25800 /* affiliate */ = {
+			isa = PBXGroup;
+			children = (
+				27DEA2292CF09B3700C25800 /* Affiliate_LinkPreview.swift */,
+				27DEA2272CF07F9700C25800 /* Affiliate_ProgramPreview.swift */,
+				27DEA2252CEF663000C25800 /* Affiliate_PeerController.swift */,
+				27DEA2232CEF257400C25800 /* Affiliate_StartController.swift */,
+			);
+			path = affiliate;
 			sourceTree = "<group>";
 		};
 		27E050982796B6DD00D5AFC3 /* sendas */ = {
@@ -6227,6 +6248,7 @@
 		C2FBC1E51DC631620063A23B /* overlay */ = {
 			isa = PBXGroup;
 			children = (
+				27DEA2222CEF256B00C25800 /* affiliate */,
 				2761549C2C2081CA0090BFFC /* mini-apps */,
 				277DFE6427843F3600F78396 /* translate */,
 				C2D2CAEE1E6486CE00939968 /* stickers */,
@@ -6340,6 +6362,7 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				271892152B18D9CD0008B238 /* transcription_locked.tgs */,
 				270FD5932C500B8A000070E6 /* duck_webapp_error.tgs */,
+				27DEA22B2CF0A2E700C25800 /* affiliate_link.tgs */,
 				270376062CA1A916003EC235 /* duck_upload_complete.tgs */,
 				270FD5952C516A99000070E6 /* browser_back_to_close.tgs */,
 				270FD5992C5181D9000070E6 /* browser_more.tgs */,
@@ -7260,6 +7283,7 @@
 				2751E79D27F34415003E3937 /* menu_autodelete_1h.tgs in Resources */,
 				2780DE40271F0BB30092323F /* zoom.tgs in Resources */,
 				27CE1560297966D8001F8CE8 /* emoji_category_activities.tgs in Resources */,
+				27DEA22C2CF0A2E700C25800 /* affiliate_link.tgs in Resources */,
 				277C208D27A2C4C50070B3BF /* menu_sharescreen_slash.tgs in Resources */,
 				27336739276241EE0027441E /* menu_add_gif.tgs in Resources */,
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
@@ -7830,6 +7854,7 @@
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */,
 				9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */,
+				27DEA2262CEF664200C25800 /* Affiliate_PeerController.swift in Sources */,
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
 				C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */,
 				2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */,
@@ -7927,6 +7952,7 @@
 				270FD5A62C57C34B000070E6 /* InstantViewInBrowser.swift in Sources */,
 				27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
+				27DEA22A2CF09B3D00C25800 /* Affiliate_LinkPreview.swift in Sources */,
 				D0D7520B24C04FD60037D73A /* VideoEditorScrubbler.swift in Sources */,
 				2744018526E6344E0035C55D /* WidgetRecentPeersController.swift in Sources */,
 				27AAAD57299F5F9E00F70A9A /* LiteModeController.swift in Sources */,
@@ -7960,6 +7986,7 @@
 				27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
+				27DEA2242CEF258400C25800 /* Affiliate_StartController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
 				27D9131728364F1F007CF40F /* VoiceTranscriptionControl.swift in Sources */,
@@ -8013,6 +8040,7 @@
 				274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
 				27CE2DDE2AD66B4E001FA1C7 /* ChatInputView.swift in Sources */,
+				27DEA2282CF07FBA00C25800 /* Affiliate_ProgramPreview.swift in Sources */,
 				2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */,
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				2771FC522BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift in Sources */,

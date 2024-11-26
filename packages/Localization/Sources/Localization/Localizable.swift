@@ -12393,6 +12393,8 @@ public final class L10n {
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
   /// Add To Group or Channel
   public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
+  /// Affiliate Program
+  public static var peerInfoBotAffiliate: String  { return L10n.tr("Localizable", "PeerInfo.BotAffiliate") }
   /// Appearance
   public static var peerInfoChannelAppearance: String  { return L10n.tr("Localizable", "PeerInfo.ChannelAppearance") }
   /// Channel Color

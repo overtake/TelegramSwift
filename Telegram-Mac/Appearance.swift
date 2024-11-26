@@ -568,6 +568,14 @@ func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage 
     return generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
 }
 
+func generateTextIcon_NewBadge_Flipped(bgColor: NSColor, textColor: NSColor) -> CGImage {
+    let image = generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
+    return generateImage(image.systemSize, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(image, in: image.systemSize.bounds)
+    })!
+}
+
 func generateTextIcon_AccentBadge(text: String, bgColor: NSColor, textColor: NSColor) -> CGImage {
     
     let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .avatar(.small)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)

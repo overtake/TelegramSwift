@@ -696,7 +696,8 @@ private final class Arguments {
     let openTransaction:(Star_Transaction)->Void
     let openSubscription:(Star_Subscription)->Void
     let openRecommendedApps:()->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void) {
+    let openAffiliate:()->Void
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void, openAffiliate:@escaping()->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
@@ -711,6 +712,7 @@ private final class Arguments {
         self.openTransaction = openTransaction
         self.openSubscription = openSubscription
         self.openRecommendedApps = openRecommendedApps
+        self.openAffiliate = openAffiliate
     }
 }
 
@@ -866,6 +868,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state.myBalance), comparable: nil, item: { initialSize, stableId in
                 return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? 0, viewType: .singleItem, buyMore: arguments.buyMore, giftStars: arguments.giftStars)
             }))
+            
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            //TODOLANG
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("affiliate"), data: .init(name: "Earn Stars", color: theme.colors.text, icon: NSImage(resource: .iconAffiliateEarnStars).precomposed(flipVertical: true), type: .next, viewType: .singleItem, description: "Distribute links to mini apps and earn a share of their revenue in Stars.", action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))))
+            
             
             if !state.subscriptions.isEmpty {
                 
@@ -1278,6 +1287,9 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         showModal(with: Star_SubscriptionScreen(context: context, subscription: subscription), for: window)
     }, openRecommendedApps: {
         showModal(with: Star_AppExamples(context: context), for: window)
+    }, openAffiliate: {
+        close?()
+        context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: context.peerId))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

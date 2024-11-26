@@ -528,23 +528,19 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
                         
-            //BrowserStateContext.get(context).open(tab: .tonsite(url: "tonsite://foundation.ton"))
-            
-            
-           // showModal(with: Star_AppExamples(context: context), for: context.window)
-            
-            //showModal(with: StoryFoundListController(context: context, source: .hashtag("#telegram"), presentation: theme), for: context.window)
-           // showModal(with: Star_PurschaseInApp(context: context, invoice: .init(title: "", description: "", photo: nil, receiptMessageId: nil, currency: "USD", totalAmount: 1, startParam: "", extendedMedia: nil, flags: .init(), version: 0), source: .slug("BbS2JQXHYEjXFgAAbjEtYxbaAJA"), type: .subscription), for: context.window)
-
-          //  showModal(with: Star_ReactionsController(context: context), for: context.window)
-            
-           // showModal(with: Star_TransactionScreen(context: context, peer: .init(context.myPeer!), transaction: StarsContext.State.Transaction.init(id: "kqwjeflklqwkejflqwkejflqkwejflqkwejf", count: 1000, date: Int32(Date().timeIntervalSince1970), peer: StarsContext.State.Transaction.Peer.appStore)), for: context.window)
-//            showModal(with: FactCheckController(context: context), for: context.window)
-          //  showModal(with: Star_PurschaseInApp(context: context, peerId: context.peerId), for: context.window)
-            
+          //  context.bindings.rootNavigation().push(Affiliate_StartController(context: context))
             
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        
+        
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+                        
+            context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: context.peerId))
+
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+        
         
         #endif
         
