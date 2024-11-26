@@ -12,6 +12,152 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 
+private final class ButtonsItem : GeneralRowItem {
+    fileprivate let state: State
+    fileprivate let secondAction:()->Void
+    fileprivate let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, stableId: AnyHashable, presentation: TelegramPresentationTheme, state: State, action: @escaping()->Void, secondAction:@escaping()->Void) {
+        self.state = state
+        self.secondAction = secondAction
+        self.presentation = presentation
+        super.init(initialSize, stableId: stableId, action: action)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return ButtonsItemView.self
+    }
+    
+    override var height: CGFloat {
+        return 60
+    }
+    
+    
+    var actionEnabled: Bool {
+        return state.actionEnabled
+    }
+}
+
+private final class ButtonsItemView : GeneralRowView {
+    private let button = TextButton(frame: .zero)
+    
+    private var secondButton: TextButton? = nil
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        addSubview(button)
+        button.set(handler: { [weak self] _ in
+            if let item = self?.item as? ButtonsItem {
+                item.action()
+            }
+        }, for: .Click)
+        
+        button.scaleOnClick = true
+        button._thatFit = true
+        button.disableActions()
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? ButtonsItem else {
+            return
+        }
+        
+        
+        self.button.userInteractionEnabled = item.actionEnabled
+        self.button.isEnabled = item.actionEnabled
+        self.button.alphaValue = item.actionEnabled ? 1 : 0.8
+        
+        if case let .confirm(string, _) = item.state.data.mode {
+            let current: TextButton
+            if let view = self.secondButton {
+                current = view
+            } else {
+                current = TextButton()
+                current.scaleOnClick = true
+                current.disableActions()
+                current.set(font: .medium(.text), for: .Normal)
+                self.secondButton = current
+                addSubview(current)
+                
+                current.set(handler: { [weak self] _ in
+                    if let item = self?.item as? ButtonsItem {
+                        item.secondAction()
+                    }
+                }, for: .Click)
+            }
+            
+            current.set(background: item.presentation.colors.background, for: .Normal)
+            current.set(text: string, for: .Normal)
+            current._thatFit = true
+            current.set(color: item.presentation.colors.darkGrayText, for: .Normal)
+            current.layer?.cornerRadius = 10
+            current.layer?.borderWidth = 1
+            current.layer?.borderColor = item.presentation.colors.border.cgColor
+        } else if let view = self.secondButton {
+            performSubviewRemoval(view, animated: animated)
+            self.secondButton = nil
+        }
+        
+        
+        
+        
+        button.set(background: item.presentation.colors.accent, for: .Normal)
+        button.set(font: .medium(.text), for: .Normal)
+        button.set(text: item.state.data.ok, for: .Normal)
+        button.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
+
+        button.layer?.cornerRadius = 10
+        
+        needsLayout = true
+                
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        
+        if let second = self.secondButton {
+            let btnwidth = floor((size.width - 40 - 10) / 2)
+            
+            button.sizeToFit(NSMakeSize(20, 0))
+            second.sizeToFit(NSMakeSize(20, 0))
+            
+            let effectiveOk = button.frame.width
+            let effectiveSecond = second.frame.width
+
+            var btnRect: NSRect
+            var secondRect: NSRect
+            if effectiveOk > btnwidth {
+                btnRect = CGRect(origin: CGPoint(x: frame.width - effectiveOk - 20, y: size.height - 20 - 40), size: CGSize(width: effectiveOk, height: 40))
+                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: frame.width - 40 - effectiveOk - 10, height: 40))
+            } else if effectiveSecond > btnwidth {
+                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: effectiveSecond, height: 40))
+                btnRect = CGRect(origin: CGPoint(x: secondRect.maxX, y: size.height - 20 - 40), size: CGSize(width: frame.width - 40 - effectiveSecond - 10, height: 40))
+            } else {
+                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
+                btnRect = CGRect(origin: CGPoint(x: secondRect.maxX + 10, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
+            }
+            ContainedViewLayoutTransition.immediate.updateFrame(view: button, frame: btnRect)
+            ContainedViewLayoutTransition.immediate.updateFrame(view: second, frame: secondRect)
+
+        } else {
+            ContainedViewLayoutTransition.immediate.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: size.width - 40, height: 40)))
+        }
+        
+    }
+}
+
 private final class Arguments {
     let presentation: TelegramPresentationTheme
     let action: ()->Void
@@ -177,15 +323,11 @@ private final class RowItem : TableRowItem {
     fileprivate var disclaimer: TextViewLayout?
     fileprivate let options: [Option]
     fileprivate let toggle: (Int)->Void
-    fileprivate let action:()->Void
-    fileprivate let secondAction:()->Void
     fileprivate let presentation: TelegramPresentationTheme
-    init(_ initialSize: NSSize, presentation: TelegramPresentationTheme, state: State, toggle:@escaping(Int)->Void, action: @escaping()->Void, secondAction:@escaping()->Void) {
+    init(_ initialSize: NSSize, presentation: TelegramPresentationTheme, state: State, toggle:@escaping(Int)->Void) {
         self.state = state
         self.presentation = presentation
         self.toggle = toggle
-        self.action = action
-        self.secondAction = secondAction
         if !state.data.info.isEmpty {
             let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.darkGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.darkGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inApp(for: contents.nsstring, context: appDelegate?.currentContext, openInfo: { peerId, _, _, _ in
@@ -283,7 +425,7 @@ private final class RowItem : TableRowItem {
         height += optionsSize.height
         
         if let descprion = desc {
-            if !descprion.onlyWhenEnabled || actionEnabled {
+            if !descprion.onlyWhenEnabled || state.actionEnabled {
                 height += descprion.size.height
                 height += 10
             }
@@ -293,9 +435,6 @@ private final class RowItem : TableRowItem {
             height += disclaimer.layoutSize.height + 10
             height += 20
         }
-        
-        height += 40 //button
-        height += 20
         
 
         return height
@@ -313,10 +452,7 @@ private final class RowItem : TableRowItem {
         }
         return NSMakeSize(width, height)
     }
-    
-    var actionEnabled: Bool {
-        return state.actionEnabled
-    }
+
     
     override func viewClass() -> AnyClass {
         return RowView.self
@@ -397,9 +533,6 @@ private final class RowView : TableRowView {
     }
     
     private let infoView = TextView()
-    private let button = TextButton(frame: .zero)
-    
-    private var secondButton: TextButton? = nil
     
     private let optionsView = View()
     
@@ -410,20 +543,11 @@ private final class RowView : TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(infoView)
-        addSubview(button)
         addSubview(optionsView)
                 
         infoView.isSelectable = true
         
-        button.set(handler: { [weak self] _ in
-            if let item = self?.item as? RowItem {
-                item.action()
-            }
-        }, for: .Click)
-        
-        button.scaleOnClick = true
-        button._thatFit = true
-        button.disableActions()
+
         optionsView.layer?.masksToBounds = false
     }
     
@@ -452,40 +576,6 @@ private final class RowView : TableRowView {
         self.infoView.update(item.info)
         
         
-        self.button.userInteractionEnabled = item.actionEnabled
-        self.button.isEnabled = item.actionEnabled
-        self.button.alphaValue = item.actionEnabled ? 1 : 0.8
-        
-        if case let .confirm(string, _) = item.state.data.mode {
-            let current: TextButton
-            if let view = self.secondButton {
-                current = view
-            } else {
-                current = TextButton()
-                current.scaleOnClick = true
-                current.disableActions()
-                current.set(font: .medium(.text), for: .Normal)
-                self.secondButton = current
-                addSubview(current)
-                
-                current.set(handler: { [weak self] _ in
-                    if let item = self?.item as? RowItem {
-                        item.secondAction()
-                    }
-                }, for: .Click)
-            }
-            
-            current.set(background: item.presentation.colors.background, for: .Normal)
-            current.set(text: string, for: .Normal)
-            current._thatFit = true
-            current.set(color: item.presentation.colors.darkGrayText, for: .Normal)
-            current.layer?.cornerRadius = 10
-            current.layer?.borderWidth = 1
-            current.layer?.borderColor = item.presentation.colors.border.cgColor
-        } else if let view = self.secondButton {
-            performSubviewRemoval(view, animated: animated)
-            self.secondButton = nil
-        }
         
         
         optionsView.setFrameSize(item.optionsSize)
@@ -502,7 +592,7 @@ private final class RowView : TableRowView {
             }, animated: animated)
         }
         
-        if let desc = item.desc, !desc.onlyWhenEnabled || item.actionEnabled {
+        if let desc = item.desc, !desc.onlyWhenEnabled || item.state.actionEnabled {
             let current: TextView
             let isNew: Bool
             if let view = self.descriptionView {
@@ -518,7 +608,7 @@ private final class RowView : TableRowView {
             }
             current.update(desc.text)
             if isNew {
-                current.centerX(y: button.frame.minY - 10 - current.frame.height)
+                current.centerX(y: frame.height - 10 - current.frame.height)
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
@@ -554,14 +644,7 @@ private final class RowView : TableRowView {
             performSubviewRemoval(view, animated: animated, duration: 0.2, scale: true)
             self.disclaimer = nil
         }
-        
-        button.set(background: item.presentation.colors.accent, for: .Normal)
-        button.set(font: .medium(.text), for: .Normal)
-        button.set(text: item.state.data.ok, for: .Normal)
-        button.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
 
-        button.layer?.cornerRadius = 10
-                
       
         updateLayout(size: self.frame.size, transition: transition)
     }
@@ -584,34 +667,6 @@ private final class RowView : TableRowView {
         }
         
         
-        if let second = self.secondButton {
-            let btnwidth = floor((size.width - 40 - 10) / 2)
-            
-            button.sizeToFit(NSMakeSize(20, 0))
-            second.sizeToFit(NSMakeSize(20, 0))
-            
-            let effectiveOk = button.frame.width
-            let effectiveSecond = second.frame.width
-
-            var btnRect: NSRect
-            var secondRect: NSRect
-            if effectiveOk > btnwidth {
-                btnRect = CGRect(origin: CGPoint(x: frame.width - effectiveOk - 20, y: size.height - 20 - 40), size: CGSize(width: effectiveOk, height: 40))
-                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: frame.width - 40 - effectiveOk - 10, height: 40))
-            } else if effectiveSecond > btnwidth {
-                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: effectiveSecond, height: 40))
-                btnRect = CGRect(origin: CGPoint(x: secondRect.maxX, y: size.height - 20 - 40), size: CGSize(width: frame.width - 40 - effectiveSecond - 10, height: 40))
-            } else {
-                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
-                btnRect = CGRect(origin: CGPoint(x: secondRect.maxX + 10, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
-            }
-            ContainedViewLayoutTransition.immediate.updateFrame(view: button, frame: btnRect)
-            ContainedViewLayoutTransition.immediate.updateFrame(view: second, frame: secondRect)
-
-        } else {
-            ContainedViewLayoutTransition.immediate.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: size.width - 40, height: 40)))
-        }
-        
         var y: CGFloat = 0
         for (i, view) in optionsView.subviews.enumerated() {
             let view = view as! OptionView
@@ -622,10 +677,10 @@ private final class RowView : TableRowView {
             y += 10
         }
         if let disclaimer = disclaimer {
-            transition.updateFrame(view: disclaimer, frame: disclaimer.centerFrameX(y: button.frame.minY - 20 - disclaimer.frame.height))
+            transition.updateFrame(view: disclaimer, frame: disclaimer.centerFrameX(y: size.height - 20 - disclaimer.frame.height))
         }
         if let descriptionView = descriptionView {
-            let y = disclaimer?.frame.minY ?? button.frame.minY
+            let y = disclaimer?.frame.minY ?? size.height
             transition.updateFrame(view: descriptionView, frame: descriptionView.centerFrameX(y: y - 10 - descriptionView.frame.height))
         }
        
@@ -642,8 +697,24 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, presentation: arguments.presentation, state: state, toggle: arguments.toggle, action: arguments.action, secondAction: arguments.secondAction)
+        return RowItem(initialSize, presentation: arguments.presentation, state: state, toggle: arguments.toggle)
     }))
+    
+    if let footer = state.data.footer {
+        entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("footer"), equatable: .init(footer), comparable: nil, item: { initialSize, stableId in
+            return footer.value(initialSize, stableId, arguments.presentation)
+        }))
+        entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("footer1"), equatable: .init(footer), comparable: nil, item: { initialSize, stableId in
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, backgroundColor: .clear)
+        }))
+    }
+    
+    entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("buttons"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        return ButtonsItem(initialSize, stableId: stableId, presentation: arguments.presentation, state: state, action: arguments.action, secondAction: arguments.secondAction)
+    }))
+    
+    
+   
     
     return entries
 }
@@ -655,6 +726,14 @@ struct ModalAlertData : Equatable {
         var value:(NSSize, AnyHashable, TelegramPresentationTheme)->TableRowItem
         
         static func ==(lhs: Header, rhs: Header) -> Bool {
+            return true
+        }
+    }
+    
+    struct Footer : Equatable {
+        var value:(NSSize, AnyHashable, TelegramPresentationTheme)->TableRowItem
+        
+        static func ==(lhs: Footer, rhs: Footer) -> Bool {
             return true
         }
     }
@@ -683,7 +762,8 @@ struct ModalAlertData : Equatable {
     var disclaimer: String?
     
     var header: Header?
-    
+    var footer: Footer?
+
     var hasClose: Bool {
         switch mode {
         case .alert:

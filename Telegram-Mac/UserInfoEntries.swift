@@ -179,6 +179,10 @@ class UserInfoArguments : PeerInfoArguments {
         self.pullNavigation()?.push(EditBotUsernameController(context: context, peerId: peerId))
     }
     
+    func openAffiliate() {
+        self.pullNavigation()?.push(Affiliate_StartController(context: context, peerId: peerId))
+    }
+    
     func openStarsBalance() {
         if let revenueContext = getStarsContext?() {
             self.pullNavigation()?.push(FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: revenueContext))
@@ -1018,6 +1022,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case botPermissionsStatus(sectionId:Int, value: Bool, viewType: GeneralViewType)
     case botPermissionsGeo(sectionId:Int, value: Bool, viewType: GeneralViewType)
     case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botAffiliate(sectionId:Int, text: String, viewType: GeneralViewType)
     case botEditIntro(sectionId:Int, viewType: GeneralViewType)
     case botEditCommands(sectionId:Int, viewType: GeneralViewType)
     case botEditSettings(sectionId:Int, viewType: GeneralViewType)
@@ -1082,6 +1087,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case .botPermissionsGeo(_, _, let viewType):
             return viewType
         case .botEditUsername(_, _, let viewType):
+            return viewType
+        case .botAffiliate(_, _, let viewType):
             return viewType
         case .botEditIntro(_, let viewType):
             return viewType
@@ -1171,6 +1178,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botPermissionsStatus(sectionId, value, _): return .botPermissionsStatus(sectionId: sectionId, value: value, viewType: viewType)
         case let .botPermissionsGeo(sectionId, value, _): return .botPermissionsGeo(sectionId: sectionId, value: value, viewType: viewType)
         case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botAffiliate(sectionId, text, _): return .botAffiliate(sectionId: sectionId, text: text, viewType: viewType)
         case let .botEditIntro(sectionId, _): return .botEditIntro(sectionId: sectionId, viewType: viewType)
         case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
         case let .botEditSettings(sectionId, _): return .botEditSettings(sectionId: sectionId, viewType: viewType)
@@ -1340,6 +1348,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botEditUsername(sectionId, text, viewType):
             switch entry {
             case .botEditUsername(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botAffiliate(sectionId, text, viewType):
+            switch entry {
+            case .botAffiliate(sectionId, text, viewType):
                 return true
             default:
                 return false
@@ -1632,90 +1647,92 @@ enum UserInfoEntry: PeerInfoEntry {
             return 104
         case .botEditUsername:
             return 105
-        case .botStarsBalance:
+        case .botAffiliate:
             return 106
-        case .botTonBalance:
+        case .botStarsBalance:
             return 107
-        case .botPermissionsHeader:
+        case .botTonBalance:
             return 108
-        case .botPermissionsStatus:
+        case .botPermissionsHeader:
             return 109
-        case .botPermissionsGeo:
+        case .botPermissionsStatus:
             return 110
-        case .botEditIntro:
+        case .botPermissionsGeo:
             return 111
-        case .botEditCommands:
+        case .botEditIntro:
             return 112
-        case .botEditSettings:
+        case .botEditCommands:
             return 113
-        case .botEditInfo:
+        case .botEditSettings:
             return 114
-        case .userName:
+        case .botEditInfo:
             return 115
-        case .scam:
+        case .userName:
             return 116
-        case .about:
+        case .scam:
             return 117
-        case .aboutInfo:
+        case .about:
             return 118
-        case .bio:
+        case .aboutInfo:
             return 119
-        case .phoneNumber:
+        case .bio:
             return 120
-        case .birthday:
+        case .phoneNumber:
             return 121
-        case .peerId:
+        case .birthday:
             return 122
-        case .businessHours:
+        case .peerId:
             return 123
-        case .businessLocation:
+        case .businessHours:
             return 124
-        case .sendMessage:
+        case .businessLocation:
             return 125
-        case .botAddToGroup:
+        case .sendMessage:
             return 126
-        case .botAddToGroupInfo:
+        case .botAddToGroup:
             return 127
+        case .botAddToGroupInfo:
+            return 128
         case .botShare:
-            return 128
-        case .botSettings:
-            return 128
-        case .botHelp:
             return 129
-        case .botPrivacy:
+        case .botSettings:
             return 130
-        case .shareContact:
+        case .botHelp:
             return 131
-        case .shareMyInfo:
+        case .botPrivacy:
             return 132
-        case .addContact:
+        case .shareContact:
             return 133
-        case .startSecretChat:
+        case .shareMyInfo:
             return 134
-        case .sharedMedia:
+        case .addContact:
             return 135
-        case .notifications:
+        case .startSecretChat:
             return 136
-        case .encryptionKey:
+        case .sharedMedia:
             return 137
-        case .groupInCommon:
+        case .notifications:
             return 138
+        case .encryptionKey:
+            return 139
+        case .groupInCommon:
+            return 140
         case let .setPhoto(_, _, type, _, _):
-            return 139 + type.rawValue
+            return 141 + type.rawValue
         case .resetPhoto:
-            return 142
-        case .setPhotoInfo:
-            return 143
-        case .block:
-            return 144
-        case .reportReaction:
             return 145
-        case .deleteChat:
+        case .setPhotoInfo:
             return 146
-        case .deleteContact:
+        case .block:
             return 147
-        case .media:
+        case .reportReaction:
             return 148
+        case .deleteChat:
+            return 149
+        case .deleteContact:
+            return 150
+        case .media:
+            return 151
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1734,6 +1751,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setLastName(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botEditUsername(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botAffiliate(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botStarsBalance(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1863,6 +1882,8 @@ enum UserInfoEntry: PeerInfoEntry {
             }, limit: 255)
         case let .botEditUsername(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
+        case let .botAffiliate(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotAffiliate, icon: NSImage(resource: .iconBotAffiliate).precomposed(flipVertical: true), type: .nextContext(text), viewType: viewType, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))
         case let .botStarsBalance(_, text, viewType):
             let icon = generateStarBalanceIcon(text)
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalanceNew, icon: theme.icons.peerInfoStarsBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openStarsBalance)
@@ -2273,7 +2294,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     
                     if peer.botInfo?.flags.contains(.canEdit) == true {
                         
-                        entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
+                        entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
+                        //TODOLANG
+                        entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: "Off", viewType: .lastItem))
 
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1

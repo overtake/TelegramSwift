@@ -26,7 +26,7 @@ final class InputDataTableBasedItem : GeneralRowItem {
         let right: Right
         
         var height: CGFloat {
-            return 24 + right.name.layoutSize.height
+            return (left?.layoutSize.height ?? 16) + 8 + right.name.layoutSize.height
         }
         
         func measure(_ width: CGFloat, basic: CGFloat) {
@@ -44,8 +44,8 @@ final class InputDataTableBasedItem : GeneralRowItem {
                 right.name.measure(width: width - 20 - additional)
             }
         }
-        func prepare() {
-            left?.measure(width: .greatestFiniteMagnitude)
+        func prepare(width: CGFloat) {
+            left?.measure(width: width / 1.5 - 40)
         }
         var leftWidth: CGFloat {
             if let left {
@@ -62,7 +62,7 @@ final class InputDataTableBasedItem : GeneralRowItem {
         self.context = context
         super.init(initialSize, stableId: stableId, viewType: viewType)
         for row in rows {
-            row.prepare()
+            row.prepare(width: initialSize.width)
         }
         assert(rows.count != 0)
     }
