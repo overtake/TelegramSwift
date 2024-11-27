@@ -16,7 +16,7 @@ private enum ChunkMediaPlayerPlaybackAction {
     case pause
 }
 
-public enum ChunkMediaPlayerSeek {
+public enum MediaPlayerSeek {
     case none
     case start
     case automatic
@@ -47,7 +47,7 @@ private final class ChunkMediaPlayerLoadedState {
     var lostAudioSession: Bool = false
 }
 
-private struct ChunkMediaPlayerSeekState {
+private struct MediaPlayerSeekState {
     let duration: Double
 }
 
@@ -106,6 +106,7 @@ public enum ChunkMediaPlayerStreaming {
         }
     }
 }
+
 
 private final class MediaPlayerAudioRendererContext {
     let renderer: MediaPlayerAudioRenderer
@@ -440,7 +441,7 @@ private final class ChunkMediaPlayerContext {
         }
     }
     
-    fileprivate func playOnceWithSound(playAndRecord: Bool, seek: ChunkMediaPlayerSeek = .start) {
+    fileprivate func playOnceWithSound(playAndRecord: Bool, seek: MediaPlayerSeek = .start) {
         assert(self.queue.isCurrent())
         
         if !self.enableSound {
@@ -489,7 +490,7 @@ private final class ChunkMediaPlayerContext {
         }
     }
     
-    fileprivate func continuePlayingWithoutSound(seek: ChunkMediaPlayerSeek) {
+    fileprivate func continuePlayingWithoutSound(seek: MediaPlayerSeek) {
         if self.enableSound {
             self.lastStatusUpdateTimestamp = nil
             
@@ -975,7 +976,27 @@ private final class ChunkMediaPlayerContext {
 
 }
 
-public final class ChunkMediaPlayer {
+public protocol ChunkMediaPlayer: AnyObject {
+    var status: Signal<MediaPlayerStatus, NoError> { get }
+    var audioLevelEvents: Signal<Float, NoError> { get }
+    var actionAtEnd: ChunkMediaPlayerActionAtEnd { get set }
+    
+    func play()
+    func playOnceWithSound(playAndRecord: Bool, seek: MediaPlayerSeek)
+    func setSoundMuted(soundMuted: Bool)
+    func continueWithOverridingAmbientMode(isAmbient: Bool)
+    func continuePlayingWithoutSound(seek: MediaPlayerSeek)
+    func setContinuePlayingWithoutSoundOnLostAudioSession(_ value: Bool)
+    func setForceAudioToSpeaker(_ value: Bool)
+    func setKeepAudioSessionWhilePaused(_ value: Bool)
+    func pause()
+    func togglePlayPause(faded: Bool)
+    func seek(timestamp: Double, play: Bool?)
+    func setBaseRate(_ baseRate: Double)
+    func setVolume(volume: Float)
+}
+
+public class ChunkMediaPlayerImpl : ChunkMediaPlayer {
     private let queue = Queue()
     private var contextRef: Unmanaged<ChunkMediaPlayerContext>?
     
@@ -1061,7 +1082,7 @@ public final class ChunkMediaPlayer {
         }
     }
     
-    public func playOnceWithSound(playAndRecord: Bool, seek: ChunkMediaPlayerSeek = .start) {
+    public func playOnceWithSound(playAndRecord: Bool, seek: MediaPlayerSeek = .start) {
         self.queue.async {
             if let context = self.contextRef?.takeUnretainedValue() {
                 context.playOnceWithSound(playAndRecord: playAndRecord, seek: seek)
@@ -1093,7 +1114,7 @@ public final class ChunkMediaPlayer {
         }
     }
     
-    public func continuePlayingWithoutSound(seek: ChunkMediaPlayerSeek = .start) {
+    public func continuePlayingWithoutSound(seek: MediaPlayerSeek = .start) {
         self.queue.async {
             if let context = self.contextRef?.takeUnretainedValue() {
                 context.continuePlayingWithoutSound(seek: seek)

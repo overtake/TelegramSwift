@@ -575,7 +575,8 @@ private final class Arguments {
     let loadMore:(State.TransactionMode)->Void
     let toggleTransactionType:(State.TransactionMode)->Void
     let openStarsTransaction:(Star_Transaction)->Void
-    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping(State.TransactionMode)->Void, toggleTransactionType:@escaping(State.TransactionMode)->Void, openStarsTransaction:@escaping(Star_Transaction)->Void, withdrawStars:@escaping()->Void) {
+    let openAffiliate:()->Void
+    init(context: AccountContext, interactions: TextView_Interactions, updateState:@escaping(Updated_ChatTextInputState)->Void, executeLink:@escaping(String)->Void, withdraw:@escaping()->Void, promo: @escaping()->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, transaction:@escaping(State.Transaction)->Void, toggleAds:@escaping()->Void, loadMore:@escaping(State.TransactionMode)->Void, toggleTransactionType:@escaping(State.TransactionMode)->Void, openStarsTransaction:@escaping(Star_Transaction)->Void, withdrawStars:@escaping()->Void, openAffiliate:@escaping()->Void) {
         self.context = context
         self.interactions = interactions
         self.updateState = updateState
@@ -589,6 +590,7 @@ private final class Arguments {
         self.toggleTransactionType = toggleTransactionType
         self.openStarsTransaction = openStarsTransaction
         self.withdrawStars = withdrawStars
+        self.openAffiliate = openAffiliate
     }
 }
 
@@ -990,6 +992,12 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         index += 1
         
     }
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    //TODOLANG
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("affiliate"), data: .init(name: "Earn Stars", color: theme.colors.text, icon: NSImage(resource: .iconAffiliateEarnStars).precomposed(flipVertical: true), type: .next, viewType: .singleItem, description: "Distribute links to mini apps and earn a share of their revenue in Stars.", descTextColor: theme.colors.grayText, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))))
+    
     
 
     if let transactionsState = state.transactionsState, let starsState = state.starsState, let starsTransactionsState = starsState.transactionsState {
@@ -1442,6 +1450,8 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId, onl
             }, callback: processWithdraw), for: context.window)
 
         }
+    }, openAffiliate: {
+        context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: peerId))
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

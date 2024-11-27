@@ -45,6 +45,85 @@ private final class HeaderItem : GeneralRowItem {
 }
 
 private final class HeaderItemView : GeneralRowView {
+    
+    
+    private final class PeerView: Control {
+        private let avatarView = AvatarControl(font: .avatar(13))
+        private let nameView: TextView = TextView()
+        
+        private var select: ImageView?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(avatarView)
+            addSubview(nameView)
+            
+            avatarView.userInteractionEnabled = false
+            
+            nameView.userInteractionEnabled = false
+            self.avatarView.setFrameSize(NSMakeSize(26, 26))
+            
+            layer?.cornerRadius = 12.5
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(_ peer: EnginePeer, sendas: [SendAsPeer], _ context: AccountContext, maxWidth: CGFloat) {
+            self.avatarView.setPeer(account: context.account, peer: peer._asPeer())
+            
+            let nameLayout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: sendas.isEmpty ? theme.colors.text : theme.colors.accent, font: .normal(.title)), maximumNumberOfLines: 1)
+            nameLayout.measure(width: maxWidth)
+            
+            nameView.update(nameLayout)
+            
+            self.userInteractionEnabled = !sendas.isEmpty
+            self.scaleOnClick = true
+            
+            if !sendas.isEmpty {
+                let current: ImageView
+                if let view = self.select {
+                    current = view
+                } else {
+                    current = ImageView()
+                    self.select = current
+                    addSubview(current)
+                }
+                current.image = NSImage(resource: .iconAffiliateExpand).precomposed(theme.colors.accent)
+                current.sizeToFit()
+            } else if let select {
+                performSubviewRemoval(select, animated: false)
+                self.select = nil
+            }
+            
+            if !sendas.isEmpty {
+                self.contextMenu = {
+                    let menu = ContextMenu()
+                    for senda in sendas {
+                        menu.addItem(ContextSendAsMenuItem(peer: senda, context: context, isSelected: true))
+                    }
+                    return menu
+                }
+            } else {
+                self.contextMenu = nil
+            }
+
+            setFrameSize(NSMakeSize(avatarView.frame.width + 10 + nameLayout.layoutSize.width + 10 + (sendas.isEmpty ? 0 : 16), 26))
+            
+            self.background = sendas.isEmpty ? theme.colors.grayForeground : theme.colors.accent.withAlphaComponent(0.2)
+        }
+        
+        override func layout() {
+            super.layout()
+            nameView.centerY(x: self.avatarView.frame.maxX + 10, addition: -1)
+            
+            if let select {
+                select.centerY(x: nameView.frame.maxX + 4)
+            }
+        }
+    }
+    
+    
     private let fromPeer = AvatarControl(font: .avatar(20))
     private let toPeer = AvatarControl(font: .avatar(20))
     private let next = ImageView()
@@ -100,7 +179,7 @@ private final class HeaderItemView : GeneralRowView {
         next.image = NSImage(resource: .iconAffiliateChevron).precomposed(theme.colors.grayIcon)
         next.sizeToFit()
         
-        badge.image = generateImage(NSMakeSize(34, 34), contextGenerator: { size, ctx in
+        badge.image = generateImage(NSMakeSize(35, 35), contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
             ctx.setFillColor(theme.colors.background.cgColor)
             ctx.round(size, size.width / 2)
@@ -139,20 +218,30 @@ private final class HeaderItemView : GeneralRowView {
 
 
 struct AffiliateProgram : Equatable {
+    struct Connected : Equatable {
+        var url: String
+        var revenue: Int64
+        var participants: Int64
+    }
     var peer: EnginePeer
     var commission: Int32
     var commission2: Int32
     var duration: Int32
     var date: Int32
     var revenue: Int32
+    var connected: Connected?
 }
+
+
 
 private final class Arguments {
     let context: AccountContext
     let close:()->Void
-    init(context: AccountContext, close:@escaping()->Void) {
+    let join:()->Void
+    init(context: AccountContext, close:@escaping()->Void, join:@escaping()->Void) {
         self.close = close
         self.context = context
+        self.join = join
     }
 }
 
@@ -183,9 +272,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_button, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: "Join Program", viewType: .legacy, action: {
-            
-        }, inset: .init(left: 10, right: 10))
+        return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: "Join Program", viewType: .legacy, action: arguments.join, inset: .init(left: 10, right: 10))
     }))
     
     
@@ -204,7 +291,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
 
-func Affiliate_ProgramPreview(context: AccountContext, peerId: PeerId, program: AffiliateProgram) -> InputDataModalController {
+func Affiliate_ProgramPreview(context: AccountContext, peerId: PeerId, program: AffiliateProgram, joined:@escaping(AffiliateProgram)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -235,6 +322,15 @@ func Affiliate_ProgramPreview(context: AccountContext, peerId: PeerId, program: 
     }))
     
     let arguments = Arguments(context: context, close: {
+        close?()
+    }, join: {
+        let signal = context.engine.peers.connectStarRefBot(id: peerId, botId: program.peer.id)
+        
+        _ = showModalProgress(signal: signal, for: window).startStandalone(next: { value in
+            joined(.init(peer: value.peer, commission: value.commissionPermille, commission2: 0, duration: value.durationMonths ?? .max, date: 0, revenue: 0, connected: .init(url: value.url, revenue: value.revenue, participants: value.participants)))
+        })
+        //TODOLANG
+        showModalText(for: window, text: "You have successfully connected to referal program")
         close?()
     })
     

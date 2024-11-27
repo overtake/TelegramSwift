@@ -50,10 +50,10 @@ private final class PromoItem : GeneralRowItem {
     
     override var height: CGFloat {
         var height: CGFloat = 0
-        height += 20
+        height += 15
         for option in options {
             height += option.size.height
-            height += 20
+            height += 15
         }
         return height
     }
@@ -115,13 +115,13 @@ private final class PromoItemView: GeneralContainableRowView {
     override func layout() {
         super.layout()
         
-        optionsView.centerX(y: 20)
+        optionsView.centerX(y: 15)
         
         var y: CGFloat = 0
         for subview in optionsView.subviews {
             subview.centerX(y: y)
             y += subview.frame.height
-            y += 20
+            y += 15
         }
     }
     
@@ -147,7 +147,7 @@ private final class PromoItemView: GeneralContainableRowView {
             view.setFrameSize(option.size)
             optionsSize = NSMakeSize(max(option.width, optionsSize.width), option.size.height + optionsSize.height)
             if i != item.options.count - 1 {
-                optionsSize.height += 20
+                optionsSize.height += 15
             }
         }
         
@@ -202,18 +202,29 @@ private final class AffiliateRowItem: GeneralRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items: [ContextMenuItem] = []
         
-        items.append(.init("Open App", handler: {
-            
+        
+        items.append(.init("Open App", handler: { [weak self] in
+            if let item = self?.item {
+                self?.arguments.openApp(item)
+            }
         }, itemImage: MenuAnimation.menu_folder_bot.value))
         
-        items.append(.init("Copy Link", handler: {
+        if item.connected != nil {
+            items.append(.init("Copy Link", handler: { [weak self] in
+                if let item = self?.item {
+                    self?.arguments.copyToClipboard(item)
+                }
+            }, itemImage: MenuAnimation.menu_copy_link.value))
             
-        }, itemImage: MenuAnimation.menu_copy_link.value))
-        
-        items.append(.init("Leave", handler: {
+            items.append(.init("Leave", handler: { [weak self] in
+                if let item = self?.item {
+                    self?.arguments.leave(item)
+                }
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
             
-        }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+        }
         
+ 
         return .single(items)
     }
     
@@ -236,6 +247,8 @@ private final class AffiliateRowView : GeneralContainableRowView {
     
     private var commission2: TextView?
     private var plus: TextView?
+    
+    private var linkBadge: ImageView?
 
     
     private let duration = TextView()
@@ -277,7 +290,11 @@ private final class AffiliateRowView : GeneralContainableRowView {
             guard let item = self?.item as? AffiliateRowItem else {
                 return
             }
-            item.arguments.open(item.item)
+            if item.item.connected != nil {
+                item.arguments.openConnected(item.item)
+            } else {
+                item.arguments.open(item.item)
+            }
         }, for: .Click)
     }
     
@@ -302,7 +319,6 @@ private final class AffiliateRowView : GeneralContainableRowView {
             return
         }
         
-        
         self.commission.update(item.commissionLayout)
         self.duration.update(item.durationLayout)
         self.title.update(item.titleLayout)
@@ -313,6 +329,7 @@ private final class AffiliateRowView : GeneralContainableRowView {
         commission.layer?.cornerRadius = 4
         
         avatar.setPeer(account: item.arguments.context.account, peer: item.item.peer._asPeer())
+        avatar.userInteractionEnabled = false
         
         next.image = theme.icons.generalNext
         next.sizeToFit()
@@ -357,6 +374,35 @@ private final class AffiliateRowView : GeneralContainableRowView {
             self.plus = nil
         }
         
+        if let _ = item.item.connected {
+            let current: ImageView
+            if let view = self.linkBadge {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.linkBadge = current
+            }
+            
+            current.image = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+                ctx.clear(size.bounds)
+                ctx.round(size, size.width / 2)
+                ctx.setFillColor(theme.colors.background.cgColor)
+                ctx.fill(size.bounds)
+                ctx.setFillColor(theme.colors.accent.cgColor)
+                ctx.fillEllipse(in: size.bounds.insetBy(dx: 2, dy: 2))
+                
+                let image = NSImage(resource: .iconAffiliateLinkSmallBadge).precomposed(theme.colors.underSelectedColor)
+                ctx.draw(image, in: size.bounds.focus(image.systemSize))
+                
+            })
+            
+            current.sizeToFit()
+        } else if let view = self.linkBadge {
+            performSubviewRemoval(view, animated: animated)
+            self.linkBadge = nil
+        }
+        
         needsLayout = true
     }
     override var additionBorderInset: CGFloat {
@@ -381,6 +427,9 @@ private final class AffiliateRowView : GeneralContainableRowView {
             self.duration.setFrameOrigin(NSMakePoint(self.commission.frame.maxX + 5, frame.height - 7 - self.duration.frame.height))
         }
         
+        if let linkBadge {
+            linkBadge.setFrameOrigin(NSMakePoint(avatar.frame.maxX - linkBadge.frame.width + 4, avatar.frame.maxY - linkBadge.frame.height))
+        }
         
         next.centerY(x: containerView.frame.width - 12 - next.frame.width)
     }
@@ -523,10 +572,18 @@ private final class Arguments {
     let context: AccountContext
     let toggleSort:(State.Sort)->Void
     let open:(AffiliateProgram)->Void
-    init(context: AccountContext, toggleSort:@escaping(State.Sort)->Void, open:@escaping(AffiliateProgram)->Void) {
+    let openConnected:(AffiliateProgram)->Void
+    let openApp:(AffiliateProgram)->Void
+    let copyToClipboard:(AffiliateProgram)->Void
+    let leave: (AffiliateProgram) ->Void
+    init(context: AccountContext, toggleSort:@escaping(State.Sort)->Void, open:@escaping(AffiliateProgram)->Void, openConnected:@escaping(AffiliateProgram)->Void, openApp:@escaping(AffiliateProgram)->Void, copyToClipboard:@escaping(AffiliateProgram)->Void, leave: @escaping(AffiliateProgram)->Void) {
         self.context = context
         self.toggleSort = toggleSort
         self.open = open
+        self.openConnected = openConnected
+        self.openApp = openApp
+        self.copyToClipboard = copyToClipboard
+        self.leave = leave
     }
 }
 
@@ -548,19 +605,23 @@ private struct State : Equatable {
             }
         }
     }
-    var peers: [AffiliateProgram] = []
-    
+    var list: [AffiliateProgram] = []
+    var connectedList: [AffiliateProgram] = []
+
+    var listState: TelegramSuggestedStarRefBotList?
+    var connectedState: TelegramConnectedStarRefBotList?
+
     var sort: Sort = .date
     
     
     var sorted: [AffiliateProgram] {
         switch sort {
         case .date:
-            return self.peers.sorted(by: { $0.date > $1.date })
+            return self.list.sorted(by: { $0.date > $1.date })
         case .commission:
-            return self.peers.sorted(by: { $0.commission > $1.commission })
+            return self.list.sorted(by: { $0.commission > $1.commission })
         case .revenue:
-            return self.peers.sorted(by: { $0.revenue > $1.revenue })
+            return self.list.sorted(by: { $0.revenue > $1.revenue })
         }
     }
 }
@@ -570,61 +631,104 @@ private func _id_peer_id(_ peerId: PeerId) -> InputDataIdentifier {
     return .init("_id_peer_id_\(peerId.toInt64())")
 }
 
+private func _id_peer_id_connected(_ peerId: PeerId) -> InputDataIdentifier {
+    return .init("_id_peer_id_connected\(peerId.toInt64())")
+}
+
 private let _id_promo = InputDataIdentifier("_id_promo")
 
-private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, arguments: Arguments, onlyDemo: Bool) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+    if !onlyDemo {
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return HeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: theme, peer: nil, viewType: .legacy)
+        }))
+       
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_promo, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return PromoItem(initialSize, stableId: stableId, context: arguments.context)
+        }))
+        
+        if !state.connectedList.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
+            
+        if !state.connectedList.isEmpty {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MY PROGRAMS"), data: .init(viewType: .textTopItem)))
+            index += 1
+            
+            struct Tuple : Equatable {
+                var peer: AffiliateProgram
+                var viewType: GeneralViewType
+            }
+          
+            var tuples: [Tuple] = []
+            for (i, peer) in state.connectedList.enumerated() {
+                tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.list, for: i)))
+            }
+            
+            for tuple in tuples {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id_connected(tuple.peer.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                    return AffiliateRowItem(initialSize, stableId: stableId, item: tuple.peer, arguments: arguments, viewType: tuple.viewType)
+                }))
+            }
+        }
+    }
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: theme, peer: nil, viewType: .legacy)
-    }))
-   
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_promo, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PromoItem(initialSize, stableId: stableId, context: arguments.context)
-    }))
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+    if !state.list.isEmpty {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
     
-    let sortString = NSMutableAttributedString()
-    sortString.append(string: "SORT BY", color: theme.colors.listGrayText, font: .normal(.text))
-    sortString.append(string: " ", color: theme.colors.listGrayText, font: .normal(.text))
-    sortString.append(string: state.sort.string.uppercased(), color: theme.colors.accent, font: .normal(.text))
+    if !state.list.isEmpty {
+        
+        if !onlyDemo {
+            let sortString = NSMutableAttributedString()
+            sortString.append(string: "SORT BY", color: theme.colors.listGrayText, font: .normal(.text))
+            sortString.append(string: " ", color: theme.colors.listGrayText, font: .normal(.text))
+            sortString.append(string: state.sort.string.uppercased(), color: theme.colors.accent, font: .normal(.text))
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(" "), data: .init(viewType: .textTopItem, rightItem: .init(isLoading: false, text: sortString, contextMenu: {
-        var items: [ContextMenuItem] = []
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(" "), data: .init(viewType: .textTopItem, rightItem: .init(isLoading: false, text: sortString, contextMenu: {
+                var items: [ContextMenuItem] = []
+                
+                let sortAll: [State.Sort] = [.date, .revenue, .commission]
+                
+                for sort in sortAll {
+                    items.append(ContextMenuItem(sort.string, handler: {
+                        arguments.toggleSort(sort)
+                    }))
+                }
+                return items
+            }, afterImage: NSImage(resource: .iconAffiliateExpand).precomposed(theme.colors.accent)))))
+            index += 1
+        }
         
-        let sortAll: [State.Sort] = [.date, .revenue, .commission]
         
-        for sort in sortAll {
-            items.append(ContextMenuItem(sort.string, handler: {
-                arguments.toggleSort(sort)
+        
+        struct Tuple : Equatable {
+            var peer: AffiliateProgram
+            var viewType: GeneralViewType
+        }
+      
+        var tuples: [Tuple] = []
+        for (i, peer) in state.sorted.enumerated() {
+            tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.list, for: i)))
+        }
+        
+        for tuple in tuples {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(tuple.peer.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                return AffiliateRowItem(initialSize, stableId: stableId, item: tuple.peer, arguments: arguments, viewType: tuple.viewType)
             }))
         }
-        return items
-    }, afterImage: NSImage(resource: .iconAffiliateExpand).precomposed(theme.colors.accent)))))
-    index += 1
-    
-    struct Tuple : Equatable {
-        var peer: AffiliateProgram
-        var viewType: GeneralViewType
-    }
-  
-    var tuples: [Tuple] = []
-    for (i, peer) in state.sorted.enumerated() {
-        tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.peers, for: i)))
-    }
-    
-    for tuple in tuples {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(tuple.peer.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-            return AffiliateRowItem(initialSize, stableId: stableId, item: tuple.peer, arguments: arguments, viewType: tuple.viewType)
-        }))
     }
     
     // entries
@@ -635,7 +739,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Affiliate_PeerController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo: Bool = false) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
@@ -647,27 +751,28 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId) -> InputD
         statePromise.set(stateValue.modify (f))
     }
     
-    let bots: Signal<[EnginePeer], NoError> = context.account.viewTracker.tailChatListView(groupId: .root, count: 100) |> take(1) |> map { value in
-        return value.0.entries.compactMap { value in
-            switch value {
-            case let .MessageEntry(data):
-                if let message = data.messages.first {
-                    if let peer = message.peers[message.id.peerId], peer.isBot {
-                        return EnginePeer(peer)
-                    }
-                }
-            default:
-                return nil
-            }
-            return nil
-        }
-    }
+    let connected: Signal<TelegramConnectedStarRefBotList?, NoError> = onlyDemo ? .single(nil) : context.engine.peers.requestConnectedStarRefBots(id: peerId, offset: nil, limit: 100)
     
-    actionsDisposable.add(bots.startStrict(next: { peers in
+    
+    
+    let bots = context.engine.peers.requestSuggestedStarRefBots(id: peerId, orderByCommission: true, offset: nil, limit: 100) |> take(1)
+    
+    actionsDisposable.add(combineLatest(bots, connected).startStrict(next: { list, connected in
         updateState { current in
             var current = current
-            current.peers = peers.map {
-                .init(peer: $0, commission: Int32.random(in: 1...90), commission2: Int32.random(in:0...50), duration: Int32.random(in: 3...36), date: context.timestamp - Int32.random(in: 0..<10000000), revenue: Int32.random(in: 0...100000000))
+            
+            current.listState = list
+            current.connectedState = connected
+
+            if let list {
+                current.list = list.items.map {
+                    .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: 0)
+                }
+            }
+            if let connected {
+                current.connectedList = connected.items.map {
+                    .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: 0, connected: .init(url: $0.url, revenue: $0.revenue, participants: $0.participants))
+                }
             }
             return current
         }
@@ -688,18 +793,38 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId) -> InputD
             return current
         }
     }, open: { program in
-        if Int32.random(in: 0..<Int32.max) % 2 == 0 {
-            showModal(with: Affiliate_ProgramPreview(context: context, peerId: peerId, program: program), for: window)
+        if onlyDemo {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: program.peer.id)
         } else {
-            showModal(with: Affiliate_LinkPreview(context: context, link: .init(count: Int32.random(in: 0..<100)), program: program, peerId: peerId), for: window)
+            let connected = stateValue.with { $0.connectedList.first(where: { $0.peer.id == program.peer.id })}
+            if let connected {
+                showModal(with: Affiliate_LinkPreview(context: context, program: connected, peerId: peerId), for: window)
+            } else {
+                showModal(with: Affiliate_ProgramPreview(context: context, peerId: peerId, program: program, joined: { program in
+                    updateState { current in
+                        var current = current
+                        current.connectedList.insert(program, at: 0)
+                        return current
+                    }
+                }), for: window)
+            }
         }
+    }, openConnected: { program in
+        showModal(with: Affiliate_LinkPreview(context: context, program: program, peerId: peerId), for: window)
+    }, openApp: { progam in
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: progam.peer.id)
+    }, copyToClipboard: { program in
+        copyToClipboard(program.connected!.url)
+        showModalText(for: window, text: strings().shareLinkCopied)
+    }, leave: { program in
+        
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        return InputDataSignalValue(entries: entries(state, arguments: arguments, onlyDemo: onlyDemo))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Affiliate Programs", removeAfterDisappear: false)
+    let controller = InputDataController(dataSignal: signal, title: onlyDemo ? "Existing Affiliate Programs" : "Affiliate Programs", removeAfterDisappear: false, hasDone: false)
     
     getController = { [weak controller] in
         return controller

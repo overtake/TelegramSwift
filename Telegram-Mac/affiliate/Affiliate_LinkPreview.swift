@@ -7,15 +7,15 @@ import Postbox
 
 
 private final class HeaderItem : GeneralRowItem {
-    fileprivate let link: AffliateLink
     fileprivate let peer: EnginePeer
+    fileprivate let program: AffiliateProgram
     fileprivate let sendas: [SendAsPeer]
     fileprivate let arguments: Arguments
     fileprivate let headerLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, link: AffliateLink, program: AffiliateProgram, peer: EnginePeer, sendas: [SendAsPeer], arguments: Arguments) {
-        self.link = link
+    init(_ initialSize: NSSize, stableId: AnyHashable, program: AffiliateProgram, peer: EnginePeer, sendas: [SendAsPeer], arguments: Arguments) {
         self.peer = peer
+        self.program = program
         self.sendas = sendas
         self.arguments = arguments
         
@@ -169,7 +169,7 @@ private final class HeaderItemView : GeneralRowView {
         
         override func layout() {
             super.layout()
-            nameView.centerY(x: self.avatarView.frame.maxX + 10)
+            nameView.centerY(x: self.avatarView.frame.maxX + 10, addition: -1)
             
             if let select {
                 select.centerY(x: nameView.frame.maxX + 4)
@@ -229,7 +229,7 @@ private final class HeaderItemView : GeneralRowView {
         header.update(item.headerLayout)
 
         
-        if item.link.count > 0 {
+        if item.program.connected!.participants > 0 {
             let current: JoinedBadge
             if let view = self.joined {
                 current = view
@@ -238,7 +238,7 @@ private final class HeaderItemView : GeneralRowView {
                 self.joined = current
                 addSubview(current)
             }
-            current.set(count: item.link.count)
+            current.set(count: Int32(item.program.connected!.participants))
         } else if let view = self.joined {
             performSubviewRemoval(view, animated: animated)
             self.joined = nil
@@ -264,10 +264,6 @@ private final class HeaderItemView : GeneralRowView {
 }
 
 
-struct AffliateLink : Equatable {
-    var link: String = "https://t.me/bums/+2Jf9fsmcKsd"
-    var count: Int32
-}
 
 private final class Arguments {
     let context: AccountContext
@@ -281,7 +277,6 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var link: AffliateLink
     var program: AffiliateProgram
     var peer: EnginePeer?
     
@@ -300,14 +295,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     if let peer = state.peer {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return HeaderItem(initialSize, stableId: stableId, link: state.link, program: state.program, peer: peer, sendas: state.sendAs, arguments: arguments)
+            return HeaderItem(initialSize, stableId: stableId, program: state.program, peer: peer, sendas: state.sendAs, arguments: arguments)
         }))
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("link"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link.link, font: .normal(.text), centerViewAlignment: true, hasBorder: nil, customTheme: .init(backgroundColor: theme.colors.grayForeground))
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.program.connected!.url, font: .normal(.text), centerViewAlignment: true, hasBorder: nil, customTheme: .init(backgroundColor: theme.colors.grayForeground))
         }))
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -333,11 +328,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func Affiliate_LinkPreview(context: AccountContext, link: AffliateLink, program: AffiliateProgram, peerId: PeerId) -> InputDataModalController {
+func Affiliate_LinkPreview(context: AccountContext, program: AffiliateProgram, peerId: PeerId) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(link: link, program: program)
+    let initialState = State(program: program)
     
     var close:(()->Void)? = nil
     
@@ -379,6 +374,7 @@ func Affiliate_LinkPreview(context: AccountContext, link: AffliateLink, program:
     let arguments = Arguments(context: context, dismiss: {
         close?()
     }, copyToClipboard: {
+        copyToClipboard(stateValue.with { $0.program.connected!.url })
         showModalText(for: window, text: strings().shareLinkCopied)
     })
     
