@@ -1112,9 +1112,10 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
         intrinsicDimensions.height = floor(intrinsicDimensions.height)
         self.intrinsicDimensions = intrinsicDimensions
         
+        self.playerView = MediaPlayerView()
+        
         var onSeeked:(()->Void)? = nil
-        self.player = ChunkMediaPlayer(
-            postbox: postbox,
+        self.player = ChunkMediaPlayerV2(
             partsState: self.chunkPlayerPartsState.get(),
             video: true,
             enableSound: true,
@@ -1122,13 +1123,9 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
             volume: volume,
             onSeeked: {
                 onSeeked?()
-            }
+            }, playerNode: playerView
         )
-        
-        self.playerView = MediaPlayerView()
-        self.player.attachPlayerNode(self.playerView)
-        
-        
+
      
         
         super.init(frame: .zero)
@@ -1281,7 +1278,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     }
     
     fileprivate func onSetCurrentTime(timestamp: Double) {
-        self.player.seek(timestamp: timestamp)
+        self.player.seek(timestamp: timestamp, play: nil)
     }
     
     fileprivate func onPlay() {
@@ -1427,7 +1424,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     }
     
     public func playOnceWithSound(playAndRecord: Bool, actionAtEnd: MediaPlayerActionAtEnd) {
-        self.player.playOnceWithSound(playAndRecord: playAndRecord)
+        self.player.playOnceWithSound(playAndRecord: playAndRecord, seek: .none)
     }
     
     
@@ -1462,7 +1459,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     
     public func togglePlayPause() {
         assert(Queue.mainQueue().isCurrent())
-        self.player.togglePlayPause()
+        self.player.togglePlayPause(faded: false)
     }
     
     public func setSoundEnabled(_ value: Bool) {

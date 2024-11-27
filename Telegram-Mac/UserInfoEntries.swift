@@ -179,8 +179,8 @@ class UserInfoArguments : PeerInfoArguments {
         self.pullNavigation()?.push(EditBotUsernameController(context: context, peerId: peerId))
     }
     
-    func openAffiliate() {
-        self.pullNavigation()?.push(Affiliate_StartController(context: context, peerId: peerId))
+    func openAffiliate(starRefProgram: TelegramStarRefProgram?) {
+        self.pullNavigation()?.push(Affiliate_StartController(context: context, peerId: peerId, starRefProgram: starRefProgram))
     }
     
     func openStarsBalance() {
@@ -1022,7 +1022,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case botPermissionsStatus(sectionId:Int, value: Bool, viewType: GeneralViewType)
     case botPermissionsGeo(sectionId:Int, value: Bool, viewType: GeneralViewType)
     case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
-    case botAffiliate(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botAffiliate(sectionId:Int, text: String, starRefProgram: TelegramStarRefProgram?, viewType: GeneralViewType)
     case botEditIntro(sectionId:Int, viewType: GeneralViewType)
     case botEditCommands(sectionId:Int, viewType: GeneralViewType)
     case botEditSettings(sectionId:Int, viewType: GeneralViewType)
@@ -1088,7 +1088,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return viewType
         case .botEditUsername(_, _, let viewType):
             return viewType
-        case .botAffiliate(_, _, let viewType):
+        case .botAffiliate(_, _, _, let viewType):
             return viewType
         case .botEditIntro(_, let viewType):
             return viewType
@@ -1178,7 +1178,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botPermissionsStatus(sectionId, value, _): return .botPermissionsStatus(sectionId: sectionId, value: value, viewType: viewType)
         case let .botPermissionsGeo(sectionId, value, _): return .botPermissionsGeo(sectionId: sectionId, value: value, viewType: viewType)
         case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
-        case let .botAffiliate(sectionId, text, _): return .botAffiliate(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botAffiliate(sectionId, text, starRefProgram, _): return .botAffiliate(sectionId: sectionId, text: text, starRefProgram: starRefProgram, viewType: viewType)
         case let .botEditIntro(sectionId, _): return .botEditIntro(sectionId: sectionId, viewType: viewType)
         case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
         case let .botEditSettings(sectionId, _): return .botEditSettings(sectionId: sectionId, viewType: viewType)
@@ -1352,9 +1352,9 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .botAffiliate(sectionId, text, viewType):
+        case let .botAffiliate(sectionId, text, starRefProgram, viewType):
             switch entry {
-            case .botAffiliate(sectionId, text, viewType):
+            case .botAffiliate(sectionId, text, starRefProgram, viewType):
                 return true
             default:
                 return false
@@ -1752,7 +1752,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .botEditUsername(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .botAffiliate(sectionId, _, _):
+        case let .botAffiliate(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botStarsBalance(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1882,8 +1882,10 @@ enum UserInfoEntry: PeerInfoEntry {
             }, limit: 255)
         case let .botEditUsername(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
-        case let .botAffiliate(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotAffiliate, icon: NSImage(resource: .iconBotAffiliate).precomposed(flipVertical: true), type: .nextContext(text), viewType: viewType, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))
+        case let .botAffiliate(_, text, starRefProgram, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotAffiliate, icon: NSImage(resource: .iconBotAffiliate).precomposed(flipVertical: true), type: .nextContext(text), viewType: viewType, action: {
+                arguments.openAffiliate(starRefProgram: starRefProgram)
+            }, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))
         case let .botStarsBalance(_, text, viewType):
             let icon = generateStarBalanceIcon(text)
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalanceNew, icon: theme.icons.peerInfoStarsBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openStarsBalance)
@@ -2296,7 +2298,20 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         
                         entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
                         //TODOLANG
-                        entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: "Off", viewType: .lastItem))
+                        let text: String
+                        if let program = cachedData.starRefProgram {
+                            let localizedDuration: String
+                            if let duration = program.durationMonths {
+                                localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : strings().timerYearsCountable(Int(duration / 12))
+                            } else {
+                                localizedDuration = "Lifetime"
+                            }
+                            text = "\(program.commissionPermille)%, \(localizedDuration)"
+                        } else {
+                            text = "Off"
+                        }
+                        
+                        entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: text, starRefProgram: cachedData.starRefProgram, viewType: .lastItem))
 
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1

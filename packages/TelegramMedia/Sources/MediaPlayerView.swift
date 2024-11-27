@@ -69,7 +69,7 @@ public final class MediaPlayerView: View {
     
     private var videoNode: MediaPlayerViewDisplayView
     
-    private var videoLayer: AVSampleBufferDisplayLayer?
+    private(set) var videoLayer: AVSampleBufferDisplayLayer?
         
     
     public var preventsCapture: Bool = false {

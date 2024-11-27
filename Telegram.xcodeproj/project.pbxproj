@@ -616,6 +616,9 @@
 		27A734492B7A7BB600AB4FD5 /* BusinessHoursController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */; };
 		27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */; };
 		27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */; };
+		27A7FBDA2CF5B20900AE9432 /* PreciseSliderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A7FBD92CF5B20700AE9432 /* PreciseSliderRowItem.swift */; };
+		27A7FBDC2CF73E8600AE9432 /* libdav1d.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */; };
+		27A7FBDD2CF73EE000AE9432 /* libdav1d.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		27AAAD57299F5F9E00F70A9A /* LiteModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAAD56299F5F9E00F70A9A /* LiteModeController.swift */; };
@@ -1747,6 +1750,7 @@
 		2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyEmptyRowItem.swift; sourceTree = "<group>"; };
 		2719D8132A1774BC00081079 /* StoryViewersModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewersModalController.swift; sourceTree = "<group>"; };
 		2719D8152A1F555500081079 /* StoryChatContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatContent.swift; sourceTree = "<group>"; };
+		271A195A2CF7485C00FAE5FB /* TelegramAudio */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramAudio; path = "submodules/telegram-ios/submodules/TelegramAudio"; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
@@ -2229,6 +2233,8 @@
 		27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessHoursController.swift; sourceTree = "<group>"; };
 		27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_unmuted.mp3; sourceTree = "<group>"; };
 		27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_recording_started.mp3; sourceTree = "<group>"; };
+		27A7FBD92CF5B20700AE9432 /* PreciseSliderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreciseSliderRowItem.swift; sourceTree = "<group>"; };
+		27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdav1d.a; path = "core-xprojects/dav1d/build/dav1d/lib/libdav1d.a"; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -3253,6 +3259,7 @@
 				27D43DCF27919229006968A6 /* libssl.a in Frameworks */,
 				27B6D04B2739388600C785C7 /* TelegramCore in Frameworks */,
 				27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */,
+				27A7FBDC2CF73E8600AE9432 /* libdav1d.a in Frameworks */,
 				278926CB27550CA100923087 /* KeyboardKey in Frameworks */,
 				2745FED9274F95CF00546B05 /* ApiCredentials in Frameworks */,
 				270375EB2C9CCE11003EC235 /* InAppSettings in Frameworks */,
@@ -3377,6 +3384,7 @@
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				27D43DB027917748006968A6 /* libssl.a in Frameworks */,
 				27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */,
+				27A7FBDD2CF73EE000AE9432 /* libdav1d.a in Frameworks */,
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
 				271891F82B08A7DB0008B238 /* LokiRng in Frameworks */,
@@ -4382,6 +4390,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				271A195A2CF7485C00FAE5FB /* TelegramAudio */,
 				27528F5A2CABE98E0003810A /* TelegramSystem */,
 				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
 				27B8361A2B5FCCF800E82683 /* Dock */,
@@ -4865,6 +4874,7 @@
 				D014AA272317DA0E00CE5362 /* themes */,
 				9F7B5FC922003D8C0087D020 /* wallpapers */,
 				C20CAD141FE436E300EFF8BF /* SelectSizeRowItem.swift */,
+				27A7FBD92CF5B20700AE9432 /* PreciseSliderRowItem.swift */,
 				9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */,
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
@@ -6542,6 +6552,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */,
 				2739A4AF2CABC4260065186B /* libopenh264.a */,
 				2703762E2CA1FEC4003EC235 /* libiconv.2.tbd */,
 				2703762D2CA1FE62003EC235 /* libSystem.B.tbd */,
@@ -8326,6 +8337,7 @@
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
+				27A7FBDA2CF5B20900AE9432 /* PreciseSliderRowItem.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,
 				C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */,
@@ -8709,6 +8721,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;
@@ -8764,6 +8777,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libopus/build/libopus/lib",
 					"$(PROJECT_DIR)/core-xprojects/libvpx/build/libvpx/lib",
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;
@@ -8815,6 +8829,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libopus/build/libopus/lib",
 					"$(PROJECT_DIR)/core-xprojects/libvpx/build/libvpx/lib",
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;
@@ -8935,6 +8950,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;

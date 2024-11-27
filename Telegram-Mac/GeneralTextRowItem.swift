@@ -325,6 +325,9 @@ class GeneralTextRowView : GeneralRowView {
             self.rightTextView = nil
             self.animatedView?.removeFromSuperview()
             self.animatedView = nil
+            
+            afterRightIcon?.removeFromSuperview()
+            afterRightIcon = nil
         }
 
         if item.clickable {
