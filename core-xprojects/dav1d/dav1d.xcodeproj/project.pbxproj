@@ -157,7 +157,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/dav1d/build.sh $PROJECT_DIR/../../submodules/telegram-ios/submodules/third-party/dav1d/dav1d $PROJECT_DIR/build\nfi\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/dav1d/build.sh $PROJECT_DIR/../../submodules/telegram-ios/third-party/dav1d/dav1d $PROJECT_DIR/build\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
