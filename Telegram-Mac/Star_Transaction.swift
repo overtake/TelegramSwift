@@ -73,8 +73,9 @@ private final class HeaderItem : GeneralRowItem {
         }
         
         let header: String
-        let incoming: Bool = transaction.count > 0
-        let amount: Int64
+        let incoming: Bool = transaction.count.value > 0
+        let amount: Double
+        
         if isGift {
             if purpose == .unavailableGift {
                 header = strings().giftUnavailable
@@ -88,13 +89,13 @@ private final class HeaderItem : GeneralRowItem {
                 }
             }
             if purpose.isStarGift {
-                amount = transaction.count
+                amount = transaction.count.totalValue
             } else {
-                amount = abs(transaction.count)
+                amount = abs(transaction.count.totalValue)
             }
         } else if transaction.flags.contains(.isReaction) {
             header = strings().starsTransactionPaidReaction
-            amount = transaction.count
+            amount = transaction.count.totalValue
         } else if let period = transaction.subscriptionPeriod {
             if period == 30 * 24 * 60 * 60 {
                 header = strings().starsSubscriptionPeriodMonthly
@@ -105,7 +106,10 @@ private final class HeaderItem : GeneralRowItem {
             } else {
                 header = strings().starsSubscriptionPeriodUnknown
             }
-            amount = transaction.count
+            amount = transaction.count.totalValue
+        } else if let commission = transaction.starrefCommissionPermille, transaction.starrefPeerId == nil {
+            header = strings().starsTransactionCommission("\(commission.decemial.string)%")
+            amount = transaction.count.totalValue
         } else {
             switch transaction.peer {
             case .appStore:
@@ -129,7 +133,7 @@ private final class HeaderItem : GeneralRowItem {
             case .apiLimitExtension:
                 header = strings().starsIntroTransactionTelegramBotApiTitle
             }
-            amount = transaction.count
+            amount = transaction.count.totalValue
         }
         
         self.incoming = incoming
@@ -306,9 +310,9 @@ private final class HeaderItem : GeneralRowItem {
         case let .starGift(gift, _, _, _, _, _, _, _):
             return gift.file
         case .unavailableGift:
-            return self.transaction.starGift?.file ?? LocalAnimatedSticker.bestForStarsGift(abs(transaction.count)).file
+            return self.transaction.starGift?.file ?? LocalAnimatedSticker.bestForStarsGift(abs(transaction.count.value)).file
         default:
-            return LocalAnimatedSticker.bestForStarsGift(abs(transaction.count)).file
+            return LocalAnimatedSticker.bestForStarsGift(abs(transaction.count.value)).file
         }
     }
     
@@ -657,7 +661,8 @@ private final class Arguments {
     let displayOnMyPage:()->Void
     let seeInProfile: () ->Void
     let sendGift:(PeerId)->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void) {
+    let openAffiliate:()->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void, openAffiliate:@escaping()->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
@@ -670,6 +675,7 @@ private final class Arguments {
         self.displayOnMyPage = displayOnMyPage
         self.seeInProfile = seeInProfile
         self.sendGift = sendGift
+        self.openAffiliate = openAffiliate
     }
 }
 
@@ -678,6 +684,7 @@ private struct State : Equatable {
     var purpose: Star_TransactionPurpose
     var peer: EnginePeer?
     var paidPeer: EnginePeer?
+    var starrefPeer: EnginePeer?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -707,7 +714,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     switch state.purpose {
     case let .starGift(gift, convertStars, _, _, _, _savedToProfile, converted, _):
         savedToProfile = _savedToProfile
-        if state.transaction.count > 0 {
+        if state.transaction.count.value > 0 {
             switch state.transaction.peer {
             case let .peer(peer):
                 if peer.id == arguments.context.peerId {
@@ -740,7 +747,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let peer = state.peer {
         
+        
+        if let _ = state.transaction.starrefCommissionPermille {
+            
+            let affiliate: TextViewLayout = .init(parseMarkdownIntoAttributedString(strings().starTransactionReasonAffiliate, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })), maximumNumberOfLines: 1, alwaysStaticItems: true)
+            
+            affiliate.interactions.processURL = { url in
+                if let url = url as? String {
+                    if url.hasPrefix("affiliate") {
+                        arguments.openAffiliate()
+                    }
+                }
+            }
+            
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: affiliate)))
+
+        }
+        
         let fromPeer: String
+        
+       
         if let messageId = state.transaction.giveawayMessageId {
             fromPeer = "[\(peer._asPeer().compactDisplayTitle)](t.me/c/\(peer.id.id._internalGetInt64Value())/\(messageId.id))"
         } else if peer.id == servicePeerId {
@@ -764,11 +792,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         let fromText: String
-        if state.transaction.giveawayMessageId != nil {
+        if let _ = state.transaction.starrefCommissionPermille {
+            fromText = state.transaction.starrefPeerId == nil ? strings().starTransactionMiniApp : strings().starTransacitonReferredUser
+        } else if state.transaction.giveawayMessageId != nil {
             fromText = strings().starTransactionFrom
-        } else if peer._asPeer().isUser && state.transaction.count > 0 {
+        } else if peer._asPeer().isUser && state.transaction.count.value > 0 {
             fromText = strings().starTransactionFrom
-        } else if state.transaction.count < 0, state.transaction.starGift != nil {
+        } else if state.transaction.count.value < 0, state.transaction.starGift != nil {
             fromText = strings().starTransactionFrom
         }  else {
             fromText = strings().starTransactionTo
@@ -805,6 +835,27 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
         }, badge: badge)))
+        
+        
+        
+        if let starrefPeer = state.starrefPeer {
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionMiniApp, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+                let control: AvatarControl
+                if let previous = previous as? AvatarControl {
+                    control = previous
+                } else {
+                    control = AvatarControl(font: .avatar(6))
+                }
+                control.setFrameSize(NSMakeSize(20, 20))
+                control.setPeer(account: arguments.context.account, peer: starrefPeer._asPeer())
+                return control
+            }, badge: badge)))
+            
+            
+            if let commission = state.transaction.starrefCommissionPermille {
+                rows.append(.init(left: .init(.initialize(string: strings().starTransactionCommission, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(commission.decemial.string)%", color: theme.colors.text, font: .normal(.text))))))
+            }
+        }
         
         
         switch state.purpose {
@@ -928,7 +979,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if state.transaction.giveawayMessageId != nil {
-        rows.append(.init(left: .init(.initialize(string: strings().starTransactionGift, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starListItemCountCountable(Int(state.transaction.count)), color: theme.colors.text, font: .normal(.text))))))
+        rows.append(.init(left: .init(.initialize(string: strings().starTransactionGift, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starListItemCountCountable(Int(state.transaction.count.value)), color: theme.colors.text, font: .normal(.text))))))
 
         rows.append(.init(left: .init(.initialize(string: strings().starTransactionReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionReasonGiveaway, color: theme.colors.text, font: .normal(.text))))))
     }
@@ -1082,7 +1133,7 @@ enum Star_TransactionPurpose : Equatable {
     }
 }
 
-func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transaction: StarsContext.State.Transaction, purpose: Star_TransactionPurpose = .payment, messageId: MessageId? = nil, profileContext: ProfileGiftsContext? = nil) -> InputDataModalController {
+func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: EnginePeer?, transaction: StarsContext.State.Transaction, purpose: Star_TransactionPurpose = .payment, messageId: MessageId? = nil, profileContext: ProfileGiftsContext? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -1108,6 +1159,17 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
             }
         }))
     }
+    
+    if let starrefPeerId = transaction.starrefPeerId {
+        actionsDisposable.add(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: starrefPeerId)).start(next: { peer in
+            updateState { current in
+                var current = current
+                current.starrefPeer = peer
+                return current
+            }
+        }))
+    }
+    
     
     var getController:(()->ViewController?)? = nil
     
@@ -1154,7 +1216,7 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
         let amount = stateValue.with { $0.transaction.count }
         let peer = stateValue.with { $0.peer?._asPeer() }
         if !medias.isEmpty, let peer {
-            let message = Message(TelegramMediaPaidContent(amount: amount, extendedMedia: medias.map { .full(media: $0) }), stableId: 0, messageId: .init(peerId: peer.id, namespace: 0, id: 0))
+            let message = Message(TelegramMediaPaidContent(amount: amount.value, extendedMedia: medias.map { .full(media: $0) }), stableId: 0, messageId: .init(peerId: peer.id, namespace: 0, id: 0))
             showPaidMedia(context: context, medias: medias, parent: message, firstIndex: 0, firstStableId: ChatHistoryEntryId.mediaId(0, message), getTableView?(), nil)
         }
     }, openApps: {
@@ -1225,6 +1287,9 @@ func Star_TransactionScreen(context: AccountContext, peer: EnginePeer?, transact
     }, sendGift: { peerId in
         showModal(with: GiftingController(context: context, peerId: peerId, isBirthday: false), for: window)
         close?()
+    }, openAffiliate: {
+        close?()
+        context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: fromPeerId, onlyDemo: false))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

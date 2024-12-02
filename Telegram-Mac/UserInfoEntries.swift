@@ -2295,8 +2295,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 if let _ = state.editingState {
                     
                     if peer.botInfo?.flags.contains(.canEdit) == true {
-                        
-                        entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
+                        let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_program_allowed", orElse: false)
+
+                        entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: affiliateEnabled ? .firstItem : .singleItem))
                         //TODOLANG
                         let text: String
                         if let program = cachedData.starRefProgram {
@@ -2304,17 +2305,18 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             if let duration = program.durationMonths {
                                 localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : strings().timerYearsCountable(Int(duration / 12))
                             } else {
-                                localizedDuration = "Lifetime"
+                                localizedDuration = strings().affiliateProgramDurationLifetime
                             }
                             text = "\(program.commissionPermille)%, \(localizedDuration)"
                         } else {
-                            text = "Off"
+                            text = strings().affiliateProgramOff
                         }
-                        
-                        entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: text, starRefProgram: cachedData.starRefProgram, viewType: .lastItem))
-
+                        if affiliateEnabled {
+                            entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: text, starRefProgram: cachedData.starRefProgram, viewType: .lastItem))
+                        }
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1
+
                         
                         destructBlock.append(.botEditIntro(sectionId: sectionId, viewType: .singleItem))
                         destructBlock.append(.botEditCommands(sectionId: sectionId, viewType: .singleItem))
@@ -2358,10 +2360,10 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 
                
                 
-                let starBalance = (revenueState?.stats?.balances.currentBalance ?? 0)
+                let starBalance = (revenueState?.stats?.balances.currentBalance.value ?? 0)
                 let tonBalance = (tonRevenueState?.stats?.balances.currentBalance ?? 0)
 
-                let hasStars = (revenueState?.stats?.balances.overallRevenue ?? 0) > 0
+                let hasStars = (revenueState?.stats?.balances.overallRevenue.value ?? 0) > 0
                 let hasTon = (tonRevenueState?.stats?.balances.overallRevenue ?? 0) > 0 
 
                 

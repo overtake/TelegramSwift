@@ -91,7 +91,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 case .installed:
                     scope = [.installed]
                 }
-                return context.engine.stickers.searchStickers(query: [query], scope: scope) |> map { $0.items }
+            return context.engine.stickers.searchStickers(query: query, emoticon: [], scope: scope) |> map { $0.items }
         }
         |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in
@@ -105,7 +105,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     case let .emoji(query, firstWord):
         if !query.isEmpty {
             let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> mapToSignal { results in
-                return context.engine.stickers.searchEmoji(emojiString: results)
+                return context.engine.stickers.searchEmoji(category: .init(id: 0, title: "", identifiers: results, kind: .generic))
                 |> map { ($0.isFinalResult ? results : [], $0.items) }
             } |> deliverOnResourceQueue |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
 
@@ -321,7 +321,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 signal = .single({ _ in return nil })
             }
         }
-        let contextBot = context.engine.peers.resolvePeerByName(name: addressName)
+        let contextBot = context.engine.peers.resolvePeerByName(name: addressName, referrer: nil)
             |> mapToSignal { result -> Signal<Peer?, NoError> in
                 switch result {
                 case .progress:
@@ -494,7 +494,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         
         if !query.isEmpty {
             let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> mapToSignal { results in
-                return context.engine.stickers.searchEmoji(emojiString: results)
+                return context.engine.stickers.searchEmoji(category: .init(id: 0, title: "", identifiers: results, kind: .generic))
                 |> map { ($0.isFinalResult ? results : [], $0.items) }
             } |> deliverOnResourceQueue |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
 

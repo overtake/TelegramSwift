@@ -647,7 +647,7 @@ class MainViewController: TelegramViewController {
         let peerSignal: Signal<EnginePeer?, NoError>
         
         if let username = result?.username {
-            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { value in
+            peerSignal = context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> mapToSignal { value in
                 switch value {
                 case let .result(peer):
                     return .single(peer)

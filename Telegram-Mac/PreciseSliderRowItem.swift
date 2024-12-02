@@ -9,12 +9,14 @@ final class PrecieSliderRowItem : GeneralRowItem {
     fileprivate let magnit: [CGFloat]
     fileprivate let markers: [String]
     fileprivate let showValue: String?
-    init(_ initialSize: NSSize, stableId: AnyHashable, current: CGFloat, magnit: [CGFloat] = [], markers: [String] = [], showValue: String? = nil, update: @escaping(CGFloat)->Void, viewType: GeneralViewType) {
+    fileprivate let minValue: CGFloat
+    init(_ initialSize: NSSize, stableId: AnyHashable, current: CGFloat, minValue: CGFloat = 0, magnit: [CGFloat] = [], markers: [String] = [], showValue: String? = nil, update: @escaping(CGFloat)->Void, viewType: GeneralViewType) {
         self.markers = markers
         self.current = current
         self.magnit = magnit
         self.update = update
         self.showValue = showValue
+        self.minValue = minValue
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     

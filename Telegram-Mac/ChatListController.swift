@@ -197,7 +197,7 @@ struct UIChatListBuyStarsAction : UIChatListTextAction {
         
         let title: String
         let text: String
-        let starsValue = strings().chatListSubscriptionsLowBalanceCountable(Int(amount))
+        let starsValue = strings().chatListSubscriptionsLowBalanceCountable(Int(amount.value))
         if let peer = peers.first, peers.count == 1 {
             title = strings().chatListSubscriptionsLowBalanceSingleTitle(starsValue, peer._asPeer().compactDisplayTitle)
             text = strings().chatListSubscriptionsLowBalanceSingleText
@@ -947,7 +947,7 @@ class ChatListController : PeersListController {
             }
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(where: { $0 == .starsSubscriptionLowBalance }), let missingBalanceState {
-                    if missingBalanceState.balance > 0, !missingBalanceState.subscriptions.isEmpty {
+                    if missingBalanceState.balance.value > 0, !missingBalanceState.subscriptions.isEmpty {
                         additionItems.append(.custom(UIChatListBuyStarsAction(context: context, state: missingBalanceState)))
                     }
                 }
