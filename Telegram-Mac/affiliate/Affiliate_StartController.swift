@@ -31,9 +31,8 @@ private final class HeaderItem : GeneralRowItem {
         let title: NSAttributedString
         let info = NSMutableAttributedString()
         
-        //TODOLANG
-        title = .initialize(string: "Affiliate Program", color: presentation.colors.text, font: .medium(.header))
-        _ = info.append(string: "Reward those who help grow your user base.", color: presentation.colors.text, font: .normal(.text))
+        title = .initialize(string: strings().affiliateSetupTitleNew, color: presentation.colors.text, font: .medium(.header))
+        _ = info.append(string: strings().affiliateSetupHeaderInfo, color: presentation.colors.text, font: .normal(.text))
 
         self.titleLayout = .init(title, alignment: .center)
 
@@ -128,7 +127,9 @@ private final class HeaderItemView : TableRowView {
         if let view = self.premiumView {
             current = view
         } else {
-            current = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+            let scene = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+            scene.mode = .affiliate
+            current = scene
             addSubview(current)
             self.premiumView = current
         }
@@ -171,12 +172,12 @@ private final class PromoItem : GeneralRowItem {
         
         var options:[Option] = []
         
-        options.append(.init(image: NSImage(resource: .iconBotAffiliateStar).precomposed(theme.colors.accent), header: .init(.initialize(string: "Share Revenue with Channels", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Define the commission for revenue from users referred to you.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconBotAffiliateStar).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().affiliateSetupIntroNewTitle1, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().affiliateSetupIntroNewText1, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
-        options.append(.init(image: NSImage(resource: .iconBotAffiliateChannel).precomposed(theme.colors.accent), header: .init(.initialize(string: "Launch your affiliate program", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Telegram will feature your program in the admin panel for all channel owners.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconBotAffiliateChannel).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().affiliateSetupIntroNewTitle2, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().affiliateSetupIntroNewText2, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
-        options.append(.init(image: NSImage(resource: .iconBotAffiliateLink).precomposed(theme.colors.accent), header: .init(.initialize(string: "Let channels promote you", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Channel owners will share your referral link with their audience.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconBotAffiliateLink).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().affiliateSetupIntroNewTitle3, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().affiliateSetupIntroNewText3, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
         self.options = options
 
@@ -313,14 +314,18 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var commission: Int32 = 11
+    var commission: Int32 = 110
     var commission2: Int32 = 0
     var duration: Int32 = 6
     
     var current: TelegramStarRefProgram?
     
     var mappedCommission: Int32 {
-        return Int32(mappingRange(Double(self.commission), 0, 100.0, 1.0, 90.0))
+        return Int32(mappingRange(Double(self.commission), 0, 1000, 10, 900))
+    }
+    
+    var currentCommission: Int32 {
+        return Int32(mappingRange(Double(self.commission), 0, 1000, 10, 900) / 10)
     }
 }
 
@@ -355,26 +360,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("COMMISSION"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().affiliateSetupSectionCommission), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_commission, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        let values: [Int32] = [5, 10, 15, 20, 30, 50, 90]
-        
-        //
-        //double mappingRange(double x, double in_min, double in_max, double out_min, double out_max) {
-
-        
-        return PrecieSliderRowItem(initialSize, stableId: stableId, current: Double(state.commission) / 100.0, magnit: [], markers: ["1%", "90%"], showValue: "\(state.mappedCommission)%", update: { value in
-            arguments.updateCommission(Int32(value * 100))
+        return PrecieSliderRowItem(initialSize, stableId: stableId, current: Double(state.commission) / 1000.0, magnit: [], markers: ["1%", "90%"], showValue: "\(state.currentCommission)%", update: { value in
+            arguments.updateCommission(Int32(value * 1000))
         }, viewType: .singleItem)
-        
-//        return SelectSizeRowItem(initialSize, stableId: stableId, current: state.commission, sizes: values, hasMarkers: false, titles:  values.map {"\($0)%"}, viewType: .singleItem, selectAction: { selected in
-//            arguments.updateCommission(values[selected])
-//        })
     }))
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Define the percentage of star revenue your affiliates earn for referring users to your bot."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().affiliateSetupSectionCommissionFooter), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     
@@ -422,7 +417,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
            // arguments.updateAwayPeriod(values[selected])
         })
     }))
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Set the duration for which affiliates will earn commissions from referred users."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().affiliateSetupSectionDurationFooter), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     
@@ -430,18 +425,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_view_existing, data: .init(name: "View Existing Programs", color: theme.colors.text, type: .next, viewType: .singleItem, action: arguments.viewExisting)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_view_existing, data: .init(name: strings().affiliateSetupExistingProgramsAction, color: theme.colors.text, type: .next, viewType: .singleItem, action: arguments.viewExisting)))
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Explore what other mini apps offer."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().affiliateSetupExistingProgramsFooter), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     // entries
     
-    
-    if state.current != nil {
+        
+    if state.current != nil, state.current?.endDate == nil {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_end, data: .init(name: "End Affiliate Program", color: theme.colors.redUI, viewType: .singleItem, action: arguments.end)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_end, data: .init(name: strings().affiliateSetupEndAction, color: theme.colors.redUI, viewType: .singleItem, action: arguments.end)))
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -456,9 +451,9 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
 
     let commissionPermille: Int32
     if let starRefProgram {
-        commissionPermille = Int32(ceil(mappingRange(Double(starRefProgram.commissionPermille), 1, 90, 0, 100)))
+        commissionPermille = Int32(ceil(mappingRange(Double(starRefProgram.commissionPermille), 10, 900, 0, 100)))
     } else {
-        commissionPermille = Int32(ceil(mappingRange(10, 1, 90, 0, 100)))
+        commissionPermille = Int32(ceil(mappingRange(100, 10, 900, 0, 1000)))
     }
     
     let initialState = State(commission: commissionPermille, duration: starRefProgram?.durationMonths ?? 3, current: starRefProgram)
@@ -480,7 +475,11 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
     let arguments = Arguments(context: context, updateCommission: { value in
         updateState { current in
             var current = current
-            current.commission = value
+            if let starRefProgram {
+                current.commission = max(starRefProgram.commissionPermille, value)
+            } else {
+                current.commission = value
+            }
             return current
         }
     }, updateCommission2: { value in
@@ -492,16 +491,21 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
     }, updateDuration: { value in
         updateState { current in
             var current = current
-            current.duration = value
+            if let starRefProgram {
+                current.duration = max(starRefProgram.durationMonths ?? .max, value)
+            } else {
+                current.duration = value
+            }
             return current
         }
     }, viewExisting: {
         context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: peerId, onlyDemo: true))
     }, end: {
-        
-        let text = "If you end your affiliate program:\n\n• Any referral links already shared will be disabled in 24 hours.\n\n• All participating affiliates will be notified.\n\n• You will be able to start a new affiliate program only in 24 hours."
-        
-        verifyAlert(for: window, header: "Warning", information: text, ok: "End Anyway", successHandler: { _ in
+                
+        verifyAlert(for: window, header: strings().affiliateSetupAlertTerminateTitle, information: strings().affiliateSetupAlertTerminateText, ok: strings().affiliateSetupAlertTerminateAction, successHandler: { _ in
+            _ = context.engine.peers.updateStarRefProgram(id: peerId, program: nil).start()
+            showModalText(for: window, text: strings().affiliateSetupToastTerminatedText, title: strings().affiliateSetupToastTerminatedTitle)
+            context.bindings.rootNavigation().back()
             //Affiliate program ended
             //Participating affiliates have been notified. All referral links will be disabled in 24 hours.
         })
@@ -511,38 +515,46 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Affiliate Program", removeAfterDisappear: false, doneString: { starRefProgram == nil ? "Start" : "Update" })
+    let controller = InputDataController(dataSignal: signal, title: strings().affiliateSetupTitleNew, removeAfterDisappear: false, doneString: { starRefProgram == nil ? "Start" : "Update" })
     
     controller.validateData = { _ in
         return .fail(.doSomething(next: { next in
-            let info = "Once you start the affiliate program, you won't be able to decrease its commission or duration. You can only increase these parameters or end the program, which will disable all previously distributed referral links.";
             
-            var rows: [InputDataTableBasedItem.Row] = []
-            let comission = stateValue.with { $0.mappedCommission }
-            let comission2 = stateValue.with { $0.commission2 }
-            let duration = stateValue.with { $0.duration }
+            let endDate = starRefProgram?.endDate ?? 0
             
-            rows.append(.init(left: .init(.initialize(string: "Commission", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
-            
-            if comission2 > 0 {
-                rows.append(.init(left: .init(.initialize(string: "Commission for\n2-Level Affiliates", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission2)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+            if endDate == 0 || endDate < context.timestamp {
+                
+                let info = strings().affiliateSetupAlertApplyText;
+                
+                var rows: [InputDataTableBasedItem.Row] = []
+                let comission = stateValue.with { $0.mappedCommission }
+                let comission2 = stateValue.with { $0.commission2 }
+                let duration = stateValue.with { $0.duration }
+                
+                rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionCommission, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+//
+//                if comission2 > 0 {
+//                    rows.append(.init(left: .init(.initialize(string: "Commission for\n2-Level Affiliates", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission2)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+//
+//                }
+                
+                let localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : duration == .max ? strings().affiliateProgramDurationLifetime : strings().timerYearsCountable(Int(duration))
+                
+                rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionDuration, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: localizedDuration, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
 
+                
+                let data = ModalAlertData(title: strings().affiliateSetupAlertApplyTitle, info: info, description: nil, ok: starRefProgram != nil ? strings().affiliateSetupUpdate : strings().affiliateSetupStart, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: .init(value: { initialSize, stableId, presentation in
+                    return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .legacy, rows: rows, context: arguments.context)
+                }))
+                
+                showModalAlert(for: window, data: data, completion: { result in
+                    _ = context.engine.peers.updateStarRefProgram(id: peerId, program: (comission, duration)).start()
+                    showModalText(for: window, text: strings().affiliateSetupToastStartedText)
+                    next(.success(.navigationBack))
+                })
+            } else {
+                alert(for: window, info: strings().affiliateProgramStartDelay(stringForFullDate(timestamp: endDate)))
             }
-            
-            let localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : duration == .max ? "Lifetime" : strings().timerYearsCountable(Int(duration))
-            
-            rows.append(.init(left: .init(.initialize(string: "Duration", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: localizedDuration, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
-
-            
-            let data = ModalAlertData(title: "Warning", info: info, description: nil, ok: "Start", options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: .init(value: { initialSize, stableId, presentation in
-                return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .legacy, rows: rows, context: arguments.context)
-            }))
-            
-            showModalAlert(for: window, data: data, completion: { result in
-                _ = context.engine.peers.updateStarRefProgram(id: peerId, program: (comission, duration)).start()
-                showModalText(for: window, text: "Affiliate program started")
-                next(.success(.navigationBack))
-            })
             
         }))
     }

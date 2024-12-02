@@ -1928,7 +1928,17 @@ public extension Int32 {
     var isFuture: Bool {
         return self > Int32(Date().timeIntervalSince1970)
     }
+    var decemial: Double {
+        return Double(self) / 10
+    }
 }
+
+public extension Double {
+    var string: String {
+        return self.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", self) : String(self)
+    }
+}
+
 public extension Int64 {
     
     func prettyFormatter(_ n: Int64, iteration: Int, rounded: Bool = false) -> String {

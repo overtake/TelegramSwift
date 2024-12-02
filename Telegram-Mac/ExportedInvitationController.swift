@@ -35,7 +35,7 @@ private final class SubscriptionFeeRowItem: GeneralRowItem {
         if invitation.count == 0 {
             infoText = strings().inviteLinkJoinedNewCountable(0)
         } else {
-            let amountText = "~$" + "\(Double(invitation.count) * Double(pricing.amount) * XTR_USD_RATE)".prettyCurrencyNumberUsd
+            let amountText = "~$" + "\(Double(invitation.count) * Double(pricing.amount.value) * XTR_USD_RATE)".prettyCurrencyNumberUsd
             infoText = "You get approximately \(amountText) monthly"
         }
         

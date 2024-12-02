@@ -939,6 +939,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var reactionsView: ImageView?
     
     private var selectionView: View?
+    
+    private var openMiniApp: TextView?
 
     
     private var activeImage: ImageView?
@@ -2190,6 +2192,33 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.archivedPhoto?.layer?.cornerRadius = photo.radius
                  self.photo.update(component: nil, availableSize: NSMakeSize(44, 44), transition: transition)
              }
+             
+             
+             if let openMiniApp = item.ctxOpenMiniApp {
+                 let current: TextView
+                 if let view = self.openMiniApp {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.isSelectable = false
+                     current.scaleOnClick = true
+                     self.openMiniApp = current
+                     addSubview(current)
+                 }
+                 current.update(openMiniApp)
+                 current.backgroundColor = item.isActiveSelected ? theme.colors.underSelectedColor : theme.colors.accent
+                 current.setFrameSize(openMiniApp.layoutSize.bounds.insetBy(dx: -8, dy: -4).size)
+                 current.layer?.cornerRadius = current.frame.height / 2
+                 
+                 current.setSingle(handler: { [weak item] _ in
+                     item?.openWebApp()
+                 }, for: .Click)
+                 
+             } else if let view = openMiniApp {
+                 performSubviewRemoval(view, animated: animated)
+                 self.openMiniApp = nil
+             }
+             
          }
         
         
@@ -3042,6 +3071,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         if let tagsView = tagsView {
             tagsView.setFrameOrigin(NSMakePoint(item.leftInset, contentView.frame.height - tagsView.frame.height - 7))
+        }
+        
+        if let openMiniApp = openMiniApp {
+            
+            var offset = item.margin + 1
+            if (item.isPinned || item.isLastPinned) {
+                offset += theme.icons.pinnedImage.systemSize.width + 5
+            }
+            
+            openMiniApp.setFrameOrigin(NSMakePoint(frame.width - openMiniApp.frame.width - offset, frame.height - openMiniApp.frame.height - (item.margin + 1)))
         }
         
         if let delta = internalDelta {

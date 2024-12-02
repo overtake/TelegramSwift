@@ -844,7 +844,7 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         
         switch state.option {
         case let .starGift(option):
-            if starsState.balance < option.stars {
+            if starsState.balance.value < option.stars {
                 showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: option.stars)), for: window)
                 return .none
             }

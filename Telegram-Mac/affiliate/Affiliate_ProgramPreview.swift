@@ -228,7 +228,7 @@ struct AffiliateProgram : Equatable {
     var commission2: Int32
     var duration: Int32
     var date: Int32
-    var revenue: Int32
+    var revenue: StarsAmount
     var connected: Connected?
 }
 
@@ -269,7 +269,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+    
+    let info = "Once you start the affiliate program, you won't be able to decrease its commission or duration. You can only increase these parameters or end the program, which will disable all previously distributed referral links.";
+    
+    var rows: [InputDataTableBasedItem.Row] = []
+    
+    if let user = state.program.peer as? TelegramUser, let count = user.subscriberCount {
+        rows.append(.init(left: .init(.initialize(string: "Monthly users", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: count.formattedWithSeparator, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+    }
+    
+    
+    rows.append(.init(left: .init(.initialize(string: "Daily Revenue per User", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: state.program.revenue.stringValue, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("stats"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .legacy, rows: rows, context: arguments.context)
+    }))
   
+    entries.append(.sectionId(sectionId, type: .custom(10)))
+    sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_button, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: "Join Program", viewType: .legacy, action: arguments.join, inset: .init(left: 10, right: 10))
@@ -327,7 +345,7 @@ func Affiliate_ProgramPreview(context: AccountContext, peerId: PeerId, program: 
         let signal = context.engine.peers.connectStarRefBot(id: peerId, botId: program.peer.id)
         
         _ = showModalProgress(signal: signal, for: window).startStandalone(next: { value in
-            joined(.init(peer: value.peer, commission: value.commissionPermille, commission2: 0, duration: value.durationMonths ?? .max, date: 0, revenue: 0, connected: .init(url: value.url, revenue: value.revenue, participants: value.participants)))
+            joined(.init(peer: value.peer, commission: value.commissionPermille, commission2: 0, duration: value.durationMonths ?? .max, date: 0, revenue: .zero, connected: .init(url: value.url, revenue: value.revenue, participants: value.participants)))
         })
         //TODOLANG
         showModalText(for: window, text: "You have successfully connected to referal program")

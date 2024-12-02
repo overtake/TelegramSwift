@@ -6,8 +6,6 @@ import TelegramCore
 import Postbox
 
 
-
-
 private final class PromoItem : GeneralRowItem {
     
     struct Option {
@@ -36,12 +34,12 @@ private final class PromoItem : GeneralRowItem {
         
         var options:[Option] = []
         
-        options.append(.init(image: NSImage(resource: .iconBotAffiliateShield).precomposed(theme.colors.accent), header: .init(.initialize(string: "Reliable", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Receive guaranteed commissions for spending by users you refer.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconBotAffiliateShield).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().affiliateSetupIntroJoinTitle1, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().affiliateSetupIntroJoinText1, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
-        options.append(.init(image: NSImage(resource: .iconBotAffiliateEye).precomposed(theme.colors.accent), header: .init(.initialize(string: "Transparent", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Track your commissions from referred users in real time.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconBotAffiliateEye).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().affiliateSetupIntroJoinTitle2, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().affiliateSetupIntroJoinText2, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
         
-        options.append(.init(image: NSImage(resource: .iconBotAffiliateThumb).precomposed(theme.colors.accent), header: .init(.initialize(string: "Simple", color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: "Choose a mini app below, get your referral link, and start earning Stars.", color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconBotAffiliateThumb).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().affiliateSetupIntroJoinTitle3, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().affiliateSetupIntroJoinText3, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
         self.options = options
 
@@ -175,10 +173,10 @@ private final class AffiliateRowItem: GeneralRowItem {
         self.item = item
         
         self.titleLayout = .init(.initialize(string: item.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.commissionLayout = .init(.initialize(string: "\(item.commission)%", color: theme.colors.underSelectedColor, font: .menlo(.small)), alignment: .center)
+        self.commissionLayout = .init(.initialize(string: "\(item.commission.decemial.string)%", color: theme.colors.underSelectedColor, font: .menlo(.small)), alignment: .center)
         self.commissionLayout.measure(width: .greatestFiniteMagnitude)
         
-        let localizedDuration = item.duration < 12 ? strings().timerMonthsCountable(Int(item.duration)) : strings().timerYearsCountable(Int(item.duration / 12))
+        let localizedDuration = item.duration == .max ? strings().affiliateProgramDurationLifetime : item.duration < 12 ? strings().timerMonthsCountable(Int(item.duration)) : strings().timerYearsCountable(Int(item.duration / 12))
 
         
         self.durationLayout = .init(.initialize(string: localizedDuration, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
@@ -203,20 +201,20 @@ private final class AffiliateRowItem: GeneralRowItem {
         var items: [ContextMenuItem] = []
         
         
-        items.append(.init("Open App", handler: { [weak self] in
+        items.append(.init(strings().affiliateSetupProgramMenuOpenApp, handler: { [weak self] in
             if let item = self?.item {
                 self?.arguments.openApp(item)
             }
         }, itemImage: MenuAnimation.menu_folder_bot.value))
         
         if item.connected != nil {
-            items.append(.init("Copy Link", handler: { [weak self] in
+            items.append(.init(strings().affiliateSetupProgramMenuCopyLink, handler: { [weak self] in
                 if let item = self?.item {
                     self?.arguments.copyToClipboard(item)
                 }
             }, itemImage: MenuAnimation.menu_copy_link.value))
             
-            items.append(.init("Leave", handler: { [weak self] in
+            items.append(.init(strings().affiliateSetupProgramMenuLeave, handler: { [weak self] in
                 if let item = self?.item {
                     self?.arguments.leave(item)
                 }
@@ -453,9 +451,8 @@ private final class HeaderItem : GeneralRowItem {
         let title: NSAttributedString
         let info = NSMutableAttributedString()
         
-        //TODOLANG
-        title = .initialize(string: "Affiliate Programs", color: presentation.colors.text, font: .medium(.header))
-        _ = info.append(string: "Earn a commission each time a user who first accessed a mini app through your referral link spends **Starts** within it.", color: presentation.colors.text, font: .normal(.text))
+        title = .initialize(string: strings().affiliateSetupTitleJoin, color: presentation.colors.text, font: .medium(.header))
+        _ = info.append(string: strings().affiliateSetupTextJoin, color: presentation.colors.text, font: .normal(.text))
 
         info.detectBoldColorInString(with: .medium(.text))
         
@@ -552,7 +549,9 @@ private final class HeaderItemView : TableRowView {
         if let view = self.premiumView {
             current = view
         } else {
-            current = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+            let scene = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+            scene.mode = .affiliate
+            current = scene
             addSubview(current)
             self.premiumView = current
         }
@@ -591,38 +590,41 @@ private struct State : Equatable {
     
     enum Sort {
         case date
-        case commission
+        case profitability
         case revenue
         
         var string: String {
             switch self {
             case .date:
-                return "Date"
-            case .commission:
-                return "Commission"
+                return strings().affiliateProgramSortSelectorDate
+            case .profitability:
+                return strings().affiliateProgramSortSelectorProfitability
             case .revenue:
-                return "Revenue"
+                return strings().affiliateProgramSortSelectorRevenue
+            }
+        }
+        var value: TelegramSuggestedStarRefBotList.SortMode {
+            switch self {
+            case .date:
+                return .date
+            case .profitability:
+                return .profitability
+            case .revenue:
+                return .revenue
             }
         }
     }
-    var list: [AffiliateProgram] = []
+    var list: [TelegramSuggestedStarRefBotList.SortMode : [AffiliateProgram]] = [:]
     var connectedList: [AffiliateProgram] = []
 
-    var listState: TelegramSuggestedStarRefBotList?
+    var listState: [TelegramSuggestedStarRefBotList.SortMode : TelegramSuggestedStarRefBotList] = [:]
     var connectedState: TelegramConnectedStarRefBotList?
 
-    var sort: Sort = .date
+    var sort: Sort = .profitability
     
     
     var sorted: [AffiliateProgram] {
-        switch sort {
-        case .date:
-            return self.list.sorted(by: { $0.date > $1.date })
-        case .commission:
-            return self.list.sorted(by: { $0.commission > $1.commission })
-        case .revenue:
-            return self.list.sorted(by: { $0.revenue > $1.revenue })
-        }
+        return list[self.sort.value] ?? []
     }
 }
 
@@ -631,11 +633,12 @@ private func _id_peer_id(_ peerId: PeerId) -> InputDataIdentifier {
     return .init("_id_peer_id_\(peerId.toInt64())")
 }
 
-private func _id_peer_id_connected(_ peerId: PeerId) -> InputDataIdentifier {
-    return .init("_id_peer_id_connected\(peerId.toInt64())")
+private func _id_peer_id_connected(_ peerId: PeerId, link: String) -> InputDataIdentifier {
+    return .init("_id_peer_id_connected_\(peerId.toInt64())_\(link)")
 }
 
 private let _id_promo = InputDataIdentifier("_id_promo")
+private let _id_empty = InputDataIdentifier("_id_empty")
 
 private func entries(_ state: State, arguments: Arguments, onlyDemo: Bool) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -662,7 +665,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDemo: Bool) -> [I
         }
             
         if !state.connectedList.isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("MY PROGRAMS"), data: .init(viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().affiliateSetupConnectedSectionTitle), data: .init(viewType: .textTopItem)))
             index += 1
             
             struct Tuple : Equatable {
@@ -672,11 +675,11 @@ private func entries(_ state: State, arguments: Arguments, onlyDemo: Bool) -> [I
           
             var tuples: [Tuple] = []
             for (i, peer) in state.connectedList.enumerated() {
-                tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.list, for: i)))
+                tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.connectedList, for: i)))
             }
             
             for tuple in tuples {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id_connected(tuple.peer.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id_connected(tuple.peer.peer.id, link: tuple.peer.connected!.url), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
                     return AffiliateRowItem(initialSize, stableId: stableId, item: tuple.peer, arguments: arguments, viewType: tuple.viewType)
                 }))
             }
@@ -684,51 +687,59 @@ private func entries(_ state: State, arguments: Arguments, onlyDemo: Bool) -> [I
     }
     
     
-    if !state.list.isEmpty {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    let rightItem: InputDataGeneralTextRightData
+    if !onlyDemo && !state.list.isEmpty {
+        
+        let sortString = NSMutableAttributedString()
+        sortString.append(string: strings().affiliateSetupSortSectionHeader, color: theme.colors.listGrayText, font: .normal(.text))
+        sortString.append(string: " ", color: theme.colors.listGrayText, font: .normal(.text))
+        sortString.append(string: state.sort.string.uppercased(), color: theme.colors.accent, font: .normal(.text))
+        
+        rightItem = .init(isLoading: false, text: sortString, contextMenu: {
+            var items: [ContextMenuItem] = []
+            
+            let sortAll: [State.Sort] = [.date, .revenue, .profitability]
+            
+            for sort in sortAll {
+                items.append(ContextMenuItem(sort.string, handler: {
+                    arguments.toggleSort(sort)
+                }))
+            }
+            return items
+        }, afterImage: NSImage(resource: .iconAffiliateExpand).precomposed(theme.colors.accent))
+    } else {
+        rightItem = .init(isLoading: false, text: nil)
     }
     
-    if !state.list.isEmpty {
-        
-        if !onlyDemo {
-            let sortString = NSMutableAttributedString()
-            sortString.append(string: "SORT BY", color: theme.colors.listGrayText, font: .normal(.text))
-            sortString.append(string: " ", color: theme.colors.listGrayText, font: .normal(.text))
-            sortString.append(string: state.sort.string.uppercased(), color: theme.colors.accent, font: .normal(.text))
 
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(" "), data: .init(viewType: .textTopItem, rightItem: .init(isLoading: false, text: sortString, contextMenu: {
-                var items: [ContextMenuItem] = []
-                
-                let sortAll: [State.Sort] = [.date, .revenue, .commission]
-                
-                for sort in sortAll {
-                    items.append(ContextMenuItem(sort.string, handler: {
-                        arguments.toggleSort(sort)
-                    }))
-                }
-                return items
-            }, afterImage: NSImage(resource: .iconAffiliateExpand).precomposed(theme.colors.accent)))))
-            index += 1
-        }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().affiliateSetupSuggestedSectionTitle), data: .init(viewType: .textTopItem, rightItem: rightItem)))
+    index += 1
+    
+    
+    struct Tuple : Equatable {
+        var peer: AffiliateProgram
+        var viewType: GeneralViewType
+    }
+  
+    var tuples: [Tuple] = []
+    for (i, peer) in state.sorted.enumerated() {
+        tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.sorted, for: i)))
+    }
+    
+    for tuple in tuples {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(tuple.peer.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+            return AffiliateRowItem(initialSize, stableId: stableId, item: tuple.peer, arguments: arguments, viewType: tuple.viewType)
+        }))
+    }
+    
+    if state.list.isEmpty {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty, equatable: .init(state.list), comparable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().affiliateProgramsEmpty, font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
+        }))
         
-        
-        
-        struct Tuple : Equatable {
-            var peer: AffiliateProgram
-            var viewType: GeneralViewType
-        }
-      
-        var tuples: [Tuple] = []
-        for (i, peer) in state.sorted.enumerated() {
-            tuples.append(.init(peer: peer, viewType: bestGeneralViewType(state.list, for: i)))
-        }
-        
-        for tuple in tuples {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(tuple.peer.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                return AffiliateRowItem(initialSize, stableId: stableId, item: tuple.peer, arguments: arguments, viewType: tuple.viewType)
-            }))
-        }
     }
     
     // entries
@@ -742,6 +753,8 @@ private func entries(_ state: State, arguments: Arguments, onlyDemo: Bool) -> [I
 func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo: Bool = false) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
+    let loadDisposable = MetaDisposable()
+    actionsDisposable.add(loadDisposable)
 
     let initialState = State()
     
@@ -755,29 +768,35 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
     
     
     
-    let bots = context.engine.peers.requestSuggestedStarRefBots(id: peerId, orderByCommission: true, offset: nil, limit: 100) |> take(1)
-    
-    actionsDisposable.add(combineLatest(bots, connected).startStrict(next: { list, connected in
-        updateState { current in
-            var current = current
-            
-            current.listState = list
-            current.connectedState = connected
+    let updateList:(TelegramSuggestedStarRefBotList.SortMode)->Void = { sort in
+        let bots = context.engine.peers.requestSuggestedStarRefBots(id: peerId, sortMode: sort, offset: nil, limit: 100) |> take(1)
+        
+        actionsDisposable.add(combineLatest(bots, connected).startStrict(next: { list, connected in
+            updateState { current in
+                var current = current
+                
+                current.listState[sort] = list
+                current.connectedState = connected
 
-            if let list {
-                current.list = list.items.map {
-                    .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: 0)
+                if let list {
+                    current.list[sort] = list.items.map {
+                        .init(peer: $0.peer, commission: $0.program.commissionPermille, commission2: 0, duration: $0.program.durationMonths ?? .max, date: context.timestamp, revenue: $0.program.dailyRevenuePerUser ?? .zero)
+                    }
                 }
-            }
-            if let connected {
-                current.connectedList = connected.items.map {
-                    .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: 0, connected: .init(url: $0.url, revenue: $0.revenue, participants: $0.participants))
+                if let connected {
+                    current.connectedList = connected.items.map {
+                        .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: .zero, connected: .init(url: $0.url, revenue: $0.revenue, participants: $0.participants))
+                    }
                 }
+                return current
             }
-            return current
-        }
-    }))
+        }))
+    }
     
+    updateList(.profitability)
+    updateList(.date)
+    updateList(.revenue)
+
     var getController:(()->ViewController?)? = nil
     
     var window:Window {
@@ -792,6 +811,7 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
             current.sort = sort
             return current
         }
+        updateList(sort.value)
     }, open: { program in
         if onlyDemo {
             PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: program.peer.id)
@@ -817,14 +837,24 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
         copyToClipboard(program.connected!.url)
         showModalText(for: window, text: strings().shareLinkCopied)
     }, leave: { program in
-        
+        if let connected = program.connected {
+            verifyAlert(for: window, header: strings().affiliateSetupTitleNew, information: strings().affiliateProgramsConfirmAlert, ok: strings().affiliateProgramsConfirmAlertOK, successHandler: { _ in
+                _ = context.engine.peers.removeConnectedStarRefBot(id: program.peer.id, link: connected.url).start()
+                updateState { current in
+                    var current = current
+                    current.connectedList.removeAll(where: { $0.connected?.url == connected.url })
+                    return current
+                }
+            })
+        }
+                
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments, onlyDemo: onlyDemo))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: onlyDemo ? "Existing Affiliate Programs" : "Affiliate Programs", removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: onlyDemo ? strings().affiliateProgramsExistingPrograms : strings().affiliateSetupTitleJoin, removeAfterDisappear: false, hasDone: false)
     
     getController = { [weak controller] in
         return controller

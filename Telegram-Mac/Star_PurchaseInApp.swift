@@ -17,7 +17,7 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peer: EnginePeer
     fileprivate let request: State.Request
-    fileprivate let myBalance: Int64
+    fileprivate let myBalance: StarsAmount
     fileprivate let close:()->Void
     
     
@@ -27,7 +27,7 @@ private final class HeaderItem : GeneralRowItem {
 
     private(set) var badge: BadgeNode?
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: EnginePeer, myBalance: Int64, request: State.Request, viewType: GeneralViewType, action:@escaping()->Void, close:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: EnginePeer, myBalance: StarsAmount, request: State.Request, viewType: GeneralViewType, action:@escaping()->Void, close:@escaping()->Void) {
         self.context = context
         self.peer = peer
         self.myBalance = myBalance
@@ -567,7 +567,7 @@ private struct State : Equatable {
     }
     var request: Request
     var peer: EnginePeer?
-    var myBalance: Int64?
+    var myBalance: StarsAmount?
     var starsState: StarsContext.State?
     var formId: Int64?
 }
@@ -655,7 +655,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
         request = .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice, type: type)
     } else {
         if case let .subscription(state) = type {
-            request = .init(count: state.subscriptionPricing!.amount, info: "", invoice: nil, type: type)
+            request = .init(count: state.subscriptionPricing!.amount.value, info: "", invoice: nil, type: type)
         } else {
             fatalError()
         }
@@ -732,9 +732,9 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
         close?()
     }, buy: {
         let state = stateValue.with { $0 }
-        let myBalance = state.myBalance ?? 0
+        let myBalance = state.myBalance ?? .init(value: 0, nanos: 0)
         if let peer = state.peer {
-            if state.request.count > myBalance {
+            if state.request.count > myBalance.value {
                 let sourceValue: Star_ListScreenSource
                 if case .starsChatSubscription = source {
                     sourceValue = .purchaseSubscribe(peer, state.request.count)

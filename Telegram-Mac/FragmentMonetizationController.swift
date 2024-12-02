@@ -342,7 +342,7 @@ extension StarsContext.State {
         return 0.01
     }
     var fractional: Double {
-        return currencyToFractionalAmount(value: balance, currency: XTR) ?? 0
+        return currencyToFractionalAmount(value: balance.totalValue, currency: XTR) ?? 0
     }
     var usdAmount: String {
         return "$" + "\(self.fractional * self.usdRate)".prettyCurrencyNumberUsd
@@ -612,7 +612,7 @@ private struct StarsState : Equatable {
     }
     struct Transaction : Equatable {
         let id: String
-        let amount: Int64
+        let amount: StarsAmount
         let date: Int32
         let name: String
         let peer: EnginePeer?
@@ -621,11 +621,11 @@ private struct StarsState : Equatable {
     }
     
     struct Balance : Equatable {
-        var stars: Int64
+        var stars: StarsAmount
         var usdRate: Double
         
         var fractional: Double {
-            return currencyToFractionalAmount(value: stars, currency: XTR) ?? 0
+            return currencyToFractionalAmount(value: stars.totalValue, currency: XTR) ?? 0
         }
         
         var usd: String {
@@ -642,8 +642,8 @@ private struct StarsState : Equatable {
         
     var nextWithdrawalTimestamp: Int32? = nil
 
-    var overview: Overview = .init(balance: .init(stars: 0, usdRate: 0), current: .init(stars: 0, usdRate: 0), all: .init(stars: 0, usdRate: 0))
-    var balance: Balance = .init(stars: 0, usdRate: 0)
+    var overview: Overview = .init(balance: .init(stars: .zero, usdRate: 0), current: .init(stars: .zero, usdRate: 0), all: .init(stars: .zero, usdRate: 0))
+    var balance: Balance = .init(stars: .init(value: 0, nanos: 0), usdRate: 0)
     var transactions: [Star_Transaction] = []
         
     var transactionsState: StarsTransactionsContext.State?
@@ -706,7 +706,7 @@ private struct State : Equatable {
         var usdRate: Double
         
         var fractional: Double {
-            return currencyToFractionalAmount(value: ton, currency: "TON") ?? 0
+            return currencyToFractionalAmount(value: Double(ton), currency: "TON") ?? 0
         }
         
         var usd: String {
@@ -955,7 +955,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance_ton, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.ton, usd: state.balance.usd, currency: .ton), canWithdraw: state.canWithdraw, viewType: .singleItem, transfer: arguments.withdraw)
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: Double(state.balance.ton), usd: state.balance.usd, currency: .ton), canWithdraw: state.canWithdraw, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
         let text: String
@@ -977,7 +977,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance_stars, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars.totalValue, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
                 if let url = state.adsUrl {
                     arguments.executeLink(url)
                 }
@@ -993,19 +993,20 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    //TODOLANG
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("affiliate"), data: .init(name: "Earn Stars", color: theme.colors.text, icon: NSImage(resource: .iconAffiliateEarnStars).precomposed(flipVertical: true), type: .next, viewType: .singleItem, description: "Distribute links to mini apps and earn a share of their revenue in Stars.", descTextColor: theme.colors.grayText, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))))
+  
+    let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_connect_allowed", orElse: false)
     
-    
-
-    if let transactionsState = state.transactionsState, let starsState = state.starsState, let starsTransactionsState = starsState.transactionsState {
+    if affiliateEnabled {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-      
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationTransactionsTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-        index += 1
+        //TODOLANG
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("affiliate"), data: .init(name: strings().affilateProgramEarn, color: theme.colors.text, icon: NSImage(resource: .iconAffiliateEarnStars).precomposed(flipVertical: true), type: .next, viewType: .singleItem, description: strings().affilateProgramEarnInfo, descTextColor: theme.colors.grayText, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))))
+
+    }
+        
+
+    if let transactionsState = state.transactionsState, let starsState = state.starsState, let starsTransactionsState = starsState.transactionsState {
+       
         
         var modes: [State.TransactionMode] = []
         if !state.transactions.isEmpty {
@@ -1022,9 +1023,17 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         if state.transactionMode == .xtr, !modes.contains(.xtr) {
             mode = .ton
         }
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction_mode, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return TransactionTypesItem(initialSize, stableId: stableId, context: arguments.context, modes: modes, transactionMode: mode, viewType: .firstItem, callback: arguments.toggleTransactionType)
-        }))
+        if !modes.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+          
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationTransactionsTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction_mode, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return TransactionTypesItem(initialSize, stableId: stableId, context: arguments.context, modes: modes, transactionMode: mode, viewType: .firstItem, callback: arguments.toggleTransactionType)
+            }))
+        }
         
         
         switch mode {
@@ -1086,6 +1095,12 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
             }
             
             if starsTransactionsState.isLoading {
+                
+                if modes.isEmpty {
+                    entries.append(.sectionId(sectionId, type: .normal))
+                    sectionId += 1
+                }
+
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
                     return LoadingTableItem(initialSize, height: 40, stableId: stableId, viewType: .lastItem)
                 }))
@@ -1239,7 +1254,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId, onl
                     starsState.transactions = starsTransactions?.transactions.map { value in
                         let type: Star_TransactionType
                         var botPeer: EnginePeer?
-                        let incoming: Bool = value.count > 0
+                        let incoming: Bool = value.count.totalValue > 0
                         let source: Star_TransactionType.Source
                         switch value.peer {
                         case let .peer(peer):
@@ -1437,7 +1452,7 @@ func FragmentMonetizationController(context: AccountContext, peerId: PeerId, onl
             return current
         }
     }, openStarsTransaction: { transaction in
-        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
+        showModal(with: Star_TransactionScreen(context: context, fromPeerId: peerId, peer: transaction.peer, transaction: transaction.native), for: context.window)
     }, withdrawStars: { [weak contextObject] in
         if let contextObject {
             let defaultState = stateValue.with { $0.starsState ?? .init(config_withdraw: false) }
@@ -1575,11 +1590,11 @@ private final class WithdrawHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let balance: TextViewLayout
     fileprivate let arguments: WithdrawArguments
-    init(_ initialSize: NSSize, stableId: AnyHashable, balance: Int64, arguments: WithdrawArguments) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, balance: StarsAmount, arguments: WithdrawArguments) {
         self.arguments = arguments
         self.titleLayout = .init(.initialize(string: strings().fragmentStarWithdraw, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         let attr = NSMutableAttributedString()
-        attr.append(string: strings().starPurchaseBalance("\(clown)\(balance)"), color: theme.colors.text, font: .normal(.text))
+        attr.append(string: strings().starPurchaseBalance("\(clown)\(balance.stringValue)"), color: theme.colors.text, font: .normal(.text))
         attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.balance = .init(attr)
@@ -1654,8 +1669,8 @@ private final class WithdrawInputItem : GeneralRowItem {
     let inputState: Updated_ChatTextInputState
     let arguments: WithdrawArguments
     let interactions: TextView_Interactions
-    let balance: Int64
-    init(_ initialSize: NSSize, stableId: AnyHashable, balance: Int64, inputState: Updated_ChatTextInputState, arguments: WithdrawArguments) {
+    let balance: StarsAmount
+    init(_ initialSize: NSSize, stableId: AnyHashable, balance: StarsAmount, inputState: Updated_ChatTextInputState, arguments: WithdrawArguments) {
         self.inputState = inputState
         self.arguments = arguments
         self.balance = balance
@@ -2037,8 +2052,8 @@ private func withdrawStarBalance(context: AccountContext, state: StarsState, sta
         let number = Int64(value.string) ?? 0
         
         var value = value
-        if number > state.balance.stars {
-            let string = "\(state.balance.stars)"
+        if number > state.balance.stars.value {
+            let string = state.balance.stars.stringValue
             value = .init(inputText: .initialize(string: string), selectionRange: string.length..<string.length)
             getController?()?.proccessValidation(.fail(.fields([_id_input : .shake])))
         }

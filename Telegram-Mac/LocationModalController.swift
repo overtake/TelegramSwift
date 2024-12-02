@@ -622,7 +622,7 @@ class LocationModalController: ModalViewController {
         
         
         
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare") |> mapToSignal { result in
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare", referrer: nil) |> mapToSignal { result in
             switch result {
             case .progress:
                 return .never()

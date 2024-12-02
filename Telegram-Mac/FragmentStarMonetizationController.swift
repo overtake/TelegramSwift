@@ -140,11 +140,11 @@ private struct State : Equatable {
     }
     
     struct Balance : Equatable {
-        var stars: Int64
+        var stars: StarsAmount
         var usdRate: Double
         
         var fractional: Double {
-            return currencyToFractionalAmount(value: stars, currency: XTR) ?? 0
+            return currencyToFractionalAmount(value: stars.totalValue, currency: XTR) ?? 0
         }
         
         var usd: String {
@@ -161,8 +161,8 @@ private struct State : Equatable {
         
     var nextWithdrawalTimestamp: Int32? = nil
 
-    var overview: Overview = .init(balance: .init(stars: 0, usdRate: 0), current: .init(stars: 0, usdRate: 0), all: .init(stars: 0, usdRate: 0))
-    var balance: Balance = .init(stars: 0, usdRate: 0)
+    var overview: Overview = .init(balance: .init(stars: .init(value: 0, nanos: 0), usdRate: 0), current: .init(stars: .init(value: 0, nanos: 0), usdRate: 0), all: .init(stars: .init(value: 0, nanos: 0), usdRate: 0))
+    var balance: Balance = .init(stars: .init(value: 0, nanos: 0), usdRate: 0)
     var allTransactions: [Star_Transaction] = []
     var incomingTransactions: [Star_Transaction] = []
     var outgoingTransactions: [Star_Transaction] = []
@@ -290,9 +290,9 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         
         var tuples: [Tuple] = []
         
-        tuples.append(.init(overview: .init(amount: state.overview.balance.stars, usdAmount: state.overview.balance.usd, info: strings().fragmentStarsAvailableBalance, stars: nil), viewType: .firstItem))
+        tuples.append(.init(overview: .init(amount: state.overview.balance.stars.value, usdAmount: state.overview.balance.usd, info: strings().fragmentStarsAvailableBalance, stars: nil), viewType: .firstItem))
         
-        tuples.append(.init(overview: .init(amount: state.overview.current.stars, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .lastItem))
+        tuples.append(.init(overview: .init(amount: state.overview.current.stars.value, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .lastItem))
 
         
         //tuples.append(.init(overview: .init(amount: state.overview.all.stars, usdAmount: state.overview.all.usd, info: strings().fragmentStarsTotalLifetime, stars: nil), viewType: .lastItem))
@@ -314,7 +314,7 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars.totalValue, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
                 if let url = state.adsUrl {
                     arguments.executeLink(url)
                 }
@@ -472,7 +472,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                 let map:(StarsContext.State.Transaction)->Star_Transaction = { value in
                     let type: Star_TransactionType
                     var botPeer: EnginePeer?
-                    let incoming: Bool = value.count > 0
+                    let incoming: Bool = value.count.value > 0
                     let source: Star_TransactionType.Source
                     switch value.peer {
                     case let .peer(peer):
@@ -560,7 +560,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
             contextObject?.outgoingTransactions.loadMore()
         }
     }, openTransaction: { transaction in
-        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
+        showModal(with: Star_TransactionScreen(context: context, fromPeerId: peerId, peer: transaction.peer, transaction: transaction.native), for: context.window)
     }, loadDetailedGraph: { [weak contextObject] graph, x in
         return contextObject?.revenue.loadDetailedGraph(graph, x: x) ?? .complete()
     }, toggleFilterMode: { filter in
@@ -1015,14 +1015,14 @@ private func withdrawEntries(_ state: State, arguments: WithdrawArguments) -> [I
     var index: Int32 = 0
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return WithdrawHeaderItem(initialSize, stableId: stableId, balance: state.balance.stars, arguments: arguments)
+        return WithdrawHeaderItem(initialSize, stableId: stableId, balance: state.balance.stars.value, arguments: arguments)
     }))
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarWithdrawPlaceholder), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return WithdrawInputItem(initialSize, stableId: stableId, balance: state.balance.stars, inputState: state.inputState, arguments: arguments)
+        return WithdrawInputItem(initialSize, stableId: stableId, balance: state.balance.stars.value, inputState: state.inputState, arguments: arguments)
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -1054,8 +1054,8 @@ private func withdraw(context: AccountContext, state: State, stateValue: Signal<
         let number = Int64(value.string) ?? 0
         
         var value = value
-        if number > state.balance.stars {
-            let string = "\(state.balance.stars)"
+        if number > state.balance.stars.value {
+            let string = state.balance.stars.stringValue
             value = .init(inputText: .initialize(string: string), selectionRange: string.length..<string.length)
             getController?()?.proccessValidation(.fail(.fields([_id_input : .shake])))
         }

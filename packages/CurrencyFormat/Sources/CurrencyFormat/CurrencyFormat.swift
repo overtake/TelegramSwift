@@ -126,7 +126,7 @@ public func fractionalToCurrencyAmount(value: Double, currency: String) -> Int64
     }
 }
 
-public func currencyToFractionalAmount(value: Int64, currency: String) -> Double? {
+public func currencyToFractionalAmount(value: Double, currency: String) -> Double? {
     guard let entry = currencyFormatterEntries[currency] ?? currencyFormatterEntries["USD"] else {
         return nil
     }

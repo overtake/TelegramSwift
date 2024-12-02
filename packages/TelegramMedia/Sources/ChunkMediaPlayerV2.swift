@@ -136,8 +136,6 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
     private var partsStateDisposable: Disposable?
     private var updateTimer: Foundation.Timer?
     
-    private var audioSessionDisposable: Disposable?
-    private var hasAudioSession: Bool = false
 
     public init(
         partsState: Signal<ChunkMediaPlayerPartsState, NoError>,
@@ -201,7 +199,6 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
     deinit {
         self.partsStateDisposable?.dispose()
         self.updateTimer?.invalidate()
-        self.audioSessionDisposable?.dispose()
         
         if #available(macOS 14.0, *) {
             self.videoRenderer.sampleBufferRenderer.stopRequestingMediaData()
@@ -221,9 +218,10 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
     }
     
     private func updateInternalState() {
-        if self.isSoundEnabled && self.hasSound && self.hasAudioSession {
+        if self.isSoundEnabled && self.hasSound {
             if self.audioRenderer == nil {
                 let audioRenderer = AVSampleBufferAudioRenderer()
+                audioRenderer.volume = self.volume
                 audioRenderer.isMuted = self.isMuted
                 self.audioRenderer = audioRenderer
                 self.renderSynchronizer.addRenderer(audioRenderer)
@@ -244,8 +242,7 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
             if #available(macOS 10.14, *) {
                 timestamp = self.renderSynchronizer.currentTime()
             } else {
-                //TODOFATAL
-                timestamp = CMTimeMakeWithSeconds(0, preferredTimescale: 44000)
+                timestamp = CMTimebaseGetTime(self.renderSynchronizer.timebase)
             }
         }
         let timestampSeconds = timestamp.seconds

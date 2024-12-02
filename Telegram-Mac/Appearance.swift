@@ -515,13 +515,13 @@ private func generateBalanceIcon(text: String, icon: CGImage) -> CGImage {
     })!
 }
 
-func generateTonAndStarBalanceIcon(ton: String?, stars: Int64) -> CGImage {
+func generateTonAndStarBalanceIcon(ton: String?, stars: String?) -> CGImage {
     
     
     let starsIcon: CGImage?
     let tonIcon: CGImage?
-    if stars > 0 {
-        starsIcon = generateBalanceIcon(text: "\(stars)", icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
+    if let stars {
+        starsIcon = generateBalanceIcon(text: stars, icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
     } else {
         starsIcon = nil
     }

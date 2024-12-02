@@ -1155,7 +1155,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
         }
         updateState { current in
             var current = current
-            current.myBalance = state?.balance ?? 0
+            current.myBalance = state?.balance.value ?? 0
             current.topPeers = values
             current.message = updatedMessage ?? .init(message)
             if isFirst {
