@@ -180,7 +180,13 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     func openAffiliate(starRefProgram: TelegramStarRefProgram?) {
-        self.pullNavigation()?.push(Affiliate_StartController(context: context, peerId: peerId, starRefProgram: starRefProgram))
+        if let starRefProgram, let peer, peer.botInfo?.flags.contains(.canEdit) == false {
+            showModal(with: Affiliate_ProgramPreview(context: context, peerId: context.peerId, program: AffiliateProgram.init(starRefProgram, peer: .init(peer)), joined: { _ in
+                
+            }), for: context.window)
+        } else {
+            self.pullNavigation()?.push(Affiliate_StartController(context: context, peerId: peerId, starRefProgram: starRefProgram))
+        }
     }
     
     func openStarsBalance() {
@@ -2298,7 +2304,6 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_program_allowed", orElse: false)
 
                         entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: affiliateEnabled ? .firstItem : .singleItem))
-                        //TODOLANG
                         let text: String
                         if let program = cachedData.starRefProgram {
                             let localizedDuration: String
@@ -2307,7 +2312,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             } else {
                                 localizedDuration = strings().affiliateProgramDurationLifetime
                             }
-                            text = "\(program.commissionPermille)%, \(localizedDuration)"
+                            text = "\(program.commissionPermille.decemial)%, \(localizedDuration)"
                         } else {
                             text = strings().affiliateProgramOff
                         }
@@ -2340,6 +2345,26 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
 
                     if peer is TelegramSecretChat || view.peerIsContact {
                         destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
+                    }
+                } else {
+                    if peer.botInfo?.flags.contains(.canEdit) == false {
+                        let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_connect_allowed", orElse: false)
+
+                        let text: String
+                        if let program = cachedData.starRefProgram {
+                            let localizedDuration: String
+                            if let duration = program.durationMonths {
+                                localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : strings().timerYearsCountable(Int(duration / 12))
+                            } else {
+                                localizedDuration = strings().affiliateProgramDurationLifetime
+                            }
+                            text = "\(program.commissionPermille.decemial)%, \(localizedDuration)"
+                        } else {
+                            text = strings().affiliateProgramOff
+                        }
+                        if affiliateEnabled {
+                            entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: text, starRefProgram: cachedData.starRefProgram, viewType: .firstItem))
+                        }
                     }
                 }
                

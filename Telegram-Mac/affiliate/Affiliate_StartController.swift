@@ -548,7 +548,7 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
                 }))
                 
                 showModalAlert(for: window, data: data, completion: { result in
-                    _ = context.engine.peers.updateStarRefProgram(id: peerId, program: (comission, duration)).start()
+                    _ = context.engine.peers.updateStarRefProgram(id: peerId, program: (comission, duration == .max ? nil : duration)).start()
                     showModalText(for: window, text: strings().affiliateSetupToastStartedText)
                     next(.success(.navigationBack))
                 })
