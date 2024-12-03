@@ -232,6 +232,15 @@ struct AffiliateProgram : Equatable {
     var connected: Connected?
 }
 
+extension AffiliateProgram {
+    init(_ starRefProgram: TelegramStarRefProgram, peer: EnginePeer) {
+        self.init(peer: peer, commission: starRefProgram.commissionPermille, commission2: 0, duration: starRefProgram.durationMonths ?? .max, date: 0, revenue: starRefProgram.dailyRevenuePerUser ?? .zero)
+    }
+    init(_ program: EngineSuggestedStarRefBotsContext.Item) {
+        self.init(peer: program.peer, commission: program.program.commissionPermille, commission2: 0, duration: program.program.durationMonths ?? .max, date: 0, revenue: program.program.dailyRevenuePerUser ?? .zero)
+    }
+}
+
 
 
 private final class Arguments {
@@ -270,16 +279,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let info = "Once you start the affiliate program, you won't be able to decrease its commission or duration. You can only increase these parameters or end the program, which will disable all previously distributed referral links.";
+    let info = strings().affiliateSetupAlertApplyText;
     
     var rows: [InputDataTableBasedItem.Row] = []
     
-    if let user = state.program.peer as? TelegramUser, let count = user.subscriberCount {
-        rows.append(.init(left: .init(.initialize(string: "Monthly users", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: count.formattedWithSeparator, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+    if let user = state.program.peer._asPeer() as? TelegramUser, let count = user.subscriberCount {
+        rows.append(.init(left: .init(.initialize(string: strings().affiliateProgramMonthlyText, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: count.formattedWithSeparator, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
     }
     
     
-    rows.append(.init(left: .init(.initialize(string: "Daily Revenue per User", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: state.program.revenue.stringValue, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+    rows.append(.init(left: .init(.initialize(string: strings().affiliateProgramDailyRevenueText, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: state.program.revenue.stringValue, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("stats"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -290,12 +299,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_button, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: "Join Program", viewType: .legacy, action: arguments.join, inset: .init(left: 10, right: 10))
+        return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: strings().affiliateProgramActionJoin, viewType: .legacy, action: arguments.join, inset: .init(left: 10, right: 10))
     }))
     
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("By joining this program, you agree to the [Terms and Services](https://telegram.org) of Affiliate Programs.", linkHandler: { link in
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().affiliateProgramJoinTerms, linkHandler: { link in
         execute(inapp: .external(link: link, false))
     }), data: .init(color: theme.colors.listGrayText, viewType: .legacy, centerViewAlignment: true, alignment: .center)))
     index += 1
@@ -347,8 +356,7 @@ func Affiliate_ProgramPreview(context: AccountContext, peerId: PeerId, program: 
         _ = showModalProgress(signal: signal, for: window).startStandalone(next: { value in
             joined(.init(peer: value.peer, commission: value.commissionPermille, commission2: 0, duration: value.durationMonths ?? .max, date: 0, revenue: .zero, connected: .init(url: value.url, revenue: value.revenue, participants: value.participants)))
         })
-        //TODOLANG
-        showModalText(for: window, text: "You have successfully connected to referal program")
+        showModalText(for: window, text: strings().affiliateProgramAlertConnected)
         close?()
     })
     

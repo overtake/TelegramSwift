@@ -39,6 +39,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var hiddenStatus: Bool = true
     private var badgeNode: View? = nil
     
+    private var customAction: TextView?
+    
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -407,6 +409,10 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 photoBadge.setFrameOrigin(NSMakePoint(self.image.frame.maxX - photoBadge.frame.width / 2 + 5, self.image.frame.midY + 5))
             }
         }
+        
+        if let customAction {
+            customAction.centerY(x: containerView.frame.width - customAction.frame.width - 10)
+        }
     }
     
     func updateInteractionType(_ previousType:ShortPeerItemInteractionType, _ interactionType:ShortPeerItemInteractionType, item:ShortPeerRowItem, animated:Bool) {
@@ -739,6 +745,31 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 performSubviewRemoval(view, animated: animated, scale: true)
                 self.photoBadge = nil
             }
+        }
+        
+        if let customAction = (isRowSelected ? item.customActionTextSelected : item.customActionText) {
+            let current: TextView
+            if let view = self.customAction {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.scaleOnClick = true
+                self.customAction = current
+                containerView.addSubview(current)
+            }
+            current.update(customAction)
+            current.backgroundColor = isRowSelected ? theme.colors.underSelectedColor : theme.colors.accent
+            current.setFrameSize(customAction.layoutSize.bounds.insetBy(dx: -8, dy: -4).size)
+            current.layer?.cornerRadius = current.frame.height / 2
+            
+            current.setSingle(handler: { [weak item] _ in
+                item?.customAction?.callback()
+            }, for: .Click)
+            
+        } else if let view = customAction {
+            performSubviewRemoval(view, animated: animated)
+            self.customAction = nil
         }
         
         

@@ -219,7 +219,20 @@ class ShortPeerRowItem: GeneralRowItem {
     let openStory:(StoryInitialIndex?)->Void
     let menuOnAction: Bool
     
-    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, menuOnAction: Bool = false, photoBadge: CGImage? = nil) {
+    let customActionText: TextViewLayout?
+    let customActionTextSelected: TextViewLayout?
+    
+    let customAction: CustomAction?
+    
+    struct CustomAction {
+        var title: String
+        var callback:()->Void
+    }
+    
+    
+
+    
+    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, menuOnAction: Bool = false, photoBadge: CGImage? = nil, customAction: CustomAction? = nil) {
         self.peer = peer
         self.drawPhotoOuter = drawPhotoOuter
         self.contextMenuItems = contextMenuItems
@@ -234,6 +247,7 @@ class ShortPeerRowItem: GeneralRowItem {
         self.disabledAction = disabledAction
         self.inputActivity = inputActivity
         self.menuOnAction = menuOnAction
+        self.customAction = customAction
         if let deleteInset = deleteInset {
             self.deleteInset = deleteInset
         } else {
@@ -243,6 +257,17 @@ class ShortPeerRowItem: GeneralRowItem {
             case let .modern(_, insets):
                 self.deleteInset = insets.left
             }
+        }
+        
+        if let customAction {
+            self.customActionText = .init(.initialize(string: customAction.title, color: theme.colors.underSelectedColor, font: .medium(.text)), alignment: .center)
+            self.customActionText?.measure(width: .greatestFiniteMagnitude)
+            
+            self.customActionTextSelected = .init(.initialize(string: customAction.title, color: theme.colors.accent, font: .medium(.text)), alignment: .center)
+            self.customActionTextSelected?.measure(width: .greatestFiniteMagnitude)
+        } else {
+            self.customActionText = nil
+            self.customActionTextSelected = nil
         }
         
         self.badgeNode = badgeNode
@@ -385,6 +410,12 @@ class ShortPeerRowItem: GeneralRowItem {
         if self.peer.isFake {
             addition += 20
         }
+        
+        
+        if let customActionText {
+            addition += customActionText.layoutSize.width + 10
+        }
+        
         if self.highlightVerified  {
             if peer.isPremium || peer.isVerified || peer.isScam || peer.isFake {
                 addition += 25

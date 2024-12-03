@@ -19,10 +19,13 @@ private final class HeaderItem : GeneralRowItem {
         self.sendas = sendas
         self.arguments = arguments
         
-        let localizedDuration = program.duration < 12 ? strings().timerMonthsCountable(Int(program.duration)) : program.duration == .max ? "Lifetime" : strings().timerYearsCountable(Int(program.duration / 12))
+        let localizedDuration = program.duration < 12 ? strings().timerMonthsCountable(Int(program.duration)) : program.duration == .max ? strings().affiliateProgramDurationLifetime : strings().timerYearsCountable(Int(program.duration / 12))
         
-        self.headerLayout = .init(.initialize(string: "Referral Link", color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1)
-        self.infoLayout = .init(.initialize(string: "Share this link with your subscribers to earn a **\(program.commission)%** commission on their spending in **\(program.peer._asPeer().displayTitle)** for **\(localizedDuration)**.\n\nCommission will be sent to:", color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: strings().affiliateProgramLinkTitle, color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1)
+        
+        
+        
+        self.infoLayout = .init(.initialize(string: strings().affiliateProgramLinkSubtitle(Int(program.commission), program.peer._asPeer().displayTitle, localizedDuration), color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         
         super.init(initialSize, stableId: stableId)
     }
@@ -314,15 +317,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_button, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: "Copy Link", viewType: .legacy, action: arguments.copyToClipboard, inset: .init(left: 10, right: 10))
+            return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: strings().affiliateProgramActionCopyLink, viewType: .legacy, action: arguments.copyToClipboard, inset: .init(left: 10, right: 10))
         }))
         
         
         let openedCount: String
         if let connected = state.program.connected, connected.participants > 0 {
-            openedCount = "\(connected.participants) users opened \(state.program.peer._asPeer().displayTitle) through this link."
+            openedCount = strings().affiliateProgramUserCountFooterCountable(Int(connected.participants), state.program.peer._asPeer().displayTitle)
         } else {
-            openedCount = "No one opened \(state.program.peer._asPeer().displayTitle) through this link yet."
+            openedCount = strings().affiliateProgramUserCountFooterZeroValueHolder(state.program.peer._asPeer().displayTitle)
         }
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(openedCount, linkHandler: { link in
@@ -388,8 +391,10 @@ func Affiliate_LinkPreview(context: AccountContext, program: AffiliateProgram, p
     let arguments = Arguments(context: context, dismiss: {
         close?()
     }, copyToClipboard: {
-        copyToClipboard(stateValue.with { $0.program.connected!.url })
-        showModalText(for: window, text: "Share this link and earn \(program.commission)% of what people", title: "Link copied to clipboard")
+        let program = stateValue.with { $0.program }
+        copyToClipboard(program.connected!.url)
+        
+        showModalText(for: window, text: strings().affiliateProgramToastLinkCopiedText("\(program.commission.decemial)%", program.peer._asPeer().displayTitle), title: strings().affiliateProgramToastLinkCopiedTitle)
         close?()
     }, setGetAs: { value in
         updateState { current in

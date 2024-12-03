@@ -219,46 +219,28 @@ public final class L10n {
   public static var affiliateProgramActionJoin: String  { return L10n.tr("Localizable", "AffiliateProgram.ActionJoin") }
   /// Commission will be sent to:
   public static var affiliateProgramCommistionDestinationText: String  { return L10n.tr("Localizable", "AffiliateProgram.CommistionDestinationText") }
-  /// The average daily revenue per user: #**%@**
-  public static func affiliateProgramDailyRevenueText(_ p1: String) -> String {
-    return L10n.tr("Localizable", "AffiliateProgram.DailyRevenueText", p1)
-  }
+  /// Daily Revenue per User
+  public static var affiliateProgramDailyRevenueText: String  { return L10n.tr("Localizable", "AffiliateProgram.DailyRevenueText") }
   /// Lifetime
   public static var affiliateProgramDurationLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.DurationLifetime") }
+  /// **%$1@** will share **%$2@** of the revenue from each user you refer to it for **%$3@.**
+  public static var affiliateProgramJoinSubtitle: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitle") }
   /// **{bot}** will share **{commission}** of the revenue from each user you refer to it **forever**.
   public static var affiliateProgramJoinSubtitleLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitleLifetime") }
-  /// **{bot}** will share **{commission}** of the revenue from each user you refer to it for **1 month.**
-  public static var affiliateProgramJoinSubtitleMonths1: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitleMonths_1") }
-  /// **{bot}** will share **{commission}** of the revenue from each user you refer to it for **%d months.**
-  public static func affiliateProgramJoinSubtitleMonthsAny(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitleMonths_any", p1)
-  }
-  /// **{bot}** will share **{commission}** of the revenue from each user you refer to it for **1 month.**
-  public static var affiliateProgramJoinSubtitleYears1: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitleYears_1") }
-  /// **{bot}** will share **{commission}** of the revenue from each user you refer to it for **%d months.**
-  public static func affiliateProgramJoinSubtitleYearsAny(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitleYears_any", p1)
-  }
   /// By joining this program, you afree to the [terms and conditions](https://telegram.org/terms) of Affiliate Programs.
   public static var affiliateProgramJoinTerms: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTerms") }
   /// Affiliate Program
   public static var affiliateProgramJoinTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTitle") }
+  /// Share this link with your users to earn a **%1$d** commission on their spending in **%2$@** for **%3$@** after they follow your link.
+  public static func affiliateProgramLinkSubtitle(_ p1: Int, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitle", p1, p2, p3)
+  }
   /// Share this link with your users to earn a **{commission}** commission on their spending in **{bot}** **forever** after they follow your link.
   public static var affiliateProgramLinkSubtitleLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitleLifetime") }
-  /// Share this link with your users to earn a **{commission}** commission on their spending in **{bot}** for **1 month** after they follow your link.
-  public static var affiliateProgramLinkSubtitleMonths1: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitleMonths_1") }
-  /// Share this link with your users to earn a **{commission}** commission on their spending in **{bot}** for **%d months** after they follow your link.
-  public static func affiliateProgramLinkSubtitleMonthsAny(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitleMonths_any", p1)
-  }
-  /// Share this link with your users to earn a **{commission}** commission on their spending in **{bot}** for **1 year** after they follow your link.
-  public static var affiliateProgramLinkSubtitleYears1: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitleYears_1") }
-  /// Share this link with your users to earn a **{commission}** commission on their spending in **{bot}** for **%d years** after they follow your link.
-  public static func affiliateProgramLinkSubtitleYearsAny(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitleYears_any", p1)
-  }
   /// Referral Link
   public static var affiliateProgramLinkTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkTitle") }
+  /// Monthly users
+  public static var affiliateProgramMonthlyText: String  { return L10n.tr("Localizable", "AffiliateProgram.MonthlyText") }
   /// Off
   public static var affiliateProgramOff: String  { return L10n.tr("Localizable", "AffiliateProgram.Off") }
   /// personal account
@@ -269,14 +251,40 @@ public final class L10n {
   public static var affiliateProgramSortSelectorProfitability: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorProfitability") }
   /// Revenue
   public static var affiliateProgramSortSelectorRevenue: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorRevenue") }
-  /// No one opened {bot} through this link yet.
-  public static var affiliateProgramUserCountFooter0: String  { return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_0") }
-  /// 1 user opened {bot} through this link.
-  public static var affiliateProgramUserCountFooter1: String  { return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_1") }
-  /// %d users opened {bot} through this link.
-  public static func affiliateProgramUserCountFooterAny(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_any", p1)
+  /// %d %@
+  public static func affiliateProgramUserCountFooterCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_countable", p1, p2)
   }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_few", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_many", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_one", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_other", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_two", p1, p2)
+  }
+  /// No one opened %@ through this link yet.
+  public static func affiliateProgramUserCountFooterZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_zero", p1)
+  }
+  /// No one opened %@ through this link yet.
+  public static func affiliateProgramUserCountFooterZeroValueHolder(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_ZeroValueHolder", p1)
+  }
+  /// You have successfully connected to referal program
+  public static var affiliateProgramAlertConnected: String  { return L10n.tr("Localizable", "AffiliateProgram.Alert.Connected") }
   /// You can now copy the referral link.
   public static var affiliateProgramToastJoinedText: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastJoined.Text") }
   /// Program joined

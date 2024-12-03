@@ -603,7 +603,7 @@ private struct State : Equatable {
                 return strings().affiliateProgramSortSelectorRevenue
             }
         }
-        var value: TelegramSuggestedStarRefBotList.SortMode {
+        var value: EngineSuggestedStarRefBotsContext.SortMode {
             switch self {
             case .date:
                 return .date
@@ -614,11 +614,11 @@ private struct State : Equatable {
             }
         }
     }
-    var list: [TelegramSuggestedStarRefBotList.SortMode : [AffiliateProgram]] = [:]
+    var list: [EngineSuggestedStarRefBotsContext.SortMode : [AffiliateProgram]] = [:]
+    var listState: [EngineSuggestedStarRefBotsContext.SortMode : EngineSuggestedStarRefBotsContext.State] = [:]
+    
+    var connectedState: EngineConnectedStarRefBotsContext.State?
     var connectedList: [AffiliateProgram] = []
-
-    var listState: [TelegramSuggestedStarRefBotList.SortMode : TelegramSuggestedStarRefBotList] = [:]
-    var connectedState: TelegramConnectedStarRefBotList?
 
     var sort: Sort = .profitability
     
@@ -764,38 +764,56 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
         statePromise.set(stateValue.modify (f))
     }
     
-    let connected: Signal<TelegramConnectedStarRefBotList?, NoError> = onlyDemo ? .single(nil) : context.engine.peers.requestConnectedStarRefBots(id: peerId, offset: nil, limit: 100)
     
-    
-    
-    let updateList:(TelegramSuggestedStarRefBotList.SortMode)->Void = { sort in
-        let bots = context.engine.peers.requestSuggestedStarRefBots(id: peerId, sortMode: sort, offset: nil, limit: 100) |> take(1)
-        
-        actionsDisposable.add(combineLatest(bots, connected).startStrict(next: { list, connected in
-            updateState { current in
-                var current = current
-                
-                current.listState[sort] = list
-                current.connectedState = connected
-
-                if let list {
-                    current.list[sort] = list.items.map {
-                        .init(peer: $0.peer, commission: $0.program.commissionPermille, commission2: 0, duration: $0.program.durationMonths ?? .max, date: context.timestamp, revenue: $0.program.dailyRevenuePerUser ?? .zero)
-                    }
-                }
-                if let connected {
-                    current.connectedList = connected.items.map {
-                        .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: .zero, connected: .init(url: $0.url, revenue: $0.revenue, participants: $0.participants))
-                    }
-                }
-                return current
-            }
-        }))
+    struct ContextObject {
+        let connected: EngineConnectedStarRefBotsContext?
+        var sorted: [EngineSuggestedStarRefBotsContext.SortMode : EngineSuggestedStarRefBotsContext]
+        init(connected: EngineConnectedStarRefBotsContext?, list: [EngineSuggestedStarRefBotsContext.SortMode : EngineSuggestedStarRefBotsContext]) {
+            self.connected = connected
+            self.sorted = list
+        }
     }
     
-    updateList(.profitability)
-    updateList(.date)
-    updateList(.revenue)
+    let contextObject = ContextObject(connected: onlyDemo ? nil : context.engine.peers.connectedStarRefBots(id: peerId), list: [
+        .date: context.engine.peers.suggestedStarRefBots(id: peerId, sortMode: .date),
+        .profitability: context.engine.peers.suggestedStarRefBots(id: peerId, sortMode: .profitability),
+        .revenue: context.engine.peers.suggestedStarRefBots(id: peerId, sortMode: .revenue)
+    ])
+    
+    let connectedState: Signal<EngineConnectedStarRefBotsContext.State?, NoError>
+    if let connected = contextObject.connected {
+        connectedState = connected.state |> map(Optional.init)
+    } else {
+        connectedState = .single(nil)
+    }
+    
+    actionsDisposable.add(combineLatest(connectedState, contextObject.sorted[.date]!.state, contextObject.sorted[.profitability]!.state, contextObject.sorted[.revenue]!.state).startStrict(next: { connected, date, profability, revenue in
+        updateState { current in
+            var current = current
+            
+            current.connectedState = connected
+            if let connected {
+                current.connectedList = connected.items.map {
+                    .init(peer: $0.peer, commission: $0.commissionPermille, commission2: 0, duration: $0.durationMonths ?? .max, date: context.timestamp, revenue: .zero, connected: .init(url: $0.url, revenue: $0.revenue, participants: $0.participants))
+                }
+            }
+            
+            var list: [(EngineSuggestedStarRefBotsContext.SortMode, EngineSuggestedStarRefBotsContext.State)] = []
+            list.append((.date, date))
+            list.append((.profitability, profability))
+            list.append((.revenue, revenue))
+
+            for item in list {
+                current.listState[item.0] = item.1
+                current.list[item.0] = item.1.items.map {
+                    .init($0)
+                }
+            }
+            
+            return current
+        }
+    }))
+    
 
     var getController:(()->ViewController?)? = nil
     
@@ -811,7 +829,6 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
             current.sort = sort
             return current
         }
-        updateList(sort.value)
     }, open: { program in
         if onlyDemo {
             PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: program.peer.id)
@@ -839,7 +856,7 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
     }, leave: { program in
         if let connected = program.connected {
             verifyAlert(for: window, header: strings().affiliateSetupTitleNew, information: strings().affiliateProgramsConfirmAlert, ok: strings().affiliateProgramsConfirmAlertOK, successHandler: { _ in
-                _ = context.engine.peers.removeConnectedStarRefBot(id: program.peer.id, link: connected.url).start()
+                _ = contextObject.connected?.remove(url: connected.url)
                 updateState { current in
                     var current = current
                     current.connectedList.removeAll(where: { $0.connected?.url == connected.url })
@@ -855,6 +872,8 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
     }
     
     let controller = InputDataController(dataSignal: signal, title: onlyDemo ? strings().affiliateProgramsExistingPrograms : strings().affiliateSetupTitleJoin, removeAfterDisappear: false, hasDone: false)
+    
+    controller.contextObject = contextObject
     
     getController = { [weak controller] in
         return controller
