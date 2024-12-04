@@ -158,7 +158,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
             return .single(nil)
         }
     } else {
-        return context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> mapToSignal { result -> Signal<Peer?, NoError> in
+        return context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> filter { $0 != .progress } |> mapToSignal { result -> Signal<Peer?, NoError> in
             return .single(result.result?._asPeer())
         } |> deliverOnMainQueue
     }
@@ -506,7 +506,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 }
             }
         } else {
-            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> mapToSignalPromotingError { result -> Signal<Peer, Error> in
+            peerSignal = context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> filter { $0 != .progress } |> mapToSignalPromotingError { result -> Signal<Peer, Error> in
                 if let result = result.result {
                     return .single(result._asPeer())
                 } else {
@@ -601,7 +601,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 }
             }
         } else {
-            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress} |> mapToSignalPromotingError { result -> Signal<Peer, Error> in
+            peerSignal = context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> filter { $0 != .progress} |> mapToSignalPromotingError { result -> Signal<Peer, Error> in
                 if let result = result.result {
                     return .single(result._asPeer())
                 } else {
@@ -709,7 +709,23 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             if phone == username {
                 signal = context.engine.peers.resolvePeerByPhone(phone: phone)
             } else {
-                signal = context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> map { $0.result }
+                let referrer: String?
+                if let action {
+                    switch action {
+                    case let .start(parameter, _):
+                        let prefix = context.appConfiguration.getStringValue("starref_start_param_prefixes", orElse: "_tgref_")
+                        if parameter.hasPrefix(prefix) {
+                            referrer = String(parameter.suffix(parameter.length - prefix.length))
+                        } else {
+                            referrer = nil
+                        }
+                    default:
+                        referrer = nil
+                    }
+                } else {
+                    referrer = nil
+                }
+                signal = context.engine.peers.resolvePeerByName(name: username, referrer: referrer) |> filter { $0 != .progress } |> map { $0.result }
             }
                 
             let _ = showModalProgress(signal: signal |> mapToSignal { result -> Signal<Peer?, NoError> in
@@ -731,7 +747,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                 let standart = ["users", "groups", "channels", "bots"]
                                 
                                 if let choose = choose, choose.count == 1, !choose.contains(where: { value in standart.contains(value) }) {
-                                    let signal = context.engine.peers.resolvePeerByName(name: choose[0]) |> filter { $0 != .progress } |> deliverOnMainQueue
+                                    let signal = context.engine.peers.resolvePeerByName(name: choose[0], referrer: nil) |> filter { $0 != .progress } |> deliverOnMainQueue
                                     
                                     _ = signal.start(next: { peer in
                                         if let peer = peer.result {
@@ -894,7 +910,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         }
         afterComplete(true)
     case let .inviteBotToGroup(_, username, context, action, rights, isChannel, callback):
-        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0.result != nil } |> map { $0.result! } |> deliverOnMainQueue, for: getWindow(context)).start(next: { botPeerId in
+        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> filter { $0.result != nil } |> map { $0.result! } |> deliverOnMainQueue, for: getWindow(context)).start(next: { botPeerId in
             
             
             var payload: String = ""
@@ -1177,7 +1193,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         })
         afterComplete(true)
     case let .story(_, username, storyId, messageId, context):
-        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> map { $0.result?._asPeer() }, for: getWindow(context))
+        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> filter { $0 != .progress } |> map { $0.result?._asPeer() }, for: getWindow(context))
         _ = signal.start(next: { peer in
             if let peer = peer {
                 let controller = context.bindings.rootNavigation().controller as? ChatController
@@ -1382,7 +1398,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         let balance = context.starsContext.state |> map { $0?.balance } |> take(1) |> deliverOnMainQueue
         _ = balance.startStandalone(next: { balance in
             if let balance = balance {
-                if balance > amount {
+                if balance.value > amount {
                     showModalText(for: getWindow(context), text: strings().starsYouHaveEnough, callback: { value in
                         showModal(with: Star_ListScreen(context: context, source: .buy(suffix: purpose, amount: nil)), for: getWindow(context))
                     })

@@ -642,7 +642,7 @@ final class AccountContext {
                                      |> map { $0! }
                                      |> take(1)
                                      |> map { state in
-                                         return state.balance >= amount
+                                        return state.balance.value >= amount
                                      }, starsAllowed)
             } else {
                 return .single((false, false))
@@ -661,7 +661,7 @@ final class AccountContext {
         }
         
         self.reactions.successStarsAmount = { [weak self] amount in
-            self?.starsContext.add(balance: -Int64(amount))
+            self?.starsContext.add(balance: amount)
         }
         self.reactions.starsDisabled = { [weak self] in
             if let self {

@@ -1390,6 +1390,34 @@ NSArray<NSString *> * __nonnull currentAppInputSource()
     return inputs;
 }
 
+NSString * __nonnull currentKeyboardLanguage()
+{
+    // Get the current keyboard input source
+    // Get the current keyboard input source
+    TISInputSourceRef currentInputSource = TISCopyCurrentKeyboardInputSource();
+    
+    // Extract the language code(s) of the input source
+    NSArray *languages = (__bridge NSArray *)TISGetInputSourceProperty(currentInputSource, kTISPropertyInputSourceLanguages);
+    
+    // Release the input source object (since we copied it)
+    if (currentInputSource) {
+        CFRelease(currentInputSource);
+    }
+    
+    // Get the first language code and create a locale identifier
+    if (languages && languages.count > 0) {
+        NSString *languageCode = languages[0];
+        
+        // Get the current region code from the user's settings
+        NSString *regionCode = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
+        
+        // Return the combined locale identifier
+        return [NSString stringWithFormat:@"%@-%@", languageCode, regionCode];
+    }
+    
+    return @"Unknown";
+}
+
 NSEvent * __nullable createScrollWheelEvent() {
     CGEventRef upEvent = CGEventCreateScrollWheelEvent(
                                                        NULL,

@@ -41,7 +41,7 @@ enum Star_TransactionType : Equatable {
 }
 struct Star_Transaction : Equatable {
     let id: String
-    let amount: Int64
+    let amount: StarsAmount
     let date: Int32
     let name: String
     let peer: EnginePeer?
@@ -57,7 +57,7 @@ struct Star_Subscription : Equatable {
     }
     let id: String
     let peer: EnginePeer
-    let amount: Int64
+    let amount: StarsAmount
     let date: Int32
     let renewDate: Int32
     let state: State
@@ -69,7 +69,7 @@ private final class FloatingHeaderView : Control {
     private let textView = TextView()
     private let balanceView = InteractiveTextView()
     fileprivate let dismiss = ImageButton()
-    required init(frame frameRect: NSRect, source: Star_ListScreenSource, myBalance: Int64) {
+    required init(frame frameRect: NSRect, source: Star_ListScreenSource, myBalance: StarsAmount) {
         super.init(frame: frameRect)
         addSubview(textView)
         addSubview(dismiss)
@@ -91,18 +91,18 @@ private final class FloatingHeaderView : Control {
         switch source {
         case let .buy(suffix, amount):
             if let amount {
-                let need = Int(amount - myBalance)
+                let need = Int(amount - myBalance.value)
                 text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
             } else {
                 text = strings().starListGetStars
             }
             balanceView.isHidden = false
         case let .purchase(_, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
             balanceView.isHidden = false
         case let .purchaseSubscribe(_, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
             balanceView.isHidden = false
         case .account:
@@ -112,7 +112,7 @@ private final class FloatingHeaderView : Control {
             text = strings().starListTelegramStars
             balanceView.isHidden = false
         case let .prolongSubscription(_, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             text = strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator)
             balanceView.isHidden = false
         case .gift:
@@ -125,10 +125,10 @@ private final class FloatingHeaderView : Control {
         textView.update(layout)
     }
     
-    func update(myBalance: Int64, context: AccountContext) {
+    func update(myBalance: StarsAmount, context: AccountContext) {
         
         let balance = NSMutableAttributedString()
-        balance.append(string: strings().starListMyBalance(clown + TINY_SPACE, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
+        balance.append(string: strings().starListMyBalance(clown + TINY_SPACE, myBalance.value.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
         balance.detectBoldColorInString(with: .medium(.text))
         balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
@@ -156,21 +156,21 @@ private final class FloatingHeaderView : Control {
 }
 
 private final class BalanceItem : GeneralRowItem {
-    fileprivate let myBalance: Int64
+    fileprivate let myBalance: StarsAmount
     fileprivate let myBalanceLayout: TextViewLayout
     fileprivate let context: AccountContext
     fileprivate let infoLayout: TextViewLayout
     fileprivate let buyMore: ()->Void
     fileprivate let giftStars: ()->Void
     fileprivate let giftPremiumLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: Int64, viewType: GeneralViewType, buyMore: @escaping()->Void, giftStars: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: StarsAmount, viewType: GeneralViewType, buyMore: @escaping()->Void, giftStars: @escaping()->Void) {
         self.myBalance = myBalance
         self.context = context
         self.buyMore = buyMore
         self.giftStars = giftStars
         
         let attr = NSMutableAttributedString()
-        attr.append(string: myBalance.formattedWithSeparator, color: theme.colors.text, font: .medium(40))
+        attr.append(string: myBalance.value.formattedWithSeparator, color: theme.colors.text, font: .medium(40))
         self.myBalanceLayout = .init(attr)
         self.myBalanceLayout.measure(width: .greatestFiniteMagnitude)
         
@@ -292,12 +292,12 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let headerText: TextViewLayout
     fileprivate let dismiss: ()->Void
     fileprivate let source: Star_ListScreenSource
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: Int64, source: Star_ListScreenSource, viewType: GeneralViewType, dismiss: @escaping()->Void, openRecommendedApps: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: StarsAmount, source: Star_ListScreenSource, viewType: GeneralViewType, dismiss: @escaping()->Void, openRecommendedApps: @escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
         self.source = source
         let balance = NSMutableAttributedString()
-        balance.append(string: strings().starListMyBalance(clown + TINY_SPACE, myBalance.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
+        balance.append(string: strings().starListMyBalance(clown + TINY_SPACE, myBalance.value.formattedWithSeparator), color: theme.colors.text, font: .normal(.text))
         balance.detectBoldColorInString(with: .medium(.text))
         balance.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
@@ -310,7 +310,7 @@ private final class HeaderItem : GeneralRowItem {
         switch source {
         case let .buy(suffix, amount):
             if let amount {
-                let need = Int(amount - myBalance)
+                let need = Int(amount - myBalance.value)
                 headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
             } else {
                 headerAttr.append(string: strings().starListGetStars, color: theme.colors.text, font: .medium(.header))
@@ -327,22 +327,22 @@ private final class HeaderItem : GeneralRowItem {
                 headerInfo.append(string: strings().starListHowMany, color: theme.colors.text, font: .normal(.text))
             }
         case let .purchase(peer, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starListBuyAndUse(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
         case .account:
             headerAttr.append(string: strings().starListTelegramStars, color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starListBuyAndUserNobot, color: theme.colors.text, font: .normal(.text))
         case let .reactions(_, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starListBuyAndUserNobot, color: theme.colors.text, font: .normal(.text))
         case let .prolongSubscription(peer, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starBuyScreenProlongSubs(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
         case let .purchaseSubscribe(peer, requested):
-            let need = Int(requested - myBalance)
+            let need = Int(requested - myBalance.value)
             headerAttr.append(string: strings().starListStarsNeededCountable(need).replacingOccurrences(of: "\(need)", with: need.formattedWithSeparator), color: theme.colors.text, font: .medium(.header))
             headerInfo.append(string: strings().starBuyScreenPurschaseSub(peer._asPeer().displayTitle), color: theme.colors.text, font: .normal(.text))
 
@@ -696,7 +696,8 @@ private final class Arguments {
     let openTransaction:(Star_Transaction)->Void
     let openSubscription:(Star_Subscription)->Void
     let openRecommendedApps:()->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void) {
+    let openAffiliate:()->Void
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void, openAffiliate:@escaping()->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
@@ -711,6 +712,7 @@ private final class Arguments {
         self.openTransaction = openTransaction
         self.openSubscription = openSubscription
         self.openRecommendedApps = openRecommendedApps
+        self.openAffiliate = openAffiliate
     }
 }
 
@@ -743,7 +745,7 @@ private struct State : Equatable {
         }
     }
     
-    var myBalance: Int64? = nil
+    var myBalance: StarsAmount? = nil
     var options: [Option]? = nil
     var transactions: [Star_Transaction]? = nil
     var revealed: Bool = false
@@ -811,7 +813,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 switch arguments.source {
                 case let .purchase(_, amount):
-                    let minumum = max(0, amount - (state.myBalance ?? 0))
+                    let minumum = max(0, amount - (state.myBalance?.value ?? 0))
                     options.removeAll(where: {
                         $0.amount < minumum
                     })
@@ -864,8 +866,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         case .account:
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state.myBalance), comparable: nil, item: { initialSize, stableId in
-                return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? 0, viewType: .singleItem, buyMore: arguments.buyMore, giftStars: arguments.giftStars)
+                return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? .init(value: 0, nanos: 0), viewType: .singleItem, buyMore: arguments.buyMore, giftStars: arguments.giftStars)
             }))
+            
+            let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_connect_allowed", orElse: false)
+            
+            if affiliateEnabled {
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("affiliate"), data: .init(name: strings().affilateProgramEarn, color: theme.colors.text, icon: NSImage(resource: .iconAffiliateEarnStars).precomposed(flipVertical: true), type: .next, viewType: .singleItem, description: strings().affilateProgramEarnInfo, descTextColor: theme.colors.grayText, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))))
+            }
+            
             
             if !state.subscriptions.isEmpty {
                 
@@ -1103,7 +1114,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
             current.transactions = transactions.transactions.map { value in
                 let type: Star_TransactionType
                 var botPeer: EnginePeer?
-                let incoming: Bool = value.count > 0
+                let incoming: Bool = value.count.value > 0
                 let source: Star_TransactionType.Source
                 switch value.peer {
                 case let .peer(peer):
@@ -1204,7 +1215,6 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
                     close?()
                     inAppPurchaseManager.finishAllTransactions()
                     
-                    starsContext.add(balance: option.amount)
                     
                     delay(0.2, closure: {
                         PlayConfetti(for: window, stars: true)
@@ -1273,11 +1283,14 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, loadMoreSubscriptions: {
         starsSubscriptionsContext.loadMore()
     }, openTransaction: { transaction in
-        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: window)
+        showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: transaction.peer, transaction: transaction.native), for: window)
     }, openSubscription: { subscription in
         showModal(with: Star_SubscriptionScreen(context: context, subscription: subscription), for: window)
     }, openRecommendedApps: {
         showModal(with: Star_AppExamples(context: context), for: window)
+    }, openAffiliate: {
+        close?()
+        context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: context.peerId))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -1314,7 +1327,7 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     
     
     controller.didLoad = { controller, _ in
-        let myBalance = stateValue.with { $0.myBalance ?? 0 }
+        let myBalance = stateValue.with { $0.myBalance ?? .init(value: 0, nanos: 0) }
         let view = FloatingHeaderView(frame: NSMakeRect(0, 0, controller.frame.width, 50), source: source, myBalance: myBalance)
         view.layer?.opacity = 0
         controller.genericView.addSubview(view)

@@ -13,6 +13,11 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
         
         let context = DrawingContext(size: size, scale: 1)
         
+        if s.width != s.height {
+            var bp = 0
+            bp += 1
+        }
+        
         context.withContext { ctx in
             ctx.clear(size.bounds)
             if let img = image {
@@ -56,7 +61,11 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
                         ctx.translateBy(x: -(size.width/2.0), y: -(size.height/2.0))
 
                     }
-                    ctx.draw(c, in: NSMakeRect(0, 0, size.width, size.height))
+                    if s.width != s.height {
+                        ctx.draw(c, in: size.bounds.focus(size.aspectFilled(c.systemSize.aspectFitted(size))))
+                    } else {
+                        ctx.draw(c, in: size.bounds)
+                    }
                 }
             }
         }

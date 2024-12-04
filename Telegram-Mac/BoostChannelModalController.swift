@@ -1105,6 +1105,16 @@ enum BoostChannelSource : Equatable {
 }
 
 func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, onlyFeatures: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
+    
+    
+    var getController:(()->ViewController?)? = nil
+
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
 
     let actionsDisposable = DisposableSet()
     
@@ -1165,15 +1175,15 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                     }))
                 })
 
-                PlayConfetti(for: context.window)
+                PlayConfetti(for: window)
             } else if !occupiedBoosts.isEmpty, let _ = myStatus {
-                showModal(with: BoostReassignController(context: context, peer: peer, boosts: occupiedBoosts), for: context.window)
+                showModal(with: BoostReassignController(context: context, peer: peer, boosts: occupiedBoosts), for: window)
                 close?()
             } else {
                 if context.isPremium {
-                    alert(for: context.window, header: strings().boostGiftToGetMoreTitle, info: strings().boostGiftToGetMoreInfo(peer.displayTitle))
+                    alert(for: window, header: strings().boostGiftToGetMoreTitle, info: strings().boostGiftToGetMoreInfo(peer.displayTitle))
                 } else {
-                    prem(with: PremiumBoardingController(context: context, source: .channel_boost(peerId)), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .channel_boost(peerId)), for: window)
                 }
             }
         } else {
@@ -1185,12 +1195,12 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         close?()
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
     }, shareLink: { link in
-        showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
+        showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: window)
     }, copyLink: { link in
-        showModalText(for: context.window, text: strings().shareLinkCopied)
+        showModalText(for: window, text: strings().shareLinkCopied)
         copyToClipboard(link)
     }, openGiveaway: {
-        showModal(with: GiveawayModalController(context: context, peerId: peer.id, prepaid: nil, isGroup: stateValue.with { $0.isGroup }), for: context.window)
+        showModal(with: GiveawayModalController(context: context, peerId: peer.id, prepaid: nil, isGroup: stateValue.with { $0.isGroup }), for: window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -1214,6 +1224,10 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
     controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: {
         close?()
     })
+    
+    getController = { [weak controller] in
+        return controller
+    }
     
     close = { [weak modalController] in
         modalController?.close()

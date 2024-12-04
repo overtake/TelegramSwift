@@ -205,6 +205,200 @@ public final class L10n {
   public static var adminsWhoCanInviteEveryone: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Everyone") }
   /// Who can add members
   public static var adminsWhoCanInviteText: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Text") }
+  /// Earn Stars
+  public static var affilateProgramEarn: String  { return L10n.tr("Localizable", "AffilateProgram.Earn") }
+  /// Distribute links to mini apps and earn a share of their revenue in Stars
+  public static var affilateProgramEarnInfo: String  { return L10n.tr("Localizable", "AffilateProgram.Earn.Info") }
+  /// You will be able to start a new affiliate program only in:\n\n%@
+  public static func affiliateProgramStartDelay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Affiliate.Program.StartDelay", p1)
+  }
+  /// Copy Link
+  public static var affiliateProgramActionCopyLink: String  { return L10n.tr("Localizable", "AffiliateProgram.ActionCopyLink") }
+  /// Join Program
+  public static var affiliateProgramActionJoin: String  { return L10n.tr("Localizable", "AffiliateProgram.ActionJoin") }
+  /// Commission will be sent to:
+  public static var affiliateProgramCommistionDestinationText: String  { return L10n.tr("Localizable", "AffiliateProgram.CommistionDestinationText") }
+  /// Daily Revenue per User
+  public static var affiliateProgramDailyRevenueText: String  { return L10n.tr("Localizable", "AffiliateProgram.DailyRevenueText") }
+  /// Lifetime
+  public static var affiliateProgramDurationLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.DurationLifetime") }
+  /// **%1$@** will share **%2$@** of the revenue from each user you refer to it for **%3$@.**
+  public static func affiliateProgramJoinSubtitle(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitle", p1, p2, p3)
+  }
+  /// By joining this program, you afree to the [terms and conditions](https://telegram.org/terms) of Affiliate Programs.
+  public static var affiliateProgramJoinTerms: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTerms") }
+  /// Affiliate Program
+  public static var affiliateProgramJoinTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTitle") }
+  /// Share this link with your users to earn a **%1$d** commission on their spending in **%2$@** for **%3$@** after they follow your link.
+  public static func affiliateProgramLinkSubtitle(_ p1: Int, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitle", p1, p2, p3)
+  }
+  /// Referral Link
+  public static var affiliateProgramLinkTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkTitle") }
+  /// Monthly users
+  public static var affiliateProgramMonthlyText: String  { return L10n.tr("Localizable", "AffiliateProgram.MonthlyText") }
+  /// Off
+  public static var affiliateProgramOff: String  { return L10n.tr("Localizable", "AffiliateProgram.Off") }
+  /// personal account
+  public static var affiliateProgramPeerTypeSelf: String  { return L10n.tr("Localizable", "AffiliateProgram.PeerTypeSelf") }
+  /// Date
+  public static var affiliateProgramSortSelectorDate: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorDate") }
+  /// Profitability
+  public static var affiliateProgramSortSelectorProfitability: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorProfitability") }
+  /// Revenue
+  public static var affiliateProgramSortSelectorRevenue: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorRevenue") }
+  /// %d %@
+  public static func affiliateProgramUserCountFooterCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_countable", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_few", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_many", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_one", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_other", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_two", p1, p2)
+  }
+  /// No one opened %@ through this link yet.
+  public static func affiliateProgramUserCountFooterZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_zero", p1)
+  }
+  /// No one opened %@ through this link yet.
+  public static func affiliateProgramUserCountFooterZeroValueHolder(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_ZeroValueHolder", p1)
+  }
+  /// You have successfully connected to referal program
+  public static var affiliateProgramAlertConnected: String  { return L10n.tr("Localizable", "AffiliateProgram.Alert.Connected") }
+  /// You can now copy the referral link.
+  public static var affiliateProgramToastJoinedText: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastJoined.Text") }
+  /// Program joined
+  public static var affiliateProgramToastJoinedTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastJoined.Title") }
+  /// Share this link and earn **%1$@** of what people who use it spend in **%2$@!
+  public static func affiliateProgramToastLinkCopiedText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.ToastLinkCopied.Text", p1, p2)
+  }
+  /// Link copied to clipboard
+  public static var affiliateProgramToastLinkCopiedTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastLinkCopied.Title") }
+  /// No available programs yet. Please check this page later.
+  public static var affiliateProgramsEmpty: String  { return L10n.tr("Localizable", "AffiliatePrograms.Empty") }
+  /// Existing Affiliate Programs
+  public static var affiliateProgramsExistingPrograms: String  { return L10n.tr("Localizable", "AffiliatePrograms.ExistingPrograms") }
+  /// Are you sure you want to leave this program
+  public static var affiliateProgramsConfirmAlert: String  { return L10n.tr("Localizable", "AffiliatePrograms.Confirm.Alert") }
+  /// Leave
+  public static var affiliateProgramsConfirmAlertOK: String  { return L10n.tr("Localizable", "AffiliatePrograms.Confirm.Alert.OK") }
+  /// MY PROGRAMS
+  public static var affiliateSetupConnectedSectionTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.ConnectedSectionTitle") }
+  /// End Affiliate Program
+  public static var affiliateSetupEndAction: String  { return L10n.tr("Localizable", "AffiliateSetup.EndAction") }
+  /// Leave
+  public static var affiliateSetupProgramLeave: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramLeave") }
+  /// COMMISSION
+  public static var affiliateSetupSectionCommission: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionCommission") }
+  /// Define the percentage of star revenue your affiliates earn for referring users to your bot.
+  public static var affiliateSetupSectionCommissionFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionCommissionFooter") }
+  /// DURATION
+  public static var affiliateSetupSectionDuration: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionDuration") }
+  /// Set the duration for which affiliates will earn commissions from referred users.
+  public static var affiliateSetupSectionDurationFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionDurationFooter") }
+  /// SORT BY
+  public static var affiliateSetupSortSectionHeader: String  { return L10n.tr("Localizable", "AffiliateSetup.SortSectionHeader") }
+  /// Start
+  public static var affiliateSetupStart: String  { return L10n.tr("Localizable", "AffiliateSetup.Start") }
+  /// Start Affiliate Program
+  public static var affiliateSetupStartTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.StartTitle") }
+  /// No available programs yet.\nPlease check the page later.
+  public static var affiliateSetupSuggestedSectionEmpty: String  { return L10n.tr("Localizable", "AffiliateSetup.SuggestedSectionEmpty") }
+  /// PROGRAMS
+  public static var affiliateSetupSuggestedSectionTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.SuggestedSectionTitle") }
+  /// By creating an affiliate program, you afree to the [terms and conditions](https://telegram.org/terms) of Affiliate Programs.
+  public static var affiliateSetupTermsFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.TermsFooter") }
+  /// Earn a commission each time a user who first accessed a mini app through your referral link spends **Stars** within it.
+  public static var affiliateSetupTextJoin: String  { return L10n.tr("Localizable", "AffiliateSetup.TextJoin") }
+  /// Affiliate Program
+  public static var affiliateSetupTextNew: String  { return L10n.tr("Localizable", "AffiliateSetup.TextNew") }
+  /// Affiliate Programs
+  public static var affiliateSetupTitleJoin: String  { return L10n.tr("Localizable", "AffiliateSetup.TitleJoin") }
+  /// Affiliate Program
+  public static var affiliateSetupTitleNew: String  { return L10n.tr("Localizable", "AffiliateSetup.TitleNew") }
+  /// Update
+  public static var affiliateSetupUpdate: String  { return L10n.tr("Localizable", "AffiliateSetup.Update") }
+  /// Update Affiliate Program
+  public static var affiliateSetupUpdateTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.UpdateTitle") }
+  /// Start
+  public static var affiliateSetupAlertApplyAction: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.Action") }
+  /// Commission
+  public static var affiliateSetupAlertApplySectionCommission: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.SectionCommission") }
+  /// Duration
+  public static var affiliateSetupAlertApplySectionDuration: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.SectionDuration") }
+  /// Once you start the affiliate program, you won't be able to decrease its commission or duration. You can only increase these parameters or end the program, whuch will disable all previously distributed referral links.
+  public static var affiliateSetupAlertApplyText: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.Text") }
+  /// Warning
+  public static var affiliateSetupAlertApplyTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.Title") }
+  /// End Anyway
+  public static var affiliateSetupAlertTerminateAction: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertTerminate.Action") }
+  /// If you end your affiliate program:\n\n• Any referral links already shared will be disabled in 24 hours.\n\n• All participating affiliates will be notified.\n\n• You will be able to start a new affiliate program only in 24 hours.
+  public static var affiliateSetupAlertTerminateText: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertTerminate.Text") }
+  /// Warning
+  public static var affiliateSetupAlertTerminateTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertTerminate.Title") }
+  /// View Existing Programs
+  public static var affiliateSetupExistingProgramsAction: String  { return L10n.tr("Localizable", "AffiliateSetup.ExistingPrograms.Action") }
+  /// Explore what other mini apps offer.
+  public static var affiliateSetupExistingProgramsFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.ExistingPrograms.Footer") }
+  /// Reward those who help grow your user base
+  public static var affiliateSetupHeaderInfo: String  { return L10n.tr("Localizable", "AffiliateSetup.Header.Info") }
+  /// Receive guaranteed commissions for spending by users you refer.
+  public static var affiliateSetupIntroJoinText1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Text1") }
+  /// Track your commissions from referred users in real time.
+  public static var affiliateSetupIntroJoinText2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Text2") }
+  /// Choose a mini app below, get your referral link, and start earning Stars.
+  public static var affiliateSetupIntroJoinText3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Text3") }
+  /// Reliable
+  public static var affiliateSetupIntroJoinTitle1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Title1") }
+  /// Transparent
+  public static var affiliateSetupIntroJoinTitle2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Title2") }
+  /// Simple
+  public static var affiliateSetupIntroJoinTitle3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Title3") }
+  /// Set the commission for revenue generated by users referred to you.
+  public static var affiliateSetupIntroNewText1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Text1") }
+  /// Telegram will feature your program for millions of potential affiliates.
+  public static var affiliateSetupIntroNewText2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Text2") }
+  /// Affiliates will share your referral link with their audience.
+  public static var affiliateSetupIntroNewText3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Text3") }
+  /// Share revenue with affiliates
+  public static var affiliateSetupIntroNewTitle1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Title1") }
+  /// Launch your affiliate program
+  public static var affiliateSetupIntroNewTitle2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Title2") }
+  /// Let affiliates promote you
+  public static var affiliateSetupIntroNewTitle3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Title3") }
+  /// Copy Link
+  public static var affiliateSetupProgramMenuCopyLink: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.CopyLink") }
+  /// Leave
+  public static var affiliateSetupProgramMenuLeave: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.Leave") }
+  /// Open App
+  public static var affiliateSetupProgramMenuOpenApp: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.OpenApp") }
+  /// Open Bot
+  public static var affiliateSetupProgramMenuOpenBot: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.OpenBot") }
+  /// Affiliate Program Started
+  public static var affiliateSetupToastStartedText: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastStarted.Text") }
+  /// Participating affiliates have been notified. All referral links will be disabled in 24 hours.
+  public static var affiliateSetupToastTerminatedText: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastTerminated.Text") }
+  /// Affiliate Program Ended
+  public static var affiliateSetupToastTerminatedTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastTerminated.Title") }
   /// Cancel
   public static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
   /// Discard
@@ -6493,6 +6687,8 @@ public final class L10n {
   public static var chatListMessagesTag: String  { return L10n.tr("Localizable", "ChatList.MessagesTag") }
   /// My Notes
   public static var chatListMyNotes: String  { return L10n.tr("Localizable", "ChatList.MyNotes") }
+  /// OPEN
+  public static var chatListOpenMiniApp: String  { return L10n.tr("Localizable", "ChatList.OpenMiniApp") }
   /// Proxy Sponsor
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Story
@@ -12393,6 +12589,8 @@ public final class L10n {
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
   /// Add To Group or Channel
   public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
+  /// Affiliate Program
+  public static var peerInfoBotAffiliate: String  { return L10n.tr("Localizable", "PeerInfo.BotAffiliate") }
   /// Appearance
   public static var peerInfoChannelAppearance: String  { return L10n.tr("Localizable", "PeerInfo.ChannelAppearance") }
   /// Channel Color
@@ -16803,6 +17001,8 @@ public final class L10n {
   public static func starSubscriptionStatusExpiredInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.Subscription.Status.Expired.Info", p1)
   }
+  /// Referred User
+  public static var starTransacitonReferredUser: String  { return L10n.tr("Localizable", "Star.Transaciton.ReferredUser") }
   /// Availability
   public static var starTransactionAvailability: String  { return L10n.tr("Localizable", "Star.Transaction.Availability") }
   /// By subscribing you agree to the [Terms of Service](https://telegram.org)
@@ -16835,6 +17035,8 @@ public final class L10n {
   public static func starTransactionBroadcastMessagesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_zero", p1)
   }
+  /// Commision
+  public static var starTransactionCommission: String  { return L10n.tr("Localizable", "Star.Transaction.Commission") }
   /// Transaction ID copied to clipboard.
   public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }
   /// Date
@@ -16851,10 +17053,14 @@ public final class L10n {
   public static var starTransactionLastSale: String  { return L10n.tr("Localizable", "Star.Transaction.LastSale") }
   /// Media
   public static var starTransactionMessageId: String  { return L10n.tr("Localizable", "Star.Transaction.MessageId") }
+  /// Mini App
+  public static var starTransactionMiniApp: String  { return L10n.tr("Localizable", "Star.Transaction.MiniApp") }
   /// Message
   public static var starTransactionReactionId: String  { return L10n.tr("Localizable", "Star.Transaction.ReactionId") }
   /// Reason
   public static var starTransactionReason: String  { return L10n.tr("Localizable", "Star.Transaction.Reason") }
+  /// [Affiliate Program](affiliate)
+  public static var starTransactionReasonAffiliate: String  { return L10n.tr("Localizable", "Star.Transaction.ReasonAffiliate") }
   /// %d
   public static func starTransactionSaleForCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Transaction.SaleFor_countable", p1)
@@ -17189,6 +17395,10 @@ public final class L10n {
   public static var starsSubscriptionPeriodUnknown: String  { return L10n.tr("Localizable", "Stars.Subscription.Period.Unknown") }
   /// Weekly subscription fee
   public static var starsSubscriptionPeriodWeekly: String  { return L10n.tr("Localizable", "Stars.Subscription.Period.Weekly") }
+  /// %@ commission
+  public static func starsTransactionCommission(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Transaction.Commission", p1)
+  }
   /// Gift
   public static var starsTransactionGift: String  { return L10n.tr("Localizable", "Stars.Transaction.Gift") }
   /// Media Purchase

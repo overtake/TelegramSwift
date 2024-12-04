@@ -489,6 +489,8 @@ class ChatListRowItem: TableRowItem {
         self.isScam = false
         self.hideContent = hideContent
         self.isFake = false
+        self.openMiniApp = nil
+        self.openMiniAppSelected = nil
         self.filter = filter
         self.hasFailed = hasFailed
         self.isArchiveItem = true
@@ -690,6 +692,9 @@ class ChatListRowItem: TableRowItem {
     
     let canPreviewChat: Bool
     
+    let openMiniApp: TextViewLayout?
+    let openMiniAppSelected: TextViewLayout?
+
     init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil, canPreviewChat: Bool = false) {
         
         
@@ -708,7 +713,7 @@ class ChatListRowItem: TableRowItem {
                 draft = nil
             }
         }
-
+        
         if let peerPresence = peerPresence?._asPresence(), context.peerId != renderedPeer.peerId, renderedPeer.peerId != servicePeerId {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
             let relative = relativeUserPresenceStatus(peerPresence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
@@ -725,7 +730,7 @@ class ChatListRowItem: TableRowItem {
         if let peer = renderedPeer.chatMainPeer?._asPeer() as? TelegramChannel, peer.flags.contains(.hasActiveVoiceChat) {
             self.hasActiveGroupCall = mode.threadId == nil
         }
-    
+        
         self.mode = mode
         self.titleMode = titleMode
         self.chatListIndex = index
@@ -760,6 +765,18 @@ class ChatListRowItem: TableRowItem {
         self.isContact = isContact
         self.folders = folders
         self.canPreviewChat = canPreviewChat
+        
+        
+        if let peer, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp), readState == nil || readState?.count == 0 {
+            self.openMiniApp = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.underSelectedColor, font: .medium(.text)), alignment: .center)
+            self.openMiniApp?.measure(width: .greatestFiniteMagnitude)
+            
+            self.openMiniAppSelected = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.accent, font: .medium(.text)), alignment: .center)
+            self.openMiniAppSelected?.measure(width: .greatestFiniteMagnitude)
+        } else {
+            self.openMiniApp = nil
+            self.openMiniAppSelected = nil
+        }
         
         if let folders, folders.showTags, let peer, splitState != .minimisize, mode.threadData == nil {
             var tags: [ChatListTag] = []
@@ -1270,6 +1287,11 @@ class ChatListRowItem: TableRowItem {
         if isPinned && badgeNode == nil {
             w += 20
         }
+        
+        if let openMiniApp {
+            w += openMiniApp.layoutSize.width + 14
+        }
+        
         w += (leftInset - 20)
         
         if let chatNameLayout = chatNameLayout, let _ = tags {
@@ -1380,6 +1402,12 @@ class ChatListRowItem: TableRowItem {
         }
         
         return result
+    }
+    
+    func openWebApp() {
+        if let peer = peer {
+            BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .generic))
+        }
     }
     
     
@@ -2039,6 +2067,13 @@ class ChatListRowItem: TableRowItem {
             return displaySelectedLayout
         }
         return displayLayout
+    }
+    
+    var ctxOpenMiniApp: TextViewLayout? {
+        if isActiveSelected {
+            return openMiniAppSelected
+        }
+        return openMiniApp
     }
     
     var isActiveSelected: Bool {

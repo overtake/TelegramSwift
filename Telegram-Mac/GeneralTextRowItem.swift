@@ -186,6 +186,7 @@ class GeneralTextRowView : GeneralRowView {
     let textView:InteractiveTextView = InteractiveTextView(frame: .zero)
     private var progressView: ProgressIndicator?
     private var rightTextView: TextView?
+    private var afterRightIcon: ImageView?
     private var animatedView: MediaAnimatedStickerView?
     private var clickable: Control?
     required init(frame frameRect: NSRect) {
@@ -254,6 +255,18 @@ class GeneralTextRowView : GeneralRowView {
                 addSubview(self.rightTextView!)
             }
             
+            if let iconAfter = item.rightItem.afterImage {
+                if afterRightIcon == nil {
+                    afterRightIcon = ImageView()
+                    afterRightIcon?.image = iconAfter
+                    afterRightIcon?.sizeToFit()
+                    addSubview(afterRightIcon!)
+                }
+            } else {
+                afterRightIcon?.removeFromSuperview()
+                afterRightIcon = nil
+            }
+            
             if let wrap = item.rightItem.wrap {
                 rightTextView?.backgroundColor = wrap
             }
@@ -290,12 +303,19 @@ class GeneralTextRowView : GeneralRowView {
                 }
                 
                 rightTextView.isSelectable = false
-                rightTextView.userInteractionEnabled = item.rightItem.action != nil
+                rightTextView.userInteractionEnabled = item.rightItem.action != nil || item.rightItem.contextMenu?() != nil
                 
                 if let action = item.rightItem.action {
-                    rightTextView.removeAllHandlers()
-                    rightTextView.set(handler: { _ in
+                    rightTextView.setSingle(handler: { _ in
                         action()
+                    }, for: .Click)
+                } else if let contextMenuItems = item.rightItem.contextMenu?() {
+                    rightTextView.setSingle(handler: { control in
+                        if let event = NSApp.currentEvent {
+                            let menu = ContextMenu()
+                            menu.items = contextMenuItems
+                            AppMenu.show(menu: menu, event: event, for: control)
+                        }
                     }, for: .Click)
                 }
             }
@@ -305,6 +325,9 @@ class GeneralTextRowView : GeneralRowView {
             self.rightTextView = nil
             self.animatedView?.removeFromSuperview()
             self.animatedView = nil
+            
+            afterRightIcon?.removeFromSuperview()
+            afterRightIcon = nil
         }
 
         if item.clickable {
@@ -368,10 +391,15 @@ class GeneralTextRowView : GeneralRowView {
                     }
                     if let rightTextView = self.rightTextView {
                         
+                        var inset: CGFloat = 0
+                        if let afterRightIcon {
+                            inset += afterRightIcon.frame.width - 2
+                        }
+                        
                         if item.rightItem.alignToText {
                             rightTextView.setFrameOrigin(NSMakePoint(textView.frame.maxX + 3, textView.frame.minY - 1))
                         } else {
-                            rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, frame.height - insets.bottom - rightTextView.frame.height))
+                            rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right - inset, frame.height - insets.bottom - rightTextView.frame.height))
                         }
                         
                         if let layout = rightTextView.textLayout {
@@ -384,6 +412,10 @@ class GeneralTextRowView : GeneralRowView {
                             if let range = animatedRange, let view = self.animatedView, let offset = layout.offset(for: range.location) {
                                 view.setFrameOrigin(NSMakePoint(rightTextView.frame.minX + offset, rightTextView.frame.minY - 1))
                             }
+                        }
+                        
+                        if let afterRightIcon {
+                            afterRightIcon.setFrameOrigin(NSMakePoint(rightTextView.frame.maxX + 2, rightTextView.frame.minY))
                         }
                     }
                     if let current = clickable {

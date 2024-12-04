@@ -15,7 +15,7 @@ final class Fragment_BalanceRowItem : GeneralRowItem {
     
     
     struct Balance : Equatable {
-        var amount: Int64
+        var amount: Double
         var usd: String
         var currency: TelegramCurrency
         
@@ -51,7 +51,7 @@ final class Fragment_BalanceRowItem : GeneralRowItem {
         }
         self.canWithdraw = canWithdraw
         self.nextWithdrawalTimestamp = nextWithdrawalTimestamp
-        let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(balance.amount, currency: balance.currency.rawValue).prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
+        let tonBalance = NSAttributedString.initialize(string: formatCurrencyAmount(Int64(balance.amount), currency: balance.currency.rawValue).prettyCurrencyNumber, color: theme.colors.text, font: .medium(40)).smallDecemial
         let usdBalance = NSAttributedString.initialize(string: balance.apxSymbol + balance.usd, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
 
         self.tonBalance = .init(tonBalance)

@@ -700,7 +700,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, starsAllowed: Bool?, viewType: GeneralViewType)
     case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
     case stats(section: ChannelInfoSection, datacenterId: Int32, monetization: Bool, stars: Bool, viewType: GeneralViewType)
-    case balance(section: ChannelInfoSection, ton: String?, stars: Int64, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
+    case balance(section: ChannelInfoSection, ton: String?, stars: String?, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -1398,7 +1398,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 entries.append(.stats(section: .manage, datacenterId: cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue), stars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))
                 
                 
-                let stars: Int64 = revenueState?.stats?.balances.availableBalance ?? 0
+                let stars: String? = revenueState?.stats?.balances.availableBalance.stringValue
                 let ton: String?
                 if let tonBalance = tonRevenueState?.stats?.balances.availableBalance {
                     ton = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
@@ -1406,7 +1406,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     ton = nil
                 }
                 
-                if cachedData.flags.contains(.canViewRevenue) || cachedData.flags.contains(.canViewStarsRevenue), stars > 0 || ton != nil {
+                if cachedData.flags.contains(.canViewRevenue) || cachedData.flags.contains(.canViewStarsRevenue), stars != nil || ton != nil {
                     entries.append(.balance(section: .manage, ton: ton, stars: stars, canSeeTon: cachedData.flags.contains(.canViewRevenue), canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))
                 }
 
