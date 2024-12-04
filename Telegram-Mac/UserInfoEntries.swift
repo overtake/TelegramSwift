@@ -2347,7 +2347,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
                     }
                 } else {
-                    if peer.botInfo?.flags.contains(.canEdit) == false {
+                    if peer.botInfo?.flags.contains(.canEdit) == false, cachedData.starRefProgram != nil {
                         let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_connect_allowed", orElse: false)
 
                         let text: String

@@ -57,8 +57,8 @@ final class AvatarStoryControl : Control {
         self.avatar.setSignal(signal, force: force)
     }
     
-    func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false) {
-        self.avatar.setPeer(account: account, peer: peer, message: message, size: size, disableForum: disableForum)
+    func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false, cornerRadius: CGFloat? = nil) {
+        self.avatar.setPeer(account: account, peer: peer, message: message, size: size, disableForum: disableForum, cornerRadius: cornerRadius)
     }
     func update(component: AvatarStoryIndicatorComponent?, availableSize: CGSize, progress: CGFloat = 1.0, transition: ContainedViewLayoutTransition)  {
         

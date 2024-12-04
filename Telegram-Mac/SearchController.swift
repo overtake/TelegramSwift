@@ -210,7 +210,7 @@ private struct SearchSecretChatWrapper : Equatable {
 fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case localPeer(Peer, Int, SearchSecretChatWrapper?, UnreadSearchBadge, Bool, Bool, PeerStoryStats?)
     case topic(EngineChatList.Item, Int, UnreadSearchBadge, Bool, Bool)
-    case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool, PeerStoryStats?, Bool)
+    case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool, PeerStoryStats?, Bool, isGrossingApp: Bool)
     case globalPeer(FoundPeer, UnreadSearchBadge, Int)
     case savedMessages(Peer)
     case message(Message, String, CombinedPeerReadState?, MessageHistoryThreadData?, Int)
@@ -237,7 +237,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .savedMessages
         case let .separator(_,index, _):
             return .separator(index)
-        case let .recentlySearch(peer, _, secretChat, _, _, _, _, _):
+        case let .recentlySearch(peer, _, secretChat, _, _, _, _, _, _):
             if let secretChat = secretChat {
                 return .secretChat(secretChat.peerId)
             }
@@ -269,7 +269,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return -1
         case let .separator(_,index, _):
             return index
-        case let .recentlySearch(_,index, _, _, _, _, _, _):
+        case let .recentlySearch(_,index, _, _, _, _, _, _, _):
             return index
         case let .topPeers(index, _, _, _, _, _, _):
             return index
@@ -298,8 +298,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .recentlySearch(lhsPeer, index, isSecretChat, status, badge, drawBorder, storyStats, canRemoveRecent):
-            if case .recentlySearch(let rhsPeer, index, isSecretChat, status, badge, drawBorder, storyStats, canRemoveRecent) = rhs, lhsPeer.isEqual(rhsPeer) {
+        case let .recentlySearch(lhsPeer, index, isSecretChat, status, badge, drawBorder, storyStats, canRemoveRecent, isGrossingApp):
+            if case .recentlySearch(let rhsPeer, index, isSecretChat, status, badge, drawBorder, storyStats, canRemoveRecent, isGrossingApp) = rhs, lhsPeer.isEqual(rhsPeer) {
                 return true
             } else {
                 return false
@@ -566,7 +566,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             }, unreadBadge: badge, canAddAsTag: canAddAsTag, storyStats: storyStats, openStory: arguments.openStory, customAction: customAction)
         case let .topic(item, _, _, _, _):
             return SearchTopicRowItem(initialSize, stableId: entry.stableId, item: item, context: arguments.context)
-        case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder, storyStats, canRemoveRecent):
+        case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder, storyStats, canRemoveRecent, isGrossingApp):
             
             var customAction: ShortPeerRowItem.CustomAction?
             if peer.botInfo?.flags.contains(.hasWebApp) == true {
@@ -577,7 +577,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 customAction = nil
             }
             
-            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: canRemoveRecent, controlAction: {
+            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, photoSize: isGrossingApp ? NSMakeSize(30, 36) : NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: canRemoveRecent, controlAction: {
                 if let secretChat = secretChat {
                     arguments.removeRecentPeerId(secretChat.peerId)
                 } else {
@@ -585,7 +585,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 }
             }, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
-            }, unreadBadge: badge, storyStats: storyStats, openStory: arguments.openStory, customAction: customAction)
+            }, unreadBadge: badge, storyStats: storyStats, openStory: arguments.openStory, customAction: customAction, isGrossingApp: isGrossingApp)
         case let .savedMessages(peer):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: true, isLookSavedMessage: true, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
@@ -1339,7 +1339,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                             let status = peer.subscriberCount == nil ? strings().presenceBot : strings().peerStatusUsersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
                                             let result = PeerStatusStringResult(.initialize(string: peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
 
-                                            entries.append(.recentlySearch(peer, i, nil, result, .none, true, nil, false))
+                                            entries.append(.recentlySearch(peer, i, nil, result, .none, true, nil, false, isGrossingApp: false))
                                             i += 1
 
                                         }
@@ -1362,7 +1362,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                         let status = peer.subscriberCount == nil ? strings().presenceBot : strings().peerStatusUsersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
                                         let result = PeerStatusStringResult(.initialize(string: peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
 
-                                        entries.append(.recentlySearch(peer, i, nil, result, .none, true, nil, false))
+                                        entries.append(.recentlySearch(peer, i, nil, result, .none, true, nil, false, isGrossingApp: true))
                                         i += 1
 
                                     }
@@ -1402,7 +1402,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                         let status = subscribers == nil ? strings().peerStatusChannel : strings().peerStatusSubscribersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
                                         let result = PeerStatusStringResult(.initialize(string: peer._asPeer().displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
 
-                                        entries.append(.recentlySearch(peer._asPeer(), i, nil, result, .none, true, storyStats, false))
+                                        entries.append(.recentlySearch(peer._asPeer(), i, nil, result, .none, true, storyStats, false, isGrossingApp: false))
                                         i += 1
 
                                     }
@@ -1421,7 +1421,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     let status = channel.subscribers == nil ? strings().peerStatusChannel : strings().peerStatusSubscribersCountable(subCount).replacingOccurrences(of: "\(subCount)", with: subCount.formattedWithSeparator)
                                     let result = PeerStatusStringResult(.initialize(string: channel.peer.displayTitle, color: stringTheme.titleColor, font: stringTheme.titleFont), .initialize(string: status))
 
-                                    entries.append(.recentlySearch(channel.peer, i, nil, result, .none, true, nil, false))
+                                    entries.append(.recentlySearch(channel.peer, i, nil, result, .none, true, nil, false, isGrossingApp: false))
                                     i += 1
 
                                 }
@@ -1532,7 +1532,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     }
                                     let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
 
-                                    entries.append(.recentlySearch(peer, i, wrapper, result, recent.1[peerView.peerId] ?? .none, true, recent.2[peerView.peerId] ?? nil, true))
+                                    entries.append(.recentlySearch(peer, i, wrapper, result, recent.1[peerView.peerId] ?? .none, true, recent.2[peerView.peerId] ?? nil, true, isGrossingApp: false))
                                     i += 1
                                 }
 

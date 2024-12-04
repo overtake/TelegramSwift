@@ -17,11 +17,12 @@ private final class HeaderItem : GeneralRowItem {
         self.peer = peer
         self.arguments = arguments
         
-        let localizedDuration = program.duration < 12 ? strings().timerMonthsCountable(Int(program.duration)) : program.duration == .max ? "Lifetime" : strings().timerYearsCountable(Int(program.duration / 12))
+        let localizedDuration = program.duration < 12 ? strings().timerMonthsCountable(Int(program.duration)) : program.duration == .max ? strings().affiliateProgramDurationLifetime : strings().timerYearsCountable(Int(program.duration / 12))
 
         
-        self.headerLayout = .init(.initialize(string: "Affiliate Program", color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1)
-        self.infoLayout = .init(.initialize(string: "**\(program.peer._asPeer().displayTitle)** will share **\(program.commission)%** of the revenue from each user you refer to it for **\(localizedDuration)**.", color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: strings().affiliateProgramJoinTitle, color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1)
+                
+        self.infoLayout = .init(.initialize(string: strings().affiliateProgramJoinSubtitle(program.peer._asPeer().displayTitle, "\(program.commission.decemial)%", localizedDuration), color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         
         super.init(initialSize, stableId: stableId)
     }
@@ -287,8 +288,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         rows.append(.init(left: .init(.initialize(string: strings().affiliateProgramMonthlyText, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: count.formattedWithSeparator, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
     }
     
+    let revenueAttr = NSMutableAttributedString()
+    revenueAttr.append(string: state.program.revenue.stringValue, color: theme.colors.text, font: .normal(.text))
+    revenueAttr.append(string: " " + clown, font: .normal(.text))
+    revenueAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
     
-    rows.append(.init(left: .init(.initialize(string: strings().affiliateProgramDailyRevenueText, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: state.program.revenue.stringValue, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+    let revenueLayout: TextViewLayout = .init(revenueAttr, maximumNumberOfLines: 1)
+    
+    rows.append(.init(left: .init(.initialize(string: strings().affiliateProgramDailyRevenueText, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: revenueLayout)))
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("stats"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in

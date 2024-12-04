@@ -679,7 +679,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         if let photo = item.photo {
             image.setSignal(photo)
         } else {
-            image.setPeer(account: item.account, peer: item.peer, size: item.photoSize)
+            image.setPeer(account: item.account, peer: item.peer, size: item.photoSize, cornerRadius: item.makeAvatarRound ? 6 : nil)
         }
         
         
