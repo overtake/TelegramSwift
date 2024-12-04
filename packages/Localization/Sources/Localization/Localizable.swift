@@ -223,10 +223,10 @@ public final class L10n {
   public static var affiliateProgramDailyRevenueText: String  { return L10n.tr("Localizable", "AffiliateProgram.DailyRevenueText") }
   /// Lifetime
   public static var affiliateProgramDurationLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.DurationLifetime") }
-  /// **%$1@** will share **%$2@** of the revenue from each user you refer to it for **%$3@.**
-  public static var affiliateProgramJoinSubtitle: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitle") }
-  /// **{bot}** will share **{commission}** of the revenue from each user you refer to it **forever**.
-  public static var affiliateProgramJoinSubtitleLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitleLifetime") }
+  /// **%1$@** will share **%2$@** of the revenue from each user you refer to it for **%3$@.**
+  public static func affiliateProgramJoinSubtitle(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitle", p1, p2, p3)
+  }
   /// By joining this program, you afree to the [terms and conditions](https://telegram.org/terms) of Affiliate Programs.
   public static var affiliateProgramJoinTerms: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTerms") }
   /// Affiliate Program
@@ -235,8 +235,6 @@ public final class L10n {
   public static func affiliateProgramLinkSubtitle(_ p1: Int, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitle", p1, p2, p3)
   }
-  /// Share this link with your users to earn a **{commission}** commission on their spending in **{bot}** **forever** after they follow your link.
-  public static var affiliateProgramLinkSubtitleLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitleLifetime") }
   /// Referral Link
   public static var affiliateProgramLinkTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkTitle") }
   /// Monthly users

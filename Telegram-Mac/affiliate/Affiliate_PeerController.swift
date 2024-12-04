@@ -765,7 +765,7 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
     }
     
     
-    struct ContextObject {
+    class ContextObject {
         let connected: EngineConnectedStarRefBotsContext?
         var sorted: [EngineSuggestedStarRefBotsContext.SortMode : EngineSuggestedStarRefBotsContext]
         init(connected: EngineConnectedStarRefBotsContext?, list: [EngineSuggestedStarRefBotsContext.SortMode : EngineSuggestedStarRefBotsContext]) {
@@ -853,10 +853,10 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
     }, copyToClipboard: { program in
         copyToClipboard(program.connected!.url)
         showModalText(for: window, text: strings().shareLinkCopied)
-    }, leave: { program in
+    }, leave: { [weak contextObject] program in
         if let connected = program.connected {
             verifyAlert(for: window, header: strings().affiliateSetupTitleNew, information: strings().affiliateProgramsConfirmAlert, ok: strings().affiliateProgramsConfirmAlertOK, successHandler: { _ in
-                _ = contextObject.connected?.remove(url: connected.url)
+                _ = contextObject?.connected?.remove(url: connected.url)
                 updateState { current in
                     var current = current
                     current.connectedList.removeAll(where: { $0.connected?.url == connected.url })
@@ -881,6 +881,18 @@ func Affiliate_PeerController(context: AccountContext, peerId: PeerId, onlyDemo:
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+    }
+    
+    
+    controller.didLoad = { [weak contextObject] controller, _ in
+        controller.tableView.setScrollHandler { position in
+            switch position.direction {
+            case .bottom:
+                contextObject?.sorted[stateValue.with { $0.sort.value }]?.loadMore()
+            default:
+                break
+            }
+        }
     }
 
     return controller
