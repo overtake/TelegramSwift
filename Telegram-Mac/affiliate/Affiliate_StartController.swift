@@ -531,7 +531,7 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
                 let comission2 = stateValue.with { $0.commission2 }
                 let duration = stateValue.with { $0.duration }
                 
-                rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionCommission, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+                rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionCommission, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission.decemial)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
 //
 //                if comission2 > 0 {
 //                    rows.append(.init(left: .init(.initialize(string: "Commission for\n2-Level Affiliates", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission2)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
