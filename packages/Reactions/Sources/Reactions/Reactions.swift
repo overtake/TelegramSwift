@@ -26,7 +26,7 @@ public final class Reactions {
     
     public var checkStarsAmount:((Int, PeerId)->Signal<(Bool, Bool), NoError>)?
     public var failStarsAmount:((Int, MessageId)->Void)?
-    public var successStarsAmount:((Int)->Void)?
+    public var successStarsAmount:((StarsAmount)->Void)?
     public var starsDisabled:(()->Void)?
     
     public var sentStarReactions: ((MessageId, Int)->Void)? = nil
@@ -82,7 +82,7 @@ public final class Reactions {
                 if value && starsAllowed {
                     _ = self?._isInteractive.swap(.init(messageId: messageId, reaction: .stars, rect: fromRect))
                     _ = self?.engine.messages.sendStarsReaction(id: messageId, count: count, isAnonymous: isAnonymous).startStandalone()
-                    self?.successStarsAmount?(count)
+                    self?.successStarsAmount?(.init(value: -Int64(count), nanos: 0))
                     self?.sentStarReactions?(messageId, count)
                 } else {
                     if !value {

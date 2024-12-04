@@ -153,7 +153,7 @@ private final class PaymentsCheckoutPriceView : GeneralContainableRowView, NSTex
             }
             
             self.formatterDelegate = CurrencyUITextFieldDelegate(formatter: CurrencyFormatter(currency: editableTip.currency, { formatter in
-                formatter.maxValue = currencyToFractionalAmount(value: editableTip.maxValue, currency: editableTip.currency) ?? 10000.0
+                formatter.maxValue = currencyToFractionalAmount(value: Double(editableTip.maxValue), currency: editableTip.currency) ?? 10000.0
                 formatter.minValue = 0.0
                 formatter.hasDecimals = true
             }))

@@ -515,13 +515,13 @@ private func generateBalanceIcon(text: String, icon: CGImage) -> CGImage {
     })!
 }
 
-func generateTonAndStarBalanceIcon(ton: String?, stars: Int64) -> CGImage {
+func generateTonAndStarBalanceIcon(ton: String?, stars: String?) -> CGImage {
     
     
     let starsIcon: CGImage?
     let tonIcon: CGImage?
-    if stars > 0 {
-        starsIcon = generateBalanceIcon(text: "\(stars)", icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
+    if let stars {
+        starsIcon = generateBalanceIcon(text: stars, icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
     } else {
         starsIcon = nil
     }
@@ -566,6 +566,14 @@ func generateTonAndStarBalanceIcon(ton: String?, stars: Int64) -> CGImage {
 
 func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage {
     return generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
+}
+
+func generateTextIcon_NewBadge_Flipped(bgColor: NSColor, textColor: NSColor) -> CGImage {
+    let image = generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
+    return generateImage(image.systemSize, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(image, in: image.systemSize.bounds)
+    })!
 }
 
 func generateTextIcon_AccentBadge(text: String, bgColor: NSColor, textColor: NSColor) -> CGImage {

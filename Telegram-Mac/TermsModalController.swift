@@ -94,7 +94,7 @@ class TermsModalController: ModalViewController {
                 self?.close()
             })
             if let botname = self.proceedBotAfterAgree {
-                _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] result in
+                _ = (self.context.engine.peers.resolvePeerByName(name: botname, referrer: nil) |> deliverOnMainQueue).start(next: { [weak self] result in
                     guard let `self` = self else {return}
                     switch result {
                     case .progress:

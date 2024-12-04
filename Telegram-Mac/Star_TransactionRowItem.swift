@@ -29,7 +29,7 @@ final class Star_TransactionItem : GeneralRowItem {
         self.callback = callback
         
         let amountAttr = NSMutableAttributedString()
-        if transaction.amount < 0 {
+        if transaction.amount.value < 0 {
             amountAttr.append(string: "\(transaction.amount) \(clown)", color: theme.colors.redUI, font: .medium(.text))
         } else {
             amountAttr.append(string: "+\(transaction.amount) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
@@ -72,7 +72,9 @@ final class Star_TransactionItem : GeneralRowItem {
         self.dateLayout = .init(.initialize(string: date, color: theme.colors.grayText, font: .normal(.text)))
         
         var descString: String? = nil
-        if !transaction.native.media.isEmpty {
+        if let commission = transaction.native.starrefCommissionPermille {
+            descString = strings().starsTransactionCommission("\(commission.decemial.string)%")
+        } else if !transaction.native.media.isEmpty {
             switch transaction.native.peer {
             case let .peer(peer):
                 descString = peer._asPeer().displayTitle
@@ -104,7 +106,7 @@ final class Star_TransactionItem : GeneralRowItem {
                 if let desc = transaction.native.description {
                     descString = desc
                 } else {
-                    if transaction.amount > 0 {
+                    if transaction.amount.value > 0 {
                         if transaction.native.flags.contains(.isRefund) {
                             descString = strings().starListRefund
                         } else {
@@ -306,6 +308,7 @@ private final class TransactionView : GeneralContainableRowView {
                 current = view
             } else {
                 current = AvatarControl(font: .avatar(20))
+                current.userInteractionEnabled = false
                 current.setFrameSize(NSMakeSize(44, 44))
                 self.avatar = current
                 self.addSubview(current)

@@ -616,6 +616,9 @@
 		27A734492B7A7BB600AB4FD5 /* BusinessHoursController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */; };
 		27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */; };
 		27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */; };
+		27A7FBDA2CF5B20900AE9432 /* PreciseSliderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A7FBD92CF5B20700AE9432 /* PreciseSliderRowItem.swift */; };
+		27A7FBDC2CF73E8600AE9432 /* libdav1d.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */; };
+		27A7FBDD2CF73EE000AE9432 /* libdav1d.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		27AAAD57299F5F9E00F70A9A /* LiteModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAAD56299F5F9E00F70A9A /* LiteModeController.swift */; };
@@ -843,6 +846,11 @@
 		27D91321283BC0EB007CF40F /* shine.png in Resources */ = {isa = PBXBuildFile; fileRef = 27D9131C283BC0E9007CF40F /* shine.png */; };
 		27D91322283BC0EB007CF40F /* particles.png in Resources */ = {isa = PBXBuildFile; fileRef = 27D9131D283BC0EA007CF40F /* particles.png */; };
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
+		27DEA2242CEF258400C25800 /* Affiliate_StartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2232CEF257400C25800 /* Affiliate_StartController.swift */; };
+		27DEA2262CEF664200C25800 /* Affiliate_PeerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2252CEF663000C25800 /* Affiliate_PeerController.swift */; };
+		27DEA2282CF07FBA00C25800 /* Affiliate_ProgramPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2272CF07F9700C25800 /* Affiliate_ProgramPreview.swift */; };
+		27DEA22A2CF09B3D00C25800 /* Affiliate_LinkPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DEA2292CF09B3700C25800 /* Affiliate_LinkPreview.swift */; };
+		27DEA22C2CF0A2E700C25800 /* affiliate_link.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27DEA22B2CF0A2E700C25800 /* affiliate_link.tgs */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
 		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
 		27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */; };
@@ -1742,6 +1750,7 @@
 		2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyEmptyRowItem.swift; sourceTree = "<group>"; };
 		2719D8132A1774BC00081079 /* StoryViewersModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewersModalController.swift; sourceTree = "<group>"; };
 		2719D8152A1F555500081079 /* StoryChatContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatContent.swift; sourceTree = "<group>"; };
+		271A195A2CF7485C00FAE5FB /* TelegramAudio */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TelegramAudio; path = "submodules/telegram-ios/submodules/TelegramAudio"; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
@@ -2224,6 +2233,8 @@
 		27A734482B7A7BB600AB4FD5 /* BusinessHoursController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessHoursController.swift; sourceTree = "<group>"; };
 		27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_unmuted.mp3; sourceTree = "<group>"; };
 		27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_recording_started.mp3; sourceTree = "<group>"; };
+		27A7FBD92CF5B20700AE9432 /* PreciseSliderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreciseSliderRowItem.swift; sourceTree = "<group>"; };
+		27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdav1d.a; path = "core-xprojects/dav1d/build/dav1d/lib/libdav1d.a"; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -2432,6 +2443,11 @@
 		27D9131C283BC0E9007CF40F /* shine.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shine.png; sourceTree = "<group>"; };
 		27D9131D283BC0EA007CF40F /* particles.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = particles.png; sourceTree = "<group>"; };
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
+		27DEA2232CEF257400C25800 /* Affiliate_StartController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_StartController.swift; sourceTree = "<group>"; };
+		27DEA2252CEF663000C25800 /* Affiliate_PeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_PeerController.swift; sourceTree = "<group>"; };
+		27DEA2272CF07F9700C25800 /* Affiliate_ProgramPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_ProgramPreview.swift; sourceTree = "<group>"; };
+		27DEA2292CF09B3700C25800 /* Affiliate_LinkPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Affiliate_LinkPreview.swift; sourceTree = "<group>"; };
+		27DEA22B2CF0A2E700C25800 /* affiliate_link.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = affiliate_link.tgs; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
 		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
 		27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSendAsMenuItem.swift; sourceTree = "<group>"; };
@@ -3243,6 +3259,7 @@
 				27D43DCF27919229006968A6 /* libssl.a in Frameworks */,
 				27B6D04B2739388600C785C7 /* TelegramCore in Frameworks */,
 				27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */,
+				27A7FBDC2CF73E8600AE9432 /* libdav1d.a in Frameworks */,
 				278926CB27550CA100923087 /* KeyboardKey in Frameworks */,
 				2745FED9274F95CF00546B05 /* ApiCredentials in Frameworks */,
 				270375EB2C9CCE11003EC235 /* InAppSettings in Frameworks */,
@@ -3367,6 +3384,7 @@
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
 				27D43DB027917748006968A6 /* libssl.a in Frameworks */,
 				27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */,
+				27A7FBDD2CF73EE000AE9432 /* libdav1d.a in Frameworks */,
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
 				271891F82B08A7DB0008B238 /* LokiRng in Frameworks */,
@@ -4306,6 +4324,17 @@
 			name = usage;
 			sourceTree = "<group>";
 		};
+		27DEA2222CEF256B00C25800 /* affiliate */ = {
+			isa = PBXGroup;
+			children = (
+				27DEA2292CF09B3700C25800 /* Affiliate_LinkPreview.swift */,
+				27DEA2272CF07F9700C25800 /* Affiliate_ProgramPreview.swift */,
+				27DEA2252CEF663000C25800 /* Affiliate_PeerController.swift */,
+				27DEA2232CEF257400C25800 /* Affiliate_StartController.swift */,
+			);
+			path = affiliate;
+			sourceTree = "<group>";
+		};
 		27E050982796B6DD00D5AFC3 /* sendas */ = {
 			isa = PBXGroup;
 			children = (
@@ -4361,6 +4390,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				271A195A2CF7485C00FAE5FB /* TelegramAudio */,
 				27528F5A2CABE98E0003810A /* TelegramSystem */,
 				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
 				27B8361A2B5FCCF800E82683 /* Dock */,
@@ -4844,6 +4874,7 @@
 				D014AA272317DA0E00CE5362 /* themes */,
 				9F7B5FC922003D8C0087D020 /* wallpapers */,
 				C20CAD141FE436E300EFF8BF /* SelectSizeRowItem.swift */,
+				27A7FBD92CF5B20700AE9432 /* PreciseSliderRowItem.swift */,
 				9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */,
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
@@ -6227,6 +6258,7 @@
 		C2FBC1E51DC631620063A23B /* overlay */ = {
 			isa = PBXGroup;
 			children = (
+				27DEA2222CEF256B00C25800 /* affiliate */,
 				2761549C2C2081CA0090BFFC /* mini-apps */,
 				277DFE6427843F3600F78396 /* translate */,
 				C2D2CAEE1E6486CE00939968 /* stickers */,
@@ -6340,6 +6372,7 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				271892152B18D9CD0008B238 /* transcription_locked.tgs */,
 				270FD5932C500B8A000070E6 /* duck_webapp_error.tgs */,
+				27DEA22B2CF0A2E700C25800 /* affiliate_link.tgs */,
 				270376062CA1A916003EC235 /* duck_upload_complete.tgs */,
 				270FD5952C516A99000070E6 /* browser_back_to_close.tgs */,
 				270FD5992C5181D9000070E6 /* browser_more.tgs */,
@@ -6519,6 +6552,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */,
 				2739A4AF2CABC4260065186B /* libopenh264.a */,
 				2703762E2CA1FEC4003EC235 /* libiconv.2.tbd */,
 				2703762D2CA1FE62003EC235 /* libSystem.B.tbd */,
@@ -7260,6 +7294,7 @@
 				2751E79D27F34415003E3937 /* menu_autodelete_1h.tgs in Resources */,
 				2780DE40271F0BB30092323F /* zoom.tgs in Resources */,
 				27CE1560297966D8001F8CE8 /* emoji_category_activities.tgs in Resources */,
+				27DEA22C2CF0A2E700C25800 /* affiliate_link.tgs in Resources */,
 				277C208D27A2C4C50070B3BF /* menu_sharescreen_slash.tgs in Resources */,
 				27336739276241EE0027441E /* menu_add_gif.tgs in Resources */,
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
@@ -7830,6 +7865,7 @@
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */,
 				9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */,
+				27DEA2262CEF664200C25800 /* Affiliate_PeerController.swift in Sources */,
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
 				C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */,
 				2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */,
@@ -7927,6 +7963,7 @@
 				270FD5A62C57C34B000070E6 /* InstantViewInBrowser.swift in Sources */,
 				27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
+				27DEA22A2CF09B3D00C25800 /* Affiliate_LinkPreview.swift in Sources */,
 				D0D7520B24C04FD60037D73A /* VideoEditorScrubbler.swift in Sources */,
 				2744018526E6344E0035C55D /* WidgetRecentPeersController.swift in Sources */,
 				27AAAD57299F5F9E00F70A9A /* LiteModeController.swift in Sources */,
@@ -7960,6 +7997,7 @@
 				27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
+				27DEA2242CEF258400C25800 /* Affiliate_StartController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
 				27D9131728364F1F007CF40F /* VoiceTranscriptionControl.swift in Sources */,
@@ -8013,6 +8051,7 @@
 				274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
 				27CE2DDE2AD66B4E001FA1C7 /* ChatInputView.swift in Sources */,
+				27DEA2282CF07FBA00C25800 /* Affiliate_ProgramPreview.swift in Sources */,
 				2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */,
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				2771FC522BC3C4A1009A5DDE /* DeleteGroupMessagesController.swift in Sources */,
@@ -8298,6 +8337,7 @@
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
+				27A7FBDA2CF5B20900AE9432 /* PreciseSliderRowItem.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
 				C2A16E411E1167DA00585A85 /* ChannelIntroViewController.swift in Sources */,
 				C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */,
@@ -8681,6 +8721,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;
@@ -8736,6 +8777,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libopus/build/libopus/lib",
 					"$(PROJECT_DIR)/core-xprojects/libvpx/build/libvpx/lib",
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;
@@ -8787,6 +8829,7 @@
 					"$(PROJECT_DIR)/core-xprojects/libopus/build/libopus/lib",
 					"$(PROJECT_DIR)/core-xprojects/libvpx/build/libvpx/lib",
 					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;
@@ -8907,6 +8950,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
+					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.4.1;

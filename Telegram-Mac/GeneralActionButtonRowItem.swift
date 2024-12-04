@@ -28,7 +28,7 @@ final class GeneralActionButtonRowItem : GeneralRowItem {
         case .legacy:
             return .clear
         default:
-            return super.backgroundColor
+            return super.backdorColor
         }
     }
     

@@ -9,17 +9,18 @@
 import Foundation
 import TGUIKit
 import CurrencyFormat
+import TelegramCore
 
 final class Fragment_OverviewRowItem : GeneralRowItem {
     
     struct Overview: Equatable {
         
         struct Stars : Equatable {
-            let amount: Int64
+            let amount: StarsAmount
             let usdRate: Double
                         
             var fractional: Double {
-                return currencyToFractionalAmount(value: amount, currency: XTR) ?? 0
+                return currencyToFractionalAmount(value: amount.totalValue, currency: XTR) ?? 0
             }
             var usdAmount: String {
                 return "$" + "\(self.fractional * self.usdRate)".prettyCurrencyNumberUsd

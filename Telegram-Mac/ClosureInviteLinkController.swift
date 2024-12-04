@@ -49,7 +49,7 @@ struct ClosureInviteLinkState: Equatable {
     
     var pricing: StarsSubscriptionPricing? {
         if let requestMonthlyFee {
-            return .init(period: star_sub_period, amount: requestMonthlyFee)
+            return .init(period: star_sub_period, amount: .init(value: requestMonthlyFee, nanos: 0))
         } else {
             return nil
         }

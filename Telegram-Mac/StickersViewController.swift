@@ -13,6 +13,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import FoundationUtils
+import ObjcUtils
 
 private struct State : Equatable {
     var searchCategories: EmojiSearchCategories?
@@ -1264,6 +1265,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         genericView.presentation = presentation
         
         let context = self.context
@@ -1514,16 +1516,23 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let searchLocal = context.engine.stickers.searchStickerSets(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
                 let searchRemote = context.engine.stickers.searchStickerSetsRemotely(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
                                 
-                let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
+                
+                let input: Signal<String, NoError> = Signal { subscriber in
+                    subscriber.putNext(currentKeyboardLanguage())
+                    subscriber.putCompletion()
                     
-                    let signals = emojis.map {
-                        context.engine.stickers.searchStickers(query: [$0], scope: [.installed]) |> map { $0.items }
-                    }
-                    return combineLatest(signals) |> map {
-                        $0.reduce([], { current, value in
-                            return current + value.filter { $0.file.stickerText != nil && emojis.contains($0.file.stickerText!) }
-                        })
-                    }
+                    return EmptyDisposable
+                } |> runOn(.mainQueue())
+                
+                
+                let emojiRelated: Signal<[FoundStickerItem], NoError> = combineLatest(context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false), input) |> mapToSignal { emojis, input in
+                    
+                    return context.engine.stickers.searchStickers(query: searchText, emoticon: [], inputLanguageCode: input) |> map { $0.0 }
+//                    return combineLatest(signals) |> map {
+//                        $0.reduce([], { current, value in
+//                            return current + value.0
+//                        })
+//                    }
                 } |> delay(0.2, queue: prepareQueue)
 
                 return combineLatest(searchLocal, searchRemote, emojiRelated, statePromise.get(), premiumStickers) |> map { local, remote, emojiRelated, state, premiumStickers in
