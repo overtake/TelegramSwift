@@ -1138,6 +1138,34 @@ func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bo
     }
 }
 
+
+func generateDialogVerifyLeft(background: NSColor, foreground: NSColor, reversed: Bool = false) -> CGImage {
+    if reversed {
+        return generateImage(NSMakeSize(16, 16), contextGenerator: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+            let image = NSImage(named: "Icon_Verified_Telegram")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    } else {
+        return generateImage(NSMakeSize(16, 16), rotatedContext: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+            let image = NSImage(named: "Icon_Verified_Telegram")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    }
+}
+
+
 private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollDeleteOption")!.precomposed(color)
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
@@ -2925,6 +2953,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.accentIcon) },
                                                verifyDialog: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
                                                verifyDialogActive: { generateDialogVerify(background: palette.accentIcon, foreground: palette.underSelectedColor, reversed: true) },
+                                              verify_dialog_left: { generateDialogVerifyLeft(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
+                                              verify_dialog_active_left: { generateDialogVerifyLeft(background: palette.accentIcon, foreground: palette.underSelectedColor, reversed: true) },
                                                chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
                                                appearanceAddPlatformTheme: {
                                                 let image = NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon)

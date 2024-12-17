@@ -1030,7 +1030,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOfLeft(Int(availability.remains).formattedWithSeparator, Int(availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
         }
         
-        if savedToProfile {
+        if savedToProfile, arguments.context.peerId == state.peer?.id {
             
             let badge: InputDataTableBasedItem.Row.Right.Badge = .init(text: strings().starTransactionVisibilityHide, callback: arguments.displayOnMyPage)
             

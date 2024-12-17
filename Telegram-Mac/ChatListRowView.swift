@@ -977,6 +977,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var statusControl: PremiumStatusControl?
     
+    private var leftStatusControl: PremiumStatusControl?
+
+    
     private var avatarTimerBadge: AvatarBadgeView?
     
     private var currentTextLeftCutout: CGFloat = 0.0
@@ -1213,6 +1216,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     
                     if let statusControl = statusControl {
                         addition += statusControl.frame.width + 1
+                    }
+                    if let statusControl = leftStatusControl {
+                        addition += statusControl.frame.width + 2
                     }
 
                     if item.isMuted {
@@ -1541,7 +1547,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if let peer = item.peer, peer.id != item.context.peerId, !item.isTopic {
                  let highlighted = self.highlighed
-                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
+                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: highlighted, cached: self.statusControl, animated: animated)
                  if let control = control {
                      self.statusControl = control
                      self.contentView.addSubview(control)
@@ -1552,6 +1558,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              } else if let view = self.statusControl {
                  performSubviewRemoval(view, animated: animated)
                  self.statusControl = nil
+             }
+             
+             if let peer = item.peer, peer.id != item.context.peerId, !item.isTopic {
+                 let highlighted = self.highlighed
+                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: true, isSelected: highlighted, cached: self.leftStatusControl, animated: animated)
+                 if let control = control {
+                     self.leftStatusControl = control
+                     self.contentView.addSubview(control)
+                 } else if let view = self.leftStatusControl {
+                     performSubviewRemoval(view, animated: animated)
+                     self.leftStatusControl = nil
+                 }
+             } else if let view = self.leftStatusControl {
+                 performSubviewRemoval(view, animated: animated)
+                 self.leftStatusControl = nil
              }
              
              if item.isReplyToStory, !hiddenMessage {
@@ -2985,6 +3006,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             var addition:CGFloat = 0
+            
+            if let statusControl = leftStatusControl {
+                statusControl.setFrameOrigin(NSMakePoint(item.leftInset, displayNameView.frame.height - 8))
+                addition += statusControl.frame.width + 2
+            }
+            
             if item.isSecret {
                 addition += theme.icons.secretImage.backingSize.height
             }
@@ -3003,8 +3030,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 if item.isSecret {
                     addition += theme.icons.secretImage.backingSize.height
                 }
+                if let statusControl = leftStatusControl {
+                    addition += statusControl.frame.width + 2
+                }
                 statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
+                
+               
             }
+            
+ 
             
             var inset: CGFloat = item.leftInset
             if let view = self.storyReplyImageView {

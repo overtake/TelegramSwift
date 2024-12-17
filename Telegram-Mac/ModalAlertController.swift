@@ -163,11 +163,13 @@ private final class Arguments {
     let action: ()->Void
     let toggle: (Int)->Void
     let secondAction:()->Void
-    init(presentation: TelegramPresentationTheme, action: @escaping()->Void, toggle: @escaping(Int)->Void, secondAction:@escaping()->Void) {
+    let updateDatas:()->Void
+    init(presentation: TelegramPresentationTheme, action: @escaping()->Void, toggle: @escaping(Int)->Void, secondAction:@escaping()->Void, updateDatas:@escaping()->Void) {
         self.presentation = presentation
         self.action = action
         self.toggle = toggle
         self.secondAction = secondAction
+        self.updateDatas = updateDatas
     }
 }
 
@@ -265,7 +267,7 @@ private final class AlertHeaderView : TableRowView {
             return
         }
         
-        let control = PremiumStatusControl.control(item.peer._asPeer(), account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer._asPeer(), account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             titleContainer.addSubview(control)
@@ -702,9 +704,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let footer = state.data.footer {
         entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("footer"), equatable: .init(footer), comparable: nil, item: { initialSize, stableId in
-            return footer.value(initialSize, stableId, arguments.presentation)
+            return footer.value(initialSize, stableId, arguments.presentation, arguments.updateDatas)
         }))
-        entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("footer1"), equatable: .init(footer), comparable: nil, item: { initialSize, stableId in
+        
+        if let footer1 = state.data.footer1 {
+            entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("footer1"), equatable: .init(footer1), comparable: nil, item: { initialSize, stableId in
+                return footer1.value(initialSize, stableId, arguments.presentation, arguments.updateDatas)
+            }))
+        }
+        
+        entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("footer_end"), equatable: .init(footer), comparable: nil, item: { initialSize, stableId in
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, backgroundColor: .clear)
         }))
     }
@@ -731,7 +740,7 @@ struct ModalAlertData : Equatable {
     }
     
     struct Footer : Equatable {
-        var value:(NSSize, AnyHashable, TelegramPresentationTheme)->TableRowItem
+        var value:(NSSize, AnyHashable, TelegramPresentationTheme, @escaping()->Void)->TableRowItem
         
         static func ==(lhs: Footer, rhs: Footer) -> Bool {
             return true
@@ -763,6 +772,7 @@ struct ModalAlertData : Equatable {
     
     var header: Header?
     var footer: Footer?
+    var footer1: Footer?
 
     var hasClose: Bool {
         switch mode {
@@ -809,6 +819,8 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     
     let initialState = State(data: data)
     
+    var getController:(()->InputDataController?)? = nil
+    
     var close:(()->Void)? = nil
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -849,6 +861,8 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         } else {
             cancel()
         }
+    }, updateDatas: {
+        getController?()?.updateInputValues()
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -861,6 +875,9 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         actionsDisposable.dispose()
     }
     
+    getController = { [weak controller] in
+        return controller
+    }
     
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size:  minimumSize(data), presentation: presentation)

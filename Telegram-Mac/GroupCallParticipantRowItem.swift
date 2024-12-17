@@ -226,7 +226,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
         let addition: CGFloat
-        if let size = PremiumStatusControl.controlSize(peer, false) {
+        if let size = PremiumStatusControl.controlSize(peer, false, left: false) {
             addition = size.width + 5
         } else {
             addition = 0
@@ -833,7 +833,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             }
         }
         
-        let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: nil, isSelected: false, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: nil, left: false, isSelected: false, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.containerView.addSubview(control)

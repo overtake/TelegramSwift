@@ -426,6 +426,11 @@ func initialize() -> [String] {
     array.append("scheduledInputAction")
     array.append("verifyDialog")
     array.append("verifyDialogActive")
+    
+    array.append("verify_dialog_left")
+    array.append("verify_dialog_active_left")
+
+    
     array.append("chatInputScheduled")
     array.append("appearanceAddPlatformTheme")
     
