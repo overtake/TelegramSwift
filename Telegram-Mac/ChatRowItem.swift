@@ -1006,7 +1006,7 @@ class ChatRowItem: TableRowItem {
                 return false
             }
             if let media = message.extendedMedia, media is TelegramMediaAction {
-                return false
+              //  return false
             }
             if let media = message.extendedMedia as? TelegramMediaStory {
                 if media.isMention {
@@ -2956,7 +2956,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var hasStatus: Bool {
-        if let peer = self.peer, let message = self.message, PremiumStatusControl.hasControl(peer) {
+        if let peer = self.peer, let message = self.message, PremiumStatusControl.hasControl(peer, left: false) {
             if authorText != nil, let peer = message.peers[message.id.peerId] {
                 if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
                     return true
@@ -2967,13 +2967,13 @@ class ChatRowItem: TableRowItem {
     }
     
     var statusSize: CGFloat {
-        if let peer = self.peer, hasStatus, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = self.peer, hasStatus, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
             return controlSize.width
         }
         return 0
     }
     var forwardStatusSize: CGFloat {
-        if let peer = self.peer, false, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = self.peer, false, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
             return controlSize.width
         }
         return 0
@@ -2982,7 +2982,7 @@ class ChatRowItem: TableRowItem {
     func status(_ cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
         if let peer = peer, let attr = authorText?.attributedString, !attr.string.isEmpty, hasStatus {
             if let color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor {
-                return PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, color: color, cached: cached, animated: animated)
+                return PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, color: color, cached: cached, animated: animated)
             }
         }
         return nil

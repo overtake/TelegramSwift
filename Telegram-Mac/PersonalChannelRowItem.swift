@@ -201,7 +201,7 @@ private final class PersonalChannelRowView : GeneralContainableRowView {
             self.loadingView = nil
         }
         
-        let control = PremiumStatusControl.control(item.peer._asPeer(), account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, color: theme.colors.accent, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer._asPeer(), account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, isBig: true, color: theme.colors.accent, cached: self.statusControl, animated: animated)
         
         if let control = control {
             self.statusControl = control

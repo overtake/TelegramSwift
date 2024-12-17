@@ -201,7 +201,7 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
         nameView.update(item.nameLayout)
         statusView.update(item.statusLayout)
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, color: item.accentColor, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, isBig: true, playTwice: true, color: item.accentColor, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.addSubview(control)

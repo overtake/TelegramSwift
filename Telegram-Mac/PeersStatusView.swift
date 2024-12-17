@@ -107,7 +107,7 @@ private final class StatusView : Control {
             self.button = nil
         }
         
-        let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
+        let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
         if let control = control {
             self.button = control
             addSubview(control)

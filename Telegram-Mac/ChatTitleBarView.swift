@@ -202,7 +202,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private var inlineTopicPhotoLayer: InlineStickerItemLayer? = nil
     
     private var statusControl: PremiumStatusControl?
-    
+    private var leftStatusControl: PremiumStatusControl?
+
     private var videoAvatarView: VideoAvatarContainer?
     
     private var hasPhoto: Bool = false
@@ -598,11 +599,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             statusControl.setFrameOrigin(NSMakePoint(titleRect.maxX + 2, titleRect.minY + 1))
         }
         
+        if let statusControl = leftStatusControl, let titleRect = titleRect {
+            statusControl.setFrameOrigin(NSMakePoint(titleRect.minX - statusControl.frame.width - 2, titleRect.minY + 1))
+        }
+        
         reportPlaceholder?.frame = bounds
         
         
     }
     
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -653,6 +659,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             
             self.textInset = !hasPhoto && !mode.isTopicMode ? 24 : hasBackButton ? 66 : 46
             
+            
             switch chatInteraction.mode {
             case .history:
                 if let peer = peerViewMainPeer(peerView) {
@@ -698,6 +705,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             }
             var statusControl: PremiumStatusControl? = nil
+            var leftStatusControl: PremiumStatusControl? = nil
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
                 titleImage = (theme.icons.chatSecretTitle, .left(topInset: 0))
                 callButton.set(image: theme.icons.chatCall, for: .Normal)
@@ -708,7 +716,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 let context = chatInteraction.context
                 
                 if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
-                    statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
+                    statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: false)
+                }
+                
+                if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                    leftStatusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: true, isSelected: false, cached: self.leftStatusControl, animated: false)
                 }
                 
                 if peer.isGroup || peer.isSupergroup || peer.isChannel {
@@ -730,7 +742,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 self.statusControl = nil
             }
             
+            if let statusControl = leftStatusControl {
+                self.leftStatusControl = statusControl
+                self.addSubview(statusControl)
+            } else if let view = self.leftStatusControl {
+                performSubviewRemoval(view, animated: false)
+                self.leftStatusControl = nil
+            }
             
+            self.titleInset = leftStatusControl != nil ? leftStatusControl!.frame.width + 2 : 0
+
             
             callButton.sizeToFit()
 
@@ -741,6 +762,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
         needsLayout = true
     }
+    
     
     private func updatePhoto(_ presentation: ChatPresentationInterfaceState, animated: Bool) {
         let context = chatInteraction.context

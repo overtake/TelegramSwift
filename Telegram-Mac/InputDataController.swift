@@ -768,6 +768,11 @@ class InputDataController: GenericViewController<InputDataView> {
         self.proccessValidation(self.validateData(self.fetchData()))
     }
     
+    func updateInputValues() {
+        self.proccessValidation(self.updateDatas(self.fetchData()))
+        self.modalTransitionHandler?(true)
+    }
+    
     private func validateInput(data: [InputDataIdentifier : InputDataValue]) {
         
         var values:[InputDataIdentifier : Int] = [:]

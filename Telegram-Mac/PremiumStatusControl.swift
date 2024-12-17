@@ -50,12 +50,12 @@ final class PremiumStatusControl : Control {
         }
     }
     
-    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = true, isLite: Bool) {
+    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, left: Bool, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = true, isLite: Bool) {
         
         
         self.lite = isLite
         
-        if let size = PremiumStatusControl.controlSize(peer, isBig) {
+        if let size = PremiumStatusControl.controlSize(peer, isBig, left: left) {
             setFrameSize(size)
         }
         self.layer?.opacity = color != nil && peer.emojiStatus != nil ? 0.4 : 1
@@ -73,7 +73,7 @@ final class PremiumStatusControl : Control {
             }
             let image: CGImage?
             if peer.isVerified {
-                image = isSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog
+                image = isSelected ? (left ? theme.icons.verify_dialog_active_left : theme.icons.verifyDialogActive) : (left ? theme.icons.verify_dialog_left : theme.icons.verifyDialog)
             } else if peer.isScam {
                 image = isSelected ? theme.icons.scamActive : theme.icons.scam
             } else if peer.isFake {
@@ -218,7 +218,7 @@ final class PremiumStatusControl : Control {
         
         self.disposable.set(updatedPeer.start(next: { [weak self] updated in
             if !updated.isEqual(peer) {
-                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite)
+                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, left: left, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite)
             }
         }))
     }
@@ -270,21 +270,21 @@ final class PremiumStatusControl : Control {
         }
     }
     
-    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, playTwice: Bool = false, color: NSColor? = nil, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
+    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, left: Bool, isSelected: Bool, isBig: Bool = false, playTwice: Bool = false, color: NSColor? = nil, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
         var current: PremiumStatusControl? = nil
         if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium || peer.emojiStatus != nil {
             current = cached ?? PremiumStatusControl(frame: .zero)
         }
                 
-        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite(.emoji))
+        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, left: left, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite(.emoji))
         return current
     }
     
-    static func hasControl(_ peer: Peer) -> Bool {
+    static func hasControl(_ peer: Peer, left: Bool) -> Bool {
         return peer.isVerified || peer.isScam || peer.isFake || peer.isPremium || peer.emojiStatus != nil
     }
-    static func controlSize(_ peer: Peer, _ isBig: Bool) -> NSSize? {
-        if hasControl(peer) {
+    static func controlSize(_ peer: Peer, _ isBig: Bool, left: Bool) -> NSSize? {
+        if hasControl(peer, left: left) {
             var addition: NSSize = .zero
             if peer.isScam || peer.isFake {
                 addition.width += 20

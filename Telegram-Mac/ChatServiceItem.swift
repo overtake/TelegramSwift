@@ -1403,11 +1403,22 @@ class ChatServiceItem: ChatRowItem {
             data.makeSize(width: width - 80)
             height += data.size.height + (isBubbled ? 9 : 6)
         }
+        
+        if let reactionsLayout {
+            height += reactionsLayout.size.height
+        }
+        
         return height
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
+        
+        if let reactions = reactionsLayout {
+            reactions.measure(for: min(320, blockWidth))
+        }
+        
+        
         if isBubbled {
             if shouldBlurService {
                 text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
@@ -2201,6 +2212,7 @@ class ChatServiceRowView: TableRowView {
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
     private var suggestChannelsView: ChatChannelSuggestView?
+    private var reactionsView:ChatReactionsView?
 
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
     
@@ -2535,6 +2547,20 @@ class ChatServiceRowView: TableRowView {
             performSubviewRemoval(view, animated: animated, scale: true)
             self.suggestChannelsView = nil
         }
+        
+        if let reactionsLayout = item.reactionsLayout  {
+            if reactionsView == nil {
+                reactionsView = ChatReactionsView(frame: reactionsRect(item))
+                addSubview(reactionsView!)
+            }
+            guard let reactionsView = reactionsView else {return}
+            reactionsView.update(with: reactionsLayout, animated: animated)
+        } else {
+            if let view = self.reactionsView {
+                self.reactionsView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+        }
 
         
         updateInlineStickers(context: item.context, view: self.textView, textLayout: item.text)
@@ -2543,6 +2569,29 @@ class ChatServiceRowView: TableRowView {
         self.needsLayout = true
     }
     
+    
+    func reactionsRect(_ item: ChatRowItem) -> CGRect {
+        guard let reactionsLayout = item.reactionsLayout else {
+            return .zero
+        }
+        let contentFrameY = frame.height - reactionsLayout.size.height
+        
+        var frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY)
+        
+        return frame
+    }
+    
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        guard let item = item as? ChatServiceItem else {
+            return
+        }
+        if let reactionsView {
+            transition.updateFrame(view: reactionsView, frame: reactionsRect(item))
+        }
+    }
         
     
     override func updateAnimatableContent() -> Void {

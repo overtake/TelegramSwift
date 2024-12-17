@@ -5517,6 +5517,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var verify_dialog_left: CGImage {
+      if let image = cached.with({ $0["verify_dialog_left"] }) {
+          return image
+      } else {
+          let image = _verify_dialog_left()
+          _ = cached.modify { current in 
+              var current = current
+              current["verify_dialog_left"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var verify_dialog_active_left: CGImage {
+      if let image = cached.with({ $0["verify_dialog_active_left"] }) {
+          return image
+      } else {
+          let image = _verify_dialog_active_left()
+          _ = cached.modify { current in 
+              var current = current
+              current["verify_dialog_active_left"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chatInputScheduled: CGImage {
       if let image = cached.with({ $0["chatInputScheduled"] }) {
           return image
@@ -11038,6 +11064,8 @@ public final class TelegramIconsTheme {
   private let _scheduledInputAction: ()->CGImage
   private let _verifyDialog: ()->CGImage
   private let _verifyDialogActive: ()->CGImage
+  private let _verify_dialog_left: ()->CGImage
+  private let _verify_dialog_active_left: ()->CGImage
   private let _chatInputScheduled: ()->CGImage
   private let _appearanceAddPlatformTheme: ()->CGImage
   private let _wallet_close: ()->CGImage
@@ -11856,6 +11884,8 @@ public final class TelegramIconsTheme {
       scheduledInputAction: @escaping()->CGImage,
       verifyDialog: @escaping()->CGImage,
       verifyDialogActive: @escaping()->CGImage,
+      verify_dialog_left: @escaping()->CGImage,
+      verify_dialog_active_left: @escaping()->CGImage,
       chatInputScheduled: @escaping()->CGImage,
       appearanceAddPlatformTheme: @escaping()->CGImage,
       wallet_close: @escaping()->CGImage,
@@ -12673,6 +12703,8 @@ public final class TelegramIconsTheme {
       self._scheduledInputAction = scheduledInputAction
       self._verifyDialog = verifyDialog
       self._verifyDialogActive = verifyDialogActive
+      self._verify_dialog_left = verify_dialog_left
+      self._verify_dialog_active_left = verify_dialog_active_left
       self._chatInputScheduled = chatInputScheduled
       self._appearanceAddPlatformTheme = appearanceAddPlatformTheme
       self._wallet_close = wallet_close

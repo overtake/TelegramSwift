@@ -91,6 +91,12 @@ class InstantViewInBrowser : TelegramGenericViewController<View>, BrowserPage {
         
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        navigation.frame = bounds
+        self.page.frame = bounds
+    }
+    
     private func update() {
         let isBackButton = self.navigation.stackCount > 1
         let title = self.navigation.controller.defaultBarTitle

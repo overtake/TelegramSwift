@@ -767,7 +767,7 @@ class ChatListRowItem: TableRowItem {
         self.canPreviewChat = canPreviewChat
         
         
-        if let peer, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp), readState == nil || readState?.count == 0 {
+        if let peer, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp), readState == nil || readState?.count == 0, splitState != .minimisize {
             self.openMiniApp = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.underSelectedColor, font: .medium(.text)), alignment: .center)
             self.openMiniApp?.measure(width: .greatestFiniteMagnitude)
             
@@ -1226,7 +1226,10 @@ class ChatListRowItem: TableRowItem {
             dateSize = dateLayout.layoutSize.width
         }
         var offset: CGFloat = 0
-        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
+            offset += controlSize.width + 4
+        }
+        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false, left: true) {
             offset += controlSize.width + 4
         }
         if isMuted {
@@ -1289,7 +1292,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let openMiniApp {
-            w += openMiniApp.layoutSize.width + 14
+            w += openMiniApp.layoutSize.width + 20
         }
         
         w += (leftInset - 20)

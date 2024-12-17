@@ -5691,6 +5691,12 @@ public final class L10n {
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
+  /// Send Another Gift
+  public static var chatServiceSendAnother: String  { return L10n.tr("Localizable", "Chat.Service.SendAnother") }
+  /// Send Gift to %@
+  public static func chatServiceSendGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SendGift", p1)
+  }
   /// The story you were mentioned in\nis no longer available
   public static var chatServiceStoryExpiredMentionTextIncoming: String  { return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextIncoming") }
   /// The story where you mentioned %@\n is no longer available
@@ -12777,6 +12783,8 @@ public final class L10n {
   public static var peerInfoUnblockUser: String  { return L10n.tr("Localizable", "PeerInfo.UnblockUser") }
   /// username
   public static var peerInfoUsername: String  { return L10n.tr("Localizable", "PeerInfo.username") }
+  /// Verify Accounts
+  public static var peerInfoVerifyAccounts: String  { return L10n.tr("Localizable", "PeerInfo.VerifyAccounts") }
   /// Description
   public static var peerInfoAboutPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.About.Placeholder") }
   /// Acrhived Stories
