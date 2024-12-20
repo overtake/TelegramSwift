@@ -134,7 +134,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
                 image = nil
             }
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title.text, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
                 arguments.openPreset(filter, false)
             }, menuItems: {
                 return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
@@ -176,7 +176,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             var suggeted_index:Int32 = 0
             for filter in filtered {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recommended(suggeted_index), equatable: InputDataEquatable(filter), comparable: nil, item: { initialSize, stableId in
-                    return ChatListFilterRecommendedItem(initialSize, stableId: stableId, title: filter.title, description: filter.description, viewType: bestGeneralViewType(filtered, for: filter), add: {
+                    return ChatListFilterRecommendedItem(initialSize, stableId: stableId, title: filter.title.text, description: filter.description, viewType: bestGeneralViewType(filtered, for: filter), add: {
                         arguments.addFeatured(filter)
                     })
                 }))

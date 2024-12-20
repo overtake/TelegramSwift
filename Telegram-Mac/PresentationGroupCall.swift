@@ -211,7 +211,8 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 defaultParticipantsAreMuted: nil,
                 isVideoEnabled: false,
                 unmutedVideoLimit: 0,
-                isStream: call.isStream ?? false
+                isStream: call.isStream ?? false,
+                upgradedPrivateCallId: nil
             ),
             topParticipants: [],
             participantCount: 0,
@@ -252,7 +253,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted, isVideoEnabled: state.isVideoEnabled, unmutedVideoLimit: state.unmutedVideoLimit, isStream: state.isStream),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted, isVideoEnabled: state.isVideoEnabled, unmutedVideoLimit: state.unmutedVideoLimit, isStream: state.isStream, upgradedPrivateCallId: nil),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -1194,7 +1195,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, enableSystemMute: false, preferX264: false, logPath: allocateCallLogPath(account: self.account), onMutedSpeechActivityDetected: { _ in })
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, enableSystemMute: false, preferX264: false, logPath: allocateCallLogPath(account: self.account), onMutedSpeechActivityDetected: { _ in }, encryptionKey: nil, isConference: false, sharedAudioDevice: nil)
                 
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
@@ -1263,7 +1264,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     preferMuted: true,
                     joinPayload: joinPayload,
                     peerAdminIds: peerAdminIds,
-                    inviteHash: strongSelf.invite
+                    inviteHash: strongSelf.invite,
+                    keyFingerprint: nil
                 )
                 |> deliverOnMainQueue).start(next: { joinCallResult in
                     guard let strongSelf = self else {
@@ -1744,7 +1746,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         defaultParticipantsAreMuted: state.defaultParticipantsAreMuted,
                         isVideoEnabled: state.isVideoEnabled,
                         unmutedVideoLimit: state.unmutedVideoLimit,
-                        isStream: callInfo.isStream
+                        isStream: callInfo.isStream,
+                        upgradedPrivateCallId: nil
                     ))))
                     
                     strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
@@ -1860,6 +1863,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         isVideoEnabled: callInfo.isVideoEnabled,
                         unmutedVideoLimit: callInfo.unmutedVideoLimit,
                         isStream: callInfo.isStream,
+                        upgradedPrivateCallId: nil,
                         version: 0
                     ),
                     previousServiceState: nil
@@ -1999,7 +2003,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     strongSelf.stateValue = stateValue
                     
                     if state.scheduleTimestamp == nil && !strongSelf.isScheduledStarted {
-                        strongSelf.updateSessionState(internalState: .active(GroupCallInfo(id: callInfo.id, accessHash: callInfo.accessHash, participantCount: state.totalCount, streamDcId: callInfo.streamDcId, title: state.title, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: true, defaultParticipantsAreMuted: callInfo.defaultParticipantsAreMuted ?? state.defaultParticipantsAreMuted, isVideoEnabled: callInfo.isVideoEnabled, unmutedVideoLimit: callInfo.unmutedVideoLimit, isStream: callInfo.isStream)))
+                        strongSelf.updateSessionState(internalState: .active(GroupCallInfo(id: callInfo.id, accessHash: callInfo.accessHash, participantCount: state.totalCount, streamDcId: callInfo.streamDcId, title: state.title, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: true, defaultParticipantsAreMuted: callInfo.defaultParticipantsAreMuted ?? state.defaultParticipantsAreMuted, isVideoEnabled: callInfo.isVideoEnabled, unmutedVideoLimit: callInfo.unmutedVideoLimit, isStream: callInfo.isStream, upgradedPrivateCallId: nil)))
                     } else if !strongSelf.isScheduledStarted {
                         strongSelf.summaryInfoState.set(.single(SummaryInfoState(info: GroupCallInfo(
                             id: callInfo.id,
@@ -2014,7 +2018,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             defaultParticipantsAreMuted: state.defaultParticipantsAreMuted,
                             isVideoEnabled: state.isVideoEnabled,
                             unmutedVideoLimit: state.unmutedVideoLimit,
-                            isStream: callInfo.isStream
+                            isStream: callInfo.isStream,
+                            upgradedPrivateCallId: nil
                         ))))
                         
                         strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
@@ -2125,8 +2130,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         self.markedAsCanBeRemoved = true
-        self.genericCallContext?.stop()
-        self.screencastCallContext?.stop()
+        self.genericCallContext?.stop(account: account, reportCallId: nil)
+        self.screencastCallContext?.stop(account: account, reportCallId: nil)
         self._canBeRemoved.set(.single(true))
         if self.didConnectOnce {
         }
@@ -2366,7 +2371,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             enableSystemMute: false,
             preferX264: false,
             logPath: "",
-            onMutedSpeechActivityDetected: { _ in }
+            onMutedSpeechActivityDetected: { _ in },
+            encryptionKey: nil,
+            isConference: false,
+            sharedAudioDevice: nil
         )
 
         self.screencastCallContext = screencastCallContext
@@ -2389,7 +2397,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
 
             strongSelf.requestDisposable.set((strongSelf.accountContext.engine.calls.joinGroupCallAsScreencast(
-                peerId: strongSelf.peerId,
                 callId: callInfo.id,
                 accessHash: callInfo.accessHash,
                 joinPayload: joinPayload
@@ -2420,7 +2427,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.screencastEndpointId = nil
         if let screencastCallContext = self.screencastCallContext {
             self.screencastCallContext = nil
-            screencastCallContext.stop()
+            screencastCallContext.stop(account: account, reportCallId: nil)
 
             let maybeCallInfo: GroupCallInfo? = self.internalState.callInfo
 

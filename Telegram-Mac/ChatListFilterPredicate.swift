@@ -67,9 +67,28 @@ extension ChatListFilter {
         case .allChats:
             return strings().chatListFilterAllChats
         case let .filter(_, title, _, _):
-            return title
+            return title.text
         }
     }
+    
+    var entities: [MessageTextEntity] {
+        switch self {
+        case .allChats:
+            return []
+        case let .filter(_, title, _, _):
+            return title.entities
+        }
+    }
+    
+    var enableAnimations: Bool {
+        switch self {
+        case .allChats:
+            return false
+        case let .filter(_, title, _, _):
+            return title.enableAnimations
+        }
+    }
+    
     var emoticon: String? {
         switch self {
         case .allChats:
@@ -87,14 +106,24 @@ extension ChatListFilter {
         }
     }
     
-    func withUpdatedTitle(_ string: String) -> ChatListFilter {
+    func withUpdatedTitle(string: String, entities: [MessageTextEntity], enableAnimations: Bool) -> ChatListFilter {
         switch self {
         case .allChats:
             return self
         case let .filter(id, _, emoticon, data):
-            return .filter(id: id, title: string, emoticon: emoticon, data: data)
+            return .filter(id: id, title: .init(text: string, entities: entities, enableAnimations: enableAnimations), emoticon: emoticon, data: data)
         }
     }
+    
+    func withUpdatedTitle(_ title: ChatFolderTitle) -> ChatListFilter {
+        switch self {
+        case .allChats:
+            return self
+        case let .filter(id, _, emoticon, data):
+            return .filter(id: id, title: title, emoticon: emoticon, data: data)
+        }
+    }
+    
     func withUpdatedEmoticon(_ string: String) -> ChatListFilter {
         switch self {
         case .allChats:

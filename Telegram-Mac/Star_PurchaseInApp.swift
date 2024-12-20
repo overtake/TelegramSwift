@@ -689,7 +689,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
         let photo = state.photoRepresentation.flatMap({ [$0] }) ?? []
         updateState { current in
             var current = current
-            current.peer = .init(TelegramUser.init(id: .init(0), accessHash: nil, firstName: state.title, lastName: nil, username: nil, phone: nil, photo: photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: state.nameColor, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil))
+            current.peer = .init(TelegramUser(id: .init(0), accessHash: nil, firstName: state.title, lastName: nil, username: nil, phone: nil, photo: photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: state.nameColor, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil))
             current.formId = state.subscriptionFormId
             return current
         }

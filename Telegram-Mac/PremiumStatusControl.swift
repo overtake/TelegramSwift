@@ -281,7 +281,7 @@ final class PremiumStatusControl : Control {
     }
     
     static func hasControl(_ peer: Peer) -> Bool {
-        return peer.isVerified || peer.isScam || peer.isFake || peer.isPremium || peer.emojiStatus != nil
+        return peer.isVerified || peer.isScam || peer.isFake || peer.isPremium || peer.emojiStatus != nil 
     }
     static func controlSize(_ peer: Peer, _ isBig: Bool) -> NSSize? {
         if hasControl(peer) {

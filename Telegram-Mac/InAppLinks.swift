@@ -888,7 +888,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                                         }
                                     })
                                 } else {
-                                    BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .inline(startParam: command)))
+                                    BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .inline(startParam: command ?? "")))
                                 }
                                 
                                

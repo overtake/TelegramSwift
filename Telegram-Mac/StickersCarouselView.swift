@@ -50,6 +50,8 @@ class StickersCarouselView: View, PremiumSlideView {
         super.init(frame: .zero)
         
         self.scrollView.background = .clear
+        
+        self.tapView.userInteractionEnabled = false
                 
         self.tapView.set(handler: { [weak self] _ in
             self?.stickerTapped()
