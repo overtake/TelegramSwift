@@ -504,7 +504,7 @@ enum JoinCloudFolderMode {
     var title: String {
         switch self {
         case let .join(_, content), let .joinChats(_, content, _):
-            return content.title ?? ""
+            return content.title?.text ?? ""
         case let .remove(filter, _, _):
             return filter.title
         case let .sharedLinks(filter, _):
@@ -808,10 +808,10 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
                         var title: String? = nil
                         let text: String
                         if result.newChatCount != 0 {
-                            title = strings().sharedFolderTooltipAddedTitle(result.title)
+                            title = strings().sharedFolderTooltipAddedTitle(result.title.text)
                             text = strings().sharedFolderTooltipAddedTextCountable(result.newChatCount)
                         } else {
-                            text = strings().sharedFolderTooltipAddedTitle(result.title)
+                            text = strings().sharedFolderTooltipAddedTitle(result.title.text)
                         }
                         close?()
                         showModalText(for: context.window, text: text, title: title)

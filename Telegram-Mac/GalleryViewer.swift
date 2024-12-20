@@ -689,42 +689,80 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
-                    let previous = previous.swap(entries)
                     
-                    var inserted: [(Int, MGalleryItem)] = []
                     
-                    inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
+                    let message = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.Message(id: message.id)) |> map {
+                        $0?._asMessage()
+                    }
+                    return message |> map { message in
+                        if let message {
+                            let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
+                            let previous = previous.swap(entries)
+                            
+                            var inserted: [(Int, MGalleryItem)] = []
+                            
+                            inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
 
-                    if let webpage = message.anyMedia as? TelegramMediaWebpage {
-                        let instantMedias = instantPageMedias(for: webpage)
-                        if instantMedias.count > 1 {
-                            for i in 1 ..< instantMedias.count {
-                                let media = instantMedias[i]
-                                if media.media is TelegramMediaImage {
-                                    inserted.append((i, MGalleryPhotoItem(context, .instantMedia(media, message), pagerSize)))
-                                } else if let file = media.media as? TelegramMediaFile {
-                                    if file.isVideo && file.isAnimated {
-                                        inserted.append((i, MGalleryGIFItem(context, .instantMedia(media, message), pagerSize)))
-                                    } else if file.isVideo || file.isVideoFile {
-                                        inserted.append((i, MGalleryVideoItem(context, .instantMedia(media, message), pagerSize)))
+                            if let webpage = message.anyMedia as? TelegramMediaWebpage {
+                                let instantMedias = instantPageMedias(for: webpage)
+                                if instantMedias.count > 1 {
+                                    for i in 1 ..< instantMedias.count {
+                                        let media = instantMedias[i]
+                                        if media.media is TelegramMediaImage {
+                                            inserted.append((i, MGalleryPhotoItem(context, .instantMedia(media, message), pagerSize)))
+                                        } else if let file = media.media as? TelegramMediaFile {
+                                            if file.isVideo && file.isAnimated {
+                                                inserted.append((i, MGalleryGIFItem(context, .instantMedia(media, message), pagerSize)))
+                                            } else if file.isVideo || file.isVideoFile {
+                                                inserted.append((i, MGalleryVideoItem(context, .instantMedia(media, message), pagerSize)))
+                                            }
+                                        } else if media.media is TelegramMediaWebpage {
+                                            inserted.append((i, MGalleryExternalVideoItem(context, .instantMedia(media, message), pagerSize)))
+                                        }
                                     }
-                                } else if media.media is TelegramMediaWebpage {
-                                    inserted.append((i, MGalleryExternalVideoItem(context, .instantMedia(media, message), pagerSize)))
                                 }
                             }
+                            return (UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)
+                        } else {
+                            return (UpdateTransition(deleted: [0], inserted: [], updated: []), previous.with { $0 }, [])
                         }
                         
-                    }
+                    } |> deliverOnMainQueue
                     
-                    return .single((UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)) |> deliverOnMainQueue
-
                 case .history:
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false, translate: translate).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
-                                return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
+                                var firstCheck = message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
+                                
+                                if !firstCheck {
+                                    return false
+                                }
+                                if let peer = message.peers[message.id.peerId] {
+                                    if let group = peer as? TelegramGroup {
+                                        if group.membership != .Member {
+                                            switch group.role {
+                                            case .creator:
+                                                return true
+                                            case .admin:
+                                                return true
+                                            case .member:
+                                                return false
+                                            }
+                                        }
+                                    }
+                                    if let group = peer as? TelegramChannel {
+                                        switch group.participationStatus {
+                                        case .member:
+                                            return true
+                                        default:
+                                            return group.isAdmin
+                                        }
+                                    }
+                                }
+                                
+                                return true
                             default:
                                 return true
                             }
@@ -845,7 +883,7 @@ class GalleryViewer: NSResponder {
             let entries = current.modify({$0})
             let selectedIndex = min(entries.count - 1, selectedIndex)
             
-            guard let `self` = self else {return}
+            guard let `self` = self, entries.count > 0 else {return}
             
             let current = entries[selectedIndex]
             if let location = current.location {

@@ -680,9 +680,9 @@ class PCallSession {
             presentationState = CallState(state: .terminating, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
         case let .terminated(id, reason, options):
             presentationState = CallState(state: .terminated(id, reason, options.contains(.reportRating)), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .requesting(ringing):
+        case let .requesting(ringing, _):
             presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .active(_, _, keyVisualHash, _, _, _, _, _):
+        case let .active(_, _, keyVisualHash, _, _, _, _, _, _):
             self.callWasActive = true
             if let callContextState = callContextState {
                 switch callContextState.state {
@@ -713,12 +713,14 @@ class PCallSession {
             } else {
                 presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
             }
+        case .switchedToConference(key: let key, keyVisualHash: let keyVisualHash, conferenceCall: let conferenceCall):
+            fatalError("TODO")
         }
         
         switch sessionState.state {
         case .requesting:
             break
-        case let .active(id, key, _, connections, maxLayer, version, _, allowsP2P):
+        case let .active(id, key, _, connections, maxLayer, version, _, allowsP2P, conference):
             if !wasActive {
                 let logName = "\(id.id)_\(id.accessHash)"
                 
@@ -1174,7 +1176,7 @@ func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, 
                     return context.sharedContext.endCurrentCall()
                 }
             } |> mapToSignal { _ in
-                return context.account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
+                return context.account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible, conferenceCall: nil)
             }
             |> mapToSignal { id in
                 return getPrivateCallSessionData(context.account, accountManager: context.sharedContext.accountManager, peerId: peerId) |> map {

@@ -17,6 +17,11 @@ import TelegramMedia
 
 final class InputAnimatedEmojiAttach: View {
     
+    fileprivate var attachmentValue: TextInputTextCustomEmojiAttribute?
+    fileprivate var size: NSSize?
+    fileprivate var textColor: NSColor?
+    fileprivate var context: AccountContext?
+    
     private var media: InlineStickerItemLayer!
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -29,10 +34,21 @@ final class InputAnimatedEmojiAttach: View {
     
     func set(_ attachment: TextInputTextCustomEmojiAttribute, size: NSSize, context: AccountContext, textColor: NSColor, playPolicy: LottiePlayPolicy = .loop) -> Void {
         
+       
+        if media != nil {
+            self.media.removeFromSuperlayer()
+        }
         
         let fileId = attachment.fileId
         let file = attachment.file
-            
+        
+        self.attachmentValue = attachment
+
+        self.context = context
+        self.size = size
+        self.textColor = textColor
+        
+        
         self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, playPolicy: playPolicy, textColor: textColor)
         
         self.media.superview = self
@@ -43,6 +59,12 @@ final class InputAnimatedEmojiAttach: View {
         self.layer?.addSublayer(media)
                 
         needsLayout = true
+    }
+    
+    func updatePlayPolicy(_ playPolicy: LottiePlayPolicy) {
+        if let attachmentValue, let size, let context, let textColor {
+            self.set(attachmentValue, size: size, context: context, textColor: textColor, playPolicy: playPolicy)
+        }
     }
     
     override func layout() {
@@ -378,6 +400,12 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
                 view.set(attachment, size: rect.size, context: context, textColor: theme.textColor, playPolicy: interactions.emojiPlayPolicy)
             }
             return view
+        }
+    }
+    
+    func updatePlayPolicy(_ playPolicy: LottiePlayPolicy) {
+        for emoji in emojis {
+            emoji.updatePlayPolicy(playPolicy)
         }
     }
     
