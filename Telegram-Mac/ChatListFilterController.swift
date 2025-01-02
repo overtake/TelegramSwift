@@ -718,7 +718,6 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
             sectionId += 1
         }
         
-        //TODOLANG
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: state.nameAnimation ? strings().chatListFolderDisableAnimations : strings().chatListFolderEnableAnimations, color: theme.colors.accent, font: .normal(.text)), action: arguments.toggleNameAnimation))))
         index += 1
         

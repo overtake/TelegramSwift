@@ -18,22 +18,22 @@ import InAppPurchaseManager
 private final class HeaderTextRowItem : GeneralRowItem {
     enum HeaderTextType : Equatable {
         case premium
-        case stars
+        case stars(selfGift: Bool)
         
         var headerText: String {
             switch self {
             case .premium:
                 return strings().giftingPremiumTitle
-            case .stars:
-                return strings().giftingStarGiftTitle
+            case let .stars(selfGift):
+                return selfGift ? strings().giftOptionsGiftSelfTitle : strings().giftingStarGiftTitle
             }
         }
         func infoText(_ peer: EnginePeer) -> String {
             switch self {
             case .premium:
                 return strings().giftingPremiumInfo(peer._asPeer().displayTitle)
-            case .stars:
-                return strings().giftingStarGiftInfo(peer._asPeer().displayTitle)
+            case let .stars(selfGift):
+                return selfGift ? strings().premiumGiftContactSelectionBuySelf : strings().giftingStarGiftInfo(peer._asPeer().displayTitle)
             }
         }
     }
@@ -487,68 +487,70 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return HeaderRowItem(initialSize, stableId: stableId, peers: [peer], context: arguments.context)
         }))
         
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-       
-        
-        var paymentOptions: [PremiumPaymentOption] = []
-        
-        var i: Int32 = 0
-        var existingMonths = Set<Int32>()
-        
-        var products:[PremiumGiftProduct] = []
-        
-        for product in state.products {
-            if existingMonths.contains(product.months) {
-                continue
-            }
-            existingMonths.insert(product.months)
-            products.append(product)
-        }
-        
-        for product in products.reversed() {
-            
-            let giftTitle: String
-            if product.months == 12 {
-                giftTitle = strings().giveawayPaymentOptionsYear
-            } else {
-                giftTitle = strings().giveawayPaymentOptionsMonths(Int(product.months))
-            }
-            
-            let discountValue = Int((1.0 - Float(product.priceCurrencyAndAmount.amount) / Float(product.months) / Float(state.defaultPrice.intergal)) * 100.0)
-            let discount: String?
-            if discountValue > 0 {
-                discount = "-\(discountValue)%"
-            } else {
-                discount = nil
-            }
-            let subtitle = "\(product.price)"
-            let label = product.multipliedPrice(count: 1)
-            
-            let option = PremiumPaymentOption(title: giftTitle, desc: subtitle, total: label, discount: discount, months: product.months)
-            paymentOptions.append(option)
-        }
-        
-        
-        if !paymentOptions.isEmpty {
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .premium, context: arguments.context, openPromo: arguments.openPromo)
-            }))
+        if arguments.context.peerId != peer.id {
             
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
+            var paymentOptions: [PremiumPaymentOption] = []
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_gifts, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: paymentOptions.map { .initialize($0) }, callback: { option in
-                    if let option = option.nativePayment {
-                        arguments.giftPremium(option)
-                    }
-                })
-            }))
+            var i: Int32 = 0
+            var existingMonths = Set<Int32>()
+            
+            var products:[PremiumGiftProduct] = []
+            
+            for product in state.products {
+                if existingMonths.contains(product.months) {
+                    continue
+                }
+                existingMonths.insert(product.months)
+                products.append(product)
+            }
+            
+            for product in products.reversed() {
+                
+                let giftTitle: String
+                if product.months == 12 {
+                    giftTitle = strings().giveawayPaymentOptionsYear
+                } else {
+                    giftTitle = strings().giveawayPaymentOptionsMonths(Int(product.months))
+                }
+                
+                let discountValue = Int((1.0 - Float(product.priceCurrencyAndAmount.amount) / Float(product.months) / Float(state.defaultPrice.intergal)) * 100.0)
+                let discount: String?
+                if discountValue > 0 {
+                    discount = "-\(discountValue)%"
+                } else {
+                    discount = nil
+                }
+                let subtitle = "\(product.price)"
+                let label = product.multipliedPrice(count: 1)
+                
+                let option = PremiumPaymentOption(title: giftTitle, desc: subtitle, total: label, discount: discount, months: product.months)
+                paymentOptions.append(option)
+            }
+            
+            
+            if !paymentOptions.isEmpty {
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                    return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .premium, context: arguments.context, openPromo: arguments.openPromo)
+                }))
+                
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+                
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_gifts, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: paymentOptions.map { .initialize($0) }, callback: { option in
+                        if let option = option.nativePayment {
+                            arguments.giftPremium(option)
+                        }
+                    })
+                }))
+            }
         }
+        
         
         let filtered:([PeerStarGift], State.StarGiftFilter) -> [PeerStarGift] = { list, filter in
             switch filter {
@@ -571,7 +573,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             sectionId += 1
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars, context: arguments.context, openPromo: arguments.openPromo)
+                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars(selfGift: arguments.context.peerId == peer.id), context: arguments.context, openPromo: arguments.openPromo)
             }))
             
             entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -745,8 +747,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     let signal = statePromise.get() |> filter { $0.peer != nil } |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
-    
-    let controller = InputDataController(dataSignal: signal, title: strings().giftingTitle)
+    let controller = InputDataController(dataSignal: signal, title: context.peerId == peerId ? strings().giftOptionsGiftSelfTitle : strings().giftingTitle)
     
     getController = { [weak controller] in
         return controller

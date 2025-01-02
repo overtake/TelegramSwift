@@ -1089,6 +1089,46 @@ public final class L10n {
   public static var botUsernameListInfo: String  { return L10n.tr("Localizable", "BotUsername.List.Info") }
   /// USERNAMES ORDER
   public static var botUsernameListTitle: String  { return L10n.tr("Localizable", "BotUsername.List.Title") }
+  /// **%@** has been notified and will receive your verification mark and description upon accepting.
+  public static func botVerificationAdded(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BotVerification.Added", p1)
+  }
+  /// You have removed **%@'s** verification.
+  public static func botVerificationRemoved(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BotVerification.Removed", p1)
+  }
+  /// Remove
+  public static var botVerificationRemoveRemove: String  { return L10n.tr("Localizable", "BotVerification.Remove.Remove") }
+  /// Remove Verification
+  public static var botVerificationRemoveTitle: String  { return L10n.tr("Localizable", "BotVerification.Remove.Title") }
+  /// This bot is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveBotText: String  { return L10n.tr("Localizable", "BotVerification.Remove.Bot.Text") }
+  /// This channel is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveChannelText: String  { return L10n.tr("Localizable", "BotVerification.Remove.Channel.Text") }
+  /// This group is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveGroupText: String  { return L10n.tr("Localizable", "BotVerification.Remove.Group.Text") }
+  /// This user is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveUserText: String  { return L10n.tr("Localizable", "BotVerification.Remove.User.Text") }
+  /// Description...
+  public static var botVerificationVerifyPlaceholder: String  { return L10n.tr("Localizable", "BotVerification.Verify.Placeholder") }
+  /// Verify
+  public static var botVerificationVerifyVerify: String  { return L10n.tr("Localizable", "BotVerification.Verify.Verify") }
+  /// Do you want to verify this bot with your verification mark and description?
+  public static var botVerificationVerifyBotText: String  { return L10n.tr("Localizable", "BotVerification.Verify.Bot.Text") }
+  /// Verify Bot
+  public static var botVerificationVerifyBotTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.Bot.Title") }
+  /// Do you want to verify this channel with your verification mark and description?
+  public static var botVerificationVerifyChannelText: String  { return L10n.tr("Localizable", "BotVerification.Verify.Channel.Text") }
+  /// Verify Channel
+  public static var botVerificationVerifyChannelTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.Channel.Title") }
+  /// Do you want to verify this group with your verification mark and description?
+  public static var botVerificationVerifyGroupText: String  { return L10n.tr("Localizable", "BotVerification.Verify.Group.Text") }
+  /// Verify Group
+  public static var botVerificationVerifyGroupTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.Group.Title") }
+  /// Do you want to verify this user with your verification mark and description?
+  public static var botVerificationVerifyUserText: String  { return L10n.tr("Localizable", "BotVerification.Verify.User.Text") }
+  /// Verify User
+  public static var botVerificationVerifyUserTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.User.Title") }
   /// Leave as regular group
   public static var broadcastGroupsCancel: String  { return L10n.tr("Localizable", "BroadcastGroups.Cancel") }
   /// Convert to Broadcast Group
@@ -9549,6 +9589,10 @@ public final class L10n {
   public static var giftSoldOut: String  { return L10n.tr("Localizable", "Gift.SoldOut") }
   /// Unavailable
   public static var giftUnavailable: String  { return L10n.tr("Localizable", "Gift.Unavailable") }
+  /// Buy yourself a gift to display on your page or reserve for later.\n\nLimited-edition gifts upgraded to collectibles can be gifted to others later.
+  public static var giftOptionsGiftSelfText: String  { return L10n.tr("Localizable", "Gift.Options.GiftSelf.Text") }
+  /// Buy a Gift
+  public static var giftOptionsGiftSelfTitle: String  { return L10n.tr("Localizable", "Gift.Options.GiftSelf.Title") }
   /// %@ Premium
   public static func giftPremiumHeader(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Premium.Header", p1)
@@ -9567,6 +9611,8 @@ public final class L10n {
   public static func giftSendUpgradeInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Send.Upgrade.Info", p1)
   }
+  /// Hide my name and message from visitors to my profile.
+  public static var giftSendSelfHideMyNameInfo: String  { return L10n.tr("Localizable", "Gift.SendSelf.HideMyName.Info") }
   /// This gift has sold out
   public static var giftSoldOutError: String  { return L10n.tr("Localizable", "Gift.SoldOut.Error") }
   /// unlocks in %@
@@ -12033,6 +12079,8 @@ public final class L10n {
   }
   /// Type message...
   public static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
+  /// Saved Gift
+  public static var notificationStarGiftSelfTitle: String  { return L10n.tr("Localizable", "Notification.StarGift.Self.Title") }
   /// %@ transferred you a unique collectible
   public static func notificationStarsGiftTransfer(_ p1: String) -> String {
     return L10n.tr("Localizable", "Notification.StarsGift.Transfer", p1)
@@ -12047,6 +12095,12 @@ public final class L10n {
   public static func notificationStarsGiftUpgradeYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Notification.StarsGift.UpgradeYou", p1)
   }
+  /// You bought a gift for %@
+  public static func notificationStarsGiftSelfBought(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Self.Bought", p1)
+  }
+  /// You can display this gift on your page or turn it into a unique collectible and send to others.
+  public static var notificationStarsGiftSubtitleSelf: String  { return L10n.tr("Localizable", "Notification.StarsGift.Subtitle.Self") }
   /// Reply
   public static var notificationTitleReply: String  { return L10n.tr("Localizable", "Notification.Title.Reply") }
   /// All Accounts
@@ -13887,6 +13941,10 @@ public final class L10n {
   }
   /// Gift Telegram Premium
   public static var premiumGiftTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Title") }
+  /// buy yourself a gift
+  public static var premiumGiftContactSelectionBuySelf: String  { return L10n.tr("Localizable", "Premium.Gift.ContactSelection.BuySelf") }
+  /// THIS IS YOU
+  public static var premiumGiftContactSelectionThisIsYou: String  { return L10n.tr("Localizable", "Premium.Gift.ContactSelection.ThisIsYou") }
   /// Get **%1$@** and **%2$@** more access to exclusive features with **Telegram Premium**.
   public static func premiumGiftGetAccessMoreThanThree(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Gift.GetAccess.MoreThanThree", p1, p2)

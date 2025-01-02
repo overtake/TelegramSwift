@@ -125,7 +125,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             } else {
                 badge = nil
             }
-            return .init(file: option.media, text: nil, type: .none, badge: badge, peer: nil, invisible: false, nativeStarGift: option)
+            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, nativeStarGift: option)
         }
         static func initialize(_ option: ProfileGiftsContext.State.StarGift) -> Option {
             
@@ -162,7 +162,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             case .price:
                 return 160
             case .stars:
-                return 125
+                return 135
             case .none:
                 return 100
             }

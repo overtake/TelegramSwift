@@ -688,11 +688,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             for attr in gift.attributes {
                 switch attr {
                 case .model(let name, _, let rarity):
-                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueModel, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name)), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
+                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueModel, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
                 case .pattern(let name, _, let rarity):
-                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueSymbol, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name)), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
+                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueSymbol, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
                 case .backdrop(let name, _, _, _, _, let rarity):
-                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueBackdrop, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name)), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
+                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueBackdrop, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
                 default:
                     break
                 }

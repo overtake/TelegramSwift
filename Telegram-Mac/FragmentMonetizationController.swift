@@ -999,7 +999,6 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     if affiliateEnabled {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        //TODOLANG
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("affiliate"), data: .init(name: strings().affilateProgramEarn, color: theme.colors.text, icon: NSImage(resource: .iconAffiliateEarnStars).precomposed(flipVertical: true), type: .next, viewType: .singleItem, description: strings().affilateProgramEarnInfo, descTextColor: theme.colors.grayText, action: arguments.openAffiliate, afterNameImage: generateTextIcon_NewBadge_Flipped(bgColor: theme.colors.accent, textColor: theme.colors.underSelectedColor))))
 
     }

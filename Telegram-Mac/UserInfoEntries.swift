@@ -204,7 +204,6 @@ class UserInfoArguments : PeerInfoArguments {
                     let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId), TelegramEngine.EngineData.Item.Peer.Verification(id: peerId)) |> deliverOnMainQueue
                     
                     _ = peer.startStandalone(next: { peer, currentVerification in
-                        //TODOLANG
                         if let peer {
                             
                             let limit = context.appConfiguration.getGeneralValue("bot_verification_description_length_limit", orElse: 70)
@@ -216,16 +215,40 @@ class UserInfoArguments : PeerInfoArguments {
                             let ok: String
                             let footer: ModalAlertData.Footer?
                             if currentVerification?.botId == botId {
-                                title = "Remove Verification"
-                                info = "This account is already verified by you. Do you want to remove verification?"
-                                ok = "Remove"
+                                title = strings().botVerificationRemoveTitle
+                                if peer._asPeer().isBot {
+                                    info = strings().botVerificationRemoveBotText
+                                } else if peer._asPeer().isChannel {
+                                    info = strings().botVerificationRemoveChannelText
+                                } else if peer._asPeer().isSupergroup {
+                                    info = strings().botVerificationRemoveGroupText
+                                } else {
+                                    info = strings().botVerificationRemoveUserText
+                                }
+                                ok = strings().botVerificationRemoveRemove
                                 footer = nil
                             } else {
-                                title = "Verify Account"
-                                info = "Do you want to verify this account with your verification mark and description?"
-                                ok = "Verify"
+                                if peer._asPeer().isBot {
+                                    title = strings().botVerificationVerifyBotTitle
+                                } else if peer._asPeer().isChannel {
+                                    title = strings().botVerificationVerifyChannelTitle
+                                } else if peer._asPeer().isSupergroup {
+                                    title = strings().botVerificationVerifyGroupTitle
+                                } else {
+                                    title = strings().botVerificationVerifyUserTitle
+                                }
+                                if peer._asPeer().isBot {
+                                    info = strings().botVerificationVerifyBotText
+                                } else if peer._asPeer().isChannel {
+                                    info = strings().botVerificationVerifyChannelText
+                                } else if peer._asPeer().isSupergroup {
+                                    info = strings().botVerificationVerifyGroupText
+                                } else {
+                                    info = strings().botVerificationVerifyUserText
+                                }
+                                ok = strings().botVerificationVerifyVerify
                                 footer = .init(value: { initialSize, stableId, presentation, updateData in
-                                    return InputDataRowItem(initialSize, stableId: 0, mode: .plain, error: nil, viewType: .singleItem, currentText: "", placeholder: nil, inputPlaceholder: "Description", filter: { $0 }, updated: { updated in
+                                    return InputDataRowItem(initialSize, stableId: 0, mode: .plain, error: nil, viewType: .singleItem, currentText: "", placeholder: nil, inputPlaceholder: strings().botVerificationVerifyPlaceholder, filter: { $0 }, updated: { updated in
                                         text = updated
                                         DispatchQueue.main.async(execute: updateData)
                                     }, limit: limit)
@@ -255,9 +278,9 @@ class UserInfoArguments : PeerInfoArguments {
                                     }
                                 }, completed: {
                                     if currentVerification?.botId == botId {
-                                        showModalText(for: context.window, text: "Verification removed from \(peer._asPeer().displayTitle)")
+                                        showModalText(for: context.window, text: strings().botVerificationRemoved(peer._asPeer().displayTitle))
                                     } else {
-                                        showModalText(for: context.window, text: "Request for \(peer._asPeer().displayTitle) verification sent")
+                                        showModalText(for: context.window, text: strings().botVerificationAdded(peer._asPeer().displayTitle))
                                     }
                                 })
                             }, onDeinit: {

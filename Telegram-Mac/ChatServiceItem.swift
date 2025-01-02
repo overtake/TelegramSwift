@@ -1217,10 +1217,15 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     
-                    header.append(string: strings().chatServiceStarGiftFrom("\(clown)\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
-                    if let author = message.author {
-                        header.insertEmbedded(.embeddedAvatar(.init(author)), for: clown)
+                    if message.id.peerId == context.peerId {
+                        header.append(string: strings().notificationStarGiftSelfTitle, color: grayTextColor, font: .medium(theme.fontSize + 1))
+                    } else {
+                        header.append(string: strings().chatServiceStarGiftFrom("\(clown)\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                        if let author = message.author {
+                            header.insertEmbedded(.embeddedAvatar(.init(author)), for: clown)
+                        }
                     }
+     
 
                     if let text = text, !text.isEmpty {
                         let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities ?? [])], for: text, message: nil, context: context, fontSize: theme.fontSize, openInfo: { _, _, _, _ in }, textColor: grayTextColor, isDark: theme.colors.isDark, bubbled: true).mutableCopy() as! NSMutableAttributedString
@@ -1231,25 +1236,31 @@ class ChatServiceItem: ChatRowItem {
 
                     } else if let convertStars {
                         let text: String
-                        let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle ?? ""
-                        let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
-                        if isIncoming {
-                            if savedToProfile {
-                                text = strings().starsStarGiftTextKeptOnPageIncoming
-                            } else if convertedToStars {
-                                text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
-                            } else {
-                                text = strings().starsStarGiftTextIncoming(convertStarsString)
-                            }
+                        
+                        if message.id.peerId == context.peerId {
+                            text = strings().notificationStarsGiftSubtitleSelf
                         } else {
-                            if savedToProfile {
-                                text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
-                            } else if convertedToStars {
-                                text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
+                            let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle ?? ""
+                            let convertStarsString = strings().starListItemCountCountable(Int(convertStars))
+                            if isIncoming {
+                                if savedToProfile {
+                                    text = strings().starsStarGiftTextKeptOnPageIncoming
+                                } else if convertedToStars {
+                                    text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
+                                } else {
+                                    text = strings().starsStarGiftTextIncoming(convertStarsString)
+                                }
                             } else {
-                                text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
+                                if savedToProfile {
+                                    text = strings().starsStarGiftTextKeptOnPageOutgoing(displayTitle)
+                                } else if convertedToStars {
+                                    text = strings().starsStarGiftTextConvertedOutgoing(displayTitle, convertStarsString)
+                                } else {
+                                    text = strings().starsStarGiftTextOutgoing(displayTitle, convertStarsString)
+                                }
                             }
                         }
+                        
                         info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                     }
                     
@@ -1274,7 +1285,11 @@ class ChatServiceItem: ChatRowItem {
                     
                     let text: String
                     if authorId == context.peerId {
-                        text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.price)))
+                        if message.id.peerId == context.peerId {
+                            text = strings().notificationStarsGiftSelfBought(strings().starListItemCountCountable(Int(gift.price)))
+                        } else {
+                            text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.price)))
+                        }
                     } else {
                         text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.price)))
                     }

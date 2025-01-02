@@ -1838,14 +1838,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {})
         case let .verifiedInfo(_, value, viewType):
             let attr = NSMutableAttributedString()
-            
-            //TODOLANG
-            //
+
             let text: String
             if let value {
                 text = "\(clown) \(value.description)"
             } else {
-                text = "\(clown) This bot is verified as official by the representatives of Telegram."
+                text = clown + " " + strings().peerInfoVerificationInfoGroup
             }
             
             attr.append(string: text, color: theme.colors.listGrayText, font: .normal(.text))
