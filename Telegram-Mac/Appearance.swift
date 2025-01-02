@@ -107,7 +107,7 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
 
 func generateGiftBadgeBackground(background: CGImage, text: String, textColor: NSColor = NSColor.white) -> CGImage {
     
-    let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .bold(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .bold(.small)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
 
     let textImage = generateImage(background.systemSize, rotatedContext: { size, ctx in
         ctx.clear(CGRect(origin: .zero, size: size))
