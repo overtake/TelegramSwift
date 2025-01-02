@@ -295,6 +295,15 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
             self.updateInternalState()
         })
         
+        self.partsStateDisposable = (self.source.partsState
+        |> deliverOnMainQueue).startStrict(next: { [weak self] partsState in
+            guard let self else {
+                return
+            }
+            self.partsState = partsState
+            self.updateInternalState()
+        })
+        
         if #available(macOS 14.0, *) {
             self.renderSynchronizer.addRenderer(self.videoRenderer.sampleBufferRenderer)
         } else {
