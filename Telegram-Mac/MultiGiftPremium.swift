@@ -51,6 +51,9 @@ func multigift(context: AccountContext, type: MultigiftType = .both, selected: [
         let tomorrow = birthdays.filter({ $0.birthday.isTomorrow() })
         let yesterday = birthdays.filter({ $0.birthday.isYesterday() })
         var blocks: [SelectPeersBlock] = []
+        blocks.append(.init(separator: strings().premiumGiftContactSelectionThisIsYou, peerIds: [context.peerId]))
+
+        
         if !today.isEmpty {
             blocks.append(.init(separator: strings().birthdaySeparatorToday, peerIds: today.map { $0.peer.id }))
         }
@@ -85,7 +88,7 @@ func multigift(context: AccountContext, type: MultigiftType = .both, selected: [
             limit = 1
         }
         
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected)
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected, isLookSavedMessage: false)
         
         
         let title: String

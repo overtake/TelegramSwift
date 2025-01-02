@@ -293,8 +293,12 @@ private final class PreviewRowItem : GeneralRowItem {
         
         switch source {
         case .starGift(let option):
-            titleAttr.append(string: strings().chatServiceStarGiftFrom("\(clown_space)\(myPeer._asPeer().compactDisplayTitle)"), color: presentation.chatServiceItemTextColor, font: .medium(.header))
-            titleAttr.insertEmbedded(.embeddedAvatar(myPeer), for: clown)
+            if peer.id == myPeer.id {
+                titleAttr.append(string: strings().notificationStarGiftSelfTitle, color: presentation.chatServiceItemTextColor, font: .medium(.header))
+            } else {
+                titleAttr.append(string: strings().chatServiceStarGiftFrom("\(clown_space)\(myPeer._asPeer().compactDisplayTitle)"), color: presentation.chatServiceItemTextColor, font: .medium(.header))
+                titleAttr.insertEmbedded(.embeddedAvatar(myPeer), for: clown)
+            }
         case .premium(let option):
             titleAttr.append(string: strings().giftPremiumHeader(timeIntervalString(Int(option.months) * 30 * 60 * 60 * 24)), color: presentation.chatServiceItemTextColor, font: .medium(.header))
         }
@@ -314,7 +318,11 @@ private final class PreviewRowItem : GeneralRowItem {
         } else {
             switch source {
             case .starGift(let option):
-                infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                if peer.id == myPeer.id {
+                    infoText.append(string: strings().giftOptionsGiftSelfText, color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                } else {
+                    infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                }
             case .premium:
                 infoText.append(string: strings().giftPremiumText, color: presentation.chatServiceItemTextColor, font: .normal(.text))
             }
@@ -325,7 +333,11 @@ private final class PreviewRowItem : GeneralRowItem {
         
         switch source {
         case .starGift(let option):
-            headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(option.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+            if peer.id == myPeer.id {
+                headerLayout = .init(.initialize(string: strings().notificationStarsGiftSelfBought(strings().starListItemCountCountable(Int(option.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+            } else {
+                headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(option.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+            }
         case .premium(let option):
             headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, option.price), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
         }
@@ -684,7 +696,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let name = state.peer._asPeer().compactDisplayTitle
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starsGiftPreviewHideMyNameInfo(name, name)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.peer.id == arguments.context.peerId ? strings().giftSendSelfHideMyNameInfo : strings().starsGiftPreviewHideMyNameInfo(name, name)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
     case .premium:
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giftPremiumPreviewInfo(state.peer._asPeer().compactDisplayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -712,7 +724,7 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
     
     let inAppPurchaseManager = context.inAppPurchaseManager
     
-    let initialState = State(peer: peer, myPeer: .init(context.myPeer!), option: option, textState: .init())
+    let initialState = State(peer: peer, myPeer: .init(context.myPeer!), option: option, isAnonymous: peer.id == context.peerId, textState: .init())
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
