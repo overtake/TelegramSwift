@@ -767,7 +767,7 @@ class ChatListRowItem: TableRowItem {
         self.canPreviewChat = canPreviewChat
         
         
-        if let peer, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp), readState == nil || readState?.count == 0 {
+        if let peer, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp), readState == nil || readState?.count == 0, splitState != .minimisize {
             self.openMiniApp = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.underSelectedColor, font: .medium(.text)), alignment: .center)
             self.openMiniApp?.measure(width: .greatestFiniteMagnitude)
             
@@ -797,10 +797,21 @@ class ChatListRowItem: TableRowItem {
                     color = nil
                 }
                 if let color = color {
-                    let text = TextViewLayout(.initialize(string: tab.title.uppercased(), color: color, font: .bold(10)))
+                    
+                    let attr = NSMutableAttributedString()
+                    attr.append(string: tab.title.uppercased(), color: color, font: .bold(10))
+                    InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: tab.entities, isPremium: context.isPremium, playPolicy: tab.enableAnimations ? nil : .framesCount(1))
+
+                    
+                    let attrSelected = NSMutableAttributedString()
+                    attrSelected.append(string: tab.title.uppercased(), color: color, font: .bold(10))
+                    InlineStickerItem.apply(to: attrSelected, associatedMedia: [:], entities: tab.entities, isPremium: context.isPremium)
+
+                    
+                    let text = TextViewLayout(attr)
                     text.measure(width: .greatestFiniteMagnitude)
                     
-                    let textSelected = TextViewLayout(.initialize(string: tab.title.uppercased(), color: theme.colors.accentSelect, font: .bold(10)))
+                    let textSelected = TextViewLayout(attrSelected)
                     textSelected.measure(width: .greatestFiniteMagnitude)
 
                     tags.append(.init(text: text, selected: textSelected, color: color.withAlphaComponent(0.1), selectedColor: theme.colors.underSelectedColor))
@@ -917,7 +928,7 @@ class ChatListRowItem: TableRowItem {
                     if let peer = info.author {
                         author = peer
                     } else if let signature = info.authorSignature {
-                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil)
+                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
                     }
                 } else {
                     author = message.author
@@ -1226,7 +1237,10 @@ class ChatListRowItem: TableRowItem {
             dateSize = dateLayout.layoutSize.width
         }
         var offset: CGFloat = 0
-        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
+            offset += controlSize.width + 4
+        }
+        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false, left: true) {
             offset += controlSize.width + 4
         }
         if isMuted {
@@ -1999,6 +2013,12 @@ class ChatListRowItem: TableRowItem {
                     case .allChats:
                         break inner;
                     case let .filter(_, _, _, data):
+                        
+                        let attr = NSMutableAttributedString()
+                        attr.append(string: item.title, color: theme.colors.text, font: .normal(.text))
+                        InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: item.entities, isPremium: true, playPolicy: item.enableAnimations ? nil : .framesCount(1))
+
+                        
                         let menuItem = ContextMenuItem(item.title, handler: {
                             
                             let limit = context.isPremium ? context.premiumLimits.dialog_filters_chats_limit_premium : context.premiumLimits.dialog_filters_chats_limit_default
@@ -2029,7 +2049,16 @@ class ChatListRowItem: TableRowItem {
                                 }
                             }
                            
-                        }, state: data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value)
+                        }, state: data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value, attributedTitle: attr, customTextView: {
+                            let layout = TextViewLayout(attr)
+                            layout.measure(width: .greatestFiniteMagnitude)
+
+                            let textView = InteractiveTextView()
+                            textView.userInteractionEnabled = false
+                            textView.textView.isSelectable = false
+                            textView.set(text: layout, context: context)
+                            return textView
+                        })
                         submenu.append(menuItem)
                         menuItem.isEnabled = !data.includePeers.peers.contains(peerId) || data.includePeers.peers.count > 1
                     }

@@ -268,7 +268,7 @@ final class WebpageHeaderView : Control {
         titleView.isSelectable = false
         
         
-        if let peer = bot, let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusView, animated: false) {
+        if let peer = bot, let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusView, animated: false) {
             
             self.titleContainer.addSubview(control)
             self.statusView = control

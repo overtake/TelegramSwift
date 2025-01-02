@@ -14,6 +14,53 @@ import TGUIKit
 import SwiftSignalKit
 import DateUtils
 
+extension StarGift.UniqueGift {
+    var file: TelegramMediaFile? {
+        for attribute in self.attributes {
+            inner: switch attribute {
+            case .model(_, let file, _):
+                return file
+            default:
+                break inner
+            }
+        }
+        return nil
+    }
+    var pattern: TelegramMediaFile? {
+        for attribute in self.attributes {
+            inner: switch attribute {
+            case let .pattern(_, file, _):
+                return file
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    var patternColor: NSColor? {
+        for attribute in self.attributes {
+            inner: switch attribute {
+            case let .backdrop(_, _, _, patternColor, _, _):
+                return NSColor(UInt32(patternColor))
+            default:
+                break inner
+            }
+        }
+        return nil
+    }
+    var backdrop: [NSColor]? {
+        for attribute in self.attributes {
+            inner: switch attribute {
+            case let .backdrop(_, innerColor, outerColor, _, _, _):
+                return [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
+            default:
+                break inner
+            }
+        }
+        return nil
+    }
+}
+
 private final class GallerySupplyment : InteractionContentViewProtocol {
     private weak var tableView: TableView?
     init(tableView: TableView) {
@@ -54,6 +101,7 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate var refund: TextViewLayout?
     fileprivate let arguments: Arguments
     fileprivate let isGift: Bool
+    fileprivate let uniqueGift: StarGift.UniqueGift?
     
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, peer: EnginePeer?, purpose: Star_TransactionPurpose, arguments: Arguments) {
         self.context = context
@@ -64,19 +112,41 @@ private final class HeaderItem : GeneralRowItem {
         
         self.isGift = purpose.isGift || transaction.flags.contains(.isGift) || transaction.giveawayMessageId != nil || transaction.starGift != nil
         
+                
+        if let gift = transaction.starGift {
+            switch gift {
+            case let .unique(unique):
+                self.uniqueGift = unique
+            default:
+                self.uniqueGift = nil
+            }
+        } else {
+            self.uniqueGift = nil
+        }
+        
+        let upgraded: Bool
+        
         var fromProfile: Bool = false
         switch purpose {
-        case let .starGift(_, _, _, _, _, _, _, _fromProfile):
+        case let .starGift(_, _, _, _, _, _, _, _fromProfile, _upgraded, _, _):
             fromProfile = _fromProfile
+            upgraded = _upgraded
         default:
-            break
+            upgraded = false
         }
         
         let header: String
         let incoming: Bool = transaction.count.value > 0
         let amount: Double
         
-        if isGift {
+        if let uniqueGift {
+            header = uniqueGift.title
+            if purpose.isStarGift {
+                amount = transaction.count.totalValue
+            } else {
+                amount = abs(transaction.count.totalValue)
+            }
+        } else if isGift {
             if purpose == .unavailableGift {
                 header = strings().giftUnavailable
             } else if transaction.giveawayMessageId != nil {
@@ -138,23 +208,30 @@ private final class HeaderItem : GeneralRowItem {
         
         self.incoming = incoming
         
-        self.headerLayout = .init(.initialize(string: header, color: theme.colors.text, font: .medium(18)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: header, color: uniqueGift != nil ? .white : theme.colors.text, font: .medium(18)), alignment: .center)
         
         
 
         
         let attr = NSMutableAttributedString()
-        switch purpose {
-        case .unavailableGift, .starGift:
-            break
-        default:
-            attr.append(string: "\(incoming && !fromProfile ? "+" : "")\(amount) \(clown)", color: incoming ? theme.colors.greenUI : (amount > 0 ? theme.colors.text : theme.colors.redUI), font: .normal(15))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+        if let uniqueGift {
+            attr.append(string: strings().starTransactionGiftCollectible("#\(uniqueGift.number)"), color: NSColor.white.withAlphaComponent(0.6), font: .normal(.text))
+        } else {
+            switch purpose {
+            case .unavailableGift, .starGift:
+                break
+            default:
+                attr.append(string: "\(incoming && !fromProfile ? "+" : "")\(amount) \(clown)", color: incoming ? theme.colors.greenUI : (amount > 0 ? theme.colors.text : theme.colors.redUI), font: .normal(15))
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+            }
         }
         
         self.infoLayout = .init(attr)
-        
-        if purpose == .unavailableGift {
+        if upgraded {
+            self.descLayout = nil
+        } else if let _ = uniqueGift {
+            self.descLayout = nil
+        } else if purpose == .unavailableGift {
             self.descLayout = .init(.initialize(string: strings().giftSoldOutError, color: theme.colors.redUI, font: .normal(.text)), alignment: .center)
         } else if !transaction.media.isEmpty {
             
@@ -195,7 +272,7 @@ private final class HeaderItem : GeneralRowItem {
                 var fromProfile: Bool = false
                 var nameHidden: Bool = false
                 switch purpose {
-                case let .starGift(_, convertStars, _, _, _nameHidden, savedToProfile, convertedToStars, _fromProfile):
+                case let .starGift(_, convertStars, _, _, _nameHidden, savedToProfile, convertedToStars, _fromProfile, _, _, _):
                     let displayTitle: String
                     switch transaction.peer {
                     case let .peer(peer):
@@ -302,15 +379,23 @@ private final class HeaderItem : GeneralRowItem {
         if let descLayout {
             height += descLayout.layoutSize.height + 5 + 2
         }
+        if let uniqueGift {
+            height += 10
+        }
         return height
     }
     
     var giftFile: TelegramMediaFile {
         switch purpose {
-        case let .starGift(gift, _, _, _, _, _, _, _):
-            return gift.file
+        case let .starGift(gift, _, _, _, _, _, _, _, _, _, _):
+            switch gift {
+            case let .generic(gift):
+                return gift.file
+            case let .unique(gift):
+                return gift.file ?? LocalAnimatedSticker.bestForStarsGift(abs(transaction.count.value)).file
+            }
         case .unavailableGift:
-            return self.transaction.starGift?.file ?? LocalAnimatedSticker.bestForStarsGift(abs(transaction.count.value)).file
+            return self.transaction.starGift?.generic?.file ?? LocalAnimatedSticker.bestForStarsGift(abs(transaction.count.value)).file
         default:
             return LocalAnimatedSticker.bestForStarsGift(abs(transaction.count.value)).file
         }
@@ -333,6 +418,10 @@ private final class HeaderView : GeneralContainableRowView {
     private var starBadgeView: ImageView?
     
     private var giftView: InlineStickerView?
+    
+    private var emoji: PeerInfoSpawnEmojiView?
+    private var backgroundView: PeerInfoBackgroundView?
+
     
     required init(frame frameRect: NSRect) {
         self.sceneView = GoldenStarSceneView(frame: NSMakeRect(0, 0, frameRect.width, 150))
@@ -381,6 +470,70 @@ private final class HeaderView : GeneralContainableRowView {
         
         guard let item = item as? HeaderItem else {
             return
+        }
+        
+        sceneView.isHidden = item.uniqueGift != nil
+        
+        
+        if let uniqueGift = item.uniqueGift {
+            do {
+                let current:PeerInfoBackgroundView
+                if let view = self.backgroundView {
+                    current = view
+                } else {
+                    current = PeerInfoBackgroundView(frame: NSMakeRect(0, 0, 180, 180))
+                    self.addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                    self.backgroundView = current
+                }
+                var colors: [NSColor] = []
+
+                for attribute in uniqueGift.attributes {
+                    switch attribute {
+                    case let .backdrop(_, innerColor, outerColor, _, _, _):
+                        colors = [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
+                    default:
+                        break
+                    }
+                }
+                current.gradient = colors
+            }
+            do {
+                let current:PeerInfoSpawnEmojiView
+                if let view = self.emoji {
+                    current = view
+                } else {
+                    current = PeerInfoSpawnEmojiView(frame: NSMakeRect(0, 0, 180, 180))
+                    self.addSubview(current, positioned: .above, relativeTo: self.backgroundView)
+                    self.emoji = current
+                }
+                
+                var patternFile: TelegramMediaFile?
+                var patternColor: NSColor?
+
+                for attribute in uniqueGift.attributes {
+                    switch attribute {
+                    case .pattern(_, let file, _):
+                        patternFile = file
+                    case let .backdrop(_, _, _, color, _, _):
+                        patternColor = NSColor(UInt32(color)).withAlphaComponent(0.3)
+                    default:
+                        break
+                    }
+                }
+                if let patternFile, let patternColor {
+                    current.set(fileId: patternFile.fileId.id, color: patternColor, context: item.context, animated: animated)
+                }
+            }
+                        
+        } else {
+            if let view = self.emoji {
+                performSubviewRemoval(view, animated: animated)
+                self.emoji = nil
+            }
+            if let view = self.backgroundView {
+                performSubviewRemoval(view, animated: animated)
+                self.backgroundView = nil
+            }
         }
         
         
@@ -540,7 +693,7 @@ private final class HeaderView : GeneralContainableRowView {
         self.headerView.update(item.headerLayout)
         self.infoView.set(text: item.infoLayout, context: item.context)
         
-        self.dismiss.set(image: theme.icons.modalClose, for: .Normal)
+        self.dismiss.set(image: item.uniqueGift != nil ? NSImage(resource: .iconChatSearchCancel).precomposed(NSColor.white) : theme.icons.modalClose, for: .Normal)
         self.dismiss.sizeToFit()
         self.dismiss.scaleOnClick = true
         self.dismiss.autohighlight = false
@@ -643,6 +796,13 @@ private final class HeaderView : GeneralContainableRowView {
         if let descView {
             descView.centerX(y: infoContainer.frame.maxY + 5)
         }
+        
+        if let emoji {
+            emoji.centerX(y: 20)
+        }
+        if let backgroundView {
+            backgroundView.frame = bounds
+        }
     }
     
     
@@ -662,7 +822,9 @@ private final class Arguments {
     let seeInProfile: () ->Void
     let sendGift:(PeerId)->Void
     let openAffiliate:()->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void, openAffiliate:@escaping()->Void) {
+    let upgrade:()->Void
+    let transferUnqiue:(StarGift.UniqueGift)->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void, openAffiliate:@escaping()->Void, upgrade:@escaping()->Void, transferUnqiue:@escaping(StarGift.UniqueGift)->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
@@ -676,6 +838,8 @@ private final class Arguments {
         self.seeInProfile = seeInProfile
         self.sendGift = sendGift
         self.openAffiliate = openAffiliate
+        self.upgrade = upgrade
+        self.transferUnqiue = transferUnqiue
     }
 }
 
@@ -685,6 +849,7 @@ private struct State : Equatable {
     var peer: EnginePeer?
     var paidPeer: EnginePeer?
     var starrefPeer: EnginePeer?
+    var starsState: StarsContext.State?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -708,13 +873,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
+    let isIncoming: Bool
+    switch state.transaction.peer {
+    case let .peer(peer):
+        isIncoming = peer.id == arguments.context.peerId
+    default:
+        isIncoming = state.transaction.count.value > 0
+    }
+    
     let done: String
     var convertStarsAmount: Int64? = nil
     var savedToProfile: Bool = false
     switch state.purpose {
-    case let .starGift(gift, convertStars, _, _, _, _savedToProfile, converted, _):
+    case let .starGift(gift, convertStars, _, _, _, _savedToProfile, converted, _, upgraded, _, _):
         savedToProfile = _savedToProfile
-        if state.transaction.count.value > 0 {
+        
+        if state.transaction.count.value > 0 || isIncoming, !upgraded {
             switch state.transaction.peer {
             case let .peer(peer):
                 if peer.id == arguments.context.peerId {
@@ -792,7 +966,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         let fromText: String
-        if let _ = state.transaction.starrefCommissionPermille {
+        if case .unique = state.transaction.starGift {
+            fromText = strings().starTransactionOwner
+        } else if let _ = state.transaction.starrefCommissionPermille {
             fromText = state.transaction.starrefPeerId == nil ? strings().starTransactionMiniApp : strings().starTransacitonReferredUser
         } else if state.transaction.giveawayMessageId != nil {
             fromText = strings().starTransactionFrom
@@ -800,12 +976,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             fromText = strings().starTransactionFrom
         } else if state.transaction.count.value < 0, state.transaction.starGift != nil {
             fromText = strings().starTransactionFrom
-        }  else {
+        } else {
             fromText = strings().starTransactionTo
         }
         
         let badge: InputDataTableBasedItem.Row.Right.Badge?
-        if fromText == strings().starTransactionFrom, state.transaction.starGift != nil, peer.id != arguments.context.peerId {
+        
+        if case let .unique(gift) = state.transaction.starGift, arguments.context.peerId == gift.ownerPeerId {
+            badge = .init(text: strings().giftUniqueTransfer, callback: {
+                arguments.transferUnqiue(gift)
+            })
+        } else if fromText == strings().starTransactionFrom, state.transaction.starGift != nil, peer.id != arguments.context.peerId {
             badge = .init(text: strings().starTransactionSendGift, callback: {
                 arguments.sendGift(peer.id)
             })
@@ -993,7 +1174,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     switch state.purpose {
     case .unavailableGift:
-        if let gift = state.transaction.starGift {
+        if let gift = state.transaction.starGift?.generic {
             
             if let soldOut = gift.soldOut {
                 rows.append(.init(left: .init(.initialize(string: strings().starTransactionFirstSale, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: soldOut.firstSale), color: theme.colors.text, font: .normal(.text))))))
@@ -1015,31 +1196,56 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             
         }
-    case let .starGift(gift, _, text, entities, _, _, _, _):
+    case let .starGift(gift, _, text, entities, _, _, _, _, upgraded, _, _):
         
-        rows.append(.init(left: .init(.initialize(string: strings().starTransactionValue, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: gift.price.formattedWithSeparator, color: theme.colors.text, font: .normal(.text))), leftView: { previous in
+        if let gift = gift.generic, !upgraded {
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionValue, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: gift.price.formattedWithSeparator, color: theme.colors.text, font: .normal(.text))), leftView: { previous in
+                
+                let imageView = previous as? ImageView ?? ImageView()
+                imageView.image = NSImage(resource: .iconStarCurrency).precomposed()
+                imageView.setFrameSize(18, 18)
+                imageView.contentGravity = .resizeAspectFill
+                return imageView
+            }, badge: convertStarsAmount != nil ? .init(text: strings().starTransactionSaleForCountable(Int(convertStarsAmount!)), callback: arguments.convertStars) : nil)))
             
-            let imageView = previous as? ImageView ?? ImageView()
-            imageView.image = NSImage(resource: .iconStarCurrency).precomposed()
-            imageView.setFrameSize(18, 18)
-            imageView.contentGravity = .resizeAspectFill
-            return imageView
-        }, badge: convertStarsAmount != nil ? .init(text: strings().starTransactionSaleForCountable(Int(convertStarsAmount!)), callback: arguments.convertStars) : nil)))
-        
-        if let availability = gift.availability {
-            rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOfLeft(Int(availability.remains).formattedWithSeparator, Int(availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
+            if let availability = gift.availability {
+                rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOfLeft(Int(availability.remains).formattedWithSeparator, Int(availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
+            }
+            
+            if savedToProfile, case let .peer(peer) = state.transaction.peer, arguments.context.peerId == peer.id {
+                
+                let badge: InputDataTableBasedItem.Row.Right.Badge = .init(text: strings().starTransactionVisibilityHide, callback: arguments.displayOnMyPage)
+                
+                rows.append(.init(left: .init(.initialize(string: strings().starTransactionVisibility, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: strings().starTransactionVisibilityInfo, color: theme.colors.text, font: .normal(.text))), badge: badge)))
+            }
         }
-        
-        if savedToProfile {
-            
-            let badge: InputDataTableBasedItem.Row.Right.Badge = .init(text: strings().starTransactionVisibilityHide, callback: arguments.displayOnMyPage)
-            
-            rows.append(.init(left: .init(.initialize(string: strings().starTransactionVisibility, color: theme.colors.text, font: .normal(.text))), right: InputDataTableBasedItem.Row.Right(name: .init(.initialize(string: strings().starTransactionVisibilityInfo, color: theme.colors.text, font: .normal(.text))), badge: badge)))
-        }
-        
 
         
+        switch gift {
+        case let .unique(gift):
+            for attr in gift.attributes {
+                switch attr {
+                case .model(let name, _, let rarity):
+                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueModel, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name)), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
+                case .pattern(let name, _, let rarity):
+                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueSymbol, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name)), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
+                case .backdrop(let name, _, _, _, _, let rarity):
+                    rows.append(.init(left: .init(.initialize(string: strings().giftUniqueBackdrop, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name)), badge: .init(text: "\((Double(rarity) / 100).string)%", callback: {}))))
+                default:
+                    break
+                }
+            }
+            
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionGiftUpgradeIssued(Int(gift.availability.issued).formattedWithSeparator, Int(gift.availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
+            
+        default:
+            break
+        }
         
+      
+        if let _ = gift.generic?.upgradeStars, !state.purpose.isUpgraded, state.transaction.count.value > 0 {
+            rows.append(.init(left: .init(.initialize(string: strings().giftViewStatus, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().giftViewStatusNonUnique, color: theme.colors.text, font: .normal(.text))), badge: .init(text: strings().giftViewStatusUpgrade, callback: arguments.upgrade))))
+        }
         
         if let text {
             
@@ -1049,9 +1255,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
             rows.append(.init(left: nil, right: .init(name: .init(attr))))
         }
+        
+        
     default:
         break
     }
+    
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_rows, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .singleItem, rows: rows, context: arguments.context)
@@ -1100,11 +1309,44 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
+extension StarGift {
+    var generic: StarGift.Gift? {
+        switch self {
+        case let .generic(gift):
+            return gift
+        case .unique:
+            return nil
+        }
+    }
+    var unique: StarGift.UniqueGift? {
+        switch self {
+        case .generic:
+            return nil
+        case let .unique(unique):
+            return unique
+        }
+    }
+    
+    var backdropColor: [NSColor]? {
+        if let unique {
+            for attribute in unique.attributes {
+                switch attribute {
+                case .backdrop(_, let innerColor, let outerColor, let patternColor, _, _):
+                    return [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
+                default:
+                    break
+                }
+            }
+        }
+        return nil
+    }
+}
+
 enum Star_TransactionPurpose : Equatable {
     case payment
     case gift
     case unavailableGift
-    case starGift(gift: StarGift, convertStars: Int64?, text: String?, entities: [MessageTextEntity]?, nameHidden: Bool, savedToProfile: Bool, converted: Bool, fromProfile: Bool)
+    case starGift(gift: StarGift, convertStars: Int64?, text: String?, entities: [MessageTextEntity]?, nameHidden: Bool, savedToProfile: Bool, converted: Bool, fromProfile: Bool, upgraded: Bool, transferStars: Int64?, canExportDate: Int32?)
     
     var isGift: Bool {
         switch self {
@@ -1123,9 +1365,18 @@ enum Star_TransactionPurpose : Equatable {
         }
     }
     
+    var isUpgraded: Bool {
+        switch self {
+        case let .starGift(_, _, _, _, _, _, _, _, upgraded, _, _):
+            return upgraded
+        default:
+            return false
+        }
+    }
+    
     var gift: StarGift? {
         switch self {
-        case let .starGift(gift, _, _, _, _, _, _, _):
+        case let .starGift(gift, _, _, _, _, _, _, _, _, _, _):
             return gift
         default:
             return nil
@@ -1160,6 +1411,16 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
         }))
     }
     
+    if case let .unique(gift) = transaction.starGift {
+        actionsDisposable.add(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: gift.ownerPeerId)).start(next: { peer in
+            updateState { current in
+                var current = current
+                current.peer = peer
+                return current
+            }
+        }))
+    }
+    
     if let starrefPeerId = transaction.starrefPeerId {
         actionsDisposable.add(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: starrefPeerId)).start(next: { peer in
             updateState { current in
@@ -1169,6 +1430,15 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
             }
         }))
     }
+    
+    actionsDisposable.add(context.starsContext.state.startStrict(next: { state in
+        updateState { current in
+            var current = current
+            current.starsState = state
+            return current
+        }
+    }))
+    
     
     
     var getController:(()->ViewController?)? = nil
@@ -1228,7 +1498,7 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
     }, convertStars: { [weak profileContext] in
         if let messageId, let peer = peer {
             switch purpose {
-            case .starGift(_, let convertStars, _, _, _, _, _, _):
+            case .starGift(_, let convertStars, _, _, _, _, _, _, _, _, _):
                 
                 if let convertStars {
                     let period_max = context.appConfiguration.getGeneralValue("stargifts_convert_period_max", orElse: 300) + (transaction.date - Int32(context.timeDifference))
@@ -1264,7 +1534,7 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
         
         if let messageId {
             switch purpose {
-            case .starGift(_, _, _, _, _, let savedToProfile, _, _):
+            case .starGift(_, _, _, _, _, let savedToProfile, _, _, _, _, _):
                 if let profileContext {
                     profileContext.updateStarGiftAddedToProfile(messageId: messageId, added: !savedToProfile)
                 } else {
@@ -1290,6 +1560,74 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
     }, openAffiliate: {
         close?()
         context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: fromPeerId, onlyDemo: false))
+    }, upgrade: {
+        if let gift = transaction.starGift, let id = gift.generic?.id, let peer, let messageId {
+            _ = showModalProgress(signal: context.engine.payments.starGiftUpgradePreview(giftId: id), for: window).startStandalone(next: { attributes in
+                close?()
+                showModal(with: StarGift_Nft_Controller(context: context, gift: gift, source: .upgrade(peer, attributes, messageId), transaction: transaction), for: window)
+            })
+        }
+    }, transferUnqiue: { gift in
+        
+        let state = stateValue.with { $0 }
+        
+        if let messageId, case let .starGift(_, _, _, _, _, _, _, _, _, convertStars, canExportDate) = purpose {
+            
+            var additionalItem: SelectPeers_AdditionTopItem?
+            if let canExportDate {
+                additionalItem = .init(title: strings().giftTransferSendViaBlockchain, color: theme.colors.text, icon: NSImage(resource: .iconSendViaTon).precomposed(), callback: {
+                    let currentTime = Int32(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970)
+                    if currentTime > canExportDate {
+                        showModalText(for: window, text: strings().updateAppUpdateTelegram)
+                    } else {
+                        let delta = canExportDate - currentTime
+                        let days: Int32 = Int32(ceil(Float(delta) / 86400.0))
+                        alert(for: window, header: strings().giftTransferUnlockPendingTitle, info: strings().giftTransferUnlockPendingText(strings().timerDaysCountable(Int(days))))
+                    }
+                })
+            }
+            
+            _ = selectModalPeers(window: window, context: context, title: strings().giftTransferTitle, behavior: SelectChatsBehavior(settings: [.excludeBots, .contacts, .remote], limit: 1, additionTopItem: additionalItem)).start(next: { peerIds in
+                if let peerId = peerIds.first {
+                    let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+                    
+                    _ = peer.startStandalone(next: { peer in
+                        if let peer {
+                                                    
+                            let info: String
+                            let ok: String
+                        
+            
+                            
+                            if let convertStars = convertStars, let starsState = state.starsState, starsState.balance.value < convertStars {
+                                showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: convertStars)), for: window)
+                                return
+                            }
+                            
+                            if let stars = convertStars, stars > 0 {
+                                info = strings().giftTransferConfirmationText("\(gift.title) #\(gift.number)", peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(stars)))
+                                ok = strings().giftTransferConfirmationTransfer + " " + strings().starListItemCountCountable(Int(stars))
+                            } else {
+                                info = strings().giftTransferConfirmationTextFree("\(gift.title) #\(gift.number)", peer._asPeer().displayTitle)
+                                ok = strings().giftTransferConfirmationTransferFree
+                            }
+                    
+                            let data = ModalAlertData(title: nil, info: info, description: nil, ok: ok, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+                                return TransferUniqueGiftHeaderItem(initialSize, stableId: stableId, gift: gift, toPeer: peer, context: context)
+                            }))
+                            
+                            showModalAlert(for: window, data: data, completion: { result in
+                                _ = context.engine.payments.transferStarGift(prepaid: true, messageId: messageId, peerId: peerId).startStandalone()
+                                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                                close?()
+                                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(messageId.peerId)))
+                            })
+                        }
+                    })
+                }
+            })
+        }
+        
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -1325,6 +1663,8 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    modalController._hasBorder = false
     
     close = { [weak modalController] in
         modalController?.modal?.close()

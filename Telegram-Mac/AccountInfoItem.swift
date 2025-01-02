@@ -104,7 +104,7 @@ class AccountInfoItem: GeneralRowItem {
         textLayout.measure(width: width - 140)
         activeTextlayout.measure(width: width - 140)
         
-        let hasControl = PremiumStatusControl.hasControl(peer)
+        let hasControl = PremiumStatusControl.hasControl(peer, left: false)
         
         self.titleLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
         self.titleActiveLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
@@ -333,7 +333,7 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = nil
             }
             
-            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
                         
             if let control = control {
                 self.statusControl = control

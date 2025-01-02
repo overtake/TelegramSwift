@@ -974,11 +974,29 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             text = strings().chatServiceRefundedBackCountable(peerName, currency + TINY_SPACE, Int(totalAmount))
         case let .prizeStars(amount, _, _, _, _):
             text = strings().chatServiceStarsPrize(authorName, strings().channelBoostBoosterStarsCountable(Int(amount)))
-        case let .starGift(gift, _, _, _, _, messageText, _):
+        case let .starGift(gift, _, messageText, _, _, _, _, _, _, _, _, _):
             if authorId == account.peerId {
-                text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.price)))
+                text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.generic!.price)))
             } else {
-                text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.price)))
+                text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.generic!.price)))
+            }
+        case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded):
+            if case let .unique(gift) = gift {
+                if isTransferred {
+                    if authorId == account.peerId {
+                        text = strings().notificationStarsGiftTransferYou
+                    } else {
+                        text = strings().notificationStarsGiftTransfer(authorName)
+                    }
+                } else if isUpgrade {
+                    if authorId == account.peerId {
+                        text = strings().notificationStarsGiftUpgradeYou(authorName)
+                    } else {
+                        text = strings().notificationStarsGiftUpgrade(authorName)
+                    }
+                } else {
+                    text = strings().chatListTextUniqueGift(gift.title + " #\(gift.number)")
+                }
             }
         }
     }

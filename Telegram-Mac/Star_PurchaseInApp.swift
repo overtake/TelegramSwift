@@ -689,7 +689,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
         let photo = state.photoRepresentation.flatMap({ [$0] }) ?? []
         updateState { current in
             var current = current
-            current.peer = .init(TelegramUser(id: .init(0), accessHash: nil, firstName: state.title, lastName: nil, username: nil, phone: nil, photo: photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: state.nameColor, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil))
+            current.peer = .init(TelegramUser(id: .init(0), accessHash: nil, firstName: state.title, lastName: nil, username: nil, phone: nil, photo: photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: state.nameColor, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil))
             current.formId = state.subscriptionFormId
             return current
         }
@@ -746,7 +746,7 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
                 if let formId = state.formId {
                     _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: formId, source: source), for: window).startStandalone(next: { result in
                         switch result {
-                        case let .done(receiptMessageId, subscriptionPeerId):
+                        case let .done(receiptMessageId, subscriptionPeerId, _):
 //                            starsContext.add(balance: -state.request.count)
                             let text: String
                             switch type {

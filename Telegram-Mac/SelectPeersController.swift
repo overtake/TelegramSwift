@@ -29,7 +29,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
     case searchEmpty(GeneralRowItem.Theme, CGImage)
     case empty(GeneralRowItem.Theme, InputDataEquatable?, (NSSize, AnyHashable)->TableRowItem)
     case separator(Int32, GeneralRowItem.Theme, String)
-    case actionButton(String, CGImage, Int, GeneralRowItem.Theme, (Int)->Void, Bool)
+    case actionButton(String, CGImage, Int, GeneralRowItem.Theme, (Int)->Void, Bool, NSColor)
     case requirements(NSAttributedString)
     var stableId: SelectPeerEntryStableId {
         switch self {
@@ -43,7 +43,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
             return .separator(index)
         case let .peer(peer, index, _):
             return .peerId(peer.peer.id, index)
-        case let .actionButton(_, _, index, _, _, _):
+        case let .actionButton(_, _, index, _, _, _, _):
             return .inviteLink(index)
         }
     }
@@ -74,8 +74,8 @@ enum SelectPeerEntry : Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .actionButton(text, image, index, customTheme, _, _):
-            if case .actionButton(text, image, index, customTheme, _, _) = rhs {
+        case let .actionButton(text, image, index, customTheme, _, _, _):
+            if case .actionButton(text, image, index, customTheme, _, _, _) = rhs {
                 return true
             } else {
                 return false
@@ -254,12 +254,12 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
     
     if let linkInvation = linkInvation {
         let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.accentColor, flipVertical: true)
-        entries.append(SelectPeerEntry.actionButton(strings().peerSelectInviteViaLink, icon, 0, theme, linkInvation, true))
+        entries.append(SelectPeerEntry.actionButton(strings().peerSelectInviteViaLink, icon, 0, theme, linkInvation, true, theme.accentColor))
     }
     if let item = additionTopItem {
         entries.append(SelectPeerEntry.actionButton(item.title, item.icon, 0, theme, { _ in
             item.callback()
-        }, false))
+        }, false, item.color))
     }
         
     var index:Int32 = 0
@@ -439,14 +439,14 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                 return callback(initialSize, entry.stableId)
             case let .separator(_, customTheme, text):
                 return SeparatorRowItem(initialSize, entry.stableId, string: text.uppercased(), customTheme: customTheme)
-            case let .actionButton(text, image, index, customTheme, action, close):
-                let style = ControlStyle(font: .normal(.title), foregroundColor: customTheme.accentColor)
+            case let .actionButton(text, image, index, customTheme, action, close, color):
+                let style = ControlStyle(font: .normal(.title), foregroundColor: color)
                 return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: text, nameStyle: style, type: .none, action: {
                     action(index)
                     if close {
                         interactions.close()
                     }
-                }, thumb: GeneralThumbAdditional(thumb: image, textInset: 39), inset: NSEdgeInsetsMake(0, 10, 0, 0), customTheme: customTheme)
+                }, thumb: GeneralThumbAdditional(thumb: image, textInset: 41), inset: NSEdgeInsetsMake(0, 6, 0, 0), customTheme: customTheme)
             case let .requirements(string):
                 return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: string, border: [.Top], inset: NSEdgeInsets(left: 10, right: 10, top: 0, bottom: 4))
             }
@@ -846,7 +846,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     if let item = additionTopItem {
         entries.append(SelectPeerEntry.actionButton(item.title, item.icon, 0, .initialize(theme), { _ in
             item.callback()
-        }, false))
+        }, false, item.color))
     }
     
     let participants = participants.filter({ participant -> Bool in
@@ -915,9 +915,11 @@ class SelectChatsBehavior: SelectPeersBehavior {
     
     var premiumBlock: Bool
     var miniappsBlock: Bool
-    init(settings: SelectPeerSettings = [.contacts, .remote], excludePeerIds: [PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping () -> GeneralRowItem.Theme = { GeneralRowItem.Theme() }, premiumBlock: Bool = false, miniappsBlock: Bool = false) {
+    var additionTopItem: SelectPeers_AdditionTopItem?
+    init(settings: SelectPeerSettings = [.contacts, .remote], excludePeerIds: [PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping () -> GeneralRowItem.Theme = { GeneralRowItem.Theme() }, premiumBlock: Bool = false, miniappsBlock: Bool = false, additionTopItem: SelectPeers_AdditionTopItem? = nil) {
         self.premiumBlock = premiumBlock
         self.miniappsBlock = miniappsBlock
+        self.additionTopItem = additionTopItem
         super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
     }
     
@@ -925,6 +927,12 @@ class SelectChatsBehavior: SelectPeersBehavior {
         var entries: [SelectPeerEntry] = []
        
         var index:Int32 = 0
+        
+        if let item = additionTopItem {
+            entries.append(SelectPeerEntry.actionButton(item.title, item.icon, 0, customTheme(), { _ in
+                item.callback()
+            }, false, item.color))
+        }
 
         if premiumBlock {
             entries.append(.separator(index, customTheme(), strings().selectPeersUserTypes))

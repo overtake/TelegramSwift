@@ -705,6 +705,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
     case aboutDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
+    case verifiedInfo(sectionId: ChannelInfoSection, value: PeerVerification?, viewType: GeneralViewType)
+
     case report(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case leave(sectionId: ChannelInfoSection, isCreator: Bool, viewType: GeneralViewType)
     
@@ -733,6 +735,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .balance(section, ton, stars, canSeeTon, canSeeStars, _): return .balance(section: section, ton: ton, stars: stars, canSeeTon: canSeeTon, canSeeStars: canSeeStars, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
+        case let .verifiedInfo(sectionId, verification, _): return .verifiedInfo(sectionId: sectionId, value: verification, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
         case let .report(sectionId, _): return .report(sectionId: sectionId, viewType: viewType)
         case let .leave(sectionId, isCreator, _): return .leave(sectionId: sectionId, isCreator: isCreator, viewType: viewType)
@@ -918,6 +921,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .verifiedInfo(sectionId, value, viewType):
+            if case .verifiedInfo(sectionId, value, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .aboutDesc(sectionId, viewType):
             if case .aboutDesc(sectionId, viewType) = entry {
                 return true
@@ -993,12 +1002,14 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 21
         case .aboutDesc:
             return 22
+        case .verifiedInfo:
+            return 23
         case .report:
-            return 25
+            return 24
         case .leave:
-            return 26
+            return 25
         case .media:
-            return 27
+            return 26
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1045,6 +1056,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussionDesc(sectionId, _):
             return sectionId.rawValue
         case let .aboutInput(sectionId, _, _):
+            return sectionId.rawValue
+        case let .verifiedInfo(sectionId, _, _):
             return sectionId.rawValue
         case let .aboutDesc(sectionId, _):
             return sectionId.rawValue
@@ -1101,6 +1114,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .aboutInput(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
+        case let .verifiedInfo(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
         case let .aboutDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .report(sectionId, _):
@@ -1138,6 +1153,26 @@ enum ChannelInfoEntry: PeerInfoEntry {
             }, hashtag: { hashtag in
                 arguments.context.bindings.globalSearch(hashtag, arguments.peerId, nil)
             }, canTranslate: true)
+        case let .verifiedInfo(_, value, viewType):
+            let attr = NSMutableAttributedString()
+            
+            //TODOLANG
+            //
+            
+            let text: String
+            if let value {
+                text = "\(clown) \(value.description)"
+            } else {
+                text = "\(clown) This bot is verified as official by the representatives of Telegram."
+            }
+            
+            attr.append(string: text, color: theme.colors.listGrayText, font: .normal(.text))
+            if let value {
+                InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: [.init(range: 0..<2, type: .CustomEmoji(stickerPack: nil, fileId: value.iconFileId))], isPremium: true)
+            } else {
+                attr.insertEmbedded(.embedded(name: "Icon_Verified_Telegram", color: theme.colors.grayIcon, resize: false), for: clown)
+            }
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .attributed(attr), viewType: viewType, context: arguments.context)
         case let .userName(_, value, viewType):
             let link = "@\(value[0].username)"
             
@@ -1351,7 +1386,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             
         } else {
             
-             applyBlock(infoBlock)
+            applyBlock(infoBlock)
+            
             
             var aboutBlock:[ChannelInfoEntry] = []
             if channel.isScam {
@@ -1378,6 +1414,11 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 aboutBlock.append(.peerId(sectionId: .desc, value: "\(channel.id.id._internalGetInt64Value())", viewType: .singleItem))
             }
             applyBlock(aboutBlock)
+            
+            if channel.isVerified || (view.cachedData as? CachedChannelData)?.verification != nil {
+                entries.append(.verifiedInfo(sectionId: .desc, value: (view.cachedData as? CachedChannelData)?.verification, viewType: .textBottomItem))
+            }
+            
 
         }
 

@@ -815,7 +815,10 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         self.items = editing ? [] : actionItems(item: self, width: blockWidth, theme: theme)
         var textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - 10
-        if let peer = peer, let controlSize = PremiumStatusControl.controlSize(peer, true) {
+        if let peer = peer, let controlSize = PremiumStatusControl.controlSize(peer, true, left: false) {
+            textWidth -= (controlSize.width + 5)
+        }
+        if let peer = peer, let controlSize = PremiumStatusControl.controlSize(peer, true, left: true) {
             textWidth -= (controlSize.width + 5)
         }
         nameLayout.measure(width: textWidth)
@@ -853,13 +856,16 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     fileprivate var nameSize: NSSize {
         var stateHeight: CGFloat = 0
-        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true) {
+        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true, left: false) {
             stateHeight = max(size.height + 4, nameLayout.layoutSize.height)
         } else {
             stateHeight = nameLayout.layoutSize.height
         }
         var width = nameLayout.layoutSize.width
-        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true)  {
+        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true, left: false)  {
+            width += size.width + 5
+        }
+        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true, left: true)  {
             width += size.width + 5
         }
         return NSMakeSize(width, stateHeight)
@@ -900,6 +906,7 @@ final class PeerInfoBackgroundView: View {
         didSet {
             backgroundGradientLayer.colors = gradient.map { $0.cgColor }
             avatarBackgroundGradientLayer.isHidden = gradient[0].alpha == 0
+            backgroundGradientLayer.animateGradientColors()
         }
     }
     
@@ -1034,6 +1041,7 @@ private final class PeerInfoPhotoEditableView : Control {
 private final class NameContainer : View {
     let nameView = TextView()
     var statusControl: PremiumStatusControl?
+    var leftStatusControl: PremiumStatusControl?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(nameView)
@@ -1045,7 +1053,7 @@ private final class NameContainer : View {
         let context = item.context
         
         if let peer = item.peer {
-            let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, color: item.accentColor, cached: self.statusControl, animated: animated)
+            let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, isBig: true, color: item.accentColor, cached: self.statusControl, animated: animated)
             if let control = control {
                 self.statusControl = control
                 self.addSubview(control)
@@ -1056,6 +1064,20 @@ private final class NameContainer : View {
         } else if let view = self.statusControl {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
+        }
+        
+        if let peer = item.peer {
+            let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: true, isSelected: false, isBig: true, color: item.accentColor, cached: self.leftStatusControl, animated: animated)
+            if let control = control {
+                self.leftStatusControl = control
+                self.addSubview(control)
+            } else if let view = self.leftStatusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.leftStatusControl = nil
+            }
+        } else if let view = self.leftStatusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.leftStatusControl = nil
         }
         
         
@@ -1092,8 +1114,12 @@ private final class NameContainer : View {
     
     override func layout() {
         super.layout()
-        
-        nameView.centerY(x: 0)
+        var offset: CGFloat = 0
+        if let control = leftStatusControl {
+            control.centerY(x: 0, addition: -1)
+            offset += control.frame.width + 2
+        }
+        nameView.centerY(x: offset)
         var inset: CGFloat = nameView.frame.maxX + 5
         if let control = statusControl {
             control.centerY(x: inset, addition: -1)

@@ -719,7 +719,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
         }
         
         //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: state.nameAnimation ? "disable animations" : "enable animations", color: theme.colors.accent, font: .normal(.text)), action: arguments.toggleNameAnimation))))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: state.nameAnimation ? strings().chatListFolderDisableAnimations : strings().chatListFolderEnableAnimations, color: theme.colors.accent, font: .normal(.text)), action: arguments.toggleNameAnimation))))
         index += 1
         
         //InputTextDataRowItem
@@ -750,7 +750,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
         
         if hasAddInclude  {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_include, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: includePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: includePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4), context: arguments.context)
             }))
             index += 0
         }
@@ -1027,7 +1027,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     let title = ChatTextInputState(inputText: filter.title, selectionRange: filter.title.length..<filter.title.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: filter.entities), associatedMedia: [:]))
     
-    let initialState = State(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew, inviteLinks: nil, creatingLink: false, linkSaving: nil, inputState: .init(inputText: .initialize(string: filter.title, color: theme.colors.text, font: .normal(.text))), nameAnimation: true)
+    let initialState = State(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew, inviteLinks: nil, creatingLink: false, linkSaving: nil, inputState: title.textInputState(), nameAnimation: true)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

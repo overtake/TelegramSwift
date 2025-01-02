@@ -850,7 +850,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
             size.width += 16 + 2 + self.innerInset
         }
         
-        if let s = PremiumStatusControl.controlSize(peer, false), peer.id != context.peerId {
+        if let s = PremiumStatusControl.controlSize(peer, false, left: false), peer.id != context.peerId {
             size.width += s.width + 2
         }
         if let afterNameBadge {
@@ -1040,7 +1040,7 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         }
         
         if item.peer.id != item.context.peerId {
-            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: animated)
             if let control = control {
                 self.statusControl = control
                 self.addSubview(control)

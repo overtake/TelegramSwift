@@ -47,8 +47,8 @@ private final class HeaderItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        titleLayout.measure(width: width - 40)
-        infoLayout.measure(width: width - 40)
+        titleLayout.measure(width: blockWidth - 40)
+        infoLayout.measure(width: blockWidth - 40)
 
         return true
     }
@@ -531,7 +531,7 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
                 let comission2 = stateValue.with { $0.commission2 }
                 let duration = stateValue.with { $0.duration }
                 
-                rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionCommission, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
+                rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionCommission, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission.decemial)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
 //
 //                if comission2 > 0 {
 //                    rows.append(.init(left: .init(.initialize(string: "Commission for\n2-Level Affiliates", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(comission2)%", color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
@@ -543,7 +543,7 @@ func Affiliate_StartController(context: AccountContext, peerId: PeerId, starRefP
                 rows.append(.init(left: .init(.initialize(string: strings().affiliateSetupAlertApplySectionDuration, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1), right: .init(name: .init(.initialize(string: localizedDuration, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1))))
 
                 
-                let data = ModalAlertData(title: strings().affiliateSetupAlertApplyTitle, info: info, description: nil, ok: starRefProgram != nil ? strings().affiliateSetupUpdate : strings().affiliateSetupStart, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: .init(value: { initialSize, stableId, presentation in
+                let data = ModalAlertData(title: strings().affiliateSetupAlertApplyTitle, info: info, description: nil, ok: starRefProgram != nil ? strings().affiliateSetupUpdate : strings().affiliateSetupStart, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: .init(value: { initialSize, stableId, presentation, _ in
                     return InputDataTableBasedItem(initialSize, stableId: stableId, viewType: .legacy, rows: rows, context: arguments.context)
                 }))
                 

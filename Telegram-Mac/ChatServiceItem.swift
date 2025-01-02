@@ -39,6 +39,36 @@ class ChatServiceItem: ChatRowItem {
             case stars(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
         }
         
+        struct UniqueAttributes {
+            struct Attribute {
+                var name: TextViewLayout
+                var value: TextViewLayout
+            }
+            var header: TextViewLayout
+            var attributes: [Attribute]
+            
+            var height: CGFloat {
+                var height: CGFloat = 5
+                height += header.layoutSize.height
+                height += 5
+                
+                for attribute in attributes {
+                    height += 20
+                }
+                height += 5
+                return height
+            }
+            
+            func makeSize(width: CGFloat) {
+                header.measure(width: width)
+                
+                for attribute in attributes {
+                    attribute.name.measure(width: width / 2)
+                    attribute.value.measure(width: width / 2)
+                }
+            }
+        }
+        
         let from: PeerId
         let to: PeerId
         let text: TextViewLayout
@@ -46,21 +76,28 @@ class ChatServiceItem: ChatRowItem {
         let source: Source
         let ribbon: Ribbon?
         
-        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?) {
+        let uniqueAttributes: UniqueAttributes?
+        
+        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?, uniqueAttributes: UniqueAttributes?) {
             self.from = from
             self.to = to
             self.text = text
             self.info = info
             self.source = source
             self.ribbon = ribbon
+            self.uniqueAttributes = uniqueAttributes
             self.text.measure(width: 200)
             self.info?.measure(width: 200)
+            self.uniqueAttributes?.makeSize(width: 200)
         }
         
         var height: CGFloat {
             var height = 170 + text.layoutSize.height + 15
             if let info {
                 height += 4 + info.layoutSize.height
+            }
+            if let uniqueAttributes {
+                height += uniqueAttributes.height
             }
             return height + 40
         }
@@ -793,7 +830,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil, uniqueAttributes: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1149,7 +1186,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1171,9 +1208,13 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case let .starGift(gift, convertStars, text, entities, nameHidden, savedToProfile, convertedToStars):
+                case let .starGift(gift, convertStars, text, entities, nameHidden, savedToProfile, convertedToStars, upgraded, canUpgrade, upgradeStars, isRefunded, upgradedMessageId):
                     let info = NSMutableAttributedString()
                     let header = NSMutableAttributedString()
+                    
+                    guard let gift = gift.generic else {
+                        break
+                    }
                     
                     
                     header.append(string: strings().chatServiceStarGiftFrom("\(clown)\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
@@ -1212,7 +1253,7 @@ class ChatServiceItem: ChatRowItem {
                         info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                     }
                     
-                    let purpose: Star_TransactionPurpose = .starGift(gift: gift, convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false)
+                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil)
                     
                     let ribbon: ChatServiceItem.GiftData.Ribbon?
                     if let availability = gift.availability {
@@ -1229,7 +1270,7 @@ class ChatServiceItem: ChatRowItem {
                         toPeer = message.peers[message.id.peerId].flatMap( { .init($0) })
                     }
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1248,7 +1289,94 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
 
+                case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded):
+                    if case let .unique(gift) = gift {
+                        var text: String = ""
+                        if let messagePeer = message.peers[message.id.peerId] {
+                            let peerName = messagePeer.compactDisplayTitle
+                            let peerIds: [(Int, EnginePeer.Id?)] = [(0, messagePeer.id)]
+                            if isUpgrade {
+                                if message.author?.id == context.account.peerId {
+                                    text = strings().notificationStarsGiftUpgradeYou(peerName)
+                                } else {
+                                    text = strings().notificationStarsGiftUpgrade(peerName)
+                                }
+                            } else if isTransferred {
+                                if message.author?.id == context.account.peerId {
+                                    text = strings().notificationStarsGiftTransferYou
+                                } else {
+                                    text = strings().notificationStarsGiftTransfer(peerName)
+                                }
+                            }
+                        }
+                        
+                        let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        
+                        if let authorId = authorId {
+                            let range = attributedString.string.nsstring.range(of: authorName)
+                            if range.location != NSNotFound {
+                                let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                                attributedString.add(link: link, for: range, color: nameColor(authorId))
+                                attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                            }
+                        }
+                        
+                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate)
+                        
 
+                        
+                        
+                        let toPeer: EnginePeer?
+                        if authorId != context.peerId {
+                            toPeer = context.myPeer.flatMap { .init($0) }
+                        } else {
+                            toPeer = message.peers[message.id.peerId].flatMap( { .init($0) })
+                        }
+                        
+                        let info = NSMutableAttributedString()
+                        let header = NSMutableAttributedString()
+                        
+                        
+                        header.append(string: strings().chatServiceStarGiftFrom("\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+
+                        
+                        var attributes: [GiftData.UniqueAttributes.Attribute] = []
+                        
+                        var backdropColor: NSColor?
+                        
+                        for attribute in gift.attributes {
+                            switch attribute {
+                            case let .backdrop(name, _, outerColor, _, _, _):
+                                attributes.append(.init(name: .init(.initialize(string: strings().giftUniqueBackdrop, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
+                                                        value: .init(.initialize(string: name, color: NSColor.white, font: .medium(.text)))))
+                                backdropColor = NSColor(UInt32(outerColor)).withAlphaComponent(0.7)
+                            case let .model(name, _, _):
+                                attributes.append(.init(name: .init(.initialize(string: strings().giftUniqueModel, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
+                                                        value: .init(.initialize(string: name, color: NSColor.white, font: .medium(.text)))))
+                            case let .pattern(name, _, _):
+                                attributes.append(.init(name: .init(.initialize(string: strings().giftUniqueSymbol, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
+                                                        value: .init(.initialize(string: name, color: NSColor.white, font: .medium(.text)))))
+                            default:
+                                break
+                            }
+                        }
+                        
+                        let ribbon: ChatServiceItem.GiftData.Ribbon = .init(color: backdropColor ?? theme.chatServiceItemColor, text: "Gift")
+
+                        
+                        var uniqueAttributes: GiftData.UniqueAttributes?
+                        if !refunded {
+                            uniqueAttributes = .init(header: .init(.initialize(string: "\(gift.title) #\(gift.number)", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.header))), attributes: attributes)
+                        }
+                        
+                        
+                        if refunded {
+                            info.append(string: strings().giftUpgradeRefunded, color: grayTextColor, font: .normal(theme.fontSize))
+                        }
+                        
+                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
+                        
+                    }
                 default:
                     break
                 }
@@ -1403,11 +1531,22 @@ class ChatServiceItem: ChatRowItem {
             data.makeSize(width: width - 80)
             height += data.size.height + (isBubbled ? 9 : 6)
         }
+        
+        if let reactionsLayout {
+            height += reactionsLayout.size.height
+        }
+        
         return height
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
+        
+        if let reactions = reactionsLayout {
+            reactions.measure(for: min(320, blockWidth))
+        }
+        
+        
         if isBubbled {
             if shouldBlurService {
                 text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
@@ -1547,6 +1686,86 @@ class ChatServiceRowView: TableRowView {
     
     private class GiftView : Control {
         
+        class UniqueAttributesView : View {
+            private let headerView = TextView()
+            private let leftAttrs: View = View()
+            private let rightAttrs: View = View()
+            private let attrContainer = View()
+            required init(frame frameRect: NSRect) {
+                super.init(frame: frameRect)
+                addSubview(headerView)
+                attrContainer.addSubview(rightAttrs)
+                attrContainer.addSubview(leftAttrs)
+
+                addSubview(attrContainer)
+                
+                headerView.userInteractionEnabled = false
+                headerView.isSelectable = false
+            }
+             required init?(coder: NSCoder) {
+                fatalError("init(coder:) has not been implemented")
+            }
+            
+            func set(attributes: ChatServiceItem.GiftData.UniqueAttributes, item: ChatServiceItem, animated: Bool) {
+                headerView.update(attributes.header)
+                
+                while leftAttrs.subviews.count > attributes.attributes.count {
+                    leftAttrs.subviews.last?.removeFromSuperview()
+                }
+                while leftAttrs.subviews.count < attributes.attributes.count {
+                    let textView = TextView()
+                    textView.userInteractionEnabled = false
+                    textView.isSelectable = false
+                    leftAttrs.addSubview(textView)
+                }
+                
+                
+                while rightAttrs.subviews.count > attributes.attributes.count {
+                    rightAttrs.subviews.last?.removeFromSuperview()
+                }
+                while rightAttrs.subviews.count < attributes.attributes.count {
+                    let textView = TextView()
+                    textView.userInteractionEnabled = false
+                    textView.isSelectable = false
+                    rightAttrs.addSubview(textView)
+                }
+                
+                for (i, attribute) in attributes.attributes.enumerated() {
+                    let left = self.leftAttrs.subviews[i] as! TextView
+                    let right = self.rightAttrs.subviews[i] as! TextView
+                    left.update(attribute.name)
+                    right.update(attribute.value)
+                }
+                
+                needsLayout = true
+            }
+            
+            override func layout() {
+                super.layout()
+                headerView.centerX(y: 5)
+                
+                leftAttrs.setFrameSize(NSMakeSize(leftAttrs.subviewsWidthSize.width, frame.height - headerView.frame.height - 5))
+                rightAttrs.setFrameSize(NSMakeSize(rightAttrs.subviewsWidthSize.width, frame.height - headerView.frame.height - 5))
+
+                
+                attrContainer.setFrameSize(NSMakeSize(leftAttrs.frame.width + 6 + rightAttrs.frame.width, leftAttrs.frame.height))
+                
+                leftAttrs.setFrameOrigin(0, 0)
+                rightAttrs.setFrameOrigin(leftAttrs.frame.maxX + 6, 0)
+
+                
+                attrContainer.centerX(y: headerView.frame.maxY + 5)
+                
+                var y: CGFloat = 0
+                for (i, left) in leftAttrs.subviews.enumerated() {
+                    let right = self.rightAttrs.subviews[i]
+                    left.setFrameOrigin(leftAttrs.frame.width - left.frame.width, y)
+                    right.setFrameOrigin(0, y)
+                    y += 20
+                }
+            }
+        }
+        
         private let disposable = MetaDisposable()
         private let stickerView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSMakeSize(150, 150).bounds)
         
@@ -1558,6 +1777,10 @@ class ChatServiceRowView: TableRowView {
         private let button = TextButton()
         
         private var badgeView: ImageView?
+        
+        private var emoji: PeerInfoSpawnEmojiView?
+        private var backgroundView: PeerInfoBackgroundView?
+        private var attributesView: UniqueAttributesView?
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -1575,6 +1798,27 @@ class ChatServiceRowView: TableRowView {
             
             let context = item.context
             let alt:String = data.alt
+            
+            var uniqueGift: StarGift.UniqueGift?
+            
+            switch data.source {
+            case let .starGift(_, _, _, _, purpose):
+                switch purpose {
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _):
+                    switch gift {
+                    case let .unique(gift):
+                        uniqueGift = gift
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+            default:
+                break
+            }
+            
+            
             
             textView.set(text: data.text, context: item.context)
             
@@ -1641,8 +1885,17 @@ class ChatServiceRowView: TableRowView {
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _):
-                    stickerFile = .single(gift.file)
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _):
+                    switch gift {
+                    case let .unique(gift):
+                        if let file = gift.file {
+                            stickerFile = .single(file)
+                        } else {
+                            stickerFile = .complete()
+                        }
+                    case let .generic(gift):
+                        stickerFile = .single(gift.file)
+                    }
                 default:
                     stickerFile = .complete()
                 }
@@ -1673,6 +1926,89 @@ class ChatServiceRowView: TableRowView {
                 self.backgroundColor = item.presentation.chatServiceItemColor
             }
             
+            if let uniqueGift, let attributes = data.uniqueAttributes {
+                
+                
+                do {
+                    let current:PeerInfoBackgroundView
+                    if let view = self.backgroundView {
+                        current = view
+                    } else {
+                        current = PeerInfoBackgroundView(frame: NSMakeRect(0, 0, 180, 180))
+                        self.addSubview(current, positioned: .below, relativeTo: stickerView)
+                        self.backgroundView = current
+                    }
+                    var colors: [NSColor] = []
+
+                    for attribute in uniqueGift.attributes {
+                        switch attribute {
+                        case let .backdrop(_, innerColor, outerColor, _, _, _):
+                            colors = [NSColor(UInt32(innerColor)).withAlphaComponent(1), NSColor(UInt32(outerColor)).withAlphaComponent(1)]
+                        default:
+                            break
+                        }
+                    }
+                    current.gradient = colors
+                }
+                do {
+                    let current:PeerInfoSpawnEmojiView
+                    if let view = self.emoji {
+                        current = view
+                    } else {
+                        current = PeerInfoSpawnEmojiView(frame: NSMakeRect(0, 0, 180, 180))
+                        self.addSubview(current, positioned: .below, relativeTo: stickerView)
+                        self.emoji = current
+                    }
+                    
+                    var patternFile: TelegramMediaFile?
+                    var patternColor: NSColor?
+
+                    for attribute in uniqueGift.attributes {
+                        switch attribute {
+                        case .pattern(_, let file, _):
+                            patternFile = file
+                        case let .backdrop(_, _, _, color, _, _):
+                            patternColor = NSColor(UInt32(color)).withAlphaComponent(0.3)
+                        default:
+                            break
+                        }
+                    }
+                    if let patternFile, let patternColor {
+                        current.set(fileId: patternFile.fileId.id, color: patternColor, context: context, animated: animated)
+                    }
+                }
+                
+                if let attributes = data.uniqueAttributes {
+                    let current: UniqueAttributesView
+                    if let view = self.attributesView {
+                        current = view
+                    } else {
+                        current = UniqueAttributesView(frame: NSMakeRect(0, 0, 200, attributes.height))
+                        addSubview(current)
+                        self.attributesView = current
+                    }
+                    
+                    current.set(attributes: attributes, item: item, animated: animated)
+                    
+                }
+               
+                
+            } else {
+                if let view = self.emoji {
+                    performSubviewRemoval(view, animated: animated)
+                    self.emoji = nil
+                }
+                if let view = self.backgroundView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundView = nil
+                }
+                if let view = self.attributesView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.attributesView = nil
+                }
+            }
+            
+            
             needsLayout = true
         }
         
@@ -1694,6 +2030,18 @@ class ChatServiceRowView: TableRowView {
             }
             button.centerX(y: frame.height - 15 - button.frame.height)
             visualEffect?.frame = bounds
+            
+            if let emoji {
+                emoji.frame = bounds.insetBy(dx: 4, dy: 4).offsetBy(dx: 15, dy: 0)
+            }
+            if let backgroundView {
+                backgroundView.layer?.cornerRadius = 10
+                backgroundView.frame = bounds.insetBy(dx: 4, dy: 4)
+            }
+            
+            if let attributesView {
+                attributesView.frame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5)
+            }
         }
         
         deinit {
@@ -2201,6 +2549,7 @@ class ChatServiceRowView: TableRowView {
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
     private var suggestChannelsView: ChatChannelSuggestView?
+    private var reactionsView:ChatReactionsView?
 
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
     
@@ -2535,6 +2884,20 @@ class ChatServiceRowView: TableRowView {
             performSubviewRemoval(view, animated: animated, scale: true)
             self.suggestChannelsView = nil
         }
+        
+        if let reactionsLayout = item.reactionsLayout  {
+            if reactionsView == nil {
+                reactionsView = ChatReactionsView(frame: reactionsRect(item))
+                addSubview(reactionsView!)
+            }
+            guard let reactionsView = reactionsView else {return}
+            reactionsView.update(with: reactionsLayout, animated: animated)
+        } else {
+            if let view = self.reactionsView {
+                self.reactionsView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+        }
 
         
         updateInlineStickers(context: item.context, view: self.textView, textLayout: item.text)
@@ -2543,6 +2906,29 @@ class ChatServiceRowView: TableRowView {
         self.needsLayout = true
     }
     
+    
+    func reactionsRect(_ item: ChatRowItem) -> CGRect {
+        guard let reactionsLayout = item.reactionsLayout else {
+            return .zero
+        }
+        let contentFrameY = frame.height - reactionsLayout.size.height
+        
+        var frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY)
+        
+        return frame
+    }
+    
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        guard let item = item as? ChatServiceItem else {
+            return
+        }
+        if let reactionsView {
+            transition.updateFrame(view: reactionsView, frame: reactionsRect(item))
+        }
+    }
         
     
     override func updateAnimatableContent() -> Void {

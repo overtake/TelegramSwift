@@ -67,7 +67,7 @@ class LeftSidebarFolderItem: TableRowItem {
         
         let attr = NSMutableAttributedString()
         attr.append(string: folder.title, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10))
-        InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: folder.entities, isPremium: context.isPremium)
+        InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: folder.entities, isPremium: context.isPremium, playPolicy: folder.enableAnimations ? nil : .framesCount(1))
 
         nameLayout = TextViewLayout(attr, alignment: .center)
         

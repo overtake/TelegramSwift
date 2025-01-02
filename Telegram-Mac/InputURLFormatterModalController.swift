@@ -10,6 +10,17 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
+
+private func urlFromPasteboard() -> String? {
+    let pasteboard = NSPasteboard.general
+    // Attempt to read a string from the pasteboard
+    guard let urlString = pasteboard.string(forType: .string) else {
+        return nil
+    }
+    // Attempt to parse the string into a valid URL
+    return urlString
+}
+
 private struct State : Equatable {
     var text: String
     var url: String?
@@ -63,7 +74,7 @@ private func entries(state: State, presentation: TelegramPresentationTheme) -> [
 func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String, String?) -> Void, presentation: TelegramPresentationTheme? = nil, hosts: [String] = []) -> InputDataModalController {
     
     
-    let initialState = State(text: string, url: defaultUrl?.removingPercentEncoding, hosts: hosts)
+    let initialState = State(text: string, url: defaultUrl?.removingPercentEncoding ?? urlFromPasteboard(), hosts: hosts)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -74,6 +85,7 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
     let dataSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return entries(state: state, presentation: presentation ?? theme)
     }
+    
     
     var close: (() -> Void)? = nil
     

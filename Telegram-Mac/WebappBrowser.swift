@@ -528,7 +528,7 @@ private final class TabView: Control {
             }
             
             if let peer = item.peer {
-                let statusControl = PremiumStatusControl.control(peer._asPeer(), account: arguments.context.account, inlinePacksContext: arguments.context.inlinePacksContext, isSelected: false, cached: self.premiumStatus, animated: false)
+                let statusControl = PremiumStatusControl.control(peer._asPeer(), account: arguments.context.account, inlinePacksContext: arguments.context.inlinePacksContext, left: false, isSelected: false, cached: self.premiumStatus, animated: false)
 
                 if let statusControl = statusControl, let textView {
                     let isNew = self.premiumStatus == nil
@@ -1021,7 +1021,7 @@ struct BrowserTabData : Comparable, Identifiable {
             let textWidth = max(title.layoutSize.width, urlText?.layoutSize.width ?? 0)
             var width = textWidth + 20 + 20 + 10 + 20
             if let peer = self.peer {
-                if let size = PremiumStatusControl.controlSize(peer._asPeer(), false) {
+                if let size = PremiumStatusControl.controlSize(peer._asPeer(), false, left: false) {
                     width += (size.width) + 2
                 }
             }

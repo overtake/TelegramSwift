@@ -33,8 +33,8 @@ private final class HeaderItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        infoLayout.measure(width: width - 40)
-        headerLayout.measure(width: width - 40)
+        infoLayout.measure(width: blockWidth - 40)
+        headerLayout.measure(width: blockWidth - 40)
         
         return true
     }

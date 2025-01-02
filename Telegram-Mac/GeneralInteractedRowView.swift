@@ -20,7 +20,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
     private let nextView:ImageView = ImageView()
     private var imageContext:ImageView?
     
-    private let nameView = TextView()
+    private let nameView = InteractiveTextView()
 
     private var badgeView: View?
     
@@ -33,7 +33,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         if let item = item as? GeneralInteractedRowItem {
             
             
-            nameView.update(item.isSelected ? item.nameLayoutSelected : item.nameLayout)
+            nameView.set(text: item.isSelected ? item.nameLayoutSelected : item.nameLayout, context: item.context)
                         
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
@@ -399,7 +399,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         containerView.addSubview(nameView)
         
         nameView.userInteractionEnabled = false
-        nameView.isSelectable = false
+        nameView.textView.isSelectable = false
         
         
         containerView.set(handler: { [weak self] _ in

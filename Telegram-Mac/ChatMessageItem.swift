@@ -70,7 +70,7 @@ final class InlineStickerItem : Hashable {
         return true
     }
     
-    static func apply(to attr: NSMutableAttributedString, associatedMedia: [MediaId : Media], entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false, offset: Int = 0) {
+    static func apply(to attr: NSMutableAttributedString, associatedMedia: [MediaId : Media], entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false, offset: Int = 0, playPolicy: LottiePlayPolicy? = nil) {
         let copy = attr
     
         
@@ -106,7 +106,7 @@ final class InlineStickerItem : Hashable {
                     let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
                     var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
                     let text = copy.string.nsstring.substring(with: range).fixed
-                    updatedAttributes[TextInputAttributes.embedded] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
+                    updatedAttributes[TextInputAttributes.embedded] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)), playPolicy: playPolicy)
                     
                     let insertString = NSAttributedString(string: clown, attributes: updatedAttributes)
                     copy.replaceCharacters(in: range, with: insertString)
