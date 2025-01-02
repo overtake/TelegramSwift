@@ -1055,7 +1055,8 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
     private var didBecomeActiveObserver: NSObjectProtocol?
     private var willResignActiveObserver: NSObjectProtocol?
     
-    private let chunkPlayerPartsState = Promise<ChunkMediaPlayerPartsState>(ChunkMediaPlayerPartsState(duration: nil, parts: []))
+    private let chunkPlayerPartsState = Promise<ChunkMediaPlayerPartsState>(ChunkMediaPlayerPartsState(duration: nil, content: .parts([])))
+
     private var sourceBufferStateDisposable: Disposable?
     
     private var playerStatusDisposable: Disposable?
@@ -1116,7 +1117,8 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
         
         var onSeeked:(()->Void)? = nil
         self.player = ChunkMediaPlayerV2(
-            partsState: self.chunkPlayerPartsState.get(),
+            params: ChunkMediaPlayerV2.MediaDataReaderParams(useV2Reader: true),
+            source: .externalParts(self.chunkPlayerPartsState.get()),
             video: true,
             enableSound: true,
             baseRate: baseRate,
@@ -1125,7 +1127,6 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
                 onSeeked?()
             }, playerNode: playerView
         )
-
      
         
         super.init(frame: .zero)
@@ -1300,7 +1301,8 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
             return
         }
         
-        self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, parts: sourceBuffer.items)))
+        self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, content: .parts(sourceBuffer.items))))
+
     }
     
     fileprivate func onMediaSourceBuffersUpdated() {
@@ -1314,7 +1316,7 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
             return
         }
 
-        self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, parts: sourceBuffer.items)))
+        self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, content: .parts(sourceBuffer.items))))
         if self.sourceBufferStateDisposable == nil {
             self.sourceBufferStateDisposable = (sourceBuffer.updated.signal()
             |> deliverOnMainQueue).startStrict(next: { [weak self, weak sourceBuffer] _ in
@@ -1324,11 +1326,13 @@ public final class HLSVideoJSNativeContentView: NSView, UniversalVideoContentVie
                 guard let mediaSource = SharedHLSVideoJSContext.shared.mediaSources[sourceBuffer.mediaSourceId] else {
                     return
                 }
-                self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, parts: sourceBuffer.items)))
+                self.chunkPlayerPartsState.set(.single(ChunkMediaPlayerPartsState(duration: mediaSource.duration, content: .parts(sourceBuffer.items))))
                 
                 self.updateBuffered()
             })
         }
+
+
     }
        
 
@@ -1676,9 +1680,10 @@ private final class SourceBuffer {
                         let item = ChunkMediaPlayerPart(
                             startTime: fragmentInfo.startTime.seconds,
                             endTime: fragmentInfo.startTime.seconds + fragmentInfo.duration.seconds,
-                            file: tempFile,
+                            content: ChunkMediaPlayerPart.TempFile(file: tempFile),
                             codecName: videoCodecName
                         )
+
                         self.items.append(item)
                         self.updateRanges()
                         

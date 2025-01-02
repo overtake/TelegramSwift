@@ -25,9 +25,9 @@ class ThemePreviewRowItem: GeneralRowItem {
         
       
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: context.myPeer?.displayTitle ?? "", lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: context.myPeer?.nameColor, backgroundEmojiId: context.myPeer?.backgroundEmojiId, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil)
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: context.myPeer?.displayTitle ?? "", lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: context.myPeer?.nameColor, backgroundEmojiId: context.myPeer?.backgroundEmojiId, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
         
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil)
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
         
         
         

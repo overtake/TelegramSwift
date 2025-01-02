@@ -16,8 +16,8 @@ import InAppPurchaseManager
 import ColorPalette
 
 private final class LimitedRowItem : GeneralRowItem {
-    fileprivate let availability: StarGift.Availability
-    init(_ initialSize: NSSize, stableId: AnyHashable, availability: StarGift.Availability) {
+    fileprivate let availability: StarGift.Gift.Availability
+    init(_ initialSize: NSSize, stableId: AnyHashable, availability: StarGift.Gift.Availability) {
         self.availability = availability
         super.init(initialSize, height: 30 + 48, stableId: stableId)
     }
@@ -113,7 +113,7 @@ private final class LimitedRowView : GeneralRowView {
     }
 
     private class LineView : View {
-        private var availability: StarGift.Availability?
+        private var availability: StarGift.Gift.Availability?
         private let limitedView = TextView()
         private let totalView = TextView()
         
@@ -157,7 +157,7 @@ private final class LimitedRowView : GeneralRowView {
             
         }
         
-        func set(availability: StarGift.Availability) {
+        func set(availability: StarGift.Gift.Availability) {
             self.availability = availability
             needsDisplay = true
             
@@ -275,17 +275,18 @@ private final class PreviewRowItem : GeneralRowItem {
     let context: AccountContext
     let peer: EnginePeer
     let source: PreviewGiftSource
-    
+    let includeUpgrade: Bool
     let headerLayout: TextViewLayout
     
     let presentation: TelegramPresentationTheme
     let titleLayout: TextViewLayout
     let infoLayout: TextViewLayout
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType, includeUpgrade: Bool) {
         self.context = context
         self.peer = peer
         self.source = source
+        self.includeUpgrade = includeUpgrade
         self.presentation = theme.withUpdatedChatMode(true).withUpdatedWallpaper(.init(wallpaper: .builtin, associated: nil)).withUpdatedColors(dayClassicPalette)
         
         let titleAttr = NSMutableAttributedString()
@@ -313,7 +314,7 @@ private final class PreviewRowItem : GeneralRowItem {
         } else {
             switch source {
             case .starGift(let option):
-                infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
             case .premium:
                 infoText.append(string: strings().giftPremiumText, color: presentation.chatServiceItemTextColor, font: .normal(.text))
             }
@@ -425,7 +426,7 @@ private final class PreviewRowView : GeneralContainableRowView {
             button.set(font: .medium(.text), for: .Normal)
             button.set(color: item.presentation.chatServiceItemTextColor, for: .Normal)
             button.set(background: item.shouldBlurService ? item.presentation.blurServiceColor : item.presentation.chatServiceItemColor, for: .Normal)
-            button.set(text: strings().chatServiceGiftView, for: .Normal)
+            button.set(text: item.includeUpgrade ? strings().giftUpgradeUpgrade : strings().chatServiceGiftView, for: .Normal)
             button.sizeToFit(NSMakeSize(20, 14))
             button.layer?.cornerRadius = button.frame.height / 2
             switch item.source {
@@ -469,7 +470,7 @@ private final class PreviewRowView : GeneralContainableRowView {
             
             switch item.source {
             case .starGift(let option):
-                if let availability = option.native.availability {
+                if let availability = option.native.generic?.availability {
                     let current: ImageView
                     if let view = self.imageView {
                         current = view
@@ -577,11 +578,15 @@ private final class PreviewRowView : GeneralContainableRowView {
 private final class Arguments {
     let context: AccountContext
     let toggleAnonymous: ()->Void
+    let toggleUpgrade: ()->Void
     let updateState:(Updated_ChatTextInputState)->Void
-    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void) {
+    let previewUpgrade:(PeerStarGift)->Void
+    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void) {
         self.context = context
         self.toggleAnonymous = toggleAnonymous
         self.updateState = updateState
+        self.toggleUpgrade = toggleUpgrade
+        self.previewUpgrade = previewUpgrade
     }
 }
 
@@ -592,13 +597,14 @@ private struct State : Equatable {
     var isAnonymous: Bool = false
     var textState: Updated_ChatTextInputState
     var starsState: StarsContext.State?
+    var includeUpgrade: Bool = false
 }
 
 private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_input = InputDataIdentifier("_id_input")
 private let _id_anonymous = InputDataIdentifier("_id_anonymous")
 private let _id_limit = InputDataIdentifier("_id_limit")
-
+private let _id_upgrade = InputDataIdentifier("_id_upgrade")
 
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -612,7 +618,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     switch state.option {
     case .starGift(let option):
-        if let limited = option.native.availability {
+        if let limited = option.native.generic?.availability {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_limit, equatable: .init(option), comparable: nil, item: { initialSize, stableId in
                 return LimitedRowItem(initialSize, stableId: stableId, availability: limited)
             }))
@@ -629,7 +635,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: .firstItem)
+        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: .firstItem, includeUpgrade: state.includeUpgrade)
     }))
     
     
@@ -655,7 +661,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
   
     switch state.option {
-    case .starGift:
+    case let .starGift(option: gift):
+        
+        
+        if let upgraded = gift.native.generic?.upgradeStars {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_upgrade, data: .init(name: strings().giftSendUpgrade(strings().starListItemCountCountable(Int(upgraded))), color: theme.colors.text, type: .switchable(state.includeUpgrade), viewType: .singleItem, action: arguments.toggleUpgrade)))
+
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().giftSendUpgradeInfo(state.peer._asPeer().displayTitle), linkHandler: { _ in
+                arguments.previewUpgrade(gift)
+            }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+
+        }
+        
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
@@ -727,6 +748,18 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
             var current = current
             current.textState = state
             return current
+        }
+    }, toggleUpgrade: {
+        updateState { current in
+            var current = current
+            current.includeUpgrade = !current.includeUpgrade
+            return current
+        }
+    }, previewUpgrade: { gift in
+        if let giftId = gift.native.generic?.id {
+            _ = showModalProgress(signal: context.engine.payments.starGiftUpgradePreview(giftId: giftId), for: window).startStandalone(next: { attributes in
+                showModal(with: StarGift_Nft_Controller(context: context, gift: gift.native, source: .preview(peer, attributes)), for: window)
+            })
         }
     })
     
@@ -844,12 +877,12 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         
         switch state.option {
         case let .starGift(option):
-            if starsState.balance.value < option.stars {
-                showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: option.stars)), for: window)
+            if starsState.balance.value < option.totalStars(state.includeUpgrade) {
+                showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: option.totalStars(state.includeUpgrade))), for: window)
                 return .none
             }
             
-            let source: BotPaymentInvoiceSource = .starGift(hideName: state.isAnonymous, peerId: state.peer.id, giftId: option.native.id, text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
+            let source: BotPaymentInvoiceSource = .starGift(hideName: state.isAnonymous, includeUpgrade: state.includeUpgrade, peerId: state.peer.id, giftId: option.native.generic!.id, text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
             
             let paymentForm = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil) |> mapToSignal {
                 return context.engine.payments.sendStarsPaymentForm(formId: $0.id, source: source) |> mapError { _ in
@@ -859,7 +892,7 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
             
             _ = showModalProgress(signal: paymentForm, for: context.window).start(next: { result in
                 switch result {
-                case let .done(receiptMessageId, _):
+                case let .done(receiptMessageId, _, _):
                     PlayConfetti(for: window, stars: true)
                     closeAllModals(window: window)
                     context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
@@ -884,17 +917,26 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         return .none
     }
     
-    let okText: String
-    switch option {
-    case let .starGift(option):
-        okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.stars)))
-    case let .premium(option):
-        okText = strings().starsGiftPreviewSend(option.price)
-    }
-
-    let modalInteractions = ModalInteractions(acceptTitle: okText, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
+    
+    
+    controller.afterTransaction = { [weak modalInteractions] _ in
+        let state = stateValue.with { $0 }
+        let okText: String
+        switch option {
+        case let .starGift(option):
+            okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
+        case let .premium(option):
+            okText = strings().starsGiftPreviewSend(option.price)
+        }
+        
+        modalInteractions?.updateDone { button in
+            button.set(text: okText, for: .Normal)
+        }
+    }
+    
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

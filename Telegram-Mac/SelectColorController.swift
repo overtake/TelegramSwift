@@ -201,7 +201,7 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
         nameView.update(item.nameLayout)
         statusView.update(item.statusLayout)
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, color: item.accentColor, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, isBig: true, playTwice: true, color: item.accentColor, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.addSubview(control)
@@ -275,9 +275,9 @@ private class PreviewRowItem: GeneralRowItem {
         
         let previewPeer: Peer?
         if let peer = peer as? TelegramUser {
-            previewPeer = TelegramUser(id: peerId, accessHash: peer.accessHash, firstName: peer.firstName, lastName: peer.lastName, username: peer.username, phone: peer.phone, photo: peer.photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: emojiStatus, usernames: [], storiesHidden: nil, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, subscriberCount: nil, verification: nil)
+            previewPeer = TelegramUser(id: peerId, accessHash: peer.accessHash, firstName: peer.firstName, lastName: peer.lastName, username: peer.username, phone: peer.phone, photo: peer.photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: emojiStatus, usernames: [], storiesHidden: nil, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, subscriberCount: nil, verificationIconFileId: nil)
         } else if let peer = peer as? TelegramChannel {
-            previewPeer = TelegramChannel(id: peerId, accessHash: peer.accessHash, title: peer.title, username: peer.username, photo: peer.profileImageRepresentations, creationDate: peer.creationDate, version: peer.version, participationStatus: peer.participationStatus, info: peer.info, flags: peer.flags, restrictionInfo: peer.restrictionInfo, adminRights: peer.adminRights, bannedRights: peer.bannedRights, defaultBannedRights: peer.defaultBannedRights, usernames: peer.usernames, storiesHidden: peer.storiesHidden, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, emojiStatus: emojiStatus, approximateBoostLevel: nil, subscriptionUntilDate: nil, verification: nil)
+            previewPeer = TelegramChannel(id: peerId, accessHash: peer.accessHash, title: peer.title, username: peer.username, photo: peer.profileImageRepresentations, creationDate: peer.creationDate, version: peer.version, participationStatus: peer.participationStatus, info: peer.info, flags: peer.flags, restrictionInfo: peer.restrictionInfo, adminRights: peer.adminRights, bannedRights: peer.bannedRights, defaultBannedRights: peer.defaultBannedRights, usernames: peer.usernames, storiesHidden: peer.storiesHidden, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, emojiStatus: emojiStatus, approximateBoostLevel: nil, subscriptionUntilDate: nil, verificationIconFileId: nil)
         } else {
             previewPeer = nil
         }

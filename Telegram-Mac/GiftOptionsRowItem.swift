@@ -45,6 +45,20 @@ struct PeerStarGift : Equatable {
     let stars: Int64
     let limited: Bool
     let native: StarGift
+    
+    func totalStars(_ includeUpgrade: Bool) -> Int64 {
+        if includeUpgrade {
+            switch native {
+            case let .generic(gift):
+                if let upgradeStars = gift.upgradeStars {
+                    return stars + upgradeStars
+                }
+            default:
+                return stars
+            }
+        }
+        return stars
+    }
 }
 
 final class GiftOptionsRowItem : GeneralRowItem {
@@ -53,6 +67,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
         enum TypeValue {
             case price(String)
             case stars(Int64)
+            case none
         }
         struct Badge {
             let text: String
@@ -69,6 +84,10 @@ final class GiftOptionsRowItem : GeneralRowItem {
         var nativePayment: PremiumPaymentOption?
         var nativeStarGift: PeerStarGift?
         var nativeProfileGift: ProfileGiftsContext.State.StarGift?
+        
+        var gift: StarGift? {
+            return nativeStarGift?.native ?? nativeProfileGift?.gift
+        }
         
         static func initialize(_ option: PremiumPaymentOption) -> Option {
             
@@ -95,16 +114,18 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 blueColor = [theme.colors.accent.withMultipliedBrightnessBy(1.1), theme.colors.accent.withMultipliedBrightnessBy(0.9)]
             }
             
-            if let availability = option.native.availability {
+            if let availability = option.native.generic?.availability {
                 if availability.remains == 0 {
                     badge = .init(text: strings().giftSoldOut, colors: redColor, textColor: .white)
                 } else {
                     badge = .init(text: strings().starGiftLimited, colors: blueColor, textColor: theme.colors.underSelectedColor)
                 }
+            } else if let availability = option.native.unique?.availability {
+                badge = .init(text: strings().starTransactionAvailabilityOfText(Int(availability.issued).prettyNumber, Int(availability.total).prettyNumber), colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
-            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, nativeStarGift: option)
+            return .init(file: option.media, text: nil, type: .none, badge: badge, peer: nil, invisible: false, nativeStarGift: option)
         }
         static func initialize(_ option: ProfileGiftsContext.State.StarGift) -> Option {
             
@@ -117,12 +138,23 @@ final class GiftOptionsRowItem : GeneralRowItem {
             }
             
             let badge: Badge?
-            if let availability = option.gift.availability {
+            if let availability = option.gift.generic?.availability {
                 badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), colors: blueColor, textColor: theme.colors.underSelectedColor)
+            } else if let availability = option.gift.unique?.availability {
+                badge = .init(text: strings().starTransactionAvailabilityOfText(Int(availability.issued).prettyNumber, Int(availability.total).prettyNumber), colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
-            return .init(file: option.gift.file, text: nil, type: .stars(option.gift.price), badge: badge, peer: option.fromPeer, invisible: !option.savedToProfile, nativeProfileGift: option)
+            
+            let file: TelegramMediaFile
+            switch option.gift {
+            case .generic(let gift):
+                file = gift.file
+            case .unique(let uniqueGift):
+                file = uniqueGift.file!
+            }
+            
+            return .init(file: file, text: nil, type: .none, badge: badge, peer: option.fromPeer, invisible: !option.savedToProfile, nativeProfileGift: option)
         }
         
         var height: CGFloat {
@@ -131,6 +163,8 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 return 160
             case .stars:
                 return 125
+            case .none:
+                return 100
             }
         }
     }
@@ -197,6 +231,9 @@ private final class GiftOptionsRowView:  GeneralRowView {
         private var starPriceView: StarPriceView?
         private var avatarView: AvatarControl?
         private var invisibleView: InvisibleView?
+        private var emoji: PeerInfoSpawnEmojiView?
+        private var backgroundView: PeerInfoBackgroundView?
+
 
         private class PriceView: View {
             private let textView = TextView()
@@ -343,9 +380,9 @@ private final class GiftOptionsRowView:  GeneralRowView {
                     self.addSubview(current)
                     self.priceView = current
                 }
-                let priceLayout = TextViewLayout(.initialize(string: string, color: theme.colors.accent, font: .medium(.text)))
+                let priceLayout = TextViewLayout(.initialize(string: string, color: option.gift?.unique != nil ? .white : theme.colors.accent, font: .medium(.text)))
                 priceLayout.measure(width: .greatestFiniteMagnitude)
-                current.backgroundColor = theme.colors.accent.withAlphaComponent(0.2)
+                current.backgroundColor = option.gift?.unique != nil ? NSColor.white.withAlphaComponent(0.2) : theme.colors.accent.withAlphaComponent(0.2)
                 current.update(text: priceLayout)
                 
             case .stars(let int64):
@@ -369,6 +406,15 @@ private final class GiftOptionsRowView:  GeneralRowView {
                 priceLayout.measure(width: .greatestFiniteMagnitude)
                 current.backgroundColor = GOLD.withAlphaComponent(0.2)
                 current.update(text: priceLayout, context: context)
+            case .none:
+                if let view = self.priceView {
+                    performSubviewRemoval(view, animated: false)
+                    self.priceView = nil
+                }
+                if let view = self.starPriceView {
+                    performSubviewRemoval(view, animated: false)
+                    self.starPriceView = nil
+                }
             }
             
             if let badge = option.badge {
@@ -407,12 +453,75 @@ private final class GiftOptionsRowView:  GeneralRowView {
                 self.invisibleView = nil
             }
             
+            
+            if let uniqueGift = option.gift?.unique {
+                do {
+                    let current:PeerInfoBackgroundView
+                    if let view = self.backgroundView {
+                        current = view
+                    } else {
+                        current = PeerInfoBackgroundView(frame: bounds)
+                        self.addSubview(current, positioned: .below, relativeTo: sticker)
+                        self.backgroundView = current
+                    }
+                    var colors: [NSColor] = []
+
+                    for attribute in uniqueGift.attributes {
+                        switch attribute {
+                        case let .backdrop(_, innerColor, outerColor, _, _, _):
+                            colors = [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
+                        default:
+                            break
+                        }
+                    }
+                    current.gradient = colors
+                }
+                do {
+                    let current:PeerInfoSpawnEmojiView
+                    if let view = self.emoji {
+                        current = view
+                    } else {
+                        current = PeerInfoSpawnEmojiView(frame: bounds)
+                        self.addSubview(current, positioned: .below, relativeTo: sticker)
+                        self.emoji = current
+                    }
+                    
+                    var patternFile: TelegramMediaFile?
+                    var patternColor: NSColor?
+
+                    for attribute in uniqueGift.attributes {
+                        switch attribute {
+                        case .pattern(_, let file, _):
+                            patternFile = file
+                        case let .backdrop(_, _, _, color, _, _):
+                            patternColor = NSColor(UInt32(color)).withAlphaComponent(0.4)
+                        default:
+                            break
+                        }
+                    }
+                    if let patternFile, let patternColor {
+                        current.set(fileId: patternFile.fileId.id, color: patternColor, context: context, animated: false)
+                        current.fraction = 0.66
+                    }
+                }
+            } else {
+                if let view = self.emoji {
+                    performSubviewRemoval(view, animated: false)
+                    self.emoji = nil
+                }
+                if let view = self.backgroundView {
+                    performSubviewRemoval(view, animated: false)
+                    self.backgroundView = nil
+                }
+            }
+            
+            
             needsLayout = true
         }
         
         override func layout() {
             super.layout()
-            sticker.centerX(y: 0)
+            sticker.centerX(y: priceView != nil ? 0 : 10)
             textView?.centerX(y: sticker.frame.maxY + 5)
             if let badgeView {
                 badgeView.setFrameOrigin(frame.width - badgeView.frame.width, 0)
@@ -425,6 +534,12 @@ private final class GiftOptionsRowView:  GeneralRowView {
             }
             if let avatarView {
                 avatarView.setFrameOrigin(NSMakePoint(4, 4))
+            }
+            if let backgroundView {
+                backgroundView.frame = bounds
+            }
+            if let emoji {
+                emoji.frame = bounds.offsetBy(dx: 0, dy: 20)
             }
             invisibleView?.center()
         }
@@ -466,7 +581,7 @@ private final class GiftOptionsRowView:  GeneralRowView {
         for (i, subview) in subviews.enumerated() {
             let view = subview as? OptionView
             view?.setFrameSize(itemSize)
-            if view?.option?.nativeStarGift?.native.id != item.options[i].nativeStarGift?.native.id {
+            if view?.option?.nativeStarGift?.native.generic?.id != item.options[i].nativeStarGift?.native.generic?.id {
                 if animated {
                     view?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35)
                 }

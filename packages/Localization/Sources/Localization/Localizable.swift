@@ -5691,6 +5691,12 @@ public final class L10n {
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
+  /// Send Another Gift
+  public static var chatServiceSendAnother: String  { return L10n.tr("Localizable", "Chat.Service.SendAnother") }
+  /// Send Gift to %@
+  public static func chatServiceSendGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SendGift", p1)
+  }
   /// The story you were mentioned in\nis no longer available
   public static var chatServiceStoryExpiredMentionTextIncoming: String  { return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextIncoming") }
   /// The story where you mentioned %@\n is no longer available
@@ -7145,6 +7151,10 @@ public final class L10n {
   public static var chatListFolderColorReset: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorReset") }
   /// FOLDER COLOR
   public static var chatListFolderColorTitle: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorTitle") }
+  /// disable animations
+  public static var chatListFolderDisableAnimations: String  { return L10n.tr("Localizable", "ChatList.Folder.DisableAnimations") }
+  /// enable animations
+  public static var chatListFolderEnableAnimations: String  { return L10n.tr("Localizable", "ChatList.Folder.EnableAnimations") }
   /// Subscribe to Telegram Premium to add colors for your folders.
   public static var chatListFolderPremiumAlert: String  { return L10n.tr("Localizable", "ChatList.Folder.PremiumAlert") }
   /// Show Folders Tags
@@ -7355,6 +7365,10 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
+  /// Gift %@
+  public static func chatListTextUniqueGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Text.UniqueGift", p1)
+  }
   /// Clear
   public static var chatListAppsClear: String  { return L10n.tr("Localizable", "ChatListApps.Clear") }
   /// RECENT USED APPS
@@ -9545,8 +9559,146 @@ public final class L10n {
   }
   /// Subscription for exclusive Telegram features
   public static var giftPremiumText: String  { return L10n.tr("Localizable", "Gift.Premium.Text") }
+  /// Make Unique for %@
+  public static func giftSendUpgrade(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Upgrade", p1)
+  }
+  /// Enable this to let %1$@ turn your gift into a unique collectible. [Learn More >]()
+  public static func giftSendUpgradeInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Upgrade.Info", p1)
+  }
   /// This gift has sold out
   public static var giftSoldOutError: String  { return L10n.tr("Localizable", "Gift.SoldOut.Error") }
+  /// unlocks in %@
+  public static func giftTransferSendUnlocks(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.SendUnlocks", p1)
+  }
+  /// Send via Blockchain
+  public static var giftTransferSendViaBlockchain: String  { return L10n.tr("Localizable", "Gift.Transfer.SendViaBlockchain") }
+  /// Transfer
+  public static var giftTransferTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.Title") }
+  /// Do you want to transfer ownership of **%1$@** to **%2$@** for **%3$@**?
+  public static func giftTransferConfirmationText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Text", p1, p2, p3)
+  }
+  /// Do you want to transfer ownership of **%1$@** to **%2$@**?
+  public static func giftTransferConfirmationTextFree(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.Confirmation.TextFree", p1, p2)
+  }
+  /// Confirm Transfer
+  public static var giftTransferConfirmationTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Title") }
+  /// Transfer for
+  public static var giftTransferConfirmationTransfer: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Transfer") }
+  /// Transfer
+  public static var giftTransferConfirmationTransferFree: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.TransferFree") }
+  /// In %@, you'll be able to send this collectible to any TON blockchain address outside Telegram for sale or auction.
+  public static func giftTransferUnlockPendingText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.UnlockPending.Text", p1)
+  }
+  /// Unlocking In Progress
+  public static var giftTransferUnlockPendingTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.UnlockPending.Title") }
+  /// Please update your Telegram application to the latest version.
+  public static var giftTransferUpdateRequiredText: String  { return L10n.tr("Localizable", "Gift.Transfer.UpdateRequired.Text") }
+  /// Update Required
+  public static var giftTransferUpdateRequiredTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.UpdateRequired.Title") }
+  /// Only %@ of such collectibles have this attribute.
+  public static func giftUniqueAttributeDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.AttributeDescription", p1)
+  }
+  /// Availability
+  public static var giftUniqueAvailability: String  { return L10n.tr("Localizable", "Gift.Unique.Availability") }
+  /// Backdrop
+  public static var giftUniqueBackdrop: String  { return L10n.tr("Localizable", "Gift.Unique.Backdrop") }
+  /// Collectible
+  public static var giftUniqueCollectible: String  { return L10n.tr("Localizable", "Gift.Unique.Collectible") }
+  /// %@ issued
+  public static func giftUniqueIssued(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.Issued", p1)
+  }
+  /// Model
+  public static var giftUniqueModel: String  { return L10n.tr("Localizable", "Gift.Unique.Model") }
+  /// Gifted to %1$@ on %2$@.
+  public static func giftUniqueOriginalInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfo", p1, p2)
+  }
+  /// Gifted by %1$@ to %2$@ on %3$@.
+  public static func giftUniqueOriginalInfoSender(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfoSender", p1, p2, p3)
+  }
+  /// Gifted by %1$@ to %2$@ on %3$@ with comment "%4$@"
+  public static func giftUniqueOriginalInfoSenderWithText(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfoSenderWithText", p1, p2, p3, p4)
+  }
+  /// Gifted to %1$@ on %2$@ with comment "%3$@"
+  public static func giftUniqueOriginalInfoWithText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfoWithText", p1, p2, p3)
+  }
+  /// Owner
+  public static var giftUniqueOwner: String  { return L10n.tr("Localizable", "Gift.Unique.Owner") }
+  /// Symbol
+  public static var giftUniqueSymbol: String  { return L10n.tr("Localizable", "Gift.Unique.Symbol") }
+  /// change
+  public static var giftUniqueTransfer: String  { return L10n.tr("Localizable", "Gift.Unique.Transfer") }
+  /// Add my name to the gift
+  public static var giftUpgradeAddMyName: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddMyName") }
+  /// Add sender's name
+  public static var giftUpgradeAddName: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddName") }
+  /// Add sender's name and comment
+  public static var giftUpgradeAddNameAndComment: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddNameAndComment") }
+  /// Confirm
+  public static var giftUpgradeConfirm: String  { return L10n.tr("Localizable", "Gift.Upgrade.Confirm") }
+  /// Turn your gift into a unique collectible that you can transfer or auction.
+  public static var giftUpgradeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Description") }
+  /// Let %@ turn your gift into a unique collectible.
+  public static func giftUpgradeIncludeDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Upgrade.IncludeDescription", p1)
+  }
+  /// Make Unique
+  public static var giftUpgradeIncludeTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.IncludeTitle") }
+  /// Pay %@
+  public static func giftUpgradePay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Upgrade.Pay", p1)
+  }
+  /// This gift was downgraded because a request to refund the payment related to this gift was made, and the money was returned.
+  public static var giftUpgradeRefunded: String  { return L10n.tr("Localizable", "Gift.Upgrade.Refunded") }
+  /// Upgrade Gift
+  public static var giftUpgradeTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Title") }
+  /// Upgrade
+  public static var giftUpgradeUpgrade: String  { return L10n.tr("Localizable", "Gift.Upgrade.Upgrade") }
+  /// You have received a unique number, model, backdrop and symbol for your gift.
+  public static var giftUpgradeSucceedText: String  { return L10n.tr("Localizable", "Gift.Upgrade.Succeed.Text") }
+  /// The gift is now collectible
+  public static var giftUpgradeSucceedTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Succeed.Title") }
+  /// Sell or auction your gift on third-party NFT marketplaces.
+  public static var giftUpgradeTradableDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Tradable.Description") }
+  /// The recipient will be able to auction the gift on third-party NFT marketplaces.
+  public static var giftUpgradeTradableIncludeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Tradable.IncludeDescription") }
+  /// Tradable
+  public static var giftUpgradeTradableTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Tradable.Title") }
+  /// Send your upgraded gift to any of your friends on Telegram.
+  public static var giftUpgradeTransferableDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Transferable.Description") }
+  /// The recipient will be able to send the gift to anyone Telegram.
+  public static var giftUpgradeTransferableIncludeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Transferable.IncludeDescription") }
+  /// Transferable
+  public static var giftUpgradeTransferableTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Transferable.Title") }
+  /// Get a unique number, model, backdrop, and symbol for your gift.
+  public static var giftUpgradeUniqueDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Unique.Description") }
+  /// The recipient will get a unique number, model, backdrop, and symbol for the gift.
+  public static var giftUpgradeUniqueIncludeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Unique.IncludeDescription") }
+  /// Unique
+  public static var giftUpgradeUniqueTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Unique.Title") }
+  /// The gift is visible on your Page. [Hide >]()
+  public static var giftViewDisplayedInfoHide: String  { return L10n.tr("Localizable", "Gift.View.DisplayedInfoHide") }
+  /// You can keep this gift, upgrade it, or sell it for %@. [More About Stars >]()
+  public static func giftViewKeepUpgradeOrConvertDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.View.KeepUpgradeOrConvertDescription", p1)
+  }
+  /// Status
+  public static var giftViewStatus: String  { return L10n.tr("Localizable", "Gift.View.Status") }
+  /// Non-Unique
+  public static var giftViewStatusNonUnique: String  { return L10n.tr("Localizable", "Gift.View.Status.NonUnique") }
+  /// upgrade
+  public static var giftViewStatusUpgrade: String  { return L10n.tr("Localizable", "Gift.View.Status.Upgrade") }
   /// No Recipient
   public static var giftLinkNoRecipient: String  { return L10n.tr("Localizable", "GiftLink.NoRecipient") }
   /// Gift Link
@@ -11881,6 +12033,20 @@ public final class L10n {
   }
   /// Type message...
   public static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
+  /// %@ transferred you a unique collectible
+  public static func notificationStarsGiftTransfer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Transfer", p1)
+  }
+  /// You transferred a unique collectible
+  public static var notificationStarsGiftTransferYou: String  { return L10n.tr("Localizable", "Notification.StarsGift.TransferYou") }
+  /// %@ turned the gift from you to a unique collectible
+  public static func notificationStarsGiftUpgrade(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Upgrade", p1)
+  }
+  /// You turned the gift from %@ to a unique collectible
+  public static func notificationStarsGiftUpgradeYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.UpgradeYou", p1)
+  }
   /// Reply
   public static var notificationTitleReply: String  { return L10n.tr("Localizable", "Notification.Title.Reply") }
   /// All Accounts
@@ -12777,6 +12943,8 @@ public final class L10n {
   public static var peerInfoUnblockUser: String  { return L10n.tr("Localizable", "PeerInfo.UnblockUser") }
   /// username
   public static var peerInfoUsername: String  { return L10n.tr("Localizable", "PeerInfo.username") }
+  /// Verify Accounts
+  public static var peerInfoVerifyAccounts: String  { return L10n.tr("Localizable", "PeerInfo.VerifyAccounts") }
   /// Description
   public static var peerInfoAboutPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.About.Placeholder") }
   /// Acrhived Stories
@@ -13113,6 +13281,14 @@ public final class L10n {
   public static func peerInfoUsernamesList(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.Usernames.List", p1, p2)
   }
+  /// This bot is verified as official by the representatives of Telegram.
+  public static var peerInfoVerificationInfoBot: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.Bot") }
+  /// This channel is verified as official by the representatives of Telegram.
+  public static var peerInfoVerificationInfoChannel: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.Channel") }
+  /// This group is verified as official by the representatives of Telegram.
+  public static var peerInfoVerificationInfoGroup: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.Group") }
+  /// https://telegram.org/verify
+  public static var peerInfoVerificationInfoURL: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.URL") }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
   /// Archive Settings
@@ -17055,6 +17231,8 @@ public final class L10n {
   public static var starTransactionMessageId: String  { return L10n.tr("Localizable", "Star.Transaction.MessageId") }
   /// Mini App
   public static var starTransactionMiniApp: String  { return L10n.tr("Localizable", "Star.Transaction.MiniApp") }
+  /// Owner
+  public static var starTransactionOwner: String  { return L10n.tr("Localizable", "Star.Transaction.Owner") }
   /// Message
   public static var starTransactionReactionId: String  { return L10n.tr("Localizable", "Star.Transaction.ReactionId") }
   /// Reason
@@ -17109,6 +17287,10 @@ public final class L10n {
   public static func starTransactionAvailabilityOfLeft(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Star.Transaction.Availability.OfLeft", p1, p2)
   }
+  /// %1$@ of %2$@
+  public static func starTransactionAvailabilityOfText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Availability.OfText", p1, p2)
+  }
   /// Convert Gift to Stars
   public static var starTransactionConvertAlertHeader: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Header") }
   /// Do you want to convert this gift from **%1$@** to **%2$@**?\n\nThis action cannot be undone.
@@ -17122,6 +17304,14 @@ public final class L10n {
   /// Do you want to convert this gift from **%1$@** to **%2$@**?\n\nConversion option available until %3$@.\n\nThis action cannot be undone.
   public static func starTransactionConvertAlertInfoUntil(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Info.Until", p1, p2, p3)
+  }
+  /// Collectible %@
+  public static func starTransactionGiftCollectible(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Gift.Collectible", p1)
+  }
+  /// %1$@/%2$@ issued
+  public static func starTransactionGiftUpgradeIssued(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.GiftUpgrade.Issued", p1, p2)
   }
   /// Giveaway
   public static var starTransactionReasonGiveaway: String  { return L10n.tr("Localizable", "Star.Transaction.Reason.Giveaway") }
@@ -17213,6 +17403,8 @@ public final class L10n {
   public static var starsPurchaseBotSubscribe: String  { return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe") }
   /// Subscribe to the Channel
   public static var starsPurchaseSubscribe: String  { return L10n.tr("Localizable", "Stars.Purchase.Subscribe") }
+  /// Buy Stars to upgrade yort gift into a unique collectible.
+  public static var starsPurchaseUpgradeStarGiftInfo: String  { return L10n.tr("Localizable", "Stars.Purchase.UpgradeStarGiftInfo") }
   /// %1$@ %2$@ %3$d
   public static func starsPurchaseBotSubscribeInfoCountable(_ p1: String, _ p2: String, _ p3: Int) -> String {
     return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_countable", p1, p2, p3)

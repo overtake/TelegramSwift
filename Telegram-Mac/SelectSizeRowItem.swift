@@ -319,7 +319,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             ctx.setFillColor(theme.colors.border.cgColor)
             ctx.fillEllipse(in: NSMakeRect(selectPoint.x, selectPoint.y, selectSize.width, selectSize.height))
 
-            ctx.setFillColor(.white)
+            ctx.setFillColor(theme.colors.background.cgColor)
             ctx.fillEllipse(in: NSMakeRect(selectPoint.x + 1, selectPoint.y + 1, selectSize.width - 2, selectSize.height - 2))
 
             resetCursorRects()

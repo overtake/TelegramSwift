@@ -223,7 +223,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         reloadData()
     }
     
-    private func reloadData() {
+    func reloadData() {
         updateLayout()
         self.containerLayoutUpdated(animated: false)
     }

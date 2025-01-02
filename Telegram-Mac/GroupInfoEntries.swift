@@ -1154,6 +1154,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case scam(section:Int, title: String, text: String, viewType: GeneralViewType)
     case about(section:Int, text: String, viewType: GeneralViewType)
     case addressName(section:Int, name:[UserInfoAddress], viewType: GeneralViewType)
+    case verifiedInfo(sectionId: Int, value: PeerVerification?, viewType: GeneralViewType)
     case peerId(section:Int, value: String, viewType: GeneralViewType)
     case sharedMedia(section:Int, viewType: GeneralViewType)
     case notifications(section:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
@@ -1195,6 +1196,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .sharedMedia(section, _): return .sharedMedia(section: section, viewType: viewType)
         case let .notifications(section, settings, _): return .notifications(section: section, settings: settings, viewType: viewType)
         case let .usersHeader(section, count, _): return .usersHeader(section: section, count: count, viewType: viewType)
+        case let .verifiedInfo(sectionId, verification, _): return .verifiedInfo(sectionId: sectionId, value: verification, viewType: viewType)
         case let .addMember(section, inviteViaLink, _): return .addMember(section: section, inviteViaLink: inviteViaLink, viewType: viewType)
         case let .groupTypeSetup(section, isPublic, _): return .groupTypeSetup(section: section, isPublic: isPublic, viewType: viewType)
         case let .autoDeleteMessages(section, timer, _): return .autoDeleteMessages(section: section, timer: timer, viewType: viewType)
@@ -1306,6 +1308,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             }
         case let .about(section, text, viewType):
             if case .about(section, text, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .verifiedInfo(sectionId, value, viewType):
+            if case .verifiedInfo(sectionId, value, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1563,54 +1571,56 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 7
         case .notifications:
             return 8
-        case .sharedMedia:
+        case .verifiedInfo:
             return 9
-        case .groupTypeSetup:
+        case .sharedMedia:
             return 10
-        case .members:
+        case .groupTypeSetup:
             return 11
-        case .inviteLinks:
+        case .members:
             return 12
-        case .requests:
+        case .inviteLinks:
             return 13
-        case .reactions:
+        case .requests:
             return 14
-        case .color:
+        case .reactions:
             return 15
-        case .linkedChannel:
+        case .color:
             return 16
-        case .preHistory:
+        case .linkedChannel:
             return 17
-        case .groupStickerset:
+        case .preHistory:
             return 18
-        case .autoDeleteMessages:
+        case .groupStickerset:
             return 19
-        case .groupManagementInfoLabel:
+        case .autoDeleteMessages:
             return 20
-        case .permissions:
+        case .groupManagementInfoLabel:
             return 21
-        case .blocked:
+        case .permissions:
             return 22
-        case .administrators:
+        case .blocked:
             return 23
-        case .recentActions:
+        case .administrators:
             return 24
-        case .toggleForum:
+        case .recentActions:
             return 25
-        case .forumInfo:
+        case .toggleForum:
             return 26
-        case .usersHeader:
+        case .forumInfo:
             return 27
-        case .addMember:
+        case .usersHeader:
             return 28
+        case .addMember:
+            return 29
         case .member:
             fatalError("no stableIndex")
         case .showMore:
-            return 29
-        case .leave:
             return 30
-        case .media:
+        case .leave:
             return 31
+        case .media:
+            return 32
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -1633,6 +1643,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .addMember(sectionId, _, _):
             return sectionId
         case let .notifications(sectionId, _, _):
+            return sectionId
+        case let .verifiedInfo(sectionId, _, _):
             return sectionId
         case let .sharedMedia(sectionId, _):
             return sectionId
@@ -1706,6 +1718,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .addMember(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .notifications(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .verifiedInfo(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .sharedMedia(sectionId, _):
             return (sectionId * 100000) + stableIndex
@@ -1822,7 +1836,25 @@ enum GroupInfoEntry: PeerInfoEntry {
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoGroupTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .notifications(_, settings, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {})
+        case let .verifiedInfo(_, value, viewType):
+            let attr = NSMutableAttributedString()
             
+            //TODOLANG
+            //
+            let text: String
+            if let value {
+                text = "\(clown) \(value.description)"
+            } else {
+                text = "\(clown) This bot is verified as official by the representatives of Telegram."
+            }
+            
+            attr.append(string: text, color: theme.colors.listGrayText, font: .normal(.text))
+            if let value {
+                InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: [.init(range: 0..<2, type: .CustomEmoji(stickerPack: nil, fileId: value.iconFileId))], isPremium: true)
+            } else {
+                attr.insertEmbedded(.embedded(name: "Icon_Verified_Telegram", color: theme.colors.grayIcon, resize: false), for: clown)
+            }
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .attributed(attr), viewType: viewType, context: arguments.context)
         case let .sharedMedia(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSharedMedia, type: .next, viewType: viewType, action: arguments.sharedMedia)
         case let .groupDescriptionSetup(section: _, text, viewType):
@@ -2259,6 +2291,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
 
             applyBlock(aboutBlock)
+            
+            if group.isVerified || (view.cachedData as? CachedChannelData)?.verification != nil {
+                entries.append(GroupInfoEntry.verifiedInfo(sectionId: GroupInfoSection.desc.rawValue, value: (view.cachedData as? CachedChannelData)?.verification, viewType: .textBottomItem))
+            }
             
 
         }

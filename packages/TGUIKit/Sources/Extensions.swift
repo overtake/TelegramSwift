@@ -634,6 +634,11 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
     }
+    func animateGradientColors() ->Void {
+        let animation = CABasicAnimation(keyPath: "colors")
+        animation.duration = 0.2
+        self.add(animation, forKey: "colors")
+    }
     func animateCornerRadius(duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut) ->Void {
         let animation: CABasicAnimation
         if timingFunction == .spring {

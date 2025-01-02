@@ -753,6 +753,8 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             alert(for: window(), info: strings().unknownError)
         case .alreadyActive:
             alert(for: window(), info: strings().unknownError)
+        case .noPaymentNeeded:
+            alert(for: window(), info: strings().unknownError)
         }
     }))
     

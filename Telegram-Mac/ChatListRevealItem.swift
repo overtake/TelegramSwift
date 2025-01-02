@@ -247,8 +247,24 @@ final class ChatListRevealView : TableStickView {
             let unreadCount = item.counters.count(for: tab)
             let icon: CGImage? = generateIcon(tab)
             let title: String = tab.title
+            let selected = item.selected == tab
            
-            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount)))
+            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: selected, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount), customTextView: {
+                
+                let attr = NSMutableAttributedString()
+                attr.append(string: title, color: selected ? segmentTheme.activeText : segmentTheme.inactiveText, font: segmentTheme.textFont)
+                InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: tab.entities, isPremium: context.isPremium, playPolicy: tab.enableAnimations ? nil : .framesCount(1))
+
+                let layout = TextViewLayout(attr)
+                layout.measure(width: .greatestFiniteMagnitude)
+
+                let textView = InteractiveTextView()
+                textView.userInteractionEnabled = false
+                textView.textView.isSelectable = false
+                textView.set(text: layout, context: context)
+                
+                return textView
+            }))
             index += 1
         }
         

@@ -243,8 +243,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let context = data.chatInteraction.context
         let account = context.account
         let mode = chatInteraction.mode
+        let isIncoming = data.message.isIncoming(context.account, false)
         var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode || mode == .preview || chatInteraction.isLogInteraction
         
+
         if !isService, let story = data.message.media.first as? TelegramMediaStory {
             isService = story.isMention
         }
@@ -278,6 +280,18 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
                 
             }, itemImage: MenuAnimation.menu_quote.value))
+        }
+        
+        
+        if let action = data.message.media.first as? TelegramMediaAction {
+            switch action.action {
+            case .starGift:
+                zeroBlock.append(ContextMenuItem(isIncoming ? strings().chatServiceSendGift(message.peers[message.id.peerId]?.displayTitle ?? "") : strings().chatServiceSendAnother, handler: {
+                    showModal(with: GiftingController(context: context, peerId: message.id.peerId, isBirthday: false), for: context.window)
+                }, itemImage: MenuAnimation.menu_gift.value))
+            default:
+                break
+            }
         }
         
         

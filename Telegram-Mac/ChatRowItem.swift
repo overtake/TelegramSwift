@@ -1005,8 +1005,8 @@ class ChatRowItem: TableRowItem {
             if message.containsSecretMedia {
                 return false
             }
-            if let media = message.extendedMedia, media is TelegramMediaAction {
-                return false
+            if let media = message.extendedMedia, let action = media as? TelegramMediaAction {
+                return message.flags.contains(.ReactionsArePossible)
             }
             if let media = message.extendedMedia as? TelegramMediaStory {
                 if media.isMention {
@@ -1926,13 +1926,13 @@ class ChatRowItem: TableRowItem {
                     self.peer = author
                 } else if let signature = info.authorSignature {
                     
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil)
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verification: nil)
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -2956,7 +2956,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var hasStatus: Bool {
-        if let peer = self.peer, let message = self.message, PremiumStatusControl.hasControl(peer) {
+        if let peer = self.peer, let message = self.message, PremiumStatusControl.hasControl(peer, left: false) {
             if authorText != nil, let peer = message.peers[message.id.peerId] {
                 if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
                     return true
@@ -2967,13 +2967,13 @@ class ChatRowItem: TableRowItem {
     }
     
     var statusSize: CGFloat {
-        if let peer = self.peer, hasStatus, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = self.peer, hasStatus, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
             return controlSize.width
         }
         return 0
     }
     var forwardStatusSize: CGFloat {
-        if let peer = self.peer, false, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = self.peer, false, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
             return controlSize.width
         }
         return 0
@@ -2982,7 +2982,7 @@ class ChatRowItem: TableRowItem {
     func status(_ cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
         if let peer = peer, let attr = authorText?.attributedString, !attr.string.isEmpty, hasStatus {
             if let color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor {
-                return PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, color: color, cached: cached, animated: animated)
+                return PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, color: color, cached: cached, animated: animated)
             }
         }
         return nil

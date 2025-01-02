@@ -167,12 +167,31 @@ class ShortPeerRowItem: GeneralRowItem {
     let account: Account
     let interactionType:ShortPeerItemInteractionType
     let drawSeparatorIgnoringInset:Bool
-    var textInset:CGFloat {
+    func textInset(_ status: Bool) -> CGFloat {
         switch viewType {
         case .legacy:
-            return inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            var width = inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            
+            #if !SHARE
+            if self.highlightVerified, (!self.isLookSavedMessage || self.peerId != self.account.peerId) {
+                if let size = PremiumStatusControl.controlSize(self.peer, false, left: true), !status {
+                    width += size.width + 2
+                }
+            }
+            #endif
+            return width
         case let .modern(_, insets):
-            return photoSize.width + min(10, insets.left) + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            var width = photoSize.width + min(10, insets.left) + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            
+            #if !SHARE
+            if self.highlightVerified, (!self.isLookSavedMessage || self.peerId != self.account.peerId) {
+                if let size = PremiumStatusControl.controlSize(self.peer, false, left: true), !status {
+                    width += size.width + 2
+                }
+            }
+            
+            #endif
+            return width
         }
     }
     let badgeNode: GlobalBadgeNode?
@@ -425,15 +444,15 @@ class ShortPeerRowItem: GeneralRowItem {
         switch viewType {
         case .legacy:
             if let titleAttr = titleAttr {
-                title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
-                titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,true, .left)
+                title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(false) - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
+                titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(false) - (inset.right) - addition - textAdditionInset - 10, 20), nil,true, .left)
             }
             if let statusAttr = statusAttr {
-                status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
-                statusSelected = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - inset.right - addition - textAdditionInset - 10, 20), nil,true, .left)
+                status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(true) - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
+                statusSelected = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(true) - inset.right - addition - textAdditionInset - 10, 20), nil,true, .left)
             }
         case let .modern(_, insets):
-            let textSize = NSMakeSize(self.width - textInset - insets.left - insets.right - inset.left - inset.right - addition - textAdditionInset, 20)
+            let textSize = NSMakeSize(self.width - textInset(false) - insets.left - insets.right - inset.left - inset.right - addition - textAdditionInset, 20)
             if let titleAttr = titleAttr {
                 title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, textSize, nil, false, .left)
                 titleSelected = TextNode.layoutText(maybeNode: nil, titleAttr, nil, 1, .end, textSize, nil,true, .left)

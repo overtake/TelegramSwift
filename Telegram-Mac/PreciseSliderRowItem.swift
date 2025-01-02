@@ -31,7 +31,7 @@ final class PrecieSliderRowItem : GeneralRowItem {
 }
 
 private final class PrecieSliderRowView : GeneralContainableRowView {
-    private let slider = LinearProgressControl(progressHeight: 4)
+    private let slider = LinearProgressControl(progressHeight: 3)
     private var leftMarker: TextView?
     private var rightMarker: TextView?
     private var currentValue: TextView?
@@ -42,22 +42,15 @@ private final class PrecieSliderRowView : GeneralContainableRowView {
         slider.scrubberImage = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
             let rect = CGRect(origin: .zero, size: size)
             
-            // Create shadow
-            let shadow = NSShadow()
-            shadow.shadowColor = NSColor.black.withAlphaComponent(1.0)
-            shadow.shadowOffset = NSSize(width: 0, height: 1)
-            shadow.shadowBlurRadius = 2
-            
-            // Save graphics state before applying shadow
-            ctx.saveGState()
-            
-            // Apply shadow
-            shadow.set()
-            
-            // Clear the context and draw the circle
+ 
             ctx.clear(rect)
-            ctx.setFillColor(theme.colors.accent.cgColor)
-            ctx.fillEllipse(in: rect)
+            
+            ctx.setFillColor(theme.colors.border.cgColor)
+            ctx.fillEllipse(in: size.bounds)
+
+            ctx.setFillColor(theme.colors.background.cgColor)
+            ctx.fillEllipse(in: size.bounds.insetBy(dx: 1, dy: 1))
+
             
             // Restore graphics state
             ctx.restoreGState()

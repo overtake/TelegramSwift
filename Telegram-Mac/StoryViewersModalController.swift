@@ -348,7 +348,7 @@ private final class StoryViewerRowView: GeneralRowView {
             return
         }
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.content.addSubview(control)

@@ -134,12 +134,26 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
                 image = nil
             }
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title.text, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
-                arguments.openPreset(filter, false)
-            }, menuItems: {
-                return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
-            })))
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preset(filter), equatable: .init(filter), comparable: nil, item: { initialSize, stableId in
+                
+                let attr = NSMutableAttributedString()
+                attr.append(string: title.text, color: theme.colors.text, font: .normal(.text))
+                InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: title.entities, isPremium: arguments.context.isPremium, playPolicy: title.enableAnimations ? nil : .framesCount(1))
+
+                return GeneralInteractedRowItem(initialSize, name: title.text, nameAttributed: attr, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
+                    arguments.openPreset(filter, false)
+                }, menuItems: {
+                    return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
+                }, context: arguments.context)
+            }))
             index += 1
+            
+//            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title.text, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: image != nil ? .nextImage(image!) : .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+//                arguments.openPreset(filter, false)
+//            }, menuItems: {
+//                return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
+//            })))
+//            index += 1
 
         }
     }

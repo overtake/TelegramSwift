@@ -55,6 +55,12 @@ private class TitledContainerView : View {
         }
     }
     
+    var titleInset:CGFloat? = nil {
+        didSet {
+            updateLayouts()
+        }
+    }
+    
     var textInset:CGFloat? = nil {
         didSet {
             updateLayouts()
@@ -79,6 +85,10 @@ private class TitledContainerView : View {
             let point = convert( NSMakePoint(floorToScreenPixels(backingScaleFactor, (superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
             var textRect = NSMakeRect(min(max(textInset == nil ? point.x : textInset!, 0), frame.width - textLayout.size.width), point.y, textLayout.size.width, textLayout.size.height)
             
+            if let titleInset {
+                textRect.origin.x += titleInset
+            }
+            
             if let (titleImage, side) = titleImage {
                 switch side {
                 case .left:
@@ -102,6 +112,9 @@ private class TitledContainerView : View {
         if let (textLayout, textApply) = titleNode, let superview = superview?.superview {
                         
             var additionalInset: CGFloat = 0
+            
+          
+            
             if let (image,_) = titleImage {
                 additionalInset += image.backingSize.width + 5
             }
@@ -124,6 +137,11 @@ private class TitledContainerView : View {
             
             let point = convert( NSMakePoint(floorToScreenPixels(backingScaleFactor, (superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
             var textRect = NSMakeRect(min(max(textInset == nil ? point.x : textInset!, 0), frame.width - textLayout.size.width), point.y, textLayout.size.width, textLayout.size.height)
+            
+            
+            if let titleInset {
+                textRect.origin.x += titleInset
+            }
             
             if let (titleImage, side) = titleImage {
                 switch side {
@@ -195,7 +213,14 @@ open class TitledBarView: BarView {
             _containerView.textInset = textInset
         }
     }
-    public var titleRect: NSRect? {
+    
+    public var titleInset:CGFloat? {
+        didSet {
+            _containerView.titleInset = titleInset
+        }
+    }
+    
+    open var titleRect: NSRect? {
         return _containerView.titleRect
     }
     
