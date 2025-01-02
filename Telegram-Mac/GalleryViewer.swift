@@ -741,7 +741,7 @@ class GalleryViewer: NSResponder {
                                 }
                                 if let peer = message.peers[message.id.peerId] {
                                     if let group = peer as? TelegramGroup {
-                                        if group.membership != .Member {
+                                        if group.membership == .Removed {
                                             switch group.role {
                                             case .creator:
                                                 return true
@@ -754,7 +754,7 @@ class GalleryViewer: NSResponder {
                                     }
                                     if let group = peer as? TelegramChannel {
                                         switch group.participationStatus {
-                                        case .member:
+                                        case .member, .left:
                                             return true
                                         default:
                                             return group.isAdmin
