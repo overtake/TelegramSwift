@@ -121,7 +121,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
                     badge = .init(text: strings().starGiftLimited, colors: blueColor, textColor: theme.colors.underSelectedColor)
                 }
             } else if let availability = option.native.unique?.availability {
-                badge = .init(text: strings().starTransactionAvailabilityOfText(Int(availability.issued).prettyNumber, Int(availability.total).prettyNumber), colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
+                badge = .init(text: "\(Int(availability.issued).prettyNumber)/\(Int(availability.total).prettyNumber)", colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
@@ -141,7 +141,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             if let availability = option.gift.generic?.availability {
                 badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), colors: blueColor, textColor: theme.colors.underSelectedColor)
             } else if let availability = option.gift.unique?.availability {
-                badge = .init(text: strings().starTransactionAvailabilityOfText(Int(availability.issued).prettyNumber, Int(availability.total).prettyNumber), colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
+                badge = .init(text: "\(Int(availability.issued).prettyNumber)/\(Int(availability.total).prettyNumber)", colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
