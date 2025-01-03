@@ -1759,8 +1759,11 @@ class ChatServiceRowView: TableRowView {
                 super.layout()
                 headerView.centerX(y: 5)
                 
-                leftAttrs.setFrameSize(NSMakeSize(leftAttrs.subviewsWidthSize.width, frame.height - headerView.frame.height - 5))
-                rightAttrs.setFrameSize(NSMakeSize(rightAttrs.subviewsWidthSize.width, frame.height - headerView.frame.height - 5))
+                let maxLeftWidth = leftAttrs.subviews.map { $0.frame.width }.max() ?? 0
+                let maxRightWidth = rightAttrs.subviews.map { $0.frame.width }.max() ?? 0
+
+                leftAttrs.setFrameSize(NSMakeSize(maxLeftWidth, frame.height - headerView.frame.height - 5))
+                rightAttrs.setFrameSize(NSMakeSize(maxRightWidth, frame.height - headerView.frame.height - 5))
 
                 
                 attrContainer.setFrameSize(NSMakeSize(leftAttrs.frame.width + 6 + rightAttrs.frame.width, leftAttrs.frame.height))

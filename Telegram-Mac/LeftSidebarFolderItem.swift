@@ -66,7 +66,7 @@ class LeftSidebarFolderItem: TableRowItem {
         var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
         
         let attr = NSMutableAttributedString()
-        attr.append(string: folder.title, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10))
+        attr.append(string: folder.title, color: !selected ? NSColor(0xffffff).withAlphaComponent(0.5) : NSColor(0xffffff), font: .medium(10))
         InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: folder.entities, isPremium: context.isPremium, playPolicy: folder.enableAnimations ? nil : .framesCount(1))
 
         nameLayout = TextViewLayout(attr, alignment: .center)
