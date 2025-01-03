@@ -177,13 +177,15 @@ struct SelectPeerValue : Equatable {
     let customTheme: GeneralRowItem.Theme?
     let ignoreStatus: Bool
     let isLookSavedMessage: Bool
-    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil, ignoreStatus: Bool = false, isLookSavedMessage: Bool = true) {
+    let savedStatus: String?
+    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil, ignoreStatus: Bool = false, isLookSavedMessage: Bool = true, savedStatus: String? = nil) {
         self.peer = peer
         self.presence = presence
         self.subscribers = subscribers
         self.customTheme = customTheme
         self.ignoreStatus = ignoreStatus
         self.isLookSavedMessage = isLookSavedMessage
+        self.savedStatus = savedStatus
     }
     
     static func == (lhs: SelectPeerValue, rhs: SelectPeerValue) -> Bool {
@@ -207,7 +209,12 @@ struct SelectPeerValue : Equatable {
         if lhs.customTheme != rhs.customTheme {
             return false
         }
-        
+        if lhs.savedStatus != rhs.savedStatus {
+            return false
+        }
+        if lhs.isLookSavedMessage != rhs.isLookSavedMessage {
+            return false
+        }
         return true
     }
     
@@ -251,7 +258,7 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme, additionTopItem: SelectPeers_AdditionTopItem? = nil, isLookSavedMessage: Bool = true) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, recentPeers: RecentPeers? = nil, excludeIds:[PeerId] = [], blocks: [SelectPeersBlock] = [], defaultSelected: [PeerId] = [], linkInvation: ((Int)->Void)? = nil, theme: GeneralRowItem.Theme, additionTopItem: SelectPeers_AdditionTopItem? = nil, isLookSavedMessage: Bool = true, savedStatus: String? = nil) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
     
     if let linkInvation = linkInvation {
@@ -280,7 +287,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                     }
                 }
                 
-                entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage), index, !excludeIds.contains(peer.id)))
+                entries.append(.peer(SelectPeerValue(peer: peer, presence: searchView.presences[peer.id], subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), index, !excludeIds.contains(peer.id)))
                 index += 1
             }
         }
@@ -294,7 +301,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                     for peer in found {
                         if isset[peer.id] == nil {
                             isset[peer.id] = peer.id
-                            entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage), index, !excludeIds.contains(peer.id)))
+                            entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), index, !excludeIds.contains(peer.id)))
                             index += 1
                         }
                     }
@@ -307,7 +314,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
             for peer in found {
                 if isset[peer.id] == nil {
                     isset[peer.id] = peer.id
-                    entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
+                    entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), index, !excludeIds.contains(peer.id)))
                     index += 1
                 }
             }
@@ -321,7 +328,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                     for peer in recent {
                         if !peer.isEqual(accountPeer), isset[peer.id] == nil {
                             isset[peer.id] = peer.id
-                            entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
+                            entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), index, !excludeIds.contains(peer.id)))
                             index += 1
                         }
                     }
@@ -343,7 +350,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                     }
                 }
                 
-                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme), index, !excludeIds.contains(peer.id)))
+                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), index, !excludeIds.contains(peer.id)))
                 index += 1
             }
         }
@@ -428,8 +435,10 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                     interactionType = .selectable(interactions, side: .right)
                 }
                 
-                let (status, color) = peer.status(context.account)
+                var (status, color) = peer.status(context.account)
                 
+                status = peer.peer.id == context.peerId ? peer.savedStatus ?? status : status
+                color = peer.peer.id == context.peerId  && peer.savedStatus != nil ? theme.colors.grayText : color
                 item = ShortPeerRowItem(initialSize, peer: peer.peer, account: context.account, context: context, stableId: entry.stableId, enabled: enabled, height: 42, photoSize: NSMakeSize(32, 32), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: peer.customTheme?.textColor ?? theme.colors.text, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: color), status: status, isLookSavedMessage: peer.isLookSavedMessage, drawLastSeparator: true, inset: NSEdgeInsets(left: 10, right:10), drawSeparatorIgnoringInset: true, interactionType:interactionType, action: {
                     if let singleAction = singleAction {
                         singleAction(peer.peer)
@@ -1036,12 +1045,14 @@ class SelectContactsBehavior : SelectPeersBehavior {
     var blocks: [SelectPeersBlock] = []
     var additionTopItem:SelectPeers_AdditionTopItem?
     let isLookSavedMessage: Bool
+    let savedStatus: String?
     
-    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, blocks: [SelectPeersBlock] = [], additionTopItem: SelectPeers_AdditionTopItem? = nil, defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }, isLookSavedMessage: Bool = true) {
+    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, blocks: [SelectPeersBlock] = [], additionTopItem: SelectPeers_AdditionTopItem? = nil, defaultSelected: [PeerId] = [], customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }, isLookSavedMessage: Bool = true, savedStatus: String? = nil) {
         self.defaultSelected = defaultSelected
         self.blocks = blocks
         self.additionTopItem = additionTopItem
         self.isLookSavedMessage = isLookSavedMessage
+        self.savedStatus = savedStatus
         super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
     }
     
@@ -1061,7 +1072,8 @@ class SelectContactsBehavior : SelectPeersBehavior {
         let defaultSelected = self.defaultSelected
         let blocks = self.blocks
         let additionTopItem = self.additionTopItem
-        let isLookSavedMessage = isLookSavedMessage
+        let isLookSavedMessage = self.isLookSavedMessage
+        let savedStatus = self.savedStatus
         
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
@@ -1077,7 +1089,7 @@ class SelectContactsBehavior : SelectPeersBehavior {
                     |> deliverOn(prepareQueue)
                     |> map { view, searchView, accountPeer, recentPeers -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, blocks: blocks, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme, additionTopItem: additionTopItem, isLookSavedMessage: isLookSavedMessage), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, recentPeers: recentPeers, excludeIds: excludePeerIds, blocks: blocks, defaultSelected: defaultSelected, linkInvation: linkInvation, theme: theme, additionTopItem: additionTopItem, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), updatedSearch)
                 }
                 
             } else  {
@@ -1110,7 +1122,7 @@ class SelectContactsBehavior : SelectPeersBehavior {
                             return presences
                             } |> map { presences -> ([SelectPeerEntry], Bool) in
                                 let local:[SelectPeerValue] = local.map { peer in
-                                    return SelectPeerValue(peer: peer, presence: presences[peer.id], subscribers: nil, isLookSavedMessage: isLookSavedMessage)
+                                    return SelectPeerValue(peer: peer, presence: presences[peer.id], subscribers: nil, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus)
                                 }
                                 
                                 var filteredLocal:[SelectPeerValue] = []
@@ -1128,7 +1140,7 @@ class SelectContactsBehavior : SelectPeersBehavior {
                                 }
                                 
                                 var global:[SelectPeerValue] = global.map { peer in
-                                    return SelectPeerValue(peer: peer, presence: presences[peer.id], subscribers: nil, isLookSavedMessage: isLookSavedMessage)
+                                    return SelectPeerValue(peer: peer, presence: presences[peer.id], subscribers: nil, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus)
                                 }.filter { peer in
                                     if account.peerId != peer.peer.id, !excludeIds.contains(peer.peer.id) {
                                         if let peer = peer.peer as? TelegramUser, let botInfo = peer.botInfo {

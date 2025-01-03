@@ -185,7 +185,7 @@ class GeneralTextRowItem: GeneralRowItem {
 class GeneralTextRowView : GeneralRowView {
     let textView:InteractiveTextView = InteractiveTextView(frame: .zero)
     private var progressView: ProgressIndicator?
-    private var rightTextView: TextView?
+    private var rightTextView: InteractiveTextView?
     private var afterRightIcon: ImageView?
     private var animatedView: MediaAnimatedStickerView?
     private var clickable: Control?
@@ -250,7 +250,7 @@ class GeneralTextRowView : GeneralRowView {
         
         if let text = item.rightItem.text {
             if self.rightTextView == nil {
-                self.rightTextView = TextView()
+                self.rightTextView = InteractiveTextView()
                 rightTextView?.layer?.cornerRadius = .cornerRadius
                 addSubview(self.rightTextView!)
             }
@@ -296,13 +296,13 @@ class GeneralTextRowView : GeneralRowView {
             }
             
             if let rightTextView = rightTextView {
-                rightTextView.update(textLayout)
+                rightTextView.set(text: textLayout, context: item.context)
                 
                 if item.rightItem.alignToText {
                     rightTextView.setFrameSize(rightTextView.frame.width + 6, rightTextView.frame.height + 4)
                 }
                 
-                rightTextView.isSelectable = false
+                rightTextView.textView.isSelectable = false
                 rightTextView.userInteractionEnabled = item.rightItem.action != nil || item.rightItem.contextMenu?() != nil
                 
                 if let action = item.rightItem.action {
@@ -402,7 +402,7 @@ class GeneralTextRowView : GeneralRowView {
                             rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right - inset, frame.height - insets.bottom - rightTextView.frame.height))
                         }
                         
-                        if let layout = rightTextView.textLayout {
+                        if let layout = rightTextView.textView.textLayout {
                             var animatedRange: NSRange? = nil
                             layout.attributedString.enumerateAttributes(in: layout.attributedString.range, options: [], using: { data, range, stop in
                                 if let _ = data[InputDataTextInsertAnimatedViewData.attributeKey] {

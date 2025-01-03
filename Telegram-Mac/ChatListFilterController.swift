@@ -910,13 +910,16 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
 
         let rightText: NSAttributedString?
         if state.filter.data?.color != nil {
-            rightText = .initialize(string: state.filter.title, color: selected, font: .bold(11))
+            let attr = NSMutableAttributedString()
+            attr.append(string: state.filter.title, color: selected, font: .bold(11))
+            InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: state.filter.entities, isPremium: true)
+            rightText = attr
         } else {
             rightText = nil
         }
         
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: rightText, action: nil, update: nil, alignToText: true, wrap: selected?.withAlphaComponent(0.1)))))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: rightText, action: nil, update: nil, alignToText: true, wrap: selected?.withAlphaComponent(0.1)), context: arguments.context)))
         index += 1
         
       

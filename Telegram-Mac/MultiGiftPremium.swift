@@ -88,7 +88,7 @@ func multigift(context: AccountContext, type: MultigiftType = .both, selected: [
             limit = 1
         }
         
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected, isLookSavedMessage: false)
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected, isLookSavedMessage: false, savedStatus: strings().premiumGiftContactSelectionBuySelf)
         
         
         let title: String
