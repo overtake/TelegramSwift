@@ -17397,6 +17397,8 @@ public final class L10n {
   public static var starTransactionVisibilityInfo: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility.Info") }
   /// Send a Gift
   public static var starGiftPreviewTitle: String  { return L10n.tr("Localizable", "StarGift.Preview.Title") }
+  /// Buy a Gift
+  public static var starGiftPreviewTitleBuy: String  { return L10n.tr("Localizable", "StarGift.Preview.Title.Buy") }
   /// %@ Gift Stars to Friends
   public static func starsGiftToFriends(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stars.GiftToFriends", p1)
@@ -17411,6 +17413,10 @@ public final class L10n {
   public static var starsGiftServiceInfo: String  { return L10n.tr("Localizable", "Stars.Gift.ServiceInfo") }
   /// Gift Stars
   public static var starsGiftTitle: String  { return L10n.tr("Localizable", "Stars.Gift.Title") }
+  /// Buy a Gift for %@
+  public static func starsGiftPreviewBuy(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.Buy", p1)
+  }
   /// CUSTOMIZE YOUR GIFT
   public static var starsGiftPreviewCustomize: String  { return L10n.tr("Localizable", "Stars.GiftPreview.Customize") }
   /// Display this gift on your page or convert it to %@
