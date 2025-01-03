@@ -33,7 +33,7 @@ private final class HeaderTextRowItem : GeneralRowItem {
             case .premium:
                 return strings().giftingPremiumInfo(peer._asPeer().displayTitle)
             case let .stars(selfGift):
-                return selfGift ? strings().premiumGiftContactSelectionBuySelf : strings().giftingStarGiftInfo(peer._asPeer().displayTitle)
+                return selfGift ? strings().giftOptionsGiftSelfText : strings().giftingStarGiftInfo(peer._asPeer().displayTitle)
             }
         }
     }

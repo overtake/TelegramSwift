@@ -319,7 +319,7 @@ private final class PreviewRowItem : GeneralRowItem {
             switch source {
             case .starGift(let option):
                 if peer.id == myPeer.id {
-                    infoText.append(string: strings().giftOptionsGiftSelfText, color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                    infoText.append(string: strings().notificationStarsGiftSubtitleSelf, color: presentation.chatServiceItemTextColor, font: .normal(.text))
                 } else {
                     infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
                 }
@@ -676,7 +676,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     case let .starGift(option: gift):
         
         
-        if let upgraded = gift.native.generic?.upgradeStars {
+        if let upgraded = gift.native.generic?.upgradeStars, arguments.context.peerId != state.peer.id {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
@@ -779,7 +779,7 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().starGiftPreviewTitle)
+    let controller = InputDataController(dataSignal: signal, title: context.peerId == peer.id ? strings().starGiftPreviewTitleBuy : strings().starGiftPreviewTitle)
     
     
     getController = { [weak controller] in
@@ -939,7 +939,11 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         let okText: String
         switch option {
         case let .starGift(option):
-            okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
+            if state.peer.id == context.peerId {
+                okText = strings().starsGiftPreviewBuy(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
+            } else {
+                okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
+            }
         case let .premium(option):
             okText = strings().starsGiftPreviewSend(option.price)
         }
