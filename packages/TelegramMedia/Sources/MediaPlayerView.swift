@@ -471,15 +471,15 @@ public final class MediaPlayerView: View {
         
         
         if #available(macOS 14.4, *) {
-            self.videoLayerReadyForDisplayObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVSampleBufferDisplayLayerReadyForDisplayDidChange, object: videoLayer, queue: .main, using: { [weak self] _ in
-                guard let self else {
-                    return
-                }
-                if !self.didNotifyVideoLayerReadyForDisplay {
-                    self.didNotifyVideoLayerReadyForDisplay = true
-                    self.hasSentFramesToDisplay?()
-                }
-            })
+//            self.videoLayerReadyForDisplayObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVSampleBufferDisplayLayerReadyForDisplayDidChange, object: videoLayer, queue: .main, using: { [weak self] _ in
+//                guard let self else {
+//                    return
+//                }
+//                if !self.didNotifyVideoLayerReadyForDisplay {
+//                    self.didNotifyVideoLayerReadyForDisplay = true
+//                    self.hasSentFramesToDisplay?()
+//                }
+//            })
         }
         
         self.updateState()
