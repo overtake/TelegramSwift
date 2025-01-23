@@ -62,7 +62,7 @@ extension StarGift.UniqueGift {
     }
     
     var link: String {
-        return "https://t.me/nft/\(self.title)-\(self.number)"
+        return "https://t.me/nft/\(self.title.replacingOccurrences(of: " ", with: "-"))-\(self.number)"
     }
 }
 
