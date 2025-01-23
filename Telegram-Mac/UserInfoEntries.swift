@@ -145,7 +145,7 @@ class UserInfoArguments : PeerInfoArguments {
 
     
     func giftPremium(_ isBirthday: Bool) {
-        showModal(with: GiftingController(context: context, peerId: self.effectivePeerId, isBirthday: isBirthday), for: context.window)
+        showModal(with: GiftingController(context: context, peerId: self.effectivePeerId, isBirthday: isBirthday, starGiftsContext: getStarGiftsContext?()), for: context.window)
     }
     
     func editBot(_ payload: String?, action: Bool = true) -> Void {
@@ -721,7 +721,7 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true), confirm: { url, f in
                     if isEditableBot {
                         f()
                     } else {
@@ -827,7 +827,7 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true), confirm: { url, f in
                     showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                 })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)

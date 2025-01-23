@@ -487,7 +487,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return HeaderRowItem(initialSize, stableId: stableId, peers: [peer], context: arguments.context)
         }))
         
-        if arguments.context.peerId != peer.id {
+        if arguments.context.peerId != peer.id, peer._asPeer().isUser {
             
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
@@ -618,7 +618,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool) -> InputDataModalController {
+func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool, starGiftsContext: ProfileGiftsContext? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let paymentDisposable = MetaDisposable()
@@ -723,14 +723,14 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             if option.native.generic?.availability?.remains == 0 {
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil), purpose: .unavailableGift), for: context.window)
             } else {
-                showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer), for: window)
+                showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer, starGiftsProfile: starGiftsContext), for: window)
             }
         }
     }, giftPremium: { option in
         let state = stateValue.with { $0 }
         if let peer = state.peer {
             if let product = state.products.first(where: { $0.months == option.months }) {
-                showModal(with: PreviewStarGiftController(context: context, option: .premium(option: product), peer: peer), for: window)
+                showModal(with: PreviewStarGiftController(context: context, option: .premium(option: product), peer: peer, starGiftsProfile: starGiftsContext), for: window)
             }
         }
 

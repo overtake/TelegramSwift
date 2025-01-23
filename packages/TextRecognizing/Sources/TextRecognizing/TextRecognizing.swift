@@ -235,7 +235,7 @@ public final class TextRecognizing {
                 var results:[Result.Detected] = []
                 for observation in observations {
                     for text in observation.topCandidates(1) {
-                        if text.confidence > 0.3 {
+                        if text.confidence > 0.25 {
                             results.append(.init(text: text.string, language: Translate.detectLanguage(for: text.string), _topLeft: Point(observation.topLeft), _topRight: Point(observation.topRight), _bottomLeft: Point(observation.bottomLeft), _bottomRight: Point(observation.bottomRight), _boundingBox: Rect(observation.boundingBox)))
                         }
                     }

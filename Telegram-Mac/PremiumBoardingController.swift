@@ -70,6 +70,7 @@ enum PremiumLogEventsSource : Equatable {
     case folder_tags
     case upload_limit
     case grace_period
+    case emoji_status
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -130,6 +131,8 @@ enum PremiumLogEventsSource : Equatable {
             return "business_intro"
         case .grace_period:
             return "grace_period"
+        case .emoji_status:
+            return "emoji_status"
         }
     }
     
@@ -189,6 +192,8 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .grace_period:
             return nil
+        case .emoji_status:
+            return .emoji_status
         }
     }
     

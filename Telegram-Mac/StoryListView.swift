@@ -300,6 +300,8 @@ extension MediaArea {
             return strings().storyViewMediaAreaViewMessage
         case .link:
             return strings().storyViewMediaAreaOpenUrl
+        case .starGift:
+            return strings().storyWidgetOpenGift
         }
     }
     var menu: MenuAnimation {
@@ -314,6 +316,8 @@ extension MediaArea {
             return MenuAnimation.menu_copy_link
         case .weather:
             return MenuAnimation.menu_copy_link
+        case .starGift:
+            return MenuAnimation.menu_show_message
         }
     }
     var canDraw: Bool {
@@ -328,6 +332,8 @@ extension MediaArea {
             return false
         case .weather:
             return true
+        case .starGift:
+            return false
         }
     }
     
@@ -343,34 +349,24 @@ extension MediaArea {
             return true
         case .weather:
             return false
+        case .starGift:
+            return true
         }
     }
     
     var reaction: MessageReaction.Reaction? {
         switch self {
-        case .venue:
-            return nil
         case let .reaction(_, reaction, _):
             return reaction
-        case .channelMessage:
-            return nil
-        case .link:
-            return nil
-        case .weather:
+        default:
             return nil
         }
     }
     var isDark: Bool {
         switch self {
-        case .venue:
-            return false
         case let .reaction(_, _, flags):
             return flags.contains(.isDark)
-        case .channelMessage:
-            return false
-        case .link:
-            return false
-        case .weather:
+        default:
             return false
         }
     }

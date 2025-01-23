@@ -497,7 +497,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
 
 
     
-    interactions.sendAnimatedEmoji = { sticker, _, _, _ in
+    interactions.sendAnimatedEmoji = { sticker, _, _, _, _ in
 
         
         let text = stateValue.with { $0.state.inputText }

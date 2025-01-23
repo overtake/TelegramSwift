@@ -302,6 +302,72 @@ fileprivate class PreviewSenderView : Control {
             if canSpoiler || state.state == .media {
                 menu.addItem(ContextSeparatorItem())
             }
+            
+            
+            if totalCount == 1, newValue.state == .media {
+                if let medias = self.controller?.getMedias(), let media = medias[0] as? TelegramMediaFile, let url = self.controller?.urls.first {
+                    if media.isVideo {
+                        
+                        enum Action {
+                            case upload
+                            case change
+                            case remove
+                            var string: String {
+                                switch self {
+                                case .upload:
+                                    return strings().previewSenderUploadVideoCover
+                                case .change:
+                                    return strings().previewSenderChangeVideoCover
+                                case .remove:
+                                    return strings().previewSenderRemoveVideoCover
+                                }
+                            }
+                        }
+                        
+                        let action: Action
+                        if media.videoCover == nil {
+                            action = .upload
+                        } else {
+                            action = .change
+                        }
+                        
+                        menu.addItem(ContextMenuItem(action.string, handler: { [weak self] in
+                            if let controller = self?.controller {
+                                let context = controller.chatInteraction.context
+                                filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { files in
+                                    if let first = files?.first {
+                                        
+                                        let editorSettings: EditControllerSettings
+                                        if let size = media.dimensions?.size {
+                                            editorSettings = .disableSizes(dimensions: SelectionRectDimensions.bestDimension(for: size), circle: false)
+                                        } else {
+                                            editorSettings = .plain
+                                        }
+                                        
+                                        let editor = EditImageModalController(URL(fileURLWithPath: first), context: context, settings: editorSettings)
+                                        showModal(with: editor, for: context.window, animationType: .scaleCenter)
+                                        
+                                        
+                                        _ = (editor.result |> deliverOnMainQueue).start(next: { [weak self] new, editedData in
+                                            if let controller = self?.controller {
+                                                controller.updateCustomPreview(url.path, new.path)
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        }, itemImage: MenuAnimation.menu_shared_media.value))
+                        
+                        if media.videoCover != nil {
+                            menu.addItem(ContextMenuItem(Action.remove.string, handler: { [weak self] in
+                                if let controller = self?.controller {
+                                    controller.updateCustomPreview(url.path, nil)
+                                }
+                            }, itemImage: MenuAnimation.menu_delete.value))
+                        }
+                    }
+                }
+            }
 
             if canSpoiler {
                 menu.addItem(ContextMenuItem(!newValue.isSpoiler ? strings().previewSenderSpoilerTooltipEnable : strings().previewSenderSpoilerTooltipDisable, handler: {
@@ -867,18 +933,19 @@ private final class PreviewMedia : Comparable, Identifiable {
         return lhs.index < rhs.index
     }
     static func == (lhs: PreviewMedia, rhs: PreviewMedia) -> Bool {
-        return lhs.container == rhs.container && lhs.isCollage == rhs.isCollage
+        return lhs.container == rhs.container && lhs.isCollage == rhs.isCollage && lhs.customPreview == rhs.customPreview
     }
     let container: MediaSenderContainer
     let index: Int
     let isCollage: Bool
     private(set) var media: Media?
-
-    init(container: MediaSenderContainer, index: Int, media: Media?, isCollage: Bool) {
+    let customPreview: String?
+    init(container: MediaSenderContainer, index: Int, media: Media?, isCollage: Bool, customPreview: String?) {
         self.container = container
         self.index = index
         self.media = media
         self.isCollage = isCollage
+        self.customPreview = customPreview
     }
     
 
@@ -888,14 +955,18 @@ private final class PreviewMedia : Comparable, Identifiable {
     }
     
     func withApplyCachedMedia(_ media: Media) -> PreviewMedia {
-        return PreviewMedia(container: container, index: index, media: media, isCollage: isCollage)
+        return PreviewMedia(container: container, index: index, media: media, isCollage: isCollage, customPreview: customPreview)
     }
     
-    func generateMedia(account: Account, isSecretRelated: Bool, isCollage: Bool) -> Media {
+    func withCustomPreview(_ customPreview: String?) -> PreviewMedia {
+        return PreviewMedia(container: container, index: index, media: media, isCollage: isCollage, customPreview: customPreview)
+    }
+    
+    func generateMedia(account: Account, isSecretRelated: Bool, isCollage: Bool, customPreview: String?) -> Media {
         
-        if let media = self.media {
-            return media
-        }
+//        if let media = self.media {
+//            return media
+//        }
         
         let semaphore = DispatchSemaphore(value: 0)
         var generated: Media!
@@ -906,7 +977,7 @@ private final class PreviewMedia : Comparable, Identifiable {
             }
         }
         
-        _ = Sender.generateMedia(for: container, account: account, isSecretRelated: isSecretRelated, isCollage: isCollage).start(next: { media, path in
+        _ = Sender.generateMedia(for: container, account: account, isSecretRelated: isSecretRelated, isCollage: isCollage, customPreview: customPreview).start(next: { media, path in
             generated = media
             semaphore.signal()
         })
@@ -919,12 +990,12 @@ private final class PreviewMedia : Comparable, Identifiable {
 }
 
 
-private func previewMedias(containers:[MediaSenderContainer], savedState: [PreviewMedia]?, isCollage: Bool) -> [PreviewMedia] {
+private func previewMedias(containers:[MediaSenderContainer], savedState: [PreviewMedia]?, isCollage: Bool, previews: [String: String]) -> [PreviewMedia] {
     var index: Int = 0
     var result:[PreviewMedia] = []
     for container in containers {
         let found = savedState?.first(where: {$0.stableId == .container(container)})
-        result.append(PreviewMedia(container: container, index: index, media: found?.media, isCollage: isCollage))
+        result.append(PreviewMedia(container: container, index: index, media: found?.media, isCollage: isCollage, customPreview: previews[container.path]))
         index += 1
     }
     return result
@@ -933,7 +1004,7 @@ private func previewMedias(containers:[MediaSenderContainer], savedState: [Previ
 
 private func prepareMedias(left: [PreviewMedia], right: [PreviewMedia], isSecretRelated: Bool, isCollage: Bool, account: Account) -> UpdateTransition<Media> {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { item in
-        return item.generateMedia(account: account, isSecretRelated: isSecretRelated, isCollage: isCollage)
+        return item.generateMedia(account: account, isSecretRelated: isSecretRelated, isCollage: isCollage, customPreview: item.customPreview)
     })
     return UpdateTransition(deleted: removed, inserted: inserted, updated: updated)
 }
@@ -941,9 +1012,11 @@ private func prepareMedias(left: [PreviewMedia], right: [PreviewMedia], isSecret
 private struct UrlAndState : Equatable {
     let urls:[URL]
     let state: PreviewSendingState
-    init(_ urls:[URL], _ state: PreviewSendingState) {
+    let previews: [String : String]
+    init(_ urls:[URL], _ state: PreviewSendingState, previews: [String : String]) {
         self.urls = urls
         self.state = state
+        self.previews = previews
     }
 }
 
@@ -952,6 +1025,15 @@ class PreviewSenderController: ModalViewController, Notifable {
    
     private var lockInteractiveChanges: Bool = false
     private var _urls:[URL] = []
+    
+    var getMedias:()->[Media] = { return [] }
+    var updateCustomPreview:(String, String?)->Void = { _, _ in }
+
+    fileprivate var previews: [String: String] = [:] {
+        didSet {
+            self.urlsAndStateValue.set(UrlAndState(_urls, self.genericView.state, previews: self.previews))
+        }
+    }
     
     fileprivate var urls:[URL] {
         set {
@@ -963,7 +1045,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                 }
             }
             self.genericView.updateWithSlowMode(chatInteraction.presentation.slowMode, urlsCount: _urls.count)
-            self.urlsAndStateValue.set(UrlAndState(_urls, self.genericView.state))
+            self.urlsAndStateValue.set(UrlAndState(_urls, self.genericView.state, previews: self.previews))
         }
         get {
             return _urls
@@ -1413,7 +1495,7 @@ class PreviewSenderController: ModalViewController, Notifable {
             _ = self?.contextChatInteraction.appendText(.initialize(string: emoji))
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }
-        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _, fromRect in
             let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown).fixed
             _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text))
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
@@ -1431,6 +1513,18 @@ class PreviewSenderController: ModalViewController, Notifable {
         let stateValue = Atomic(value: initialState)
         let updateState: ((PreviewState) -> PreviewState) -> Void = { f in
             statePromise.set(stateValue.modify (f))
+        }
+        
+        self.getMedias = {
+            return stateValue.with { $0.medias }
+        }
+        
+        self.updateCustomPreview = { [weak self] path, preview in
+            if let preview {
+                self?.previews[path] = preview
+            } else {
+                self?.previews.removeValue(forKey: path)
+            }
         }
         
         let removeTransitionAnimation: Atomic<Bool> = Atomic(value: false)
@@ -1484,7 +1578,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                 containers.append(ArchiverSenderContainer(path: dir, files: urls))
             }
             
-            return (previewMedias(containers: containers, savedState: savedStateMedias.with { $0[state]}, isCollage: state.isCollage), urls, state)
+            return (previewMedias(containers: containers, savedState: savedStateMedias.with { $0[state]}, isCollage: state.isCollage, previews: urlsAndState.previews), urls, state)
         } |> map { previews, urls, state in
             return (prepareMedias(left: previousMedias.swap(previews), right: previews, isSecretRelated: isSecretRelated, isCollage: state.isCollage, account: context.account), urls, state, previews)
         }
@@ -1612,7 +1706,7 @@ class PreviewSenderController: ModalViewController, Notifable {
         }
         
         self.genericView.state = state
-        self.urlsAndStateValue.set(UrlAndState(self.urls, state))
+        self.urlsAndStateValue.set(UrlAndState(self.urls, state, previews: self.previews))
         self.genericView.updateWithSlowMode(chatInteraction.presentation.slowMode, urlsCount: self.urls.count)
         
         self.genericView.textView.placeholder = self.inputPlaceholder
@@ -1634,7 +1728,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                 state = state.withUpdatedIsCollage(false)
             }
             self.genericView.tableView.scroll(to: .up(true))
-            self.urlsAndStateValue.set(UrlAndState(self.urls, state))
+            self.urlsAndStateValue.set(UrlAndState(self.urls, state, previews: self.previews))
         }
         
         self.sendCurrentMedia = { [weak self] silent, atDate, asSpoiler in

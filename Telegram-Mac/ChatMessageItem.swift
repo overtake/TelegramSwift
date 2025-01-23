@@ -469,11 +469,25 @@ class ChatMessageItem: ChatRowItem {
                              break
                          }
                      }
+                     var uniqueGift: StarGift.UniqueGift? = nil
+                     for attribute in content.attributes {
+                         switch attribute {
+                         case let .starGift(gift):
+                             switch gift.gift {
+                             case let .unique(gift):
+                                 uniqueGift = gift
+                             default:
+                                 break
+                             }
+                         default:
+                             break
+                         }
+                     }
                      
-                     if content.file == nil || forceArticle, content.story == nil {
+                     if content.file == nil || forceArticle, content.story == nil, uniqueGift == nil {
                          webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
-                     } else if content.file != nil || content.image != nil {
-                         webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
+                     } else if content.file != nil || content.image != nil || uniqueGift != nil {
+                         webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected(), uniqueGift: uniqueGift)
                      }
                  default:
                      break
@@ -984,5 +998,14 @@ class ChatMessageItem: ChatRowItem {
         }
         return string.copy() as! NSAttributedString
     }
+    
+    override func inset(for text: String) -> CGFloat {
+        if let rect = self.textLayout.rect(for: text) {
+            return rect.maxY
+        } else {
+            return super.inset(for: text)
+        }
+    }
+
 }
 

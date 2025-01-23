@@ -76,7 +76,7 @@ class VideoMessageSenderContainer : MediaSenderContainer {
 
 class Sender: NSObject {
     
-    private static func previewForFile(_ path: String, isSecretRelated: Bool, account: Account) -> [TelegramMediaImageRepresentation] {
+    private static func previewForFile(_ path: String, isSecretRelated: Bool, account: Account, colorQuality: Float? = nil) -> [TelegramMediaImageRepresentation] {
         var preview:[TelegramMediaImageRepresentation] = []
         
 //        if isDirectory(path) {
@@ -131,9 +131,9 @@ class Sender: NSObject {
         } else if (mimeType.hasPrefix("image") || mimeType.hasSuffix("pdf") && !mimeType.hasPrefix("image/webp")), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             
             let options = NSMutableDictionary()
-            options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
+            options.setValue((colorQuality != nil ? 320 * 2 : 320) as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
             
-            let colorQuality: Float = 0.7
+            let colorQuality: Float = colorQuality ?? 0.7
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
             options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
 
@@ -270,7 +270,7 @@ class Sender: NSObject {
             |> deliverOnMainQueue
     }
     
-    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool, isCollage: Bool = false, isUniquelyReferencedTemporaryFile: Bool = true) -> Signal<(Media,String), NoError> {
+    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool, isCollage: Bool = false, isUniquelyReferencedTemporaryFile: Bool = true, customPreview: String? = nil) -> Signal<(Media,String), NoError> {
         return Signal { (subscriber) in
             
             let path = container.path
@@ -363,7 +363,15 @@ class Sender: NSObject {
                 } else if mimeType.hasPrefix("video") {
                     let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true, inCollage: isCollage)
                     
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileVideoMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs, alternativeRepresentations: [])
+                    let videoCover: TelegramMediaImage?
+                    if let customPreview {
+                        let representations = previewForFile(customPreview, isSecretRelated: isSecretRelated, account: account, colorQuality: 1.0)
+                        videoCover = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                    } else {
+                        videoCover = nil
+                    }
+                    
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileVideoMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], videoCover: videoCover, immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs, alternativeRepresentations: [])
                 } else if mimeType.hasPrefix("image/gif") {
                     let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true, inCollage: isCollage)
                     

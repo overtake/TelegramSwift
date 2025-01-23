@@ -27,6 +27,7 @@ private struct State : Equatable {
     var gifts: [ProfileGiftsContext.State.StarGift] = []
     var perRowCount: Int = 3
     var peer: EnginePeer?
+    var state: ProfileGiftsContext.State?
 }
 
 private func _id_stars_gifts(_ index: Int) -> InputDataIdentifier {
@@ -63,7 +64,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PeerMediaGiftsController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
@@ -84,14 +85,15 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId) -> InputD
         }
     }
     
-    let giftsContext = ProfileGiftsContext(account: context.account, peerId: peerId)
+    let giftsContext = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peerId)
         
     let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
     
     actionsDisposable.add(combineLatest(giftsContext.state, peer).startStrict(next: { gifts, peer in
         updateState { current in
             var current = current
-            current.gifts = gifts.gifts
+            current.gifts = gifts.filteredGifts
+            current.state = gifts
             current.peer = peer
             return current
         }
@@ -105,9 +107,15 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId) -> InputD
         let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: option.gift.generic?.price ?? 0, nanos: 0), date: option.date, peer: toPeer.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
         
         
-        let purpose: Star_TransactionPurpose = .starGift(gift: option.gift, convertStars: option.convertStars ?? 0, text: option.text, entities: option.entities, nameHidden: option.fromPeer != nil, savedToProfile: option.savedToProfile, converted: option.convertStars == nil, fromProfile: true, upgraded: false, transferStars: option.convertStars, canExportDate: option.canExportDate)
+        let purpose: Star_TransactionPurpose = .starGift(gift: option.gift, convertStars: option.convertStars ?? 0, text: option.text, entities: option.entities, nameHidden: option.fromPeer != nil, savedToProfile: option.savedToProfile, converted: option.convertStars == nil, fromProfile: true, upgraded: false, transferStars: option.convertStars, canExportDate: option.canExportDate, reference: option.reference, sender: nil, saverId: nil)
         
-        showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: fromPeer, transaction: transaction, purpose: purpose, messageId: option.messageId, profileContext: giftsContext), for: context.window)
+        switch option.gift {
+        case let .unique(gift):
+            showModal(with: StarGift_Nft_Controller(context: context, gift: option.gift, source: .quickLook(gift), transaction: transaction, purpose: .starGift(gift: option.gift, convertStars: option.convertStars, text: option.text, entities: option.entities, nameHidden: option.nameHidden, savedToProfile: option.savedToProfile, converted: false, fromProfile: true, upgraded: false, transferStars: option.transferStars, canExportDate: option.canExportDate, reference: option.reference, sender: option.fromPeer, saverId: nil)), for: context.window)
+        default:
+            showModal(with: Star_TransactionScreen(context: context, fromPeerId: peerId, peer: fromPeer, transaction: transaction, purpose: purpose, reference: option.reference, profileContext: giftsContext), for: context.window)
+        }
+        
 
     })
     
@@ -116,6 +124,81 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId) -> InputD
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")
+    
+    controller._menuItems = { [weak giftsContext] in
+        var items: [ContextMenuItem] = []
+        
+        let state = stateValue.with { $0 }
+        
+        if let peer = state.peer?._asPeer(), peer.isChannel, let notificationsEnabled = state.state?.notificationsEnabled {
+            items.append(ContextMenuItem(strings().peerInfoGiftsChannelNotify, handler: {
+                _ = context.engine.payments.toggleStarGiftsNotifications(peerId: peer.id, enabled: !notificationsEnabled).start()
+                updateState { current in
+                    var current = current
+                    current.state?.notificationsEnabled = !notificationsEnabled
+                    return current
+                }
+                showModalText(for: context.window, text: !notificationsEnabled ? strings().peerInfoGiftsChannelNotifyTooltip : strings().peerInfoGiftsChannelNotifyDisabledTooltip)
+            }, state: notificationsEnabled ? .on : nil))
+            
+            items.append(ContextSeparatorItem())
+        }
+        if let peer = state.peer?._asPeer(), let giftState = state.state, peer.isChannel, peer.isAdmin {
+            
+            let toggleFilter: (ProfileGiftsContext.Filters) -> Void = { [weak giftsContext] value in
+                var updatedFilter = giftState.filter
+                if updatedFilter.contains(value) {
+                    updatedFilter.remove(value)
+                } else {
+                    updatedFilter.insert(value)
+                }
+                if !updatedFilter.contains(.unlimited) && !updatedFilter.contains(.limited) && !updatedFilter.contains(.unique) {
+                    updatedFilter.insert(.unlimited)
+                }
+                if !updatedFilter.contains(.displayed) && !updatedFilter.contains(.hidden) {
+                    if value == .displayed {
+                        updatedFilter.insert(.hidden)
+                    } else {
+                        updatedFilter.insert(.displayed)
+                    }
+                }
+                giftsContext?.updateFilter(updatedFilter)
+            }
+
+            
+            items.append(ContextMenuItem(giftState.sorting == .value ? strings().peerInfoGiftsSortByDate : strings().peerInfoGiftsSortByValue, handler: {
+                giftsContext?.updateSorting(giftState.sorting == .value ? .date : .value)
+            }))
+            
+            items.append(ContextSeparatorItem())
+            
+            items.append(ContextMenuItem(strings().peerInfoGiftsUnlimited, handler: {
+                toggleFilter(.unlimited)
+            }, state: giftState.filter.contains(.unlimited) ? .on : nil))
+            
+            items.append(ContextMenuItem(strings().peerInfoGiftsLimited, handler: {
+                toggleFilter(.limited)
+            }, state: giftState.filter.contains(.limited) ? .on : nil))
+            
+            items.append(ContextMenuItem(strings().peerInfoGiftsUnique, handler: {
+                toggleFilter(.unique)
+            }, state: giftState.filter.contains(.unique) ? .on : nil))
+            
+            items.append(ContextSeparatorItem())
+            
+            items.append(ContextMenuItem(strings().peerInfoGiftsDisplayed, handler: {
+                toggleFilter(.displayed)
+            }, state: giftState.filter.contains(.displayed) ? .on : nil))
+            
+            items.append(ContextMenuItem(strings().peerInfoGiftsHidden, handler: {
+                toggleFilter(.hidden)
+            }, state: giftState.filter.contains(.hidden) ? .on : nil))
+        }
+       
+        
+        return items
+    }
+    
     
     getController = { [weak controller] in
         return controller

@@ -16,10 +16,70 @@ import AppKit
 import TelegramMedia
 
 
+public final class StarsEffectLayer: SimpleLayer {
+    private let emitterLayer = CAEmitterLayer()
+    private let emitter = CAEmitterCell()
+
+    public override init() {
+        super.init()
+        
+        self.addSublayer(self.emitterLayer)
+    }
+    
+    override init(layer: Any) {
+        super.init(layer: layer)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setup(color: NSColor, size: CGSize) {
+        emitter.name = "emitter"
+        emitter.contents = NSImage(contentsOfFile: Bundle.main.path(forResource: "particle", ofType: "png")!)?._cgImage
+        emitter.birthRate = 6.0
+        emitter.lifetime = 1.5
+        emitter.velocity = 0.1
+        emitter.scale = (size.width / 32.0) * 0.12
+        emitter.scaleRange = 0.02
+        emitter.alphaRange = 0.1
+        emitter.emissionRange = .pi * 2.0
+        
+        
+    }
+    
+    public func update(color: NSColor, size: CGSize) {
+        if self.emitterLayer.emitterCells == nil {
+            self.setup(color: color, size: size)
+        }
+        
+        let staticColors: [Any] = [
+            color.withAlphaComponent(0.0).cgColor,
+            color.withAlphaComponent(0.58).cgColor,
+            color.withAlphaComponent(0.58).cgColor,
+            color.withAlphaComponent(0.0).cgColor
+        ]
+        let staticColorBehavior = createEmitterBehavior(type: "colorOverLife")
+        staticColorBehavior.setValue(staticColors, forKey: "colors")
+        emitter.setValue([staticColorBehavior], forKey: "emitterBehaviors")
+        self.emitterLayer.emitterCells = [emitter]
+        
+        self.emitterLayer.seed = UInt32.random(in: .min ..< .max)
+        self.emitterLayer.emitterShape = .circle
+        self.emitterLayer.emitterSize = size
+        self.emitterLayer.emitterMode = .surface
+        self.emitterLayer.frame = CGRect(origin: .zero, size: size)
+        self.emitterLayer.emitterPosition = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
+    }
+}
+
+
+
 final class PremiumStatusControl : Control {
     private var imageLayer: SimpleLayer?
     private var animateLayer: InlineStickerItemLayer?
     private var statusSelected: Bool? = nil
+    private var starsLayer: StarsEffectLayer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         userInteractionEnabled = false
@@ -211,6 +271,33 @@ final class PremiumStatusControl : Control {
             performSublayerRemoval(animateLayer, animated: animated)
             self.animateLayer = nil
         }
+        
+        if let status = peer.emojiStatus, case let .starGift(_, _, title, _, _, innerColor, _, _, _) = status.content {
+            let starsLayer: StarsEffectLayer
+            if let current = self.starsLayer {
+                starsLayer = current
+            } else {
+                starsLayer = StarsEffectLayer()
+                self.layer?.insertSublayer(starsLayer, at: 0)
+                self.starsLayer = starsLayer
+            }
+            let availableSize = NSMakeSize(20, 20)
+            let side = floor(availableSize.width * 1.25)
+            let starsFrame = CGRect(origin: .zero, size: availableSize).focus(CGSize(width: side, height: side))
+            starsLayer.frame = starsFrame
+            starsLayer.update(color: isSelected ? theme.colors.underSelectedColor : NSColor(UInt32(innerColor)), size: starsFrame.size)
+            
+            self.appTooltip = title
+            
+        } else {
+            if let starsLayer = self.starsLayer {
+                self.starsLayer = nil
+                starsLayer.removeFromSuperlayer()
+            }
+            self.appTooltip = nil
+        }
+        
+
         
         self.statusSelected = isSelected
         

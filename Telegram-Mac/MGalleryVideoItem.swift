@@ -228,7 +228,7 @@ class MGalleryVideoItem: MGalleryItem {
 
         super.request(immediately: immediately)
         
-        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
+        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(account: context.account, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true, noVideoCover: true)
         
         let size = sizeValue
         

@@ -479,7 +479,7 @@ class InputTextDataRowView : GeneralContainableRowView {
                         let interactions = EntertainmentInteractions(.emoji, peerId: item.context.peerId)
                         emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(item.context.peerId), context: item.context))
 
-                        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _ in
+                        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _, _ in
                             if let item = self?.item as? InputTextDataRowItem, let textView = self?.textView {
                                 self?.textView.makeFirstResponder()
                                 let text = sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown

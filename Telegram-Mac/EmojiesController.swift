@@ -296,6 +296,7 @@ private struct State : Equatable {
     var topReactionsItems: [RecentReactionItem] = []
     var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
     var featuredChannelStatusEmojiItems: [RecentMediaItem] = []
+    var uniqueStarGiftsItems:[RecentStarGiftItem] = []
     var recent: RecentUsedEmoji = .defaultSettings
     var reactionSettings: ReactionSettings = .default
     
@@ -343,6 +344,9 @@ private struct State : Equatable {
             return false
         }
         if lhs.topReactionsItems.count != rhs.topReactionsItems.count {
+            return false
+        }
+        if lhs.uniqueStarGiftsItems.count != rhs.uniqueStarGiftsItems.count {
             return false
         }
         if lhs.recent != rhs.recent {
@@ -832,6 +836,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
         }
         
+    }
+    
+    if !state.uniqueStarGiftsItems.isEmpty {
+        
+        var items:[StickerPackItem] = []
+        for gift in state.uniqueStarGiftsItems {
+            items.append(.init(index: .init(index: 0, id: 0), file: gift.starGift.file!, indexKeys: []))
+        }
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(0), equatable: InputDataEquatable(items), comparable: nil, item: { initialSize, stableId in
+            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
+        }))
+        index += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("collectibles"), equatable: InputDataEquatable(state.uniqueStarGiftsItems), comparable: nil, item: { initialSize, stableId in
+            return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: items, mode: arguments.mode.itemMode, selectedItems: [], color: theme.colors.text, callback: arguments.send, openPremium: arguments.openPremium, installPack: arguments.installPack, ignorePremium: arguments.ignorePremium, uniqueGifts: state.uniqueStarGiftsItems.map(\.starGift))
+        }))
     }
     
     for (i, section) in state.sections.enumerated() {
@@ -2073,13 +2094,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                     })
                 } else {
-                    self?.interactions?.sendAnimatedEmoji(item, info, nil, rect)
+                    self?.interactions?.sendAnimatedEmoji(item, nil, info, nil, rect)
                 }
                 _ = scrollToOnNextAppear.swap(info)
             case .status:
-                self?.interactions?.sendAnimatedEmoji(item, nil, timeout, rect)
+                let starGift = stateValue.with { $0.uniqueStarGiftsItems.first(where: { $0.starGift.file?.fileId == item.file.fileId })}?.starGift
+                self?.interactions?.sendAnimatedEmoji(item, starGift, nil, timeout, rect)
             default:
-                self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
+                self?.interactions?.sendAnimatedEmoji(item, nil, nil, nil, rect)
             }
             
         }, sendEmoji: { [weak self] emoji, fromRect in
@@ -2280,6 +2302,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         
+        
+        
         let forumTopic: Signal<[StickerPackItem], NoError>
         if mode == .forumTopic {
             forumTopic = context.engine.stickers.loadedStickerPack(reference: .iconTopicEmoji, forceActualized: false) |> map { result in
@@ -2408,6 +2432,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 var featuredBackgroundIconEmoji: OrderedItemListView?
                 var featuredChannelStatusEmoji: OrderedItemListView?
                 var defaultTagReactions: OrderedItemListView?
+                var uniqueStarGifts: OrderedItemListView?
 
                 for orderedView in view.orderedItemListsViews {
                     if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
@@ -2424,6 +2449,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         featuredChannelStatusEmoji = orderedView
                     } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudDefaultTagReactions {
                         defaultTagReactions = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudUniqueStarGifts {
+                        uniqueStarGifts = orderedView
                     }
                 }
                 var recentStatusItems:[RecentMediaItem] = []
@@ -2433,7 +2460,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
                 var featuredChannelStatusEmojiItems : [RecentMediaItem] = []
                 var defaultTagReactionsItems: [RecentReactionItem] = []
-                
+                var uniqueStarGiftsItems: [RecentStarGiftItem] = []
                 if let recentStatusEmoji = recentStatusEmoji {
                     for item in recentStatusEmoji.items {
                         guard let item = item.contents.get(RecentMediaItem.self) else {
@@ -2490,6 +2517,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                             continue
                         }
                         defaultTagReactionsItems.append(item)
+                    }
+                }
+                if let uniqueStarGifts = uniqueStarGifts {
+                    for item in uniqueStarGifts.items {
+                        guard let item = item.contents.get(RecentStarGiftItem.self) else {
+                            continue
+                        }
+                        uniqueStarGiftsItems.append(item)
                     }
                 }
                 
@@ -2584,6 +2619,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     current.search = search
                     current.reactions = reactions
                     current.recent = recentEmoji
+                    current.uniqueStarGiftsItems = uniqueStarGiftsItems
                     current.topReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : topReactionsItems
                     current.recentReactionsItems = mode == .defaultTags ? defaultTagReactionsItems : recentReactionsItems
                     current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems

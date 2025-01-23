@@ -395,7 +395,8 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
                         clippedStartTime: partStartTime == part.startTime ? nil : partStartTime,
                         endTime: part.endTime,
                         content: part.content,
-                        codecName: part.codecName
+                        codecName: part.codecName,
+                        offsetTime: part.offsetTime
                     ))
                     minStartTime = max(minStartTime, partEndTime)
                 }
@@ -417,7 +418,8 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
                             clippedStartTime: partStartTime == part.startTime ? nil : partStartTime,
                             endTime: part.endTime,
                             content: part.content,
-                            codecName: part.codecName
+                            codecName: part.codecName,
+                            offsetTime: part.offsetTime
                         ))
                         minStartTime = max(minStartTime, partEndTime)
                         break
@@ -812,7 +814,9 @@ public final class ChunkMediaPlayerV2: ChunkMediaPlayer {
         self.loadedPartsMediaData.with { [weak self] loadedPartsMediaData in
             loadedPartsMediaData.parts.removeAll()
             loadedPartsMediaData.seekFromMinTimestamp = timestamp
-            
+            loadedPartsMediaData.directMediaData = nil
+            loadedPartsMediaData.directReaderId = nil
+
             Queue.mainQueue().async {
                 guard let self else {
                     return

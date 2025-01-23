@@ -365,9 +365,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         
         
-        if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            
-           
+        if let cachedData = item.peerView.cachedData as? CachedChannelData, cachedData.flags.contains(.starGiftsAvailable) {
+                        
+            items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
             
             switch cachedData.linkedDiscussionPeerId {
             case let .known(peerId):
@@ -499,6 +499,16 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     
     var profileEmojiColor: NSColor {
+        
+        if let emojiStatus = peer?.emojiStatus {
+            switch emojiStatus.content {
+            case let .starGift(_, _, _, _, _, _, _, patternColor, _):
+                return .init(UInt32(patternColor))
+            default:
+                break
+            }
+        }
+        
         if let nameColor = nameColor, threadId == nil, !editing {
             return context.peerNameColors.getProfile(nameColor).main
         } else {
@@ -506,6 +516,14 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
     }
     var backgroundGradient: [NSColor] {
+        if let emojiStatus = peer?.emojiStatus {
+            switch emojiStatus.content {
+            case let .starGift(_, _, _, _, _, innerColor, outerColor, _, _):
+                return [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
+            default:
+                break
+            }
+        }
         if let nameColor = nameColor, threadId == nil, !editing {
             let colors = context.peerNameColors.getProfile(nameColor)
             return [colors.main, colors.secondary ?? colors.main].compactMap { $0 }
@@ -877,6 +895,8 @@ class PeerInfoHeadItem: GeneralRowItem {
 final class PeerInfoBackgroundView: View {
     private let backgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
     private let avatarBackgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
+    
+    public var offset: CGFloat = 0
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.layer?.addSublayer(backgroundGradientLayer)
@@ -906,7 +926,7 @@ final class PeerInfoBackgroundView: View {
         didSet {
             backgroundGradientLayer.colors = gradient.map { $0.cgColor }
             avatarBackgroundGradientLayer.isHidden = gradient[0].alpha == 0
-            backgroundGradientLayer.animateGradientColors()
+          //  backgroundGradientLayer.animateGradientColors()
         }
     }
     
@@ -919,7 +939,7 @@ final class PeerInfoBackgroundView: View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(layer: avatarBackgroundGradientLayer, frame: size.bounds.focus(NSMakeSize(300, 300)).offsetBy(dx: 0, dy: 20))
+        transition.updateFrame(layer: avatarBackgroundGradientLayer, frame: size.bounds.focus(NSMakeSize(300, 300)).offsetBy(dx: 0, dy: offset))
         transition.updateFrame(layer: backgroundGradientLayer, frame: size.bounds)
     }
 }
@@ -1085,9 +1105,26 @@ private final class NameContainer : View {
             control.userInteractionEnabled = item.peer?.isScam == false && item.peer?.isFake == false
             control.scaleOnClick = true
             control.removeAllHandlers()
+            
+//            if let emojiStatus = item.peer?.emojiStatus {
+//                switch emojiStatus.content {
+//                case let .starGift(_, _, title, _, _, _, _, _, _):
+//                    control.appTooltip = title
+//                default:
+//                    control.appTooltip = nil
+//                }
+//            } else {
+//                control.appTooltip = nil
+//            }
+            
             control.set(handler: { control in
-                if item.peer?.emojiStatus != nil {
-                    prem(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                if let emojiStatus = item.peer?.emojiStatus {
+                    switch emojiStatus.content {
+                    case let .starGift(_, _, _, slug, _, _, _, _, _):
+                        execute(inapp: .nft(link: "t.me/nft/\(slug)", slug: slug, context: item.context))
+                    default:
+                        prem(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                    }
                 } else {
                     let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, contents)
@@ -1398,7 +1435,7 @@ private final class PeerInfoHeadView : GeneralRowView {
             photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
         }
-        backgroundView.frame = NSMakeRect(0, -130, frame.width, frame.height + 130)
+        backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
 
         if let showStatusView {
             showStatusView.centerY(x: statusView.frame.maxX + 4)

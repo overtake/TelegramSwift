@@ -2557,8 +2557,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.openStatus = { control in
             let peer = stateValue.with { $0.peer?.peer }
             if let peer = peer as? TelegramUser {
-                let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
-                    context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
+                let callback:(TelegramMediaFile, StarGift.UniqueGift?, Int32?, CGRect?)->Void = { file, starGift, timeout, fromRect in
+                    context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect, starGift: starGift)
                 }
                 if control.popover == nil {
                     showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)

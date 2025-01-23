@@ -1543,7 +1543,7 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
         
         let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
 
-        interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, _, fromRect in
             
             if sticker.file.mimeType.hasPrefix("bundle") {
                 updateState { current in
@@ -1610,10 +1610,10 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
         }
     }, getColor: getColor, showEmojiStatus: {
         let setStatus:(Control, TelegramUser)->Void = { control, peer in
-            let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
+            let callback:(TelegramMediaFile, StarGift.UniqueGift?, Int32?, CGRect?)->Void = { file, _, timeout, fromRect in
                 updateState { current in
                     var current = current
-                    current.emojiStatus = .init(fileId: file.fileId.id, expirationDate: timeout)
+                    current.emojiStatus = .init(content: .emoji(fileId: file.fileId.id), expirationDate: timeout)
                     return current
                 }
             }
@@ -1634,13 +1634,13 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
                 
                 let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
 
-                interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, expirationDate, fromRect in
+                interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, expirationDate, fromRect in
                     updateState { current in
                         var current = current
                         if sticker.file.mimeType.hasPrefix("bundle") {
                             current.emojiStatus = nil
                         } else {
-                            current.emojiStatus = .init(fileId: sticker.file.fileId.id, expirationDate: expirationDate)
+                            current.emojiStatus = .init(content: .emoji(fileId: sticker.file.fileId.id), expirationDate: expirationDate)
                         }
                         return current
                     }

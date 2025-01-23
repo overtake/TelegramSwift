@@ -83,7 +83,7 @@ open class Control: View {
     
     public var appTooltip: String? {
         didSet {
-            if let tp = appTooltip, (!tooltipOnclick && controlState == .Hover) || (tooltipOnclick && controlState == .Highlight) {
+            if let tp = appTooltip, (!tooltipOnclick && controlState == .Hover) || (tooltipOnclick && controlState == .Highlight), userInteractionEnabled {
                 tooltip(for: self, text: tp)
             }
         }
@@ -169,7 +169,7 @@ open class Control: View {
                     }
                 }
 
-                if let tp = appTooltip, controlState == .Hover {
+                if let tp = appTooltip, controlState == .Hover, userInteractionEnabled {
                     tooltip(for: self, text: tp)
                 }
             }

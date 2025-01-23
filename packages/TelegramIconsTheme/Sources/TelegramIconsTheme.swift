@@ -10639,6 +10639,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_input_channel_gift: CGImage {
+      if let image = cached.with({ $0["chat_input_channel_gift"] }) {
+          return image
+      } else {
+          let image = _chat_input_channel_gift()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_input_channel_gift"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -11458,6 +11471,7 @@ public final class TelegramIconsTheme {
   private let _avatar_star_badge_gray: ()->CGImage
   private let _avatar_star_badge_large_gray: ()->CGImage
   private let _chatlist_apps: ()->CGImage
+  private let _chat_input_channel_gift: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -12277,7 +12291,8 @@ public final class TelegramIconsTheme {
       avatar_star_badge_active: @escaping()->CGImage,
       avatar_star_badge_gray: @escaping()->CGImage,
       avatar_star_badge_large_gray: @escaping()->CGImage,
-      chatlist_apps: @escaping()->CGImage
+      chatlist_apps: @escaping()->CGImage,
+      chat_input_channel_gift: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -13097,5 +13112,6 @@ public final class TelegramIconsTheme {
       self._avatar_star_badge_gray = avatar_star_badge_gray
       self._avatar_star_badge_large_gray = avatar_star_badge_large_gray
       self._chatlist_apps = chatlist_apps
+      self._chat_input_channel_gift = chat_input_channel_gift
   }
 }

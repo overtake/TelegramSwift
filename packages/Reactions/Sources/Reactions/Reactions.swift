@@ -99,8 +99,8 @@ public final class Reactions {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
     
-    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?, handleInteractive: Bool = true) {
-        
+    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?, handleInteractive: Bool = true, starGift: StarGift.UniqueGift? = nil) {
+                
         let emojiStatus = (peer as? TelegramUser)?.emojiStatus
         
         let expiryDate: Int32?
@@ -109,7 +109,20 @@ public final class Reactions {
         } else {
             expiryDate = nil
         }
-        if file.mimeType.hasPrefix("bundle") {
+        
+        if let starGift {
+            if file.fileId.id == emojiStatus?.fileId {
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(nil)
+                }
+                _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
+            } else {
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                }
+                _ = engine.accountData.setStarGiftStatus(starGift: starGift, expirationDate: expiryDate).start()
+            }
+        } else if file.mimeType.hasPrefix("bundle") {
             if handleInteractive {
                 if emojiStatus != nil {
                     _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))

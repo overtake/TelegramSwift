@@ -105,7 +105,7 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                         fetchSignal = chatMessagePhotoInteractiveFetched(account: context.account, imageReference: .message(message: MessageReference(entry.message), media: media), toRepresentationSize: dimensions)
                         dimensions = media.representationForDisplayAtSize(PixelDimensions(dimensions))?.dimensions.size ?? dimensions
                     } else if let media = entry.message.anyMedia as? TelegramMediaFile {
-                        updateSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: .message(message: MessageReference(entry.message), media: media), scale: System.backingScale)
+                        updateSignal = chatMessageVideo(account: context.account, fileReference: .message(message: MessageReference(entry.message), media: media), scale: System.backingScale)
                         
                         
                         fetchSignal = messageMediaFileInteractiveFetched(context: context, messageId: entry.message.id, messageReference: .init(entry.message), file: media, userInitiated: false)

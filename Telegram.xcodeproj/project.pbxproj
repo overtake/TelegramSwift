@@ -212,6 +212,7 @@
 		273C04032C2B75E400AF2751 /* TelegramMediaPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 273C04022C2B75E400AF2751 /* TelegramMediaPlayer */; };
 		273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273C04042C2B75E900AF2751 /* MediaPlayer.framework */; };
 		2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */ = {isa = PBXBuildFile; fileRef = 2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */; };
+		27424F962D3174BA00EDC12A /* SimilarBotsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27424F952D3174B400EDC12A /* SimilarBotsController.swift */; };
 		2744018526E6344E0035C55D /* WidgetRecentPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */; };
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
@@ -382,6 +383,7 @@
 		276976912C0635310016BACB /* star2.scn in Resources */ = {isa = PBXBuildFile; fileRef = 276976902C0635310016BACB /* star2.scn */; };
 		276976932C0636800016BACB /* star.scn in Resources */ = {isa = PBXBuildFile; fileRef = 276976922C0636800016BACB /* star.scn */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
+		276AEAA52D36502B00AF9290 /* particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 276AEAA42D36502B00AF9290 /* particle.png */; };
 		276B5D182C8897BE00DB82E2 /* GiftingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D172C8897BE00DB82E2 /* GiftingController.swift */; };
 		276B5D1A2C89121900DB82E2 /* PreviewStarGiftController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D192C89121900DB82E2 /* PreviewStarGiftController.swift */; };
 		276B5D1C2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */; };
@@ -1859,6 +1861,7 @@
 		273AF9932CCB7E4F00C2067E /* improving_video.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = improving_video.tgs; sourceTree = "<group>"; };
 		273C04042C2B75E900AF2751 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
+		27424F952D3174B400EDC12A /* SimilarBotsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimilarBotsController.swift; sourceTree = "<group>"; };
 		2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRecentPeersController.swift; sourceTree = "<group>"; };
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
 		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
@@ -2022,6 +2025,7 @@
 		276976922C0636800016BACB /* star.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = star.scn; sourceTree = "<group>"; };
 		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
 		276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackTrendingItem.swift; sourceTree = "<group>"; };
+		276AEAA42D36502B00AF9290 /* particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = particle.png; sourceTree = "<group>"; };
 		276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallMainVideoContainer.swift; sourceTree = "<group>"; };
 		276B597C261C78AD0029FD3F /* GroupCallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallView.swift; sourceTree = "<group>"; };
 		276B597F261C78F40029FD3F /* GroupCallUIState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallUIState.swift; sourceTree = "<group>"; };
@@ -3455,6 +3459,7 @@
 				27D9131C283BC0E9007CF40F /* shine.png */,
 				27CCE82F2B839B7000F7C687 /* coin_anim.png */,
 				27CCE8302B839B7100F7C687 /* coin_edge.png */,
+				276AEAA42D36502B00AF9290 /* particle.png */,
 				27CCE82E2B839B6F00F7C687 /* coin.png */,
 				27CCE8362B839C0000F7C687 /* darkerTexture.jpg */,
 				27CCE8352B839BFF00F7C687 /* diagonal_shine.png */,
@@ -5048,6 +5053,7 @@
 				D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */,
 				D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */,
 				271892072B0B2E5C0008B238 /* SimilarChannelsController.swift */,
+				27424F952D3174B400EDC12A /* SimilarBotsController.swift */,
 				2745B0682B35691600EF8623 /* SavedPeersController.swift */,
 				276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */,
 			);
@@ -7396,6 +7402,7 @@
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */,
 				27D48B492A7273A200721995 /* menu_download_circle_lock.tgs in Resources */,
+				276AEAA52D36502B00AF9290 /* particle.png in Resources */,
 				27CE155E297966D8001F8CE8 /* emoji_category_heart.tgs in Resources */,
 				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
 				2747FD422930FD570045B95C /* global_autoremove.tgs in Resources */,
@@ -8125,6 +8132,7 @@
 				2751017D29D2BA02004CEFF3 /* TextInputController.swift in Sources */,
 				2733F0ED291BB4C700A4552B /* TopicReplyItemView.swift in Sources */,
 				27ABFD192858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift in Sources */,
+				27424F962D3174BA00EDC12A /* SimilarBotsController.swift in Sources */,
 				9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,
 				C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */,
@@ -8696,7 +8704,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 245482;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DEVELOPMENT_TEAM = C67CF9S4VU;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -8765,7 +8773,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 245682;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DEVELOPMENT_TEAM = C67CF9S4VU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_C_LANGUAGE_STANDARD = c17;
@@ -8817,7 +8825,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 245682;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DEVELOPMENT_TEAM = C67CF9S4VU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_C_LANGUAGE_STANDARD = c17;
@@ -8925,7 +8933,7 @@
 				CURRENT_PROJECT_VERSION = 245482;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DEVELOPMENT_TEAM = C67CF9S4VU;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (

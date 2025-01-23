@@ -3889,6 +3889,16 @@ class ChatRowItem: TableRowItem {
             chatInteraction.toggleQuote(QuoteMessageIndex(messageId: messageId, index: index))
         }
     }
+    
+    override func inset(for text: String) -> CGFloat {
+        for captionLayout in captionLayouts {
+            if let rect = captionLayout.layout.rect(for: text) {
+                return rect.maxY
+            }
+        }
+        return super.inset(for: text)
+    }
+
 
 }
 

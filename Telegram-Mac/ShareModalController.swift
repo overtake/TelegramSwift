@@ -1992,7 +1992,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             _ = self?.contextChatInteraction.appendText(.initialize(string: emoji))
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }
-        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _, fromRect in
             let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
             _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text))
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)

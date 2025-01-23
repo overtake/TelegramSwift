@@ -911,8 +911,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         
         
         let setStatus:(Control, TelegramUser)->Void = { control, peer in
-            let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
-                context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
+            let callback:(TelegramMediaFile, StarGift.UniqueGift?, Int32?, CGRect?)->Void = { file, starGift, timeout, fromRect in
+                context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect, starGift: starGift)
             }
             if control.popover == nil {
                 showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)

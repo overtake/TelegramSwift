@@ -323,7 +323,7 @@ private final class VideoView : View, MediaView {
         
         playerView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
 
-        playerView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
+        playerView.setSignal(chatMessageVideo(account: context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
             if let media = media {
                 cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
             }

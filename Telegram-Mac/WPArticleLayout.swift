@@ -67,6 +67,8 @@ class WPArticleLayout: WPLayout {
                     break
                 case .unsupported:
                     break
+                case .starGift:
+                    break
                 }
             }
             
@@ -133,6 +135,8 @@ class WPArticleLayout: WPLayout {
             switch attr {
             case .stickerPack:
                 imageSize = NSMakeSize(50, 50)
+            case .starGift:
+                imageSize = NSMakeSize(70, 70)
             default:
                 break
             }

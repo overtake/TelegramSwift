@@ -144,7 +144,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
         })
     }
     
-    interactions.sendAnimatedEmoji = { sticker, _, _, fromRect in
+    interactions.sendAnimatedEmoji = { sticker, _, _, _, fromRect in
         let pass: Bool
         switch purpose {
         case let .edit(data, _):

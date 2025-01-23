@@ -420,9 +420,12 @@ protocol PeerMediaSearchable : AnyObject {
         if self == .commonGroups {
             return strings().peerMediaCommonGroups
         }
-         if self == .similarChannels {
-             return strings().peerMediaSimilarChannels
-         }
+         if self == .similarBots {
+            return strings().peerMediaSimilarBots
+        }
+        if self == .similarChannels {
+            return strings().peerMediaSimilarChannels
+        }
         if self == .gifs {
             return strings().peerMediaGifs
         }
@@ -544,10 +547,11 @@ protocol PeerMediaSearchable : AnyObject {
     private let members: ViewController
     private let commonGroups: ViewController
     private let similarChannels: ViewController
+    private let similarBots: ViewController
 
      private let statusDisposable = MetaDisposable()
     
-     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .archiveStories, .photoOrVideo, .saved, .file, .webpage, .music, .voice, .gifs, .commonGroups, .similarChannels, .gifts]
+     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .archiveStories, .photoOrVideo, .saved, .file, .webpage, .music, .voice, .gifs, .commonGroups, .similarChannels, .similarBots, .gifts]
     
     
     private var currentTagListIndex: Int {
@@ -600,7 +604,7 @@ protocol PeerMediaSearchable : AnyObject {
         }
     }
     
-     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil, isBot: Bool, mode: PeerMediaCollectionMode? = nil) {
+     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil, isBot: Bool, mode: PeerMediaCollectionMode? = nil, starGiftsProfile: ProfileGiftsContext? = nil) {
         self.externalSearchData = externalSearchData
         self.peerId = peerId
         self.mode = mode
@@ -612,8 +616,8 @@ protocol PeerMediaSearchable : AnyObject {
         } else {
             self.savedMessages = nil
         }
-        if peerId.namespace == Namespaces.Peer.CloudUser, !isBot {
-            self.gifts = PeerMediaGiftsController(context: context, peerId: peerId)
+         if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel, !isBot {
+             self.gifts = PeerMediaGiftsController(context: context, peerId: peerId, starGiftsProfile: starGiftsProfile)
         } else {
             self.gifts = nil
         }
@@ -658,8 +662,8 @@ protocol PeerMediaSearchable : AnyObject {
         self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
         self.stories = StoryMediaController(context: context, peerId: peerId, listContext: storyListContext)
         self.similarChannels = SimilarChannelsController(context: context, peerId: peerId, recommendedChannels: nil)
+        self.similarBots = SimilarBotsController(context: context, peerId: peerId, recommendedBots: nil)
 
-         
          
         super.init(context)
          
@@ -755,6 +759,10 @@ protocol PeerMediaSearchable : AnyObject {
      }
      
      
+     func setMode(_ mode: PeerMediaCollectionMode) {
+         self.toggle(with: mode, animated: true)
+     }
+     
      override func getRightBarViewOnce() -> BarView {
          let back = BarView(70, controller: self)
          let editButton = ImageButton()
@@ -784,12 +792,17 @@ protocol PeerMediaSearchable : AnyObject {
          let context = self.context
          editButton.contextMenu = { [weak self] in
              
-             let mode = self?.mode
              
              var items:[ContextMenuItem] = []
-             items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
-                 self?.changeState()
-             }, itemImage: MenuAnimation.menu_edit.value))
+             
+             if let menuItems = self?.currentController?.menuItems(), !menuItems.isEmpty {
+                 items.append(ContextSeparatorItem())
+                 items.append(contentsOf: menuItems)
+             } else {
+                 items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                     self?.changeState()
+                 }, itemImage: MenuAnimation.menu_edit.value))
+             }
              
             
              let menu = ContextMenu(betterInside: true)
@@ -936,6 +949,7 @@ protocol PeerMediaSearchable : AnyObject {
         let archiveStoriesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let similarChannels:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+        let similarBots:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let savedMessagesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let giftsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let savedTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
@@ -943,6 +957,11 @@ protocol PeerMediaSearchable : AnyObject {
         
         giftsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
             if let cachedData = view.cachedData as? CachedUserData {
+                if let starGiftsCount = cachedData.starGiftsCount, starGiftsCount > 0 {
+                    return (exist: true, loaded: true)
+                }
+            }
+            if let cachedData = view.cachedData as? CachedChannelData {
                 if let starGiftsCount = cachedData.starGiftsCount, starGiftsCount > 0 {
                     return (exist: true, loaded: true)
                 }
@@ -1019,6 +1038,16 @@ protocol PeerMediaSearchable : AnyObject {
             similarChannels = .single((tag: .similarChannels, exists: false, hasLoaded: true))
         }
         
+        if threadInfo == nil, peerId.namespace == Namespaces.Peer.CloudUser {
+            similarBots = context.engine.peers.recommendedBots(peerId: peerId) |> map { bots -> (exist: Bool, loaded: Bool) in
+                return (exist: (bots?.bots.count ?? 0) > 0, loaded: true)
+            } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                return (tag: .similarBots, exists: data.exist, hasLoaded: data.loaded)
+            }
+        } else {
+            similarBots = .single((tag: .similarBots, exists: false, hasLoaded: true))
+        }
+        
         if threadInfo == nil, peerId == context.peerId, !isProfileIntended {
             let savedKeyId = PostboxViewKey.savedMessagesIndex(peerId: context.peerId)
             let viewSignal: Signal<Int, NoError> = context.account.postbox.combinedView(keys: [savedKeyId]) |> map {
@@ -1061,7 +1090,7 @@ protocol PeerMediaSearchable : AnyObject {
             }
         }
         
-        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab, archiveStoriesTab, similarChannels, savedMessagesTab, savedTab, giftsTab) |> map { members, general, commonGroups, stories, archiveStories, similarChannels, savedMessagesTab, savedTab, giftsTab -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab, archiveStoriesTab, similarChannels, similarBots, savedMessagesTab, savedTab, giftsTab) |> map { members, general, commonGroups, stories, archiveStories, similarChannels, similarBots, savedMessagesTab, savedTab, giftsTab -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
             var general = general
             var bestIndex: Int = 0
             for general in general {
@@ -1077,6 +1106,7 @@ protocol PeerMediaSearchable : AnyObject {
             general.insert(giftsTab, at: 0)
             general.insert(stories, at: 0)
             general.append(similarChannels)
+            general.append(similarBots)
             general.insert(savedMessagesTab, at: 0)
             return general
         }
@@ -1130,6 +1160,13 @@ protocol PeerMediaSearchable : AnyObject {
                         self.similarChannels.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.similarChannels.ready.get() |> map { ready in
+                        return data
+                    }
+                case .similarBots:
+                    if !self.similarBots.isLoaded() {
+                        self.similarBots.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return self.similarBots.ready.get() |> map { ready in
                         return data
                     }
                 case .photoOrVideo:
@@ -1436,6 +1473,8 @@ protocol PeerMediaSearchable : AnyObject {
         let storiesCount = self.storyListContext.state |> map { Int32($0.totalCount) }
         let commonGroupsCount = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.CommonGroupCount(id: peerId)) |> map { Int32($0 ?? 0) }
         let similarChannelsCount = context.engine.peers.recommendedChannels(peerId: peerId) |> map { $0?.count ?? 0 }
+        let similarBotsCount = context.engine.peers.recommendedBots(peerId: peerId) |> map { Int32($0?.bots.count ?? 0) }
+
         let savedMessagesCount: Signal<Int32, NoError> = context.engine.messages.savedMessagesPeersStats() |> map { Int32($0 ?? 0) }
 
         
@@ -1465,8 +1504,8 @@ protocol PeerMediaSearchable : AnyObject {
 
         let counters: Signal<(PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]), NoError> = combineLatest(self.modeValue.get(), context.engine.data.subscribe(EngineDataMap(
             summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: peerId, threadId: nil, tag: $0) }
-        )), storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount)
-        |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
+        )), storiesCount, archiveStoriesCount, similarChannelsCount, similarBotsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount)
+        |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, similarBotsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
             var result: [PeerMediaCollectionMode: Int32] = [:]
             var photoOrVideo: Int32 = 0
             for (key, count) in summaries {
@@ -1494,6 +1533,7 @@ protocol PeerMediaSearchable : AnyObject {
                 result[.savedMessages] = savedMessagesCount
                 result[.saved] = savedCount
                 result[.gifts] = giftsCount
+                result[.similarBots] = similarBotsCount
             }
             return (mode, result)
         } |> deliverOnMainQueue
@@ -1531,6 +1571,8 @@ protocol PeerMediaSearchable : AnyObject {
                     string = strings().sharedMediaSavedMessagesCountCountable(count)
                 case .similarChannels:
                     string = strings().sharedMediaSimilarCountCountable(count)
+                case .similarBots:
+                    string = strings().sharedMediaSimilarBotsCountCountable(count)
                 case .members:
                     string = nil
                 case .gifts:
@@ -1640,6 +1682,8 @@ protocol PeerMediaSearchable : AnyObject {
             return self.commonGroups
         case .similarChannels:
             return self.similarChannels
+        case .similarBots:
+            return self.similarBots
         case .gifs:
             return self.gifs
         case .stories:

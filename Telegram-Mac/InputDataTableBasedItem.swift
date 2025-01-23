@@ -20,6 +20,7 @@ final class InputDataTableBasedItem : GeneralRowItem {
             }
             var name: TextViewLayout
             var leftView: ((NSView?)->NSView)?
+            var rightView: ((NSView?)->NSView?)?
             var badge: Badge?
         }
         let left: TextViewLayout?
@@ -135,6 +136,7 @@ final class InputDataTableBasedItemView: TableRowView {
         private let left = View()
         
         private var rightLeft: NSView?
+        private var rightRight: NSView?
         private var rightBadge: BadgeView?
         
         required init(frame frameRect: NSRect) {
@@ -181,6 +183,16 @@ final class InputDataTableBasedItemView: TableRowView {
                 addSubview(rightLeft)
             }
             
+            let rightRight = row.right.rightView?(self.rightRight)
+            
+            if rightRight != self.rightRight {
+                self.rightRight?.removeFromSuperview()
+            }
+            self.rightRight = rightRight
+            if let rightRight = rightRight {
+                addSubview(rightRight)
+            }
+            
             if let badge = row.right.badge {
                 let current: BadgeView
                 if let view = self.rightBadge {
@@ -210,9 +222,19 @@ final class InputDataTableBasedItemView: TableRowView {
             } else {
                 rightView.centerY(x: startRight)
             }
-            if let rightBadge {
-                rightBadge.centerY(x: rightView.frame.maxX + 6)
+            
+            var rightOffset = rightView.frame.maxX + 6
+            if let rightRight = rightRight {
+                rightOffset -= 2
+                rightRight.centerY(x: rightOffset)
+                rightOffset += rightRight.frame.width + 2
             }
+            
+            if let rightBadge {
+                rightBadge.centerY(x: rightOffset)
+            }
+            
+           
             left.frame = NSMakeRect(0, 0, startRight - 10, frame.height)
         }
     }
