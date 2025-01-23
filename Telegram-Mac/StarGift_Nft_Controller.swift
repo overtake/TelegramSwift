@@ -1279,6 +1279,13 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                     current.ownerName = name
                     return current
                 }
+            case let .address(address):
+                updateState { current in
+                    var current = current
+                    current.owner = nil
+                    current.ownerName = address
+                    return current
+                }
             }
         }
     }))
