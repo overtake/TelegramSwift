@@ -2130,8 +2130,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         self.markedAsCanBeRemoved = true
-        self.genericCallContext?.stop(account: account, reportCallId: nil)
-        self.screencastCallContext?.stop(account: account, reportCallId: nil)
+        self.genericCallContext?.stop(account: account, reportCallId: nil, debugLog: .init(nil))
+        self.screencastCallContext?.stop(account: account, reportCallId: nil, debugLog: .init(nil))
         self._canBeRemoved.set(.single(true))
         if self.didConnectOnce {
         }
@@ -2427,7 +2427,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.screencastEndpointId = nil
         if let screencastCallContext = self.screencastCallContext {
             self.screencastCallContext = nil
-            screencastCallContext.stop(account: account, reportCallId: nil)
+            screencastCallContext.stop(account: account, reportCallId: nil, debugLog: .init(nil))
 
             let maybeCallInfo: GroupCallInfo? = self.internalState.callInfo
 

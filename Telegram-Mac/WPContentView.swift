@@ -94,7 +94,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         
         set(handler: { [weak self] _ in
             self?.content?.invokeAction()
-        }, for: .Click)
+        }, for: .Down)
     }
     
     required init?(coder: NSCoder) {

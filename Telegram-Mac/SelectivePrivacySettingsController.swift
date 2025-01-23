@@ -770,7 +770,7 @@ class SelectivePrivacySettingsController: TableViewController {
                     return putToTemp(image: image, compress: true)
                 } |> deliverOnMainQueue
                 _ = signal.start(next: { path in
-                    let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
+                    let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true))
                     showModal(with: controller, for: context.window, animationType: .scaleCenter)
                     _ = controller.result.startStandalone(next: { url, _ in
                         DispatchQueue.main.async {

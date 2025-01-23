@@ -60,9 +60,10 @@ CONFIGURE_FLAGS="--enable-cross-compile --disable-programs \
                  --enable-parser=aac,h264,mp3,libopus \
                  --enable-protocol=file \
                  --enable-muxer=mp4,matroska,mpegts \
+                 --enable-hwaccel=h264_videotoolbox,hevc_videotoolbox,av1_videotoolbox \
                  "
 
-
+EXTRA_CFLAGS="-DCONFIG_SAFE_BITSTREAM_READER=1"
 CONFIGURE_FLAGS="$CONFIGURE_FLAGS --disable-debug"
 
 COMPILE="y"
@@ -101,7 +102,7 @@ then
 
 		
 
-		CFLAGS="-arch $ARCH"
+        CFLAGS="$EXTRA_CFLAGS -arch $ARCH"
 		if [ "$ARCH" = "x86_64" ]
 		then
 		    PLATFORM="MacOSX"

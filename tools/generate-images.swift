@@ -430,7 +430,6 @@ func initialize() -> [String] {
     array.append("verify_dialog_left")
     array.append("verify_dialog_active_left")
 
-    
     array.append("chatInputScheduled")
     array.append("appearanceAddPlatformTheme")
     
@@ -962,6 +961,9 @@ func initialize() -> [String] {
     array.append("avatar_star_badge_large_gray")
 
     array.append("chatlist_apps")
+    
+    array.append("chat_input_channel_gift")
+
     
 
     return array

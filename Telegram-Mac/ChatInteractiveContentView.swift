@@ -685,6 +685,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if parent?.media.first is TelegramMediaStory {
             return false
         }
+        if let media = media as? TelegramMediaFile, media.videoCover != nil {
+            return false
+        }
         if parent == nil {
             return true
         }
@@ -817,7 +820,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let image = media as? TelegramMediaImage {
             dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
         } else if let file = media as? TelegramMediaFile {
-            dimensions = file.dimensions?.size ?? size
+            if let image = file.videoCover {
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+            } else {
+                dimensions = file.dimensions?.size ?? size
+            }
         }
         
 
@@ -878,7 +885,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.containsSecretMedia || isSpoiler {
                     updateImageSignal = chatSecretMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor)
                 } else {
-                    updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
+                    updateImageSignal = chatMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
                 
@@ -987,7 +994,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let current = media as? TelegramMediaImage {
                     image = current
                 } else if let file = media as? TelegramMediaFile {
-                    image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+                    image = TelegramMediaImage(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
                 } else {
                     fatalError()
                 }
@@ -1041,13 +1048,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 var fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
                                 
 
-                                let isHLS: Bool = isHLSVideo(file: fileReference.media)
+//                                let isHLS: Bool = isHLSVideo(file: fileReference.media)
+//                                
+//                                if isHLS {
+//                                    fileReference = HLSVideoContent.minimizedHLSQuality(file: fileReference)?.file ?? fileReference
+//                                }
                                 
-                                if isHLS {
-                                    fileReference = HLSVideoContent.minimizedHLSQuality(file: fileReference)?.file ?? fileReference
-                                }
-                                
-                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable && !isHLS, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: false), view: MediaPlayerView(backgroundThread: true))
+                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: false), view: MediaPlayerView(backgroundThread: true))
                                 
                                 strongSelf.autoplayVideoView = autoplay
                                 if !strongSelf.blurBackground {

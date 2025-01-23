@@ -692,12 +692,15 @@ class ChatInputView: View, Notifable {
             if let addition = addition {
                 additionBlockedActionView = ImageButton()
                 additionBlockedActionView?.animates = false
+                additionBlockedActionView?.scaleOnClick = true
                 additionBlockedActionView?.set(image: addition.icon, for: .Normal)
                 additionBlockedActionView?.sizeToFit()
                 addSubview(additionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
 
-                additionBlockedActionView?.set(handler: { control in
-                    addition.action(control)
+                additionBlockedActionView?.set(handler: { [weak self] control in
+                    if let chatInteraction = self?.chatInteraction {
+                        addition.action(chatInteraction, control)
+                    }
                 }, for: .Click)
             } else {
                 additionBlockedActionView?.removeFromSuperview()

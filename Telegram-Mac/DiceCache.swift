@@ -152,11 +152,11 @@ class DiceCache {
 
     
     var emojies_status: Signal<ItemCollectionsView, NoError> {
-        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji, Namespaces.OrderedItemList.CloudUniqueStarGifts], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
     }
     
     var emojies_status_small: Signal<ItemCollectionsView, NoError> {
-        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
+        return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji, Namespaces.OrderedItemList.CloudUniqueStarGifts], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000)
     }
     
     var background_icons: Signal<ItemCollectionsView, NoError> {

@@ -763,7 +763,7 @@ private final class ChatListMediaPreviewView: View {
 
             if let mediaDimensions = file.dimensions {
                 dimensions = mediaDimensions.size
-                signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
+                signal = mediaGridMessageVideo(account: self.context.account, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
             }
         }
         let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets())

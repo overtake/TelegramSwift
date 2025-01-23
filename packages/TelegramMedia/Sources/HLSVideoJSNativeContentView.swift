@@ -1715,7 +1715,8 @@ private final class SourceBuffer {
                             startTime: fragmentInfo.startTime.seconds,
                             endTime: fragmentInfo.startTime.seconds + fragmentInfo.duration.seconds,
                             content: ChunkMediaPlayerPart.TempFile(file: tempFile),
-                            codecName: videoCodecName
+                            codecName: videoCodecName,
+                            offsetTime: 0
                         )
                         strongSelf.items.append(item)
                         strongSelf.updateRanges()

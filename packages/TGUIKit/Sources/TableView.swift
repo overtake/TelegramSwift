@@ -3376,9 +3376,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, (!tableView.isFlipped ? 0 : -contentInsets.top)), documentSize.height - height) + inset.top)
         
+      
+        
         if self.tableView.isFlipped {
             rowRect.origin.y = min(rowRect.origin.y, documentSize.height - clipView.bounds.height)
         }
+        
+        if let string = focus.string, let item {
+            let inset = item.inset(for: string)
+            rowRect.origin.y -= inset
+        }
+        
         if clipView.bounds.minY != rowRect.minY {
             
             var applied = false

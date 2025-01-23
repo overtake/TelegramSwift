@@ -198,7 +198,7 @@ final class WebViewNativeJSContextImpl: HLSJSContext {
             
             #if DEBUG
             if #available(macOS 13.3, *) {
-                self.context.isInspectable = true
+               // self.context.isInspectable = true
             }
             #endif
             

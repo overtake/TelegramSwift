@@ -46,7 +46,8 @@ class PeerInfoArguments {
     
     let getStarsContext:(()->StarsRevenueStatsContext?)?
     let getTonContext:(()->RevenueStatsContext?)?
-
+    let getStarGiftsContext:(()->ProfileGiftsContext?)?
+    
     
     let toggleNotificationsDisposable = MetaDisposable()
     private let deleteDisposable = MetaDisposable()
@@ -145,7 +146,7 @@ class PeerInfoArguments {
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->RevenueStatsContext?)? = nil) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->RevenueStatsContext?)? = nil, getStarGiftsContext: (()->ProfileGiftsContext?)? = nil) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -156,6 +157,7 @@ class PeerInfoArguments {
         self.mediaController = mediaController
         self.getStarsContext = getStarsContext
         self.getTonContext = getTonContext
+        self.getStarGiftsContext = getStarGiftsContext
     }
 
     
@@ -374,6 +376,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private let revenueContext: StarsRevenueStatsContext?
     private let tonRevenueContext: RevenueStatsContext?
+    
+    private let starGiftsProfile: ProfileGiftsContext
+    
     let threadInfo: ThreadInfo?
     
     let source: Source
@@ -456,28 +461,34 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
     }
     
-    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil) {
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil, shake: Bool = true, starGiftsProfile: ProfileGiftsContext? = nil) {
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
-            controller.view.shake(beep: true)
+            if shake {
+                controller.view.shake(beep: true)
+            }
+            if let mediaMode {
+                controller.mediaController.setMode(mediaMode)
+            }
             return
         }
         let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
         _ = signal.start(next: { [weak navigation] peer in
             if peer.restrictionText(context.contentSettings) == nil {
-                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode), animated, style: animated ? .push : Optional.none)
+                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode, starGiftsProfile: starGiftsProfile), animated, style: animated ? .push : Optional.none)
             }
         })
     }
     
     private let mediaMode: PeerMediaCollectionMode?
     
-    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, mediaMode: PeerMediaCollectionMode? = nil) {
+    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, mediaMode: PeerMediaCollectionMode? = nil, starGiftsProfile: ProfileGiftsContext? = nil) {
         let peerId = peer.id
         self.peerId = peer.id
         self.peer = peer
         self.source = source
         self.threadInfo = threadInfo
         self.mediaMode = mediaMode
+        self.starGiftsProfile = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peerId)
         
         if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             self.stories = stories ?? .init(account: context.account, peerId: peerId)
@@ -506,7 +517,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             self.tonRevenueContext = nil
         }
         
-        self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true, isBot: peer.isBot, mode: mediaMode)
+        self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true, isBot: peer.isBot, mode: mediaMode, starGiftsProfile: self.starGiftsProfile)
         super.init(context)
         
         bar = .init(height: 50, enableBorder: false)
@@ -529,6 +540,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             return self?.revenueContext
         }, getTonContext: { [weak self] in
             return self?.tonRevenueContext
+        }, getStarGiftsContext: { [weak self] in
+            return self?.starGiftsProfile
         })
         
         
@@ -536,6 +549,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             return self?.navigationController
         }, mediaController: { [weak self] in
               return self?.mediaController
+        }, getStarGiftsContext: { [weak self] in
+            return self?.starGiftsProfile
         })
         if let threadInfo = threadInfo {
             _topicArguments = TopicInfoArguments(context: context, peerId: peerId, state: TopicInfoState(threadId: threadInfo.message.threadId), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
@@ -771,6 +786,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         if peer.isChannel {
             _ = context.engine.peers.requestRecommendedChannels(peerId: peerId, forceUpdate: true).startStandalone()
+        } else if peer.isBot {
+            _ = context.engine.peers.requestRecommendedBots(peerId: peerId, forceUpdate: true).startStandalone()
         }
         
         

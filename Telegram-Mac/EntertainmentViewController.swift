@@ -483,7 +483,7 @@ public final class EntertainmentInteractions {
     var current:EntertainmentState = .emoji
     
     var sendEmoji:(String, CGRect?) ->Void = { _,_ in }
-    var sendAnimatedEmoji:(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?) ->Void = { _, _, _, _ in}
+    var sendAnimatedEmoji:(StickerPackItem, StarGift.UniqueGift?, StickerPackCollectionInfo?, Int32?, NSRect?) ->Void = { _, _, _, _, _ in}
     var sendSticker:(TelegramMediaFile, Bool, Bool, ItemCollectionId?) ->Void = { _, _, _, _ in}
     var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
@@ -754,7 +754,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker, info, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, info, _, fromRect in
             if self?.mode == .selectAvatar {
               
             } else {

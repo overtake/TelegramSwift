@@ -144,6 +144,8 @@ class ChannelInfoArguments : PeerInfoArguments {
         }
     }
     
+    
+    
     private let reportPeerDisposable = MetaDisposable()
     private let updatePeerNameDisposable = MetaDisposable()
     private let toggleSignaturesDisposable = MetaDisposable()
@@ -222,6 +224,10 @@ class ChannelInfoArguments : PeerInfoArguments {
             }))
         }
         return true
+    }
+    
+    func giftPremium() {
+        showModal(with: GiftingController(context: context, peerId: self.peerId, isBirthday: false, starGiftsContext: getStarGiftsContext?()), for: context.window)
     }
     
     func visibilitySetup() {
@@ -354,7 +360,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true))
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)

@@ -337,7 +337,7 @@ enum ChatState : Equatable {
 
     struct AdditionAction {
         let icon: CGImage
-        let action: (NSView)->Void
+        let action: (ChatInteraction, NSView)->Void
     }
 
     case normal
@@ -765,13 +765,13 @@ class ChatPresentationInterfaceState: Equatable {
                         if let notificationSettings = notificationSettings {
                             return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)
-                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { control in
+                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { _, control in
                                 tooltip(for: control, text: strings().chatGigagroupHelp)
                             }))
                         } else {
                             return .action(strings().chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)
-                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { control in
+                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { _, control in
 
                             }))
                         }
@@ -824,9 +824,14 @@ class ChatPresentationInterfaceState: Equatable {
                         chatInteraction.removeAndCloseChat()
                     }, nil)
                 } else if !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings, peer.isChannel {
-                    return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
-                        chatInteraction.toggleNotifications(nil)
-                    }, nil)
+                    if let cachedData = cachedData as? CachedChannelData, cachedData.flags.contains(.starGiftsAvailable)  {
+                        return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
+                            chatInteraction.toggleNotifications(nil)
+                        }, .init(icon: theme.icons.chat_input_channel_gift, action: { chatInteraction, _ in
+                            showModal(with: GiftingController(context: chatInteraction.context, peerId: peer.id, isBirthday: false), for: chatInteraction.context.window)
+                        }))
+                    }
+                   
                 }
             } else if let peer = peer as? TelegramGroup {
                 if  peer.membership == .Left {

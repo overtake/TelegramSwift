@@ -46,6 +46,31 @@ public enum SelectionRectDimensions {
         }
     }
     
+    static var allCases: [SelectionRectDimensions] {
+        return [.none, .original, .square, .x2_3, .x3_5, .x3_4, .x4_5, .x5_7, .x9_16, .x16_9]
+    }
+    
+    public static func bestDimension(for size: CGSize) -> SelectionRectDimensions {
+        guard size.width > 0 && size.height > 0 else {
+            return .none
+        }
+
+        let inputAspectRatio = size.height / size.width
+        var closestDimension: SelectionRectDimensions = .none
+        var smallestDifference: CGFloat = CGFloat.greatestFiniteMagnitude
+
+        for dimension in SelectionRectDimensions.allCases {
+            let aspectRatio = dimension.aspectRation(size)
+            let difference = abs(inputAspectRatio - aspectRatio)
+            if difference <= smallestDifference {
+                smallestDifference = difference
+                closestDimension = dimension
+            }
+        }
+
+        return closestDimension
+    }
+    
     func aspectRation(_ size: NSSize) -> CGFloat {
         switch self {
         case .none:

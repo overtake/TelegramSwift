@@ -287,17 +287,16 @@ private final class PreviewRowItem : GeneralRowItem {
         self.peer = peer
         self.source = source
         self.includeUpgrade = includeUpgrade
-        self.presentation = theme.withUpdatedChatMode(true).withUpdatedWallpaper(.init(wallpaper: .builtin, associated: nil)).withUpdatedColors(dayClassicPalette)
+        self.presentation = theme.withUpdatedChatMode(true)
         
         let titleAttr = NSMutableAttributedString()
         
         switch source {
-        case .starGift(let option):
+        case .starGift:
             if peer.id == myPeer.id {
                 titleAttr.append(string: strings().notificationStarGiftSelfTitle, color: presentation.chatServiceItemTextColor, font: .medium(.header))
             } else {
-                titleAttr.append(string: strings().chatServiceStarGiftFrom("\(clown_space)\(myPeer._asPeer().compactDisplayTitle)"), color: presentation.chatServiceItemTextColor, font: .medium(.header))
-                titleAttr.insertEmbedded(.embeddedAvatar(myPeer), for: clown)
+                titleAttr.append(string: strings().chatServiceStarGiftFrom(myPeer._asPeer().compactDisplayTitle), color: presentation.chatServiceItemTextColor, font: .medium(.header))
             }
         case .premium(let option):
             titleAttr.append(string: strings().giftPremiumHeader(timeIntervalString(Int(option.months) * 30 * 60 * 60 * 24)), color: presentation.chatServiceItemTextColor, font: .medium(.header))
@@ -321,7 +320,11 @@ private final class PreviewRowItem : GeneralRowItem {
                 if peer.id == myPeer.id {
                     infoText.append(string: strings().notificationStarsGiftSubtitleSelf, color: presentation.chatServiceItemTextColor, font: .normal(.text))
                 } else {
-                    infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                    if peer._asPeer().isChannel {
+                        infoText.append(string: strings().starsGiftPreviewChannelDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                    } else {
+                        infoText.append(string: strings().starsGiftPreviewDisplay(strings().starListItemCountCountable(Int(option.native.generic!.convertStars))) , color: presentation.chatServiceItemTextColor, font: .normal(.text))
+                    }
                 }
             case .premium:
                 infoText.append(string: strings().giftPremiumText, color: presentation.chatServiceItemTextColor, font: .normal(.text))
@@ -336,7 +339,13 @@ private final class PreviewRowItem : GeneralRowItem {
             if peer.id == myPeer.id {
                 headerLayout = .init(.initialize(string: strings().notificationStarsGiftSelfBought(strings().starListItemCountCountable(Int(option.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
             } else {
-                headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(option.stars))), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+                let text: String
+                if peer._asPeer().isChannel {
+                    text = strings().chatServicePremiumGiftSentChannel(myPeer._asPeer().compactDisplayTitle, peer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(option.stars)))
+                } else {
+                    text = strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(option.stars)))
+                }
+                headerLayout = .init(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
             }
         case .premium(let option):
             headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, option.price), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
@@ -716,11 +725,13 @@ enum PreviewGiftSource : Equatable {
     case premium(option: PremiumGiftProduct)
 }
 
-func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSource, peer: EnginePeer) -> InputDataModalController {
+func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSource, peer: EnginePeer, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let paymentDisposable = MetaDisposable()
     actionsDisposable.add(paymentDisposable)
+    
+    let starGiftsProfile: ProfileGiftsContext = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peer.id)
     
     let inAppPurchaseManager = context.inAppPurchaseManager
     
@@ -907,7 +918,14 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
                 case let .done(receiptMessageId, _, _):
                     PlayConfetti(for: window, stars: true)
                     closeAllModals(window: window)
-                    context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
+                    
+                    starGiftsProfile.reload()
+                    
+                    if peer._asPeer().isChannel {
+                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id, mediaMode: .gifts, shake: false, starGiftsProfile: starGiftsProfile)
+                    } else {
+                        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
+                    }
                 default:
                     break
                     

@@ -179,6 +179,17 @@ public class FoldingTextLayout {
         return blocks.contains(where: { $0.text.selectedRange.hasSelectText })
     }
     
+    func rect(for text: String) -> NSRect? {
+        
+        for block in blocks {
+            let range = block.text.attributedString.string.nsstring.range(of: text)
+            if range.location != NSNotFound {
+                return block.text.rects(range).first?.0
+            }
+        }
+        return nil
+    }
+    
     var merged: TextViewLayout {
         let lines = self.blocks.reduce([], {
             $0 + $1.text.lines

@@ -485,7 +485,7 @@ class MediaCell : Control {
                 if layout.isSecret {
                     signal = chatSecretMessageVideo(account: context.account, fileReference: fileMedia, scale: backingScaleFactor)
                 } else {
-                    signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileMedia, scale: backingScaleFactor)
+                    signal = chatMessageVideo(account: context.account, fileReference: fileMedia, scale: backingScaleFactor)
                 }
             } else {
                 
@@ -883,7 +883,7 @@ class MediaGifCell : MediaCell {
         let isUpdated = previousLayout == nil || !previousLayout!.isEqual(to: layout)
         super.update(layout: layout, selected: selected, context: context, table: table, animated: animated)
         if isUpdated, let fileMedia = layout.fileMedia {
-            let signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileMedia, scale: backingScaleFactor)
+            let signal = chatMessageVideo(account: context.account, fileReference: fileMedia, scale: backingScaleFactor)
             gifView.update(with: fileMedia, size: frame.size, viewSize: frame.size, context: context, table: nil, iconSignal: signal)
             gifView.userInteractionEnabled = false
         }

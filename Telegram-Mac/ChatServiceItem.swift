@@ -205,8 +205,19 @@ class ChatServiceItem: ChatRowItem {
                 let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: .gift), for: context.window)
             case let .starGift(amount, date, from, to, purpose):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
-                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: purpose, messageId: message?.id), for: context.window)
+                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
+                
+                switch purpose {
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                    if let unique = gift.unique {
+                        showModal(with: StarGift_Nft_Controller(context: context, gift: gift, source: .quickLook(unique), transaction: transaction, purpose: purpose), for: context.window)
+                        return
+                    }
+                default:
+                    break
+                }
+                
+                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: purpose, reference: message.flatMap({ .message(messageId: $0.id )})), for: context.window)
             }
         }
     }
@@ -1208,7 +1219,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case let .starGift(gift, convertStars, text, entities, nameHidden, savedToProfile, convertedToStars, upgraded, canUpgrade, upgradeStars, isRefunded, upgradedMessageId):
+                case let .starGift(gift, convertStars, text, entities, nameHidden, savedToProfile, convertedToStars, upgraded, canUpgrade, upgradeStars, isRefunded, upgradedMessageId, peerId, senderId, saverId):
                     let info = NSMutableAttributedString()
                     let header = NSMutableAttributedString()
                     
@@ -1220,9 +1231,10 @@ class ChatServiceItem: ChatRowItem {
                     if message.id.peerId == context.peerId {
                         header.append(string: strings().notificationStarGiftSelfTitle, color: grayTextColor, font: .medium(theme.fontSize + 1))
                     } else {
-                        header.append(string: strings().chatServiceStarGiftFrom("\(clown)\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
-                        if let author = message.author {
-                            header.insertEmbedded(.embeddedAvatar(.init(author)), for: clown)
+                        if let senderId, let author = message.peers[senderId] {
+                            header.append(string: strings().chatServiceStarGiftFrom("\(author.displayTitle)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                        } else {
+                            header.append(string: strings().chatServiceStarGiftFrom("\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
                         }
                     }
      
@@ -1248,7 +1260,11 @@ class ChatServiceItem: ChatRowItem {
                                 } else if convertedToStars {
                                     text = strings().starsStarGiftTextConvertedIncoming(convertStarsString)
                                 } else {
-                                    text = strings().starsStarGiftTextIncoming(convertStarsString)
+                                    if let peerId, peerId.namespace == Namespaces.Peer.CloudChannel {
+                                        text = strings().starsStarGiftTextIncomingChannel(convertStarsString)
+                                    } else {
+                                        text = strings().starsStarGiftTextIncoming(convertStarsString)
+                                    }
                                 }
                             } else {
                                 if savedToProfile {
@@ -1264,7 +1280,7 @@ class ChatServiceItem: ChatRowItem {
                         info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                     }
                     
-                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil)
+                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
                     
                     let ribbon: ChatServiceItem.GiftData.Ribbon?
                     if let availability = gift.availability {
@@ -1281,7 +1297,7 @@ class ChatServiceItem: ChatRowItem {
                         toPeer = message.peers[message.id.peerId].flatMap( { .init($0) })
                     }
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1291,7 +1307,11 @@ class ChatServiceItem: ChatRowItem {
                             text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.price)))
                         }
                     } else {
-                        text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.price)))
+                        if let senderId, let author = message.peers[senderId], let peerId = peerId, let toPeer = message.peers[peerId] {
+                            text = strings().chatServiceStarGiftChannelSelt(author.displayTitle, toPeer.displayTitle, strings().starListItemCountCountable(Int(gift.price)))
+                        } else {
+                            text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.price)))
+                        }
                     }
                     let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     
@@ -1304,17 +1324,21 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
 
-                case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded):
+                case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let saverId):
                     if case let .unique(gift) = gift {
                         var text: String = ""
                         if let messagePeer = message.peers[message.id.peerId] {
-                            let peerName = messagePeer.compactDisplayTitle
+                            let peerName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? messagePeer.compactDisplayTitle
                             let peerIds: [(Int, EnginePeer.Id?)] = [(0, messagePeer.id)]
                             if isUpgrade {
                                 if message.author?.id == context.account.peerId {
                                     text = strings().notificationStarsGiftUpgradeYou(peerName)
                                 } else {
-                                    text = strings().notificationStarsGiftUpgrade(peerName)
+                                    if let _ = senderId {
+                                        text = strings().notificationStarsGiftUpgradeChannel(peerName)
+                                    } else {
+                                        text = strings().notificationStarsGiftUpgrade(peerName)
+                                    }
                                 }
                             } else if isTransferred {
                                 if message.author?.id == context.account.peerId {
@@ -1336,7 +1360,7 @@ class ChatServiceItem: ChatRowItem {
                             }
                         }
                         
-                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate)
+                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
                         
 
                         
@@ -1352,7 +1376,11 @@ class ChatServiceItem: ChatRowItem {
                         let header = NSMutableAttributedString()
                         
                         
-                        header.append(string: strings().chatServiceStarGiftFrom("\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                        if let senderId, let author = message.peers[senderId] {
+                            header.append(string: strings().chatServiceStarGiftFrom("\(author.displayTitle)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                        } else {
+                            header.append(string: strings().chatServiceStarGiftFrom("\(authorName)"), color: grayTextColor, font: .medium(theme.fontSize + 1))
+                        }
 
                         
                         var attributes: [GiftData.UniqueAttributes.Attribute] = []
@@ -1389,7 +1417,7 @@ class ChatServiceItem: ChatRowItem {
                             info.append(string: strings().giftUpgradeRefunded, color: grayTextColor, font: .normal(theme.fontSize))
                         }
                         
-                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
+                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
                         
                     }
                 default:
@@ -1606,7 +1634,7 @@ class ChatServiceItem: ChatRowItem {
                 putToTemp(image: $0, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), doneString: strings().modalSet)
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true), doneString: strings().modalSet)
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 
                 let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
@@ -1697,92 +1725,94 @@ class ChatServiceItem: ChatRowItem {
     }
 }
 
+class UniqueAttributesView : View {
+    private let headerView = TextView()
+    private let leftAttrs: View = View()
+    private let rightAttrs: View = View()
+    private let attrContainer = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(headerView)
+        attrContainer.addSubview(rightAttrs)
+        attrContainer.addSubview(leftAttrs)
+
+        addSubview(attrContainer)
+        
+        headerView.userInteractionEnabled = false
+        headerView.isSelectable = false
+    }
+     required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(attributes: ChatServiceItem.GiftData.UniqueAttributes, animated: Bool) {
+        headerView.update(attributes.header)
+        
+        while leftAttrs.subviews.count > attributes.attributes.count {
+            leftAttrs.subviews.last?.removeFromSuperview()
+        }
+        while leftAttrs.subviews.count < attributes.attributes.count {
+            let textView = TextView()
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            leftAttrs.addSubview(textView)
+        }
+        
+        
+        while rightAttrs.subviews.count > attributes.attributes.count {
+            rightAttrs.subviews.last?.removeFromSuperview()
+        }
+        while rightAttrs.subviews.count < attributes.attributes.count {
+            let textView = TextView()
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            rightAttrs.addSubview(textView)
+        }
+        
+        for (i, attribute) in attributes.attributes.enumerated() {
+            let left = self.leftAttrs.subviews[i] as! TextView
+            let right = self.rightAttrs.subviews[i] as! TextView
+            left.update(attribute.name)
+            right.update(attribute.value)
+        }
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        headerView.centerX(y: 5)
+        
+        let maxLeftWidth = leftAttrs.subviews.map { $0.frame.width }.max() ?? 0
+        let maxRightWidth = rightAttrs.subviews.map { $0.frame.width }.max() ?? 0
+
+        leftAttrs.setFrameSize(NSMakeSize(maxLeftWidth, frame.height - headerView.frame.height - 5))
+        rightAttrs.setFrameSize(NSMakeSize(maxRightWidth, frame.height - headerView.frame.height - 5))
+
+        
+        attrContainer.setFrameSize(NSMakeSize(leftAttrs.frame.width + 6 + rightAttrs.frame.width, leftAttrs.frame.height))
+        
+        leftAttrs.setFrameOrigin(0, 0)
+        rightAttrs.setFrameOrigin(leftAttrs.frame.maxX + 6, 0)
+
+        
+        attrContainer.centerX(y: headerView.frame.maxY + 5)
+        
+        var y: CGFloat = 0
+        for (i, left) in leftAttrs.subviews.enumerated() {
+            let right = self.rightAttrs.subviews[i]
+            left.setFrameOrigin(leftAttrs.frame.width - left.frame.width, y)
+            right.setFrameOrigin(0, y)
+            y += 20
+        }
+    }
+}
+
 class ChatServiceRowView: TableRowView {
     
     private class GiftView : Control {
         
-        class UniqueAttributesView : View {
-            private let headerView = TextView()
-            private let leftAttrs: View = View()
-            private let rightAttrs: View = View()
-            private let attrContainer = View()
-            required init(frame frameRect: NSRect) {
-                super.init(frame: frameRect)
-                addSubview(headerView)
-                attrContainer.addSubview(rightAttrs)
-                attrContainer.addSubview(leftAttrs)
-
-                addSubview(attrContainer)
-                
-                headerView.userInteractionEnabled = false
-                headerView.isSelectable = false
-            }
-             required init?(coder: NSCoder) {
-                fatalError("init(coder:) has not been implemented")
-            }
-            
-            func set(attributes: ChatServiceItem.GiftData.UniqueAttributes, item: ChatServiceItem, animated: Bool) {
-                headerView.update(attributes.header)
-                
-                while leftAttrs.subviews.count > attributes.attributes.count {
-                    leftAttrs.subviews.last?.removeFromSuperview()
-                }
-                while leftAttrs.subviews.count < attributes.attributes.count {
-                    let textView = TextView()
-                    textView.userInteractionEnabled = false
-                    textView.isSelectable = false
-                    leftAttrs.addSubview(textView)
-                }
-                
-                
-                while rightAttrs.subviews.count > attributes.attributes.count {
-                    rightAttrs.subviews.last?.removeFromSuperview()
-                }
-                while rightAttrs.subviews.count < attributes.attributes.count {
-                    let textView = TextView()
-                    textView.userInteractionEnabled = false
-                    textView.isSelectable = false
-                    rightAttrs.addSubview(textView)
-                }
-                
-                for (i, attribute) in attributes.attributes.enumerated() {
-                    let left = self.leftAttrs.subviews[i] as! TextView
-                    let right = self.rightAttrs.subviews[i] as! TextView
-                    left.update(attribute.name)
-                    right.update(attribute.value)
-                }
-                
-                needsLayout = true
-            }
-            
-            override func layout() {
-                super.layout()
-                headerView.centerX(y: 5)
-                
-                let maxLeftWidth = leftAttrs.subviews.map { $0.frame.width }.max() ?? 0
-                let maxRightWidth = rightAttrs.subviews.map { $0.frame.width }.max() ?? 0
-
-                leftAttrs.setFrameSize(NSMakeSize(maxLeftWidth, frame.height - headerView.frame.height - 5))
-                rightAttrs.setFrameSize(NSMakeSize(maxRightWidth, frame.height - headerView.frame.height - 5))
-
-                
-                attrContainer.setFrameSize(NSMakeSize(leftAttrs.frame.width + 6 + rightAttrs.frame.width, leftAttrs.frame.height))
-                
-                leftAttrs.setFrameOrigin(0, 0)
-                rightAttrs.setFrameOrigin(leftAttrs.frame.maxX + 6, 0)
-
-                
-                attrContainer.centerX(y: headerView.frame.maxY + 5)
-                
-                var y: CGFloat = 0
-                for (i, left) in leftAttrs.subviews.enumerated() {
-                    let right = self.rightAttrs.subviews[i]
-                    left.setFrameOrigin(leftAttrs.frame.width - left.frame.width, y)
-                    right.setFrameOrigin(0, y)
-                    y += 20
-                }
-            }
-        }
+        
         
         private let disposable = MetaDisposable()
         private let stickerView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSMakeSize(150, 150).bounds)
@@ -1809,7 +1839,7 @@ class ChatServiceRowView: TableRowView {
             
             stickerView.userInteractionEnabled = false 
             self.scaleOnClick = true
-            layer?.cornerRadius = 10
+            layer?.cornerRadius = 12
         }
         
         func update(item: ChatServiceItem, data: ChatServiceItem.GiftData, animated: Bool) {
@@ -1822,7 +1852,7 @@ class ChatServiceRowView: TableRowView {
             switch data.source {
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     switch gift {
                     case let .unique(gift):
                         uniqueGift = gift
@@ -1903,7 +1933,7 @@ class ChatServiceRowView: TableRowView {
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     switch gift {
                     case let .unique(gift):
                         if let file = gift.file {
@@ -1953,6 +1983,7 @@ class ChatServiceRowView: TableRowView {
                         current = view
                     } else {
                         current = PeerInfoBackgroundView(frame: NSMakeRect(0, 0, 180, 180))
+                        current.offset = 50
                         self.addSubview(current, positioned: .below, relativeTo: stickerView)
                         self.backgroundView = current
                     }
@@ -2006,7 +2037,7 @@ class ChatServiceRowView: TableRowView {
                         self.attributesView = current
                     }
                     
-                    current.set(attributes: attributes, item: item, animated: animated)
+                    current.set(attributes: attributes, animated: animated)
                     
                 }
                
@@ -2484,7 +2515,7 @@ class ChatServiceRowView: TableRowView {
                         imageSize = media.representations.last?.dimensions.size ?? StoryLayoutView.size
                     } else if let media = media as? TelegramMediaFile {
                         let reference = FileMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
-                        updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference:reference, scale: backingScaleFactor)
+                        updateImageSignal = chatMessageVideo(account: context.account, fileReference:reference, scale: backingScaleFactor)
                         imageSize = media.dimensions?.size ?? StoryLayoutView.size
                     } else {
                         updateImageSignal = .complete()

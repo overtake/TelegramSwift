@@ -124,7 +124,7 @@ class MGalleryGIFItem: MGalleryItem {
         super.request(immediately: immediately)
         let size = media.dimensions?.size.fitted(pagerSize) ?? sizeValue
         
-        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)
+        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(account: context.account, fileReference: entry.fileReference(media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
         let result = signal |> deliverOn(graphicsThreadPool) |> mapToThrottled { generator -> Signal<CGImage?, NoError> in
             return .single(generator.execute(arguments, generator.data)?.generateImage())

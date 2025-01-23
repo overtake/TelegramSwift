@@ -1670,6 +1670,7 @@ public func blurImage(_ data:Data?, _ s:NSSize, cornerRadius:CGFloat = 0) -> CGI
 
 private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaReference, thumbnailSize: Bool = false, onlyFullSize: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageRenderData, NoError> {
     
+    
     let fetchedFullSize = postbox.mediaBox.cachedResourceRepresentation(fileReference.media.resource, representation: thumbnailSize ? CachedScaledVideoFirstFrameRepresentation(size: CGSize(width: 160.0, height: 160.0)) : CachedVideoFirstFrameRepresentation(), complete: false, fetch: true, attemptSynchronously: synchronousLoad)
     
     let maybeFullSize = postbox.mediaBox.cachedResourceRepresentation(fileReference.media.resource, representation: thumbnailSize ? CachedScaledVideoFirstFrameRepresentation(size: CGSize(width: 160.0, height: 160.0)) : CachedVideoFirstFrameRepresentation(), complete: false, fetch: false, attemptSynchronously: synchronousLoad)
@@ -1828,8 +1829,8 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
 
 
 
-func chatMessageVideo(postbox: Postbox, fileReference: FileMediaReference, scale: CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    return mediaGridMessageVideo(postbox: postbox, fileReference: fileReference, scale: scale, synchronousLoad: synchronousLoad)
+func chatMessageVideo(account: Account, fileReference: FileMediaReference, scale: CGFloat, synchronousLoad: Bool = false, noVideoCover: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    return mediaGridMessageVideo(account: account, fileReference: fileReference, scale: scale, synchronousLoad: synchronousLoad, noVideoCover: noVideoCover)
 }
 
 
@@ -2318,8 +2319,22 @@ func chatMessageVideoThumbnail(account: Account, fileReference: FileMediaReferen
 }
 
 
-func mediaGridMessageVideo(postbox: Postbox, fileReference: FileMediaReference, scale: CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessageVideoDatas(postbox: postbox, fileReference: fileReference, synchronousLoad: synchronousLoad)
+func mediaGridMessageVideo(account: Account, fileReference: FileMediaReference, scale: CGFloat, synchronousLoad: Bool = false, noVideoCover: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    
+    
+    if let image = fileReference.media.videoCover, !noVideoCover {
+        
+        switch fileReference.abstract {
+        case let .message(message, _):
+            return chatMessagePhoto(account: account, imageReference: ImageMediaReference.message(message: message, media: image), scale: scale, synchronousLoad: synchronousLoad, autoFetchFullSize: true)
+        case let .standalone(media):
+            return chatMessagePhoto(account: account, imageReference: ImageMediaReference.standalone(media: image), scale: scale, synchronousLoad: synchronousLoad, autoFetchFullSize: true)
+        default:
+            break
+        }
+    }
+    
+    let signal = chatMessageVideoDatas(postbox: account.postbox, fileReference: fileReference, synchronousLoad: synchronousLoad)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in

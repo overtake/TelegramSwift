@@ -244,4 +244,8 @@ open class TableRowItem: NSObject, Comparable, Identifiable {
         }
         return ceil(_isAutohidden ? 1.0 : height)
     }
+    
+    open func inset(for text: String) -> CGFloat {
+        return 0
+    }
 }

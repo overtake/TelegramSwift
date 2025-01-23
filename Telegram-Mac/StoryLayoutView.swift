@@ -453,7 +453,7 @@ class StoryImageView : StoryLayoutView {
             resource = image.representations.last?.resource
         } else if let file = media as? TelegramMediaFile {
             let fileReference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
-            updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor)
+            updateImageSignal = chatMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor)
             resource = nil
         }
         

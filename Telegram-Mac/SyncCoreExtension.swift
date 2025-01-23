@@ -174,6 +174,13 @@ extension Peer {
         return false
     }
     
+    var isOwner: Bool {
+        if let peer = self as? TelegramChannel {
+            return peer.flags.contains(.isCreator)
+        }
+        return false
+    }
+    
     var isGigagroup:Bool {
         if let peer = self as? TelegramChannel {
             return peer.flags.contains(.isGigagroup)

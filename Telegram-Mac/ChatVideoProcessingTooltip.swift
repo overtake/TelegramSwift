@@ -154,7 +154,7 @@ final class ChatVideoProcessingTooltip : Control {
                 if let file = message.media.first as? TelegramMediaFile {
                     current.set(arguments: .init(corners: .init(radius: 4), imageSize: file.dimensions?.size ?? current.frame.size, boundingSize: current.frame.size, intrinsicInsets: .init()))
                     
-                    current.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor))
+                    current.setSignal(chatMessageVideo(account: context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: backingScaleFactor))
                 }
             }
             

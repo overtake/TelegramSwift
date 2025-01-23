@@ -153,7 +153,7 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
             if file.mimeType.hasPrefix("image/") && !file.mimeType.hasSuffix("gif") {
                 self.imageView.setSignal(instantPageImageFile(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
             } else {
-                self.imageView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+                self.imageView.setSignal(chatMessageVideo(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
             }
 
             switch arguments {

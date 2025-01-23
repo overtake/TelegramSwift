@@ -1301,7 +1301,7 @@ final class AvatarConstructorController : ModalViewController {
         interactions.sendGIF = { file, _, _ in
             arguments.selectForeground(file)
         }
-        interactions.sendAnimatedEmoji = { item, _, _, _ in
+        interactions.sendAnimatedEmoji = { item, _, _, _, _ in
             arguments.selectForeground(item.file)
         }
         

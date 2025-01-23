@@ -1409,6 +1409,14 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 }
             }
         })
+    case let .nft(_, slug, context):
+        showModalProgress(signal: context.engine.payments.getUniqueStarGift(slug: slug), for: getWindow(context)).start(next: { gift in
+            if let gift {
+                showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .quickLook(gift), transaction: nil), for: getWindow(context))
+            } else {
+                showModalText(for: getWindow(context), text: strings().unknownError)
+            }
+        })
     }
     
 }
@@ -1551,6 +1559,7 @@ enum inAppLink {
     case businessLink(link: String, slug: String, context: AccountContext)
     case starsTopup(link: String, amount: Int64, purpose: String, context: AccountContext)
     case multigift(link: String, context: AccountContext)
+    case nft(link: String, slug: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1624,6 +1633,8 @@ enum inAppLink {
             return link
         case let .starsTopup(link, _, _, _):
             return link
+        case let .nft(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1633,10 +1644,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/", "nft/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft"]
 
 
 let ton_scheme:String = "ton://"
@@ -1928,6 +1939,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let data = string.components(separatedBy: "/")
                         if let context = context, data.count == 2 {
                             return .businessLink(link: urlString, slug: data[1], context: context)
+                        }
+                    case actions_me[14]:
+                        let data = string.components(separatedBy: "/")
+                        if let context = context, data.count == 2 {
+                            return .nft(link: urlString, slug: data[1], context: context)
                         }
                     default:
                         break
@@ -2449,6 +2465,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[23]:
                     if let context = context, let slug = vars[keyURLSlug] {
                         return .businessLink(link: urlString, slug: slug, context: context)
+                    }
+                case known_scheme[24]:
+                    if let context = context, let slug = vars[keyURLSlug] {
+                        return .nft(link: urlString, slug: slug, context: context)
                     }
                 default:
                     break

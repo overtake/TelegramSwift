@@ -260,7 +260,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         }
                         
                     }
-                    let signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: effectiveFile, scale: backingScaleFactor)
+                    let signal = chatMessageVideo(account: item.context.account, fileReference: effectiveFile, scale: backingScaleFactor)
                     
 
                     view.update(with: effectiveFile, size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)

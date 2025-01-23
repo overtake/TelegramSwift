@@ -248,7 +248,7 @@ private final class TransactionView : GeneralContainableRowView {
             if let image = media as? TelegramMediaImage {
                 updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.starsTransaction(transaction: reference, media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             } else if let file = media as? TelegramMediaFile {
-                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .starsTransaction(transaction: reference, media: file), scale: backingScaleFactor)
+                updateImageSignal = chatMessageVideo(account: item.context.account, fileReference: .starsTransaction(transaction: reference, media: file), scale: backingScaleFactor)
             }
 
 

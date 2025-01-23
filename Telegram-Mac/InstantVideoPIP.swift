@@ -161,7 +161,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         isShown = true
         genericView.animatesAlphaOnFirstTransition = false
         if let message = currentMessage, let media = message.anyMedia as? TelegramMediaFile {
-            let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
+            let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(account: context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
             let resource = FileMediaReference.message(message: MessageReference(message), media: media)
             

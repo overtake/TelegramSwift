@@ -88,10 +88,12 @@ class WPLayout: Equatable {
     }
     private let entities: [MessageTextEntity]?
     let adAttribute: AdMessageAttribute?
+    let uniqueGift: StarGift.UniqueGift?
     
-    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil, uniqueGift: StarGift.UniqueGift? = nil) {
         self.content = content
         self.context = context
+        self.uniqueGift = uniqueGift
         self.presentation = presentation
         self.chatInteraction = chatInteraction
         self.mayCopyText = mayCopyText
@@ -113,6 +115,8 @@ class WPLayout: Equatable {
             }
             _siteNameAttr = .initialize(string: siteName, color: presentation.activity.main, font: .medium(.text))
         }
+        
+    
         
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
@@ -141,7 +145,7 @@ class WPLayout: Equatable {
         }
         
         
-        if let text = text {
+        if let text = text, uniqueGift == nil {
             
             let entitites = entities ?? []
 
@@ -313,7 +317,12 @@ class WPLayout: Equatable {
         if action_text != nil {
             buttonSize += 39
         }
-        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width), size.height + buttonSize)
+        
+        var size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width), size.height + buttonSize)
+        
+        if let uniqueGift {
+            size.height += 50
+        }
         
         self.contentRect = NSMakeRect(insets.left, insets.top, size.width, size.height)
         self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.bottom + insets.top)
@@ -323,6 +332,15 @@ class WPLayout: Equatable {
         
         if let adAtribute = parent.adAttribute {
             return adAtribute.buttonText
+        }
+        
+        for attribute in content.attributes {
+            switch attribute {
+            case .starGift:
+                return strings().chatViewCollectible
+            default:
+                break
+            }
         }
         
         if self.isProxyConfig {

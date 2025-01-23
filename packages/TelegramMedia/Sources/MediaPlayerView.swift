@@ -70,7 +70,10 @@ public final class MediaPlayerView: View {
     private var videoNode: MediaPlayerViewDisplayView
     
     private(set) var videoLayer: AVSampleBufferDisplayLayer?
-        
+    private var videoLayerReadyForDisplayObserver: NSObjectProtocol?
+    private var didNotifyVideoLayerReadyForDisplay: Bool = false
+    public var hasSentFramesToDisplay: (() -> Void)?
+
     
     public var preventsCapture: Bool = false {
         didSet {
@@ -249,6 +252,13 @@ public final class MediaPlayerView: View {
                             return
                         }
                         videoLayer.enqueue(frame.sampleBuffer)
+                        if #available(macOS 14.4, *) {
+                        } else {
+                            if !strongSelf.didNotifyVideoLayerReadyForDisplay {
+                                strongSelf.didNotifyVideoLayerReadyForDisplay = true
+                                strongSelf.hasSentFramesToDisplay?()
+                            }
+                        }
                     }
                 }
                 Queue.mainQueue().async {
@@ -283,6 +293,10 @@ public final class MediaPlayerView: View {
                             return
                         }
                         videoLayer.enqueue(frame.sampleBuffer)
+                        if !strongSelf.didNotifyVideoLayerReadyForDisplay {
+                            strongSelf.didNotifyVideoLayerReadyForDisplay = true
+                            strongSelf.hasSentFramesToDisplay?()
+                        }
                     }
                     
                     Queue.mainQueue().async {
@@ -454,6 +468,20 @@ public final class MediaPlayerView: View {
         self.videoLayer = videoLayer
         self.updateLayout()
         self.layer?.addSublayer(videoLayer)
+        
+        
+        if #available(macOS 14.4, *) {
+            self.videoLayerReadyForDisplayObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.AVSampleBufferDisplayLayerReadyForDisplayDidChange, object: videoLayer, queue: .main, using: { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                if !self.didNotifyVideoLayerReadyForDisplay {
+                    self.didNotifyVideoLayerReadyForDisplay = true
+                    self.hasSentFramesToDisplay?()
+                }
+            })
+        }
+        
         self.updateState()
     }
     

@@ -350,6 +350,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.synchronyous = layer.synchronyous
         self.color = nil
         self.isSelected = layer.isSelected
+        self.uniqueStarAnimation = layer.uniqueStarAnimation
         super.init()
     }
     
@@ -410,13 +411,15 @@ final class InlineStickerItemLayer : SimpleLayer {
     let synchronyous: Bool
     let color: NSColor?
     let isSelected: Bool
+    let uniqueStarAnimation: NSColor?
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false, uniqueStarAnimation: NSColor? = nil) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
         self.textColor = textColor
+        self.uniqueStarAnimation = uniqueStarAnimation
         self.shimmerColor = shimmerColor
         self.fileId = emoji.fileId
         self.size = size
@@ -448,7 +451,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false, uniqueStarAnimation: NSColor? = nil) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -461,6 +464,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.synchronyous = synchronyous
         self.color = nil
         self.isSelected = isSelected
+        self.uniqueStarAnimation = uniqueStarAnimation
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -865,7 +869,6 @@ final class InlineStickerItemLayer : SimpleLayer {
                         cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                     })
                 }
-                
             }
             
         }

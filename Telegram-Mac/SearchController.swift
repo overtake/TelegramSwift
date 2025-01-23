@@ -13,6 +13,17 @@ import Postbox
 import TelegramCore
 import InAppSettings
 
+extension SearchMessagesLocation {
+    func withUpdatedSouce(_ source: SearchController.MessaagesSourceValue) -> SearchMessagesLocation {
+        switch self {
+        case let .general(_, tags, minDate, maxDate):
+            return .general(scope: source.scope, tags: tags, minDate: minDate, maxDate: maxDate)
+        default:
+            return self
+        }
+    }
+}
+
 
 private final class SearchCacheData {
     
@@ -131,7 +142,8 @@ final class SearchControllerArguments {
     let setPeerAsTag:(Peer)->Void
     let openStory:(StoryInitialIndex?)->Void
     let openStorySearch:(SearchStoryListContext.State)->Void
-    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openStorySearch:@escaping(SearchStoryListContext.State)->Void) {
+    let toggleMessageSourceValue:(SearchController.MessaagesSourceValue)->Void
+    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openStorySearch:@escaping(SearchStoryListContext.State)->Void, toggleMessageSourceValue:@escaping(SearchController.MessaagesSourceValue)->Void) {
         self.context = context
         self.target = target
         self.removeRecentPeerId = removeRecentPeerId
@@ -140,6 +152,7 @@ final class SearchControllerArguments {
         self.setPeerAsTag = setPeerAsTag
         self.openStory = openStory
         self.openStorySearch = openStorySearch
+        self.toggleMessageSourceValue = toggleMessageSourceValue
     }
     
 }
@@ -601,10 +614,24 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 right = strings().separatorClear
             case let .custom(text, _):
                 right = text
+            case let .dropdown(text, _):
+                right = text
             default:
                 right = nil
             }
-            return SeparatorRowItem(initialSize, ChatListSearchEntryStableId.separator(index), string: text.uppercased(), right: right?.lowercased(), state: state, border: [.Right])
+            return SeparatorRowItem(initialSize, ChatListSearchEntryStableId.separator(index), string: text.uppercased(), right: right, state: state, border: [.Right], menuItems: {
+                var items: [ContextMenuItem] = []
+                
+                switch state {
+                case let .dropdown(_, _items):
+                    for item in _items {
+                        items.append(ContextMenuItem(item.title, handler: item.action, state: item.selected ? .on : nil))
+                    }
+                default:
+                    break
+                }
+                return items
+            })
         case let .emptySearch(isLoading):
             return SearchEmptyRowItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, isLoading: isLoading, border: [.Right])
         case let .emptyList(listType):
@@ -707,7 +734,7 @@ struct SearchTags : Hashable {
         return messageTags == nil && peerTag == nil && text == nil
     }
     
-    var scope: TelegramSearchPeersScope {
+    func scope(_ value: SearchController.MessaagesSourceValue) -> TelegramSearchPeersScope {
         if let listType {
             switch listType {
             case .channels:
@@ -716,18 +743,19 @@ struct SearchTags : Hashable {
                 return .everywhere
             }
         } else {
-            return .everywhere
+            return value.scope
         }
         
     }
     
-    var location: SearchMessagesLocation {
+    func location(_ value: SearchController.MessaagesSourceValue) -> SearchMessagesLocation {
         if let peerTag = peerTag {
             return .peer(peerId: peerTag, fromId: nil, tags: messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
         } else {
-            return .general(scope: scope, tags: messageTags, minDate: nil, maxDate: nil)
+            return .general(scope: scope(value), tags: messageTags, minDate: nil, maxDate: nil)
         }
     }
+    
 }
 
 
@@ -758,6 +786,42 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let isChannelsRevealed: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
 
     private let globalTagsValue: ValuePromise<SearchTags> = ValuePromise(ignoreRepeated: true)
+
+    
+    enum MessaagesSourceValue {
+        case allChats
+        case privateChats
+        case groupChats
+        case channels
+        
+        var string: String {
+            switch self {
+            case .allChats:
+                return strings().searchFilterAllChats
+            case .privateChats:
+                return strings().searchFilterPrivateChats
+            case .groupChats:
+                return strings().searchFilterGroupChats
+            case .channels:
+                return strings().searchFilterChannels
+            }
+        }
+        
+        var scope: TelegramSearchPeersScope {
+            switch self {
+            case .allChats:
+                return .everywhere
+            case .privateChats:
+                return .privateChats
+            case .groupChats:
+                return .groups
+            case .channels:
+                return .channels
+            }
+        }
+        
+    }
+    private let messagesSourceValue: ValuePromise<MessaagesSourceValue> = ValuePromise(.allChats, ignoreRepeated: true)
 
     
     private var globalStorySearchContext: SearchStoryListContext?
@@ -818,6 +882,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         let searchMessagesState = self.searchMessagesState
         let searchMessagesStateValue = self.searchMessagesStateValue
+        
+        let messagesSourceValue = messagesSourceValue.get()
 
 
         let isRevealed = self.isRevealed.get()
@@ -954,9 +1020,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         location = .group(groupId: groupId, tags: nil, minDate: nil, maxDate: nil)
                         foundRemotePeers = .single(([], [], false))
                     } else {
-                        location = globalTags.location
+                        location = globalTags.location(.allChats)
                         if globalTags.isEmpty {
-                            foundRemotePeers = query.hasPrefix("#") || query.hasPrefix("$") || !options.contains(.chats) || !globalTags.isEmpty || globalTags.listType == .bots ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.scope)
+                            foundRemotePeers = query.hasPrefix("#") || query.hasPrefix("$") || !options.contains(.chats) || !globalTags.isEmpty || globalTags.listType == .bots ? .single(([], [], false)) : .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.scope(.allChats))
                                 |> delay(0.2, queue: prepareQueue)
                                 |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                     
@@ -1081,7 +1147,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 }
                 
                 
-                let remoteSearch = searchMessagesState.get() |> mapToSignal { state -> Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
+                let remoteSearch = combineLatest(searchMessagesState.get(), messagesSourceValue) |> mapToSignal { state, messagesSourceValue -> Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
                     
                     var signal: Signal<(SearchMessagesResult, SearchMessagesState), NoError>
                     
@@ -1090,7 +1156,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         signal = context.engine.messages.searchHashtagPosts(hashtag: text.replacingOccurrences(of: "[#$]", with: "", options: .regularExpression), state: state?.state, limit: 100)
                         |> delay(0.2, queue: prepareQueue)
                     } else {
-                        signal = context.engine.messages.searchMessages(location: location, query: globalTags.text ?? query, state: state?.state)
+                        signal = context.engine.messages.searchMessages(location: location.withUpdatedSouce(messagesSourceValue), query: globalTags.text ?? query, state: state?.state)
                         |> delay(0.2, queue: prepareQueue)
                     }
                     
@@ -1157,8 +1223,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     hashtagSearch = .single(([], false, nil))
                 }
                 
-                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState, hashtagSearch)
-                    |> map { localPeers, remotePeers, remoteMessages, isRevealed, storySearchState, hashtagSearch -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
+                return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed, globalStorySearchState, hashtagSearch, messagesSourceValue)
+                    |> map { localPeers, remotePeers, remoteMessages, isRevealed, storySearchState, hashtagSearch, messagesSourceValue -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                         
                         cachedData.with { value -> Void in
                             value.cacheMessages(remoteMessages.0, for: .key(query: query, tags: globalTags))
@@ -1226,7 +1292,18 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             if globalTags.publicPosts || globalTags.myMessages {
                                 blockState = .custom(strings().searchSeparatorShowAsMessages, .showAsMessages(onlyMy: globalTags.myMessages))
                             } else {
-                                blockState = .none
+                                blockState = .dropdown(strings().searchFilterFrom(messagesSourceValue.string), [.init(title: MessaagesSourceValue.allChats.string, selected: messagesSourceValue == .allChats, action: {
+                                    arguments.toggleMessageSourceValue(.allChats)
+                                }),
+                                .init(title: MessaagesSourceValue.privateChats.string, selected: messagesSourceValue == .privateChats, action: {
+                                    arguments.toggleMessageSourceValue(.privateChats)
+                                }),
+                                .init(title: MessaagesSourceValue.groupChats.string, selected: messagesSourceValue == .groupChats, action: {
+                                    arguments.toggleMessageSourceValue(.groupChats)
+                                }),
+                                .init(title: MessaagesSourceValue.channels.string, selected: messagesSourceValue == .channels, action: {
+                                    arguments.toggleMessageSourceValue(.channels)
+                                })])
                             }
                             entries.append(.separator(text: strings().searchSeparatorMessages, index: 20000, state: blockState))
                             entries += remoteMessages.0
@@ -1830,6 +1907,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             if let query = self?.query {
                 showModal(with: StoryFoundListController(context: context, source: .hashtag(self?.searchTags?.peerTag, query), presentation: theme, existingsContext: self?.globalStorySearchContext), for: context.window)
             }
+        }, toggleMessageSourceValue: { [weak self] value in
+            self?.messagesSourceValue.set(value)
         })
         
         setPeerAsTag = { [weak self] peer in

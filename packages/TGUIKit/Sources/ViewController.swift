@@ -596,6 +596,9 @@ open class ViewController : NSObject {
         return true
     }
     
+    open func menuItems() -> [ContextMenuItem] {
+        return []
+    }
     open var isOnScreen: Bool {
         return self.navigationController?.controller == self && !hasModals()
     }
