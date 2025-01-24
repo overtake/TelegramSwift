@@ -804,7 +804,7 @@ class ChatListRowItem: TableRowItem {
 
                     
                     let attrSelected = NSMutableAttributedString()
-                    attrSelected.append(string: tab.title.uppercased(), color: color, font: .bold(10))
+                    attrSelected.append(string: tab.title.uppercased(), color: theme.colors.accentSelect, font: .bold(10))
                     InlineStickerItem.apply(to: attrSelected, associatedMedia: [:], entities: tab.entities, isPremium: context.isPremium)
 
                     
