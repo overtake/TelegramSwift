@@ -1410,9 +1410,9 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             }
         })
     case let .nft(_, slug, context):
-        showModalProgress(signal: context.engine.payments.getUniqueStarGift(slug: slug), for: getWindow(context)).start(next: { gift in
+        _ = showModalProgress(signal: context.engine.payments.getUniqueStarGift(slug: slug), for: getWindow(context)).start(next: { gift in
             if let gift {
-                showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .quickLook(gift), transaction: nil), for: getWindow(context))
+                showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .quickLook(nil, gift), transaction: nil), for: getWindow(context))
             } else {
                 showModalText(for: getWindow(context), text: strings().unknownError)
             }

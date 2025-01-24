@@ -365,9 +365,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         
         
-        if let cachedData = item.peerView.cachedData as? CachedChannelData, cachedData.flags.contains(.starGiftsAvailable) {
+        if let cachedData = item.peerView.cachedData as? CachedChannelData {
                         
-            items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
+            if cachedData.flags.contains(.starGiftsAvailable) {
+                items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
+            }
             
             switch cachedData.linkedDiscussionPeerId {
             case let .known(peerId):
