@@ -19929,6 +19929,10 @@ public final class L10n {
   public static var toastMuted: String  { return L10n.tr("Localizable", "Toast.Muted") }
   /// Unmuted
   public static var toastUnmuted: String  { return L10n.tr("Localizable", "Toast.Unmuted") }
+  /// https://tonviewer.com/%@
+  public static func tonViewerUrl(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TonViewer.Url", p1)
+  }
   /// Attach
   public static var touchBarAttach: String  { return L10n.tr("Localizable", "TouchBar.Attach") }
   /// Call
