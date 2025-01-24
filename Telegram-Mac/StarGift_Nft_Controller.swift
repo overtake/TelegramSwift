@@ -968,6 +968,8 @@ private struct State : Equatable {
     var owner: EnginePeer?
     var ownerName: String?
     
+    var isTonOwner: Bool = false
+    
     var accountPeerId: PeerId
 
     var okText: String {
@@ -1100,16 +1102,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else if let ownerName = state.ownerName {
-                ownerAttr = .initialize(string: ownerName, color: theme.colors.text, font: .normal(.text))
+                if state.isTonOwner {
+                    ownerAttr = parseMarkdownIntoAttributedString("[\(ownerName)](\(ownerName))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, contents)
+                    }))
+                } else {
+                    ownerAttr = .initialize(string: ownerName, color: theme.colors.text, font: .normal(.text))
+                }
             } else {
                 ownerAttr = .init()
             }
             
-            let ownerText: TextViewLayout = .init(ownerAttr, maximumNumberOfLines: 1, alwaysStaticItems: true)
+            let ownerText: TextViewLayout = .init(ownerAttr, maximumNumberOfLines: state.isTonOwner ? 3 : 1, alwaysStaticItems: true)
             
             ownerText.interactions.processURL = { url in
                 if let url = url as? String {
-                   
+                    execute(inapp: .external(link: strings().tonViewerUrl(url), false))
                 }
             }
             
@@ -1290,6 +1298,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         var current = current
                         current.owner = peer
                         current.ownerName = nil
+                        current.isTonOwner = false
                         return current
                     }
                 }))
@@ -1298,6 +1307,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                     var current = current
                     current.owner = nil
                     current.ownerName = name
+                    current.isTonOwner = false
                     return current
                 }
             case let .address(address):
@@ -1305,6 +1315,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                     var current = current
                     current.owner = nil
                     current.ownerName = address
+                    current.isTonOwner = true
                     return current
                 }
             }
@@ -1430,7 +1441,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             })
         }
         
-        _ = selectModalPeers(window: window, context: context, title: strings().giftTransferTitle, behavior: SelectChatsBehavior(settings: [.excludeBots, .contacts, .remote], limit: 1, additionTopItem: additionalItem)).start(next: { peerIds in
+        _ = selectModalPeers(window: window, context: context, title: strings().giftTransferTitle, behavior: SelectChatsBehavior(settings: [.excludeBots, .contacts, .remote, .channels], limit: 1, additionTopItem: additionalItem)).start(next: { peerIds in
             if let peerId = peerIds.first {
                 let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
                 

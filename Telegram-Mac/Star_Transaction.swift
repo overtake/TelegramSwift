@@ -1700,7 +1700,7 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
                 })
             }
             
-            _ = selectModalPeers(window: window, context: context, title: strings().giftTransferTitle, behavior: SelectChatsBehavior(settings: [.excludeBots, .contacts, .remote], limit: 1, additionTopItem: additionalItem)).start(next: { peerIds in
+            _ = selectModalPeers(window: window, context: context, title: strings().giftTransferTitle, behavior: SelectChatsBehavior(settings: [.excludeBots, .contacts, .remote, .channels], limit: 1, additionTopItem: additionalItem)).start(next: { peerIds in
                 if let peerId = peerIds.first {
                     let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
                     
