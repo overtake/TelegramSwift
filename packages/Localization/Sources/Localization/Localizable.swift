@@ -15241,6 +15241,8 @@ public final class L10n {
   public static var scheduleControllerAt: String  { return L10n.tr("Localizable", "ScheduleController.at") }
   /// Schedule Message
   public static var scheduleControllerTitle: String  { return L10n.tr("Localizable", "ScheduleController.Title") }
+  /// Remove From Recent
+  public static var searchRemoveFromRecent: String  { return L10n.tr("Localizable", "Search.RemoveFromRecent") }
   /// Are you sure you want to clear your search history?
   public static var searchConfirmClearHistory: String  { return L10n.tr("Localizable", "Search.Confirm.ClearHistory") }
   /// All Chats

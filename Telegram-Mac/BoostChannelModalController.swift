@@ -51,6 +51,8 @@ func requiredBoostSubjectLevel(subject: BoostSubject, group: Bool, context: Acco
         return configuration.minGroupEmojiPackLevel
     case .noAds:
         return configuration.minChannelRestrictAdsLevel
+    case .wearGift:
+        return configuration.minChannelWearGiftLevel
     }
 }
 
@@ -69,7 +71,7 @@ enum BoostSubject: Equatable {
     case audioTranscription
     case emojiPack
     case noAds
-
+    case wearGift
     func requiredLevel(context: AccountContext, group: Bool, configuration: PremiumConfiguration) -> Int32 {
         return requiredBoostSubjectLevel(subject: self, group: group, context: context, configuration: configuration)
     }
@@ -1102,6 +1104,7 @@ enum BoostChannelSource : Equatable {
     case unblockText(Int32)
     case unblockSlowmode(Int32)
     case noAds(Int32)
+    case wearStatus
 }
 
 func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false, onlyFeatures: Bool = false, source: BoostChannelSource = .basic, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {

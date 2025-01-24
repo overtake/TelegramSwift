@@ -559,8 +559,8 @@ private final class HeaderItem : GeneralRowItem {
         }
         
         switch source {
-        case .quickLook:
-            if let uniqueGift = uniqueGift, case let .peerId(peerId) = uniqueGift.owner, peerId == context.peerId {
+        case let .quickLook(peer, _):
+            if let uniqueGift = uniqueGift, let owner = state.owner, owner.id == context.peerId || owner._asPeer().groupAccess.canManageGifts {
                 actions = [.init(title: strings().starNftTransfer, image: NSImage(resource: .iconNFTTransfer).precomposed(.white), action: {
                     arguments.transfer()
                 }), .init(title: state.weared ? strings().starNftTakeOff : strings().starNftWear, image: NSImage(resource: .iconNFTWear).precomposed(.white), action: {
@@ -743,7 +743,7 @@ private final class HeaderView : GeneralRowView {
         
         
         
-        if let uniqueGift = item.uniqueGift, !item.source.isWearing && !item.source.isTonTransfer {
+        if let uniqueGift = item.uniqueGift, !item.source.isWearing {
             let current: ImageButton
             if let view = self.actions {
                 current = view
@@ -951,6 +951,8 @@ private struct State : Equatable {
     var nameEnabled: Bool = true
     var converted: Bool = false
     
+    var purpose: Star_TransactionPurpose?
+    
     var weared: Bool {
         return owner?.emojiStatus?.fileId == gift.unique?.file?.fileId.id
     }
@@ -965,17 +967,41 @@ private struct State : Equatable {
     
     var owner: EnginePeer?
     var ownerName: String?
+    
+    var accountPeerId: PeerId
 
     var okText: String {
         switch source {
         case .preview:
             return strings().modalOK
-        case .quickLook:
+        case let .quickLook(peer, gift):
+            if let purpose {
+                switch purpose {
+                case let .starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _):
+                    if let _ = reference {
+                        var canManage: Bool
+                        let peer = peer ?? owner
+                        
+                        if let peer, peer._asPeer().groupAccess.canManageGifts || peer.id == accountPeerId {
+                            canManage = true
+                        } else {
+                            canManage = false
+                        }
+                        if canManage {
+                            if !savedToProfile {
+                                return strings().starTransactionStarGiftChannelDisplayOnMyPage
+                            } else {
+                                return strings().starTransactionStarGiftChannelHideFromMyPage
+                            }
+                        }
+                    }
+                default:
+                    break
+                }
+            }
             return strings().modalOK
         case .previewWear:
             return strings().giftWearStart
-        case .transferTon:
-            return "Send"
         case .upgrade:
             if converted {
                 return strings().modalOK
@@ -1056,19 +1082,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return HeaderItem(initialSize, stableId: stableId, context: arguments.context, arguments: arguments, state: state, attributes: state.attributes, source: state.source)
     }))
     
+    
+    
     entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
     
     switch state.source {
-    case let .transferTon(gift):
-        
-        entries.append(.sectionId(sectionId, type: .legacy))
-        sectionId += 1
-        
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.tonAddress), error: nil, identifier: _id_ton_input, mode: .plain, data: .init(viewType: .singleItem, customTheme: .init(backgroundColor: theme.colors.listBackground, grayForeground: theme.colors.background)), placeholder: nil, inputPlaceholder: "Enter TON Address", filter: { $0 }, limit: 48))
-        
-        entries.append(.sectionId(sectionId, type: .legacy))
-        sectionId += 1
     default:
         if state.converted {
             var rows: [InputDataTableBasedItem.Row] = []
@@ -1192,19 +1211,16 @@ enum StarGiftNftSource : Equatable {
     case preview(EnginePeer, [StarGift.UniqueGift.Attribute])
     case previewWear(EnginePeer, StarGift.UniqueGift)
     case upgrade(EnginePeer, [StarGift.UniqueGift.Attribute], StarGiftReference)
-    case quickLook(StarGift.UniqueGift)
-    case transferTon(StarGift.UniqueGift)
+    case quickLook(EnginePeer?, StarGift.UniqueGift)
     var attributes: [StarGift.UniqueGift.Attribute] {
         switch self {
         case let .preview(_, attributes):
             return attributes
         case let .upgrade(_, attributes, _):
             return attributes
-        case let .quickLook(gift):
+        case let .quickLook(_, gift):
             return gift.attributes
         case let .previewWear(_, gift):
-            return gift.attributes
-        case let .transferTon(gift):
             return gift.attributes
         }
     }
@@ -1218,6 +1234,19 @@ enum StarGiftNftSource : Equatable {
         }
     }
     
+    var peer: EnginePeer? {
+        switch self {
+        case .preview(let enginePeer, _):
+            return enginePeer
+        case .previewWear(let enginePeer, _):
+            return enginePeer
+        case .upgrade(let enginePeer, _, _):
+            return enginePeer
+        case .quickLook(let enginePeer, _):
+            return enginePeer
+        }
+    }
+    
     var isWearing: Bool {
         switch self {
         case .previewWear:
@@ -1227,21 +1256,13 @@ enum StarGiftNftSource : Equatable {
         }
     }
     
-    var isTonTransfer: Bool {
-        switch self {
-        case .transferTon:
-            return true
-        default:
-            return false
-        }
-    }
 }
 
 func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
-    let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, attributes: source.attributes)
+    let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, purpose: purpose, attributes: source.attributes, accountPeerId: context.peerId)
     
     var close:(()->Void)? = nil
     
@@ -1316,7 +1337,18 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
     }
 
     let arguments = Arguments(context: context, dismiss:{
-        close?()
+        let state = stateValue.with { $0 }
+        switch state.source {
+        case let .previewWear(owner, gift):
+            updateState { current in
+                var current = current
+                current.source = .quickLook(owner, gift)
+                current.converted = true
+                return current
+            }
+        default:
+            close?()
+        }
     }, toggleName: {
         updateState { current in
             var current = current
@@ -1455,12 +1487,12 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             updateState { current in
                 var current = current
                 switch current.source {
-                case .previewWear:
-                    current.source = .quickLook(gift)
+                case .previewWear(_, _):
+                    current.source = .quickLook(owner, gift)
                     current.converted = true
                 default:
                     if current.weared {
-                        current.source = .quickLook(gift)
+                        current.source = .quickLook(owner, gift)
                         current.converted = true
                     } else {
                         current.source = .previewWear(owner, gift)
@@ -1515,28 +1547,63 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         switch state.source {
         case .preview:
             close?()
-        case .quickLook:
+        case let .quickLook(peer, gift):
+            if let purpose {
+                switch purpose {
+                case let.starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _):
+                    if let reference {
+                        var canManage: Bool
+                        let peer = peer ?? state.owner
+                        
+                        if let peer, peer._asPeer().groupAccess.canManageGifts || peer.id == context.peerId {
+                            canManage = true
+                        } else {
+                            canManage = false
+                        }
+                        if canManage {
+                            giftsContext?.updateStarGiftAddedToProfile(reference: reference, added: !savedToProfile)
+                        }
+                    }
+                default:
+                    break
+                }
+            }
             close?()
-        case let .transferTon(gift):
-            return .fail(.fields([_id_ton_input: .shake]))
-        case let .previewWear(_, gift):
+        case let .previewWear(peer, gift):
             
             let owner = stateValue.with { $0.owner }
             
-            if let owner, !owner.isPremium {
-                showModalText(for: context.window, text: strings().giftUniqueNeedsPremium, callback: { _ in
-                    prem(with: PremiumBoardingController(context: context, source: .emoji_status, openFeatures: true), for: context.window)
-                })
-                return .none
+            if let owner = owner?._asPeer() {
+                if let channel = owner as? TelegramChannel {
+                    let approximateBoostLevel = channel.approximateBoostLevel ?? 0
+                    let boostNeeded = BoostSubject.wearGift.requiredLevel(context: context, group: false, configuration: .with(appConfiguration: context.appConfiguration))
+                    if boostNeeded > approximateBoostLevel {
+                        let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: channel.id), context.engine.peers.getMyBoostStatus()), for: window)
+                        _ = signal.start(next: { stats, myStatus in
+                            if let stats = stats {
+                                showModal(with: BoostChannelModalController(context: context, peer: channel, boosts: stats, myStatus: myStatus, infoOnly: false, source: .wearStatus, presentation: theme), for: window)
+                            }
+                        })
+                        return .none
+                    }
+                } else if !owner.isPremium {
+                    showModalText(for: context.window, text: strings().giftUniqueNeedsPremium, callback: { _ in
+                        prem(with: PremiumBoardingController(context: context, source: .emoji_status, openFeatures: true), for: context.window)
+                    })
+                    return .none
+                }
             }
- 
             updateState { current in
                 var current = current
-                current.source = .quickLook(gift)
+                current.source = .quickLook(peer, gift)
                 current.converted = true
                 return current
             }
-            _ = context.engine.accountData.setStarGiftStatus(starGift: gift, expirationDate: nil).start()
+            if let owner, owner._asPeer().isChannel {
+                let _ = context.engine.peers.updatePeerStarGiftStatus(peerId: owner.id, starGift: gift, expirationDate: nil).startStandalone()
+            } else {
+                _ = context.engine.accountData.setStarGiftStatus(starGift: gift, expirationDate: nil).start()
+            }
             PlayConfetti(for: window)
         case let .upgrade(_, _, reference):
             

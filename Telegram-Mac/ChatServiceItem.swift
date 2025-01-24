@@ -210,7 +210,7 @@ class ChatServiceItem: ChatRowItem {
                 switch purpose {
                 case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     if let unique = gift.unique {
-                        showModal(with: StarGift_Nft_Controller(context: context, gift: gift, source: .quickLook(unique), transaction: transaction, purpose: purpose), for: context.window)
+                        showModal(with: StarGift_Nft_Controller(context: context, gift: gift, source: .quickLook(nil, unique), transaction: transaction, purpose: purpose), for: context.window)
                         return
                     }
                 default:

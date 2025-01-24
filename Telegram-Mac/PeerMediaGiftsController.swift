@@ -104,14 +104,18 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         let toPeer = stateValue.with { $0.peer }
         let fromPeer = option.fromPeer
         
-        let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: option.gift.generic?.price ?? 0, nanos: 0), date: option.date, peer: toPeer.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
+        guard let toPeer else {
+            return
+        }
+        
+        let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: option.gift.generic?.price ?? 0, nanos: 0), date: option.date, peer: .peer(toPeer), title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
         
         
         let purpose: Star_TransactionPurpose = .starGift(gift: option.gift, convertStars: option.convertStars ?? 0, text: option.text, entities: option.entities, nameHidden: option.fromPeer != nil, savedToProfile: option.savedToProfile, converted: option.convertStars == nil, fromProfile: true, upgraded: false, transferStars: option.convertStars, canExportDate: option.canExportDate, reference: option.reference, sender: nil, saverId: nil)
         
         switch option.gift {
         case let .unique(gift):
-            showModal(with: StarGift_Nft_Controller(context: context, gift: option.gift, source: .quickLook(gift), transaction: transaction, purpose: .starGift(gift: option.gift, convertStars: option.convertStars, text: option.text, entities: option.entities, nameHidden: option.nameHidden, savedToProfile: option.savedToProfile, converted: false, fromProfile: true, upgraded: false, transferStars: option.transferStars, canExportDate: option.canExportDate, reference: option.reference, sender: option.fromPeer, saverId: nil)), for: context.window)
+            showModal(with: StarGift_Nft_Controller(context: context, gift: option.gift, source: .quickLook(toPeer, gift), transaction: transaction, purpose: .starGift(gift: option.gift, convertStars: option.convertStars, text: option.text, entities: option.entities, nameHidden: option.nameHidden, savedToProfile: option.savedToProfile, converted: false, fromProfile: true, upgraded: false, transferStars: option.transferStars, canExportDate: option.canExportDate, reference: option.reference, sender: option.fromPeer, saverId: nil), giftsContext: giftsContext), for: context.window)
         default:
             showModal(with: Star_TransactionScreen(context: context, fromPeerId: peerId, peer: fromPeer, transaction: transaction, purpose: purpose, reference: option.reference, profileContext: giftsContext), for: context.window)
         }
@@ -143,7 +147,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
             
             items.append(ContextSeparatorItem())
         }
-        if let peer = state.peer?._asPeer(), let giftState = state.state, peer.isChannel, peer.isAdmin {
+        if let peer = state.peer?._asPeer(), let giftState = state.state, peer.groupAccess.canManageGifts {
             
             let toggleFilter: (ProfileGiftsContext.Filters) -> Void = { [weak giftsContext] value in
                 var updatedFilter = giftState.filter

@@ -1286,7 +1286,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 rows.append(.init(left: .init(.initialize(string: strings().starTransactionAvailability, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().starTransactionAvailabilityOfLeft(Int(availability.remains).formattedWithSeparator, Int(availability.total).formattedWithSeparator), color: theme.colors.text, font: .normal(.text))))))
             }
             
-            if savedToProfile, case let .peer(peer) = state.transaction.peer, arguments.context.peerId == peer.id {
+            if savedToProfile, case let .peer(peer) = state.transaction.peer, arguments.context.peerId == peer.id || peer._asPeer().groupAccess.canManageGifts {
                 
                 let badge: InputDataTableBasedItem.Row.Right.Badge = .init(text: strings().starTransactionVisibilityHide, callback: arguments.displayOnMyPage)
                 
@@ -1318,9 +1318,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
       
         if let _ = gift.generic?.upgradeStars, !state.purpose.isUpgraded, state.transaction.count.value > 0 {
-            if let owner = state.ownerPeer, owner.id == arguments.context.peerId || owner._asPeer().isAdmin {
+            if let owner = state.ownerPeer, owner.id == arguments.context.peerId || owner._asPeer().groupAccess.isCreator {
                 rows.append(.init(left: .init(.initialize(string: strings().giftViewStatus, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().giftViewStatusNonUnique, color: theme.colors.text, font: .normal(.text))), badge: .init(text: strings().giftViewStatusUpgrade, callback: arguments.upgrade))))
-            } else if state.ownerPeer == nil {
+            } else if case let .peer(peer) = state.transaction.peer, peer._asPeer().groupAccess.isCreator {
                 rows.append(.init(left: .init(.initialize(string: strings().giftViewStatus, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().giftViewStatusNonUnique, color: theme.colors.text, font: .normal(.text))), badge: .init(text: strings().giftViewStatusUpgrade, callback: arguments.upgrade))))
             }
         }
