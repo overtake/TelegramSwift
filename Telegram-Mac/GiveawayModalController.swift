@@ -443,48 +443,6 @@ private final class Arguments {
 }
 
 
-struct PremiumGiftProduct: Equatable {
-    let giftOption: PremiumGiftCodeOption
-    let storeProduct: InAppPurchaseManager.Product?
-    
-    var id: String {
-        return self.storeProduct?.id ?? ""
-    }
-    
-    var months: Int32 {
-        return self.giftOption.months
-    }
-    
-    var price: String {
-        if let storeProduct = storeProduct {
-            return formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
-        }
-        return formatCurrencyAmount(giftOption.amount, currency: giftOption.currency)
-    }
-    
-    var pricePerMonth: String {
-        if let storeProduct = storeProduct {
-            return storeProduct.pricePerMonth(Int(self.months))
-        } else {
-            return formatCurrencyAmount(giftOption.amount / Int64(giftOption.months), currency: giftOption.currency)
-        }
-    }
-    var priceCurrencyAndAmount:(currency: String, amount: Int64) {
-        if let storeProduct = storeProduct {
-            return storeProduct.priceCurrencyAndAmount
-        } else {
-            return (currency: giftOption.currency, amount: giftOption.amount)
-        }
-    }
-    
-    func multipliedPrice(count: Int) -> String {
-        if let storeProduct = storeProduct {
-            return storeProduct.multipliedPrice(count: count)
-        } else {
-            return formatCurrencyAmount(giftOption.amount * Int64(count), currency: giftOption.currency)
-        }
-    }
-}
 
 
 private struct State : Equatable {

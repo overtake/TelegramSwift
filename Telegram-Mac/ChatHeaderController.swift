@@ -44,6 +44,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         case promo(EngineChatList.AdditionalItem.PromoInfo.Content)
         case pendingRequests(Int, [PeerInvitationImportersState.Importer])
         case restartTopic
+        case removePaidMessages(Peer, StarsAmount)
         
         static func ==(lhs:Value, rhs: Value) -> Bool {
             switch lhs {
@@ -91,6 +92,8 @@ struct ChatHeaderState : Identifiable, Equatable {
                 return 8
             case .restartTopic:
                 return 9
+            case .removePaidMessages:
+                return 10
             }
         }
     }
@@ -179,6 +182,8 @@ struct ChatHeaderState : Identifiable, Equatable {
             return ChatRequestChat.self
         case .restartTopic:
             return ChatRestartTopic.self
+        case .removePaidMessages:
+            return ChatRemovePaidMessage.self
         case .none:
             return nil
         }
@@ -230,6 +235,8 @@ struct ChatHeaderState : Identifiable, Equatable {
             height += 44
         case .restartTopic:
             height += 44
+        case .removePaidMessages:
+            height += 50
         }
         return height
     }
@@ -505,6 +512,8 @@ class ChatHeaderController {
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .restartTopic:
                 primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
+            case .removePaidMessages:
+                primary = ChatRemovePaidMessage(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -2755,6 +2764,125 @@ private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
         self.text.setFrameOrigin(NSMakePoint(20, self.header.frame.maxY + 4))
         self.imageView?.centerY(x: frame.width - 50 - 10)
         dismiss?.centerY(x: frame.width - 30 - 20)
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+
+
+private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let header: InteractiveTextView = InteractiveTextView()
+    private let dismiss:ImageButton = ImageButton()
+    private let removeFee = TextButton()
+    private var state: ChatHeaderState
+    
+    private var headerLayout: TextViewLayout?
+        
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self.state = state
+        super.init(frame: frame)
+        
+        addSubview(header)
+        addSubview(removeFee)
+        
+        removeFee.scaleOnClick = true
+                
+        switch state.main {
+        case let .removePaidMessages(peer, amount):
+            let attr = NSMutableAttributedString()
+            attr.append(string: strings().chatHeaderRemoveFeeText(peer.compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue), color: theme.colors.grayText, font: .normal(.text))
+            attr.insertEmbedded(.embedded(name: "star_small", color: theme.colors.grayText, resize: false), for: clown)
+            headerLayout = .init(attr, alignment: .center)
+            
+            removeFee.setSingle(handler: { [weak chatInteraction] _ in
+                
+                if let chatInteraction = chatInteraction {
+                    let engine = chatInteraction.context.engine
+                    let window = chatInteraction.context.window
+                    
+                    _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(peerId: peer.id), for: window).startStandalone(next: { amount in
+                        
+                        let option: String?
+                        if let amount {
+                            option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
+                        } else {
+                            option = nil
+                        }
+                        verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeConfirmInfo(peer.displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
+                            _ = engine.peers.addNoPaidMessagesException(peerId: peer.id, refundCharged: result == .thrid).start()
+                        })
+                    })
+                    
+                    
+                }
+                
+            }, for: .Click)
+            
+        default:
+            headerLayout = nil
+        }
+        
+        removeFee.set(text: strings().chatHeaderRemoveFee, for: .Normal)
+        removeFee.set(color: theme.colors.accent, for: .Normal)
+        removeFee.set(font: .medium(.text), for: .Normal)
+        removeFee.sizeToFit()
+        
+        
+        
+        header.userInteractionEnabled = false
+        update(with: state, animated: false)
+
+    }
+    
+    func measure(_ width: CGFloat) {
+        headerLayout?.measure(width: width)
+        self.update(with: self.state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        
+        self.state = state
+   
+        let context = self.chatInteraction.context
+        self.header.set(text: headerLayout, context: context)
+        
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        header.centerX(y: 6)
+        removeFee.centerX(y: frame.height - removeFee.frame.height - 7)
     }
     
     override func setFrameSize(_ newSize: NSSize) {

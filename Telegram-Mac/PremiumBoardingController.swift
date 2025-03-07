@@ -1415,7 +1415,7 @@ final class PremiumBoardingController : ModalViewController {
                                     return context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: false) |> map { pack in
                                         switch pack {
                                         case let .result(info, items, _):
-                                            return (peer, PremiumEmojiStatusInfo(status: status, file: file, info: info, items: items))
+                                            return (peer, PremiumEmojiStatusInfo(status: status, file: file, info: info._parse(), items: items))
                                         default:
                                             return (peer, nil)
                                         }
@@ -1466,7 +1466,7 @@ final class PremiumBoardingController : ModalViewController {
             var result: [TelegramMediaFile] = []
             for item in items {
                 if let mediaItem = item.contents.get(RecentMediaItem.self) {
-                    result.append(mediaItem.media)
+                    result.append(mediaItem.media._parse())
                 }
             }
             return result

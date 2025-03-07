@@ -13,12 +13,17 @@ final class ChatListTextActionRowItem : GeneralRowItem {
     let title: TextViewLayout
     let info: TextViewLayout
     let context: AccountContext
+    let canDismiss: Bool
     let dismiss: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, title: NSAttributedString, info: NSAttributedString, action: @escaping()->Void, dismiss:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, title: NSAttributedString, info: NSAttributedString, canDismiss: Bool, action: @escaping()->Void, dismiss:@escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
         self.title = .init(title, maximumNumberOfLines: 1)
-        self.info = .init(info, maximumNumberOfLines: 2)
+        self.info = .init(info)
+        self.canDismiss = canDismiss
+        
+        self.info.interactions = globalLinkExecutor
+        
         super.init(initialSize, stableId: stableId, action: action)
     }
     
@@ -100,6 +105,15 @@ private final class ChatListTextActionRowView: TableRowView {
         
         guard let item = item as? ChatListTextActionRowItem else {
             return
+        }
+        
+        dismiss.isHidden = !item.canDismiss
+        
+        if !item.canDismiss {
+            overlay.userInteractionEnabled = false
+            overlay.isEventLess = true
+            infoView.userInteractionEnabled = true
+            infoView.textView.userInteractionEnabled = true
         }
         
         self.titleView.set(text: item.title, context: item.context)

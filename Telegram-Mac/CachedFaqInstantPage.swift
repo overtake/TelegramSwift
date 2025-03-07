@@ -83,7 +83,7 @@ func faqSearchableItems(context: AccountContext) -> Signal<[SettingsSearchableIt
                 if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage {
                     var processingQuestions = false
                     var currentSection: String?
-                    outer: for block in instantPage.blocks {
+                    outer: for block in instantPage._parse().blocks {
                         if !processingQuestions {
                             switch block {
                             case .blockQuote:

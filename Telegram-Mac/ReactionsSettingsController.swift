@@ -218,7 +218,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
     if let reactions = availableReactions {
         for reaction in reactions.reactions {
             
-            let signal = chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.centerAnimation ?? reaction.selectAnimation), small: false, scale: System.backingScale)
+            let signal = chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.centerAnimation?._parse() ?? reaction.selectAnimation._parse()), small: false, scale: System.backingScale)
             
             let arguments = TransformImageArguments(corners: .init(), imageSize: NSMakeSize(20 * 2, 20 * 2), boundingSize: NSMakeSize(20, 20), intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
 

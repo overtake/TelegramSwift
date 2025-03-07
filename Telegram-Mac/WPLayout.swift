@@ -44,7 +44,7 @@ class WPLayout: Equatable {
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
-            if let block = instantPage.blocks.filter({ value in
+            if let block = instantPage._parse().blocks.filter({ value in
                 if case .slideshow = value {
                     return true
                 } else if case .collage = value {
@@ -70,7 +70,7 @@ class WPLayout: Equatable {
     
     var webPage: TelegramMediaWebpage {
         if let game = parent.anyMedia as? TelegramMediaGame {
-            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, imageIsVideoCover: false, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
         }
         return parent.anyMedia as! TelegramMediaWebpage
     }
@@ -447,6 +447,7 @@ class WPLayout: Equatable {
             if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.type == "telegram_album" {
                 return false
             }
+            let instantPage = instantPage._parse()
             if instantPage.blocks.count == 3 {
                 switch instantPage.blocks[2] {
                 case let .collage(_, caption), let .slideshow(_, caption):

@@ -43,7 +43,8 @@ private final class Arguments {
     let contextMenu:()->ContextMenu
     let selectSearchTag:(PeerListState.SelectedSearchTag)->Void
     let setPeerAsTag:(Peer?)->Void
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?, navigationBarLeftPosition:@escaping()->CGFloat, contextMenu: @escaping()->ContextMenu, selectSearchTag:@escaping(PeerListState.SelectedSearchTag)->Void, setPeerAsTag:@escaping(Peer?)->Void) {
+    let toggleContactsSort:(PeerListState.ContactsSort)->Void
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?, navigationBarLeftPosition:@escaping()->CGFloat, contextMenu: @escaping()->ContextMenu, selectSearchTag:@escaping(PeerListState.SelectedSearchTag)->Void, setPeerAsTag:@escaping(Peer?)->Void, toggleContactsSort:@escaping(PeerListState.ContactsSort)->Void) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
@@ -60,6 +61,7 @@ private final class Arguments {
         self.contextMenu = contextMenu
         self.selectSearchTag = selectSearchTag
         self.setPeerAsTag = setPeerAsTag
+        self.toggleContactsSort = toggleContactsSort
     }
 }
 
@@ -239,6 +241,11 @@ struct PeerListState : Equatable {
         
     }
     
+    enum ContactsSort : Equatable {
+        case lastSeen
+        case name
+    }
+    
     enum AppearMode : Equatable {
         case normal
         case short
@@ -300,6 +307,8 @@ struct PeerListState : Equatable {
     var privacy: GlobalPrivacySettings?
     var displaySavedAsTopics: Bool
     var webapps: BrowserStateContext.FullState? = nil
+    
+    var contactsSort: ContactsSort = .lastSeen
     
     var selectedTag: SelectedSearchTag = .chats
     var peerTag: EnginePeer? = nil
@@ -1037,6 +1046,9 @@ class PeerListContainerView : Control {
     private var compose:ImageButton?
     private var backButton: ImageButton?
 
+    private var contactsSort: TextButton?
+
+    
     private var forumTitle: TitleForumView?
     
     private var scrollerView: ChatNavigationScroller?
@@ -1335,6 +1347,40 @@ class PeerListContainerView : Control {
         } else if let view = self.backButton {
             performSubviewRemoval(view, animated: animated)
             self.backButton = nil
+        }
+        
+        if state.isContacts {
+            let current: TextButton
+            if let view = self.contactsSort {
+                current = view
+            } else {
+                current = TextButton(frame: NSMakeRect(10, 10, 40, 30))
+                self.contactsSort = current
+                current.animates = false
+                current.autohighlight = false
+                current.scaleOnClick = true
+                containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+            }
+            current.set(font: .normal(.text), for: .Normal)
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(text: strings().contactsSortTitle, for: .Normal)
+            current.sizeToFit(NSMakeSize(10, 15))
+            
+            
+            current.contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().contactsSortByLastSeen, handler: {
+                    arguments.toggleContactsSort(.lastSeen)
+                }, state: state.contactsSort == .lastSeen ? .on : nil))
+                menu.addItem(ContextMenuItem(strings().contactsSortByName, handler: {
+                    arguments.toggleContactsSort(.name)
+                }, state: state.contactsSort == .name ? .on : nil))
+                return menu
+            }
+
+        } else if let view = self.contactsSort {
+            performSubviewRemoval(view, animated: animated)
+            self.contactsSort = nil
         }
                 
         if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, !hasForumTitle || state.forumPeer == nil {
@@ -2789,6 +2835,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self?.updateState { current in
                 var current = current
                 current.peerTag = peer.flatMap { .init($0) }
+                return current
+            }
+        }, toggleContactsSort: { [weak self] sort in
+            self?.updateState { current in
+                var current = current
+                current.contactsSort = sort
                 return current
             }
         })

@@ -8,21 +8,27 @@ import Postbox
 
 private final class PromoItem : GeneralRowItem {
     
-    struct Option {
+    class Option {
         let image: CGImage
         let header: TextViewLayout
         let text: TextViewLayout
-        let width: CGFloat
+        var width: CGFloat
         init(image: CGImage, header: TextViewLayout, text: TextViewLayout, width: CGFloat) {
             self.image = image
             self.header = header
             self.text = text
             self.width = width
-            self.header.measure(width: width - 80)
-            self.text.measure(width: width - 80)
+            self.header.measure(width: width - 40)
+            self.text.measure(width: width - 40)
         }
         var size: NSSize {
             return NSMakeSize(width - 40, header.layoutSize.height + 5 + text.layoutSize.height)
+        }
+        
+        func makeSize(width: CGFloat) {
+            self.header.measure(width: width - 40)
+            self.text.measure(width: width - 40)
+            self.width = width
         }
     }
     let context: AccountContext
@@ -44,6 +50,17 @@ private final class PromoItem : GeneralRowItem {
         self.options = options
 
         super.init(initialSize, stableId: stableId, viewType: .singleItem)
+    }
+    
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        for option in options {
+            option.makeSize(width: blockWidth - 40)
+        }
+        
+        return true
     }
     
     override var height: CGFloat {

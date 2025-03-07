@@ -272,7 +272,7 @@ final class PremiumStatusControl : Control {
             self.animateLayer = nil
         }
         
-        if let status = peer.emojiStatus, case let .starGift(_, _, title, _, _, innerColor, _, _, _) = status.content {
+        if let status = peer.emojiStatus, case let .starGift(_, _, title, _, _, innerColor, _, _, _) = status.content, !left {
             let starsLayer: StarsEffectLayer
             if let current = self.starsLayer {
                 starsLayer = current

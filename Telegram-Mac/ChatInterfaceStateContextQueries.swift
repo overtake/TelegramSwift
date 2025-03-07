@@ -138,7 +138,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     var selected: [TelegramMediaFile] = []
                     for sort in emojis.animated {
                         let file = animated.filter({ $0.fileId == sort}).first
-                        if let file = file {
+                        if let file = file?._parse() {
                             selected.append(file)
                             if let text = file.customEmojiText {
                                 toRemove.append(text.fixed)
@@ -527,7 +527,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                     var selected: [TelegramMediaFile] = []
                     for sort in emojis.animated {
                         let file = animated.filter({ $0.fileId == sort}).first
-                        if let file = file {
+                        if let file = file?._parse() {
                             selected.append(file)
                             if let text = file.customEmojiText {
                                 toRemove.append(text.fixed)

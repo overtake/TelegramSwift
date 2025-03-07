@@ -660,7 +660,7 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             
             let view = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]! as! OrderedItemListView
             
-            let result: [ChatContextResult] = view.items.compactMap({ $0.contents.get(RecentMediaItem.self)?.media }).map { file in
+            let result: [ChatContextResult] = view.items.compactMap({ $0.contents.get(RecentMediaItem.self)?.media._parse() }).map { file in
                 let reference = ChatContextResult.InternalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: file, message: .auto(caption: "", entities: nil, replyMarkup: nil))
                 return .internalReference(reference)
             }
@@ -676,8 +676,8 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             switch info {
             case let .result(_, items, _):
                 return emojies.emojis.compactMap { emoji in
-                    if let first = items.first(where: { $0.file.stickerText == emoji }) {
-                        return first.file
+                    if let first = items.first(where: { $0.file._parse().stickerText == emoji }) {
+                        return first.file._parse()
                     }
                     return nil
                 }

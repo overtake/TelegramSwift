@@ -779,7 +779,7 @@ final class GroupCallView : View {
             }
         }
         
-        if state.state.scheduleState == nil, state.isStream, state.videoActive(.main).isEmpty {
+        if state.state.scheduleState == nil, state.isStream, state.videoActive(.main).isEmpty, let peer = state.peer {
             let current: NoStreamView
             if let view = self.noStreamView {
                 current = view
@@ -788,7 +788,7 @@ final class GroupCallView : View {
                 self.noStreamView = current
                 addSubview(current)
             }
-            current.update(initialTimestamp: state.initialTimestamp, title: !state.peer.groupAccess.isCreator ? state.peer.displayTitle : nil, transition: transition)
+            current.update(initialTimestamp: state.initialTimestamp, title: !peer.groupAccess.isCreator ? peer.displayTitle : nil, transition: transition)
         } else if let view = noStreamView {
             performSubviewRemoval(view, animated: animated)
             self.noStreamView = nil

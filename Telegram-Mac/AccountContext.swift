@@ -18,9 +18,55 @@ import Reactions
 import FetchManager
 #if !SHARE
 import InAppPurchaseManager
+import CurrencyFormat
 #endif
 import ApiCredentials
 
+
+#if !SHARE
+struct PremiumGiftProduct: Equatable {
+    let giftOption: PremiumGiftCodeOption
+    let storeProduct: InAppPurchaseManager.Product?
+    
+    var id: String {
+        return self.storeProduct?.id ?? ""
+    }
+    
+    var months: Int32 {
+        return self.giftOption.months
+    }
+    
+    var price: String {
+        if let storeProduct = storeProduct {
+            return formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
+        }
+        return formatCurrencyAmount(giftOption.amount, currency: giftOption.currency)
+    }
+    
+    var pricePerMonth: String {
+        if let storeProduct = storeProduct {
+            return storeProduct.pricePerMonth(Int(self.months))
+        } else {
+            return formatCurrencyAmount(giftOption.amount / Int64(giftOption.months), currency: giftOption.currency)
+        }
+    }
+    var priceCurrencyAndAmount:(currency: String, amount: Int64) {
+        if let storeProduct = storeProduct {
+            return storeProduct.priceCurrencyAndAmount
+        } else {
+            return (currency: giftOption.currency, amount: giftOption.amount)
+        }
+    }
+    
+    func multipliedPrice(count: Int) -> String {
+        if let storeProduct = storeProduct {
+            return storeProduct.multipliedPrice(count: count)
+        } else {
+            return formatCurrencyAmount(giftOption.amount * Int64(count), currency: giftOption.currency)
+        }
+    }
+}
+#endif
 
 
 let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
@@ -428,9 +474,14 @@ final class AccountContext {
     var privacy:Signal<AccountPrivacySettings?, NoError> {
         return bindings.mainController().settings.privacySettings
     }
+    func updateMessagesPrivacy(noPaidMessages: SelectivePrivacySettings, globalSettings: GlobalPrivacySettings) {
+        bindings.mainController().settings.updateMessagesPrivacy(noPaidMessages: noPaidMessages, globalSettings: globalSettings)
+    }
     func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
         bindings.mainController().settings.updatePrivacy(updated, kind: kind)
     }
+    
+    private(set) var premiumProductsAndPrice: ([PremiumGiftProduct], (Int64, NSDecimalNumber)) = ([], (0, 0))
     #endif
 
     
@@ -607,7 +658,6 @@ final class AccountContext {
 
 
     
-    
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
         self.sharedContext = sharedContext
         self.account = account
@@ -616,6 +666,10 @@ final class AccountContext {
         self.isSupport = isSupport
         #if !SHARE
         self.inAppPurchaseManager = .init(engine: engine)
+        
+        
+        
+        
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
@@ -673,6 +727,42 @@ final class AccountContext {
                 showModalText(for: self.window, text: strings().chatReactionStarsDisabled)
             }
         }
+        
+        let products: Signal<[InAppPurchaseManager.Product], NoError>
+        #if APP_STORE
+        products = inAppPurchaseManager.availableProducts |> map {
+            $0
+        }
+        #else
+        products = .single([])
+        #endif
+        
+        let signal = combineLatest(
+            engine.payments.premiumGiftCodeOptions(peerId: nil),
+            products
+        )
+        |> map { options, products in
+            var gifts: [PremiumGiftProduct] = []
+            for option in options {
+                let product = products.first(where: { $0.id == option.storeProductId })
+                gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
+            }
+            let defaultPrice: (Int64, NSDecimalNumber)
+            if let defaultProduct = products.first(where: { $0.id == "org.telegram.telegramPremium.monthly" }) {
+                defaultPrice = (defaultProduct.priceCurrencyAndAmount.amount, defaultProduct.priceValue)
+            } else if let defaultProduct = options.first(where: { $0.storeProductId == "org.telegram.telegramPremium.threeMonths.code_x1" }) {
+                defaultPrice = (defaultProduct.amount / Int64(defaultProduct.months), NSDecimalNumber(value: 1))
+            } else {
+                defaultPrice = (1, NSDecimalNumber(value: 1))
+            }
+            return (gifts, defaultPrice)
+        } |> deliverOnMainQueue
+        
+        actionsDisposable.add(signal.start(next: { [weak self] value in
+            self?.premiumProductsAndPrice = value
+        }))
+        
+        
     #endif
         
         
@@ -680,7 +770,7 @@ final class AccountContext {
         |> map { pack in
             switch pack {
             case let .result(_, items, _):
-                return items.map { $0.file }
+                return items.map { $0.file._parse() }
             default:
                 return []
             }

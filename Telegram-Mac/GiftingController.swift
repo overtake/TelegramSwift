@@ -319,8 +319,12 @@ private final class StarGiftFilterRowItem : GeneralRowItem {
             switch self.value {
             case .all:
                 attr.append(string: strings().giftingStarGiftAll, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+            case .myGifts:
+                attr.append(string: strings().giftingMyGifts, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
             case .limited:
                 attr.append(string: strings().giftingStarGiftLimited, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+            case .available:
+                attr.append(string: strings().giftingStarGiftInStock, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
             case .stars(let int64):
                 attr.append(string: "\(clown_space)\(int64)", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
@@ -425,7 +429,8 @@ private final class Arguments {
     let giftPremium:(PremiumPaymentOption)->Void
     let close:()->Void
     let openPromo:(String)->Void
-    init(context: AccountContext, selectFilter:@escaping(State.StarGiftFilter)->Void, executeLink:@escaping(String)->Void, openGift:@escaping(PeerStarGift)->Void, giftPremium:@escaping(PremiumPaymentOption)->Void, close:@escaping()->Void, openPromo:@escaping(String)->Void) {
+    let transfer:(ProfileGiftsContext.State.StarGift)->Void
+    init(context: AccountContext, selectFilter:@escaping(State.StarGiftFilter)->Void, executeLink:@escaping(String)->Void, openGift:@escaping(PeerStarGift)->Void, giftPremium:@escaping(PremiumPaymentOption)->Void, close:@escaping()->Void, openPromo:@escaping(String)->Void, transfer:@escaping(ProfileGiftsContext.State.StarGift)->Void) {
         self.context = context
         self.selectFilter = selectFilter
         self.executeLink = executeLink
@@ -433,6 +438,7 @@ private final class Arguments {
         self.giftPremium = giftPremium
         self.close = close
         self.openPromo = openPromo
+        self.transfer = transfer
     }
 }
 
@@ -440,16 +446,15 @@ private final class Arguments {
 
 private struct State : Equatable {
     
-    
     enum StarGiftFilter : Hashable {
         case emptyLeft
         case emptyRight
         case all
+        case myGifts
         case limited
+        case available
         case stars(Int64)
     }
-    
-
     
     struct DefaultPrice : Equatable {
         let intergal: Int64
@@ -460,10 +465,15 @@ private struct State : Equatable {
     var premiumConfiguration: PremiumPromoConfiguration = .defaultValue
     var peer: EnginePeer?
     
-    var starFilters: [StarGiftFilter] = [.emptyLeft, .all , .limited, .emptyRight]
+    var starFilters: [StarGiftFilter] = [.emptyLeft, .all, .myGifts, .limited, .available, .emptyRight]
     var selectedStarFilter: StarGiftFilter = .all
     
     var starGifts: [PeerStarGift] = []
+    
+    var starsState: StarsContext.State?
+    
+    var collectibles: [ProfileGiftsContext.State.StarGift] = []
+    
 }
 
 
@@ -526,10 +536,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let subtitle = "\(product.price)"
                 let label = product.multipliedPrice(count: 1)
                 
-                let option = PremiumPaymentOption(title: giftTitle, desc: subtitle, total: label, discount: discount, months: product.months)
+                let option = PremiumPaymentOption(title: giftTitle, desc: subtitle, total: label, discount: discount, months: product.months, product: product, starProduct: state.products.first(where: { $0.giftOption.currency == XTR && $0.months == product.months}))
                 paymentOptions.append(option)
             }
-            
             
             if !paymentOptions.isEmpty {
                 
@@ -542,7 +551,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_premium_gifts, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: paymentOptions.map { .initialize($0) }, callback: { option in
+                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: paymentOptions.map { .initialize($0) }, insets: .init(left: 10, right: 10), callback: { option in
                         if let option = option.nativePayment {
                             arguments.giftPremium(option)
                         }
@@ -551,48 +560,73 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }
         
+      
         
-        let filtered:([PeerStarGift], State.StarGiftFilter) -> [PeerStarGift] = { list, filter in
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars(selfGift: arguments.context.peerId == peer.id), context: arguments.context, openPromo: arguments.openPromo)
+        }))
+        
+        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_filters, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return StarGiftFilterRowItem(initialSize, stableId: stableId, context: arguments.context, filters: state.starFilters, selected: state.selectedStarFilter, arguments: arguments)
+        }))
+        
+      
+
+        let filtered:([PeerStarGift], State.StarGiftFilter) -> ([PeerStarGift]) = { list, filter in
             switch filter {
             case .all:
                 return list
+            case .myGifts:
+                return []
             case .limited:
                 return list.filter(\.limited)
             case let .stars(stars):
                 return list.filter { $0.stars == stars }
+            case .available:
+                return list.filter({ !$0.limited || $0.native.generic?.soldOut == nil })
             default:
                 return list
             }
         }
-
         let chunks = filtered(state.starGifts, state.selectedStarFilter).chunks(3)
-
         
         if !chunks.isEmpty {
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars(selfGift: arguments.context.peerId == peer.id), context: arguments.context, openPromo: arguments.openPromo)
-            }))
-            
+           
             entries.append(.sectionId(sectionId, type: .customModern(10)))
             sectionId += 1
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_filters, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return StarGiftFilterRowItem(initialSize, stableId: stableId, context: arguments.context, filters: state.starFilters, selected: state.selectedStarFilter, arguments: arguments)
-            }))
-            
-            entries.append(.sectionId(sectionId, type: .customModern(10)))
-            sectionId += 1
-            
             
             for (i, chunk) in chunks.enumerated() {
                 if !chunk.isEmpty {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0) }, callback: { option in
+                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0) }, insets: .init(left: 10, right: 10), callback: { option in
                             if let option = option.nativeStarGift {
                                 arguments.openGift(option)
+                            }
+                        })
+                    }))
+                    
+                    entries.append(.sectionId(sectionId, type: .customModern(10)))
+                    sectionId += 1
+                }
+            }
+        } else if !state.collectibles.isEmpty, state.selectedStarFilter == .myGifts {
+            entries.append(.sectionId(sectionId, type: .customModern(10)))
+            sectionId += 1
+            
+            let chunks = state.collectibles.chunks(3)
+            
+            for (i, chunk) in chunks.enumerated() {
+                if !chunk.isEmpty {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
+                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0, transfrarable: true) }, insets: .init(left: 10, right: 10), callback: { option in
+                            if let gift = option.nativeProfileGift {
+                                arguments.transfer(gift)
                             }
                         })
                     }))
@@ -624,7 +658,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     let paymentDisposable = MetaDisposable()
     actionsDisposable.add(paymentDisposable)
     
-    let initialState = State()
+    let initialState = State(products: context.premiumProductsAndPrice.0, defaultPrice: .init(intergal: context.premiumProductsAndPrice.1.0, decimal: context.premiumProductsAndPrice.1.1))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -643,36 +677,6 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     let inAppPurchaseManager = context.inAppPurchaseManager
 
     
-    let products: Signal<[InAppPurchaseManager.Product], NoError>
-    #if APP_STORE //|| DEBUG
-    products = inAppPurchaseManager.availableProducts |> map {
-        $0
-    }
-    #else
-    products = .single([])
-    #endif
-    
-    let productsAndDefaultPrice: Signal<([PremiumGiftProduct], (Int64, NSDecimalNumber)), NoError> = combineLatest(
-        context.engine.payments.premiumGiftCodeOptions(peerId: nil),
-        products
-    )
-    |> map { options, products in
-        var gifts: [PremiumGiftProduct] = []
-        for option in options {
-            let product = products.first(where: { $0.id == option.storeProductId })
-            gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
-        }
-        let defaultPrice: (Int64, NSDecimalNumber)
-        if let defaultProduct = products.first(where: { $0.id == "org.telegram.telegramPremium.monthly" }) {
-            defaultPrice = (defaultProduct.priceCurrencyAndAmount.amount, defaultProduct.priceValue)
-        } else if let defaultProduct = options.first(where: { $0.storeProductId == "org.telegram.telegramPremium.threeMonths.code_x1" }) {
-            defaultPrice = (defaultProduct.amount / Int64(defaultProduct.months), NSDecimalNumber(value: 1))
-        } else {
-            defaultPrice = (1, NSDecimalNumber(value: 1))
-        }
-        return (gifts, defaultPrice)
-    }
-    
     
     let premiumPromo = context.engine.data.get(TelegramEngine.EngineData.Item.Configuration.PremiumPromo())
     |> deliverOnMainQueue
@@ -682,13 +686,21 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     
     let birtday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: peerId))
     
-    actionsDisposable.add(combineLatest(productsAndDefaultPrice, peer, premiumPromo, context.engine.payments.cachedStarGifts(), birtday).start(next: { products, peer, premiumPromo, gifts, birthday in
+    let giftsContext = starGiftsContext ?? ProfileGiftsContext(account: context.account, peerId: context.peerId)
+    
+    giftsContext.updateFilter(.unique)
+    
+    
+    actionsDisposable.add(combineLatest(peer, premiumPromo, context.engine.payments.cachedStarGifts(), birtday, context.starsContext.state, giftsContext.state).start(next: { peer, premiumPromo, gifts, birthday, starsState, myGifts in
         updateState { current in
             var current = current
-            current.products = products.0
-            current.defaultPrice = .init(intergal: products.1.0, decimal: products.1.1)
             current.peer = peer
             current.premiumConfiguration = premiumPromo
+            current.starsState = starsState
+            
+            current.collectibles = myGifts.filteredGifts
+
+            
             if let gifts {
                 current.starGifts = gifts.compactMap { $0.generic }.map {
                     .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: .generic($0))
@@ -703,11 +715,13 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                     }
                 }
                 let customFilters: [State.StarGiftFilter] = gifts.sorted(by: { $0.generic!.price < $1.generic!.price }).map { $0.generic!.price }.uniqueElements.map { .stars($0) }
-                current.starFilters = [.emptyLeft, .all, .limited] + customFilters + [.emptyRight]
+                current.starFilters = [.emptyLeft, .all] + (current.collectibles.isEmpty ? [] : [.myGifts]) + [.limited, .available] + customFilters + [.emptyRight]
             }
             return current
         }
     }))
+    
+    
     
 
     let arguments = Arguments(context: context, selectFilter: { filter in
@@ -721,7 +735,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }, openGift: { option in
         if let peer = stateValue.with({ $0.peer }) {
             if option.native.generic?.availability?.remains == 0 {
-                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil), purpose: .unavailableGift), for: context.window)
+                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil), purpose: .unavailableGift), for: context.window)
             } else {
                 showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer, starGiftsProfile: starGiftsContext), for: window)
             }
@@ -730,7 +744,8 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
         let state = stateValue.with { $0 }
         if let peer = state.peer {
             if let product = state.products.first(where: { $0.months == option.months }) {
-                showModal(with: PreviewStarGiftController(context: context, option: .premium(option: product), peer: peer, starGiftsProfile: starGiftsContext), for: window)
+                let starGift = state.products.first(where: { $0.months == option.months && $0.giftOption.currency == XTR })
+                showModal(with: PreviewStarGiftController(context: context, option: .premium(option: product, starOption: starGift), peer: peer, starGiftsProfile: starGiftsContext), for: window)
             }
         }
 
@@ -742,6 +757,46 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
         } else {
             prem(with: PremiumBoardingController(context: context), for: window)
         }
+    }, transfer: { gift in
+        
+        let unique = gift.gift.unique
+        let state = stateValue.with { $0 }
+        let peer = state.peer
+        
+        
+        let convertStars: Int64? = gift.convertStars
+        let reference: StarGiftReference? = gift.reference ?? .peer(peerId: context.peerId, id: unique!.id)
+        
+        let info: String
+        let ok: String
+        
+        guard let reference = reference, let unique = unique, let peer = peer else {
+            return
+        }
+        
+        if let convertStars = convertStars, let starsState = state.starsState, starsState.balance.value < convertStars {
+            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: convertStars)), for: window)
+            return
+        }
+        
+        if let stars = convertStars, stars > 0 {
+            info = strings().giftTransferConfirmationText("\(unique.title) #\(unique.number)", peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(stars)))
+            ok = strings().giftTransferConfirmationTransfer + " " + strings().starListItemCountCountable(Int(stars))
+        } else {
+            info = strings().giftTransferConfirmationTextFree("\(unique.title) #\(unique.number)", peer._asPeer().displayTitle)
+            ok = strings().giftTransferConfirmationTransferFree
+        }
+
+        let data = ModalAlertData(title: nil, info: info, description: nil, ok: ok, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
+            return TransferUniqueGiftHeaderItem(initialSize, stableId: stableId, gift: unique, toPeer: peer, context: context)
+        }))
+        
+        showModalAlert(for: window, data: data, completion: { result in
+            _ = context.engine.payments.transferStarGift(prepaid: convertStars == nil, reference: reference, peerId: peerId).startStandalone()
+            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+            close?()
+        })
+        
     })
     
     let signal = statePromise.get() |> filter { $0.peer != nil } |> deliverOnPrepareQueue |> map { state in
@@ -775,6 +830,8 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    controller.contextObject = giftsContext
     
     close = { [weak modalController] in
         modalController?.modal?.close()

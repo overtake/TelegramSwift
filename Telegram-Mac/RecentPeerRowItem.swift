@@ -35,7 +35,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
             self.badge = nil
         }
 
-        super.init(initialSize, peer: peer, account: account, context: context, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems, highlightVerified: true, story: storyStats?.subscriptionItem(peer), openStory: openStory, customAction: customAction, makeAvatarRound: isGrossingApp)
+        super.init(initialSize, peer: peer, account: account, context: context, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems, highlightVerified: true, story: storyStats?.subscriptionItem(peer), openStory: openStory, customAction: badge != nil ? nil : customAction, makeAvatarRound: isGrossingApp)
     }
     
     

@@ -90,10 +90,10 @@ func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, argu
         case .broadcast:
             return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, stories: stories, revenueState: revenueState, tonRevenueState: tonRevenueState)
         case .group:
-            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
+            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, revenueState: revenueState)
         }
     } else if peerViewMainPeer(view) is TelegramGroup {
-        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
+        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, revenueState: revenueState)
     }
     return []
 }

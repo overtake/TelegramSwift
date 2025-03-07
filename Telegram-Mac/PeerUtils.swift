@@ -590,6 +590,13 @@ extension Peer {
         return nil
     }
     
+    var sendPaidMessageStars: StarsAmount? {
+        if let channel = self as? TelegramChannel {
+            return channel.sendPaidMessageStars
+        }
+        return nil
+    }
+    
     public var displayTitle: String {
         switch self {
         case let user as TelegramUser:

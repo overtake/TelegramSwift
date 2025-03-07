@@ -355,7 +355,7 @@ private func eventLogItems(_ entries:[ChannelAdminEventLogEntry], state: State, 
         for (i, entry) in group.enumerated() {
             switch entry.event.action {
             case let .editMessage(prev, new):
-                let updatedMedia: TelegramMediaWebpage = .init(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(.init(url: "", displayUrl: "", hash: 0, type: "edited", websiteName: strings().channelEventLogOriginalMessage, title: nil, text: prev.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: true, image: prev.media.first as? TelegramMediaImage, file: prev.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil)))
+                let updatedMedia: TelegramMediaWebpage = .init(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(.init(url: "", displayUrl: "", hash: 0, type: "edited", websiteName: strings().channelEventLogOriginalMessage, title: nil, text: prev.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: true, imageIsVideoCover: false, image: prev.media.first as? TelegramMediaImage, file: prev.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil)))
                 
                 let new = new.withUpdatedMedia([updatedMedia])
                 

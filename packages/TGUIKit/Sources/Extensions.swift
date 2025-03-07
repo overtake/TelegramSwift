@@ -2510,6 +2510,14 @@ public extension CGSize {
     func centered(around position: CGPoint) -> CGRect {
         return CGRect(origin: CGPoint(x: position.x - self.width / 2.0, y: position.y - self.height / 2.0), size: self)
     }
+    
+    func centered(in rect: CGRect) -> CGRect {
+        let origin = CGPoint(
+            x: rect.origin.x + (rect.width - self.width) / 2,
+            y: rect.origin.y + (rect.height - self.height) / 2
+        )
+        return CGRect(origin: origin, size: self)
+    }
 
 }
 
@@ -3112,4 +3120,23 @@ public func extractAnchor(from text: String, matching url: String) -> String? {
     
     // If no anchor is found, return nil
     return nil
+}
+
+
+public func formatMonthYear(_ dateString: String, locale: Locale = .current) -> String? {
+    // Create date formatter for parsing input
+    let inputFormatter = DateFormatter()
+    inputFormatter.dateFormat = "MM.yyyy"
+    
+    // Try to parse the input string to date
+    guard let date = inputFormatter.date(from: dateString) else {
+        return nil
+    }
+    
+    // Create formatter for output
+    let outputFormatter = DateFormatter()
+    outputFormatter.locale = locale
+    outputFormatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
+    
+    return outputFormatter.string(from: date)
 }

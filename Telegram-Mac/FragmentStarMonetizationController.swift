@@ -313,12 +313,15 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+        
+        let buyAds:()->Void = {
+            if let url = state.adsUrl {
+                arguments.executeLink(url)
+            }
+        }
+        
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars.totalValue, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
-                if let url = state.adsUrl {
-                    arguments.executeLink(url)
-                }
-            }, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars.totalValue, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: state.peer?.id == arguments.context.peerId ? nil : buyAds, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
         let text: String
@@ -452,11 +455,11 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
     
     let adsUrl: Signal<String?, NoError> = .single(nil) |> then(context.engine.peers.requestStarsRevenueAdsAccountlUrl(peerId: peerId))
     
-    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.allTransactions.state, contextObject.incomingTransactions.state, contextObject.outgoingTransactions.state, adsUrl).startStrict(next: { revenue, allTransactions, incomingTransactions, outgoingTransactions, adsUrl in
+    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.allTransactions.state, contextObject.incomingTransactions.state, contextObject.outgoingTransactions.state, adsUrl, context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))).startStrict(next: { revenue, allTransactions, incomingTransactions, outgoingTransactions, adsUrl, peer in
         if let revenue = revenue.stats {
             updateState { current in
                 var current = current
-                
+                current.peer = peer
                 current.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
                 current.overview.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
                 current.overview.all = .init(stars: revenue.balances.overallRevenue, usdRate: revenue.usdRate)
@@ -596,7 +599,7 @@ private final class WithdrawHeaderItem : GeneralRowItem {
         self.arguments = arguments
         self.titleLayout = .init(.initialize(string: strings().fragmentStarWithdraw, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         let attr = NSMutableAttributedString()
-        attr.append(string: strings().starPurchaseBalance("\(clown)\(balance)"), color: theme.colors.text, font: .normal(.text))
+        attr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(balance)"), color: theme.colors.text, font: .normal(.text))
         attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.balance = .init(attr)
@@ -708,7 +711,7 @@ private final class WithdrawInputView : GeneralRowView {
         func update(_ item: WithdrawInputItem, animated: Bool) {
             let attr = NSMutableAttributedString()
             
-            attr.append(string: strings().fragmentStarWithdrawInput("\(clown)\(item.inputState.inputText.string)") , color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.append(string: strings().fragmentStarWithdrawInput("\(clown + TINY_SPACE)\(item.inputState.inputText.string)") , color: theme.colors.underSelectedColor, font: .medium(.text))
             attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: clown)
             
             let layout = TextViewLayout(attr)
@@ -1122,5 +1125,19 @@ func withdrawStarBalance(context: AccountContext, stars: StarsContext, state: St
     }
 
     return withdraw(context: context, state: initialState, stateValue: statePromise.get(), updateState: updateState, callback: { _ in })
+    
+}
+
+
+func withdrawStarBalance(context: AccountContext, balance: StarsRevenueStats, callback:@escaping(Int64)->Void) -> InputDataModalController {
+    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("bot_revenue_withdrawal_enabled", orElse: true), balance: .init(stars: balance.balances.availableBalance, usdRate: balance.usdRate))
+
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((State) -> State) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+
+    return withdraw(context: context, state: initialState, stateValue: statePromise.get(), updateState: updateState, callback: callback)
     
 }

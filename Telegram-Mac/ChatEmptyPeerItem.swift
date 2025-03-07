@@ -84,6 +84,10 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: strings().emptyGroupInfoLine3, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
                 _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
+            } else if let padMessageStars = self.chatInteraction.presentation.sendPaidMessageStars, let peer = self.chatInteraction.peer {
+                attr.append(string: strings().chatEmptyPaidMessage(peer.displayTitle, strings().starListItemCountCountable(Int(padMessageStars.value))), color: textColor, font: .medium(.text))
+                lineSpacing = nil
+                //self.standImage = (NSImage(resource: .iconBusinessChatGreetings).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
             } else {
                 if let restriction = chatInteraction.presentation.peer?.restrictionText(chatInteraction.context.contentSettings) {
                     _ = attr.append(string: restriction, color: theme.chatServiceItemTextColor, font: .medium(.text))

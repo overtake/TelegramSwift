@@ -219,9 +219,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         }
         for item in optimized {
             
-            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
+            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file._parse().stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
             
-            let selected = selectedItems.first(where: { $0.isEqual(to: item.file) })?.type
+            let selected = selectedItems.first(where: { $0.isEqual(to: item.file._parse()) })?.type
             
             let inset: NSPoint
             if selected != nil {
@@ -352,7 +352,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case .statuses:
             if let view = self.view as? EmojiesSectionRowView, let item = view.itemUnderMouse {
                 if let sticker = item.1.item, let window = view.window {
-                    if !sticker.file.mimeType.hasPrefix("bundle") {
+                    if !sticker.file._parse().mimeType.hasPrefix("bundle") {
                         let hours: [Int32] = [60 * 60,
                                               60 * 60 * 2,
                                               60 * 60 * 8,
@@ -469,12 +469,12 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let item = itemUnderMouse?.1, let file = item.item?.file {
-            let emojiReference = file.emojiReference ?? file.stickerReference
+            let emojiReference = file._parse().emojiReference ?? file._parse().stickerReference
             if let emojiReference = emojiReference {
-                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
-                if file.isVideoSticker && !file.isWebm {
+                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file._parse())
+                if file.isVideoSticker && !file._parse().isWebm {
                     return (.file(reference, GifPreviewModalView.self), nil)
-                } else if file.isAnimatedSticker || file.isWebm || file.isCustomEmoji {
+                } else if file.isAnimatedSticker || file._parse().isWebm || file.isCustomEmoji {
                     return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
                 } else if file.isStaticSticker  {
                     return (.file(reference, StickerPreviewModalView.self), nil)
@@ -1000,7 +1000,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         $0.file?.fileId == current.file.fileId
                     })?.backdrop?.first
                     
-                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, playPolicy: isEmojiLite ? .framesCount(1) : .loop, textColor: color, uniqueStarAnimation: uniqueStarAnimation)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file._parse(), size: rect.size, playPolicy: isEmojiLite ? .framesCount(1) : .loop, textColor: color, uniqueStarAnimation: uniqueStarAnimation)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     

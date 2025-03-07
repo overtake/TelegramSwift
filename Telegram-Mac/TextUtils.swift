@@ -784,7 +784,12 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         case let .webViewData(data):
             text = strings().chatServiceWebData(data)
         case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount, _, _):
-            let formatted = formatCurrencyAmount(amount, currency: currency)
+            let formatted: String
+            if currency == XTR {
+                formatted = strings().starListItemCountCountable(Int(amount))
+            } else {
+                formatted = formatCurrencyAmount(amount, currency: currency)
+            }
             if authorId == account.peerId {
                 text = strings().chatServicePremiumGiftSentYou(formatted)
             } else {
@@ -1005,6 +1010,12 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().chatListTextUniqueGift(gift.title + " #\(gift.number)")
                 }
             }
+//        case let .paidMessage(stars):
+//            if authorId == account.peerId {
+//                text = strings().chatServicePaidMessageYou(strings().starListItemCountCountable(Int(stars)))
+//            } else {
+//                text = strings().chatServicePaidMessage(authorName, strings().starListItemCountCountable(Int(stars)))
+//            }
         }
     }
     return (text, entities, media)

@@ -39,7 +39,8 @@ public final class PeerCallArguments {
     let video:(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?
     let audioLevel:()->Signal<Float, NoError>
     let openSettings:(Window)->Void
-    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping(ExternalPeerCallState)->Void, toggleScreencast:@escaping(ExternalPeerCallState)->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?, audioLevel:@escaping()->Signal<Float, NoError>, openSettings:@escaping(Window)->Void) {
+    let upgradeToConference:(Window)->Void
+    public init(engine: TelegramEngine, peerId: PeerId, makeAvatar: @escaping (NSView?, Peer?) -> NSView, toggleMute:@escaping()->Void, toggleCamera:@escaping(ExternalPeerCallState)->Void, toggleScreencast:@escaping(ExternalPeerCallState)->Void, endcall:@escaping(ExternalPeerCallState)->Void, recall:@escaping()->Void, acceptcall:@escaping()->Void, video:@escaping(Bool)->Signal<OngoingGroupCallContext.VideoFrameData, NoError>?, audioLevel:@escaping()->Signal<Float, NoError>, openSettings:@escaping(Window)->Void, upgradeToConference:@escaping(Window)->Void) {
         self.engine = engine
         self.peerId = peerId
         self.makeAvatar = makeAvatar
@@ -52,5 +53,6 @@ public final class PeerCallArguments {
         self.video = video
         self.audioLevel = audioLevel
         self.openSettings = openSettings
+        self.upgradeToConference = upgradeToConference
     }
 }

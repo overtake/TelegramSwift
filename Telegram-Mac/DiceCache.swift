@@ -134,7 +134,7 @@ class DiceCache {
         |> map { result -> [TelegramMediaFile] in
             switch result {
             case let .result(_, items, _):
-                return items.map(\.file)
+                return items.map(\.file).map { $0._parse() }
             default:
                 return []
             }
@@ -266,10 +266,11 @@ class DiceCache {
         } |> mapToSignal { dices -> Signal<Void, NoError> in
             let signals = dices.map { value -> Signal<FetchResourceSourceType, FetchResourceError> in
                 let reference: MediaResourceReference
-                if let stickerReference = value.file.stickerReference {
-                    reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: value.file).resourceReference(value.file.resource)
+                let file = value.file._parse()
+                if let stickerReference = file.stickerReference {
+                    reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file).resourceReference(file.resource)
                 } else {
-                    reference = FileMediaReference.standalone(media: value.file).resourceReference(value.file.resource)
+                    reference = FileMediaReference.standalone(media: file).resourceReference(file.resource)
                 }
                 return fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: reference)
             }
@@ -284,13 +285,14 @@ class DiceCache {
             
             for value in values {
                 let dices = value.1.map { value in
-                    return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
+                    let file = value.file._parse()
+                    return postbox.mediaBox.resourceData(file.resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
                         if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                             return .single(data)
                         } else {
                             return .single(nil)
                         }
-                    } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file) }
+                    } |> map { ((file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, file) }
                 }
                 signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
@@ -310,13 +312,13 @@ class DiceCache {
             
                         
             let effects = values.map { value in
-                return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
+                return postbox.mediaBox.resourceData(value.file._parse().resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
                     if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                         return .single(data)
                     } else {
                         return .single(nil)
                     }
-                } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file) }
+                } |> map { ((value.file._parse().stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file._parse()) }
             }
             return combineLatest(effects) |> map { values in
                 var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]

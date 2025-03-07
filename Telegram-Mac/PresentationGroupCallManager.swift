@@ -1,7 +1,8 @@
 import Foundation
+import TelegramVoip
 import Postbox
 import TelegramCore
-
+import TgVoipWebrtc
 import SwiftSignalKit
 
 
@@ -151,6 +152,38 @@ public enum PresentationGroupCallMuteAction: Equatable {
 
 }
 
+public struct VideoSources : Equatable {
+    public static func == (lhs: VideoSources, rhs: VideoSources) -> Bool {
+        if let lhsVideo = lhs.video, let rhsVideo = rhs.video {
+            if !lhsVideo.isEqual(rhsVideo) {
+                return false
+            }
+        } else if (lhs.video != nil) != (rhs.video != nil) {
+            return false
+        }
+        if let lhsScreencast = lhs.screencast, let rhsScreencast = rhs.screencast {
+            if !lhsScreencast.isEqual(rhsScreencast) {
+                return false
+            }
+        } else if (lhs.screencast != nil) != (rhs.screencast != nil) {
+            return false
+        }
+        if lhs.failed != rhs.failed {
+            return false
+        }
+        return true
+    }
+    
+    var video: VideoSourceMac? = nil
+    var screencast: VideoSourceMac? = nil
+    
+    var failed: Bool = false
+    
+    var isEmpty: Bool {
+        return video == nil && screencast == nil
+    }
+}
+
 public struct PresentationGroupCallState: Equatable {
     public enum NetworkState {
         case connecting
@@ -180,6 +213,10 @@ public struct PresentationGroupCallState: Equatable {
     public var subscribedToScheduled: Bool
     public var isVideoEnabled: Bool
     public var isStream: Bool
+    
+    public var sources: VideoSources = .init()
+
+    
     public init(
         myPeerId: PeerId,
         networkState: NetworkState,
@@ -265,7 +302,7 @@ protocol PresentationGroupCall: class {
     var accountContext: AccountContext { get }
     var sharedContext: SharedAccountContext { get }
     var internalId: CallSessionInternalId { get }
-    var peerId: PeerId { get }
+    var peerId: PeerId? { get }
     var peer: Peer? { get }
     var joinAsPeerId: PeerId { get }
     var joinAsPeerIdValue:Signal<PeerId, NoError> { get }
@@ -307,10 +344,14 @@ protocol PresentationGroupCall: class {
     
     func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo])
     func makeVideoView(endpointId: String, videoMode: GroupCallVideoMode, completion: @escaping (PresentationCallVideoView?) -> Void)
-    func requestVideo(deviceId: String)
+    func requestVideo(deviceId: OngoingCallVideoCapturer, source: VideoSourceMac)
+    func requestVideo(deviceId: String, source: VideoSourceMac)
     func disableVideo()
-    func requestScreencast(deviceId: String)
+    func requestScreencast(deviceId: OngoingCallVideoCapturer, source: VideoSourceMac)
+    func requestScreencast(deviceId: String, source: VideoSourceMac)
     func disableScreencast()
+    
+    func toggleVideoFailed(failed: Bool)
 
     func loadMore()
 

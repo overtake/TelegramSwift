@@ -330,7 +330,7 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
                 let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { [weak chatInteraction] peerId, toChat, postId, initialAction in
-                    chatInteraction?.openInfo(peerId, toChat, postId, toChat ? (initialAction ?? .source(message.id)) : nil)
+                    chatInteraction?.openInfo(peerId, toChat, postId, toChat ? (initialAction ?? .source(message.id, nil)) : nil)
                 }
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
@@ -431,7 +431,7 @@ class ChatMessageItem: ChatRowItem {
             
             var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
-                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, imageIsVideoCover: false, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
             }
                         
             
@@ -443,7 +443,7 @@ class ChatMessageItem: ChatRowItem {
                  case let .Loaded(content):
                      var content = content
                      var forceArticle: Bool = false
-                     if let instantPage = content.instantPage {
+                     if let instantPage = content.instantPage?._parse() {
                          if instantPage.blocks.count == 3 {
                              switch instantPage.blocks[2] {
                              case .collage, .slideshow:
@@ -494,7 +494,7 @@ class ChatMessageItem: ChatRowItem {
                  }
              } else if let adAttribute = message.adAttribute {
                  
-                 let content: TelegramMediaWebpageLoadedContent = .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: adAttribute.hasContentMedia, image: message.media.first as? TelegramMediaImage, file: message.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil)
+                 let content: TelegramMediaWebpageLoadedContent = .init(url: "", displayUrl: "", hash: 0, type: "telegram_ad", websiteName: adAttribute.messageType == .recommended ? strings().chatMessageRecommendedTitle : strings().chatMessageSponsoredTitle, title: message.author?.displayTitle ?? "", text: message.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: adAttribute.hasContentMedia, imageIsVideoCover: false, image: message.media.first as? TelegramMediaImage, file: message.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil)
                  
                  if adAttribute.hasContentMedia {
                      self.webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent: message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: true, entities: message.textEntities?.entities, adAttribute: adAttribute)

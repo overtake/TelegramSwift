@@ -24,6 +24,7 @@ enum ChatHistoryEntryId : Hashable {
     case commentsHeader
     case repliesHeader
     case topThreadInset
+    case userInfo
     func hash(into hasher: inout Hasher) {
         
     }
@@ -96,6 +97,12 @@ enum ChatHistoryEntryId : Hashable {
             } else {
                 return false
             }
+        case .userInfo:
+            if case .userInfo = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -123,6 +130,8 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(10) << 40
         case .mediaId:
             return UInt64(11) << 40
+        case .userInfo:
+            return UInt64(12) << 40
         }
     }
 
@@ -160,6 +169,7 @@ struct MessageEntryAdditionalData : Equatable {
     let messageEffect: AvailableMessageEffects.MessageEffect?
     let factCheckRevealed: Bool
     let quoteRevealed: Set<Int>
+    
     init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, replyTranslate: ChatLiveTranslateContext.State.Result? = nil, storyReadMaxId: Int32? = nil, authorStoryStats: PeerStoryStats? = nil, cachedData: CachedDataEquatable? = nil, recommendedChannels: RecommendedChannels? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, savedMessageTags: SavedMessageTags? = nil, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], messageEffect: AvailableMessageEffects.MessageEffect? = nil, factCheckRevealed: Bool = false, quoteRevealed: Set<Int> = Set()) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
@@ -219,6 +229,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
     case repliesHeader(Bool, MessageIndex, ChatItemRenderType)
     case topThreadInset(CGFloat, MessageIndex, ChatItemRenderType)
+    case userInfo(PeerStatusSettings, EnginePeer, GroupsInCommonState?, MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
     var message:Message? {
         switch self {
         case let .MessageEntry(message,_, _,_,_,_,_):
@@ -271,6 +282,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .repliesHeader(_, _, renderType):
             return renderType
         case let .topThreadInset(_, _, renderType):
+            return renderType
+        case let .userInfo(_, _ , _, _, renderType, _):
             return renderType
         }
     }
@@ -347,6 +360,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .repliesHeader
         case .topThreadInset:
             return .topThreadInset
+        case .userInfo:
+            return .userInfo
         }
     }
     
@@ -369,6 +384,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .topThreadInset(_, index, _):
             return index
         case let .empty(index, _):
+            return index
+        case let .userInfo(_, _, _, index, _, _):
             return index
         }
     }
@@ -393,6 +410,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .topThreadInset(_, index, _):
             return index
         case let .empty(index, _):
+            return index
+        case let .userInfo(_, _, _, index, _, _):
             return index
         }
     }
@@ -502,6 +521,13 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
+    case let .userInfo(value, peer, groups, index, theme, type):
+        switch rhs {
+        case .userInfo(value, peer, groups, index, theme, type):
+            return true
+        default:
+            return false
+        }
     }
     
 }
@@ -518,7 +544,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 
 private var index = 0
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLocation? = nil, maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil, storyState: PeerExpiringStoryListContext.State? = nil, peerStoryStats: [PeerId : PeerStoryStats] = [:], cachedData: CachedPeerData? = nil, peer: Peer? = nil, holeLater: Bool = false, holeEarlier: Bool = false, recommendedChannels: RecommendedChannels? = nil, includeJoin: Bool = false, earlierId: MessageIndex? = nil, laterId: MessageIndex? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, savedMessageTags: SavedMessageTags? = nil, contentSettings: ContentSettings? = nil, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], messageEffects: AvailableMessageEffects? = nil, factCheckRevealed: Set<MessageId> = Set(), quoteRevealed: Set<QuoteMessageIndex> = Set()) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLocation? = nil, maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil, storyState: PeerExpiringStoryListContext.State? = nil, peerStoryStats: [PeerId : PeerStoryStats] = [:], cachedData: CachedPeerData? = nil, peer: Peer? = nil, holeLater: Bool = false, holeEarlier: Bool = false, recommendedChannels: RecommendedChannels? = nil, includeJoin: Bool = false, earlierId: MessageIndex? = nil, laterId: MessageIndex? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, savedMessageTags: SavedMessageTags? = nil, contentSettings: ContentSettings? = nil, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], messageEffects: AvailableMessageEffects? = nil, factCheckRevealed: Set<MessageId> = Set(), quoteRevealed: Set<QuoteMessageIndex> = Set(), peerStatus: PeerStatusSettings? = nil, commonGroups: GroupsInCommonState? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
     
     var groupedPhotos:[ChatHistoryEntry] = []
@@ -620,6 +646,48 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         }
     }
     
+    let insertPaidMessage:(ChatHistoryEntry)->Void = { entry in
+        if let message = entry.firstMessage, let attr = message.paidStarsAttribute {
+            
+            let count: Int
+            switch entry {
+            case let .groupedPhotos(values, _):
+                count = values.count
+            case .MessageEntry:
+                count = 1
+            default:
+                count = 0
+            }
+            
+            let text: String
+            let price = Int(attr.stars.value) * count
+            if let author = message.author, message.peers[message.id.peerId]?.isUser == true {
+                if count == 1 {
+                    if author.id == message.id.peerId {
+                        text = strings().notificationPaidMessage(author.compactDisplayTitle, strings().starListItemCountCountable(Int(price)))
+                    } else {
+                        text = strings().notificationPaidMessageYou(strings().starListItemCountCountable(Int(price)))
+                    }
+                } else {
+                    let messageText = strings().notificationPaidMessagesCountable(count)
+                    if author.id == message.id.peerId {
+                        text = strings().notificationPaidMessageMany(author.compactDisplayTitle, strings().starListItemCountCountable(Int(price)), messageText)
+                    } else {
+                        text = strings().notificationPaidMessageYouMany(strings().starListItemCountCountable(Int(price)), messageText)
+                    }
+                }
+            } else {
+                text = ""
+            }
+            
+            if !text.isEmpty {
+                let action = TelegramMediaAction(action: .customText(text: text, entities: [], additionalAttributes: nil))
+                let service = message.withUpdatedMedia([action]).withUpdatedStableId(0).withUpdatedTimestamp(message.timestamp - 1)
+                entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData()))
+            }
+        }
+    }
+    
     
     for (i, entry) in messagesEntries.enumerated() {
         var message = entry.message
@@ -659,7 +727,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                 
                 if original.isSingleEmoji, let item = animatedEmojiStickers[unmodified] {
                     if fullCustom == nil {
-                        var file = item.file
+                        var file = item.file._parse()
                         var attributes = file.attributes
                         attributes.removeAll { attr in
                             if case .FileName = attr {
@@ -1022,9 +1090,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                             let entry: ChatHistoryEntry = .groupedPhotos(groupedPhotos, groupInfo: groupInfo)
                             entries.append(entry)
                             insertPendingProccessing(entry)
+                            insertPaidMessage(entry)
                         } else {
                             entries.append(groupedPhotos[0])
                             insertPendingProccessing(groupedPhotos[0])
+                            insertPaidMessage(entry)
                         }
                     }
                     groupedPhotos.removeAll()
@@ -1036,6 +1106,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         } else {
             entries.append(entry)
             insertPendingProccessing(entry)
+            insertPaidMessage(entry)
         }
         
         prev = nil
@@ -1119,6 +1190,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             let entry: ChatHistoryEntry = .groupedPhotos(groupedPhotos, groupInfo: key)
             entries.append(entry)
             insertPendingProccessing(entry)
+            insertPaidMessage(entry)
         }
     }
     
@@ -1135,6 +1207,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         for message in dynamicAdMessages {
             entries.append(.MessageEntry(message, MessageIndex(message), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(), autoplayMedia)))
         }
+    }
+    
+    if let peerStatus, peerStatus.phoneCountry != nil, let message = messagesEntries.first, let peer = message.message.peers[message.message.id.peerId] {
+        entries.append(.userInfo(peerStatus, .init(peer), commonGroups, MessageIndex.absoluteLowerBound(), renderType, chatTheme))
     }
 
     

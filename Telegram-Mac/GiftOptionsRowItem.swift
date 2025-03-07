@@ -18,6 +18,9 @@ struct PremiumPaymentOption : Equatable {
     var discount: String?
     var months: Int32
     
+    var product: PremiumGiftProduct
+    var starProduct: PremiumGiftProduct?
+    
     var media: LocalAnimatedSticker {
         switch months {
         case 12:
@@ -46,18 +49,18 @@ struct PeerStarGift : Equatable {
     let limited: Bool
     let native: StarGift
     
-    func totalStars(_ includeUpgrade: Bool) -> Int64 {
+    func totalStars(_ includeUpgrade: Bool, sendMessage: StarsAmount? = nil) -> Int64 {
         if includeUpgrade {
             switch native {
             case let .generic(gift):
                 if let upgradeStars = gift.upgradeStars {
-                    return stars + upgradeStars
+                    return stars + upgradeStars + (sendMessage?.value ?? 0)
                 }
             default:
-                return stars
+                return stars + (sendMessage?.value ?? 0)
             }
         }
-        return stars
+        return stars + (sendMessage?.value ?? 0)
     }
 }
 
@@ -80,13 +83,17 @@ final class GiftOptionsRowItem : GeneralRowItem {
         let badge: Badge?
         let peer: EnginePeer?
         let invisible: Bool
+        let pinned: Bool
+        
+        var starsPrice: TextViewLayout?
         
         var nativePayment: PremiumPaymentOption?
         var nativeStarGift: PeerStarGift?
         var nativeProfileGift: ProfileGiftsContext.State.StarGift?
+        var nativeStarUniqueGift: StarGift.UniqueGift?
         
         var gift: StarGift? {
-            return nativeStarGift?.native ?? nativeProfileGift?.gift
+            return nativeStarUniqueGift.flatMap { .unique($0) } ?? nativeStarGift?.native ?? nativeProfileGift?.gift
         }
         
         static func initialize(_ option: PremiumPaymentOption) -> Option {
@@ -98,7 +105,20 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 colors = [theme.colors.redUI.withMultipliedBrightnessBy(1.1), theme.colors.redUI.withMultipliedBrightnessBy(0.9)]
             }
             
-            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, colors: colors, textColor: .white )}, peer: nil, invisible: false, nativePayment: option)
+            let starsPrice: TextViewLayout?
+            if let starOption = option.starProduct {
+                let price = NSMutableAttributedString()
+                
+                price.append(string: strings().giftPremiumPayOrStars(clown + " " + "\(starOption.giftOption.amount)"), color: GOLD, font: .normal(.small))
+                price.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+                
+                starsPrice = .init(price)
+                starsPrice?.measure(width: .greatestFiniteMagnitude)
+            } else {
+                starsPrice = nil
+            }
+            
+            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, colors: colors, textColor: .white )}, peer: nil, invisible: false, pinned: false, starsPrice: starsPrice, nativePayment: option)
         }
         static func initialize(_ option: PeerStarGift) -> Option {
             let badge: Badge?
@@ -120,14 +140,20 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 } else {
                     badge = .init(text: strings().starGiftLimited, colors: blueColor, textColor: theme.colors.underSelectedColor)
                 }
-            } else if let availability = option.native.unique?.availability {
-                badge = .init(text: "\(Int(availability.issued).prettyNumber)/\(Int(availability.total).prettyNumber)", colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
+            } else if let unique = option.native.unique {
+                badge = .init(text: "\(unique.number)", colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
-            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, nativeStarGift: option)
+            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, pinned: false, nativeStarGift: option)
         }
-        static func initialize(_ option: ProfileGiftsContext.State.StarGift) -> Option {
+        
+        static func initialize(_ option: StarGift.UniqueGift) -> Option {
+            return .init(file: option.file!, text: nil, type: .none, badge: nil, peer: nil, invisible: false, pinned: false, nativeStarUniqueGift: option)
+        }
+        
+        
+        static func initialize(_ option: ProfileGiftsContext.State.StarGift, transfrarable: Bool = false) -> Option {
             
             var blueColor: [NSColor] = []
             
@@ -140,8 +166,8 @@ final class GiftOptionsRowItem : GeneralRowItem {
             let badge: Badge?
             if let availability = option.gift.generic?.availability {
                 badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), colors: blueColor, textColor: theme.colors.underSelectedColor)
-            } else if let availability = option.gift.unique?.availability {
-                badge = .init(text: "\(Int(availability.issued).prettyNumber)/\(Int(availability.total).prettyNumber)", colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
+            } else if let unique = option.gift.unique {
+                badge = .init(text: "\(unique.number)", colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
@@ -152,20 +178,24 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 file = gift.file
             case .unique(let uniqueGift):
                 file = uniqueGift.file!
-            }
-            
-            return .init(file: file, text: nil, type: .none, badge: badge, peer: option.fromPeer, invisible: !option.savedToProfile, nativeProfileGift: option)
+            }            
+            return .init(file: file, text: nil, type: transfrarable ? .price(strings().starNftTransfer) : .none, badge: badge, peer: option.fromPeer, invisible: !option.savedToProfile, pinned: option.pinnedToTop, nativeProfileGift: option)
         }
         
         var height: CGFloat {
+            var height: CGFloat = 0
             switch type {
             case .price:
-                return 160
+                height = nativeProfileGift != nil ? 135 : 160
             case .stars:
-                return 135
+                height = 135
             case .none:
-                return 100
+                height = 100
             }
+            if let starsPrice {
+                height += starsPrice.layoutSize.height + 10
+            }
+            return height
         }
     }
     
@@ -173,17 +203,48 @@ final class GiftOptionsRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let perRowCount: Int
     fileprivate let fitToSize: Bool
+    fileprivate let selected: StarGift?
     
     fileprivate let callback:(Option)->Void
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, options: [Option], perRowCount: Int = 3, fitToSize: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 0, right: 20), callback:@escaping(Option)->Void) {
+    private let _contextMenu:(Option)->[ContextMenuItem]
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, options: [Option], perRowCount: Int = 3, fitToSize: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 0, right: 20), viewType: GeneralViewType = .legacy, callback:@escaping(Option)->Void, selected: StarGift? = nil, contextMenu:@escaping(Option)->[ContextMenuItem] = { _ in return [] }) {
         self.options = options
         self.context = context
         self.callback = callback
         self.perRowCount = perRowCount
         self.fitToSize = fitToSize
+        self.selected = selected
+        self._contextMenu = contextMenu
         assert(!options.isEmpty)
-        super.init(initialSize, stableId: stableId, inset: insets)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets)
+    }
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        
+        let itemSize: NSSize
+        if self.fitToSize, self.options.count == 1 {
+            itemSize = NSMakeSize(width - self.inset.right - self.inset.left, self.height)
+        } else {
+            let insets = self.inset
+            let count = self.fitToSize ? CGFloat(self.options.count) : 3
+            let space = self.width - insets.left - insets.right - (10 * CGFloat(count - 1))
+            itemSize = NSMakeSize(floorToScreenPixels(space / count), self.height)
+        }
+        var x: CGFloat = self.inset.left
+
+        for (i, option) in options.enumerated() {
+            if location.x > x && location.x < (x + itemSize.width + 10) {
+                return .single(_contextMenu(options[i]))
+            }
+            x += itemSize.width + 10
+        }
+        
+        
+        return .single([])
+    }
+    
+    override var hasBorder: Bool {
+        return false
     }
     
     override func viewClass() -> AnyClass {
@@ -195,10 +256,11 @@ final class GiftOptionsRowItem : GeneralRowItem {
     }
 }
 
-private final class GiftOptionsRowView:  GeneralRowView {
+private final class GiftOptionsRowView:  GeneralContainableRowView {
     
     
     private class OptionView : Control {
+        
         
         final class InvisibleView : View {
             private let imageView = ImageView()
@@ -233,6 +295,9 @@ private final class GiftOptionsRowView:  GeneralRowView {
         private var invisibleView: InvisibleView?
         private var emoji: PeerInfoSpawnEmojiView?
         private var backgroundView: PeerInfoBackgroundView?
+        private var selectionView: View?
+        private var starsPrice: InteractiveTextView?
+        private var pinnedView: ImageView?
 
 
         private class PriceView: View {
@@ -317,7 +382,7 @@ private final class GiftOptionsRowView:  GeneralRowView {
         
         var option: GiftOptionsRowItem.Option?
         
-        func set(option: GiftOptionsRowItem.Option, context: AccountContext, callback:@escaping(GiftOptionsRowItem.Option)->Void) {
+        func set(option: GiftOptionsRowItem.Option, context: AccountContext, selected: Bool, animated: Bool, callback:@escaping(GiftOptionsRowItem.Option)->Void) {
             
             self.option = option
             
@@ -504,6 +569,7 @@ private final class GiftOptionsRowView:  GeneralRowView {
                         current.fraction = 0.66
                     }
                 }
+                
             } else {
                 if let view = self.emoji {
                     performSubviewRemoval(view, animated: false)
@@ -513,6 +579,60 @@ private final class GiftOptionsRowView:  GeneralRowView {
                     performSubviewRemoval(view, animated: false)
                     self.backgroundView = nil
                 }
+            }
+            
+            if option.pinned {
+                let current: ImageView
+                if let view = self.pinnedView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    self.pinnedView = current
+                    addSubview(current)
+                }
+                current.image = NSImage(resource: .iconChatListPinned).precomposed(.white)
+                current.sizeToFit()
+            } else if let view = self.pinnedView {
+                performSubviewRemoval(view, animated: animated)
+                self.pinnedView = nil
+            }
+            
+            
+            if let starsPrice = option.starsPrice {
+                let current: InteractiveTextView
+                if let view = self.starsPrice {
+                    current = view
+                } else {
+                    current = InteractiveTextView()
+                    current.userInteractionEnabled = false
+                    self.starsPrice = current
+                    addSubview(current)
+                }
+                current.set(text: starsPrice, context: context)
+            } else if let view = self.starsPrice {
+                performSubviewRemoval(view, animated: animated)
+                self.starsPrice = nil
+            }
+            
+            if selected {
+                let current: View
+                if let view = selectionView {
+                    current = view
+                } else {
+                    current = View()
+                    addSubview(current)
+                    self.selectionView = current
+                    current.layer?.cornerRadius = 10
+                }
+                current.layer?.borderColor = theme.colors.background.cgColor
+                current.layer?.borderWidth = 3
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            } else if let selectionView {
+                performSubviewRemoval(selectionView, animated: animated)
+                self.selectionView = nil
             }
             
             
@@ -526,11 +646,17 @@ private final class GiftOptionsRowView:  GeneralRowView {
             if let badgeView {
                 badgeView.setFrameOrigin(frame.width - badgeView.frame.width, 0)
             }
+            var offset: CGFloat = 0
+            if let starsPrice {
+                starsPrice.centerX(y: frame.height - starsPrice.frame.height - 10)
+                offset += starsPrice.frame.height + 10
+            }
+            
             if let priceView {
-                priceView.centerX(y: frame.height - priceView.frame.height - 10)
+                priceView.centerX(y: frame.height - priceView.frame.height - 10 - offset)
             }
             if let starPriceView {
-                starPriceView.centerX(y: frame.height - starPriceView.frame.height - 10)
+                starPriceView.centerX(y: frame.height - starPriceView.frame.height - 10 - offset)
             }
             if let avatarView {
                 avatarView.setFrameOrigin(NSMakePoint(4, 4))
@@ -541,12 +667,24 @@ private final class GiftOptionsRowView:  GeneralRowView {
             if let emoji {
                 emoji.frame = bounds.offsetBy(dx: 0, dy: 20)
             }
+            
+            if let pinnedView {
+                pinnedView.setFrameOrigin(NSMakePoint(4, 4))
+            }
+           
             invisibleView?.center()
+            
+            if let selectionView {
+                selectionView.frame = bounds.insetBy(dx: 3, dy: 3)
+            }
         }
     }
     
+    private let content = View()
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(content)
     }
     
     required init?(coder: NSCoder) {
@@ -560,51 +698,69 @@ private final class GiftOptionsRowView:  GeneralRowView {
         guard let item = item as? GiftOptionsRowItem else {
             return
         }
+                
         
         let itemSize: NSSize
         if item.fitToSize, item.options.count == 1 {
-            itemSize = NSMakeSize(frame.width - item.inset.right - item.inset.left, frame.height)
+            itemSize = NSMakeSize(content.frame.width - item.inset.right - item.inset.left, content.frame.height)
         } else {
             let insets = item.inset
             let count = item.fitToSize ? CGFloat(item.options.count) : 3
-            let space = frame.width - insets.left - insets.right - (10 * CGFloat(count - 1))
-            itemSize = NSMakeSize(floorToScreenPixels(space / count), frame.height)
+            let space = content.frame.width - insets.left - insets.right - (10 * CGFloat(count - 1))
+            itemSize = NSMakeSize(floorToScreenPixels(space / count), content.frame.height)
         }
 
-        while self.subviews.count > item.options.count {
-            self.subviews.last?.removeFromSuperview()
+        while self.content.subviews.count > item.options.count {
+            self.content.subviews.last?.removeFromSuperview()
         }
-        while self.subviews.count < item.options.count {
-            self.addSubview(OptionView(frame: itemSize.bounds))
+        while self.content.subviews.count < item.options.count {
+            self.content.addSubview(OptionView(frame: itemSize.bounds))
         }
         
-        for (i, subview) in subviews.enumerated() {
+        layout()
+        
+        for (i, subview) in content.subviews.enumerated() {
             let view = subview as? OptionView
-            view?.setFrameSize(itemSize)
             if view?.option?.nativeStarGift?.native.generic?.id != item.options[i].nativeStarGift?.native.generic?.id {
                 if animated {
                     view?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35)
                 }
             }
-            view?.set(option: item.options[i], context: item.context, callback: item.callback)
+            view?.set(option: item.options[i], context: item.context, selected: item.options[i].gift == item.selected && item.selected != nil, animated: animated, callback: item.callback)
         }
         
-        needsLayout = true
     }
     
     override var backdorColor: NSColor {
-        return .clear
+        guard let item = item as? GiftOptionsRowItem else {
+            return .clear
+        }
+        return item.viewType == .legacy ? .clear : super.backdorColor
     }
     
     override func layout() {
         super.layout()
         
-        guard let item = item as? GeneralRowItem else {
+        guard let item = item as? GiftOptionsRowItem else {
             return
         }
         
+        content.frame = containerView.bounds
+        
+        let itemSize: NSSize
+        if item.fitToSize, item.options.count == 1 {
+            itemSize = NSMakeSize(content.frame.width - item.inset.right - item.inset.left, content.frame.height)
+        } else {
+            let insets = item.inset
+            let count = item.fitToSize ? CGFloat(item.options.count) : 3
+            let space = content.frame.width - insets.left - insets.right - (10 * CGFloat(count - 1))
+            itemSize = NSMakeSize(floorToScreenPixels(space / count), content.frame.height)
+        }
         var x: CGFloat = item.inset.left
-        for subview in subviews {
+
+        for (i, subview) in content.subviews.enumerated() {
+            let view = subview as? OptionView
+            view?.setFrameSize(itemSize)
             subview.setFrameOrigin(x, 0)
             x += subview.frame.width + 10
         }

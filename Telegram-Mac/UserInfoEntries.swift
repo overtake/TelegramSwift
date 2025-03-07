@@ -2010,7 +2010,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .info(_, peerView, editable, updatingPhotoState, stories, viewType):
             return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, stories: stories, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: { image, control in
                 arguments.updateContactPhoto(image, control: control, type: .set)
-            })
+            }, giftsContext: arguments.getStarGiftsContext?())
         case let .personalChannelInfo(_, left, right, viewType):
             return GeneralTextRowItem(initialSize, text: left, viewType: viewType, rightItem: .init(isLoading: false, text: .initialize(string: right, color: theme.colors.listGrayText, font: .normal(.small))))
         case let .personalChannel(_, item, viewType):
@@ -2502,7 +2502,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         destructBlock.append(.botEditCommands(sectionId: sectionId, viewType: .singleItem))
                         destructBlock.append(.botEditSettings(sectionId: sectionId, viewType: .singleItem))
 
-                    } else if view.peerIsContact {
+                    } else if view.peerIsContact, peer.sendPaidMessageStars == nil {
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSuggestPhoto(user.compactDisplayTitle), type: .suggest, nextType: state.suggestingPhotoState != nil ? .loading : .none, viewType: .singleItem))
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSetPhoto(user.compactDisplayTitle), type: .set, nextType: .none, viewType: .singleItem))
 

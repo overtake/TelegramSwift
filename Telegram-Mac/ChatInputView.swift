@@ -95,6 +95,8 @@ class ChatInputView: View, Notifable {
     private var disallowText:Control?
     private var messageEffect: InputMessageEffectView?
     
+    private var paidMessageView: InteractiveTextView?
+    
     private let actionsView:ChatInputActionsView
     
 
@@ -272,6 +274,10 @@ class ChatInputView: View, Notifable {
     private var textPlaceholder: String {
         
         
+        if let amount = chatInteraction.presentation.sendPaidMessageStars {
+            return strings().messagePlaceholderPaidMessage(strings().starListItemCountCountable(Int(amount.value)))
+        }
+        
         if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
@@ -412,8 +418,9 @@ class ChatInputView: View, Notifable {
             
             urlPreviewChanged = urlPreviewChanged || value.interfaceState.composeDisableUrlPreview != oldValue.interfaceState.composeDisableUrlPreview
             
+            let peerIsNotEqual = value.peer.flatMap(EnginePeer.init) != oldValue.peer.flatMap(EnginePeer.init)
             
-            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia {
+            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia || peerIsNotEqual {
                 updateAdditions(value,animated)
             }
             
@@ -601,6 +608,8 @@ class ChatInputView: View, Notifable {
             inputDidUpdateLayout(animated: animated)
         }
         
+        let prevAdditionFrame = additionBlockedActionView?.frame ?? .zero
+        
         recordingPanelView?.removeFromSuperview()
         recordingPanelView = nil
         blockedActionView?.removeFromSuperview()
@@ -613,6 +622,8 @@ class ChatInputView: View, Notifable {
         restrictedView = nil
         messageActionsPanelView?.removeFromSuperview()
         messageActionsPanelView = nil
+        paidMessageView?.removeFromSuperview()
+        paidMessageView = nil
         
         blockText?.removeFromSuperview()
         blockText = nil
@@ -690,7 +701,7 @@ class ChatInputView: View, Notifable {
             self.blockedActionView = blockedActionView
 
             if let addition = addition {
-                additionBlockedActionView = ImageButton()
+                additionBlockedActionView = ImageButton(frame: prevAdditionFrame)
                 additionBlockedActionView?.animates = false
                 additionBlockedActionView?.scaleOnClick = true
                 additionBlockedActionView?.set(image: addition.icon, for: .Normal)
@@ -970,6 +981,10 @@ class ChatInputView: View, Notifable {
                 
         if let view = additionBlockedActionView {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))
+        }
+        
+        if let view = paidMessageView {
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         
         transition.updateFrame(view: _ts, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))

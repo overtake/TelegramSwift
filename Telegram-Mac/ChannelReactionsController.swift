@@ -431,7 +431,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         case .all:
             for reaction in availableReactions.reactions {
                 textInteractions.update { _ in
-                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation._parse(), text: reaction.value.string))
                 }
             }
         case let .limited(reactions):
@@ -440,7 +440,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
                 case .builtin:
                     if let first = availableReactions.reactions.first(where: { $0.value == reaction }) {
                         textInteractions.update { _ in
-                            return textInteractions.insertText(.makeAnimated(first.activateAnimation, text: first.value.string))
+                            return textInteractions.insertText(.makeAnimated(first.activateAnimation._parse(), text: first.value.string))
                         }
                     }
                 case let .custom(fileId):
@@ -454,7 +454,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         case .empty:
             for reaction in availableReactions.reactions {
                 textInteractions.update { _ in
-                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation._parse(), text: reaction.value.string))
                 }
             }
             enabled = false
@@ -517,8 +517,8 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         if let removeRange = removeRange {
             updatedState = textInteractions.insertText(.init(), selectedRange: removeRange.lowerBound ..< removeRange.upperBound)
         } else {
-            let text = sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown
-            updatedState = textInteractions.insertText(.makeAnimated(sticker.file, text: text))
+            let text = sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? clown
+            updatedState = textInteractions.insertText(.makeAnimated(sticker.file._parse(), text: text))
         }
         
         textInteractions.update { _ in

@@ -1120,19 +1120,20 @@ final class AvatarConstructorController : ModalViewController {
                     for i in 0 ..< itms.count {
                         var item = itms[i]
                         if item.key == "e" {
-                            item.foreground = items.first(where: { $0.file.stickerText == "🤖" })?.file ?? items.first?.file
+                            let files = items.map({ $0.file._parse() })
+                            item.foreground = files.first(where: { $0.stickerText == "🤖" }) ?? files.first
                         } else if item.key == "m" {
                             item.text = peer.displayLetters.joined()
                         } else if item.key == "s" {
                             let saved = stickers.orderedItemListsViews[1].items.compactMap {
-                                $0.contents.get(SavedStickerItem.self)?.file
+                                $0.contents.get(SavedStickerItem.self)?.file._parse()
                             }.first
                             let recent = stickers.orderedItemListsViews[0].items.compactMap {
-                                $0.contents.get(RecentMediaItem.self)?.media
+                                $0.contents.get(RecentMediaItem.self)?.media._parse()
                             }.first
                             
                             let sticker = stickers.entries.first?.item as? StickerPackItem
-                            item.foreground = saved ?? recent ?? sticker?.file
+                            item.foreground = saved ?? recent ?? sticker?.file._parse()
                         }
                         itms[i] = item
                     }
@@ -1302,7 +1303,7 @@ final class AvatarConstructorController : ModalViewController {
             arguments.selectForeground(file)
         }
         interactions.sendAnimatedEmoji = { item, _, _, _, _ in
-            arguments.selectForeground(item.file)
+            arguments.selectForeground(item.file._parse())
         }
         
         interactions.showStickerPremium = { [weak self] file, view in

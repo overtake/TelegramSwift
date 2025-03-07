@@ -270,7 +270,7 @@ final class EmojiScreenEffect {
                 })
             }
              |> mapToSignal { reaction -> Signal<MediaResourceData?, NoError> in
-                if let file = reaction?.aroundAnimation {
+                 if let file = reaction?.aroundAnimation?._parse() {
                     return context.account.postbox.mediaBox.resourceData(file.resource)
                     |> map { $0.complete ? $0 : nil }
                     |> take(1)
@@ -309,7 +309,7 @@ final class EmojiScreenEffect {
             |> map {
                 $0!
             } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
-                if let file = reaction.aroundAnimation {
+                if let file = reaction.aroundAnimation?._parse() {
                     return context.account.postbox.mediaBox.resourceData(file.resource)
                     |> filter { $0.complete }
                     |> take(1)

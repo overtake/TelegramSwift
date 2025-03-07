@@ -771,7 +771,7 @@ class ChatListRowItem: TableRowItem {
             self.openMiniApp = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.underSelectedColor, font: .medium(.text)), alignment: .center)
             self.openMiniApp?.measure(width: .greatestFiniteMagnitude)
             
-            self.openMiniAppSelected = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.accent, font: .medium(.text)), alignment: .center)
+            self.openMiniAppSelected = .init(.initialize(string: strings().chatListOpenMiniApp, color: theme.colors.accentSelect, font: .medium(.text)), alignment: .center)
             self.openMiniAppSelected?.measure(width: .greatestFiniteMagnitude)
         } else {
             self.openMiniApp = nil

@@ -50,9 +50,17 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
             status = strings().chatSendAsPersonalAccount
         } else {
             if peer.peer.isGroup || peer.peer.isSupergroup {
-                status = strings().chatSendAsGroupCountable(Int(peer.subscribers ?? 0))
+                if peer.subscribers != nil {
+                    status = strings().chatSendAsGroupCountable(Int(peer.subscribers ?? 0))
+                } else {
+                    status = strings().peerStatusGroup
+                }
             } else {
-                status = strings().chatSendAsChannelCountable(Int(peer.subscribers ?? 0))
+                if peer.subscribers != nil {
+                    status = strings().chatSendAsChannelCountable(Int(peer.subscribers ?? 0))
+                } else {
+                    status = strings().peerStatusChannel
+                }
             }
         }
         self.statusLayout = .init(.initialize(string: status, color: presentation.disabledTextColor, font: .normal(.text)))

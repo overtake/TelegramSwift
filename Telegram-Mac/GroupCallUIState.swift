@@ -57,37 +57,7 @@ final class GroupCallUIState : Equatable {
         }
     }
     
-    struct VideoSources : Equatable {
-        static func == (lhs: GroupCallUIState.VideoSources, rhs: GroupCallUIState.VideoSources) -> Bool {
-            if let lhsVideo = lhs.video, let rhsVideo = rhs.video {
-                if !lhsVideo.isEqual(rhsVideo) {
-                    return false
-                }
-            } else if (lhs.video != nil) != (rhs.video != nil) {
-                return false
-            }
-            if let lhsScreencast = lhs.screencast, let rhsScreencast = rhs.screencast {
-                if !lhsScreencast.isEqual(rhsScreencast) {
-                    return false
-                }
-            } else if (lhs.screencast != nil) != (rhs.screencast != nil) {
-                return false
-            }
-            if lhs.failed != rhs.failed {
-                return false
-            }
-            return true
-        }
-        
-        var video: VideoSourceMac? = nil
-        var screencast: VideoSourceMac? = nil
-        
-        var failed: Bool = false
-        
-        var isEmpty: Bool {
-            return video == nil && screencast == nil
-        }
-    }
+    
     
     struct PinnedData : Equatable {
         struct Focused: Equatable {
@@ -108,7 +78,7 @@ final class GroupCallUIState : Equatable {
     let isMuted: Bool
     let state: PresentationGroupCallState
     let summaryState: PresentationGroupCallSummaryState?
-    let peer: Peer
+    let peer: Peer?
     let cachedData: CachedChannelData?
     let myAudioLevel: Float
     let voiceSettings: VoiceCallSettings
@@ -136,7 +106,7 @@ final class GroupCallUIState : Equatable {
     
     let initialTimestamp: TimeInterval
         
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer?, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -217,7 +187,7 @@ final class GroupCallUIState : Equatable {
         } else if let custom = state.title, !custom.isEmpty {
             return custom
         } else {
-            return peer.displayTitle
+            return peer?.displayTitle ?? strings().callGroupCall
         }
     }
     
@@ -234,7 +204,11 @@ final class GroupCallUIState : Equatable {
         if lhs.summaryState != rhs.summaryState {
             return false
         }
-        if !lhs.peer.isEqual(rhs.peer) {
+        if let lhsPeer = lhs.peer, let rhsPeer = rhs.peer {
+            if !lhsPeer.isEqual(rhsPeer) {
+                return false
+            }
+        } else if (lhs.peer != nil) != (rhs.peer != nil) {
             return false
         }
         if lhs.voiceSettings != rhs.voiceSettings {

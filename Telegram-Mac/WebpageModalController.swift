@@ -119,7 +119,7 @@ private final class BotEmojiStatusPermissionRowView : GeneralRowView {
             let invokeNext:()->Void = {
                 if let item = item, let self, items.count > 0 {
                     let file = items[index].file
-                    self.peerView.set(item.peer, item.context, file: file, maxWidth: self.frame.width - 40)
+                    self.peerView.set(item.peer, item.context, file: file._parse(), maxWidth: self.frame.width - 40)
                     self.needsLayout = true
                 }
                 index += 1

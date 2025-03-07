@@ -672,7 +672,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         var result: [TelegramMediaFile] = []
         for item in items {
             if let mediaItem = item.contents.get(RecentMediaItem.self) {
-                result.append(mediaItem.media)
+                result.append(mediaItem.media._parse())
             }
         }
         return result

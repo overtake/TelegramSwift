@@ -37,7 +37,9 @@ class StickerPackPanelRowItem: TableRowItem {
     let canSend: Bool
     let playOnHover: Bool
     let isPreview: Bool
+    let canSchedule: Bool
     init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool, playOnHover: Bool = false, isPreview: Bool = false) {
+        
         
         let files = files.sorted(by: { lhs, rhs in
             if lhs.isPremiumSticker && !rhs.isPremiumSticker {
@@ -62,6 +64,7 @@ class StickerPackPanelRowItem: TableRowItem {
         self._files = files
         self.playOnHover = playOnHover
         self.isPreview = isPreview
+        self.canSchedule = arguments.canSchedule()
         let title: String?
         var count: Int32 = 0
         switch packInfo {
@@ -188,7 +191,7 @@ class StickerPackPanelRowItem: TableRowItem {
         let _savedStickersCount: Signal<Int, NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
             $0.orderedItemListsViews[0].items.count
         } |> deliverOnMainQueue
-
+        
         return _savedStickersCount |> map { [weak self] savedStickersCount in
             var items:[ContextMenuItem] = []
 
@@ -260,15 +263,20 @@ class StickerPackPanelRowItem: TableRowItem {
                             }
                         }, itemImage: MenuAnimation.menu_mute.value))
                         
-                        items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
-                            guard let `self` = self else {
-                                return
-                            }
-                            
-                            if let contentView = self.view {
-                                self.arguments.sendMedia(file, contentView, false, true, self.collectionId.itemCollectionId)
-                            }
-                        }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        
+                        if self?.canSchedule == true {
+                            items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
+                                guard let `self` = self else {
+                                    return
+                                }
+                                
+                                if let contentView = self.view {
+                                    self.arguments.sendMedia(file, contentView, false, true, self.collectionId.itemCollectionId)
+                                }
+                            }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        }
+                        
+                        
                     }
                     break
                 }

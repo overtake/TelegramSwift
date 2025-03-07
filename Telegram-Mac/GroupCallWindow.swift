@@ -260,59 +260,62 @@ struct GroupCallTheme {
 
 }
 
-final class GroupCallWindow : Window {
+func makeGroupWindow(isStream: Bool) -> Window {
+    
+    
+    let size = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
+    var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
+    if let screen = NSScreen.main {
+        let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
+        let y = floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2)
+        rect = .init(origin: .init(x: x, y: y), size: size)
+    }
+
+    let window = Window(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled, .resizable], backing: .buffered, defer: true)
+
+    window.minSize = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
+    window.name = "GroupCallWindow5"
+    window.acceptFirstMouse = false
+    window.titlebarAppearsTransparent = true
+    window.titleVisibility = .hidden
+    window.animationBehavior = .alertPanel
+    window.isReleasedWhenClosed = false
+    window.isMovableByWindowBackground = true
+    window.level = .normal
+    window.appearance = darkPalette.appearance
+    
+    window.initSaver()
+    
+    if window.frame.width < rect.width || window.frame.height < rect.height {
+        window.setFrame(rect, display: true)
+    }
+    
+    return window
+}
+
+final class GroupCallWindow {
     
     
     var navigation: NavigationViewController?
-    
-    init(isStream: Bool) {
-        let size = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
-        var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
-        if let screen = NSScreen.main {
-            let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
-            let y = floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2)
-            rect = .init(origin: .init(x: x, y: y), size: size)
+    var window: Window
+    init(window: Window) {
+        self.window = window
+        
+        window._layoutIfNeeded = { [weak self] in
+            self?.layoutIfNeeded()
         }
-
-        //
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled, .resizable], backing: .buffered, defer: true)
-        self.minSize = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
-        self.name = "GroupCallWindow5"
-        self.acceptFirstMouse = false
-        self.titlebarAppearsTransparent = true
-        self.titleVisibility = .hidden
-        self.animationBehavior = .alertPanel
-        self.isReleasedWhenClosed = false
-        self.isMovableByWindowBackground = true
-        self.level = .normal
-        self.appearance = darkPalette.appearance
-        
-        
-       
-//        self.toolbar = NSToolbar(identifier: "window")
-//        self.toolbar?.showsBaselineSeparator = false
-        
-        initSaver()
-        
-        if self.frame.width < rect.width || self.frame.height < rect.height {
-            self.setFrame(rect, display: true)
-        }
-        
     }
     
     
-    override func layoutIfNeeded() {
-        super.layoutIfNeeded()
-        
-        if !isFullScreen {
+    func layoutIfNeeded() {
+        if !window.isFullScreen {
             var point: NSPoint = NSMakePoint(20, 4)
-            self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
+            window.standardWindowButton(.closeButton)?.setFrameOrigin(point)
             point.x += 20
-            self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
+            window.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
             point.x += 20
-            self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+            window.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
         }
-       
     }
         
     deinit {
@@ -320,10 +323,9 @@ final class GroupCallWindow : Window {
         bp += 1
     }
     
-    override func orderOut(_ sender: Any?) {
-        super.orderOut(sender)
-    }
 }
+
+
 
 
 final class GroupCallContext {
@@ -337,17 +339,42 @@ final class GroupCallContext {
     let peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager
     private let presentDisposable = MetaDisposable()
     private let removeDisposable = MetaDisposable()
-    init(call: PresentationGroupCall, peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager) {
+    init(call: PresentationGroupCall, peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager, window: Window) {
         self.call = call
         self.peerMemberContextsManager = peerMemberContextsManager
-        self.window = GroupCallWindow(isStream: call.isStream)
+        self.window = .init(window: window)
         self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager), size: window.frame.size)
-        self.navigation = MajorNavigationController(GroupCallUIController.self, controller, self.window)
+        self.navigation = MajorNavigationController(GroupCallUIController.self, controller, window)
         self.navigation._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
         self.navigation.alwaysAnimate = true
         self.navigation.cleanupAfterDeinit = true
         self.navigation.viewWillAppear(false)
-        self.window.contentView = self.navigation.view
+        
+        func transitionToNewView(newView: NSView, duration: TimeInterval = 0.3) {
+            let window = self.window.window
+            
+            let currentView = window.contentView
+            
+            // Set initial alpha for the new view
+            newView.alphaValue = 0.0
+            newView.frame = currentView?.frame ?? .zero
+            
+            // Add the new view below the current one
+            window.contentView?.addSubview(newView, positioned: .above, relativeTo: nil)
+
+            // Animate the fade-out of the old view and fade-in of the new one
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = duration
+                currentView?.animator().alphaValue = 0.0
+                newView.animator().alphaValue = 1.0
+            }) {
+                // Once animation completes, remove the old view and set the new one
+                window.contentView = newView
+            }
+        }
+        
+        transitionToNewView(newView: self.navigation.view)
+                        
         self.window.navigation = navigation
         self.navigation.viewDidAppear(false)
         removeDisposable.set((self.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
@@ -356,7 +383,7 @@ final class GroupCallContext {
             }
         }))
 
-        self.window.closeInterceptor = { [weak self] in
+        self.window.window.closeInterceptor = { [weak self] in
             self?.readyClose()
             return true
         }
@@ -378,9 +405,9 @@ final class GroupCallContext {
     }
     
     private func readyClose(last: Bool = false) {
-        if window.isFullScreen {
-            window.toggleFullScreen(nil)
-            window._windowDidExitFullScreen = { [weak self] in
+        if window.window.isFullScreen {
+            window.window.toggleFullScreen(nil)
+            window.window._windowDidExitFullScreen = { [weak self] in
                 self?.invikeClose(last: last)
             }
         } else {
@@ -392,24 +419,24 @@ final class GroupCallContext {
         if last {
             call.sharedContext.updateCurrentGroupCallValue(nil)
         }
-        closeAllModals(window: window)
+        closeAllModals(window: window.window)
         self.navigation.viewWillDisappear(false)
         var window: GroupCallWindow? = self.window
-        if self.window.isVisible {
+        if self.window.window.isVisible {
             NSAnimationContext.runAnimationGroup({ _ in
-                window?.animator().alphaValue = 0
+                window?.window.animator().alphaValue = 0
             }, completionHandler: {
-                window?.orderOut(nil)
+                window?.window.orderOut(nil)
                 if last {
-                    window?.contentView?.removeFromSuperview()
-                    window?.contentView = nil
+                    window?.window.contentView?.removeFromSuperview()
+                    window?.window.contentView = nil
                     window?.navigation = nil
                 }
                 window = nil
             })
         } else if last {
-            window?.contentView?.removeFromSuperview()
-            window?.contentView = nil
+            window?.window.contentView?.removeFromSuperview()
+            window?.window.contentView = nil
             window?.navigation = nil
         }
         self.navigation.viewDidDisappear(false)
@@ -429,9 +456,9 @@ final class GroupCallContext {
     
     @objc private func _readyPresent() {
         call.sharedContext.updateCurrentGroupCallValue(self)
-        window.alphaValue = 1
-        self.window.makeKeyAndOrderFront(nil)
-        self.window.orderFrontRegardless()
+        self.window.window.alphaValue = 1
+        self.window.window.makeKeyAndOrderFront(nil)
+        self.window.window.orderFrontRegardless()
     }
     
 }

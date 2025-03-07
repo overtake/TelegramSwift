@@ -504,10 +504,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) || test {
             self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
             self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
-        } else if peer.isChannel {
+        } else if peer.isChannel || peer.isSupergroup {
             if peer.isAdmin {
                 self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
-                self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+                if peer.isChannel {
+                    self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+                } else {
+                    self.tonRevenueContext = nil
+                }
             } else {
                 self.revenueContext = nil
                 self.tonRevenueContext = nil
@@ -644,8 +648,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         var list: [TelegramMediaFile] = []
                         for number in separateNumbers(Int(year)) {
                             for item in items {
-                                if item.file.customEmojiText == numbers[number] {
-                                    list.append(item.file)
+                                if item.file._parse().customEmojiText == numbers[number] {
+                                    list.append(item.file._parse())
                                 }
                             }
                         }

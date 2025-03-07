@@ -72,6 +72,8 @@ private func mapCallState(_ state: CallState, canBeRemoved: Bool) -> ExternalPee
                     reason = .ended(.busy)
                 case .missed:
                     reason = .ended(.missed)
+                case .switchedToConference:
+                    reason = .ended(.switchedToConference)
                 }
             case .error(let callSessionError):
                 switch callSessionError {
@@ -226,6 +228,21 @@ func callScreen(_ context: AccountContext, _ result:PCallResult) {
             return session?.audioLevel ?? .single(0)
         }, openSettings: { window in
             showModal(with: CallSettingsModalController(context.sharedContext, presentation: darkAppearance), for: window)
+        }, upgradeToConference: { [weak session] window in
+            if let session {
+                let peerIds = [session.peerId]
+                _ = selectModalPeers(window: window, context: context, title: strings().voiceChatInviteChannelsTitle, selectedPeerIds: Set(peerIds)).start(next: { [weak session, weak window] peerIds in
+                    if let session, let window {
+                        _ = session.upgradeToConference(invitePeerIds: peerIds, completion: { groupCall in
+                            let callContext = GroupCallContext(call: groupCall, peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, window: window)
+                            context.sharedContext.dropCrossCall()
+                            context.sharedContext.peerCall?.contextObject = nil
+                            context.sharedContext.peerCall?.onCompletion?()
+                            applyGroupCallResult(context.sharedContext, callContext)
+                        })
+                    }
+                })
+            }
         })
         
         let screen: PeerCallScreen

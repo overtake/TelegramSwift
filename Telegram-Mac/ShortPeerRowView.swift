@@ -420,7 +420,21 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 photoOuter.layer?.cornerRadius = photoOuter.frame.height / 2
             }
             if let photoBadge = self.photoBadge {
-                photoBadge.setFrameOrigin(NSMakePoint(self.image.frame.maxX - photoBadge.frame.width / 2 + 5, self.image.frame.midY + 5))
+                if item.drawStarsPaid != nil {
+                    
+                    if let title = (isRowSelected ? item.titleSelected : item.title) {
+                        var tY = NSMinY(focus(title.0.size))
+                        
+                        if let status = (isRowSelected ? item.statusSelected : item.status) {
+                            let t = title.0.size.height + status.0.size.height + 1.0
+                            tY = floorToScreenPixels(backingScaleFactor, (self.frame.height - t) / 2.0)
+                        }
+                        photoBadge.setFrameOrigin(NSMakePoint(item.textInset(false) + title.0.size.width + 4, tY))
+                    }
+                    
+                } else {
+                    photoBadge.setFrameOrigin(NSMakePoint(self.image.frame.maxX - photoBadge.frame.width / 2 + 5, self.image.frame.midY + 5))
+                }
             }
         }
         
@@ -769,10 +783,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .interactable(interaction):
             updatePresentation(item: item, value: interaction.presentation, animated: animated)
         default:
-            if let view = self.photoBadge {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                self.photoBadge = nil
-            }
+            updatePresentation(item: item, value: nil, animated: animated)
         }
         
         if let customAction = (isRowSelected ? item.customActionTextSelected : item.customActionText) {
@@ -872,8 +883,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     }
 
     
-    private func updatePresentation(item: ShortPeerRowItem, value: SelectPeerPresentation, animated: Bool) {
-        if value.premiumRequired.contains(item.peerId) {
+    private func updatePresentation(item: ShortPeerRowItem, value: SelectPeerPresentation?, animated: Bool) {
+        if value?.premiumRequired.contains(item.peerId) == true || item.drawStarsPaid != nil {
             let current: ImageView
             var isNew = false
             if let view = self.photoBadge {
@@ -884,9 +895,15 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 self.photoBadge = current
                 isNew = true
             }
-            current.image = theme.icons.premium_required_forward
-            current.setFrameOrigin(NSMakePoint(self.image.frame.maxX - current.frame.width / 2 + 5, self.image.frame.midY + 5))
-            current.sizeToFit()
+            if let drawStarsPaid = item.drawStarsPaid {
+                current.image = generalSendPaidMessage(bgColor: theme.colors.accent, outerColor: theme.colors.background, imageColor: theme.colors.underSelectedColor, count: .initialize(string: drawStarsPaid.value.prettyNumber, color: theme.colors.underSelectedColor, font: .avatar(.small)))
+                current.sizeToFit()
+                current.setFrameOrigin(NSMakePoint(self.image.frame.minX + (self.image.frame.width - current.frame.width) / 2, self.image.frame.midY + 5))
+            } else {
+                current.image = theme.icons.premium_required_forward
+                current.sizeToFit()
+                current.setFrameOrigin(NSMakePoint(self.image.frame.maxX - current.frame.width / 2 + 5, self.image.frame.midY + 5))
+            }
             
             if isNew, animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

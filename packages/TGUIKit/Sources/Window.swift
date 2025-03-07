@@ -318,6 +318,8 @@ open class Window: NSWindow {
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
     public  var pastehandler:(()->Void)? = nil
+    
+    public var _layoutIfNeeded:(()->Void)? = nil
 
     public  var masterCopyhandler:(()->Void)? = nil
 
@@ -1041,6 +1043,12 @@ open class Window: NSWindow {
     
     public static var statusBarHeight: CGFloat {
         return 22
+    }
+    
+    open override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        
+        _layoutIfNeeded?()
     }
 
 }

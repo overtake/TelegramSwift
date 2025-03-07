@@ -32,7 +32,8 @@ class WPMediaLayout: WPLayout {
             self.parameters = ChatMediaGalleryParameters(isWebpage: true, media: self.media, automaticDownload: downloadSettings.isDownloable(parent))
         }
         
-                                
+                
+        
                                                   
         self.parameters?.cancelOperation = { [unowned context] message, media in
             if let media = media as? TelegramMediaFile {
@@ -40,6 +41,25 @@ class WPMediaLayout: WPLayout {
             } else if let media = media as? TelegramMediaImage {
                 chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
             }
+        }
+        
+        
+        let parsed = inApp(for: content.url.nsstring, context: context, openInfo: { _, _, _, _ in
+            
+        })
+        
+        switch parsed {
+        case let .followResolvedName(_, _, _, _, _, action, _):
+            switch action {
+            case let .openMedia(timemark):
+                if let timemark = timemark {
+                    self.parameters?.set_timeCodeInitializer(Double(timemark))
+                }
+            default:
+                break
+            }
+        default:
+            break
         }
         
         super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue, mayCopyText: mayCopyText, entities: entities, adAttribute: adAttribute, uniqueGift: uniqueGift)

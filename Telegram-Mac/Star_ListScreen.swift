@@ -162,13 +162,16 @@ private final class BalanceItem : GeneralRowItem {
     fileprivate let infoLayout: TextViewLayout
     fileprivate let buyMore: ()->Void
     fileprivate let giftStars: ()->Void
+    fileprivate let withdraw: ()->Void
     fileprivate let giftPremiumLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: StarsAmount, viewType: GeneralViewType, buyMore: @escaping()->Void, giftStars: @escaping()->Void) {
+    fileprivate let canWithdraw: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, myBalance: StarsAmount, viewType: GeneralViewType, canWithdraw: Bool, buyMore: @escaping()->Void, giftStars: @escaping()->Void, withdraw: @escaping()->Void) {
         self.myBalance = myBalance
         self.context = context
         self.buyMore = buyMore
         self.giftStars = giftStars
-        
+        self.withdraw = withdraw
+        self.canWithdraw = canWithdraw
         let attr = NSMutableAttributedString()
         attr.append(string: myBalance.value.formattedWithSeparator, color: theme.colors.text, font: .medium(40))
         self.myBalanceLayout = .init(attr)
@@ -205,6 +208,7 @@ private final class BalanceView: GeneralContainableRowView {
     private let balance = InteractiveTextView()
     private let info = TextView()
     private let action = TextButton()
+    private var withdrawAction: TextButton?
     private var star: InlineStickerView?
     private let container = View()
     private let giftStars = InteractiveTextView()
@@ -265,7 +269,36 @@ private final class BalanceView: GeneralContainableRowView {
         action.set(font: .medium(.text), for: .Normal)
         action.set(color: theme.colors.underSelectedColor, for: .Normal)
         action.set(background: theme.colors.accent, for: .Normal)
-        action.set(text: strings().starListBuyMoreStars, for: .Normal)
+        action.set(text: item.canWithdraw ? strings().starListTopUp : strings().starListBuyMoreStars, for: .Normal)
+        
+        
+        if item.canWithdraw {
+            let current: TextButton
+            if let view = self.withdrawAction {
+                current = view
+            } else {
+                current = TextButton()
+                addSubview(current)
+                self.withdrawAction = current
+            }
+            
+            current.set(font: .medium(.text), for: .Normal)
+            current.set(color: theme.colors.underSelectedColor, for: .Normal)
+            current.set(background: theme.colors.accent, for: .Normal)
+            current.set(text: strings().starListWithdraw, for: .Normal)
+            current.autohighlight = false
+            current.scaleOnClick = true
+            current.layer?.cornerRadius = 10
+            
+            current.setSingle(handler: { [weak item] _ in
+                item?.withdraw()
+            }, for: .Click)
+
+        } else if let view = self.withdrawAction {
+            performSubviewRemoval(view, animated: animated)
+            self.withdrawAction = nil
+        }
+        
         needsLayout = true
     }
     
@@ -279,7 +312,15 @@ private final class BalanceView: GeneralContainableRowView {
         }
         info.centerX(y: container.frame.maxY)
         
-        action.frame = NSMakeRect(20, containerView.frame.height - 20 - 40 - giftStars.frame.height - 10, containerView.frame.width - 40 - 10, 40)
+        if let withdrawAction {
+            let itemWidth = (containerView.frame.width - 40 - 10) / 2
+            action.frame = NSMakeRect(20, containerView.frame.height - 20 - 40 - giftStars.frame.height - 10, itemWidth, 40)
+            withdrawAction.frame = NSMakeRect(action.frame.maxX + 10, containerView.frame.height - 20 - 40 - giftStars.frame.height - 10, itemWidth, 40)
+        } else {
+            action.frame = NSMakeRect(20, containerView.frame.height - 20 - 40 - giftStars.frame.height - 10, containerView.frame.width - 40, 40)
+        }
+        
+        
         
         giftStars.centerX(y: containerView.frame.height - giftStars.frame.height - 15)
     }
@@ -697,7 +738,8 @@ private final class Arguments {
     let openSubscription:(Star_Subscription)->Void
     let openRecommendedApps:()->Void
     let openAffiliate:()->Void
-    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void, openAffiliate:@escaping()->Void) {
+    let withdraw:()->Void
+    init(context: AccountContext, source: Star_ListScreenSource, reveal: @escaping()->Void, openLink:@escaping(String)->Void, dismiss:@escaping()->Void, buyMore:@escaping()->Void, giftStars:@escaping()->Void, toggleFilterMode:@escaping(State.TransactionMode)->Void, buy:@escaping(State.Option)->Void, loadMoreTransactions:@escaping()->Void, loadMoreSubscriptions:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, openSubscription:@escaping(Star_Subscription)->Void, openRecommendedApps:@escaping()->Void, openAffiliate:@escaping()->Void, withdraw:@escaping()->Void) {
         self.context = context
         self.source = source
         self.reveal = reveal
@@ -713,6 +755,7 @@ private final class Arguments {
         self.openSubscription = openSubscription
         self.openRecommendedApps = openRecommendedApps
         self.openAffiliate = openAffiliate
+        self.withdraw = withdraw
     }
 }
 
@@ -757,6 +800,7 @@ private struct State : Equatable {
     var starsState: StarsContext.State?
     
     var subscriptions: [Star_Subscription] = []
+    var revenueStats: StarsRevenueStats?
 
 }
 
@@ -865,8 +909,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem, centerViewAlignment: true, alignment: .center)))
             index += 1
         case .account:
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state.myBalance), comparable: nil, item: { initialSize, stableId in
-                return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? .init(value: 0, nanos: 0), viewType: .singleItem, buyMore: arguments.buyMore, giftStars: arguments.giftStars)
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return BalanceItem(initialSize, stableId: stableId, context: arguments.context, myBalance: state.myBalance ?? .init(value: 0, nanos: 0), viewType: .singleItem, canWithdraw: state.revenueStats?.balances.withdrawEnabled == true, buyMore: arguments.buyMore, giftStars: arguments.giftStars, withdraw: arguments.withdraw)
             }))
             
             let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_connect_allowed", orElse: false)
@@ -1092,12 +1136,13 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }
     
     
-  
+    let starsRevenue = context.engine.payments.peerStarsRevenueContext(peerId: context.peerId)
     
-    actionsDisposable.add(combineLatest(starsContext.state, starsSubscriptionsContext.state, transactions.state).startStrict(next: { state, subscriptionState, transactions in
+    actionsDisposable.add(combineLatest(starsContext.state, starsSubscriptionsContext.state, transactions.state, starsRevenue.state).startStrict(next: { state, subscriptionState, transactions, starsRevenue in
         updateState { current in
             var current = current
             current.myBalance = state?.balance
+            current.revenueStats = starsRevenue.stats
             current.subscriptions = subscriptionState.subscriptions.map { value in
                 let state: Star_Subscription.State
                 if value.untilDate < context.timestamp, !value.flags.contains(.isCancelled) {
@@ -1251,6 +1296,40 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }
 
     
+    let processWithdraw:(Int64)->Void = { amount in
+        
+        _ = showModalProgress(signal: context.engine.peers.checkStarsRevenueWithdrawalAvailability(), for: window).startStandalone(error: { error in
+            switch error {
+            case .authSessionTooFresh, .twoStepAuthTooFresh, .twoStepAuthMissing:
+                alert(for: context.window, info: strings().monetizationWithdrawErrorText)
+            case .requestPassword:
+                showModal(with: InputPasswordController(context: context, title: strings().monetizationWithdrawEnterPasswordTitle, desc: strings().monetizationWithdrawEnterPasswordText, checker: { value in
+                    return context.engine.peers.requestStarsRevenueWithdrawalUrl(peerId: context.peerId, amount: amount, password: value)
+                    |> deliverOnMainQueue
+                    |> afterNext { url in
+                        execute(inapp: .external(link: url, false))
+                    }
+                    |> ignoreValues
+                    |> mapError { error in
+                        switch error {
+                        case .invalidPassword:
+                            return .wrong
+                        case .limitExceeded:
+                            return .custom(strings().loginFloodWait)
+                        case .generic:
+                            return .generic
+                        default:
+                            return .custom(strings().monetizationWithdrawErrorText)
+                        }
+                    }
+                }), for: context.window)
+            default:
+                break
+            }
+        })
+    }
+
+    
 
     let arguments = Arguments(context: context, source: source, reveal: {
         updateState { current in
@@ -1291,6 +1370,13 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
     }, openAffiliate: {
         close?()
         context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: context.peerId))
+    }, withdraw: { [weak starsRevenue] in
+        let stats = stateValue.with { $0.revenueStats }
+        context.bindings.rootNavigation().push(FragmentStarMonetizationController(context: context, peerId: context.peerId, revenueContext: starsRevenue))
+        close?()
+//        if let stats {
+//            showModal(with: withdrawStarBalance(context: context, balance: stats, callback: processWithdraw), for: window)
+//        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -1307,7 +1393,8 @@ func Star_ListScreen(context: AccountContext, source: Star_ListScreenSource) -> 
         actionsDisposable.dispose()
     }
     
-    controller.contextObject = starsContext
+    
+    controller.contextObject_second = (starsContext, starsRevenue)
 
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(360, 300))

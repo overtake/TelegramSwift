@@ -66,7 +66,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_channel(item.channel.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: item.channel.peer._asPeer(), account: arguments.context.account, context: arguments.context, status: item.status, inset: .init(), viewType: item.viewType, action: {
                     arguments.openInfo(item.channel.peer.id)
-                })
+                }, highlightVerified: true)
             }))
         }
         
