@@ -813,6 +813,17 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), (Bool, Bool))> = Promise()
     
+    func updateMessagesPrivacy(noPaidMessages: SelectivePrivacySettings, globalSettings: GlobalPrivacySettings) {
+        let privacy = self.settings.get() |> deliverOnMainQueue |> take(1)
+        _ = privacy.startStandalone(next: { [weak self] privacy, web, proxy, value in
+            var privacy = privacy
+            privacy?.noPaidMessages = noPaidMessages
+            privacy?.globalSettings = globalSettings
+            DispatchQueue.main.async {
+                self?.settings.set(.single((privacy, web, proxy, value)))
+            }
+        })
+    }
     
     func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
         let privacy = self.settings.get() |> deliverOnMainQueue |> take(1)

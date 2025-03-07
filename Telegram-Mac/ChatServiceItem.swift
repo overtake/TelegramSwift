@@ -20,6 +20,8 @@ import TelegramMediaPlayer
 
 class ChatServiceItem: ChatRowItem {
     
+    
+    
     static var photoSize = NSMakeSize(200, 200)
 
     let text:TextViewLayout
@@ -53,7 +55,7 @@ class ChatServiceItem: ChatRowItem {
                 height += 5
                 
                 for attribute in attributes {
-                    height += 20
+                    height += attribute.value.layoutSize.height + 6
                 }
                 height += 5
                 return height
@@ -202,10 +204,10 @@ class ChatServiceItem: ChatRowItem {
             case let .premium(months):
                 prem(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: .gift), for: context.window)
             case let .starGift(amount, date, from, to, purpose):
-                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
+                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
                 
                 switch purpose {
                 case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
@@ -572,7 +574,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: .init(value: -media.totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: .init(value: -media.totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
                                         showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -844,10 +846,17 @@ class ChatServiceItem: ChatRowItem {
                     self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil, uniqueAttributes: nil)
                     
                     let text: String
-                    if authorId == context.peerId {
-                        text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+                    let formattedCurrency: String
+                    if currency == XTR {
+                        formattedCurrency = strings().starListItemCountCountable(Int(amount))
                     } else {
-                        text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+                        formattedCurrency = formatCurrencyAmount(amount, currency: currency)
+                    }
+                    if authorId == context.peerId {
+                        
+                        text = strings().chatServicePremiumGiftSentYou(formattedCurrency)
+                    } else {
+                        text = strings().chatServicePremiumGiftSent(authorName, formattedCurrency)
                     }
                     let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     
@@ -1178,7 +1187,7 @@ class ChatServiceItem: ChatRowItem {
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: .init(value: totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: .init(value: totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: .init(peer), transaction: transaction), for: context.window)
                         })
@@ -1420,6 +1429,25 @@ class ChatServiceItem: ChatRowItem {
                         self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
                         
                     }
+//                case let .paidMessage(stars):
+//                    
+//                    let text: String
+//                    if authorId == context.peerId {
+//                        text = strings().chatServicePaidMessageYou(strings().starListItemCountCountable(Int(stars)))
+//                    } else {
+//                        text = strings().chatServicePaidMessage(authorName, strings().starListItemCountCountable(Int(stars)))
+//                    }
+//                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+//                    
+//                    if let authorId = authorId {
+//                        let range = attributedString.string.nsstring.range(of: authorName)
+//                        if range.location != NSNotFound {
+//                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+//                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+//                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+//                        }
+//                    }
+
                 default:
                     break
                 }
@@ -1803,7 +1831,7 @@ class UniqueAttributesView : View {
             let right = self.rightAttrs.subviews[i]
             left.setFrameOrigin(leftAttrs.frame.width - left.frame.width, y)
             right.setFrameOrigin(0, y)
-            y += 20
+            y += right.frame.height + 6
         }
     }
 }

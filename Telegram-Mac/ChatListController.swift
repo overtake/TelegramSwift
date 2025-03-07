@@ -188,10 +188,11 @@ struct UIChatListBuyStarsAction : UIChatListTextAction {
     }
     
     private let context: AccountContext
+    let canDismiss: Bool
     
     init(context: AccountContext, state: StarsSubscriptionsContext.State) {
         self.context = context
-        
+        self.canDismiss = true
         let amount = state.balance
         let peers = state.subscriptions.map(\.peer)
         
@@ -212,6 +213,35 @@ struct UIChatListBuyStarsAction : UIChatListTextAction {
         self.info = NSAttributedString(string: text, font: .normal(.text), textColor: theme.colors.grayText)
 
     }
+    
+    init(context: AccountContext, freezeTime: Int32) {
+        self.context = context
+        self.canDismiss = false
+       
+        let attributedTitle = NSMutableAttributedString(string: strings().chatListFreezeAccountTitle, font: .normal(.text), textColor: theme.colors.text)
+        
+        self.text = attributedTitle
+        let appealLink = context.appConfiguration.getStringValue("freeze_appeal_url", orElse: "https://t.me/spambot")
+
+        let text = strings().chatListFreezeAccount(stringForFullDate(timestamp: freezeTime), appealLink, stringForFullDate(timestamp: freezeTime))
+        
+        self.info = parseMarkdownIntoAttributedString(text, attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.grayText), bold: .init(font: .medium(.text), textColor: theme.colors.grayText), link: .init(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { link in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
+                switch value {
+                case "appeal":
+                    let link = inApp(for: appealLink.nsstring, context: context, openInfo: { peerId, _, _, action in
+                        let chatController = ChatController(context: context, chatLocation: .peer(peerId), initialAction: action)
+                        context.bindings.rootNavigation().push(chatController)
+                    })
+                    execute(inapp: link)
+                default:
+                    execute(inapp: .external(link: value, false))
+                }
+            }))
+        }))
+
+    }
+    
 }
 
 
@@ -222,6 +252,8 @@ protocol UIChatListTextAction {
     
     func action() -> Void
     func dismiss() -> Void
+    
+    var canDismiss: Bool { get }
     
     func isEqual(_ rhs: any UIChatListTextAction) -> Bool
 }
@@ -475,7 +507,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case .space:
                 return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) 
             case let .custom(action):
-                return ChatListTextActionRowItem(initialSize, stableId: entry.stableId, context: arguments.context, title: action.text, info: action.info, action: action.action, dismiss: action.dismiss)
+                return ChatListTextActionRowItem(initialSize, stableId: entry.stableId, context: arguments.context, title: action.text, info: action.info, canDismiss: action.canDismiss, action: action.action, dismiss: action.dismiss)
             }
         }
         
@@ -857,7 +889,12 @@ class ChatListController : PeersListController {
             subState = .single(nil)
         }
         
-        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), additionalSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday, context.starsContext.state, subState) |> mapToQueue { value, appearance, state, inAppSettings, additionalSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday, starsSubscriptionsState, missingBalanceState -> Signal<TableUpdateTransition, NoError> in
+        
+        let appConfiguration = context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+        }
+        
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), additionalSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday, context.starsContext.state, subState, appConfiguration) |> mapToQueue { value, appearance, state, inAppSettings, additionalSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday, starsSubscriptionsState, missingBalanceState, appConfiguration -> Signal<TableUpdateTransition, NoError> in
                                 
             let filterData = value.1
             let folderUpdates = value.3
@@ -969,6 +1006,12 @@ class ChatListController : PeersListController {
                 }
             }
             
+            let freezeTime = appConfiguration.getGeneralValue("freeze_since_date", orElse: 0)
+            
+            if freezeTime != 0 {
+                additionItems.append(.custom(UIChatListBuyStarsAction(context: context, freezeTime: freezeTime)))
+            }
+
             
             
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {

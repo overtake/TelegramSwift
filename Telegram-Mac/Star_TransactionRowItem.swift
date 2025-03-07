@@ -72,7 +72,11 @@ final class Star_TransactionItem : GeneralRowItem {
         self.dateLayout = .init(.initialize(string: date, color: theme.colors.grayText, font: .normal(.text)))
         
         var descString: String? = nil
-        if let commission = transaction.native.starrefCommissionPermille {
+        if let count = transaction.native.paidMessageCount {
+            descString = strings().starTransactionMessageFeeCountable(Int(count))
+        } else if let premiumGiftMonths = transaction.native.premiumGiftMonths {
+            descString = strings().starsTransactionPremiumFor(Int(premiumGiftMonths))
+        }  else if let commission = transaction.native.starrefCommissionPermille {
             descString = strings().starsTransactionCommission("\(commission.decemial.string)%")
         } else if !transaction.native.media.isEmpty {
             switch transaction.native.peer {

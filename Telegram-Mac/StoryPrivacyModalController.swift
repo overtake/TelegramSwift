@@ -739,8 +739,8 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         }
     }
     interactions.sendAnimatedEmoji = { sticker, _, _, _, fromRect in
-        let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown).fixed
-        let updated = textInteractions.insertText(.makeAnimated(sticker.file, text: text))
+        let text = (sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? clown).fixed
+        let updated = textInteractions.insertText(.makeAnimated(sticker.file._parse(), text: text))
         textInteractions.update { _ in
             updated
         }

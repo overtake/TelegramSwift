@@ -482,8 +482,8 @@ class InputTextDataRowView : GeneralContainableRowView {
                         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _, _ in
                             if let item = self?.item as? InputTextDataRowItem, let textView = self?.textView {
                                 self?.textView.makeFirstResponder()
-                                let text = sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown
-                                let state = textView.interactions.insertText(.makeAnimated(sticker.file, text: text))
+                                let text = sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? clown
+                                let state = textView.interactions.insertText(.makeAnimated(sticker.file._parse(), text: text))
                                 item.updateState(state)
                                 self?.set(state)
                             }

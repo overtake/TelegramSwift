@@ -74,6 +74,7 @@ public enum PeerCallSessionEndedType : Equatable {
     case hungUp
     case busy
     case missed
+    case switchedToConference
 }
 
 public enum PeerCallSessionTerminationReason: Equatable {
@@ -185,6 +186,9 @@ extension ExternalPeerCallState.State {
                         statusValue = .text(L10n.callStatusBusy, nil)
                     case .hungUp, .missed:
                         statusValue = .text(L10n.callStatusEnded, nil)
+                    case .switchedToConference:
+                        //TODOLANG
+                        statusValue = .text("SWITCHED TO CONFERENCE", nil)
                     }
                 case .error:
                     statusValue = .text(L10n.callStatusFailed, nil)

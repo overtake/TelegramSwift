@@ -62,7 +62,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         didSet {
             switch webPage.content {
             case .Loaded(let content):
-                self.instantPage = content.instantPage
+                self.instantPage = content.instantPage?._parse()
             default:
                 break
             }
@@ -77,7 +77,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         self.pendingAnchor = anchor
         switch webPage.content {
         case .Loaded(let content):
-            self.instantPage = content.instantPage
+            self.instantPage = content.instantPage?._parse()
         default:
             break
         }

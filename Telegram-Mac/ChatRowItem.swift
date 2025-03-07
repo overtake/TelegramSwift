@@ -2573,6 +2573,8 @@ class ChatRowItem: TableRowItem {
             return RepliesHeaderRowItem(initialSize, entry: entry)
         case let .topThreadInset(height, _, _):
             return GeneralRowItem(initialSize, height: height, stableId: entry.stableId, backgroundColor: .clear)
+        case let .userInfo(status, peer, commonGroups, _, _, theme):
+            return ChatUserInfoRowItem(initialSize, interaction, entry, settings: status, peer: peer, commonGroups: commonGroups, theme: theme)
         default:
             break
         }
@@ -3508,14 +3510,14 @@ class ChatRowItem: TableRowItem {
                             switch allowed {
                             case .all:
                                 available = reactions.enabled.map {
-                                    .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: isSelected($0.value))
+                                    .builtin(value: $0.value, staticFile: $0.staticIcon._parse(), selectFile: $0.selectAnimation._parse(), appearFile: $0.appearAnimation._parse(), isSelected: isSelected($0.value))
                                 }
                             case let .limited(array):
                                 available = array.compactMap { reaction in
                                     switch reaction {
                                     case .builtin:
                                         if let first = reactions.enabled.first(where: { $0.value == reaction }) {
-                                            return .builtin(value: first.value, staticFile: first.staticIcon, selectFile: first.selectAnimation, appearFile: first.appearAnimation, isSelected: isSelected(reaction))
+                                            return .builtin(value: first.value, staticFile: first.staticIcon._parse(), selectFile: first.selectAnimation._parse(), appearFile: first.appearAnimation._parse(), isSelected: isSelected(reaction))
                                         } else {
                                             return nil
                                         }
@@ -3537,12 +3539,12 @@ class ChatRowItem: TableRowItem {
                         switch value.content {
                         case let .builtin(emoji):
                             if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(generic.value))
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon._parse(), selectFile: generic.selectAnimation._parse(), appearFile: generic.appearAnimation._parse(), isSelected: isSelected(generic.value))
                             } else {
                                 return nil
                             }
                         case let .custom(file):
-                            return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: isSelected(.custom(file.fileId.id)))
+                            return .custom(value: .custom(file._parse().fileId.id), fileId: file._parse().fileId.id, file._parse(), isSelected: isSelected(.custom(file._parse().fileId.id)))
                         case .stars:
                             return nil
                         }
@@ -3570,7 +3572,7 @@ class ChatRowItem: TableRowItem {
                             }
                         case .builtin:
                             if let generic = enabled.first(where: { $0.value == reaction.value }) {
-                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(reaction.value))
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon._parse(), selectFile: generic.selectAnimation._parse(), appearFile: generic.appearAnimation._parse(), isSelected: isSelected(reaction.value))
                             } else {
                                 return nil
                             }
@@ -3665,16 +3667,16 @@ class ChatRowItem: TableRowItem {
                     reveal = { view in
                         let window = ReactionsWindowController(context, peerId: message.id.peerId, selectedItems: selectedItems, react: { sticker, fromRect in
                             let value: UpdateMessageReaction
-                            if let bundle = sticker.file.stickerText {
+                            if let bundle = sticker.file._parse().stickerText {
                                 value = .builtin(bundle)
                             } else {
-                                value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
+                                value = .custom(fileId: sticker.file._parse().fileId.id, file: sticker.file._parse())
                             }
                             var contains: Bool = false
                             for reaction in reactions {
                                 switch reaction.content {
                                 case let .custom(file):
-                                    if file.fileId == sticker.file.fileId {
+                                    if file.fileId == sticker.file._parse().fileId {
                                         contains = true
                                         break
                                     }
@@ -3686,7 +3688,7 @@ class ChatRowItem: TableRowItem {
                             if isTags, !context.isPremium {
                                 prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                             } else {
-                                if case .custom = value, !context.isPremium && sticker.file.isPremiumEmoji, !contains {
+                                if case .custom = value, !context.isPremium && sticker.file._parse().isPremiumEmoji, !contains {
                                     showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
                                         prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                                     })
@@ -3711,7 +3713,7 @@ class ChatRowItem: TableRowItem {
                         prem(with: PremiumBoardingController(context: context, source: .saved_tags, openFeatures: true), for: context.window)
                     } else {
                         if value == .stars {
-                            context.reactions.sendStarsReaction(message.id, count: 1, isAnonymous: nil, fromRect: fromRect)
+                            context.reactions.sendStarsReaction(message.id, count: 1, fromRect: fromRect)
                         } else {
                             context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(), isTags: isTags), fromRect: fromRect, storeAsRecentlyUsed: true)
                         }

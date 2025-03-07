@@ -66,7 +66,7 @@ class StickerPackRowItem: TableRowItem {
         if let thumbnail = packInfo.thumbnail {
             topItem = TelegramMediaFile(fileId: MediaId(namespace: 0, id: packInfo.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: packInfo.immediateThumbnailData, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: thumbnail.typeHint == .video ? "webm-preview" : "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: packInfo.id.id, accessHash: packInfo.accessHash), maskData: nil)], alternativeRepresentations: [])
         } else {
-            topItem = self.topItem?.file
+            topItem = self.topItem?.file._parse()
         }
         
         let allItems = self.allItems
@@ -121,7 +121,7 @@ class StickerPackRowItem: TableRowItem {
                 
                 filePanel(with: [], canChooseDirectories: true, for: context.window, completion: { paths in
                     let dataSignal: Signal<[String?], NoError> = combineLatest(allItems.map {
-                        return context.account.postbox.mediaBox.resourceData($0.file.resource) |> mapToSignal { resource in
+                        return context.account.postbox.mediaBox.resourceData($0.file._parse().resource) |> mapToSignal { resource in
                             if let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
                                 return getAnimatedStickerThumb(data: data)
                             } else {
@@ -423,8 +423,8 @@ private final class StickerPackRowView : HorizontalRowView {
             } else if let fid = item.info.thumbnailFileId {
                 fileId = fid
             } else if let item = item.topItem {
-                file = item.file
-                fileId = item.file.fileId.id
+                file = item.file._parse()
+                fileId = file?.fileId.id
             }
             
             

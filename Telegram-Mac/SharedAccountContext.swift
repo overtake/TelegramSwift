@@ -68,7 +68,12 @@ class SharedAccountContext {
     let accountManager: AccountManager<TelegramAccountManagerTypes>
 
     #if !SHARE
-    var peerCall: PeerCallScreen?
+    var peerCall: PeerCallScreen? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
     
     let inputSource: InputSources = InputSources()
     let devicesContext: DevicesContext

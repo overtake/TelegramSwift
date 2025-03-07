@@ -19,6 +19,46 @@ import Translate
 import InputView
 import TelegramMedia
 
+
+private func hTmeParseDuration(_ durationStr: String) -> Int {
+    // Optional hours, optional minutes, optional seconds
+    let pattern = "^(?:(\\d+)h)?(?:(\\d+)m)?(?:(\\d+)s)?$"
+    
+    // Attempt to create the regex
+    guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+        // If regex creation fails, fallback to integer parsing
+        return Int(durationStr) ?? 0
+    }
+    
+    // Search for a match
+    let range = NSRange(durationStr.startIndex..., in: durationStr)
+    if let match = regex.firstMatch(in: durationStr, options: [], range: range) {
+        // Extract capture groups for hours, minutes, and seconds
+        let hoursRange = match.range(at: 1)
+        let minutesRange = match.range(at: 2)
+        let secondsRange = match.range(at: 3)
+        
+        // Helper to safely extract integer from a matched range
+        func intValue(_ nsRange: NSRange) -> Int {
+            guard nsRange.location != NSNotFound,
+                  let substringRange = Range(nsRange, in: durationStr) else {
+                return 0
+            }
+            return Int(durationStr[substringRange]) ?? 0
+        }
+        
+        let hours = intValue(hoursRange)
+        let minutes = intValue(minutesRange)
+        let seconds = intValue(secondsRange)
+        
+        return hours * 3600 + minutes * 60 + seconds
+    }
+    
+    // If the string didn't match the pattern, parse it as a positive integer
+    return Int(durationStr) ?? 0
+}
+
+
 let itunesAppLink = "https://apps.apple.com/us/app/telegram/id747648890"
 
 let XTR: String = TelegramCurrency.xtr.rawValue
@@ -26,7 +66,9 @@ let XTRSTAR: String = "⭐️"
 let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
 let TINY = "\u{2009}"
-let GOLD = NSColor(0xD2720B)
+var GOLD: NSColor {
+    return theme.colors.isDark ? NSColor(0xF5C555) : NSColor(0xD2720B)
+}
 let clown: String = "🤡"
 
 let clown_space: String = "\(clown)\(TINY_SPACE)"
@@ -184,7 +226,7 @@ enum ChatInitialAction : Equatable {
     case forward(messageIds: [MessageId], text: ChatTextInputState?, behavior: ChatInitialActionBehavior)
     case reply(EngineMessageReplySubject, behavior: ChatInitialActionBehavior)
     case ad(EngineChatList.AdditionalItem.PromoInfo.Content)
-    case source(MessageId)
+    case source(MessageId, Int32?)
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
     case joinVoiceChat(_ joinHash: String?)
@@ -2018,7 +2060,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
             
                  
                 if action == nil, let messageId = messageId {
-                    action = .source(messageId)
+                    action = .source(messageId, nil)
                 }
                  
                  
@@ -2108,7 +2150,15 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     return .boost(link: urlString, username: "\(_private_)\(username)", context: context)
                                 } else {
                                     let forceProfile = false
-                                    return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, forceProfile: forceProfile, context: context, action:nil, callback: openInfo)
+                                    
+                                    var action: ChatInitialAction? = nil
+                                    if let t = params[keyURLTimecode] {
+                                        let timemark = hTmeParseDuration(t)
+                                        if Int(timemark) < Int32.max {
+                                            action = .openMedia(Int32(timemark))
+                                        }
+                                    }
+                                    return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, forceProfile: forceProfile, context: context, action: action, callback: openInfo)
                                 }
                             }
                         }
@@ -2144,7 +2194,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             
                             var action: ChatInitialAction? = nil
                             
-                            if let t = params[keyURLTimecode], let timemark = Double(t) {
+                            if let t = params[keyURLTimecode] {
+                                let timemark = Double(hTmeParseDuration(t))
                                 if Int(timemark) < Int32.max {
                                     action = .openMedia(Int32(timemark))
                                 }
@@ -2157,10 +2208,19 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     action = .makeWebview(appname: appname, command: params[keyURLStartapp])
                                 }
                             }
+                           
+                            if let t = params[keyURLTimecode], action == nil {
+                                let timemark = hTmeParseDuration(t)
+                                if Int(timemark) < Int32.max {
+                                    action = .openMedia(Int32(timemark))
+                                }
+                            }
                             
                             if action == nil, let messageId = messageId {
-                                action = .source(messageId)
+                                action = .source(messageId, nil)
                             }
+                        
+                            
                             if userAndPost.count == 3, let storyId = post, userAndPost[1] == "s" {
                                 return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
                             } else if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
@@ -2175,6 +2235,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
                             } else {
                                 let forceProfile = userAndPost.contains("profile")
+                                
                                 return .followResolvedName(link: urlString, username: name, postId: post, forceProfile: forceProfile, context: context, action: action, callback: openInfo)
                             }
                         }

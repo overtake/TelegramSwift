@@ -520,7 +520,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if arguments.mode == .channelReactions, let availableReactions = state.availableReactions {
         recentAnimated.removeAll()
         for reaction in availableReactions.reactions {
-            recentAnimated.append(.init(index: .init(index: 0, id: 0), file: reaction.activateAnimation, indexKeys: []))
+            recentAnimated.append(.init(index: .init(index: 0, id: 0), file: reaction.activateAnimation._parse(), indexKeys: []))
         }
     }
     
@@ -570,7 +570,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             })
             
-            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media } + state.featuredBackgroundIconEmojiItems.map { $0.media } + state.featuredChannelStatusEmojiItems.map { $0.media }
+            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media._parse() } + state.featuredStatusItems.map { $0.media._parse() } + state.featuredBackgroundIconEmojiItems.map { $0.media._parse() } + state.featuredChannelStatusEmojiItems.map { $0.media._parse() }
             
             
             var contains:Set<MediaId> = Set()
@@ -699,10 +699,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                             $0.value.string == emoji
                         })
                         if let builtin = builtin {
-                            return .init(index: .init(index: 0, id: 0), file: builtin.selectAnimation, indexKeys: [])
+                            return .init(index: .init(index: 0, id: 0), file: builtin.selectAnimation._parse(), indexKeys: [])
                         }
                     case let .custom(file):
-                        return .init(index: .init(index: -1, id: 0), file: file, indexKeys: [])
+                        return .init(index: .init(index: -1, id: 0), file: file._parse(), indexKeys: [])
                     case .stars:
                         return nil
                     }
@@ -748,7 +748,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
             }
             
-            let statuses = state.recentStatusItems.filter { !isDefaultStatusesPackId($0.media.emojiReference) } + state.featuredStatusItems
+            let statuses = state.recentStatusItems.filter { !isDefaultStatusesPackId($0.media._parse().emojiReference) } + state.featuredStatusItems
             var contains:Set<MediaId> = Set()
             var normalized:[StickerPackItem] = statuses.filter { item in
                 if !contains.contains(item.media.fileId) {
@@ -757,7 +757,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 return false
             }.map { value in
-                return StickerPackItem(index: .init(index: 0, id: 0), file: value.media, indexKeys: [])
+                return StickerPackItem(index: .init(index: 0, id: 0), file: value.media._parse(), indexKeys: [])
             }
             
             
@@ -853,6 +853,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("collectibles"), equatable: InputDataEquatable(state.uniqueStarGiftsItems), comparable: nil, item: { initialSize, stableId in
             return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: items, mode: arguments.mode.itemMode, selectedItems: [], color: theme.colors.text, callback: arguments.send, openPremium: arguments.openPremium, installPack: arguments.installPack, ignorePremium: arguments.ignorePremium, uniqueGifts: state.uniqueStarGiftsItems.map(\.starGift))
         }))
+        
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(1), equatable: InputDataEquatable(items), comparable: nil, item: { initialSize, stableId in
+            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
+        }))
+        index += 1
+        
     }
     
     for (i, section) in state.sections.enumerated() {
@@ -2267,7 +2274,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             |> map { result -> [TelegramMediaFile] in
                 switch result {
                 case let .result(_, items, _):
-                    return items.map(\.file)
+                    return items.map(\.file).map { $0._parse() }
                 default:
                     return []
                 }
@@ -2278,7 +2285,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             |> map { result -> [TelegramMediaFile] in
                 switch result {
                 case let .result(_, items, _):
-                    return items.map(\.file)
+                    return items.map(\.file).map { $0._parse() }
                 default:
                     return []
                 }
@@ -2538,7 +2545,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         var dict: [MediaId: StickerPackItem] = [:]
                         for item in groupEmojiPack.1 {
                             var updated = item
-                            var attrs = item.file.attributes
+                            let file = item.file._parse()
+                            var attrs = file.attributes
                             loop: for (i, attr) in attrs.enumerated() {
                                 switch attr {
                                 case let .CustomEmoji(isPremium, isSingleColor, alt, packReference):
@@ -2548,7 +2556,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                                     break
                                 }
                             }
-                            updated = StickerPackItem(index: updated.index, file: item.file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
+                            updated = StickerPackItem(index: updated.index, file: file.withUpdatedAttributes(attrs), indexKeys: updated.indexKeys)
                             files.append(updated)
                             dict[item.file.fileId] = updated
                             itemsDict[item.file.fileId] = updated
@@ -2603,7 +2611,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                                 }
                             })
                             if !items.isEmpty {
-                                sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
+                                sections.append(.init(info: item.info._parse(), items: items, dict: dict, installed: false))
                             }
                         }
                     }
@@ -2674,7 +2682,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         |> map { result in
                             switch result {
                             case let .result(info, items, _):
-                                return (info, items)
+                                return (info._parse(), items)
                             default:
                                 return nil
                             }

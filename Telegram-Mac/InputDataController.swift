@@ -587,6 +587,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var _externalFirstResponder:(()->NSResponder?)? = nil
     var _becomeFirstResponder:(()->Bool)?
     var contextObject: Any?
+    var contextObject_second: Any?
     var didAppear: ((InputDataController)->Void)?
     var didDisappear: ((InputDataController)->Void)?
     var didResize: ((InputDataController)->Void)?

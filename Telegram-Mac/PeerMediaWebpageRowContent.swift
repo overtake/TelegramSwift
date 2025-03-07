@@ -181,8 +181,8 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
             if case let .Loaded(content) = webpage.content {
                 if let instantPage = content.instantPage {
                     let hasInstantPage:()->Bool = {
-                        if instantPage.blocks.count == 3 {
-                            switch instantPage.blocks[2] {
+                        if instantPage._parse().blocks.count == 3 {
+                            switch instantPage._parse().blocks[2] {
                             case let .collage(_, caption), let .slideshow(_, caption):
                                 return !attributedStringForRichText(caption.text, styleStack: InstantPageTextStyleStack()).string.isEmpty
                             default:

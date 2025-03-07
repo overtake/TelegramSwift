@@ -135,7 +135,7 @@ private func <(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
 }
 
 
-private func entriesForView(_ view: EngineContactList, storyList: EngineStorySubscriptions?, accountPeer: Peer?) -> [ContactsEntry] {
+private func entriesForView(_ view: EngineContactList, storyList: EngineStorySubscriptions?, sort: PeerListState.ContactsSort, accountPeer: Peer?) -> [ContactsEntry] {
     var entries: [ContactsEntry] = []
     
     entries.append(.space)
@@ -143,22 +143,40 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
     if let accountPeer = accountPeer {
         
         var peerIds: Set<PeerId> = Set()
-        let orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
-            let lhsPresence = view.presences[lhsPeer.id]
-            let rhsPresence = view.presences[rhsPeer.id]
-            if let lhsPresence = lhsPresence?._asPresence() as? TelegramUserPresence, let rhsPresence = rhsPresence?._asPresence() as? TelegramUserPresence {
-                if lhsPresence.status < rhsPresence.status {
-                    return false
-                } else if lhsPresence.status > rhsPresence.status {
+        let orderedPeers:[Peer]
+        switch sort {
+        case .lastSeen:
+            orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
+                let lhsPresence = view.presences[lhsPeer.id]
+                let rhsPresence = view.presences[rhsPeer.id]
+                if let lhsPresence = lhsPresence?._asPresence() as? TelegramUserPresence, let rhsPresence = rhsPresence?._asPresence() as? TelegramUserPresence {
+                    if lhsPresence.status < rhsPresence.status {
+                        return false
+                    } else if lhsPresence.status > rhsPresence.status {
+                        return true
+                    }
+                } else if let _ = lhsPresence {
                     return true
+                } else if let _ = rhsPresence {
+                    return false
                 }
-            } else if let _ = lhsPresence {
-                return true
-            } else if let _ = rhsPresence {
-                return false
-            }
-            return lhsPeer.id < rhsPeer.id
-        })
+                return lhsPeer.id < rhsPeer.id
+            })
+        case .name:
+            orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
+                return {
+                    let lhsIsName = lhsPeer.displayTitle.trimmed.rangeOfCharacter(from: CharacterSet.letters) != nil
+                    let rhsIsName = rhsPeer.displayTitle.trimmed.rangeOfCharacter(from: CharacterSet.letters) != nil
+
+                    if lhsIsName != rhsIsName {
+                        return lhsIsName // Names appear before numbers
+                    }
+
+                    return lhsPeer.displayTitle.trimmed.localizedStandardCompare(rhsPeer.displayTitle.trimmed) == .orderedAscending
+                }()
+            })
+        }
+        
         
         //entries.append(.addContact)
         var index: Int32 = 0
@@ -351,10 +369,12 @@ class ContactsController: PeersListController {
             TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
         ) |> map { $0?._asPeer() }
         
-        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal)
-            |> mapToQueue { view, accountPeer, appearance -> Signal<TableUpdateTransition, NoError> in
+        let sortState = self.stateUpdater |> map { $0.contactsSort } |> distinctUntilChanged
+        
+        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, sortState, appearanceSignal)
+            |> mapToQueue { view, accountPeer, sortState, appearance -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
-                let entries = entriesForView(view, storyList: nil, accountPeer: accountPeer)
+                let entries = entriesForView(view, storyList: nil, sort: sortState, accountPeer: accountPeer)
                     .map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
 
                 return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)

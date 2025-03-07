@@ -450,7 +450,7 @@ private final class StoryViewerRowView: GeneralRowView {
             } else {
                 if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
                     let file = appear ? animation.activateAnimation : animation.selectAnimation
-                    layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+                    layer = InlineStickerItemLayer(account: context.account, file: file._parse(), size: size, playPolicy: .onceEnd)
                 } else {
                     layer = nil
                 }

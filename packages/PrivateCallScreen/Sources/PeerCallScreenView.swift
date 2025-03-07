@@ -887,6 +887,11 @@ final class PeerCallScreenView : Control {
         }
         
     }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
 }
 
 
@@ -937,4 +942,5 @@ private extension PeerCallScreenView {
     func revealedKeyFrame(view: NSView, state: PeerCallState) -> NSRect {
         return view.centerFrame()
     }
+    
 }

@@ -62,7 +62,7 @@ extension StarGift.UniqueGift {
     }
     
     var link: String {
-        return "https://t.me/nft/\(self.title.replacingOccurrences(of: " ", with: "-"))-\(self.number)"
+        return "https://t.me/nft/\(self.title.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "’", with: ""))-\(self.number)"
     }
 }
 
@@ -200,7 +200,9 @@ private final class HeaderItem : GeneralRowItem {
             case .unsupported:
                 header = strings().starListTransactionUnknown
             case .peer:
-                if !transaction.media.isEmpty {
+                if let count = transaction.paidMessageCount {
+                    header = strings().starTransactionMessageFeeCountable(Int(count))
+                } else if !transaction.media.isEmpty {
                     header = strings().starsTransactionMediaPurchase
                 } else {
                     header = transaction.title ?? peer?._asPeer().displayTitle ?? ""
@@ -232,7 +234,21 @@ private final class HeaderItem : GeneralRowItem {
         }
         
         self.infoLayout = .init(attr)
-        if upgraded {
+        if transaction.paidMessageCount != nil, let commission = transaction.starrefCommissionPermille?.decemial.string {
+            let text = strings().starTransactionMessageFeeInfo("\(commission)%")
+            
+            let textAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })).mutableCopy() as! NSMutableAttributedString
+            
+            textAttr.detectBoldColorInString(with: .medium(.text))
+            
+            self.descLayout = .init(textAttr, alignment: .center)
+            
+        } else if let premiumGiftMonths = transaction.premiumGiftMonths {
+            let text = strings().starsTransactionPremiumFor(Int(premiumGiftMonths))
+            self.descLayout = .init(.initialize(string: text, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        } else if upgraded {
             self.descLayout = nil
         } else if let _ = uniqueGift {
             self.descLayout = nil
@@ -358,6 +374,8 @@ private final class HeaderItem : GeneralRowItem {
                     arguments.openApps()
                 } else if url == "stars" {
                     arguments.openStars()
+                } else if url == "changeFee" {
+                    arguments.changeFee()
                 }
             }
         }
@@ -882,7 +900,8 @@ private final class Arguments {
     let copyNftLink:(StarGift.UniqueGift)->Void
     let shareNft:(StarGift.UniqueGift)->Void
     let startWearing:(StarGift.UniqueGift)->Void
-    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void, openAffiliate:@escaping()->Void, upgrade:@escaping()->Void, transferUnqiue:@escaping(StarGift.UniqueGift)->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, startWearing:@escaping(StarGift.UniqueGift)->Void) {
+    let changeFee:()->Void
+    init(context: AccountContext, openPeer:@escaping(PeerId)->Void, copyTransaction:@escaping(String)->Void, openLink:@escaping(String)->Void, previewMedia:@escaping()->Void, openApps: @escaping()->Void, close: @escaping()->Void, openStars:@escaping()->Void, convertStars:@escaping()->Void, displayOnMyPage:@escaping()->Void, seeInProfile: @escaping() ->Void, sendGift:@escaping(PeerId)->Void, openAffiliate:@escaping()->Void, upgrade:@escaping()->Void, transferUnqiue:@escaping(StarGift.UniqueGift)->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, startWearing:@escaping(StarGift.UniqueGift)->Void, changeFee:@escaping()->Void) {
         self.context = context
         self.openPeer = openPeer
         self.copyTransaction = copyTransaction
@@ -901,6 +920,7 @@ private final class Arguments {
         self.copyNftLink = copyNftLink
         self.shareNft = shareNft
         self.startWearing = startWearing
+        self.changeFee = changeFee
     }
 }
 
@@ -992,7 +1012,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let peer = state.peer {
         
         
-        if let _ = state.transaction.starrefCommissionPermille {
+        if let _ = state.transaction.starrefCommissionPermille, state.transaction.paidMessageCount == nil {
             
             let affiliate: TextViewLayout = .init(parseMarkdownIntoAttributedString(strings().starTransactionReasonAffiliate, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, contents)
@@ -1038,7 +1058,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let fromText: String
         if case .unique = state.transaction.starGift {
             fromText = strings().starTransactionOwner
-        } else if let _ = state.transaction.starrefCommissionPermille {
+        } else if let _ = state.transaction.starrefCommissionPermille,  state.transaction.paidMessageCount == nil {
             fromText = state.transaction.starrefPeerId == nil ? strings().starTransactionMiniApp : strings().starTransacitonReferredUser
         } else if state.transaction.giveawayMessageId != nil {
             fromText = strings().starTransactionFrom
@@ -1093,7 +1113,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         
         
-        if let starrefPeer = state.starrefPeer {
+        if let starrefPeer = state.starrefPeer, state.transaction.paidMessageCount == nil {
             rows.append(.init(left: .init(.initialize(string: strings().starTransactionMiniApp, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
                 let control: AvatarControl
                 if let previous = previous as? AvatarControl {
@@ -1747,6 +1767,20 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
         showModal(with: ShareModalController(ShareLinkObject(context, link: gift.link)), for: window)
     }, startWearing: { gift in
         showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .previewWear(.init(context.myPeer!), gift)), for: window)
+    }, changeFee: {
+        
+        closeAllModals(window: window)
+        
+        let privacySignal = context.privacy |> take(1) |> deliverOnMainQueue
+        
+        let _ = (privacySignal
+            |> deliverOnMainQueue).startStandalone(next: { info in
+            if let info = info {
+                context.bindings.rootNavigation().push(MessagesPrivacyController(context: context, noPaidMessages: info.noPaidMessages, globalSettings: info.globalSettings, updated: { noPaidMessages, globalSettings in
+                    context.updateMessagesPrivacy(noPaidMessages: noPaidMessages, globalSettings: globalSettings)
+                }))
+            }
+        })
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

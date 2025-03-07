@@ -15,13 +15,13 @@ import TGUIKit
 import TelegramMedia
 import TelegramMediaPlayer
 
-extension AutoremoveTimeoutMessageAttribute : Equatable {
+extension AutoremoveTimeoutMessageAttribute : @retroactive Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
         return lhs.timeout == rhs.timeout && lhs.countdownBeginTime == rhs.countdownBeginTime && lhs.associatedMessageIds == rhs.associatedMessageIds
     }
-    
-    
 }
+
+
 
 final class ChatVideoAutoplayView {
     let mediaPlayer: MediaPlayer
@@ -82,10 +82,13 @@ final class ChatVideoAutoplayView {
 }
 
 
-final class CornerMaskLayer : SimpleShapeLayer {
+final class CornerMaskLayer : SimpleLayer {
     var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
+                
+                let layer = SimpleShapeLayer()
+                
                 let path = CGMutablePath()
                 
                 let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
@@ -97,6 +100,7 @@ final class CornerMaskLayer : SimpleShapeLayer {
                 var bottomLeftRadius: CGFloat = .cornerRadius
                 var topRightRadius: CGFloat = .cornerRadius
                 var bottomRightRadius: CGFloat = .cornerRadius
+                
                 
                 
                 if positionFlags.contains(.top) && positionFlags.contains(.left) {
@@ -117,7 +121,9 @@ final class CornerMaskLayer : SimpleShapeLayer {
                 path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
                 path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
                 
-                self.path = path
+                layer.path = path
+                
+                self.mask = layer
             }
         }
     }
@@ -350,6 +356,26 @@ final class MediaInkView : Control {
     }
 }
 
+private final class VideoTimestampView : View {
+    let progress: LinearProgressControl = .init(progressHeight: 3)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(progress)
+        self.isEventLess = true
+        
+        self.layer = CornerMaskLayer()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        progress.frame = NSMakeRect(0, frame.height - 3, frame.width, 3)
+    }
+}
+
 class ChatInteractiveContentView: ChatMediaContentView {
 
     private let image:TransformImageView = TransformImageView()
@@ -358,6 +384,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
     private var timableProgressView: TimableProgressView? = nil
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
+    
+    private var videoTimeProgress: VideoTimestampView?
     
     
     private let partDisposable = MetaDisposable()
@@ -573,6 +601,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
 
         }
         
+        if let videoTimeProgress {
+            videoTimeProgress.frame = bounds
+        }
+        
     }
     
     private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile, mediaPlayerStatus: MediaPlayerStatus? = nil, animated: Bool = false) {
@@ -749,6 +781,24 @@ class ChatInteractiveContentView: ChatMediaContentView {
     override func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         partDisposable.set(nil)
+        
+        var videoTimestamp: Int32?
+        if let parent = parent {
+            var storedVideoTimestamp: Int32?
+            for attribute in parent.attributes {
+                if let attribute = attribute as? ForwardVideoTimestampAttribute {
+                    videoTimestamp = attribute.timestamp
+                } else if let attribute = attribute as? DerivedDataMessageAttribute {
+                    if let value = attribute.data["mps"]?.get(MediaPlaybackStoredState.self) {
+                        storedVideoTimestamp = Int32(value.timestamp)
+                    }
+                }
+            }
+            if let storedVideoTimestamp {
+                videoTimestamp = storedVideoTimestamp
+            }
+
+        }
         
         let versionUpdated = parent?.stableVersion != self.parent?.stableVersion && self.parent?.stableId == parent?.stableId
         
@@ -1204,14 +1254,42 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         case .Remote:
                             strongSelf.progressView?.state = .Remote
                         }
+                        
+                        
+                        strongSelf.updateVideoTimestamp(videoTimestamp, duration: (media as? TelegramMediaFile)?.duration, animated: animated)
+                        
                         strongSelf.needsLayout = true
                     }
                 }))
                
             }
+        } else {
+            self.updateVideoTimestamp(videoTimestamp, duration: (media as? TelegramMediaFile)?.duration, animated: animated)
+            self.needsLayout = true
         }
-        
-        
+    }
+    
+    private func updateVideoTimestamp(_ videoTimestamp: Int32?, duration: Double?, animated: Bool) {
+        if let videoTimestamp, let duration {
+            let current: VideoTimestampView
+            if let view = self.videoTimeProgress {
+                current = view
+            } else {
+                current = VideoTimestampView(frame: bounds)
+                self.videoTimeProgress = current
+                addSubview(current)
+            }
+            current.progress.set(progress: Double(videoTimestamp) / duration, animated: animated)
+            current.progress.fetchingColor = theme.colors.redUI
+            current.progress.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
+            current.progress.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
+            
+            (current.layer as? CornerMaskLayer)?.positionFlags = positionFlags
+            
+        } else if let view = self.videoTimeProgress {
+            performSubviewRemoval(view, animated: animated)
+            self.videoTimeProgress = nil
+        }
     }
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {

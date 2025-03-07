@@ -248,7 +248,7 @@ final class ChatReactionsLayout {
             var effect: TelegramMediaFile? {
                 switch self {
                 case let .builtin(reaction):
-                    return reaction.centerAnimation
+                    return reaction.centerAnimation?._parse()
                 case let .custom(_, _, effect):
                     return effect
                 case let .stars(file, _):
@@ -270,7 +270,7 @@ final class ChatReactionsLayout {
         func getInlineLayer(_ mode: ChatReactionsLayout.Mode) -> InlineStickerItemLayer {
             switch source {
             case let .builtin(reaction):
-                return .init(account: context.account, file: reaction.centerAnimation ?? reaction.selectAnimation, size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+                return .init(account: context.account, file: reaction.centerAnimation?._parse() ?? reaction.selectAnimation._parse(), size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             case let .custom(fileId, file, _):
                 var reactionSize: NSSize = presentation.reactionSize
                 reactionSize.width += 3
@@ -496,7 +496,7 @@ final class ChatReactionsLayout {
             let source: ReactionPeerMenu.Source
             switch self.source {
             case let .builtin(reaction):
-                source = .builtin(reaction.staticIcon)
+                source = .builtin(reaction.staticIcon._parse())
             case let .custom(fileId, file, _):
                 source = .custom(fileId, file)
             case let .stars(file, effect):
@@ -666,7 +666,7 @@ final class ChatReactionsLayout {
                        tagAction(value)
                     } else {
                         if value == .stars {
-                            engine.sendStarsReaction(message.id, count: 1, isAnonymous: nil)
+                            engine.sendStarsReaction(message.id, count: 1)
                         } else {
                             engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
                         }

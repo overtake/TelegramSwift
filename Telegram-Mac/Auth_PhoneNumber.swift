@@ -60,7 +60,7 @@ private func formatNumber(_ number: String, country: Country) -> String {
     return formatted
 }
 
-private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
+func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
     
     if countryCode == "FT" {
         return "🏴‍☠️"

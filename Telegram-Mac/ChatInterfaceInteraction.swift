@@ -167,6 +167,8 @@ final class ChatInteraction : InterfaceObserver  {
     var markAdAction:(Data, Bool)->Void = { _, _ in }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
+    var freezeAccountAlert:()->Void = { }
+    
     var openFocusedMedia:(Int32?)->Void = { _ in return }
     
     var push:(ViewController)->Void = { _ in }

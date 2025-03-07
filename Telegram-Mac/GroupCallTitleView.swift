@@ -241,7 +241,7 @@ final class GroupCallTitleView : Control {
     
     private var currentState: GroupCallUIState?
     private var currentPeer: Peer?
-    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, hidePeersClick: @escaping()->Void, animated: Bool) {
+    func update(_ peer: Peer?, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, hidePeersClick: @escaping()->Void, animated: Bool) {
         
         let oldMode = self.mode
         let mode: Mode = .normal
@@ -272,7 +272,7 @@ final class GroupCallTitleView : Control {
             if !state.hideParticipants && state.isFullScreen {
                 return false
             }
-            if member.isSpeaking && member.peer.id != peer.id {
+            if member.isSpeaking && member.peer.id != peer?.id {
                 if pinned == nil {
                     return member.videoEndpoint == nil && member.presentationEndpoint == nil
                 } else {

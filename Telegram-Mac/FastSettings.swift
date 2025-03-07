@@ -266,6 +266,14 @@ class FastSettings {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
     
+    static func needConfirmPaid(_ peerId: PeerId, price: Int) -> Bool {
+        return UserDefaults.standard.bool(forKey: "\(peerId)_confirm_paid_\(price)_3")
+    }
+    
+    static func toggleCofirmPaid(_ peerId: PeerId, price: Int) -> Void {
+        UserDefaults.standard.set(!needConfirmPaid(peerId, price: price), forKey: "\(peerId)_confirm_paid_\(price)_3")
+    }
+    
     static func shouldConfirmWebApp(_ peerId: PeerId) -> Bool {
         let value = UserDefaults.standard.value(forKey: "\(peerId)_\(kConfirmWebApp)")
         return value as? Bool ?? true

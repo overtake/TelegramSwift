@@ -359,7 +359,7 @@ private func _id_peer_id(_ data: PeerGroupCallData, endpoint: String? = nil) -> 
     }
 }
 
-private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], pinnedData: GroupCallUIState.PinnedData, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, tooltips: Tooltips, version: Int, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) -> GroupCallUIState {
+private func makeState(previous:GroupCallUIState?, peerView: PeerView?, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], pinnedData: GroupCallUIState.PinnedData, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: VideoSources, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, tooltips: Tooltips, version: Int, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -549,7 +549,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         controlsTooltip = nil
     }
         
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants || isStream, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled, isStream: isStream, windowIsFullscreen: windowIsFullscreen, initialTimestamp: initialTimestamp)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerView.flatMap { peerViewMainPeer($0) }, cachedData: peerView?.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants || isStream, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled, isStream: isStream, windowIsFullscreen: windowIsFullscreen, initialTimestamp: initialTimestamp)
 }
 
 
@@ -781,11 +781,6 @@ final class GroupCallUIController : ViewController {
         let account = self.data.call.account
         let context = self.data.call.accountContext
 
-        let videoSources = ValuePromise<GroupCallUIState.VideoSources>(.init())
-        let videoSourcesValue: Atomic<GroupCallUIState.VideoSources> = Atomic(value: .init())
-        let updateVideoSources:(@escaping(GroupCallUIState.VideoSources)->GroupCallUIState.VideoSources)->Void = { f in
-            videoSources.set(videoSourcesValue.modify(f))
-        }
         
         
      
@@ -843,7 +838,7 @@ final class GroupCallUIController : ViewController {
             }
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
-            guard let window = self?.window, let accountContext = self?.data.call.accountContext else {
+            guard let window = self?.window, let accountContext = self?.data.call.accountContext, let peerId = peerId else {
                 return
             }
             let isChannel = self?.data.call.peer?.isChannel == true
@@ -947,21 +942,11 @@ final class GroupCallUIController : ViewController {
             }
             
             let select:(VideoSourceMac)->Void = { source in
-                updateVideoSources { current in
-                    var current = current
-                    switch source.mode {
-                    case .screencast:
-                        current.screencast = source
-                    case .video:
-                        current.video = source
-                    }
-                    return current
-                }
                 switch source.mode {
                 case .screencast:
-                    self?.data.call.requestScreencast(deviceId: source.deviceIdKey())
+                    self?.data.call.requestScreencast(deviceId: source.deviceIdKey(), source: source)
                 case .video:
-                    self?.data.call.requestVideo(deviceId: source.deviceIdKey())
+                    self?.data.call.requestVideo(deviceId: source.deviceIdKey(), source: source)
                 }
                 self?.updateTooltips { current in
                     var current = current
@@ -1075,18 +1060,8 @@ final class GroupCallUIController : ViewController {
         }, getAccount: {
             return account
         }, cancelShareScreencast: { [weak self] in
-            updateVideoSources { current in
-                var current = current
-                current.screencast = nil
-                return current
-            }
             self?.data.call.disableScreencast()
         }, cancelShareVideo: { [weak self] in
-            updateVideoSources {current in
-                var current = current
-                current.video = nil
-                return current
-            }
             self?.data.call.disableVideo()
         }, toggleRaiseHand: { [weak self] in
             if let strongSelf = self, let state = self?.genericView.state {
@@ -1178,14 +1153,12 @@ final class GroupCallUIController : ViewController {
                 return (self.genericView.videoRect.size, view)
             }
             return nil
-        }, getSource: { mode in
-            return videoSourcesValue.with { value in
-                switch mode {
-                case .screencast:
-                    return value.screencast
-                case .video:
-                    return value.video
-                }
+        }, getSource: { [weak self] mode in
+            switch mode {
+            case .screencast:
+                return self?.genericView.state?.state.sources.screencast
+            case .video:
+                return self?.genericView.state?.state.sources.video
             }
         })
         
@@ -1441,12 +1414,6 @@ final class GroupCallUIController : ViewController {
             if state.state.muteState?.canUnmute == false || currentState?.state.myPeerId != state.state.myPeerId {
                 if !state.videoSources.isEmpty {
                     DispatchQueue.main.async {
-                        updateVideoSources { current in
-                            var current = current
-                            current.screencast = nil
-                            current.video = nil
-                            return current
-                        }
                         self?.data.call.disableVideo()
                         self?.data.call.disableScreencast()
                     }
@@ -1507,40 +1474,24 @@ final class GroupCallUIController : ViewController {
             }
         }
         
-        self.data.call.mustStopVideo = { [weak arguments, weak window] in
-            updateVideoSources { current in
-                var current = current
-                current.failed = true
-                return current
-            }
+        self.data.call.mustStopVideo = { [weak arguments, weak window, weak self] in
+            self?.data.call.toggleVideoFailed(failed: true)
             arguments?.cancelShareVideo()
             if let window = window {
                 showModalText(for: window, text: strings().voiceChatTooltipVideoFailed)
             }
             delay(0.2, closure: {
-                updateVideoSources { current in
-                    var current = current
-                    current.failed = false
-                    return current
-                }
+                self?.data.call.toggleVideoFailed(failed: false)
             })
         }
-        self.data.call.mustStopSharing = { [weak arguments, weak window] in
-            updateVideoSources { current in
-                var current = current
-                current.failed = true
-                return current
-            }
+        self.data.call.mustStopSharing = { [weak self, weak arguments, weak window] in
+            self?.data.call.toggleVideoFailed(failed: true)
             arguments?.cancelShareScreencast()
             if let window = window {
                 showModalText(for: window, text: strings().voiceChatTooltipScreencastFailed)
             }
             delay(0.2, closure: {
-                updateVideoSources { current in
-                    var current = current
-                    current.failed = false
-                    return current
-                }
+                self?.data.call.toggleVideoFailed(failed: false)
             })
         }
         
@@ -1549,10 +1500,13 @@ final class GroupCallUIController : ViewController {
         
         let signal: Signal<Bool, NoError> = (.single(true) |> then(.single(true) |> delay(1.0, queue: Queue.mainQueue()))) |> restart
         
-        let videoData = combineLatest(queue: .mainQueue(), members, dominantSpeakerSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 }, size.get(), videoSources.get(), signal, self.data.call.state)
+        let videoData = combineLatest(queue: .mainQueue(), members, dominantSpeakerSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 }, size.get(), signal, self.data.call.state)
         
                 
-        actionsDisposable.add(videoData.start(next: { [weak self] members, dominant, isFullScreen, accountId, stateVersion, size, videoSources, _, state in
+        actionsDisposable.add(videoData.start(next: { [weak self] members, dominant, isFullScreen, accountId, stateVersion, size, _, state in
+            
+            let videoSources = state.sources
+            
             DispatchQueue.main.async {
                 guard let strongSelf = self else {
                     return
@@ -1753,7 +1707,14 @@ final class GroupCallUIController : ViewController {
         
         let initialTimestamp = Date().timeIntervalSince1970
         
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), videoSources.get(), tooltipsValue.get(), window.fullScreen) |> mapToQueue { values in
+        let peerView: Signal<PeerView?, NoError>
+        if let peerId {
+            peerView = context.account.postbox.peerView(id: peerId) |> map(Optional.init)
+        } else {
+            peerView = .single(nil)
+        }
+        
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, peerView, invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), tooltipsValue.get(), window.fullScreen) |> mapToQueue { values in
             let value = previousState.modify { previous in
                 return makeState(previous: previous,
                                         peerView: values.3,
@@ -1770,13 +1731,13 @@ final class GroupCallUIController : ViewController {
                                         pinnedData: values.7.4,
                                         hideWantsToSpeak: values.8,
                                         isFullScreen: values.7.6,
-                                        videoSources: values.9,
+                                        videoSources: values.0.sources,
                                         activeVideoViews: values.7.5.set,
                                         hideParticipants: values.7.8,
-                                        tooltips: values.10,
+                                        tooltips: values.9,
                                         version: values.7.7,
                                         isStream: values.0.isStream,
-                                        windowIsFullscreen: values.11,
+                                        windowIsFullscreen: values.10,
                                         initialTimestamp: initialTimestamp)
             }
             return .single(value!)
@@ -1982,7 +1943,7 @@ final class GroupCallUIController : ViewController {
         
         window.set(handler: { [weak arguments, weak self] event in
             if self?.data.call.isStream == false {
-                if videoSourcesValue.with ({ $0.video == nil }) {
+                if self?.genericView.state?.videoSources.video == nil {
                     arguments?.shareSource(.video, true)
                 } else {
                     arguments?.cancelShareVideo()

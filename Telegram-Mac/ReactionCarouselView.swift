@@ -35,14 +35,14 @@ private final class ReactionView : Control {
         addSubview(player)
         
 
-        let signal = context.account.postbox.mediaBox.resourceData(reaction.activateAnimation.resource, attemptSynchronously: true)
+        let signal = context.account.postbox.mediaBox.resourceData(reaction.activateAnimation._parse().resource, attemptSynchronously: true)
         |> filter {
             $0.complete
         }
         |> deliverOnMainQueue
         
-        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: reaction.selectAnimation.resource)).start()
-        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: reaction.appearAnimation.resource)).start()
+        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: reaction.selectAnimation._parse().resource)).start()
+        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: reaction.appearAnimation._parse().resource)).start()
         
         stateDisposable.set(player.state.start(next: { [weak self] state in
             switch state {
@@ -63,11 +63,11 @@ private final class ReactionView : Control {
         
         let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
         
-        self.imageView.setSignal(signal: cachedMedia(media: reaction.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
+        self.imageView.setSignal(signal: cachedMedia(media: reaction.staticIcon._parse(), arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
 
         if !self.imageView.isFullyLoaded {
-            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon), small: false, scale: System.backingScale), cacheImage: { result in
-                cacheMedia(result, media: reaction.staticIcon, arguments: arguments, scale: System.backingScale)
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon._parse()), small: false, scale: System.backingScale), cacheImage: { result in
+                cacheMedia(result, media: reaction.staticIcon._parse(), arguments: arguments, scale: System.backingScale)
             })
         }
 
@@ -336,7 +336,7 @@ final class ReactionCarouselView: View {
                 guard let aroundAnimation = reaction.aroundAnimation else {
                     return
                 }
-                self?.add(effect: reaction.value, file: aroundAnimation)
+                self?.add(effect: reaction.value, file: aroundAnimation._parse())
             })
             self.addSubview(itemView)
                         
@@ -416,7 +416,7 @@ final class ReactionCarouselView: View {
             return
         }
         
-        self.add(effect: reaction.value, file: aroundAnimation)
+        self.add(effect: reaction.value, file: aroundAnimation._parse())
     }
     
     deinit {

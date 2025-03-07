@@ -189,7 +189,7 @@ public final class PeerCallScreen : ViewController {
             guard let self else {
                 return
             }
-            statePromise.set(stateValue.modify (f))
+            self.statePromise.set(self.stateValue.modify (f))
         }
         
         
@@ -353,6 +353,13 @@ public final class PeerCallScreen : ViewController {
         screen.set(mouseHandler: updateMouse, with: self, for: .mouseExited)
         screen.set(mouseHandler: updateMouse, with: self, for: .mouseEntered)
 
+        
+        screen.set(handler: { [weak self] event in
+            if let window = event.window as? Window {
+                self?.external.upgradeToConference(window)
+            }
+            return .invoked
+        }, with: self, for: .T, modifierFlags: [.command])
     }
     
     private var previousState: PeerCallState?
@@ -424,22 +431,13 @@ public final class PeerCallScreen : ViewController {
             if screen.isFullScreen {
                 screen.toggleFullScreen(nil)
             }
-            delay(1.3, closure: {
-                NSAnimationContext.runAnimationGroup({ ctx in
-                    self.screen.animator().alphaValue = 0
-                }, completionHandler: {
-                    closeAllModals(window: self.screen)
-                    self.screen.orderOut(nil)
-                })
-            })
+            closeAllModals(window: self.screen)
+            self.screen.orderOut(nil)
+
             self.onCompletion?()
             self.onCompletion = nil
         }
         
-        if state.externalState.canBeRemoved {
-            enableScreenSleep();
-        }
-       
         self.videoViewState = videoViewState
         self.previousState = state
     }
@@ -490,6 +488,7 @@ public final class PeerCallScreen : ViewController {
     }
     
     deinit {
+        _ = enableScreenSleep();
     }
 }
 

@@ -112,6 +112,7 @@ final class StoryContentContextState {
         let slowModeTimeout: Int32?
         let slowModeValidUntilTimestamp: Int32?
         let canAvoidRestrictions: Bool
+        let paidMessage: StarsAmount?
 
         init(
             isMuted: Bool,
@@ -122,7 +123,8 @@ final class StoryContentContextState {
             preferHighQualityStories: Bool,
             slowModeTimeout: Int32?,
             slowModeValidUntilTimestamp: Int32?,
-            canAvoidRestrictions: Bool
+            canAvoidRestrictions: Bool,
+            paidMessage: StarsAmount?
         ) {
             self.isMuted = isMuted
             self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
@@ -133,6 +135,7 @@ final class StoryContentContextState {
             self.slowModeTimeout = slowModeTimeout
             self.slowModeValidUntilTimestamp = slowModeValidUntilTimestamp
             self.canAvoidRestrictions = canAvoidRestrictions
+            self.paidMessage = paidMessage
         }
     }
 
@@ -427,7 +430,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             preferHighQualityStories: preferHighQualityStories,
                             slowModeTimeout: nil,
                             slowModeValidUntilTimestamp: nil,
-                            canAvoidRestrictions: true
+                            canAvoidRestrictions: true,
+                            paidMessage: cachedUserData.sendPaidMessageStars
                         )
                     } else if let cachedChannelData = cachedPeerDataView.cachedPeerData as? CachedChannelData {
                         let boostsToUnrestrict = cachedChannelData.boostsToUnrestrict
@@ -441,7 +445,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             preferHighQualityStories: preferHighQualityStories,
                             slowModeTimeout: cachedChannelData.slowModeTimeout,
                             slowModeValidUntilTimestamp: cachedChannelData.slowModeValidUntilTimestamp,
-                            canAvoidRestrictions: boostsToUnrestrict != nil ? boostsToUnrestrict! <= appliedBoosts : false
+                            canAvoidRestrictions: boostsToUnrestrict != nil ? boostsToUnrestrict! <= appliedBoosts : false,
+                            paidMessage: cachedChannelData.sendPaidMessageStars
                         )
                     } else {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
@@ -453,7 +458,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             preferHighQualityStories: preferHighQualityStories,
                             slowModeTimeout: nil,
                             slowModeValidUntilTimestamp: nil,
-                            canAvoidRestrictions: true
+                            canAvoidRestrictions: true,
+                            paidMessage: nil
                         )
                     }
                 }
@@ -467,7 +473,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         preferHighQualityStories: preferHighQualityStories,
                         slowModeTimeout: nil,
                         slowModeValidUntilTimestamp: nil,
-                        canAvoidRestrictions: true
+                        canAvoidRestrictions: true,
+                        paidMessage: nil
                     )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
@@ -1380,7 +1387,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeTimeout(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeValidUntilTimeout(id: storyId.peerId),
-                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: storyId.peerId)
+                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.SendPaidMessageStars(id: storyId.peerId)
             ),
             item |> mapToSignal { item -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]), NoError> in
                 return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]) in
@@ -1450,7 +1458,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions, paidMessage) = data
             let (item, peers, allEntityFiles, forwardInfoStories) = itemAndPeers
             
             guard let peer = peer else {
@@ -1468,7 +1476,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 preferHighQualityStories: preferHighQualityStories,
                 slowModeTimeout: slowmodeTimeout,
                 slowModeValidUntilTimestamp: slowmodeValidUntilTimeout, 
-                canAvoidRestrictions: canAvoidGroupRestrictions
+                canAvoidRestrictions: canAvoidGroupRestrictions,
+                paidMessage: paidMessage
             )
             
             for (storyId, story) in forwardInfoStories {
@@ -1669,7 +1678,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeTimeout(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeValidUntilTimeout(id: peerId),
-                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: peerId)
+                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.SendPaidMessageStars(id: peerId)
             ),
             listContext.state,
             self.focusedIdUpdated.get(),
@@ -1680,7 +1690,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions, paidMessage) = data
             
             guard let peer = peer else {
                 return
@@ -1697,7 +1707,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 preferHighQualityStories: preferHighQualityStories,
                 slowModeTimeout: slowmodeTimeout,
                 slowModeValidUntilTimestamp: slowmodeValidUntilTimeout, 
-                canAvoidRestrictions: canAvoidGroupRestrictions
+                canAvoidRestrictions: canAvoidGroupRestrictions,
+                paidMessage: paidMessage
             )
             
             self.listState = state
@@ -2027,7 +2038,7 @@ func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signa
             for reaction in availableReactions.reactions {
                 for value in builtinReactions {
                     if case .builtin(value) = reaction.value {
-                        files.append(reaction.selectAnimation)
+                        files.append(reaction.selectAnimation._parse())
                     }
                 }
             }
@@ -2267,7 +2278,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
                 for reaction in availableReactions.reactions {
                     for value in builtinReactions {
                         if case .builtin(value) = reaction.value {
-                            files.append(reaction.selectAnimation)
+                            files.append(reaction.selectAnimation._parse())
                         }
                     }
                 }

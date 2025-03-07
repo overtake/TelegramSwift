@@ -67,7 +67,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     
                     if let info = status.info {
                         let packName: String = info.title
-                        let packFile: TelegramMediaFile = status.items.first?.file ?? status.file
+                        let packFile: TelegramMediaFile = status.items.first?.file._parse() ?? status.file
                         
                         let attr = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusCustomTitle(peer.displayTitle, packName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                             return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
@@ -218,7 +218,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
         infoView.update(item.infoLayout)
         
         if let status = item.status, let embedded = item.titleLayout.embeddedItems.first {
-            let file = status.items.first?.file ?? status.file
+            let file = status.items.first?.file._parse() ?? status.file
             let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
             let view = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: rect.size)
             view.frame = rect

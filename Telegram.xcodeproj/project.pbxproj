@@ -877,6 +877,10 @@
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
 		27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */; };
 		27EBC7B227579A7200C6A820 /* Reactions in Frameworks */ = {isa = PBXBuildFile; productRef = 27EBC7B127579A7200C6A820 /* Reactions */; };
+		27ED23552D673B710093C11F /* ChatUserInfoRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ED23542D673B6C0093C11F /* ChatUserInfoRowItem.swift */; };
+		27ED23592D76DDF90093C11F /* menu_transfer.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27ED23562D76DDF90093C11F /* menu_transfer.tgs */; };
+		27ED235A2D76DDF90093C11F /* menu_wear.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27ED23572D76DDF90093C11F /* menu_wear.tgs */; };
+		27ED235B2D76DDF90093C11F /* menu_wearoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27ED23582D76DDF90093C11F /* menu_wearoff.tgs */; };
 		27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27ED5A6C2750CDE100BA55A7 /* FoundationUtils */; };
 		27EE1E022C3365150002BAF8 /* Star_ReactionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE1E012C3365150002BAF8 /* Star_ReactionsController.swift */; };
 		27EE1E182C3C2CF70002BAF8 /* InviteLinkMonthlyFeeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE1E172C3C2CF70002BAF8 /* InviteLinkMonthlyFeeRowItem.swift */; };
@@ -2483,6 +2487,10 @@
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
 		27EBC7AD275789BC00C6A820 /* Reactions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Reactions; path = packages/Reactions; sourceTree = "<group>"; };
 		27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatReactionsView.swift; sourceTree = "<group>"; };
+		27ED23542D673B6C0093C11F /* ChatUserInfoRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatUserInfoRowItem.swift; sourceTree = "<group>"; };
+		27ED23562D76DDF90093C11F /* menu_transfer.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_transfer.tgs; sourceTree = "<group>"; };
+		27ED23572D76DDF90093C11F /* menu_wear.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_wear.tgs; sourceTree = "<group>"; };
+		27ED23582D76DDF90093C11F /* menu_wearoff.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_wearoff.tgs; sourceTree = "<group>"; };
 		27ED5A692750CD4000BA55A7 /* FoundationUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FoundationUtils; path = packages/FoundationUtils; sourceTree = "<group>"; };
 		27EE1E012C3365150002BAF8 /* Star_ReactionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_ReactionsController.swift; sourceTree = "<group>"; };
 		27EE1E172C3C2CF70002BAF8 /* InviteLinkMonthlyFeeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinkMonthlyFeeRowItem.swift; sourceTree = "<group>"; };
@@ -4952,6 +4960,7 @@
 		C219E1E61D8AC84B0042F0C8 /* items */ = {
 			isa = PBXGroup;
 			children = (
+				27ED23542D673B6C0093C11F /* ChatUserInfoRowItem.swift */,
 				C219E1E31D8AC8370042F0C8 /* ChatUnreadRowItem.swift */,
 				C20232A91D81D19C007C9ADE /* ChatRowItem.swift */,
 				C219E1D61D8869F20042F0C8 /* ChatHoleRowItem.swift */,
@@ -6381,6 +6390,9 @@
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				270375F02C9CDF20003EC235 /* duck_passcode.tgs */,
 				270376032CA1A760003EC235 /* duck_uploads.tgs */,
+				27ED23562D76DDF90093C11F /* menu_transfer.tgs */,
+				27ED23572D76DDF90093C11F /* menu_wear.tgs */,
+				27ED23582D76DDF90093C11F /* menu_wearoff.tgs */,
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				271892152B18D9CD0008B238 /* transcription_locked.tgs */,
 				270FD5932C500B8A000070E6 /* duck_webapp_error.tgs */,
@@ -7059,6 +7071,9 @@
 				27803BFF27A3E944007B0FA9 /* menu_folder_math.tgs in Resources */,
 				27672EBD26F8D64900297DB4 /* 105.m4a in Resources */,
 				27672EBE26F8D64E00297DB4 /* 106.m4a in Resources */,
+				27ED23592D76DDF90093C11F /* menu_transfer.tgs in Resources */,
+				27ED235A2D76DDF90093C11F /* menu_wear.tgs in Resources */,
+				27ED235B2D76DDF90093C11F /* menu_wearoff.tgs in Resources */,
 				27B6AFA72B4FB317001D0983 /* menu_tag_filter.tgs in Resources */,
 				27672EBF26F8D65100297DB4 /* 107.m4a in Resources */,
 				2787AD6A2BED0DCE0046578E /* menu_adult_slash.tgs in Resources */,
@@ -8384,6 +8399,7 @@
 				27F2BBCD27BE7F9700A37463 /* Auth_CodeEntryContol.swift in Sources */,
 				2760E55B269706D7001C59F8 /* WidgetView.swift in Sources */,
 				270B7CC429FA925D009C994C /* StoryControlsView.swift in Sources */,
+				27ED23552D673B710093C11F /* ChatUserInfoRowItem.swift in Sources */,
 				C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */,
 				C27A8E991EC9D48000C8E7E7 /* QuickSwitcherModalController.swift in Sources */,
 				C230BEB21EE97B290029586C /* ChannelEventLogController.swift in Sources */,

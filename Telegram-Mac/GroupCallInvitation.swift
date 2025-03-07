@@ -73,13 +73,19 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
         
         let peerMemberContextsManager = data.peerMemberContextsManager
         let account = data.call.account
-        let peerId = data.call.peerId
+        
         let engine = data.call.engine
         let customTheme = self.customTheme
         let cachedContacts = self.cachedContacts
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
         let invited = data.call.invitedPeers
         let peer = data.call.peer
+        
+        
+        guard let peerId = data.call.peerId else {
+            return .complete()
+        }
+        
         let isUnmutedForAll: Signal<Bool, NoError> = data.call.state |> take(1) |> map { value in
             if let muteState = value.defaultParticipantMuteState {
                 switch muteState {
@@ -303,6 +309,12 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
         let invited = data.call.invitedPeers
         let peer = data.call.peer
+        
+        
+        guard let peerId = data.call.peerId else {
+            return .complete()
+        }
+        
         let isUnmutedForAll: Signal<Bool, NoError> = data.call.state |> take(1) |> map { value in
             if let muteState = value.defaultParticipantMuteState {
                 switch muteState {
@@ -459,9 +471,12 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
     }
     let account = data.call.account
     let context = data.call.accountContext
-    let callPeerId = data.call.peerId
     let peerMemberContextsManager = data.peerMemberContextsManager
 
+    guard let callPeerId = data.call.peerId else {
+        return .single([])
+    }
+    
     let peer = data.call.peer
     let links = data.call.inviteLinks
     return selectModalPeers(window: window, context: data.call.accountContext, title: title, settings: [], excludePeerIds: [], limit: behaviour is GroupCallAddMembersBehaviour ? 1 : 100, behavior: behaviour, confirmation: { [weak behaviour, weak window, weak data] peerIds in

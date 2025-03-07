@@ -94,11 +94,14 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
             case let .member(_, _, _, peer, presence, inputActivity, stories, memberStatus, editing, menuItems, enabled, viewType):
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer!.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                     let label: String
+                    let isAdmin: Bool
                     switch memberStatus {
                     case let .admin(rank):
                         label = rank
+                        isAdmin = true
                     case .member:
                         label = ""
+                        isAdmin = false
                     }
                     let peer = peer!
                     
@@ -106,7 +109,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                     var color:NSColor = theme.colors.grayText
                     
                     if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
-                        string = botInfo.flags.contains(.hasAccessToChatHistory) ? strings().peerInfoBotStatusHasAccess : strings().peerInfoBotStatusHasNoAccess
+                        string = botInfo.flags.contains(.hasAccessToChatHistory) || isAdmin ? strings().peerInfoBotStatusHasAccess : strings().peerInfoBotStatusHasNoAccess
                     } else if let presence = presence as? TelegramUserPresence {
                         let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                         (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))

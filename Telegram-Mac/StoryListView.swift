@@ -565,7 +565,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         case .builtin:
             if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
                 let file = animation.selectAnimation
-                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .loop)
+                layer = InlineStickerItemLayer(account: context.account, file: file._parse(), size: size, playPolicy: .loop)
             } else {
                 layer = nil
             }
@@ -664,7 +664,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
              effectFile = file
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-             effectFile = reaction?.aroundAnimation
+             effectFile = reaction?.aroundAnimation?._parse()
          case .stars:
              break
          }
@@ -742,7 +742,7 @@ private final class Weather_InteractiveMedia: EventLessView, InteractiveMedia {
             self.emoji = emoji
             self.temperature = stringForTemperature(temperature).uppercased()
             self.file = context.diceCache.animatedEmojies |> map {
-                return $0[emoji]?.file
+                return $0[emoji]?.file._parse()
             } |> deliverOnMainQueue
             self.color = NSColor(argb: UInt32(bitPattern: color))
         default:
@@ -797,7 +797,7 @@ private final class Weather_InteractiveMedia: EventLessView, InteractiveMedia {
              effectFile = file
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-             effectFile = reaction?.aroundAnimation
+             effectFile = reaction?.aroundAnimation?._parse()
          case .stars:
              break
          }

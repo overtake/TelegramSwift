@@ -91,16 +91,20 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var scrubbingFrameDisposable: Disposable?
     private let isProtected: Bool
     private let isControlsLimited: Bool
+    private let message: Message?
     
     private let partDisposable = MetaDisposable()
     
+    private let mediaPlaybackStateDisposable = MetaDisposable()
+    
     private var endPlaybackId: Int?
     
-    init(account: Account, reference: FileMediaReference, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
+    init(account: Account, reference: FileMediaReference, message: Message?, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
         self.reference = reference
         self.account = account
         self.isProtected = isProtected
         self.isControlsLimited = isControlsLimited
+        self.message = message
         super.init()
         bar = .init(height: 0)
     }
@@ -484,6 +488,25 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             }
         }
         
+        
+        if let message {
+            let throttledSignal = self.mediaPlayer.status
+            |> mapToThrottled { next -> Signal<MediaPlayerStatus, NoError> in
+                return .single(next) |> then(.complete() |> delay(2.0, queue: Queue.concurrentDefaultQueue()))
+            }
+            
+            self.mediaPlaybackStateDisposable.set(throttledSignal.startStrict(next: { status in
+                if status.duration >= 10, case .playing = status.status {
+                    let storedState = MediaPlaybackStoredState(timestamp: status.timestamp)
+                    let _ = updateMediaPlaybackStoredStateInteractively(engine: TelegramEngine(account: account), messageId: message.id, state: storedState).startStandalone()
+                }
+            }))
+        }
+        
+
+
+        
+        
         readyOnce()
     }
     
@@ -581,6 +604,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         bufferingDisposable.dispose()
         hideOnIdleDisposable.dispose()
         hideControlsDisposable.dispose()
+        mediaPlaybackStateDisposable.dispose()
         partDisposable.dispose()
         if let endPlaybackId {
             mediaPlayer.removePlaybackCompleted(endPlaybackId)

@@ -244,7 +244,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                     $0.value == value
                 })?.staticIcon
                 if let file = file {
-                    reaction = .builtin(file)
+                    reaction = .builtin(file._parse())
                 } else {
                     switch value {
                     case let .custom(fileId):

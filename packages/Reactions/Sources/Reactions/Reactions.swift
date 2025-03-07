@@ -76,12 +76,12 @@ public final class Reactions {
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
-    public func sendStarsReaction(_ messageId: MessageId, count: Int, isAnonymous: Bool?, fromRect: NSRect? = nil) {
+    public func sendStarsReaction(_ messageId: MessageId, count: Int, privacy: TelegramPaidReactionPrivacy = .default, fromRect: NSRect? = nil) {
         if let signal = checkStarsAmount?(count, messageId.peerId) {
             _ = signal.start(next: { [weak self] value, starsAllowed in
                 if value && starsAllowed {
                     _ = self?._isInteractive.swap(.init(messageId: messageId, reaction: .stars, rect: fromRect))
-                    _ = self?.engine.messages.sendStarsReaction(id: messageId, count: count, isAnonymous: isAnonymous).startStandalone()
+                    _ = self?.engine.messages.sendStarsReaction(id: messageId, count: count, privacy: privacy).startStandalone()
                     self?.successStarsAmount?(.init(value: -Int64(count), nanos: 0))
                     self?.sentStarReactions?(messageId, count)
                 } else {

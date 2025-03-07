@@ -1084,7 +1084,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return HeaderItem(initialSize, stableId: stableId, context: arguments.context, arguments: arguments, state: state, attributes: state.attributes, source: state.source)
     }))
     
-    
+    let explorerUrl = arguments.context.appConfiguration.getStringValue("ton_blockchain_explorer_url", orElse: "https://tonviewer.com/")
+
     
     entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
@@ -1116,8 +1117,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let ownerText: TextViewLayout = .init(ownerAttr, maximumNumberOfLines: state.isTonOwner ? 3 : 1, alwaysStaticItems: true)
             
             ownerText.interactions.processURL = { url in
-                if let url = url as? String {
-                    execute(inapp: .external(link: strings().tonViewerUrl(url), false))
+                if let url = url as? String, !url.isEmpty {
+                    execute(inapp: .external(link: explorerUrl + url, false))
                 }
             }
             
@@ -1189,13 +1190,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             
             
-            if case .quickLook = state.source {
-                entries.append(.sectionId(sectionId, type: .legacy))
-                sectionId += 1
-            } else if state.convertedGift != nil {
-                entries.append(.sectionId(sectionId, type: .legacy))
-                sectionId += 1
+            if let address = state.gift.unique?.giftAddress {
+                entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starGiftOnBlockchainInfo, linkHandler: { _ in
+                    execute(inapp: .external(link: explorerUrl + address, false))
+                }), data: .init(viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+            } else {
+                if case .quickLook = state.source {
+                    entries.append(.sectionId(sectionId, type: .legacy))
+                    sectionId += 1
+                } else if state.convertedGift != nil {
+                    entries.append(.sectionId(sectionId, type: .legacy))
+                    sectionId += 1
+                }
             }
+            
+          
             
         } else {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("row"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in

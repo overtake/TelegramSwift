@@ -162,13 +162,15 @@ private final class Arguments {
     let updateValue:(Int64)->Void
     let openPeer:(EnginePeer)->Void
     let toggleShowInTop:()->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, react:@escaping()->Void, updateValue:@escaping(Int64)->Void, openPeer:@escaping(EnginePeer)->Void, toggleShowInTop:@escaping()->Void) {
+    let toggleSendAs:(EnginePeer)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, react:@escaping()->Void, updateValue:@escaping(Int64)->Void, openPeer:@escaping(EnginePeer)->Void, toggleShowInTop:@escaping()->Void, toggleSendAs:@escaping(EnginePeer)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.react = react
         self.updateValue = updateValue
         self.openPeer = openPeer
         self.toggleShowInTop = toggleShowInTop
+        self.toggleSendAs = toggleSendAs
     }
 }
 
@@ -267,6 +269,19 @@ private struct State : Equatable {
     var message: EngineMessage
     var showMeInTop: Bool = true
     
+    
+    var privacy: TelegramPaidReactionPrivacy {
+        if !showMeInTop {
+            return .anonymous
+        } else {
+            if myPeer.id == sendAsSelected.id {
+                return .default
+            } else {
+                return .peer(sendAsSelected.id)
+            }
+        }
+    }
+    
     var peers: [TopPeer] {
         if let myTopIndex = topPeers.firstIndex(where: { $0.isMy }) {
             var topPeers = self.topPeers
@@ -274,12 +289,16 @@ private struct State : Equatable {
                 topPeers[myTopIndex].count += Int64(amount.realValue)
             }
             topPeers[myTopIndex].isAnonymous = !self.showMeInTop
-            topPeers[myTopIndex].peer = myPeer
+            if sendAsSelected.id != topPeers[myTopIndex].peer?.id {
+                topPeers[myTopIndex].peer = sendAsSelected
+            } else {
+                topPeers[myTopIndex].peer = topPeers[myTopIndex].peer ?? sendAsSelected
+            }
             return Array(topPeers.sorted(by: { $0.count > $1.count }).prefix(3))
         } else {
             var topPeers = self.topPeers
             if countUpdated {
-                let myTopPeer = TopPeer(peer: self.myPeer, isMy: true, count: Int64(amount.realValue), isAnonymous: !self.showMeInTop)
+                let myTopPeer = TopPeer(peer: self.sendAsSelected, isMy: true, count: Int64(amount.realValue), isAnonymous: !self.showMeInTop)
                 topPeers.append(myTopPeer)
             }
             return Array(topPeers.sorted(by: { $0.count > $1.count }).prefix(3))
@@ -287,6 +306,10 @@ private struct State : Equatable {
     }
     
     var topPeers: [TopPeer]
+    
+    var sendAs: [EnginePeer] = []
+    
+    var sendAsSelected: EnginePeer
 }
 
 
@@ -315,7 +338,8 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let updateValue:(Int64)->Void
     fileprivate let openPeer:(EnginePeer)->Void
     fileprivate let toggleShowInTop:()->Void
-    
+    fileprivate let toggleSendAs:(EnginePeer)->Void
+
     var showMe: Bool {
         return state.showMeInTop
     }
@@ -327,14 +351,17 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let info: TextViewLayout
     
     fileprivate var senders: [Sender] = []
+    fileprivate var sendAs: [EnginePeer] = []
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: State, viewType: GeneralViewType, updateValue:@escaping(Int64)->Void, action:@escaping()->Void, close:@escaping()->Void, openPeer:@escaping(EnginePeer)->Void, toggleShowInTop:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: State, viewType: GeneralViewType, updateValue:@escaping(Int64)->Void, action:@escaping()->Void, close:@escaping()->Void, openPeer:@escaping(EnginePeer)->Void, toggleShowInTop:@escaping()->Void, sendAs: [EnginePeer], toggleSendAs:@escaping(EnginePeer)->Void) {
         self.context = context
         self.state = state
         self.close = close
         self.toggleShowInTop = toggleShowInTop
         self.openPeer = openPeer
+        self.sendAs = sendAs
         self.updateValue = updateValue
+        self.toggleSendAs = toggleSendAs
         self.maxValue = Int64(context.appConfiguration.getGeneralValue("stars_paid_reaction_amount_max", orElse: 1))
         let balanceAttr = NSMutableAttributedString()
         balanceAttr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(state.myBalance)"), color: theme.colors.text, font: .normal(.text))
@@ -566,6 +593,7 @@ private final class SendersView: View {
         }
     }
     
+  
     private let badge: BadgeView
     private let container: View
     required init(frame frameRect: NSRect) {
@@ -911,6 +939,73 @@ private final class ShowMeInTopView: View {
     }
 }
 
+
+
+private final class FromPeerView: Control {
+    private let avatarView = AvatarControl(font: .avatar(13))
+    private var select: ImageView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(avatarView)
+        avatarView.userInteractionEnabled = false
+        self.avatarView.setFrameSize(NSMakeSize(26, 26))
+        
+        layer?.cornerRadius = 12.5
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(_ peer: EnginePeer, sendas: [EnginePeer], _ context: AccountContext, maxWidth: CGFloat, selectAction:@escaping(EnginePeer)->Void) {
+        self.avatarView.setPeer(account: context.account, peer: peer._asPeer(), disableForum: true)
+        
+        self.userInteractionEnabled = !sendas.isEmpty
+        self.scaleOnClick = true
+        
+        if !sendas.isEmpty {
+            let current: ImageView
+            if let view = self.select {
+                current = view
+            } else {
+                current = ImageView()
+                self.select = current
+                addSubview(current)
+            }
+            current.image = NSImage(resource: .iconAffiliateExpand).precomposed(theme.colors.accent)
+            current.sizeToFit()
+        } else if let select {
+            performSubviewRemoval(select, animated: false)
+            self.select = nil
+        }
+        
+        if !sendas.isEmpty {
+            self.contextMenu = {
+                let menu = ContextMenu()
+                for senda in sendas {
+                    menu.addItem(ContextSendAsMenuItem(peer: .init(peer: senda._asPeer(), subscribers: nil, isPremiumRequired: false), context: context, isSelected: peer.id == senda._asPeer().id, handler: {
+                        selectAction(senda)
+                    }))
+                }
+                return menu
+            }
+        } else {
+            self.contextMenu = nil
+        }
+
+        setFrameSize(NSMakeSize(avatarView.frame.width + 5 + (sendas.isEmpty ? 0 : 20), 26))
+        
+        self.background = theme.colors.grayForeground
+    }
+    
+    override func layout() {
+        super.layout()
+        if let select {
+            select.centerY(x: self.avatarView.frame.maxX + 5)
+        }
+    }
+}
+
 private final class HeaderItemView : GeneralContainableRowView {
     
     private let dismiss = ImageButton()
@@ -928,6 +1023,9 @@ private final class HeaderItemView : GeneralContainableRowView {
     private var sendersView: SendersView?
     
     private let showMeInTop: ShowMeInTopView = .init(frame: .zero)
+    
+    
+    private var sendFromView: FromPeerView?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -1030,6 +1128,24 @@ private final class HeaderItemView : GeneralContainableRowView {
             self.sendersView = nil
         }
         
+        
+        if !item.sendAs.isEmpty {
+            let current: FromPeerView
+            if let view = self.sendFromView {
+                current = view
+            } else {
+                current = .init(frame: NSMakeRect(0, 0, frame.width, 30))
+                addSubview(current)
+                self.sendFromView = current
+            }
+            current.set(item.state.sendAsSelected, sendas: item.sendAs, item.context, maxWidth: 50, selectAction: item.toggleSendAs)
+        } else if let view = self.sendFromView {
+            performSubviewRemoval(view, animated: animated)
+            self.sendFromView = nil
+        }
+        
+        dismiss.isHidden = sendFromView != nil
+        
         needsLayout = true
 
     }
@@ -1064,6 +1180,9 @@ private final class HeaderItemView : GeneralContainableRowView {
         info.centerX(y: sliderView.frame.maxY + 20)
         
 
+        if let sendFromView {
+            sendFromView.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - sendFromView.frame.height) / 2) - 10))
+        }
     }
 }
 
@@ -1075,13 +1194,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
+    if !state.sendAs.isEmpty {
+        var bp = 0
+        bp += 1
+    }
+    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("h1"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: theme.colors.background)
     }))
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, state: state, viewType: .legacy, updateValue: arguments.updateValue, action: arguments.react, close: arguments.dismiss, openPeer: arguments.openPeer, toggleShowInTop: arguments.toggleShowInTop)
+        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, state: state, viewType: .legacy, updateValue: arguments.updateValue, action: arguments.react, close: arguments.dismiss, openPeer: arguments.openPeer, toggleShowInTop: arguments.toggleShowInTop, sendAs: state.sendAs, toggleSendAs: arguments.toggleSendAs)
     }))
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("h2"), equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -1111,7 +1235,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     
     context.reactions.forceSendStarReactions?()
     
-    let initialState = State(amount: amount, myPeer: .init(context.myPeer!), message: .init(message), showMeInTop: !message.isAnonymousInStarReaction, topPeers: [])
+    let initialState = State(amount: amount, myPeer: .init(context.myPeer!), message: .init(message), showMeInTop: !message.isAnonymousInStarReaction, topPeers: [], sendAsSelected: .init(context.myPeer!))
     
     let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -1140,8 +1264,12 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
     ))
     
     let messageView = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.Message(id: message.id))
+    
+    
+    let sendAs = context.engine.peers.channelsForPublicReaction(useLocalCache: false)
+    
     var isFirst: Bool = true
-    actionsDisposable.add(combineLatest(context.starsContext.state, topPeersSignal, messageView).start(next: { state, top, updatedMessage in
+    actionsDisposable.add(combineLatest(context.starsContext.state, topPeersSignal, messageView, sendAs).start(next: { state, top, updatedMessage, sendAs in
         
         var values: [State.TopPeer] = []
         for topPeer in topPeers {
@@ -1158,6 +1286,8 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
             current.myBalance = state?.balance.value ?? 0
             current.topPeers = values
             current.message = updatedMessage ?? .init(message)
+            current.sendAs = sendAs.isEmpty ? [] : [.init(context.myPeer!)] + sendAs
+            current.sendAsSelected = values.first(where: { $0.isMy })?.peer ?? current.sendAsSelected
             if isFirst {
                 current.showMeInTop = !message.isAnonymousInStarReaction
             }
@@ -1181,7 +1311,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
                 } else {
                     rect = nil
                 }
-                context.reactions.sendStarsReaction(message.id, count: count, isAnonymous: stateValue.with { !$0.showMeInTop }, fromRect: rect)
+                context.reactions.sendStarsReaction(message.id, count: count, privacy: stateValue.with { $0.privacy }, fromRect: rect)
                 close?()
             }
         }
@@ -1212,8 +1342,14 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
             current.showMeInTop = !current.showMeInTop
             return current
         }
-        _ = context.engine.messages.updateStarsReactionIsAnonymous(id: message.id, isAnonymous: stateValue.with { !$0.showMeInTop }).startStandalone()
+        _ = context.engine.messages.updateStarsReactionPrivacy(id: message.id, privacy: stateValue.with { $0.privacy }).startStandalone()
 
+    }, toggleSendAs: { peer in
+        updateState { current in
+            var current = current
+            current.sendAsSelected = peer
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnMainQueue |> map { state in

@@ -169,7 +169,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
             } else {
                 updateState { current in
                     var current = current
-                    current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
+                    current.icon = .init(file: sticker.file._parse(), fileId: sticker.file.fileId.id, fromRect: fromRect)
                     return current
                 }
             }

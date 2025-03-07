@@ -282,7 +282,7 @@ private final class PreviewRowItem : GeneralRowItem {
     let titleLayout: TextViewLayout
     let infoLayout: TextViewLayout
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType, includeUpgrade: Bool) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType, includeUpgrade: Bool, payWithStars: Bool) {
         self.context = context
         self.peer = peer
         self.source = source
@@ -298,7 +298,7 @@ private final class PreviewRowItem : GeneralRowItem {
             } else {
                 titleAttr.append(string: strings().chatServiceStarGiftFrom(myPeer._asPeer().compactDisplayTitle), color: presentation.chatServiceItemTextColor, font: .medium(.header))
             }
-        case .premium(let option):
+        case .premium(let option, _):
             titleAttr.append(string: strings().giftPremiumHeader(timeIntervalString(Int(option.months) * 30 * 60 * 60 * 24)), color: presentation.chatServiceItemTextColor, font: .medium(.header))
         }
         
@@ -347,8 +347,15 @@ private final class PreviewRowItem : GeneralRowItem {
                 }
                 headerLayout = .init(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
             }
-        case .premium(let option):
-            headerLayout = .init(.initialize(string: strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, option.price), color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
+        case let .premium(option, starOption):
+            let text: String
+            if payWithStars, let starOption {
+                text = strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, strings().starListItemCountCountable(Int(starOption.priceCurrencyAndAmount.amount)))
+            } else {
+                text = strings().chatServicePremiumGiftSent(myPeer._asPeer().compactDisplayTitle, option.price)
+            }
+            
+            headerLayout = .init(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
         }
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -454,7 +461,7 @@ private final class PreviewRowView : GeneralContainableRowView {
             case .starGift(let option):
                 let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .onceEnd, media: option.media)
                 sticker.update(with: option.media, size: sticker.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
-            case .premium(let option):
+            case .premium(let option, _):
                 let media: TelegramMediaFile
                 switch option.months {
                 case 3:
@@ -602,12 +609,16 @@ private final class Arguments {
     let toggleUpgrade: ()->Void
     let updateState:(Updated_ChatTextInputState)->Void
     let previewUpgrade:(PeerStarGift)->Void
-    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void) {
+    let buyStars:()->Void
+    let togglePayWithStars:()->Void
+    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void, buyStars:@escaping()->Void, togglePayWithStars:@escaping()->Void) {
         self.context = context
         self.toggleAnonymous = toggleAnonymous
         self.updateState = updateState
         self.toggleUpgrade = toggleUpgrade
         self.previewUpgrade = previewUpgrade
+        self.buyStars = buyStars
+        self.togglePayWithStars = togglePayWithStars
     }
 }
 
@@ -619,6 +630,12 @@ private struct State : Equatable {
     var textState: Updated_ChatTextInputState
     var starsState: StarsContext.State?
     var includeUpgrade: Bool = false
+    
+    var payWithStars: Bool = false
+    
+    
+    var sendMessaagePaid: StarsAmount?
+    
 }
 
 private let _id_preview = InputDataIdentifier("_id_preview")
@@ -626,6 +643,7 @@ private let _id_input = InputDataIdentifier("_id_input")
 private let _id_anonymous = InputDataIdentifier("_id_anonymous")
 private let _id_limit = InputDataIdentifier("_id_limit")
 private let _id_upgrade = InputDataIdentifier("_id_upgrade")
+private let _id_pay_stars = InputDataIdentifier("_id_pay_stars")
 
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -652,32 +670,54 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     
+    var canComment: Bool = true
+    switch state.option {
+    case let .starGift(option: gift):
+        canComment = state.sendMessaagePaid == nil
+    default:
+        break
+    }
+
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starsGiftPreviewCustomize), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: .firstItem, includeUpgrade: state.includeUpgrade)
+        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: canComment ? .firstItem : .singleItem, includeUpgrade: state.includeUpgrade, payWithStars: state.payWithStars)
     }))
     
     
     let maxTextLength: Int32 = arguments.context.appConfiguration.getGeneralValue("stargifts_message_length_max", orElse: 256)
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
-        return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .lastItem, placeholder: nil, inputPlaceholder: strings().starsGiftPreviewMessagePlaceholder, filter: { text in
-            var text = text
-            while text.contains("\n\n\n") {
-                text = text.replacingOccurrences(of: "\n\n\n", with: "\n\n")
-            }
-            
-            if !text.isEmpty {
-                while text.range(of: "\n")?.lowerBound == text.startIndex {
-                    text = String(text[text.index(after: text.startIndex)...])
+    if canComment {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
+            return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .lastItem, placeholder: nil, inputPlaceholder: strings().starsGiftPreviewMessagePlaceholder, filter: { text in
+                var text = text
+                while text.contains("\n\n\n") {
+                    text = text.replacingOccurrences(of: "\n\n\n", with: "\n\n")
                 }
+                
+                if !text.isEmpty {
+                    while text.range(of: "\n")?.lowerBound == text.startIndex {
+                        text = String(text[text.index(after: text.startIndex)...])
+                    }
+                }
+                return text
+            }, updateState: arguments.updateState, limit: maxTextLength, hasEmoji: true)
+        }))
+        index += 1
+        
+        switch state.option {
+        case let .starGift(option: gift):
+            if let sendMessaagePaid = state.sendMessaagePaid {
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giftingUserChargeStars(state.peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(sendMessaagePaid.value)))), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
             }
-            return text
-        }, updateState: arguments.updateState, limit: maxTextLength, hasEmoji: true)
-    }))
-    index += 1
+        default:
+            break
+        }
+    }
+   
+   
     
     
   
@@ -707,10 +747,38 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.peer.id == arguments.context.peerId ? strings().giftSendSelfHideMyNameInfo : strings().starsGiftPreviewHideMyNameInfo(name, name)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
-    case .premium:
+    case let .premium(_, starOption):
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giftPremiumPreviewInfo(state.peer._asPeer().compactDisplayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
+        
+        if let starOption {
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_pay_stars, data: .init(name: strings().giftPremiumPayWith(strings().starListItemCountCountable(Int(starOption.giftOption.amount))), color: theme.colors.text, type: .switchable(state.payWithStars), viewType: .singleItem, action: arguments.togglePayWithStars)))
+                        
+            if let starsState = state.starsState {
+                let str = strings().giftPremiumYourBalance(clown + " " + starsState.balance.stringValue)
+                
+                let attr = parseMarkdownIntoAttributedString(str, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, contents)
+                })).mutableCopy() as! NSMutableAttributedString
+                
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+                
+                let linkExecutor = globalLinkExecutor
+                
+                linkExecutor.processURL = { _ in
+                    arguments.buyStars()
+                }
+                
+                entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(attr), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem, context: arguments.context, linkExecutor: linkExecutor)))
+                index += 1
+            }
+        }
         
     }
    
@@ -722,7 +790,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 enum PreviewGiftSource : Equatable {
     case starGift(option: PeerStarGift)
-    case premium(option: PremiumGiftProduct)
+    case premium(option: PremiumGiftProduct, starOption: PremiumGiftProduct?)
 }
 
 func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSource, peer: EnginePeer, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataModalController {
@@ -752,10 +820,13 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         }
     }
     
-    actionsDisposable.add(context.starsContext.state.startStrict(next: { state in
+    let sendMessaagePaid = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.SendPaidMessageStars(id: peer.id))
+
+    actionsDisposable.add(combineLatest(context.starsContext.state, sendMessaagePaid).startStrict(next: { state, sendMessaagePaid in
         updateState { current in
             var current = current
             current.starsState = state
+            current.sendMessaagePaid = sendMessaagePaid
             return current
         }
     }))
@@ -783,6 +854,14 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
             _ = showModalProgress(signal: context.engine.payments.starGiftUpgradePreview(giftId: giftId), for: window).startStandalone(next: { attributes in
                 showModal(with: StarGift_Nft_Controller(context: context, gift: gift.native, source: .preview(peer, attributes)), for: window)
             })
+        }
+    }, buyStars: {
+        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: nil)), for: window)
+    }, togglePayWithStars: {
+        updateState { current in
+            var current = current
+            current.payWithStars = !current.payWithStars
+            return current
         }
     })
     
@@ -824,7 +903,47 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         }, error: { error in
             showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
         }))
+    }
+    
+    let buyWithStars:(PremiumGiftProduct)->Void = { premiumProduct in
+        let state = stateValue.with { $0 }
         
+        let peer = state.peer
+        
+        let source = BotPaymentInvoiceSource.premiumGift(peerId: peer.id, option: CachedPremiumGiftOption(months: premiumProduct.months, currency: premiumProduct.giftOption.currency, amount: premiumProduct.giftOption.amount, botUrl: nil, storeProductId: premiumProduct.giftOption.storeProductId), text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
+                        
+        let form = showModalProgress(signal: context.engine.payments.fetchBotPaymentForm(source: source, themeParams: [:]), for: context.window)
+
+        actionsDisposable.add(form.start(next: { form in
+            _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: window).startStandalone(next: { result in
+                switch result {
+                case let .done(receiptMessageId, subscriptionPeerId, _):
+                    PlayConfetti(for: window, stars: true)
+                    context.starsContext.load(force: true)
+                    context.starsSubscriptionsContext.load(force: true)
+                    closeAllModals(window: window)
+                default:
+                    break
+                }
+            }, error: { error in
+                let text: String
+                switch error {
+                case .alreadyPaid:
+                    text = strings().checkoutErrorInvoiceAlreadyPaid
+                case .generic:
+                    text = strings().unknownError
+                case .paymentFailed:
+                    text = strings().checkoutErrorPaymentFailed
+                case .precheckoutFailed:
+                    text = strings().checkoutErrorPrecheckoutFailed
+                case .starGiftOutOfStock:
+                    text = strings().giftSoldOutError
+                }
+                showModalText(for: window, text: text)
+            })
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        }))
     }
     
     let buyAppStore:(PremiumGiftProduct)->Void = { premiumProduct in
@@ -934,7 +1053,22 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
                 var bp = 0
                 bp += 1
             })
-        case let .premium(option):
+        case let .premium(option, starGift):
+            
+            if state.payWithStars, let starGift {
+                
+                let amount = starGift.priceCurrencyAndAmount.amount
+                
+                if starsState.balance.value < starGift.priceCurrencyAndAmount.amount {
+                    showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: amount)), for: window)
+                    return .none
+                }
+                verifyAlert(for: window, header: strings().giftingPremWithStarsConfirmTitle, information: strings().giftingPremWithStarsConfirmInfo(state.peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(amount))), successHandler: { _ in
+                    buyWithStars(starGift)
+                })
+                return .none
+            }
+            
 #if APP_STORE
             buyAppStore(option)
 #else
@@ -962,8 +1096,12 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
             } else {
                 okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
             }
-        case let .premium(option):
-            okText = strings().starsGiftPreviewSend(option.price)
+        case let .premium(option, starGift):
+            if state.payWithStars, let starGift = starGift {
+                okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(starGift.priceCurrencyAndAmount.amount)))
+            } else {
+                okText = strings().starsGiftPreviewSend(option.price)
+            }
         }
         
         modalInteractions?.updateDone { button in

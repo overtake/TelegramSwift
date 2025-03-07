@@ -142,10 +142,11 @@ class ChatInputAttachView: ImageButton, Notifable {
                     let acceptMode = chatMode == .history || (chatMode.isThreadMode || chatMode.isTopicMode)
                     
                     
-                    if let cachedData = chatInteraction.presentation.cachedData as? CachedUserData, let peer = chatInteraction.presentation.mainPeer {
-                        if !cachedData.premiumGiftOptions.isEmpty, context.premiumLimits.show_premium_gift_in_attach_menu, !peer.isPremium {
+                    if let peer = chatInteraction.presentation.mainPeer {
+                        
+                        if context.premiumLimits.show_premium_gift_in_attach_menu, !peer.isPremium {
                             items.append(ContextMenuItem(strings().inputAttachPopoverGift, handler: {
-                                showModal(with: PremiumGiftController(context: context, peerId: peerId, options: cachedData.premiumGiftOptions), for: context.window)
+                                showModal(with: PremiumGiftController(context: context, peerId: peerId, options: context.premiumProductsAndPrice.0), for: context.window)
                             }, itemImage: MenuAnimation.menu_gift.value))
                         }
                     }

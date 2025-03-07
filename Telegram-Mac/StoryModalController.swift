@@ -566,12 +566,12 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
             switch value.content {
             case let .builtin(emoji):
                 if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                    return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: selectedItems.contains(where: { $0.source == .builtin(emoji) }))
+                    return .builtin(value: generic.value, staticFile: generic.staticIcon._parse(), selectFile: generic.selectAnimation._parse(), appearFile: generic.appearAnimation._parse(), isSelected: selectedItems.contains(where: { $0.source == .builtin(emoji) }))
                 } else {
                     return nil
                 }
             case let .custom(file):
-                return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: selectedItems.contains(where: { $0.source == .custom(file.fileId.id) }))
+                return .custom(value: .custom(file._parse().fileId.id), fileId: file._parse().fileId.id, file._parse(), isSelected: selectedItems.contains(where: { $0.source == .custom(file._parse().fileId.id) }))
             case .stars:
                 return nil
             }
@@ -603,10 +603,10 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
         reveal = { view in
             let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
                 let value: UpdateMessageReaction
-                if let bundle = sticker.file.stickerText {
+                if let bundle = sticker.file._parse().stickerText {
                     value = .builtin(bundle)
                 } else {
-                    value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
+                    value = .custom(fileId: sticker.file._parse().fileId.id, file: sticker.file._parse())
                 }
                 react(.init(item: value, fromRect: fromRect))
                 onClose()
@@ -876,7 +876,7 @@ private final class StoryViewController: Control, Notifable {
                     file = f
                 case let .builtin(string):
                     let reaction = context.reactions.available?.reactions.first(where: { $0.value.string == string })
-                    file = reaction?.selectAnimation
+                    file = reaction?.selectAnimation._parse()
                 case .stars:
                     break
                 }
@@ -1615,8 +1615,8 @@ private final class StoryViewController: Control, Notifable {
             effectFileId = f?.fileId.id
         case let .builtin(string):
             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-            file = reaction?.selectAnimation
-            effectFile = reaction?.aroundAnimation
+            file = reaction?.selectAnimation._parse()
+            effectFile = reaction?.aroundAnimation?._parse()
         case .stars:
             break
         }
@@ -2462,6 +2462,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendText)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -2469,12 +2471,57 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
-            beforeCompletion()
-            _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
-                afterCompletion()
-                self?.interactions.updateInput(with: "", resetFocus: true)
-                self?.genericView.showTooltip(source)
-            })
+            let invoke:()->Void = {
+                beforeCompletion()
+                _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil, sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
+                    afterCompletion()
+                    self?.interactions.updateInput(with: "", resetFocus: true)
+                    self?.genericView.showTooltip(source)
+                })
+            }
+            
+            guard let self else {
+                return
+            }
+            
+            let presentation = self.chatInteraction.presentation
+            
+            if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+                let starsPrice = Int(payStars.value )
+                let amount = strings().starListItemCountCountable(starsPrice)
+                let messagesCount = 1
+                
+                if !presentation.alwaysPaidMessage {
+                    
+                    let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                    
+                    verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                        
+                        if starsState.balance.value > starsPrice {
+                            chatInteraction.update({ current in
+                                return current
+                                    .withUpdatedAlwaysPaidMessage(result == .thrid)
+                            })
+                            if result == .thrid {
+                                FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                            }
+                            invoke()
+                        } else {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                        }
+                    })
+                    
+                } else {
+                    if starsState.balance.value > starsPrice {
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                }
+            } else {
+                invoke()
+            }
+            
         }
         
 
@@ -2934,6 +2981,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendFiles)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -2941,12 +2990,56 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
-            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
-                beforeCompletion()
-                _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
-                    afterCompletion()
-                    self?.genericView.showTooltip(.media([file]))
-                })
+            let invoke:()->Void = {
+                if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                    beforeCompletion()
+                    _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
+                        afterCompletion()
+                        self?.genericView.showTooltip(.media([file]))
+                    })
+                }
+            }
+            
+            guard let self else {
+                return
+            }
+            
+            let presentation = self.chatInteraction.presentation
+            
+            if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+                let starsPrice = Int(payStars.value )
+                let amount = strings().starListItemCountCountable(starsPrice)
+                let messagesCount = 1
+                
+                if !presentation.alwaysPaidMessage {
+                    
+                    let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                    
+                    verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                        
+                        if starsState.balance.value > starsPrice {
+                            chatInteraction.update({ current in
+                                return current
+                                    .withUpdatedAlwaysPaidMessage(result == .thrid)
+                            })
+                            if result == .thrid {
+                                FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                            }
+                            invoke()
+                        } else {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                        }
+                    })
+                    
+                } else {
+                    if starsState.balance.value > starsPrice {
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                }
+            } else {
+                invoke()
             }
             
         }
@@ -2991,6 +3084,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendMedia)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -3000,7 +3095,7 @@ final class StoryModalController : ModalViewController, Notifable {
             
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, messageEffect: messageEffect, leadingText: leadingText).start(completed: {
+                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, messageEffect: messageEffect, leadingText: leadingText, sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media(medias))
                 })
@@ -3014,6 +3109,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendMedia)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -3021,12 +3118,55 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
-            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
-                beforeCompletion()
-                _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
-                    afterCompletion()
-                    self?.genericView.showTooltip(.media([]))
-                })
+            let invoke:()->Void = {
+                if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                    beforeCompletion()
+                    _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
+                        afterCompletion()
+                        self?.genericView.showTooltip(.media([]))
+                    })
+                }
+            }
+            
+            
+            guard let self else {
+                return
+            }
+            
+            let presentation = self.chatInteraction.presentation
+            
+            if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+                let starsPrice = Int(payStars.value )
+                let amount = strings().starListItemCountCountable(starsPrice)
+                let messagesCount = 1
+                
+                if !presentation.alwaysPaidMessage {
+                    
+                    let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                    
+                    verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                        
+                        if starsState.balance.value > starsPrice {
+                            chatInteraction.update({ current in
+                                return current
+                                    .withUpdatedAlwaysPaidMessage(result == .thrid)
+                            })
+                            FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                            invoke()
+                        } else {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                        }
+                    })
+                    
+                } else {
+                    if starsState.balance.value > starsPrice {
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                }
+            } else {
+                invoke()
             }
         }
         
@@ -3119,7 +3259,12 @@ final class StoryModalController : ModalViewController, Notifable {
                 return current
             })
         }))
-
+        
+        actionsDisposable.add((context.starsContext.state |> deliverOnMainQueue).start(next: { [weak self] starsState in
+            self?.chatInteraction.update({ current in
+                return current.withUpdatedStarsState(starsState)
+            })
+        }))
         
         disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
             if state.slice == nil {
@@ -3135,6 +3280,11 @@ final class StoryModalController : ModalViewController, Notifable {
                         var current = current
                         current = current.updatedPeer { _ in
                             return state.slice?.peer._asPeer()
+                        }
+                        
+                        if let slice = state.slice {
+                            let paidMessge = state.slice?.additionalPeerData.paidMessage
+                            current = current.withUpdatedSendPaidMessageStars(paidMessge).withUpdatedAlwaysPaidMessage(FastSettings.needConfirmPaid(slice.peer.id, price: Int(paidMessge?.value ?? 0)))
                         }
                         
                         if let slowmode = state.slice?.additionalPeerData.slowModeTimeout, state.slice?.additionalPeerData.canAvoidRestrictions == false {

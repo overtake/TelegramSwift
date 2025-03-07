@@ -215,7 +215,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         
         if !peer.isBot {
-            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
+            
+            let payStars = (item.peerView.cachedData as? CachedUserData)?.sendPaidMessageStars != nil
+            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty, !payStars {
                 items.append(ActionItem(text: strings().peerInfoActionSecretChat, color: item.accentColor, image: theme.icons.profile_secret_chat, animation: .menu_lock, action: arguments.startSecretChat))
             }
             if peer.id != item.context.peerId, item.peerView.peerIsContact, peer.phone != nil {
@@ -641,8 +643,10 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     let peerPhotosDisposable = MetaDisposable()
     
+    let giftsContext: ProfileGiftsContext?
+    
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }, giftsContext: ProfileGiftsContext? = nil) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.threadData = threadData
@@ -650,6 +654,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.context = context
         self.editing = editing
         self.threadId = threadId
+        self.giftsContext = giftsContext
         self.arguments = arguments
         self.stories = stories
         self.isVerified = peer?.isVerified ?? false
@@ -1171,6 +1176,408 @@ private final class NameContainer : View {
     }
 }
 
+private var shadowImage: CGImage? = {
+    return generateImage(CGSize(width: 44.0, height: 44.0), rotatedContext: { size, context in
+        context.clear(CGRect(origin: .zero, size: size))
+        
+        var locations: [CGFloat] = [0.0, 0.3, 1.0]
+        let colors: [CGColor] = [NSColor(rgb: 0xffffff, alpha: 0.65).cgColor, NSColor(rgb: 0xffffff, alpha: 0.65).cgColor, NSColor(rgb: 0xffffff, alpha: 0.0).cgColor]
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+        context.drawRadialGradient(gradient, startCenter: CGPoint(x: size.width / 2.0, y: size.height / 2.0), startRadius: 0.0, endCenter: CGPoint(x: size.width / 2.0, y: size.height / 2.0), endRadius: size.width / 2.0, options: .drawsAfterEndLocation)
+    })
+}()
+
+
+private class GiftIconLayer: SimpleLayer {
+    private let context: AccountContext
+    let gift: ProfileGiftsContext.State.StarGift
+    private let size: CGSize
+    var glowing: Bool {
+        didSet {
+            self.shadowLayer.opacity = self.glowing ? 1.0 : 0.0
+            
+            let color: NSColor
+            if self.glowing {
+                color = .white
+            } else if let layerTintColor = self.shadowLayer.layerTintColor {
+                color = NSColor(cgColor: layerTintColor) ?? .white
+            } else {
+                color = .white
+            }
+            
+            let side = floor(self.size.width * 1.25)
+            let starsFrame = CGSize(width: side, height: side).centered(in: CGRect(origin: .zero, size: self.size))
+            self.starsLayer.frame = starsFrame
+            self.starsLayer.update(color: color, size: starsFrame.size)
+        }
+    }
+    
+    let shadowLayer = SimpleLayer()
+    let starsLayer = StarsEffectLayer()
+    let animationLayer: InlineStickerItemLayer
+    
+    override init(layer: Any) {
+        guard let layer = layer as? GiftIconLayer else {
+            fatalError()
+        }
+                
+        let context = layer.context
+        let gift = layer.gift
+        let size = layer.size
+        let glowing = layer.glowing
+        
+        var file: TelegramMediaFile?
+        var color: NSColor = .white
+        switch gift.gift {
+        case let .generic(gift):
+            file = gift.file
+        case let .unique(gift):
+            for attribute in gift.attributes {
+                if case let .model(_, fileValue, _) = attribute {
+                    file = fileValue
+                } else if case let .backdrop(_, innerColor, _, _, _, _) = attribute {
+                    color = NSColor(rgb: UInt32(bitPattern: innerColor))
+                }
+            }
+        }
+        
+       
+        
+        self.animationLayer = .init(account: context.account, file: file!, size: size, playPolicy: .playCount(1))
+        
+        
+        self.shadowLayer.contents = shadowImage
+        self.shadowLayer.layerTintColor = color.cgColor
+        self.shadowLayer.opacity = glowing ? 1.0 : 0.0
+        
+        self.context = context
+        self.gift = gift
+        self.size = size
+        self.glowing = glowing
+        
+        super.init()
+        
+        let side = floor(size.width * 1.25)
+        let starsFrame = CGSize(width: side, height: side).centered(in: CGRect(origin: .zero, size: size))
+        self.starsLayer.frame = starsFrame
+        self.starsLayer.update(color: glowing ? .white : color, size: starsFrame.size)
+        
+        self.addSublayer(self.shadowLayer)
+        self.addSublayer(self.starsLayer)
+        self.addSublayer(self.animationLayer)
+    }
+    
+    init(
+        context: AccountContext,
+        gift: ProfileGiftsContext.State.StarGift,
+        size: CGSize,
+        glowing: Bool
+    ) {
+        self.context = context
+        self.gift = gift
+        self.size = size
+        self.glowing = glowing
+        
+        var file: TelegramMediaFile?
+        var color: NSColor = .white
+        switch gift.gift {
+        case let .generic(gift):
+            file = gift.file
+        case let .unique(gift):
+            for attribute in gift.attributes {
+                if case let .model(_, fileValue, _) = attribute {
+                    file = fileValue
+                } else if case let .backdrop(_, innerColor, _, _, _, _) = attribute {
+                    color = NSColor(rgb: UInt32(bitPattern: innerColor))
+                }
+            }
+        }
+        
+        self.animationLayer = .init(account: context.account, file: file!, size: size, playPolicy: .playCount(1))
+
+        
+        self.shadowLayer.contents = shadowImage
+        self.shadowLayer.layerTintColor = color.cgColor
+        self.shadowLayer.opacity = glowing ? 1.0 : 0.0
+        
+        super.init()
+        
+        let side = floor(size.width * 1.25)
+        let starsFrame = CGSize(width: side, height: side).centered(in: CGRect(origin: .zero, size: size))
+        self.starsLayer.frame = starsFrame
+        self.starsLayer.update(color: glowing ? .white : color, size: starsFrame.size)
+        
+        self.addSublayer(self.shadowLayer)
+        self.addSublayer(self.starsLayer)
+        self.addSublayer(self.animationLayer)
+    }
+    
+    required init?(coder: NSCoder) {
+        preconditionFailure()
+    }
+    
+    override func layoutSublayers() {
+        self.shadowLayer.frame = CGRect(origin: .zero, size: self.bounds.size).insetBy(dx: -4.0, dy: -4.0)
+        self.animationLayer.frame = CGRect(origin: .zero, size: self.bounds.size)
+    }
+    
+    func startAnimations(index: Int) {
+        let beginTime = Double(index) * 1.5
+        
+        if self.animation(forKey: "hover") == nil {
+            let upDistance = CGFloat.random(in: 1.0 ..< 2.0)
+            let downDistance = CGFloat.random(in: 1.0 ..< 2.0)
+            let hoverDuration = TimeInterval.random(in: 3.5 ..< 4.5)
+            
+            let hoverAnimation = CABasicAnimation(keyPath: "transform.translation.y")
+            hoverAnimation.duration = hoverDuration
+            hoverAnimation.fromValue = -upDistance
+            hoverAnimation.toValue = downDistance
+            hoverAnimation.autoreverses = true
+            hoverAnimation.repeatCount = .infinity
+            hoverAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            hoverAnimation.beginTime = beginTime
+            hoverAnimation.isAdditive = true
+            self.add(hoverAnimation, forKey: "hover")
+        }
+        
+        if self.animationLayer.animation(forKey: "wiggle") == nil {
+            let fromRotationAngle = CGFloat.random(in: 0.025 ..< 0.05)
+            let toRotationAngle = CGFloat.random(in: 0.025 ..< 0.05)
+            let wiggleDuration = TimeInterval.random(in: 2.0 ..< 3.0)
+            
+            let wiggleAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
+            wiggleAnimation.duration = wiggleDuration
+            wiggleAnimation.fromValue = -fromRotationAngle
+            wiggleAnimation.toValue = toRotationAngle
+            wiggleAnimation.autoreverses = true
+            wiggleAnimation.repeatCount = .infinity
+            wiggleAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            wiggleAnimation.beginTime = beginTime
+            wiggleAnimation.isAdditive = true
+            self.animationLayer.add(wiggleAnimation, forKey: "wiggle")
+        }
+        
+        if self.shadowLayer.animation(forKey: "glow") == nil {
+            let glowDuration = TimeInterval.random(in: 2.0 ..< 3.0)
+            
+            let glowAnimation = CABasicAnimation(keyPath: "transform.scale")
+            glowAnimation.duration = glowDuration
+            glowAnimation.fromValue = 1.0
+            glowAnimation.toValue = 1.2
+            glowAnimation.autoreverses = true
+            glowAnimation.repeatCount = .infinity
+            glowAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            glowAnimation.beginTime = beginTime
+            self.shadowLayer.add(glowAnimation, forKey: "glow")
+        }
+    }
+}
+
+
+private final class SpawnGiftsView: View {
+    
+    
+    
+    private var giftsDisposable: Disposable?
+    private var gifts: [ProfileGiftsContext.State.StarGift] = []
+    private var appliedGiftIds: [Int64] = []
+
+    private var iconPositions: [PositionGenerator.Position] = []
+    private let seed = UInt(Date().timeIntervalSince1970)
+    
+    private var iconLayers: [AnyHashable: GiftIconLayer] = [:]
+
+    private var context: AccountContext?
+    private var peer: EnginePeer?
+    
+    var avatarCenter: CGPoint = NSMakePoint(0, 0)
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        let location = self.convert(event.locationInWindow, from: nil)
+        
+        for (_, iconLayer) in self.iconLayers {
+            if iconLayer.frame.contains(location), let window = window as? Window {
+                if let context = self.context, let unique = iconLayer.gift.gift.unique {
+                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique)), for: window)
+                }
+            }
+        }
+
+        
+    }
+    
+    override var isFlipped: Bool {
+        return false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    func update(context: AccountContext, giftsContext: ProfileGiftsContext, peer: EnginePeer?, transition: ContainedViewLayoutTransition, avatarTransitionFraction: CGFloat) {
+        
+        
+        self.context = context
+        self.peer = peer
+        
+        guard let peerId = self.peer?.id else {
+            return
+        }
+        
+        let iconSize = CGSize(width: 32.0, height: 32.0)
+        
+        avatarCenter = NSMakeSize(120, 120).centered(in: bounds).origin
+        avatarCenter.y = 80
+        
+        let giftIds = self.gifts.map { gift in
+            if case let .unique(gift) = gift.gift {
+                return gift.id
+            } else {
+                return 0
+            }
+        }
+        
+        if !giftIds.isEmpty && (self.iconPositions.isEmpty || self.appliedGiftIds != giftIds) {
+            
+            var excludeRects: [CGRect] = []
+                                         
+            excludeRects.append(CGSize(width: 200, height: 200).centered(around: avatarCenter))
+//            excludeRects.append(CGRect(origin: CGPoint(x: 0.0, y: 110), size: NSMakeSize(frame.width, 50)))
+
+            
+            let positionGenerator = PositionGenerator(
+                containerSize: CGSize(width: frame.width, height: frame.height - 110),
+                centerFrame: CGSize(width: 140, height: 140).centered(around: avatarCenter),
+                exclusionZones: excludeRects,
+                minimumDistance: 42.0,
+                edgePadding: 5.0,
+                seed: self.seed
+            )
+            
+            let start = CACurrentMediaTime()
+            self.iconPositions = positionGenerator.generatePositions(count: 12, itemSize: iconSize)
+        }
+        self.appliedGiftIds = giftIds
+        
+        
+        if self.giftsDisposable == nil {
+            self.giftsDisposable = combineLatest(
+                queue: Queue.mainQueue(),
+                giftsContext.state,
+                context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
+                |> map { peer -> Int64? in
+                    if case let .user(user) = peer, case let .starGift(id, _, _, _, _, _, _, _, _) = user.emojiStatus?.content {
+                        return id
+                    }
+                    return nil
+                }
+                |> distinctUntilChanged
+            ).start(next: { [weak self] state, giftStatusId in
+                guard let self else {
+                    return
+                }
+                
+                let pinnedGifts = state.gifts.filter { gift in
+                    if gift.pinnedToTop {
+                        if case let .unique(uniqueGift) = gift.gift {
+                            return uniqueGift.id != giftStatusId
+                        }
+                    }
+                    return false
+                }
+                self.gifts = pinnedGifts
+                self.update(context: context, giftsContext: giftsContext, peer: peer, transition: transition, avatarTransitionFraction: avatarTransitionFraction)
+            })
+        }
+        
+        var validIds = Set<AnyHashable>()
+        var index = 0
+        for gift in self.gifts.prefix(12) {
+            guard index < self.iconPositions.count else {
+                break
+            }
+            let id: AnyHashable
+            if case let .unique(uniqueGift) = gift.gift {
+                id = uniqueGift.slug
+            } else {
+                id = index
+            }
+            validIds.insert(id)
+            
+            var iconTransition = transition
+            let iconPosition = self.iconPositions[index]
+            let iconLayer: GiftIconLayer
+            if let current = self.iconLayers[id] {
+                iconLayer = current
+            } else {
+                iconTransition = .immediate
+                iconLayer = GiftIconLayer(context: context, gift: gift, size: iconSize, glowing: true)
+                self.iconLayers[id] = iconLayer
+                self.layer?.addSublayer(iconLayer)
+                
+                iconLayer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
+                iconLayer.animateScale(from: 0.01, to: 1.0, duration: 0.2)
+                
+                iconLayer.startAnimations(index: index)
+            }
+            iconLayer.glowing = true
+            
+            let centerPosition = avatarCenter
+            let finalPosition = iconPosition.center.offsetBy(dx: avatarCenter.x, dy: avatarCenter.y)
+            let itemScaleFraction = patternScaleValueAt(fraction: avatarTransitionFraction, t: 0.0, reverse: false)
+
+            func interpolateRect(from: CGPoint, to: CGPoint, t: CGFloat) -> CGPoint {
+                let clampedT = max(0, min(1, t))
+                
+                let interpolatedX = from.x + (to.x - from.x) * clampedT
+                let interpolatedY = from.y + (to.y - from.y) * clampedT
+                
+                return CGPoint(
+                    x: interpolatedX,
+                    y: interpolatedY
+                )
+            }
+            
+            var effectivePosition = interpolateRect(from: finalPosition, to: centerPosition, t: itemScaleFraction)
+            effectivePosition.x += 60
+
+            iconTransition.updateFrame(layer: iconLayer, frame: CGRect(origin: effectivePosition, size: iconSize))
+            iconTransition.updateTransformScale(layer: iconLayer, scale: iconPosition.scale * (1.0 - itemScaleFraction))
+            iconTransition.updateAlpha(layer: iconLayer, alpha: 1.0 - itemScaleFraction)
+            
+            index += 1
+        }
+        
+        var removeIds: [AnyHashable] = []
+        for (id, layer) in self.iconLayers {
+            if !validIds.contains(id) {
+                removeIds.append(id)
+                layer.animateScale(from: 1.0, to: 0.01, duration: 0.25, removeOnCompletion: false)
+                layer.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: { _ in
+                    layer.removeFromSuperlayer()
+                })
+            }
+        }
+        for id in removeIds {
+            self.iconLayers.removeValue(forKey: id)
+        }
+           
+    }
+    
+    deinit {
+        giftsDisposable?.dispose()
+    }
+}
 
 
 private final class PeerInfoHeadView : GeneralRowView {
@@ -1182,6 +1589,7 @@ private final class PeerInfoHeadView : GeneralRowView {
     private let backgroundView = PeerInfoBackgroundView(frame: .zero)
     
     private var emojiSpawn: PeerInfoSpawnEmojiView?
+    private let spawnGiftsView: SpawnGiftsView = .init(frame: .zero)
     
     private let nameView = NameContainer(frame: .zero)
     private let statusView = TextView()
@@ -1229,6 +1637,10 @@ private final class PeerInfoHeadView : GeneralRowView {
         addSubview(backgroundView)
         
         photoContainer.addSubview(photoView)
+        
+        addSubview(spawnGiftsView)
+
+        
         addSubview(photoContainer)
         addSubview(nameView)
         addSubview(actionsView)
@@ -1236,6 +1648,8 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         statusContainer.addSubview(statusView)
         addSubview(statusContainer)
+        
+        
         
         listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateSpawnerFraction()
@@ -1275,11 +1689,13 @@ private final class PeerInfoHeadView : GeneralRowView {
         }
         
         
-         registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
+        registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
+        
+        layout()
     }
     
     private func updateSpawnerFraction() {
-        if let item = self.item, let table = item.table {
+        if let item = self.item as? PeerInfoHeadItem, let table = item.table {
             let position = table.scrollPosition().current
             let y = position.rect.minY - table.frame.height
             let clamp = min(max(0, y), item.height)
@@ -1297,6 +1713,10 @@ private final class PeerInfoHeadView : GeneralRowView {
             } else {
                 photoContainer.layer?.transform = CATransform3DIdentity
             }
+            if let peer = item.peer, let giftsContext = item.giftsContext {
+                spawnGiftsView.update(context: item.context, giftsContext: giftsContext, peer: .init(peer), transition: .immediate, avatarTransitionFraction: photoFraction)
+            }
+            
         }
     }
     
@@ -1413,6 +1833,11 @@ private final class PeerInfoHeadView : GeneralRowView {
     override func layout() {
         super.layout()
         
+        
+        backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
+        spawnGiftsView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
+
+        
         guard let item = item as? PeerInfoHeadItem else {
             return
         }
@@ -1423,7 +1848,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         photoEditableView?.center()
         
         emojiSpawn?.centerX(y: 0)
-        
+                
         if item.isTopic {
             nameView.centerX(y: photoContainer.frame.maxY - 12)
             statusContainer.centerX(y: nameView.frame.maxY + 8)
@@ -1437,7 +1862,6 @@ private final class PeerInfoHeadView : GeneralRowView {
             photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
         }
-        backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
 
         if let showStatusView {
             showStatusView.centerY(x: statusView.frame.maxX + 4)
@@ -1616,6 +2040,8 @@ private final class PeerInfoHeadView : GeneralRowView {
         statusView.update(item.statusLayout)
         statusView.isSelectable = item.threadId == nil
         statusView.scaleOnClick = item.threadId != nil
+        
+        
         
         statusView.removeAllHandlers()
         if item.isTopic {

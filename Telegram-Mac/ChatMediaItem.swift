@@ -276,6 +276,24 @@ class ChatMediaItem: ChatRowItem {
         parameters?.revealMedia = { [weak self] message in
             self?.chatInteraction.revealMedia(message)
         }
+        
+        var videoTimestamp: Int32?
+        if let parent = message {
+            var storedVideoTimestamp: Int32?
+            for attribute in parent.attributes {
+                if let attribute = attribute as? ForwardVideoTimestampAttribute {
+                    videoTimestamp = attribute.timestamp
+                } else if let attribute = attribute as? DerivedDataMessageAttribute {
+                    if let value = attribute.data["mps"]?.get(MediaPlaybackStoredState.self) {
+                        storedVideoTimestamp = Int32(value.timestamp)
+                    }
+                }
+            }
+            if let storedVideoTimestamp {
+                videoTimestamp = storedVideoTimestamp
+            }
+        }
+        self.parameters?.set_timeCodeInitializer(videoTimestamp.flatMap(Double.init))
     }
     
     
