@@ -15,7 +15,7 @@ import TGUIKit
 import TelegramMedia
 import TelegramMediaPlayer
 
-extension AutoremoveTimeoutMessageAttribute : @retroactive Equatable {
+extension AutoremoveTimeoutMessageAttribute : Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
         return lhs.timeout == rhs.timeout && lhs.countdownBeginTime == rhs.countdownBeginTime && lhs.associatedMessageIds == rhs.associatedMessageIds
     }
