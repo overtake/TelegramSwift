@@ -3240,6 +3240,9 @@ extension MessageIndex {
     func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {
         return MessageIndex(id: self.id, timestamp: timestamp)
     }
+    func withUpdatedNamespace(_ namespace: MessageId.Namespace) -> MessageIndex {
+        return MessageIndex(id: .init(peerId: self.id.peerId, namespace: namespace, id: self.id.id), timestamp: timestamp)
+    }
     init(_ message: Message) {
         self.init(id: message.id, timestamp: message.timestamp)
     }

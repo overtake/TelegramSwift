@@ -75,6 +75,10 @@ enum ChatItemRenderType {
 
 class ChatRowItem: TableRowItem {
     
+    override var canBeAnchor: Bool {
+        return !self.entry.isFakeMessage
+    }
+    
     class RowCaption {
         var id: UInt32
         var offset: NSPoint

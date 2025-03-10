@@ -234,8 +234,8 @@ private final class HeaderItem : GeneralRowItem {
         }
         
         self.infoLayout = .init(attr)
-        if transaction.paidMessageCount != nil, let commission = transaction.starrefCommissionPermille?.decemial.string {
-            let text = strings().starTransactionMessageFeeInfo("\(commission)%")
+        if transaction.paidMessageCount != nil, let commission = transaction.starrefCommissionPermille?.decemial {
+            let text = strings().starTransactionMessageFeeInfo("\((100 - commission).string)%")
             
             let textAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, contents)

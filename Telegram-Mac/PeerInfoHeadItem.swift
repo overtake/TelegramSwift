@@ -1423,6 +1423,12 @@ private final class SpawnGiftsView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        
+        
+    }
+    
     
     func update(context: AccountContext, giftsContext: ProfileGiftsContext, peer: EnginePeer?, transition: ContainedViewLayoutTransition, avatarTransitionFraction: CGFloat) {
         
@@ -1436,8 +1442,8 @@ private final class SpawnGiftsView: View {
         
         let iconSize = CGSize(width: 32.0, height: 32.0)
         
-        avatarCenter = NSMakeSize(120, 120).centered(in: bounds).origin
-        avatarCenter.y = 80
+        avatarCenter = NSMakeSize(140, 140).centered(in: bounds).offsetBy(dx: 70, dy: 0).origin
+        avatarCenter.y = 0
         
         let giftIds = self.gifts.map { gift in
             if case let .unique(gift) = gift.gift {
@@ -1447,17 +1453,19 @@ private final class SpawnGiftsView: View {
             }
         }
         
+        //background = .random
+        
         if !giftIds.isEmpty && (self.iconPositions.isEmpty || self.appliedGiftIds != giftIds) {
             
             var excludeRects: [CGRect] = []
                                          
-            excludeRects.append(CGSize(width: 200, height: 200).centered(around: avatarCenter))
-//            excludeRects.append(CGRect(origin: CGPoint(x: 0.0, y: 110), size: NSMakeSize(frame.width, 50)))
+            excludeRects.append(CGRect(origin: NSMakePoint(avatarCenter.x - 70, frame.height - 140), size: NSMakeSize(140, 140)))
+            excludeRects.append(CGRect(origin: NSMakePoint(0, 0), size: CGSize(width: frame.width, height: 140)))
 
             
             let positionGenerator = PositionGenerator(
-                containerSize: CGSize(width: frame.width, height: frame.height - 110),
-                centerFrame: CGSize(width: 140, height: 140).centered(around: avatarCenter),
+                containerSize: CGSize(width: frame.width, height: frame.height),
+                centerFrame: NSMakeRect(excludeRects[0].minX, -50, 200, 200),
                 exclusionZones: excludeRects,
                 minimumDistance: 42.0,
                 edgePadding: 5.0,
@@ -1549,7 +1557,7 @@ private final class SpawnGiftsView: View {
             }
             
             var effectivePosition = interpolateRect(from: finalPosition, to: centerPosition, t: itemScaleFraction)
-            effectivePosition.x += 60
+           // effectivePosition.x += 60
 
             iconTransition.updateFrame(layer: iconLayer, frame: CGRect(origin: effectivePosition, size: iconSize))
             iconTransition.updateTransformScale(layer: iconLayer, scale: iconPosition.scale * (1.0 - itemScaleFraction))
@@ -1571,6 +1579,8 @@ private final class SpawnGiftsView: View {
         for id in removeIds {
             self.iconLayers.removeValue(forKey: id)
         }
+        
+        needsDisplay = true
            
     }
     
@@ -1835,7 +1845,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         
         backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
-        spawnGiftsView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
+        spawnGiftsView.frame = NSMakeRect(0, 0, frame.width, frame.height)
 
         
         guard let item = item as? PeerInfoHeadItem else {
