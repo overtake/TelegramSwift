@@ -287,7 +287,7 @@ final class PremiumStatusControl : Control {
             starsLayer.frame = starsFrame
             starsLayer.update(color: isSelected ? theme.colors.underSelectedColor : NSColor(UInt32(innerColor)), size: starsFrame.size)
             
-            self.appTooltip = title
+           // self.appTooltip = title
             
         } else {
             if let starsLayer = self.starsLayer {

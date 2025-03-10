@@ -112,8 +112,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         index += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_charge_price, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            let amount = "\(Double(stars.value) * 0.013)".prettyCurrencyNumberUsd
-            
             return PrecieSliderRowItem(initialSize, stableId: stableId, current: Double(stars.value) / (Double(maximumStars) - 1), magnit: [], markers: ["1", "\(maximumStars)"], showValue: strings().starListItemCountCountable(Int(stars.value)), update: { value in
                 arguments.toggle(.paidMessages(.init(value: Int64(1 + value * (Double(maximumStars) - 1)), nanos: 0)))
             }, viewType: .singleItem)
@@ -122,7 +120,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let amount = "\(Double(stars.value) * 0.013 * commission)".prettyCurrencyNumberUsd
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().messagesPrivacyChargeforMessagesSelectInfo(commission.string, amount)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().messagesPrivacyChargeforMessagesSelectInfo("\(commission.string)%", amount)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))

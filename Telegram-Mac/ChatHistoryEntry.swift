@@ -209,13 +209,15 @@ struct ChatHistoryEntryData : Equatable {
     let location: MessageHistoryEntryLocation?
     let additionData: MessageEntryAdditionalData
     let autoPlay: AutoplayMediaPreferences?
-    init(_ location: MessageHistoryEntryLocation? = nil, _ additionData: MessageEntryAdditionalData = .init(), _ autoPlay: AutoplayMediaPreferences? = nil) {
+    let isFakeMessage: Bool
+    init(_ location: MessageHistoryEntryLocation? = nil, _ additionData: MessageEntryAdditionalData = .init(), _ autoPlay: AutoplayMediaPreferences? = nil, isFakeMessage: Bool = false) {
         self.location = location
         self.additionData = additionData
         self.autoPlay = autoPlay
+        self.isFakeMessage = isFakeMessage
     }
     static func ==(lhs: ChatHistoryEntryData, rhs: ChatHistoryEntryData) -> Bool {
-        return lhs.location == rhs.location && lhs.additionData == rhs.additionData && lhs.autoPlay == rhs.autoPlay
+        return lhs.location == rhs.location && lhs.additionData == rhs.additionData && lhs.autoPlay == rhs.autoPlay && lhs.isFakeMessage == rhs.isFakeMessage
     }
 }
 
@@ -304,6 +306,18 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return nil
         }
     }
+    
+    var isFakeMessage:Bool {
+        switch self {
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.isFakeMessage
+        case let .groupedPhotos(entries, groupInfo: _):
+            return entries.first?.isFakeMessage ?? false
+        default:
+            return false
+        }
+    }
+    
     func additionalData(_ messageId: MessageId) -> MessageEntryAdditionalData {
         switch self {
         case let .MessageEntry(_,_,_,_,_,_,data):
@@ -536,6 +550,11 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
     let lhsIndex = lhs.index
     let rhsIndex = rhs.index
     if lhsIndex == rhsIndex {
+        if lhs.isFakeMessage && !rhs.isFakeMessage {
+            return true
+        } else if !lhs.isFakeMessage && rhs.isFakeMessage {
+            return false
+        }
         return lhs.stableId.stableIndex < rhs.stableId.stableIndex
     } else {
         return lhsIndex < rhsIndex
@@ -639,10 +658,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
     let insertPendingProccessing:(ChatHistoryEntry)->Void = { entry in
         if let message = entry.firstMessage, message.pendingProcessingAttribute != nil {
             let action = TelegramMediaAction(action: .customText(text: strings().chatVideoProccessingService, entities: [], additionalAttributes: nil))
-            let service = message.withUpdatedMedia([action]).withUpdatedStableId(0).withUpdatedTimestamp(message.timestamp - 1)
+            let service = message.withUpdatedMedia([action]).withUpdatedStableId(message.stableId + UInt32(Int32.max))
             
             
-            entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData()))
+            entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(isFakeMessage: true)))
         }
     }
     
@@ -682,8 +701,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             
             if !text.isEmpty {
                 let action = TelegramMediaAction(action: .customText(text: text, entities: [], additionalAttributes: nil))
-                let service = message.withUpdatedMedia([action]).withUpdatedStableId(0).withUpdatedTimestamp(message.timestamp - 1)
-                entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData()))
+                let service = message.withUpdatedMedia([action]).withUpdatedStableId(message.stableId + UInt32(Int32.max))
+                entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(isFakeMessage: true)))
             }
         }
     }

@@ -28,7 +28,8 @@ final class ChatUserInfoRowItem : ChatRowItem {
         let countries = context.currentCountriesConfiguration.with { $0 }
         
         var attrs: [ChatServiceItem.GiftData.UniqueAttributes.Attribute] = []
-        
+        let textColor: NSColor = isLite(.blur) ? theme.colors.text : theme.chatServiceItemTextColor
+
         
         let groupsCount: Int
         if let commonGroups {
@@ -40,23 +41,25 @@ final class ChatUserInfoRowItem : ChatRowItem {
         self.groupsCount = groupsCount
         
         
-        commontGroups = .init(.initialize(string: strings().chatServiceNotOfficial , color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)))
+        commontGroups = .init(.initialize(string: strings().chatServiceNotOfficial , color: textColor.withAlphaComponent(0.8), font: .normal(.text)))
 
         
         if let registrationDate = settings.registrationDate {
-            attrs.append(.init(name: .init(.initialize(string: strings().chatEmptyUserInfoRegistration, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
-                               value: .init(.initialize(string: formatMonthYear(registrationDate, locale: appAppearance.locale) , color: NSColor.white, font: .medium(.text)))))
+            attrs.append(.init(name: .init(.initialize(string: strings().chatEmptyUserInfoRegistration, color: textColor.withAlphaComponent(0.8), font: .normal(.text))),
+                               value: .init(.initialize(string: formatMonthYear(registrationDate, locale: appAppearance.locale), color: textColor, font: .medium(.text)))))
         }
         
         if let phoneCountry = settings.phoneCountry, let country = countries.countries.first(where: { $0.id == phoneCountry}) {
-            attrs.append(.init(name: .init(.initialize(string: strings().chatEmptyUserInfoPhoneNumber, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
-                               value: .init(.initialize(string: emojiFlagForISOCountryCode(phoneCountry) + " " +  country.name, color: NSColor.white, font: .medium(.text)))))
+            attrs.append(.init(name: .init(.initialize(string: strings().chatEmptyUserInfoPhoneNumber, color: textColor.withAlphaComponent(0.8), font: .normal(.text))),
+                               value: .init(.initialize(string: emojiFlagForISOCountryCode(phoneCountry) + " " +  country.name, color: textColor, font: .medium(.text)))))
         }
-        attrs.append(.init(name: .init(.initialize(string: strings().chatEmptyUserInfoCommonGroups, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
-                           value: .init(.initialize(string: strings().chatServiceGroupsInCommonCountable(groupsCount), color: NSColor.white, font: .medium(.text)))))
+        if groupsCount > 0 {
+            attrs.append(.init(name: .init(.initialize(string: strings().chatEmptyUserInfoCommonGroups, color: textColor.withAlphaComponent(0.8), font: .normal(.text))),
+                               value: .init(.initialize(string: strings().chatServiceGroupsInCommonCountable(groupsCount), color: textColor, font: .medium(.text)))))
+        }
 
         
-        self.attributes = .init(header: .init(.initialize(string: peer._asPeer().displayTitle, color: NSColor.white, font: .medium(.header)), maximumNumberOfLines: 1), attributes: attrs)
+        self.attributes = .init(header: .init(.initialize(string: peer._asPeer().displayTitle, color: textColor, font: .medium(.header)), maximumNumberOfLines: 1), attributes: attrs)
         
         super.init(initialSize, chatInteraction, entry, theme: theme)
     }

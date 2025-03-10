@@ -2822,7 +2822,7 @@ private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
                     _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(peerId: peer.id), for: window).startStandalone(next: { amount in
                         
                         let option: String?
-                        if let amount {
+                        if let amount, amount.value > 0 {
                             option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
                         } else {
                             option = nil

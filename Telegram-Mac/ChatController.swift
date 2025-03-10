@@ -1963,6 +1963,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let keepShortcutDisposable = MetaDisposable()
     
     private let preloadPersonalChannel = MetaDisposable()
+    private let premiumOrStarsRequiredDisposable = MetaDisposable()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     private var keepSavedMessagesSyncrhonizedDisposable: Disposable?
@@ -2055,6 +2056,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let uiState: Atomic<State> = Atomic(value: State())
     private let stateValue: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         
+    
+    private var groupsInCommon: GroupsInCommonContext?
     
     private struct State : Equatable {
         
@@ -3050,7 +3053,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let groupsInCommon = GroupsInCommonContext(account: context.account, peerId: peerId)
-        
+        self.groupsInCommon = groupsInCommon
       
         presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal, context.chatThemes, counters, context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.PeerSettings(id: peerId)), Signal<GroupsInCommonState?, NoError>.single(nil) |> then(groupsInCommon.state |> map(Optional.init))).start(next: { [weak self] presentation, wallpaper, translate, storyState, emoticonThemes, counters, peerStatus, groupsInCommon in
             let emoticon = presentation.emoticon
@@ -6426,6 +6429,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     
+                    present = present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration).withUpdatedCachedData(combinedInitialData.cachedData)
+                    
                     let price = present.sendPaidMessageStars.flatMap({ Int($0.value) })
                     
                     let freezeAccount = context.appConfiguration.getGeneralValue("freeze_since_date", orElse: 0)
@@ -6448,7 +6453,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     
                     
-                    present = present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration).withUpdatedCachedData(combinedInitialData.cachedData).withUpdatedAlwaysPaidMessage(FastSettings.needConfirmPaid(peerId, price: price ?? 0)).withUpdatedFreezeAccount(freezeAccount).withUpdatedFreezeAccountAddressName(extractUsername(from: freezeAccountAppealAddressName)?.lowercased())
+                    present = present.withUpdatedAlwaysPaidMessage(FastSettings.needConfirmPaid(peerId, price: price ?? 0)).withUpdatedFreezeAccount(freezeAccount).withUpdatedFreezeAccountAddressName(extractUsername(from: freezeAccountAppealAddressName)?.lowercased())
                 case .scheduled:
                     if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                         present = present.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
@@ -7388,6 +7393,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         preloadPersonalChannel.set(personalChannelSignal.start())
+        
+        self.premiumOrStarsRequiredDisposable.set(((self.context.engine.peers.isPremiumRequiredToContact([peerId]) |> then(.complete() |> suspendAwareDelay(60.0, queue: Queue.concurrentDefaultQueue()))) |> restart).startStandalone())
         
         
         let count = 50
@@ -8519,6 +8526,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         titleUpdateDisposable.dispose()
         preloadPersonalChannel.dispose()
         codeSyntaxHighlightDisposables.dispose()
+        premiumOrStarsRequiredDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
