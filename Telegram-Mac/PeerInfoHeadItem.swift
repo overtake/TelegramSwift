@@ -901,7 +901,7 @@ class PeerInfoHeadItem: GeneralRowItem {
 
 final class PeerInfoBackgroundView: View {
     private let backgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
-    private let avatarBackgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
+    let avatarBackgroundGradientLayer: SimpleGradientLayer = SimpleGradientLayer()
     
     public var offset: CGFloat = 0
     required init(frame frameRect: NSRect) {
@@ -909,7 +909,7 @@ final class PeerInfoBackgroundView: View {
         self.layer?.addSublayer(backgroundGradientLayer)
         self.layer?.addSublayer(avatarBackgroundGradientLayer)
         
-        let baseAvatarGradientAlpha: CGFloat = 0.4
+        let baseAvatarGradientAlpha: CGFloat = 0.2
         let numSteps = 6
         self.avatarBackgroundGradientLayer.colors = (0 ..< numSteps).map { i in
             let step: CGFloat = 1.0 - CGFloat(i) / CGFloat(numSteps - 1)
@@ -921,7 +921,7 @@ final class PeerInfoBackgroundView: View {
         
         self.backgroundGradientLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
         self.backgroundGradientLayer.endPoint = CGPoint(x: 0.5, y: 0.0)
-        self.backgroundGradientLayer.type = .axial
+        self.backgroundGradientLayer.type = .radial
 
     }
     
@@ -1416,7 +1416,7 @@ private final class SpawnGiftsView: View {
     }
     
     override var isFlipped: Bool {
-        return false
+        return true
     }
     
     required init?(coder: NSCoder) {
@@ -1426,7 +1426,17 @@ private final class SpawnGiftsView: View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        
+//        var excludeRects: [CGRect] = []
+//                                     
+//        excludeRects.append(CGRect(origin: NSMakePoint(avatarCenter.x - 70, 70), size: NSMakeSize(140, 140)))
+//
+//        excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 140), size: CGSize(width: frame.width, height: 140)))
+//
+//        for rect in excludeRects {
+//            ctx.setFillColor(NSColor.random.cgColor)
+//            ctx.fill(rect)
+//        }
+//        
     }
     
     
@@ -1443,7 +1453,7 @@ private final class SpawnGiftsView: View {
         let iconSize = CGSize(width: 32.0, height: 32.0)
         
         avatarCenter = NSMakeSize(140, 140).centered(in: bounds).offsetBy(dx: 70, dy: 0).origin
-        avatarCenter.y = 0
+        avatarCenter.y = 70 + 60
         
         let giftIds = self.gifts.map { gift in
             if case let .unique(gift) = gift.gift {
@@ -1459,13 +1469,13 @@ private final class SpawnGiftsView: View {
             
             var excludeRects: [CGRect] = []
                                          
-            excludeRects.append(CGRect(origin: NSMakePoint(avatarCenter.x - 70, frame.height - 140), size: NSMakeSize(140, 140)))
-            excludeRects.append(CGRect(origin: NSMakePoint(0, 0), size: CGSize(width: frame.width, height: 140)))
+            excludeRects.append(CGRect(origin: NSMakePoint(avatarCenter.x - 90, 50), size: NSMakeSize(170, 170)))
+            excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 100), size: CGSize(width: frame.width, height: 100)))
 
             
             let positionGenerator = PositionGenerator(
                 containerSize: CGSize(width: frame.width, height: frame.height),
-                centerFrame: NSMakeRect(excludeRects[0].minX, -50, 200, 200),
+                centerFrame: CGSize(width: 100, height: 100).centered(around: avatarCenter),
                 exclusionZones: excludeRects,
                 minimumDistance: 42.0,
                 edgePadding: 5.0,
@@ -1845,7 +1855,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         
         backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
-        spawnGiftsView.frame = NSMakeRect(0, 0, frame.width, frame.height)
+        spawnGiftsView.frame = NSMakeRect(0, -70, frame.width, frame.height + 70)
 
         
         guard let item = item as? PeerInfoHeadItem else {

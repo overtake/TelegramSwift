@@ -1222,6 +1222,10 @@ final class AccountContext {
         dockControl.clear()
         #endif
     }
+    
+    var isFrozen: Bool {
+        return appConfiguration.getGeneralValue("freeze_since_date", orElse: 0) != 0
+    }
    
     
     func checkFirstRecentlyForDuplicate(peerId:PeerId) {

@@ -139,6 +139,8 @@
 		272934162778E05000F10D3C /* menu_music.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934152778E05000F10D3C /* menu_music.tgs */; };
 		2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */; };
 		27296B392B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27296B382B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift */; };
+		2729C3CA2D7F384F00BD64CC /* FrozenAccountController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2729C3C92D7F384900BD64CC /* FrozenAccountController.swift */; };
+		2729C3CC2D8023A200BD64CC /* freeze_duck.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729C3CB2D8023A200BD64CC /* freeze_duck.tgs */; };
 		272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272C182F267D00350030B5FB /* CoreMediaIO.framework */; };
 		272C7DB62A94BF9300F89190 /* ArchiveSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */; };
 		272C7DF02AA07EDD00F89190 /* StoryLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */; };
@@ -1793,6 +1795,8 @@
 		2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_select_multiple.tgs; sourceTree = "<group>"; };
 		27296B382B8D0156004BFA74 /* ContextInlineSetupQuickReplyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextInlineSetupQuickReplyRowItem.swift; sourceTree = "<group>"; };
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
+		2729C3C92D7F384900BD64CC /* FrozenAccountController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrozenAccountController.swift; sourceTree = "<group>"; };
+		2729C3CB2D8023A200BD64CC /* freeze_duck.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = freeze_duck.tgs; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
 		272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSettingsController.swift; sourceTree = "<group>"; };
 		272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryLayoutView.swift; sourceTree = "<group>"; };
@@ -5274,6 +5278,7 @@
 		C22E06301D8043A000A11C88 /* chatlist */ = {
 			isa = PBXGroup;
 			children = (
+				2729C3C92D7F384900BD64CC /* FrozenAccountController.swift */,
 				277840D02BBEC8D90026CC3A /* pendings */,
 				272C7DF42AA1C0E200F89190 /* suspicious-auth */,
 				2786368327C8B73E00690B10 /* downloads */,
@@ -6387,6 +6392,7 @@
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
 				273AF9932CCB7E4F00C2067E /* improving_video.tgs */,
+				2729C3CB2D8023A200BD64CC /* freeze_duck.tgs */,
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				270375F02C9CDF20003EC235 /* duck_passcode.tgs */,
 				270376032CA1A760003EC235 /* duck_uploads.tgs */,
@@ -7317,6 +7323,7 @@
 				27803BF127A3E944007B0FA9 /* menu_folder_all_chats.tgs in Resources */,
 				27CB1754276344E000DD25E0 /* menu_shared_media.tgs in Resources */,
 				C2CFCABE1EBB4A4D00843F6A /* voip_connecting.mp3 in Resources */,
+				2729C3CC2D8023A200BD64CC /* freeze_duck.tgs in Resources */,
 				27CE37752760CEE4007E6F1B /* menu_mute_for_2_days.tgs in Resources */,
 				2751E79D27F34415003E3937 /* menu_autodelete_1h.tgs in Resources */,
 				2780DE40271F0BB30092323F /* zoom.tgs in Resources */,
@@ -7660,6 +7667,7 @@
 				D00B191C24E54BA3006CCB87 /* CallReceptionControl.swift in Sources */,
 				27A710B928B9009500E65838 /* QuickReactionRowItem.swift in Sources */,
 				A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */,
+				2729C3CA2D7F384F00BD64CC /* FrozenAccountController.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatMessageAccessoryView.swift in Sources */,
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
 				2719D8162A1F555500081079 /* StoryChatContent.swift in Sources */,

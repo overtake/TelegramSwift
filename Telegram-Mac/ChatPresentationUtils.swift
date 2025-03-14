@@ -503,6 +503,10 @@ final class TelegramChatColors {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
     }
     
+    func paidMessageIcon(_ item: ChatRowItem) -> CGImage {
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatPaidMessageOverlayServiceBubble : item.presentation.icons.chatPaidMessageOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatPaidMessageInBubble_incoming : item.presentation.icons.chatPaidMessageInBubble_outgoing : item.presentation.icons.chatPaidMessageOutBubble
+    }
+    
     func messagePinnedIcon(_ item: ChatRowItem) -> CGImage {
         if item.isStateOverlayLayout {
             if !item.isInteractiveMedia {

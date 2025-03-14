@@ -77,7 +77,7 @@ private struct State : Equatable {
     var canMakePayment: Bool
     var values: [PremiumGiftOption] {
         
-        #if APP_STORE || DEBUG
+        #if APP_STORE
         return self.options.compactMap { value in
             let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProduct?.id })
             if let storeProduct = storeProduct {

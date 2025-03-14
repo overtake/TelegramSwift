@@ -99,6 +99,7 @@ class ChatInputView: View, Notifable {
     
     private let actionsView:ChatInputActionsView
     
+    private var frozenView:TextView?
 
     
     let textView:UITextView!
@@ -625,6 +626,9 @@ class ChatInputView: View, Notifable {
         paidMessageView?.removeFromSuperview()
         paidMessageView = nil
         
+        frozenView?.removeFromSuperview()
+        frozenView = nil
+        
         blockText?.removeFromSuperview()
         blockText = nil
         
@@ -717,6 +721,36 @@ class ChatInputView: View, Notifable {
                 additionBlockedActionView?.removeFromSuperview()
                 additionBlockedActionView = nil
             }
+
+            self.contentView.isHidden = true
+            self.contentView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
+        case let .frozen(action):
+            
+            let frozenView = TextView(frame: bounds)
+            
+            let frozenText = NSMutableAttributedString()
+            frozenText.append(string: strings().freezeAccountTitle, color: theme.colors.redUI, font: .medium(.text))
+            frozenText.append(string: "\n")
+            frozenText.append(string: strings().freezeAccountClickDetails, color: theme.colors.grayText, font: .normal(.small))
+            
+            let frozenLayout = TextViewLayout(frozenText, alignment: .center)
+            frozenLayout.measure(width: frame.width - 40)
+            
+            frozenView.update(frozenLayout)
+            frozenView.frame = bounds
+            
+            if animated {
+                frozenView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            frozenView.set(handler: { _ in
+                action(chatInteraction)
+            }, for:.Click)
+
+            self.addSubview(frozenView, positioned: .below, relativeTo: _ts)
+            self.frozenView = frozenView
+            
+            frozenView.isSelectable = false
 
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
@@ -981,6 +1015,11 @@ class ChatInputView: View, Notifable {
                 
         if let view = additionBlockedActionView {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))
+        }
+        
+        if let view = frozenView {
+            view.resize(size.width - 40)
+            view.frame = size.bounds
         }
         
         if let view = paidMessageView {

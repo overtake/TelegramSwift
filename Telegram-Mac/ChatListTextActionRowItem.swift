@@ -109,13 +109,13 @@ private final class ChatListTextActionRowView: TableRowView {
         
         dismiss.isHidden = !item.canDismiss
         
-        if !item.canDismiss {
-            overlay.userInteractionEnabled = false
-            overlay.isEventLess = true
-            infoView.userInteractionEnabled = true
-            infoView.textView.userInteractionEnabled = true
-        }
-        
+//        if !item.canDismiss {
+//            overlay.userInteractionEnabled = false
+//            overlay.isEventLess = true
+//            infoView.userInteractionEnabled = true
+//            infoView.textView.userInteractionEnabled = true
+//        }
+//        
         self.titleView.set(text: item.title, context: item.context)
         self.infoView.set(text: item.info, context: item.context)
         

@@ -74,6 +74,11 @@ func initialize() -> [String] {
     array.append("chatChannelViewsInBubble_outgoing")
     array.append("chatChannelViewsOutBubble")
     array.append("chatChannelViewsOverlayBubble")
+    array.append("chatPaidMessageInBubble_incoming")
+    array.append("chatPaidMessageInBubble_outgoing")
+    array.append("chatPaidMessageOutBubble")
+    array.append("chatPaidMessageOverlayBubble")
+
     array.append("chatNavigationBack")
     array.append("peerInfoAddMember")
     array.append("chatSearchUp")

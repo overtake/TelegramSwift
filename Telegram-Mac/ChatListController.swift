@@ -214,16 +214,42 @@ struct UIChatListBuyStarsAction : UIChatListTextAction {
 
     }
     
+}
+
+struct UIChatFrozenAction : UIChatListTextAction {
+    var text: NSAttributedString
+    
+    var info: NSAttributedString
+    
+    func action() {
+        showModal(with: FrozenAccountController(context: context), for: context.window)
+    }
+    
+    func dismiss() {
+        
+    }
+    
+    func isEqual(_ rhs: UIChatListTextAction) -> Bool {
+        if let _ = rhs as? UIChatFrozenAction {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private let context: AccountContext
+    let canDismiss: Bool
+    
     init(context: AccountContext, freezeTime: Int32) {
         self.context = context
         self.canDismiss = false
        
-        let attributedTitle = NSMutableAttributedString(string: strings().chatListFreezeAccountTitle, font: .normal(.text), textColor: theme.colors.text)
+        let attributedTitle = NSMutableAttributedString(string: strings().chatListFreezeAccountTitle, font: .medium(.text), textColor: theme.colors.redUI)
         
         self.text = attributedTitle
         let appealLink = context.appConfiguration.getStringValue("freeze_appeal_url", orElse: "https://t.me/spambot")
 
-        let text = strings().chatListFreezeAccount(stringForFullDate(timestamp: freezeTime), appealLink, stringForFullDate(timestamp: freezeTime))
+        let text = strings().chatListFreezeAccount
         
         self.info = parseMarkdownIntoAttributedString(text, attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.grayText), bold: .init(font: .medium(.text), textColor: theme.colors.grayText), link: .init(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { link in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
@@ -243,6 +269,7 @@ struct UIChatListBuyStarsAction : UIChatListTextAction {
     }
     
 }
+
 
 
 
@@ -1009,7 +1036,7 @@ class ChatListController : PeersListController {
             let freezeTime = appConfiguration.getGeneralValue("freeze_since_date", orElse: 0)
             
             if freezeTime != 0 {
-                additionItems.append(.custom(UIChatListBuyStarsAction(context: context, freezeTime: freezeTime)))
+                additionItems.append(.custom(UIChatFrozenAction(context: context, freezeTime: freezeTime)))
             }
 
             

@@ -143,10 +143,9 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     
                     if let peer = chatInteraction.presentation.mainPeer {
-                        
-                        if context.premiumLimits.show_premium_gift_in_attach_menu, !peer.isPremium {
+                        if context.premiumLimits.show_premium_gift_in_attach_menu, !peer.isPremium, peer.isUser {
                             items.append(ContextMenuItem(strings().inputAttachPopoverGift, handler: {
-                                showModal(with: PremiumGiftController(context: context, peerId: peerId, options: context.premiumProductsAndPrice.0), for: context.window)
+                                showModal(with: GiftingController(context: context, peerId: peerId, isBirthday: false), for: context.window)
                             }, itemImage: MenuAnimation.menu_gift.value))
                         }
                     }

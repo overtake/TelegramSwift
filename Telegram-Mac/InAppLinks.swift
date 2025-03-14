@@ -212,6 +212,7 @@ enum InAppSettingsSection : String {
     case devices
     case folders
     case privacy
+    case phone_privacy
 }
 
 enum ChatInitialActionBehavior : Equatable {
@@ -1276,6 +1277,19 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             controller = ChatListFiltersListController(context: context)
         case .privacy:
             controller = PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: .autoArchive, twoStepVerificationConfiguration: nil)
+        case .phone_privacy:
+            let privacySignal = context.privacy |> take(1) |> deliverOnMainQueue
+            
+            let _ = (privacySignal
+                |> deliverOnMainQueue).startStandalone(next: { info in
+                if let info = info {
+                    context.bindings.rootNavigation().push(SelectivePrivacySettingsController(context, kind: .birthday, current: info.birthday, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _, _ in
+                        context.updatePrivacy(updated, kind: .birthday)
+                    }))
+                }
+            })
+            afterComplete(true)
+            return
         }
         context.bindings.rootNavigation().push(controller)
         afterComplete(true)
@@ -2479,7 +2493,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         return .theme(link: urlString, context: context, name: value)
                     }
                 case known_scheme[13]:
-                    if let context = context, let range = action.range(of: known_scheme[12] + "/") {
+                    if let context = context, let range = action.range(of: known_scheme[13] + "/") {
                         let section = String(action[range.upperBound...])
                         if let section = InAppSettingsSection(rawValue: section) {
                             return .settings(link: urlString, context: context, section: section)

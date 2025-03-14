@@ -6058,17 +6058,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.freezeAccountAlert = { [weak self] in
-            let freezeTime = self?.chatInteraction.presentation.freezeAccount ?? 0
-            let appealUrl = context.appConfiguration.getStringValue("freeze_appeal_url", orElse: "https://t.me/spambot")
-            if freezeTime > 0 {
-                let text = strings().chatListFreezeAccountAlert(stringForFullDate(timestamp: freezeTime), stringForFullDate(timestamp: freezeTime))
-                verifyAlert(for: context.window, header: strings().chatListFreezeAccountAlertTitle, information: text, ok: strings().chatListFreezeAccountAlertAppeal, successHandler: { [weak self] _ in
-                    if let chatInteraction = self?.chatInteraction {
-                        let inappLink = inApp(for: appealUrl.nsstring, context: context, openInfo: chatInteraction.openInfo)
-                        execute(inapp: inappLink)
-                    }
-                })
-            }
+            showModal(with: FrozenAccountController(context: context), for: context.window)
         }
         
         chatInteraction.markAdAsSeen = { [weak self] opaqueId in
