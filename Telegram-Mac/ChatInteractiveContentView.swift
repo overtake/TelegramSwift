@@ -1270,7 +1270,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     private func updateVideoTimestamp(_ videoTimestamp: Int32?, duration: Double?, animated: Bool) {
-        if let videoTimestamp, let duration {
+        if let videoTimestamp, let duration, duration > 0 {
             let current: VideoTimestampView
             if let view = self.videoTimeProgress {
                 current = view
