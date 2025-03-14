@@ -1047,19 +1047,19 @@ final class AvatarConstructorController : ModalViewController {
         updateState { current in
             var current = current
             
-            current.items.append(.init(key: "e", index: 0, title: "Emoji", thumb: MenuAnimation.menu_smile, selected: false, options: [
-                    .init(key: "e", title: "Emoji", selected: true),
-                    .init(key: "b", title: "Background", selected: false)
+            current.items.append(.init(key: "e", index: 0, title: strings().customAvatarTitleEmoji, thumb: MenuAnimation.menu_smile, selected: false, options: [
+                .init(key: "e", title: strings().customAvatarTitleEmoji, selected: true),
+                .init(key: "b", title: strings().customAvatarTitleBackground, selected: false)
             ]))
             
-            current.items.append(.init(key: "s", index: 1, title: "Sticker", thumb: MenuAnimation.menu_view_sticker_set, selected: true, options: [
-                    .init(key: "s", title: "Sticker", selected: true),
-                    .init(key: "b", title: "Background", selected: false)
+            current.items.append(.init(key: "s", index: 1, title: strings().customAvatarTitleSticker, thumb: MenuAnimation.menu_view_sticker_set, selected: true, options: [
+                .init(key: "s", title: strings().customAvatarTitleSticker, selected: true),
+                .init(key: "b", title: strings().customAvatarTitleBackground, selected: false)
             ]))
             
-            current.items.append(.init(key: "m", index: 2, title: "Monogram", thumb: MenuAnimation.menu_monogram, selected: false, options: [
-                    .init(key: "t", title: "Text", selected: true),
-                    .init(key: "b", title: "Background", selected: false)
+            current.items.append(.init(key: "m", index: 2, title: strings().customAvatarTitleMonogram, thumb: MenuAnimation.menu_monogram, selected: false, options: [
+                .init(key: "t", title: strings().customAvatarTitleText, selected: true),
+                .init(key: "b", title: strings().customAvatarTitleBackground, selected: false)
             ]))
             
             var colors: [AvatarColor] = []

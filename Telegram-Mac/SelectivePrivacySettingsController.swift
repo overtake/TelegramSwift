@@ -62,7 +62,10 @@ private final class SelectivePrivacySettingsControllerArguments {
     let toggleHideReadTime:()->Void
     let openPremium:()->Void
     let setupBirthday:()->Void
-    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void, uploadPublicPhoto:@escaping()->[ContextMenuItem], removePublicPhoto:@escaping()->Void, toggleHideReadTime:@escaping()->Void, openPremium:@escaping()->Void, setupBirthday:@escaping()->Void) {
+    let toggleUnlimitedGifts:()->Void
+    let toggleLimitedGifts:()->Void
+    let toggleUniqueGifts:()->Void
+    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void, uploadPublicPhoto:@escaping()->[ContextMenuItem], removePublicPhoto:@escaping()->Void, toggleHideReadTime:@escaping()->Void, openPremium:@escaping()->Void, setupBirthday:@escaping()->Void, toggleUnlimitedGifts:@escaping()->Void, toggleLimitedGifts:@escaping()->Void, toggleUniqueGifts:@escaping()->Void) {
         self.context = context
         self.updateType = updateType
         self.openEnableFor = openEnableFor
@@ -74,6 +77,9 @@ private final class SelectivePrivacySettingsControllerArguments {
         self.toggleHideReadTime = toggleHideReadTime
         self.openPremium = openPremium
         self.setupBirthday = setupBirthday
+        self.toggleUnlimitedGifts = toggleUnlimitedGifts
+        self.toggleLimitedGifts = toggleLimitedGifts
+        self.toggleUniqueGifts = toggleUniqueGifts
     }
 }
 
@@ -126,6 +132,11 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     case hideReadTimeInfo(Int32, String, GeneralViewType)
     case premium(Int32, GeneralViewType)
     case premiumInfo(Int32, GeneralViewType)
+    case giftsHeader(Int32, GeneralViewType)
+    case giftsUnlimited(Int32, Bool, Bool, GeneralViewType)
+    case giftsLimited(Int32, Bool, Bool, GeneralViewType)
+    case giftsUnique(Int32, Bool, Bool, GeneralViewType)
+    case giftsInfo(Int32, GeneralViewType)
     case section(Int32)
 
     var stableId: Int32 {
@@ -158,6 +169,11 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case .hideReadTimeInfo: return 25
         case .premium: return 26
         case .premiumInfo: return 27
+        case .giftsHeader: return 28
+        case .giftsLimited: return 29
+        case .giftsUnique: return 30
+        case .giftsUnlimited: return 31
+        case .giftsInfo: return 32
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -192,6 +208,11 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case .hideReadTimeInfo(let sectionId, _, _): return (sectionId * 1000) + stableId
         case .premium(let sectionId, _): return (sectionId * 1000) + stableId
         case .premiumInfo(let sectionId, _): return (sectionId * 1000) + stableId
+        case .giftsHeader(let sectionId, _): return (sectionId * 1000) + stableId
+        case .giftsLimited(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .giftsUnique(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .giftsUnlimited(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .giftsInfo(let sectionId, _): return (sectionId * 1000) + stableId
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -288,6 +309,17 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPremium, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.openPremium)
         case let .premiumInfo(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsPremiumInfo, viewType: viewType)
+        case let .giftsHeader(_, viewType):
+            //TODOLANG
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain("ACCEPTED GIFT TYPES"), viewType: viewType)
+        case let .giftsUnlimited(_, enabled, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Unlimited", type: .switchable(selected), viewType: viewType, action: arguments.toggleUnlimitedGifts, enabled: enabled, disabledAction: arguments.openPremium)
+        case let .giftsLimited(_, enabled, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Limited-Edition", type: .switchable(selected), viewType: viewType, action: arguments.toggleLimitedGifts, enabled: enabled, disabledAction: arguments.openPremium)
+        case let .giftsUnique(_, enabled, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Unique", type: .switchable(selected), viewType: viewType, action: arguments.toggleUniqueGifts, enabled: enabled, disabledAction: arguments.openPremium)
+        case let .giftsInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain("Choose the types of gifts that you allow others to send you."), viewType: viewType)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
@@ -516,6 +548,20 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
 
         }
     }
+    
+    #if DEBUG
+    if kind == .gifts {
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
+        entries.append(.giftsHeader(sectionId, .textTopItem))
+        entries.append(.giftsUnlimited(sectionId, true, context.isPremium, .firstItem))
+        entries.append(.giftsLimited(sectionId, true, context.isPremium, .innerItem))
+        entries.append(.giftsUnique(sectionId, true, context.isPremium, .lastItem))
+        entries.append(.giftsInfo(sectionId, .textBottomItem))
+    }
+    #endif
+   
     
 
     entries.append(.section(sectionId))
@@ -1008,6 +1054,12 @@ class SelectivePrivacySettingsController: TableViewController {
             nav._frameRect = NSMakeRect(0, 0, 300, 310)
             
             showModal(with: nav, for: context.window)
+        }, toggleUnlimitedGifts: {
+            
+        }, toggleLimitedGifts: {
+            
+        }, toggleUniqueGifts: {
+            
         })
 
 

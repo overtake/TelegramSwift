@@ -6925,10 +6925,8 @@ public final class L10n {
   public static var chatListEmptyText: String  { return L10n.tr("Localizable", "ChatList.EmptyText") }
   /// Channels
   public static var chatListFeeds: String  { return L10n.tr("Localizable", "ChatList.Feeds") }
-  /// Your account was frozen for serious infringement of [Telegrams Terms and Condition](https://telegram.org/tos). Your account is in read-only mode now (since %1$@). You can still appeal to [@SpamBot](%2$@) if you believe there was a mistake. If we don't hear from you until %3$@, your account will be deactivated completely and terminated.
-  public static func chatListFreezeAccount(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "ChatList.FreezeAccount", p1, p2, p3)
-  }
+  /// Click to view details and submit an appeal.
+  public static var chatListFreezeAccount: String  { return L10n.tr("Localizable", "ChatList.FreezeAccount") }
   /// Giveaway
   public static var chatListGiveaway: String  { return L10n.tr("Localizable", "ChatList.Giveaway") }
   /// Group Channel
@@ -7437,16 +7435,8 @@ public final class L10n {
   public static func chatListFolderUpdatesTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_zero", p1)
   }
-  /// Your account was frozen for serious infringement of [Telegrams Terms and Condition](https://telegram.org/tos). Your account is in read-only mode now (since %1$@). You can still appeal to @SpamBot if you believe there was a mistake. If we don't hear from you until %3$@, your account will be deactivated completely and terminated.
-  public static func chatListFreezeAccountAlert(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ChatList.FreezeAccount.Alert", p1, p2)
-  }
-  /// Your account was frozen
+  /// Your account is frozen!
   public static var chatListFreezeAccountTitle: String  { return L10n.tr("Localizable", "ChatList.FreezeAccount.Title") }
-  /// Appeal
-  public static var chatListFreezeAccountAlertAppeal: String  { return L10n.tr("Localizable", "ChatList.FreezeAccount.Alert.Appeal") }
-  /// Your account was frozen
-  public static var chatListFreezeAccountAlertTitle: String  { return L10n.tr("Localizable", "ChatList.FreezeAccount.Alert.Title") }
   /// Don't lose access to exclusive features.
   public static var chatListGracePeriodInfo: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Info") }
   /// ⚠️ Your Premium subscription is expiring!
@@ -8491,6 +8481,20 @@ public final class L10n {
   public static var createGroupRequiresUsernamePlaceholder: String  { return L10n.tr("Localizable", "CreateGroup.Requires.Username.Placeholder") }
   /// Group must be a public. Please choose username.
   public static var createGroupUsernameError: String  { return L10n.tr("Localizable", "CreateGroup.Username.Error") }
+  /// Enter Symbols
+  public static var customAvatarEnterSymbol: String  { return L10n.tr("Localizable", "CustomAvatar.EnterSymbol") }
+  /// Maximum length is 2 symbols
+  public static var customAvatarEnterSymbolInfo: String  { return L10n.tr("Localizable", "CustomAvatar.EnterSymbol.Info") }
+  /// Background
+  public static var customAvatarTitleBackground: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Background") }
+  /// Emoji
+  public static var customAvatarTitleEmoji: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Emoji") }
+  /// Monogram
+  public static var customAvatarTitleMonogram: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Monogram") }
+  /// Sticker
+  public static var customAvatarTitleSticker: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Sticker") }
+  /// Text
+  public static var customAvatarTitleText: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Text") }
   /// Artists are welcome to add their own emoji sets using our [@stickers]() bot.
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
@@ -9569,6 +9573,26 @@ public final class L10n {
   public static var fragmentStarsTotalLifetime: String  { return L10n.tr("Localizable", "Fragment.Stars.TotalLifetime") }
   /// Stars from your total balance become avallable for spending on ads and rewards 21 days after they are earned
   public static var fragmentStarsWithdrawInfo: String  { return L10n.tr("Localizable", "Fragment.Stars.WithdrawInfo") }
+  /// Click to view details
+  public static var freezeAccountClickDetails: String  { return L10n.tr("Localizable", "FreezeAccount.ClickDetails") }
+  /// Submit an Appeal
+  public static var freezeAccountOK: String  { return L10n.tr("Localizable", "FreezeAccount.OK") }
+  /// Your Account is Frozen
+  public static var freezeAccountTitle: String  { return L10n.tr("Localizable", "FreezeAccount.Title") }
+  /// Your account was frozen for breaking Telegram's Terms and Conditions.
+  public static var freezeAccountOption1Text: String  { return L10n.tr("Localizable", "FreezeAccount.Option1.Text") }
+  /// Violation of Terms
+  public static var freezeAccountOption1Title: String  { return L10n.tr("Localizable", "FreezeAccount.Option1.Title") }
+  /// You can access your account but can't send messages or take actions.
+  public static var freezeAccountOption2Text: String  { return L10n.tr("Localizable", "FreezeAccount.Option2.Text") }
+  /// Read-Only Mode
+  public static var freezeAccountOption2Title: String  { return L10n.tr("Localizable", "FreezeAccount.Option2.Title") }
+  /// Appeal via [@SpamBot](appeal) before %@, or your account will be deleted.
+  public static func freezeAccountOption3Text(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FreezeAccount.Option3.Text", p1)
+  }
+  /// Appeal Before Deactivation
+  public static var freezeAccountOption3Title: String  { return L10n.tr("Localizable", "FreezeAccount.Option3.Title") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
   /// Hide Translatation
@@ -11937,7 +11961,7 @@ public final class L10n {
   public static var messagesPrivacyChargeforMessagesExceptionsRemoveFee: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Exceptions.RemoveFee") }
   /// SET YOUR PRICE PER MESSAGE
   public static var messagesPrivacyChargeforMessagesSelectHeader: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Select.Header") }
-  /// You will receive %1$@ of the selected fee (~(%2$@)$) for each incoming message.
+  /// You will receive %1$@ of the selected fee (~%2$@$) for each incoming message.
   public static func messagesPrivacyChargeforMessagesSelectInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Select.Info", p1, p2)
   }

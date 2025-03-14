@@ -349,6 +349,7 @@ enum ChatState : Equatable {
     case editing
     case recording(ChatRecordingState)
     case restricted(String)
+    case frozen((ChatInteraction)->Void)
 }
 
 func ==(lhs:ChatState, rhs:ChatState) -> Bool {
@@ -403,6 +404,12 @@ func ==(lhs:ChatState, rhs:ChatState) -> Bool {
         }
     case .restricted(let text):
         if case .restricted(text) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .frozen:
+        if case .frozen = rhs {
             return true
         } else {
             return false
@@ -693,9 +700,9 @@ class ChatPresentationInterfaceState: Equatable {
             }
             
             if self.freezeAccount != 0, self.peer?.addressName?.lowercased() != self.freezeAccountAppealAddressName {
-                return .action(strings().chatListFreezeAccountTitle, { chatInteraction in
+                return .frozen({ chatInteraction in
                     chatInteraction.freezeAccountAlert()
-                }, nil)
+                })
             }
             
             if case .searchHashtag = chatMode.customChatContents?.kind {

@@ -814,7 +814,7 @@ private final class HeaderView : GeneralRowView {
             guard let self else {
                 return
             }
-            self.emoji.set(fileId: item.pattern.fileId.id, color: item.patternColor.withAlphaComponent(0.3), context: item.context, animated: animated)
+            self.emoji.set(fileId: item.pattern.fileId.id, color: item.patternColor.withAlphaComponent(0.6), context: item.context, animated: animated)
             self.backgroundView.gradient = item.backgroundGradient
             self.giftView.update(with: item.model, size: giftView.frame.size, context: item.context, table: item.table, animated: animated)
         }

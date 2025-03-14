@@ -540,6 +540,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                         }
                     }
                     current.gradient = colors
+                    current.avatarBackgroundGradientLayer.opacity = 0.5
                 }
                 do {
                     let current:PeerInfoSpawnEmojiView
@@ -559,7 +560,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                         case .pattern(_, let file, _):
                             patternFile = file
                         case let .backdrop(_, _, _, color, _, _):
-                            patternColor = NSColor(UInt32(color)).withAlphaComponent(0.4)
+                            patternColor = NSColor(UInt32(color)).withAlphaComponent(0.7)
                         default:
                             break
                         }

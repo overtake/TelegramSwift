@@ -941,6 +941,58 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chatPaidMessageInBubble_incoming: CGImage {
+      if let image = cached.with({ $0["chatPaidMessageInBubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chatPaidMessageInBubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatPaidMessageInBubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chatPaidMessageInBubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chatPaidMessageInBubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chatPaidMessageInBubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatPaidMessageInBubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chatPaidMessageOutBubble: CGImage {
+      if let image = cached.with({ $0["chatPaidMessageOutBubble"] }) {
+          return image
+      } else {
+          let image = _chatPaidMessageOutBubble()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatPaidMessageOutBubble"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chatPaidMessageOverlayBubble: CGImage {
+      if let image = cached.with({ $0["chatPaidMessageOverlayBubble"] }) {
+          return image
+      } else {
+          let image = _chatPaidMessageOverlayBubble()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatPaidMessageOverlayBubble"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chatNavigationBack: CGImage {
       if let image = cached.with({ $0["chatNavigationBack"] }) {
           return image
@@ -10725,6 +10777,10 @@ public final class TelegramIconsTheme {
   private let _chatChannelViewsInBubble_outgoing: ()->CGImage
   private let _chatChannelViewsOutBubble: ()->CGImage
   private let _chatChannelViewsOverlayBubble: ()->CGImage
+  private let _chatPaidMessageInBubble_incoming: ()->CGImage
+  private let _chatPaidMessageInBubble_outgoing: ()->CGImage
+  private let _chatPaidMessageOutBubble: ()->CGImage
+  private let _chatPaidMessageOverlayBubble: ()->CGImage
   private let _chatNavigationBack: ()->CGImage
   private let _peerInfoAddMember: ()->CGImage
   private let _chatSearchUp: ()->CGImage
@@ -11546,6 +11602,10 @@ public final class TelegramIconsTheme {
       chatChannelViewsInBubble_outgoing: @escaping()->CGImage,
       chatChannelViewsOutBubble: @escaping()->CGImage,
       chatChannelViewsOverlayBubble: @escaping()->CGImage,
+      chatPaidMessageInBubble_incoming: @escaping()->CGImage,
+      chatPaidMessageInBubble_outgoing: @escaping()->CGImage,
+      chatPaidMessageOutBubble: @escaping()->CGImage,
+      chatPaidMessageOverlayBubble: @escaping()->CGImage,
       chatNavigationBack: @escaping()->CGImage,
       peerInfoAddMember: @escaping()->CGImage,
       chatSearchUp: @escaping()->CGImage,
@@ -12366,6 +12426,10 @@ public final class TelegramIconsTheme {
       self._chatChannelViewsInBubble_outgoing = chatChannelViewsInBubble_outgoing
       self._chatChannelViewsOutBubble = chatChannelViewsOutBubble
       self._chatChannelViewsOverlayBubble = chatChannelViewsOverlayBubble
+      self._chatPaidMessageInBubble_incoming = chatPaidMessageInBubble_incoming
+      self._chatPaidMessageInBubble_outgoing = chatPaidMessageInBubble_outgoing
+      self._chatPaidMessageOutBubble = chatPaidMessageOutBubble
+      self._chatPaidMessageOverlayBubble = chatPaidMessageOverlayBubble
       self._chatNavigationBack = chatNavigationBack
       self._peerInfoAddMember = peerInfoAddMember
       self._chatSearchUp = chatSearchUp

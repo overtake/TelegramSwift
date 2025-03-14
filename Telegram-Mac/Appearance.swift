@@ -2259,6 +2259,17 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
+    private var _chatPaidMessageOverlayServiceBubble: CGImage?
+    var chatPaidMessageOverlayServiceBubble: CGImage {
+        if let icon = _chatPaidMessageOverlayServiceBubble {
+            return icon
+        } else {
+            let new = NSImage(resource: .iconPaidMessageStatus).precomposed(self.chatServiceItemTextColor)
+            _chatPaidMessageOverlayServiceBubble = new
+            return new
+        }
+    }
+    
     private var _chat_pinned_message_overlay_service_bubble: CGImage?
     var chat_pinned_message_overlay_service_bubble: CGImage {
         if let icon = _chat_pinned_message_overlay_service_bubble {
@@ -2631,6 +2642,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatChannelViewsInBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing) },
                                                chatChannelViewsOutBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon) },
                                                chatChannelViewsOverlayBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(.white) },
+                                               chatPaidMessageInBubble_incoming: { NSImage(resource: .iconPaidMessageStatus).precomposed(palette.grayIconBubble_incoming) },
+                                               chatPaidMessageInBubble_outgoing: { NSImage(resource: .iconPaidMessageStatus).precomposed(palette.grayIconBubble_outgoing) },
+                                               chatPaidMessageOutBubble: { NSImage(resource: .iconPaidMessageStatus).precomposed(palette.grayIcon) },
+                                               chatPaidMessageOverlayBubble: { NSImage(resource: .iconPaidMessageStatus).precomposed(.white) },
                                                chatNavigationBack: { #imageLiteral(resourceName: "Icon_ChatNavigationBack").precomposed(palette.accentIcon) },
                                                peerInfoAddMember: { #imageLiteral(resourceName: "Icon_NewContact").precomposed(palette.accentIcon, flipVertical: true) },
                                                chatSearchUp: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.accentIcon) },
