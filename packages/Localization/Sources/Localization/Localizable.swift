@@ -9885,6 +9885,10 @@ public final class L10n {
   public static var giftSendSelfHideMyNameInfo: String  { return L10n.tr("Localizable", "Gift.SendSelf.HideMyName.Info") }
   /// This gift has sold out
   public static var giftSoldOutError: String  { return L10n.tr("Localizable", "Gift.SoldOut.Error") }
+  /// Gift Pinned
+  public static var giftTooltipPinned: String  { return L10n.tr("Localizable", "Gift.Tooltip.Pinned") }
+  /// Gift Unpinned
+  public static var giftTooltipUnpinned: String  { return L10n.tr("Localizable", "Gift.Tooltip.Unpinned") }
   /// unlocks in %@
   public static func giftTransferSendUnlocks(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Transfer.SendUnlocks", p1)

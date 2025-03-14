@@ -1549,6 +1549,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 current.pinnedInfo = .init(pinnedInfo: !pinnedInfo.pinnedInfo, reference: pinnedInfo.reference)
                 return current
             }
+            showModalText(for: window, text: !pinnedInfo.pinnedInfo ? strings().giftTooltipPinned : strings().giftTooltipUnpinned)
         }
     })
     

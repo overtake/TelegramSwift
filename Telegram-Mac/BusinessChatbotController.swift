@@ -299,7 +299,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .firstItem, text: "https://t.me/\(bot.addressName ?? "")", font: .normal(.text), color: theme.colors.text)
         }))
     } else {
-        entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .firstItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessChatbotsPlaceholder, filter: { $0 }, limit: 60))
+        entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .singleItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessChatbotsPlaceholder, filter: { $0 }, limit: 60))
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatBotsFooter), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
@@ -307,10 +307,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if let result = state.botsResult {
+        
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
         switch result {
         case .loading:
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+                return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .singleItem)
             }))
         case let .found(peers):
             struct Tuple : Equatable {
@@ -322,18 +327,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             if peers.isEmpty {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_bot(.init(0)), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .lastItem, text: strings().businessChatbotsNotFound, font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
+                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().businessChatbotsNotFound, font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
                 }))
             } else {
+           
+                
+                
                 for (i, peer) in peers.enumerated() {
                     var viewType: GeneralViewType = bestGeneralViewType(peers, for: i)
-                    if i == 0 {
-                        if i < peers.count - 1 {
-                            viewType = .innerItem
-                        } else {
-                            viewType = .lastItem
-                        }
-                    }
+//                    if i == 0 {
+//                        if i < peers.count - 1 {
+//                            viewType = .innerItem
+//                        } else {
+//                            viewType = .lastItem
+//                        }
+//                    }
                     tuples.append(.init(peer: peer, viewType: viewType, selected: state.bot?.id == peer.id))
                 }
                 for tuple in tuples {

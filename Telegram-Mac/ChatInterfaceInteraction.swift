@@ -354,6 +354,13 @@ final class ChatInteraction : InterfaceObserver  {
     
     
     func call(isVideo: Bool = false) {
+        
+        
+        guard !context.isFrozen else {
+            context.freezeAlert()
+            return
+        }
+        
         if let peer = presentation.peer {
             let peerId:PeerId
             if let peer = peer as? TelegramSecretChat {

@@ -7978,6 +7978,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return nil
                 }
                 
+                guard !context.isFrozen else {
+                    return nil
+                }
+                
                 let chatInteraction = self.chatInteraction
                 let menu = ContextMenu(betterInside: true)
                 let mode = self.mode
@@ -9218,8 +9222,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         messages = context.account.postbox.messagesAtIds(ids) |> deliverOnMainQueue
                     }
                     loadSelectionMessagesDisposable.set(messages.start( next:{ [weak self] messages in
-                        var canDelete:Bool = !messages.isEmpty
-                        var canForward:Bool = !messages.isEmpty
+                        var canDelete:Bool = !messages.isEmpty && !context.isFrozen
+                        var canForward:Bool = !messages.isEmpty && !context.isFrozen
                         if let chatInteraction = self?.chatInteraction {
                             for message in messages {
                                 if !canDeleteMessage(message, account: context.account, mode: mode) {

@@ -231,6 +231,10 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 
 
 func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true, fromAdPromo: Bool = false) -> Signal<[ContextMenuItem], NoError> {
+    
+    if chatInteraction.context.isFrozen {
+        return .complete()
+    }
 
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
         

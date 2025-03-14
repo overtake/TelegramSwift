@@ -1228,6 +1228,12 @@ final class AccountContext {
     }
    
     
+#if !SHARE
+    func freezeAlert() {
+        showModal(with: FrozenAccountController(context: self), for: self.window)
+    }
+    #endif
+    
     func checkFirstRecentlyForDuplicate(peerId:PeerId) {
         if let index = recentlyPeerUsed.firstIndex(of: peerId), index == 0 {
          //   recentlyPeerUsed.remove(at: index)
@@ -1362,47 +1368,59 @@ final class AccountContext {
 
     
     func composeCreateGroup(selectedPeers:Set<PeerId> = Set()) {
-        createGroup(with: self, selectedPeers: selectedPeers)
+        if isFrozen {
+            self.freezeAlert()
+        } else {
+            createGroup(with: self, selectedPeers: selectedPeers)
+        }
     }
     func composeCreateChannel() {
-        createChannel(with: self)
+        if isFrozen {
+            self.freezeAlert()
+        } else {
+            createChannel(with: self)
+        }
     }
     func composeCreateSecretChat() {
-        let account = self.account
-        let window = self.window
-        let engine = self.engine
-        let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
-            if let first = peerIds.first, peerIds.count == 1 {
-                return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
+        if isFrozen {
+            self.freezeAlert()
+        } else {
+            let account = self.account
+            let window = self.window
+            let engine = self.engine
+            let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
+                if let first = peerIds.first, peerIds.count == 1 {
+                    return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
+                        return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
+                    }
                 }
+                return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
             }
-            return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
+            let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
+            
+            let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
+                return engine.peers.createSecretChat(peerId: peerId)
+            } |> deliverOnMainQueue
+            
+            _ = create.start(next: { [weak self] peerId in
+                guard let `self` = self else {return}
+                self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
+            }, error: { [weak self] error in
+                guard let context = self else {
+                    return
+                }
+                switch error {
+                case .generic:
+                    showModalText(for: context.window, text: strings().unknownError)
+                case .limitExceeded:
+                    showModalText(for: context.window, text: strings().loginFloodWait)
+                case let .premiumRequired(peer):
+                    showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                        prem(with: PremiumBoardingController(context: context), for: context.window)
+                    })
+                }
+            })
         }
-        let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
-        
-        let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
-            return engine.peers.createSecretChat(peerId: peerId)
-        } |> deliverOnMainQueue
-        
-        _ = create.start(next: { [weak self] peerId in
-            guard let `self` = self else {return}
-            self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
-        }, error: { [weak self] error in
-            guard let context = self else {
-                return
-            }
-            switch error {
-            case .generic:
-                showModalText(for: context.window, text: strings().unknownError)
-            case .limitExceeded:
-                showModalText(for: context.window, text: strings().loginFloodWait)
-            case let .premiumRequired(peer):
-                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                    prem(with: PremiumBoardingController(context: context), for: context.window)
-                })
-            }
-        })
     }
     #endif
 }
