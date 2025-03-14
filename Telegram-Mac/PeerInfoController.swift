@@ -294,6 +294,32 @@ final class PeerInfoView : View {
         addSubview(navigationBarView)
         self.addSubview(borderView)
     }
+    
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        tableView.enumerateItems(with: { item in
+            if let item = item as? PeerInfoHeadItem {
+                item.view?.mouseDown(with: event)
+                return false
+            }
+            return true
+        })
+        
+    }
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        
+        tableView.enumerateItems(with: { item in
+            if let item = item as? PeerInfoHeadItem {
+                item.view?.mouseUp(with: event)
+                return false
+            }
+            return true
+        })
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         navigationBarView.backgroundColor = .clear
@@ -337,7 +363,7 @@ final class PeerInfoView : View {
         navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
         navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
         navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
-
+        
         self.updateLayout(size: self.frame.size, transition: transition)
     }
     
@@ -766,6 +792,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         _leftBar = super.getLeftBarViewOnce()
         _centerBar = super.getCenterBarViewOnce()
         _rightBar = super.getRightBarViewOnce()
+        
+        _centerBar.userInteractionEnabled = false
+        _centerBar.isEventLess = true
         
         genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
 

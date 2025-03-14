@@ -1771,6 +1771,7 @@ public final class TextViewLayout : Equatable {
             selectedRange.location = map(start, byWord: byWord, forward: false)
             selectedRange.length = map(end, byWord: byWord, forward: true) - selectedRange.location
         }
+        
         return selectedRange
     }
 

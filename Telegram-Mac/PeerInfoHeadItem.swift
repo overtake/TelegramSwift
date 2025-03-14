@@ -1401,7 +1401,7 @@ private final class SpawnGiftsView: View {
     }
     
     override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
+      //  super.mouseDown(with: event)
         
         let location = self.convert(event.locationInWindow, from: nil)
         
@@ -2267,5 +2267,10 @@ private final class PeerInfoHeadView : GeneralRowView {
     }
     func setOpenProgress(_ signal:Signal<Never, NoError>) {
         SetOpenStoryDisposable(self.photoView.pushLoadingStatus(signal: signal))
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        self.spawnGiftsView.mouseDown(with: event)
     }
 }
