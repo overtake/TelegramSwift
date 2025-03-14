@@ -1391,6 +1391,7 @@ private final class SpawnGiftsView: View {
 
     private var context: AccountContext?
     private var peer: EnginePeer?
+    private var giftsContext: ProfileGiftsContext?
     
     var avatarCenter: CGPoint = NSMakePoint(0, 0)
 
@@ -1404,10 +1405,14 @@ private final class SpawnGiftsView: View {
         
         let location = self.convert(event.locationInWindow, from: nil)
         
+        guard let peer else {
+            return
+        }
+        
         for (_, iconLayer) in self.iconLayers {
             if iconLayer.frame.contains(location), let window = window as? Window {
-                if let context = self.context, let unique = iconLayer.gift.gift.unique {
-                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique)), for: window)
+                if let context = self.context, let unique = iconLayer.gift.gift.unique, let reference = iconLayer.gift.reference {
+                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique), giftsContext: self.giftsContext, pinnedInfo: .init(pinnedInfo: iconLayer.gift.pinnedToTop, reference: reference)), for: window)
                 }
             }
         }
@@ -1445,6 +1450,7 @@ private final class SpawnGiftsView: View {
         
         self.context = context
         self.peer = peer
+        self.giftsContext = giftsContext
         
         guard let peerId = self.peer?.id else {
             return

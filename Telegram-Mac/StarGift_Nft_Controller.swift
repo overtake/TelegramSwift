@@ -770,7 +770,14 @@ private final class HeaderView : GeneralRowView {
                 
                 let owner = item.state.owner?._asPeer()
                 
+                
+                
                 if case let .peerId(peerId) = uniqueGift.owner, peerId == item.arguments.context.peerId || owner?.groupAccess.isCreator == true {
+                    
+                    if let pinnedInfo = item.state.pinnedInfo {
+                        menu.addItem(ContextMenuItem(pinnedInfo.pinnedInfo ? strings().messageContextUnpin : strings().messageContextPin, handler: item.arguments.togglePin, itemImage: pinnedInfo.pinnedInfo ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
+                    }
+                                        
                     menu.addItem(ContextMenuItem(strings().giftTransferConfirmationTransferFree, handler: {
                         item.arguments.transfer()
                     }, itemImage: MenuAnimation.menu_replace.value))
@@ -814,7 +821,7 @@ private final class HeaderView : GeneralRowView {
             guard let self else {
                 return
             }
-            self.emoji.set(fileId: item.pattern.fileId.id, color: item.patternColor.withAlphaComponent(0.6), context: item.context, animated: animated)
+            self.emoji.set(fileId: item.pattern.fileId.id, color: item.patternColor.withAlphaComponent(0.5), context: item.context, animated: animated)
             self.backgroundView.gradient = item.backgroundGradient
             self.giftView.update(with: item.model, size: giftView.frame.size, context: item.context, table: item.table, animated: animated)
         }
@@ -933,7 +940,8 @@ private final class Arguments {
     let copyNftLink:(StarGift.UniqueGift)->Void
     let shareNft:(StarGift.UniqueGift)->Void
     let toggleWear:(StarGift.UniqueGift)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void) {
+    let togglePin:()->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
         self.toggleName = toggleName
@@ -941,6 +949,7 @@ private final class Arguments {
         self.copyNftLink = copyNftLink
         self.shareNft = shareNft
         self.toggleWear = toggleWear
+        self.togglePin = togglePin
     }
 }
 
@@ -971,6 +980,8 @@ private struct State : Equatable {
     var isTonOwner: Bool = false
     
     var accountPeerId: PeerId
+    
+    var pinnedInfo: GiftPinnedInfo?
 
     var okText: String {
         switch source {
@@ -1275,11 +1286,16 @@ enum StarGiftNftSource : Equatable {
     
 }
 
-func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil) -> InputDataModalController {
+struct GiftPinnedInfo : Equatable {
+    var pinnedInfo: Bool
+    var reference: StarGiftReference
+}
+
+func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil, pinnedInfo: GiftPinnedInfo? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
-    let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, purpose: purpose, attributes: source.attributes, accountPeerId: context.peerId)
+    let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, purpose: purpose, attributes: source.attributes, accountPeerId: context.peerId, pinnedInfo: pinnedInfo)
     
     var close:(()->Void)? = nil
     
@@ -1524,6 +1540,16 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         }
         
         
+    }, togglePin: { [weak giftsContext] in
+        let pinnedInfo = stateValue.with { $0.pinnedInfo }
+        if let pinnedInfo {
+            giftsContext?.updateStarGiftPinnedToTop(reference: pinnedInfo.reference, pinnedToTop: !pinnedInfo.pinnedInfo)
+            updateState { current in
+                var current = current
+                current.pinnedInfo = .init(pinnedInfo: !pinnedInfo.pinnedInfo, reference: pinnedInfo.reference)
+                return current
+            }
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
