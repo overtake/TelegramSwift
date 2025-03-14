@@ -488,6 +488,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     }
     
     static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil, shake: Bool = true, starGiftsProfile: ProfileGiftsContext? = nil) {
+        
+        
+        guard !context.isFrozen else {
+            context.freezeAlert()
+            return
+        }
+        
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
             if shake {
                 controller.view.shake(beep: true)

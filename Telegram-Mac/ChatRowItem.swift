@@ -986,6 +986,10 @@ class ChatRowItem: TableRowItem {
     var canReact: Bool {
         if let message = firstMessage {
             
+            if entry.isFakeMessage {
+                return false
+            }
+            
             if chatInteraction.isPeerSavedMessages {
                 return false
             }
@@ -1647,6 +1651,10 @@ class ChatRowItem: TableRowItem {
             return value
         } else if let message = self.messages.first {
             if chatInteraction.isLogInteraction {
+                return nil
+            }
+            
+            if entry.isFakeMessage {
                 return nil
             }
             if chatInteraction.isPeerSavedMessages {
@@ -3378,7 +3386,11 @@ class ChatRowItem: TableRowItem {
                 }
             }
             if let reaction = reaction {
-                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate(), isTags: context.peerId == message.id.peerId))
+                if context.isFrozen {
+                    context.freezeAlert()
+                } else {
+                    context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate(), isTags: context.peerId == message.id.peerId))
+                }
             }
         }
         return false

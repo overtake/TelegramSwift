@@ -1634,6 +1634,11 @@ class ChatListRowItem: TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
+        
+        guard !context.isFrozen else {
+            return .complete()
+        }
+        
         let message = self.message
         let context = self.context
         let peerId = self.peerId
