@@ -1161,7 +1161,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case verifiedInfo(sectionId: Int, value: PeerVerification?, viewType: GeneralViewType)
     case peerId(section:Int, value: String, viewType: GeneralViewType)
     case sharedMedia(section:Int, viewType: GeneralViewType)
-    case balance(section: Int, stars: String?, canSeeStars: Bool, viewType: GeneralViewType)
+    case balance(section: Int, stars: String, canSeeStars: Bool, viewType: GeneralViewType)
     case notifications(section:Int, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case usersHeader(section:Int, count:Int, viewType: GeneralViewType)
     case addMember(section:Int, inviteViaLink: Bool, viewType: GeneralViewType)
@@ -2318,8 +2318,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
             
             if let cachedData = (view.cachedData as? CachedChannelData), cachedData.flags.contains(.canViewStarsRevenue) {
-                let stars: String? = revenueState?.stats?.balances.availableBalance.stringValue
-                entries.append(.balance(section: GroupInfoSection.action.rawValue, stars: stars, canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .singleItem))
+                if let stars = revenueState?.stats?.balances.availableBalance.stringValue {
+                    entries.append(.balance(section: GroupInfoSection.action.rawValue, stars: stars, canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .singleItem))
+                }
             }
             
 
