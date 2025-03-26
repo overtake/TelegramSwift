@@ -223,10 +223,12 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             if peer.id != item.context.peerId, item.peerView.peerIsContact, peer.phone != nil {
                 items.append(ActionItem(text: strings().peerInfoActionShare, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_forward, action: arguments.shareContact))
             }
-            if peer.id != item.context.peerId, !peer.isDeleted {
-                items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: {
-                    arguments.giftPremium((item.peerView.cachedData as? CachedUserData)?.birthday?.isEligble == true)
-                }))
+            if peer.id != item.context.peerId, !peer.isDeleted, let cachedData = item.peerView.cachedData as? CachedUserData {
+                if cachedData.disallowedGifts != .All {
+                    items.append(ActionItem(text: strings().peerInfoActionSendGift, color: item.accentColor, image: theme.icons.profile_share, animation: .menu_gift, action: {
+                        arguments.giftPremium(cachedData.birthday?.isEligble == true)
+                    }))
+                }
             }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
                 items.append(ActionItem(text: (!cachedData.isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), color: item.accentColor, image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, animation: cachedData.isBlocked ? .menu_unblock : .menu_restrict, destruct: true, action: {

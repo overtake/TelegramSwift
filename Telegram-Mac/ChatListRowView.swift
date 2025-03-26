@@ -2224,7 +2224,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      current.isSelectable = false
                      current.scaleOnClick = true
                      self.openMiniApp = current
-                     addSubview(current)
+                     contentView.addSubview(current)
                  }
                  current.update(openMiniApp)
                  current.backgroundColor = item.isActiveSelected ? theme.colors.underSelectedColor : theme.colors.accent

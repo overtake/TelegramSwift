@@ -141,7 +141,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
                     badge = .init(text: strings().starGiftLimited, colors: blueColor, textColor: theme.colors.underSelectedColor)
                 }
             } else if let unique = option.native.unique {
-                badge = .init(text: "\(unique.number)", colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
+                badge = .init(text: "#\(unique.number)", colors: option.native.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
@@ -269,7 +269,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 super.init(frame: frameRect)
                 addSubview(visualEffect)
                 addSubview(imageView)
-                imageView.image = NSImage(resource: .menuEyeSlash).precomposed(theme.colors.text)
+                imageView.image = NSImage(resource: .menuEyeSlash).precomposed(NSColor.white)
                 imageView.sizeToFit()
                 layer?.cornerRadius = frameRect.height / 2
                 visualEffect.bgColor = NSColor.blackTransparent.withAlphaComponent(0.1)

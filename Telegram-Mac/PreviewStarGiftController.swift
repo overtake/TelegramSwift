@@ -636,6 +636,8 @@ private struct State : Equatable {
     
     var sendMessaagePaid: StarsAmount?
     
+    var disallowedGifts: TelegramDisallowedGifts
+    
 }
 
 private let _id_preview = InputDataIdentifier("_id_preview")
@@ -725,7 +727,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     case let .starGift(option: gift):
         
         
-        if let upgraded = gift.native.generic?.upgradeStars, arguments.context.peerId != state.peer.id {
+        if let upgraded = gift.native.generic?.upgradeStars, arguments.context.peerId != state.peer.id, !state.disallowedGifts.contains(.unique) {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
@@ -793,7 +795,7 @@ enum PreviewGiftSource : Equatable {
     case premium(option: PremiumGiftProduct, starOption: PremiumGiftProduct?)
 }
 
-func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSource, peer: EnginePeer, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataModalController {
+func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSource, peer: EnginePeer, disallowedGifts: TelegramDisallowedGifts, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let paymentDisposable = MetaDisposable()
@@ -803,7 +805,7 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
     
     let inAppPurchaseManager = context.inAppPurchaseManager
     
-    let initialState = State(peer: peer, myPeer: .init(context.myPeer!), option: option, isAnonymous: peer.id == context.peerId, textState: .init())
+    let initialState = State(peer: peer, myPeer: .init(context.myPeer!), option: option, isAnonymous: peer.id == context.peerId, textState: .init(), disallowedGifts: disallowedGifts)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -938,6 +940,8 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
                     text = strings().checkoutErrorPrecheckoutFailed
                 case .starGiftOutOfStock:
                     text = strings().giftSoldOutError
+                case .disallowedStarGift:
+                    text = strings().giftSendDisallowError
                 }
                 showModalText(for: window, text: text)
             })

@@ -52,9 +52,9 @@ private final class RowItem : GeneralRowItem {
     
     let options: [Option]
     let dismiss:()->Void
-    let parent: Message
-    let interactions: ChatInteraction
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, parent: Message, interactions: ChatInteraction, dismiss:@escaping()->Void) {
+    let parent: Message?
+    let interactions: ChatInteraction?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, parent: Message?, interactions: ChatInteraction?, dismiss:@escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
         self.interactions = interactions
@@ -204,8 +204,8 @@ private final class RowView: GeneralContainableRowView {
         
         moreActions.set(handler: { [weak self] control  in
             
-            if let item = self?.item as? RowItem {
-                let signal = chatMenuItems(for:  item.parent, entry: nil, textLayout: nil, chatInteraction: item.interactions, fromAdPromo: true) |> deliverOnMainQueue
+            if let item = self?.item as? RowItem, let parent = item.parent, let interactions = item.interactions {
+                let signal = chatMenuItems(for: parent, entry: nil, textLayout: nil, chatInteraction: interactions, fromAdPromo: true) |> deliverOnMainQueue
                 if let event = NSApp.currentEvent {
                     _ = signal.startStandalone(next: { items in
                         let menu = ContextMenu()
@@ -307,7 +307,7 @@ private final class RowView: GeneralContainableRowView {
 
 private let _id_header = InputDataIdentifier("_id_header")
 
-private func entries(_ state: State, message: Message, interactions: ChatInteraction, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, message: Message?, interactions: ChatInteraction?, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -325,7 +325,7 @@ private func entries(_ state: State, message: Message, interactions: ChatInterac
     
     return entries
 }
-func FragmentAdsInfoController(context: AccountContext, message: Message, interactions: ChatInteraction) -> InputDataModalController {
+func FragmentAdsInfoController(context: AccountContext, message: Message?, interactions: ChatInteraction?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 

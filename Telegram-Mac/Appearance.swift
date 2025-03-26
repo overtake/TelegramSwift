@@ -503,12 +503,14 @@ func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: 
 }
 
 
-func generateTextIcon(_ text: NSAttributedString) -> CGImage {
+func generateTextIcon(_ text: NSAttributedString, minSize: Bool = true) -> CGImage {
     
-    let textNode = TextNode.layoutText(text, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    let textNode = TextNode.layoutText(text, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
     var size = textNode.0.size
-    size.width = max(size.width, 24)
-    size.width = max(size.height, 23)
+    if minSize {
+        size.width = max(size.width, 24)
+        size.width = max(size.height, 23)
+    }
     return generateImage(textNode.0.size, rotatedContext: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)

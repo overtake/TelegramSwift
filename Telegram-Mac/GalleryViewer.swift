@@ -365,7 +365,7 @@ class GalleryViewer: NSResponder {
             })
             execute(inapp: link)
             
-            context.engine.messages.markAdAction(peerId: peerId, opaqueId: adAttribute.opaqueId, media: true, fullscreen: true)
+            context.engine.messages.markAdAction(opaqueId: adAttribute.opaqueId, media: true, fullscreen: true)
         }
         interactions.canShare = { [weak self] in
             let isProtected = self?.pager.selectedItem?.entry.message?.isCopyProtected() ?? false

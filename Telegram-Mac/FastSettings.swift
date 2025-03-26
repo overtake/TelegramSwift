@@ -206,10 +206,29 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
+    private static let kPhotoSize = "kPhotoSize"
+
+    
     private static let kStoryMuted = "kStoryMuted"
     private static let kStoryHD = "kStoryHD"
     
     private static let kHashtagChannel = "kHashtagChannel";
+    
+    
+    private static let kContactsSort = "kContactsSort";
+    
+    public static var contactsSort: PeerListState.ContactsSort {
+        get {
+            if let value = UserDefaults.standard.value(forKey: kContactsSort) as? Int32 {
+                return .init(rawValue: value) ?? .lastSeen
+            } else {
+                return .lastSeen
+            }
+        }
+        set {
+            UserDefaults.standard.setValue(newValue.rawValue, forKey: kContactsSort)
+        }
+    }
 
 
     public static var hasHashtagChannelBadge: Bool {
@@ -265,6 +284,23 @@ class FastSettings {
     static func toggleChannelMessagesMuted(_ peerId: PeerId) -> Void {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
+    
+    static var photoDimension: CGFloat {
+        if let largePhotos = UserDefaults.standard.value(forKey: kPhotoSize) as? Bool {
+            return largePhotos ? 2560 : 1280
+        } else {
+            return 1280
+        }
+    }
+    
+    static var sendLargePhotos: Bool {
+        return UserDefaults.standard.bool(forKey: kPhotoSize)
+    }
+    
+    static func sendLargePhotos(_ value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: kPhotoSize)
+    }
+
     
     static func needConfirmPaid(_ peerId: PeerId, price: Int) -> Bool {
         return UserDefaults.standard.bool(forKey: "\(peerId)_confirm_paid_\(price)_3")

@@ -1010,12 +1010,21 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().chatListTextUniqueGift(gift.title + " #\(gift.number)")
                 }
             }
-//        case let .paidMessage(stars):
-//            if authorId == account.peerId {
-//                text = strings().chatServicePaidMessageYou(strings().starListItemCountCountable(Int(stars)))
-//            } else {
-//                text = strings().chatServicePaidMessage(authorName, strings().starListItemCountCountable(Int(stars)))
-//            }
+        case let .paidMessagesRefunded(_, stars):
+            let starsString = strings().starListItemCountCountable(Int(stars))
+            if authorId == account.peerId {
+                text = strings().notificationPaidMessageRefundYou(starsString, authorName)
+            } else {
+                text = strings().notificationPaidMessageRefund(authorName, starsString)
+            }
+        case .paidMessagesPriceEdited(let stars):
+            let starsString = strings().starListItemCountCountable(Int(stars))
+            
+            if authorId == account.peerId {
+                text = strings().notificationPaidMessagePriceChangedYou(starsString)
+            } else {
+                text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
+            }
         }
     }
     return (text, entities, media)

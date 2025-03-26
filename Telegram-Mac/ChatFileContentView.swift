@@ -81,8 +81,15 @@ class ChatFileContentView: ChatMediaContentView {
             if media.isGraphicFile || media.isVideoFile {
                 parameters?.showMedia(parent)
             } else {
-                if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
-                    verifyAlert_button(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
+                
+                let badExts = ["sh", "bash", "zsh", "csh", "tcsh", "command", "svg", "html", "htm", "xhtml", "app", "exe", "bin", "run", "pkg", "mpkg", "dmg", "iso", "docm", "xlsm", "pptm", "alias", "lnk", "plist", "conf", "ini"]
+                
+                let badFilename = badExts.contains(where: {
+                    return (media.fileName ?? "").hasSuffix("." + $0)
+                })
+                
+                if badExts.contains(media.mimeType) || badFilename {
+                    verifyAlert_button(for: context.window, information: strings().chatFileQuickLookMalf, successHandler: { _ in
                         QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                     })
                 } else {

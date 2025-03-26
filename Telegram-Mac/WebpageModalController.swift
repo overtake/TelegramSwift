@@ -2191,6 +2191,150 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self.checkLocation()
         case "web_app_open_location_settings":
             self.openLocationSettings()
+        case "web_app_device_storage_save_key":
+            if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
+                if let key = json["key"] as? String {
+                    let value = json["value"]
+                    
+                    var effectiveValue: String?
+                    if let stringValue = value as? String {
+                        effectiveValue = stringValue
+                    } else if value is NSNull {
+                        effectiveValue = nil
+                    } else {
+                        let data: JSON = [
+                            "req_id": requestId,
+                            "error": "VALUE_INVALID"
+                        ]
+                        self.sendEvent(name: "device_storage_failed", data: data.string)
+                        return
+                    }
+                    let _ = self.context.engine.peers.setBotStorageValue(peerId: botId, key: key, value: effectiveValue).start(error: { [weak self] error in
+                        var errorValue = "UNKNOWN_ERROR"
+                        if case .quotaExceeded = error {
+                            errorValue = "QUOTA_EXCEEDED"
+                        }
+                        let data: JSON = [
+                            "req_id": requestId,
+                            "error": errorValue
+                        ]
+                        self?.sendEvent(name: "device_storage_failed", data: data.string)
+                    }, completed: { [weak self] in
+                        let data: JSON = [
+                            "req_id": requestId
+                        ]
+                        self?.sendEvent(name: "device_storage_key_saved", data: data.string)
+                    })
+                } else {
+                    let data: JSON = [
+                        "req_id": requestId,
+                        "error": "KEY_INVALID"
+                    ]
+                    self.sendEvent(name: "device_storage_failed", data: data.string)
+                }
+            }
+        case "web_app_device_storage_get_key":
+            if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
+                if let key = json["key"] as? String {
+                    let _ = (self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotStorageValue(id: botId, key: key))
+                    |> deliverOnMainQueue).start(next: { [weak self] value in
+                        let data: JSON = [
+                            "req_id": requestId,
+                            "value": value ?? NSNull()
+                        ]
+                        self?.sendEvent(name: "device_storage_key_received", data: data.string)
+                    })
+                } else {
+                    let data: JSON = [
+                        "req_id": requestId,
+                        "error": "KEY_INVALID"
+                    ]
+                    self.sendEvent(name: "device_storage_failed", data: data.string)
+                }
+            }
+        case "web_app_device_storage_clear":
+            if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
+                let _ = (self.context.engine.peers.clearBotStorage(peerId: botId)
+                |> deliverOnMainQueue).start(completed: { [weak self] in
+                    let data: JSON = [
+                        "req_id": requestId
+                    ]
+                    self?.sendEvent(name: "device_storage_cleared", data: data.string)
+                })
+            }
+        case "web_app_secure_storage_save_key":
+            if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
+                if let key = json["key"] as? String {
+                    let value = json["value"]
+
+                    var effectiveValue: String?
+                    if let stringValue = value as? String {
+                        effectiveValue = stringValue
+                    } else if value is NSNull {
+                        effectiveValue = nil
+                    } else {
+                        let data: JSON = [
+                            "req_id": requestId,
+                            "error": "VALUE_INVALID"
+                        ]
+                        self.sendEvent(name: "secure_storage_failed", data: data.string)
+                        return
+                    }
+                    let _ = (WebAppSecureStorage.setValue(context: self.context, botId: botId, key: key, value: effectiveValue)
+                    |> deliverOnMainQueue).start(error: { [weak self] error in
+                        var errorValue = "UNKNOWN_ERROR"
+                        if case .quotaExceeded = error {
+                            errorValue = "QUOTA_EXCEEDED"
+                        }
+                        let data: JSON = [
+                            "req_id": requestId,
+                            "error": errorValue
+                        ]
+                        self?.sendEvent(name: "secure_storage_failed", data: data.string)
+                    }, completed: { [weak self] in
+                        let data: JSON = [
+                            "req_id": requestId
+                        ]
+                        self?.sendEvent(name: "secure_storage_key_saved", data: data.string)
+                    })
+                } else {
+                    let data: JSON = [
+                        "req_id": requestId,
+                        "error": "KEY_INVALID"
+                    ]
+                    self.sendEvent(name: "secure_storage_failed", data: data.string)
+                }
+            }
+        case "web_app_secure_storage_get_key":
+            if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
+                if let key = json["key"] as? String {
+                    let _ = (WebAppSecureStorage.getValue(context: self.context, botId: botId, key: key)
+                    |> deliverOnMainQueue).start(next: { [weak self] value in
+                        let data: JSON = [
+                            "req_id": requestId,
+                            "value": value ?? NSNull()
+                        ]
+                        self?.sendEvent(name: "secure_storage_key_received", data: data.string)
+                    })
+                } else {
+                    let data: JSON = [
+                        "req_id": requestId,
+                        "error": "KEY_INVALID"
+                    ]
+                    self.sendEvent(name: "secure_storage_failed", data: data.string)
+                }
+            }
+        case "web_app_secure_storage_clear":
+            if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
+                let _ = (WebAppSecureStorage.clearStorage(context: self.context, botId: botId)
+                |> deliverOnMainQueue).start(completed: { [weak self] in
+                    let data: JSON = [
+                        "req_id": requestId
+                    ]
+                    self?.sendEvent(name: "secure_storage_cleared", data: data.string)
+                })
+            }
+
         default:
             break
         }

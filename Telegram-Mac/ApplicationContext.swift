@@ -527,7 +527,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-                     
+                
+            showModal(with: JoinGroupCallController(context: context), for: window)
             
           //  showModal(with: StarGift_Nft_Controller(context: context), for: window)
           //  context.bindings.rootNavigation().push(Affiliate_StartController(context: context))

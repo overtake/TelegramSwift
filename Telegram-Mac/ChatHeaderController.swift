@@ -2531,7 +2531,7 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         if let data = state.botManager  {
             textView.update(TextViewLayout(.initialize(string: data.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1))
             let status: String
-            if data.bot.canReply {
+            if data.bot.rights.contains(.readMessages) {
                 if data.settings.isPaused {
                     status = strings().chatBotManagerPaused
                 } else {
@@ -2540,7 +2540,7 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
             } else {
                 status = strings().chatBotManagerFullAccess
             }
-            stop.isHidden = !data.bot.canReply
+            stop.isHidden = false//!data.bot.canReply
             self.stop.set(text: data.settings.isPaused ? strings().chatBotManagerStart : strings().chatBotManagerStop, for: .Normal)
             infoView.update(TextViewLayout(.initialize(string: status, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
             self.avatar.setPeer(account: chatInteraction.context.account, peer: data.peer._asPeer())

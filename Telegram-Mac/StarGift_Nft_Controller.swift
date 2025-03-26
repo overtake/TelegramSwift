@@ -1485,7 +1485,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                             return
                         }
                         
-                        if let stars = convertStars, stars > 0 {
+                        if let stars = transferStars, stars > 0 {
                             info = strings().giftTransferConfirmationText("\(unique.title) #\(unique.number)", peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(stars)))
                             ok = strings().giftTransferConfirmationTransfer + " " + strings().starListItemCountCountable(Int(stars))
                         } else {
@@ -1498,7 +1498,11 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         }))
                         
                         showModalAlert(for: window, data: data, completion: { result in
-                            _ = context.engine.payments.transferStarGift(prepaid: convertStars == nil, reference: reference, peerId: peerId).startStandalone()
+                            if let giftsContext {
+                                _ = giftsContext.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
+                            } else {
+                                _ = context.engine.payments.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
+                            }
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                             close?()
                         })

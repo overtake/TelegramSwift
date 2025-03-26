@@ -2369,7 +2369,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     let emojiItems: [StickerPackItem] = current.messageEffects.filter({ value in
                         if value.effectAnimation != nil {
                             if let search {
-                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                let emoji = value.effectSticker._parse().customEmojiText ?? value.effectSticker._parse().stickerText ?? ""
                                 return search.contains(emoji)
                             } else {
                                 return true
@@ -2377,13 +2377,13 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         }
                         return false
                     }).map {
-                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
+                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker._parse(), indexKeys: [])
                     }
                     
                     let stickerItems: [StickerPackItem] = current.messageEffects.filter({ value in
                         if value.effectAnimation == nil {
                             if let search {
-                                let emoji = value.effectSticker.customEmojiText ?? value.effectSticker.stickerText ?? ""
+                                let emoji = value.effectSticker._parse().customEmojiText ?? value.effectSticker._parse().stickerText ?? ""
                                 return search.contains(emoji)
                             } else {
                                 return true
@@ -2391,7 +2391,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         }
                         return false
                     }).map {
-                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker, indexKeys: [])
+                        .init(index: .init(index: 0, id: 0), file: $0.effectSticker._parse(), indexKeys: [])
                     }
                     
                     

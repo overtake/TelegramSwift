@@ -1429,6 +1429,41 @@ class ChatServiceItem: ChatRowItem {
                         self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
                         
                     }
+                case let .paidMessagesRefunded(_, stars):
+                    let starsString = strings().starListItemCountCountable(Int(stars))
+                    let text: String
+                    if authorId == context.peerId {
+                        text = strings().notificationPaidMessageRefundYou(starsString, authorName)
+                    } else {
+                        text = strings().notificationPaidMessageRefund(authorName, starsString)
+                    }
+                    
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+                case .paidMessagesPriceEdited(let stars):
+                    let starsString = strings().starListItemCountCountable(Int(stars))
+                    let text: String
+                    if authorId == context.peerId {
+                        text = strings().notificationPaidMessagePriceChangedYou(starsString)
+                    } else {
+                        text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
+                    }
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
 //                case let .paidMessage(stars):
 //                    
 //                    let text: String

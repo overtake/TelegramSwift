@@ -768,6 +768,8 @@ private final class PendingInAppPurchaseState: Codable {
                 self = .starsGift(peerId: peerId, count: count)
             case let .starsGiveaway(stars, boostPeer, additionalPeerIds, countries, onlyNewSubscribers, showWinners, prizeDescription, randomId, untilDate, _, _, users):
                 self = .starsGiveaway(stars: stars, boostPeer: boostPeer, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: onlyNewSubscribers, showWinners: showWinners, prizeDescription: prizeDescription, randomId: randomId, untilDate: untilDate, users: users)
+            case .authCode:
+                fatalError("notSupported")
             }
         }
         
