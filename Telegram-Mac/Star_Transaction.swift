@@ -1679,7 +1679,7 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
         
         let state = stateValue.with { $0 }
         
-        if let reference, case let .starGift(_, _, _, _, _, _, _, _, _, convertStars, canExportDate, _, _, _) = purpose {
+        if let reference, case let .starGift(_, _, _, _, _, _, _, _, _, transferStars, canExportDate, _, _, _) = purpose {
             
             var additionalItem: SelectPeers_AdditionTopItem?
             if let canExportDate {
@@ -1732,12 +1732,12 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
                         
             
                             
-                            if let convertStars = convertStars, let starsState = state.starsState, starsState.balance.value < convertStars {
+                            if let convertStars = transferStars, let starsState = state.starsState, starsState.balance.value < convertStars {
                                 showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: convertStars)), for: window)
                                 return
                             }
                             
-                            if let stars = convertStars, stars > 0 {
+                            if let stars = transferStars, stars > 0 {
                                 info = strings().giftTransferConfirmationText("\(gift.title) #\(gift.number)", peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(stars)))
                                 ok = strings().giftTransferConfirmationTransfer + " " + strings().starListItemCountCountable(Int(stars))
                             } else {

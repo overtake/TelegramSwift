@@ -1033,6 +1033,8 @@ class AuthController : GenericViewController<AuthView> {
                 }, takeTerms: {
                     
                 })
+            case .payment:
+                fatalError("not supported")
             }
         }
         

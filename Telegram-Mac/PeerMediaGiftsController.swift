@@ -162,9 +162,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         
         switch option.gift {
         case let .unique(gift):
-            if let reference = option.reference {
-                showModal(with: StarGift_Nft_Controller(context: context, gift: option.gift, source: .quickLook(toPeer, gift), transaction: transaction, purpose: .starGift(gift: option.gift, convertStars: option.convertStars, text: option.text, entities: option.entities, nameHidden: option.nameHidden, savedToProfile: option.savedToProfile, converted: false, fromProfile: true, upgraded: false, transferStars: option.transferStars, canExportDate: option.canExportDate, reference: option.reference, sender: option.fromPeer, saverId: nil), giftsContext: giftsContext, pinnedInfo: .init(pinnedInfo: option.pinnedToTop, reference: reference)), for: context.window)
-            }
+            showModal(with: StarGift_Nft_Controller(context: context, gift: option.gift, source: .quickLook(toPeer, gift), transaction: transaction, purpose: .starGift(gift: option.gift, convertStars: option.convertStars, text: option.text, entities: option.entities, nameHidden: option.nameHidden, savedToProfile: option.savedToProfile, converted: false, fromProfile: true, upgraded: false, transferStars: option.transferStars, canExportDate: option.canExportDate, reference: option.reference, sender: option.fromPeer, saverId: nil), giftsContext: giftsContext, pinnedInfo: option.reference.flatMap { .init(pinnedInfo: option.pinnedToTop, reference: $0) } ), for: context.window)
         default:
             showModal(with: Star_TransactionScreen(context: context, fromPeerId: peerId, peer: fromPeer, transaction: transaction, purpose: purpose, reference: option.reference, profileContext: giftsContext), for: context.window)
         }
@@ -246,12 +244,12 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
                             return
                         }
                         
-                        if let convertStars = convertStars, let starsState = state.starsState, starsState.balance.value < convertStars {
-                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: convertStars)), for: window)
+                        if let transferStars = transferStars, let starsState = state.starsState, starsState.balance.value < transferStars {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: transferStars)), for: window)
                             return
                         }
                         
-                        if let stars = convertStars, stars > 0 {
+                        if let stars = transferStars, stars > 0 {
                             info = strings().giftTransferConfirmationText("\(unique.title) #\(unique.number)", peer._asPeer().displayTitle, strings().starListItemCountCountable(Int(stars)))
                             ok = strings().giftTransferConfirmationTransfer + " " + strings().starListItemCountCountable(Int(stars))
                         } else {
@@ -264,7 +262,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
                         }))
                         
                         showModalAlert(for: window, data: data, completion: { result in
-                            _ = context.engine.payments.transferStarGift(prepaid: convertStars == nil, reference: reference, peerId: peerId).startStandalone()
+                            _ = giftsContext.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                         })
                     }

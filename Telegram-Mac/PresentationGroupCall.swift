@@ -1264,7 +1264,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, enableSystemMute: false, preferX264: false, logPath: allocateCallLogPath(account: self.account), onMutedSpeechActivityDetected: { _ in }, encryptionKey: encryptionKey?.key, isConference: isConference, isStream: false, sharedAudioDevice: nil)
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, enableSystemMute: false, preferX264: false, logPath: allocateCallLogPath(account: self.account), onMutedSpeechActivityDetected: { _ in }, encryptionKey: encryptionKey?.key, isConference: isConference, audioIsActiveByDefault: false, isStream: false, sharedAudioDevice: nil)
                 
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
@@ -2483,6 +2483,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             onMutedSpeechActivityDetected: { _ in },
             encryptionKey: encryptionKey?.key,
             isConference: isConference,
+            audioIsActiveByDefault: false,
             isStream: false,
             sharedAudioDevice: nil
         )

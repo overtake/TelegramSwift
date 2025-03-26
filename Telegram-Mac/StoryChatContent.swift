@@ -446,7 +446,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             slowModeTimeout: cachedChannelData.slowModeTimeout,
                             slowModeValidUntilTimestamp: cachedChannelData.slowModeValidUntilTimestamp,
                             canAvoidRestrictions: boostsToUnrestrict != nil ? boostsToUnrestrict! <= appliedBoosts : false,
-                            paidMessage: cachedChannelData.sendPaidMessageStars
+                            paidMessage: peer._asPeer().sendPaidMessageStars
                         )
                     } else {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(

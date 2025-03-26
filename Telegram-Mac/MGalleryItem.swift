@@ -585,7 +585,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             }
             
             if let adAttribute = message.adAttribute {
-                context.engine.messages.markAdAction(peerId: message.id.peerId, opaqueId: adAttribute.opaqueId, media: true, fullscreen: false)
+                context.engine.messages.markAdAction(opaqueId: adAttribute.opaqueId, media: true, fullscreen: false)
             }
             
             let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: FontSize.text, openInfo: { peerId, toChat, postId, action in

@@ -71,6 +71,7 @@ final class GroupCallUIArguments {
     let focusVideo: (String?)->Void
     let takeTileView:() -> (NSSize, GroupCallTileView)?
     let getSource:(VideoSourceMacMode)->VideoSourceMac?
+    let toggleShowConferenceKey: (Bool)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -104,7 +105,8 @@ final class GroupCallUIArguments {
     dismissTooltip:@escaping(GroupCallUIState.ControlsTooltip)->Void,
     focusVideo: @escaping(String?)->Void,
     takeTileView:@escaping() -> (NSSize, GroupCallTileView)?,
-    getSource:@escaping(VideoSourceMacMode)->VideoSourceMac?) {
+    getSource:@escaping(VideoSourceMacMode)->VideoSourceMac?,
+    toggleShowConferenceKey: @escaping(Bool)->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -139,6 +141,7 @@ final class GroupCallUIArguments {
         self.focusVideo = focusVideo
         self.takeTileView = takeTileView
         self.getSource = getSource
+        self.toggleShowConferenceKey = toggleShowConferenceKey
     }
 }
 
@@ -359,7 +362,7 @@ private func _id_peer_id(_ data: PeerGroupCallData, endpoint: String? = nil) -> 
     }
 }
 
-private func makeState(previous:GroupCallUIState?, peerView: PeerView?, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], pinnedData: GroupCallUIState.PinnedData, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: VideoSources, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, tooltips: Tooltips, version: Int, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) -> GroupCallUIState {
+private func makeState(previous:GroupCallUIState?, peerView: PeerView?, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], pinnedData: GroupCallUIState.PinnedData, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: VideoSources, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, tooltips: Tooltips, version: Int, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval, showConferenceKey: Bool) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -549,7 +552,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView?, state: P
         controlsTooltip = nil
     }
         
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerView.flatMap { peerViewMainPeer($0) }, cachedData: peerView?.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants || isStream, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled, isStream: isStream, windowIsFullscreen: windowIsFullscreen, initialTimestamp: initialTimestamp)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerView.flatMap { peerViewMainPeer($0) }, cachedData: peerView?.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants || isStream, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled, isStream: isStream, windowIsFullscreen: windowIsFullscreen, initialTimestamp: initialTimestamp, showConferenceKey: showConferenceKey)
 }
 
 
@@ -697,6 +700,7 @@ final class GroupCallUIController : ViewController {
     private var canManageCall: Bool = false
     private let connecting = MetaDisposable()
     private let isFullScreen = ValuePromise(false, ignoreRepeated: true)
+    private let showConferenceKey = ValuePromise(false, ignoreRepeated: true)
     private weak var sharing: DesktopCapturerWindow?
     private var statusBar: GroupCallStatusBar?
     private var requestedVideoSources = Set<String>()
@@ -1160,6 +1164,8 @@ final class GroupCallUIController : ViewController {
             case .video:
                 return self?.genericView.state?.state.sources.video
             }
+        }, toggleShowConferenceKey: { [weak self] value in
+            self?.showConferenceKey.set(value)
         })
         
         self.statusBar = .init(callState.get() |> deliverOnMainQueue, arguments: arguments, sharedContext: data.call.sharedContext)
@@ -1698,7 +1704,7 @@ final class GroupCallUIController : ViewController {
         }
         
         
-        let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), dominantSpeakerSignal.get(), activeVideoViews.get() |> distinctUntilChanged, isFullScreen.get(), self.data.call.stateVersion, hideParticipants.get())
+        let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), dominantSpeakerSignal.get(), activeVideoViews.get() |> distinctUntilChanged, isFullScreen.get(), self.data.call.stateVersion, hideParticipants.get(), showConferenceKey.get())
 
         
         var currentState: GroupCallUIState?
@@ -1738,7 +1744,8 @@ final class GroupCallUIController : ViewController {
                                         version: values.7.7,
                                         isStream: values.0.isStream,
                                         windowIsFullscreen: values.10,
-                                        initialTimestamp: initialTimestamp)
+                                        initialTimestamp: initialTimestamp,
+                                        showConferenceKey: values.7.9)
             }
             return .single(value!)
         } |> distinctUntilChanged
@@ -1954,6 +1961,10 @@ final class GroupCallUIController : ViewController {
         
         window.set(handler: { [weak arguments, weak self] event in
             let settings = self?.navigationController?.controller as? GroupCallSettingsController
+            if self?.genericView.state?.showConferenceKey == true {
+                self?.showConferenceKey.set(false)
+                return .invokeNext
+            }
             if let _ = settings {
                 self?.navigationController?.back()
             } else {

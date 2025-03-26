@@ -141,9 +141,6 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 
                 var signals:[Signal<Bool, NoError>] = []
                 
-                if self.isLocked {
-                    return .single(true)
-                }
                 
                 appDelegate?.enumerateAccountContexts({ context in
                     closeAllModals(window: context.window)

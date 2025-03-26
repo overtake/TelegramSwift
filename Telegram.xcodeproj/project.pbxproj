@@ -508,6 +508,9 @@
 		27867A272AE0364200E25BB8 /* bot_menu_web_app.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */; };
 		27867A292AE2876100E25BB8 /* BoostReassignController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27867A282AE2876100E25BB8 /* BoostReassignController.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
+		278751592D91A8B90005D9F9 /* libtde2e.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 278751582D91A8A50005D9F9 /* libtde2e.a */; };
+		2787515B2D9283750005D9F9 /* WebAppSecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787515A2D9283750005D9F9 /* WebAppSecureStorage.swift */; };
+		2787515D2D9289090005D9F9 /* GroupCallSecureEmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787515C2D9288FD0005D9F9 /* GroupCallSecureEmojiView.swift */; };
 		2787AD622BEA4DE00046578E /* VCardModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787AD612BEA4DE00046578E /* VCardModalController.swift */; };
 		2787AD692BED0DCE0046578E /* menu_adult.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2787AD672BED0DCD0046578E /* menu_adult.tgs */; };
 		2787AD6A2BED0DCE0046578E /* menu_adult_slash.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */; };
@@ -899,6 +902,8 @@
 		27EFF4BD27BBDF4600006834 /* Auth_PasswordEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BC27BBDF4600006834 /* Auth_PasswordEntry.swift */; };
 		27EFF4BF27BBF2D600006834 /* Auth_NextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */; };
 		27EFF4C127BBF49700006834 /* Auth_Insets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4C027BBF49700006834 /* Auth_Insets.swift */; };
+		27F219702D897C13003C5F97 /* SearchAdAboutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F2196F2D897C0E003C5F97 /* SearchAdAboutController.swift */; };
+		27F219722D8D3354003C5F97 /* JoinGroupCallController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F219712D8D334D003C5F97 /* JoinGroupCallController.swift */; };
 		27F2BBC527BE4E7B00A37463 /* code_note.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F2BBC427BE4E7A00A37463 /* code_note.tgs */; };
 		27F2BBC727BE76D000A37463 /* Auth_Email.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F2BBC627BE76D000A37463 /* Auth_Email.swift */; };
 		27F2BBC927BE79ED00A37463 /* email_recovery.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F2BBC827BE79ED00A37463 /* email_recovery.tgs */; };
@@ -2168,6 +2173,9 @@
 		27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = bot_menu_web_app.tgs; sourceTree = "<group>"; };
 		27867A282AE2876100E25BB8 /* BoostReassignController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostReassignController.swift; sourceTree = "<group>"; };
 		278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPatternPreviewController.swift; sourceTree = "<group>"; };
+		278751582D91A8A50005D9F9 /* libtde2e.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtde2e.a; path = "core-xprojects/tde2e/build/tde2e/lib/libtde2e.a"; sourceTree = "<group>"; };
+		2787515A2D9283750005D9F9 /* WebAppSecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppSecureStorage.swift; sourceTree = "<group>"; };
+		2787515C2D9288FD0005D9F9 /* GroupCallSecureEmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSecureEmojiView.swift; sourceTree = "<group>"; };
 		2787AD612BEA4DE00046578E /* VCardModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VCardModalController.swift; sourceTree = "<group>"; };
 		2787AD672BED0DCD0046578E /* menu_adult.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_adult.tgs; sourceTree = "<group>"; };
 		2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_adult_slash.tgs; sourceTree = "<group>"; };
@@ -2509,6 +2517,8 @@
 		27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_NextView.swift; sourceTree = "<group>"; };
 		27EFF4C027BBF49700006834 /* Auth_Insets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Insets.swift; sourceTree = "<group>"; };
 		27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturerWindow.swift; sourceTree = "<group>"; };
+		27F2196F2D897C0E003C5F97 /* SearchAdAboutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchAdAboutController.swift; sourceTree = "<group>"; };
+		27F219712D8D334D003C5F97 /* JoinGroupCallController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinGroupCallController.swift; sourceTree = "<group>"; };
 		27F2BBC427BE4E7A00A37463 /* code_note.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = code_note.tgs; sourceTree = "<group>"; };
 		27F2BBC627BE76D000A37463 /* Auth_Email.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Email.swift; sourceTree = "<group>"; };
 		27F2BBC827BE79ED00A37463 /* email_recovery.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = email_recovery.tgs; sourceTree = "<group>"; };
@@ -3396,6 +3406,7 @@
 				275E851C2B20C4EC007A72CA /* ShelfPack in Frameworks */,
 				277DFE6127842E6600F78396 /* Translate in Frameworks */,
 				27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */,
+				278751592D91A8B90005D9F9 /* libtde2e.a in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
 				27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */,
 				27B8361C2B5FCD0300E82683 /* Dock in Frameworks */,
@@ -3677,6 +3688,7 @@
 		2738CAD42707047E00CDB1BF /* request-join */ = {
 			isa = PBXGroup;
 			children = (
+				27F219712D8D334D003C5F97 /* JoinGroupCallController.swift */,
 				2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */,
 				2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */,
 				2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */,
@@ -3779,6 +3791,7 @@
 		2761549C2C2081CA0090BFFC /* mini-apps */ = {
 			isa = PBXGroup;
 			children = (
+				2787515A2D9283750005D9F9 /* WebAppSecureStorage.swift */,
 				27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */,
 				27352DDE2CE378C900220A87 /* FileDownload.swift */,
 				277113662CDA284C008087E9 /* WebbotShareMessageModal.swift */,
@@ -3832,6 +3845,7 @@
 		276B5978261C77C20029FD3F /* views */ = {
 			isa = PBXGroup;
 			children = (
+				2787515C2D9288FD0005D9F9 /* GroupCallSecureEmojiView.swift */,
 				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */,
 				276B597C261C78AD0029FD3F /* GroupCallView.swift */,
@@ -5076,6 +5090,7 @@
 		C2271D9A1DACC011001792B6 /* search */ = {
 			isa = PBXGroup;
 			children = (
+				27F2196F2D897C0E003C5F97 /* SearchAdAboutController.swift */,
 				C2271D9B1DACC027001792B6 /* SearchController.swift */,
 				C2271D9D1DACC796001792B6 /* ChatListMessageRowItem.swift */,
 				C2271D9F1DACC7F7001792B6 /* ChatListMessageRowView.swift */,
@@ -6582,6 +6597,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				278751582D91A8A50005D9F9 /* libtde2e.a */,
 				27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */,
 				2739A4AF2CABC4260065186B /* libopenh264.a */,
 				2703762E2CA1FEC4003EC235 /* libiconv.2.tbd */,
@@ -7635,6 +7651,7 @@
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
+				2787515D2D9289090005D9F9 /* GroupCallSecureEmojiView.swift in Sources */,
 				C22338451F823F8C004AD57C /* VideoCameraStructures.swift in Sources */,
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
@@ -8104,6 +8121,7 @@
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C291942F1DCC6E2200359491 /* DeclareEncodables.swift in Sources */,
 				27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */,
+				27F219702D897C13003C5F97 /* SearchAdAboutController.swift in Sources */,
 				A7D2822F236C549B0000A9BF /* SyncCoreExtension.swift in Sources */,
 				C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */,
 				2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */,
@@ -8301,6 +8319,7 @@
 				2733670D2760F3010027441E /* ChatMessageMenuItems.swift in Sources */,
 				C248BD241E706104004B9106 /* BlockedPeersViewController.swift in Sources */,
 				C230B9111DD3866A0057F596 /* ComposeActions.swift in Sources */,
+				27F219722D8D3354003C5F97 /* JoinGroupCallController.swift in Sources */,
 				9F3D5F6322044D8700CB0CAA /* AppUpdateViewController.swift in Sources */,
 				C24DAB861E08026C005EE404 /* MGalleryVideoItem.swift in Sources */,
 				C2DE5D3C1F3CAE120081EC1E /* InstantPageTextItem.swift in Sources */,
@@ -8479,6 +8498,7 @@
 				C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */,
 				9F1BC1A9223FDE6D00F21815 /* InputSources.swift in Sources */,
 				2703763F2CA43E04003EC235 /* Report.swift in Sources */,
+				2787515B2D9283750005D9F9 /* WebAppSecureStorage.swift in Sources */,
 				9F63152621D236CB009FD379 /* ForgotPasswordController.swift in Sources */,
 				C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */,
 				9FC4DA9821DD0B86003E2A62 /* ChannelMemberCategoryListContext.swift in Sources */,
@@ -8762,6 +8782,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
+					"$(PROJECT_DIR)/core-xprojects/tde2e/build/tde2e/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.8.1;
@@ -8991,6 +9012,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 					"$(PROJECT_DIR)/core-xprojects/OpenH264/build/output/lib",
 					"$(PROJECT_DIR)/core-xprojects/dav1d/build/dav1d/lib",
+					"$(PROJECT_DIR)/core-xprojects/tde2e/build/tde2e/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.8.1;

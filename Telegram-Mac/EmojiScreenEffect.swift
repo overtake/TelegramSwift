@@ -195,10 +195,10 @@ final class EmojiScreenEffect {
             let signal: Signal<(LottieAnimation, String)?, NoError>
             var animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
             if let messageEffect = item.messageEffect {
-                let file = messageEffect.effectSticker
+                let file = messageEffect.effectSticker._parse()
                 animationSize = NSMakeSize(200, 200)
                 
-                if let animation = messageEffect.effectAnimation {
+                if let animation = messageEffect.effectAnimation?._parse() {
                     signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
                         if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                             return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
@@ -208,7 +208,7 @@ final class EmojiScreenEffect {
                     }
                     let _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: animation.resource)).start()
                 } else {
-                    if let effect = messageEffect.effectSticker.premiumEffect {
+                    if let effect = messageEffect.effectSticker._parse().premiumEffect {
                         signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                 return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")

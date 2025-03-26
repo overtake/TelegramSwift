@@ -1175,6 +1175,42 @@ public final class L10n {
   public static var businessAwayMessageHeader: String  { return L10n.tr("Localizable", "Business.AwayMessage.Header") }
   /// Away Message
   public static var businessAwayMessageTitle: String  { return L10n.tr("Localizable", "Business.AwayMessage.Title") }
+  /// Manage Gifts and Stars
+  public static var businessChatBotManageGifts: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts") }
+  /// Manage Messages
+  public static var businessChatBotManageMessages: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages") }
+  /// Manage Profile
+  public static var businessChatBotManageProfile: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile") }
+  /// Manage Stories
+  public static var businessChatBotManageStories: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageStories") }
+  /// Sell Gifts
+  public static var businessChatBotManageGiftsSell: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.Sell") }
+  /// Change Gift Settings
+  public static var businessChatBotManageGiftsSettings: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.Settings") }
+  /// Transfer and Upgrade Gifts
+  public static var businessChatBotManageGiftsTransfer: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.Transfer") }
+  /// Transfer Stars
+  public static var businessChatBotManageGiftsTransferStars: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.TransferStars") }
+  /// View Gifts
+  public static var businessChatBotManageGiftsView: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.View") }
+  /// Delete Received Messages
+  public static var businessChatBotManageMessagesDeleteReceived: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.DeleteReceived") }
+  /// Delete Sent Messages
+  public static var businessChatBotManageMessagesDeleteSent: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.DeleteSent") }
+  /// Mark Messages as Read
+  public static var businessChatBotManageMessagesMark: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.Mark") }
+  /// Read Messages
+  public static var businessChatBotManageMessagesRead: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.Read") }
+  /// Reply to Messages
+  public static var businessChatBotManageMessagesReply: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.Reply") }
+  /// Edit Profile Picture
+  public static var businessChatBotManageProfileAvatar: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Avatar") }
+  /// Edit Bio
+  public static var businessChatBotManageProfileBio: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Bio") }
+  /// Edit Name
+  public static var businessChatBotManageProfileName: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Name") }
+  /// Edit Username
+  public static var businessChatBotManageProfileUsername: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Username") }
   /// This bot doesn't support Telegram Business yet.
   public static var businessChatBotsBotNotSupported: String  { return L10n.tr("Localizable", "Business.ChatBots.BotNotSupported") }
   /// Enter the username or URL of the Telegram bot that you want to automatically process your chats.
@@ -4273,6 +4309,8 @@ public final class L10n {
   public static var chatEmptyPremiumRequiredAction: String  { return L10n.tr("Localizable", "Chat.Empty.PremiumRequired.Action") }
   /// Send a message or click on the greeting below
   public static var chatEmptyChatInfo: String  { return L10n.tr("Localizable", "Chat.EmptyChat.Info") }
+  /// Previewing this file can potentially expose your IP address to its sender or harm your device.
+  public static var chatFileQuickLookMalf: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Malf") }
   /// Previewing this file can potentially expose your IP address to its sender.
   public static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
   /// Only admins can send messages in this group.
@@ -9779,6 +9817,8 @@ public final class L10n {
   public static var generalSettingsSendByCmdEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByCmdEnter") }
   /// Use Enter to send
   public static var generalSettingsSendByEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByEnter") }
+  /// Send Large Photos
+  public static var generalSettingsSendLargePhotos: String  { return L10n.tr("Localizable", "GeneralSettings.SendLargePhotos") }
   /// Keyboard Shortcuts
   public static var generalSettingsShortcuts: String  { return L10n.tr("Localizable", "GeneralSettings.Shortcuts") }
   /// SHORTCUTS
@@ -9833,6 +9873,10 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// Sorry, %@ is not accepting gifts.
+  public static func giftNotAccepting(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.NotAccepting", p1)
+  }
   /// sold out
   public static var giftSoldOut: String  { return L10n.tr("Localizable", "Gift.SoldOut") }
   /// Unavailable
@@ -9877,6 +9921,8 @@ public final class L10n {
   public static func giftSendUpgrade(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Send.Upgrade", p1)
   }
+  /// User is not accepting gifts
+  public static var giftSendDisallowError: String  { return L10n.tr("Localizable", "Gift.Send.Disallow.Error") }
   /// Enable this to let %1$@ turn your gift into a unique collectible. [Learn More >]()
   public static func giftSendUpgradeInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Send.Upgrade.Info", p1)
@@ -10551,6 +10597,48 @@ public final class L10n {
   public static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   public static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// **%1$@** and **%2$@** already joined this call.
+  public static func groupCallJoinDouble(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Double", p1, p2)
+  }
+  /// **%1$@**, **%2$@** and %3$@ already joined this call.
+  public static func groupCallJoinMultiple(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple", p1, p2, p3)
+  }
+  /// No one has joined this call yet.
+  public static var groupCallJoinNone: String  { return L10n.tr("Localizable", "GroupCall.Join.None") }
+  /// **%1$@** already joined this call.
+  public static func groupCallJoinSingle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Single", p1)
+  }
+  /// %d
+  public static func groupCallJoinMultipleOthersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_countable", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_few", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_many", p1)
+  }
+  /// %d other
+  public static func groupCallJoinMultipleOthersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_one", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_other", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_two", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_zero", p1)
+  }
   /// Share Screen
   public static var groupCallStatusBarStartScreen: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StartScreen") }
   /// Share Video
@@ -12362,6 +12450,22 @@ public final class L10n {
   /// %1$@ paid %2$@ to send %3$@
   public static func notificationPaidMessageMany(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Notification.PaidMessageMany", p1, p2, p3)
+  }
+  /// %1$@ changed price to %2$@ per message
+  public static func notificationPaidMessagePriceChanged(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessagePriceChanged", p1, p2)
+  }
+  /// You changed price to %1$@ per message
+  public static func notificationPaidMessagePriceChangedYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessagePriceChangedYou", p1)
+  }
+  /// %1$@ refunded you %2$@
+  public static func notificationPaidMessageRefund(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageRefund", p1, p2)
+  }
+  /// You refunded %1$@ to %2$@
+  public static func notificationPaidMessageRefundYou(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageRefundYou", p1, p2)
   }
   /// %d
   public static func notificationPaidMessagesCountable(_ p1: Int) -> String {
@@ -14921,6 +15025,18 @@ public final class L10n {
   public static var previewSenderSpoilerTooltipEnable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Enable") }
   /// ZIP Archive
   public static var previewSenderTitleArchive: String  { return L10n.tr("Localizable", "PreviewSender.Title.Archive") }
+  /// Accepted Gift Types
+  public static var privacyGiftsAcceptedGiftTypes: String  { return L10n.tr("Localizable", "Privacy.Gifts.AcceptedGiftTypes") }
+  /// Choose the types of gifts that you allow others to send you.
+  public static var privacyGiftsInfo: String  { return L10n.tr("Localizable", "Privacy.Gifts.Info") }
+  /// Limited-Edition
+  public static var privacyGiftsLimitedEdition: String  { return L10n.tr("Localizable", "Privacy.Gifts.LimitedEdition") }
+  /// Premium Subscriptions
+  public static var privacyGiftsPremium: String  { return L10n.tr("Localizable", "Privacy.Gifts.Premium") }
+  /// Unique
+  public static var privacyGiftsUnique: String  { return L10n.tr("Localizable", "Privacy.Gifts.Unique") }
+  /// Unlimited
+  public static var privacyGiftsUnlimited: String  { return L10n.tr("Localizable", "Privacy.Gifts.Unlimited") }
   /// Sorry, you cannot add %@ to channels because of %@'s privacy settings.
   public static func privacyGroupsAndChannelsInviteToChannelError(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelError", p1, p2)
@@ -15583,8 +15699,16 @@ public final class L10n {
   public static var scheduleControllerAt: String  { return L10n.tr("Localizable", "ScheduleController.at") }
   /// Schedule Message
   public static var scheduleControllerTitle: String  { return L10n.tr("Localizable", "ScheduleController.Title") }
+  /// Ad
+  public static var searchAd: String  { return L10n.tr("Localizable", "Search.Ad") }
   /// Remove From Recent
   public static var searchRemoveFromRecent: String  { return L10n.tr("Localizable", "Search.RemoveFromRecent") }
+  /// Remove Ad
+  public static var searchAdRemoveAd: String  { return L10n.tr("Localizable", "Search.Ad.RemoveAd") }
+  /// Sponsor Info
+  public static var searchAdSponsorInfo: String  { return L10n.tr("Localizable", "Search.Ad.SponsorInfo") }
+  /// You can turn off ads by subscribing to Telegram Premium.
+  public static var searchAdAboutRemove: String  { return L10n.tr("Localizable", "Search.Ad.About.Remove") }
   /// Are you sure you want to clear your search history?
   public static var searchConfirmClearHistory: String  { return L10n.tr("Localizable", "Search.Confirm.ClearHistory") }
   /// All Chats

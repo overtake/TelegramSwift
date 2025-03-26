@@ -1324,6 +1324,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 text = strings().paymentsInvoiceNotExists
             case .noPaymentNeeded:
                 text = strings().unknownError
+            case .disallowedStarGift:
+                text = strings().giftSendDisallowError
             }
             showModalText(for: getWindow(context), text: text)
         })

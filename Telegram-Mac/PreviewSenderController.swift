@@ -597,7 +597,7 @@ fileprivate class PreviewSenderView : Control {
                 if let view = self.messageEffect {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current = InputMessageEffectView(account: interactions.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
+                let current = InputMessageEffectView(account: interactions.context.account, file: messageEffect.effect.effectSticker._parse(), size: NSMakeSize(16, 16))
                 current.userInteractionEnabled = true
                 current.setFrameOrigin(NSMakePoint(textContainerView.frame.width - current.frame.width - 10, textContainerView.frame.height - current.frame.height - 5))
                 
@@ -625,7 +625,7 @@ fileprivate class PreviewSenderView : Control {
                 textContainerView.addSubview(current)
                 
                 if let fromRect = messageEffect.fromRect {
-                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker, emoji: ""), size: current.frame.size)
+                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker._parse(), emoji: ""), size: current.frame.size)
                     
                     let toRect = current.convert(current.frame.size.bounds, to: nil)
                     
@@ -652,12 +652,12 @@ fileprivate class PreviewSenderView : Control {
                     }
                     
                     let messageEffect = messageEffect.effect
-                    let file = messageEffect.effectSticker
+                    let file = messageEffect.effectSticker._parse()
                     let signal: Signal<(LottieAnimation, String)?, NoError>
                     
                     let animationSize = NSMakeSize(200, 200)
                                         
-                    if let animation = messageEffect.effectAnimation {
+                    if let animation = messageEffect.effectAnimation?._parse() {
                         signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                 return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
@@ -666,7 +666,7 @@ fileprivate class PreviewSenderView : Control {
                             }
                         }
                     } else {
-                        if let effect = messageEffect.effectSticker.premiumEffect {
+                        if let effect = messageEffect.effectSticker._parse().premiumEffect {
                             signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                                 if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                     return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
@@ -1447,7 +1447,7 @@ class PreviewSenderController: ModalViewController, Notifable {
                 }
                 
                 let available: [ContextReaction] = Array(reactions.map { value in
-                    return .custom(value: .custom(value.effectSticker.fileId.id), fileId: value.effectSticker.fileId.id, value.effectSticker, isSelected: current?.effect.effectSticker.fileId.id == value.effectSticker.fileId.id)
+                    return .custom(value: .custom(value.effectSticker.fileId.id), fileId: value.effectSticker.fileId.id, value.effectSticker._parse(), isSelected: current?.effect.effectSticker.fileId.id == value.effectSticker.fileId.id)
                 }.prefix(7))
                 
                 let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in

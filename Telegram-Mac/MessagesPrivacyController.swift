@@ -118,7 +118,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
         }))
         
-        let amount = "\(Double(stars.value) * 0.013 * commission)".prettyCurrencyNumberUsd
+        let amount = "\(Double(stars.value) * 0.013 * (commission / 100))".prettyCurrencyNumberUsd
 
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().messagesPrivacyChargeforMessagesSelectInfo("\(commission.string)%", amount)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1

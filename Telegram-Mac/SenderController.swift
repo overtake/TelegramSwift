@@ -326,10 +326,12 @@ class Sender: NSObject {
                     
                     media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: fileAttributes(for: mimeType, path: path, isMedia: true), alternativeRepresentations: [])
                 } else if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif"), let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+                    
+                    let dimension: CGFloat = FastSettings.photoDimension
                    
                     let options = NSMutableDictionary()
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
-                    options.setValue(1280 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                    options.setValue(dimension as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
 
                     
@@ -344,12 +346,12 @@ class Sender: NSObject {
                             if size.width / 10 > size.height || size.height < 40 {
                                 makeFileMedia(true)
                             } else {
-                                let data = compressImageToJPEG(image, quality: 0.73)
+                                let data = compressImageToJPEG(image, quality: 0.75)
                                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
                                 FileManager.default.createFile(atPath: path, contents: data)
 
                                 
-                                let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
+                                let scaledSize = size.fitted(CGSize(width: dimension, height: dimension))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: isUniquelyReferencedTemporaryFile)
                                 
                                 media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])

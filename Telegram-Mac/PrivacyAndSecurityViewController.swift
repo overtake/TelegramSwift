@@ -808,7 +808,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .groupInvitations, current: info.groupInvitations, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, _, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .groupInvitations, current: info.groupInvitations, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -831,7 +831,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceCalls, current: info.voiceCalls, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceCalls, current: info.voiceCalls, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -854,7 +854,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .bio, current: info.bio, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .bio, current: info.bio, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -877,7 +877,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .birthday, current: info.birthday, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .birthday, current: info.birthday, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -900,7 +900,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .profilePhoto, current: info.profilePhoto, phoneDiscoveryEnabled: nil, updated: { updated, _, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .profilePhoto, current: info.profilePhoto, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -923,7 +923,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .forwards, current: info.forwards, phoneDiscoveryEnabled: nil, updated: { updated, _, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .forwards, current: info.forwards, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -970,7 +970,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceMessages, current: info.voiceMessages, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceMessages, current: info.voiceMessages, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }
@@ -1169,7 +1169,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 |> deliverOnMainQueue
             currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .gifts, current: info.giftsAutoSave, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _, globalSettings in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .gifts, current: info.giftsAutoSave, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
                                 |> filter { $0 != nil }

@@ -586,6 +586,8 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                         text = strings().checkoutErrorPrecheckoutFailed
                     case .starGiftOutOfStock:
                         text = strings().giftSoldOutError
+                    case .disallowedStarGift:
+                        text = strings().giftSendDisallowError
                     }
                     alert(for: window(), info: text)
                     invokeCompletion(.failed)
@@ -748,14 +750,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
     }, error: { error in
         invokeCompletion(.failed)
         close?()
-        switch error {
-        case .generic:
-            alert(for: window(), info: strings().unknownError)
-        case .alreadyActive:
-            alert(for: window(), info: strings().unknownError)
-        case .noPaymentNeeded:
-            alert(for: window(), info: strings().unknownError)
-        }
+        alert(for: window(), info: strings().unknownError)
     }))
     
     getController = { [weak controller] in

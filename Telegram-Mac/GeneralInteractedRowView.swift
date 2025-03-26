@@ -168,6 +168,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 nextView.image = generateCheckSelected(foregroundColor: item.customTheme?.accentColor ?? theme.colors.accent, backgroundColor: item.customTheme?.underSelectedColor ?? theme.colors.underSelectedColor)
                 
                 nextView.sizeToFit()
+                
             }
             if case let .imageContext(image, _) = item.type {
                 nextView.isHidden = false
@@ -198,6 +199,9 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 nextView.image = item.isSelected ? nil : NSImage(named: "Icon_GeneralNext")?.precomposed(color)
                 nextView.sizeToFit()
             }
+            
+            nextView.alphaValue = item.enabled ? 1.0 : 0.7
+            
             switch item.viewType {
             case .legacy:
                 containerView.setCorners([], animated: false)

@@ -464,7 +464,7 @@ class ChatInputView: View, Notifable {
                 if let view = self.messageEffect {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
+                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker._parse(), size: NSMakeSize(16, 16))
                 current.userInteractionEnabled = true
                 current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, 5))
                 
@@ -494,7 +494,7 @@ class ChatInputView: View, Notifable {
                 
                 
                 if let fromRect = messageEffect.fromRect {
-                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker, emoji: ""), size: current.frame.size)
+                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker._parse(), emoji: ""), size: current.frame.size)
                     
                     let toRect = current.convert(current.frame.size.bounds, to: nil)
                     
@@ -521,12 +521,12 @@ class ChatInputView: View, Notifable {
                     }
                     
                     let messageEffect = messageEffect.effect
-                    let file = messageEffect.effectSticker
+                    let file = messageEffect.effectSticker._parse()
                     let signal: Signal<(LottieAnimation, String)?, NoError>
                     
                     let animationSize = NSMakeSize(200, 200)
                                         
-                    if let animation = messageEffect.effectAnimation {
+                    if let animation = messageEffect.effectAnimation?._parse() {
                         signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                 return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
@@ -535,7 +535,7 @@ class ChatInputView: View, Notifable {
                             }
                         }
                     } else {
-                        if let effect = messageEffect.effectSticker.premiumEffect {
+                        if let effect = messageEffect.effectSticker._parse().premiumEffect {
                             signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                                 if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                     return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")

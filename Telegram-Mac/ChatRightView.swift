@@ -296,7 +296,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                     self.effectTextView = nil
                 }
                 
-                let file = found?._parse() ?? effect.effectSticker
+                let file = found?._parse() ?? effect.effectSticker._parse()
                 
                 if self.effectView?.animateLayer.fileId != file.fileId.id {
                     if let view = self.effectView {

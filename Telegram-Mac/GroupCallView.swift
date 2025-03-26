@@ -105,7 +105,9 @@ final class GroupCallView : View {
     
     private let visualBackgroundView = NSVisualEffectView()
     private let backgroundContainerView = View()
-
+    
+    private var secureEmojiView: GroupCallSecureEmojiView?
+    private var secureVisualBackgroundView: NSVisualEffectView?
     
     var arguments: GroupCallUIArguments? {
         didSet {
@@ -478,6 +480,19 @@ final class GroupCallView : View {
             transition.updateFrame(view: view, frame: focus(view.frame.size))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
+        
+        if let view = secureEmojiView {
+            if self.state?.showConferenceKey == true {
+                transition.updateFrame(view: view, frame: size.bounds.focus(view.frame.size))
+            } else {
+                transition.updateFrame(view: view, frame: size.bounds.focusX(view.frame.size, y: 52))
+            }
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        
+        if let view = secureVisualBackgroundView {
+            transition.updateFrame(view: view, frame: size.bounds)
+        }
     }
     
     
@@ -503,7 +518,6 @@ final class GroupCallView : View {
                     size = NSMakeSize(width, frame.height - 180)
                 }
             }
-            
         }
         var rect = focus(size)
         rect.origin.y = 54
@@ -519,6 +533,10 @@ final class GroupCallView : View {
                     rect.origin.x = (frame.width + 5)
                 }
             }
+        }
+        
+        if let state = state, state.isConference {
+            rect.origin.y += 40
         }
         
         return rect
@@ -587,6 +605,9 @@ final class GroupCallView : View {
             rect = focus(NSMakeSize(width, height))
             rect.origin.y = 54 - scrollTempOffset
         }
+        if let state, state.isConference {
+            rect.origin.y += 40
+        }
         return rect
     }
     
@@ -651,7 +672,7 @@ final class GroupCallView : View {
         } , animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: state.showConferenceKey != previousState?.showConferenceKey ? .spring : .easeOut) : .immediate
         
         if let _ = state.state.scheduleTimestamp {
             let current: GroupCallScheduleView
@@ -793,6 +814,78 @@ final class GroupCallView : View {
             performSubviewRemoval(view, animated: animated)
             self.noStreamView = nil
         }
+        
+        if state.isConference, state.showConferenceKey {
+            let current: NSVisualEffectView
+            let isNew: Bool
+            if let view = self.secureVisualBackgroundView {
+                current = view
+                isNew = false
+            } else {
+                current = NSVisualEffectView(frame: .zero)
+                self.secureVisualBackgroundView = current
+                addSubview(current, positioned: .below, relativeTo: self.secureEmojiView)
+                isNew = true
+            }
+            
+            current.wantsLayer = true
+            current.material = .dark
+            current.blendingMode = .withinWindow
+            current.state = .active
+            
+            if isNew {
+                current.frame = bounds
+            }
+            transition.updateFrame(view: current, frame: self.bounds)
+            if isNew {
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+        } else if let view = self.secureVisualBackgroundView {
+            performSubviewRemoval(view, animated: animated)
+            self.secureVisualBackgroundView = nil
+        }
+        
+        if state.isConference {
+            let current: GroupCallSecureEmojiView
+            let isNew: Bool
+            if let view = self.secureEmojiView {
+                current = view
+                isNew = false
+            } else {
+                current = GroupCallSecureEmojiView(frame: .zero)
+                self.secureEmojiView = current
+                addSubview(current)
+                isNew = true
+            }
+            let size = current.update(state, call.account, toggle: { [weak self] in
+                self?.arguments?.toggleShowConferenceKey(!state.showConferenceKey)
+            }, transition: transition)
+            
+            if isNew {
+                current.setFrameSize(size)
+            }
+            
+            transition.updateFrame(view: current, frame: state.showConferenceKey ? self.bounds.focus(size) : self.bounds.focusX(size, y: 52))
+            
+            if isNew {
+                if state.showConferenceKey {
+                    current.center()
+                } else {
+                    current.centerX(y: 52)
+                }
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+        } else if let view = self.secureEmojiView {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.secureEmojiView = nil
+        }
+        
+       
         
         content.state = state
 

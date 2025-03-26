@@ -241,7 +241,7 @@ struct PeerListState : Equatable {
         
     }
     
-    enum ContactsSort : Equatable {
+    enum ContactsSort : Int32, Equatable {
         case lastSeen
         case name
     }
@@ -308,7 +308,7 @@ struct PeerListState : Equatable {
     var displaySavedAsTopics: Bool
     var webapps: BrowserStateContext.FullState? = nil
     
-    var contactsSort: ContactsSort = .lastSeen
+    var contactsSort: ContactsSort = FastSettings.contactsSort
     
     var selectedTag: SelectedSearchTag = .chats
     var peerTag: EnginePeer? = nil
@@ -1349,39 +1349,7 @@ class PeerListContainerView : Control {
             self.backButton = nil
         }
         
-        if state.isContacts {
-            let current: TextButton
-            if let view = self.contactsSort {
-                current = view
-            } else {
-                current = TextButton(frame: NSMakeRect(10, 10, 40, 30))
-                self.contactsSort = current
-                current.animates = false
-                current.autohighlight = false
-                current.scaleOnClick = true
-                containerView.addSubview(current, positioned: .below, relativeTo: searchView)
-            }
-            current.set(font: .normal(.text), for: .Normal)
-            current.set(color: theme.colors.accent, for: .Normal)
-            current.set(text: strings().contactsSortTitle, for: .Normal)
-            current.sizeToFit(NSMakeSize(10, 15))
-            
-            
-            current.contextMenu = {
-                let menu = ContextMenu()
-                menu.addItem(ContextMenuItem(strings().contactsSortByLastSeen, handler: {
-                    arguments.toggleContactsSort(.lastSeen)
-                }, state: state.contactsSort == .lastSeen ? .on : nil))
-                menu.addItem(ContextMenuItem(strings().contactsSortByName, handler: {
-                    arguments.toggleContactsSort(.name)
-                }, state: state.contactsSort == .name ? .on : nil))
-                return menu
-            }
-
-        } else if let view = self.contactsSort {
-            performSubviewRemoval(view, animated: animated)
-            self.contactsSort = nil
-        }
+        
                 
         if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, !hasForumTitle || state.forumPeer == nil {
             let current: WebappsControl
@@ -1525,7 +1493,39 @@ class PeerListContainerView : Control {
             }
         }
         
-        
+        if state.isContacts, self.webapps == nil {
+            let current: TextButton
+            if let view = self.contactsSort {
+                current = view
+            } else {
+                current = TextButton(frame: NSMakeRect(10, 10, 40, 30))
+                self.contactsSort = current
+                current.animates = false
+                current.autohighlight = false
+                current.scaleOnClick = true
+                containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+            }
+            current.set(font: .normal(.text), for: .Normal)
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(text: strings().contactsSortTitle, for: .Normal)
+            current.sizeToFit(NSMakeSize(10, 15))
+            
+            
+            current.contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().contactsSortByLastSeen, handler: {
+                    arguments.toggleContactsSort(.lastSeen)
+                }, state: state.contactsSort == .lastSeen ? .on : nil))
+                menu.addItem(ContextMenuItem(strings().contactsSortByName, handler: {
+                    arguments.toggleContactsSort(.name)
+                }, state: state.contactsSort == .name ? .on : nil))
+                return menu
+            }
+
+        } else if let view = self.contactsSort {
+            performSubviewRemoval(view, animated: animated)
+            self.contactsSort = nil
+        }
         
         if previous?.appear != state.appear {
             self.delta = nil
@@ -2843,6 +2843,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.contactsSort = sort
                 return current
             }
+            FastSettings.contactsSort = sort
         })
         
         self.takeArguments = { [weak arguments] in
