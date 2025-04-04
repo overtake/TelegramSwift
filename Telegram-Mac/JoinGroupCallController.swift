@@ -32,7 +32,7 @@ private final class HeaderItem : GeneralRowItem {
         self.participants = participants
         //TODOLANG
         self.headerLayout = .init(.initialize(string: "Group Call", color: theme.colors.text, font: .medium(.header)), alignment: .center)
-        self.infoLayout = .init(.initialize(string: "**\(inviter._asPeer().displayTitle)** is inviting you\nto join a Telegram call.", color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
+        self.infoLayout = .init(.initialize(string: "You are invited to join a group call.", color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         
 
         self.usersInfoLayout = .init(.initialize(string: formattedJoinedMessage(from: participants.map { $0._asPeer().compactDisplayTitle }), color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)))
@@ -256,6 +256,7 @@ private final class Arguments {
 private struct State : Equatable {
     var inviter: EnginePeer?
     var participants: [EnginePeer]
+    var summary: GroupCallSummary
 }
 
 
@@ -280,11 +281,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func JoinGroupCallController(context: AccountContext) -> InputDataModalController {
+func JoinGroupCallController(context: AccountContext, summary: GroupCallSummary, reference: InternalGroupCallReference) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(inviter: context.myPeer.flatMap(EnginePeer.init), participants: [context.myPeer.flatMap(EnginePeer.init)!])
+    let initialState = State(inviter: context.myPeer.flatMap(EnginePeer.init), participants: summary.topParticipants.map { .init($0.peer) }, summary: summary)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -315,6 +316,25 @@ func JoinGroupCallController(context: AccountContext) -> InputDataModalControlle
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+    }
+    
+    
+    controller.validateData = { _ in
+        
+        _ = requestOrJoinConferenceCall(context: context, initialInfo: summary.info, reference: reference).startStandalone(next: { result in
+            switch result {
+            case let .samePeer(callContext):
+                applyGroupCallResult(context.sharedContext, callContext)
+            case let .success(callContext):
+                applyGroupCallResult(context.sharedContext, callContext)
+            default:
+                alert(for: context.window, info: strings().errorAnError)
+            }
+        })
+        
+        close?()
+        
+        return .none
     }
 
     //TODOLANG

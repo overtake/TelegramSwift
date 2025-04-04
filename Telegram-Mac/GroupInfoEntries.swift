@@ -463,7 +463,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         if let activeCall = current {
             let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
-                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
+                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil, reference: nil), for: context.window).start(next: { result in
                     switch result {
                     case let .samePeer(callContext):
                         applyGroupCallResult(context.sharedContext, callContext)

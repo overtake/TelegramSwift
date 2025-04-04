@@ -107,7 +107,7 @@ final class GroupCallView : View {
     private let backgroundContainerView = View()
     
     private var secureEmojiView: GroupCallSecureEmojiView?
-    private var secureVisualBackgroundView: NSVisualEffectView?
+    private var secureVisualBackgroundView: Control?
     
     var arguments: GroupCallUIArguments? {
         didSet {
@@ -535,7 +535,7 @@ final class GroupCallView : View {
             }
         }
         
-        if let state = state, state.isConference {
+        if let state = state, state.isConference, isFullScreen || state.videoActive(.main).isEmpty {
             rect.origin.y += 40
         }
         
@@ -816,22 +816,23 @@ final class GroupCallView : View {
         }
         
         if state.isConference, state.showConferenceKey {
-            let current: NSVisualEffectView
+            let current: Control
             let isNew: Bool
             if let view = self.secureVisualBackgroundView {
                 current = view
                 isNew = false
             } else {
-                current = NSVisualEffectView(frame: .zero)
+                current = Control(frame: .zero)
                 self.secureVisualBackgroundView = current
                 addSubview(current, positioned: .below, relativeTo: self.secureEmojiView)
                 isNew = true
             }
             
-            current.wantsLayer = true
-            current.material = .dark
-            current.blendingMode = .withinWindow
-            current.state = .active
+            current.backgroundColor = NSColor.black.withAlphaComponent(0.8)
+            
+            current.setSingle(handler: { [weak self] _ in
+                self?.arguments?.toggleShowConferenceKey(false)
+            }, for: .Click)
             
             if isNew {
                 current.frame = bounds
@@ -859,22 +860,22 @@ final class GroupCallView : View {
                 addSubview(current)
                 isNew = true
             }
-            let size = current.update(state, call.account, toggle: { [weak self] in
+            let size = current.update(state, encryptionKeyEmoji: state.encryptionKeyEmoji, call.account, toggle: { [weak self] in
                 self?.arguments?.toggleShowConferenceKey(!state.showConferenceKey)
-            }, transition: transition)
+            }, transition: isNew ? .immediate : transition)
             
             if isNew {
                 current.setFrameSize(size)
-            }
-            
-            transition.updateFrame(view: current, frame: state.showConferenceKey ? self.bounds.focus(size) : self.bounds.focusX(size, y: 52))
-            
-            if isNew {
                 if state.showConferenceKey {
                     current.center()
                 } else {
                     current.centerX(y: 52)
                 }
+            }
+            let transition = isNew ? ContainedViewLayoutTransition.immediate : transition
+            transition.updateFrame(view: current, frame: state.showConferenceKey ? self.bounds.focus(size) : self.bounds.focusX(size, y: 52))
+            
+            if isNew {
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)

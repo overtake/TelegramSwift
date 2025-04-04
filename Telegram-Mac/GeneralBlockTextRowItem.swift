@@ -21,7 +21,7 @@ struct GeneralBlockTextHeader {
 class GeneralBlockTextRowItem: GeneralRowItem {
     struct RightAction {
         var image: CGImage
-        var action: ()->Void
+        var action: (NSView)->Void
     }
     fileprivate let textLayout: TextViewLayout
     fileprivate let header: GeneralBlockTextHeader?
@@ -29,8 +29,10 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let rightAction: RightAction?
     fileprivate let centerViewAlignment: Bool
     fileprivate let _hasBorder: Bool?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false, customTheme: GeneralRowItem.Theme? = nil, linkCallback:((String)->Void)? = nil) {
+    fileprivate let reversedBackground: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false, customTheme: GeneralRowItem.Theme? = nil, linkCallback:((String)->Void)? = nil, reversedBackground: Bool = false) {
         
+        self.reversedBackground = reversedBackground
         let color = customTheme?.textColor ?? color
         let linkColor = customTheme?.accentColor ?? theme.colors.link
 
@@ -69,7 +71,7 @@ class GeneralBlockTextRowItem: GeneralRowItem {
         
         var action_w: CGFloat = 0
         if let _ = self.rightAction {
-            action_w = 35
+            action_w = 45
         }
         
         self.textLayout.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right - action_w)
@@ -93,8 +95,7 @@ class GeneralBlockTextRowItem: GeneralRowItem {
 }
 
 
-private final class GeneralBlockTextRowView : TableRowView {
-    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
+private final class GeneralBlockTextRowView : GeneralContainableRowView {
     private let textView = TextView()
     private var headerView: TextView?
     private var headerImageView : ImageView?
@@ -102,9 +103,8 @@ private final class GeneralBlockTextRowView : TableRowView {
     private var rightAction: ImageButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(containerView)
-        containerView.addSubview(textView)
-        containerView.addSubview(separator)
+        self.addSubview(textView)
+        self.addSubview(separator)
     }
     
     override var backdorColor: NSColor {
@@ -115,13 +115,13 @@ private final class GeneralBlockTextRowView : TableRowView {
     }
     
     override func updateColors() {
+        super.updateColors()
+        
         guard let item = item as? GeneralBlockTextRowItem else {
             return
         }
-        self.backgroundColor = item.viewType.rowBackground
-        self.containerView.backgroundColor = backdorColor
         self.textView.backgroundColor = backdorColor
-        self.separator.backgroundColor = theme.colors.border
+        self.separator.backgroundColor = item.customTheme?.borderColor ?? theme.colors.border
     }
     
     override func layout() {
@@ -199,8 +199,8 @@ private final class GeneralBlockTextRowView : TableRowView {
             current.set(image: action.image, for: .Normal)
             current.sizeToFit()
             current.removeAllHandlers()
-            current.set(handler: { _ in
-                action.action()
+            current.set(handler: { control in
+                action.action(control)
             }, for: .Click)
         } else if let view = self.rightAction {
             performSubviewRemoval(view, animated: animated)

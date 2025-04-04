@@ -343,6 +343,10 @@ class WPLayout: Equatable {
             }
         }
         
+        if self.content.type == "telegram_call" {
+            return strings().chatJoinGroupCall
+        }
+        
         if self.isProxyConfig {
             return strings().chatApplyProxy
         } else if hasInstantPage {

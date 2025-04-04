@@ -814,6 +814,7 @@ private final class ContentController: View {
             if let current {
                 performSubviewRemoval(current, animated: animated)
             }
+            newView.frame = bounds
             addSubview(newView)
             if animated {
                 newView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

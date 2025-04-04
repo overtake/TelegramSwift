@@ -149,8 +149,20 @@ class SharedWakeupManager {
                     if self.sharedContext.hasActiveCall {
                         account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
                     } else {
+                        
+                        var otherParticipants: [EnginePeer] = state.otherParticipants
+                        
+                        #if DEBUG
+                        let fake = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
+                        
+                        otherParticipants = [.init(fake)]
+                        
+                        #endif
+                        
+                        
                         if let accountContext = appDelegate?.activeContext(for: account.id) {
-                            showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
+                            showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, incomingConferenceSource: state.conferenceSource, incomingParticipants: otherParticipants, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
+                            
                         }
                     }
                 })

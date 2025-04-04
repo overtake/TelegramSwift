@@ -728,6 +728,13 @@ final class VoiceChatBlobLayer: SimpleLayer {
             self.bigBlob.scaleUpdated = self.scaleUpdated
         }
     }
+    
+    override init(layer: Any) {
+        self.mediumBlob = .init(pointsCount: 0, minRandomness: 0, maxRandomness: 0, minSpeed: 0, maxSpeed: 0, minScale: 0, maxScale: 0)
+        self.bigBlob = .init(pointsCount: 0, minRandomness: 0, maxRandomness: 0, minSpeed: 0, maxSpeed: 0, minScale: 0, maxScale: 0)
+        self.maxLevel = 1
+        super.init(layer: layer)
+    }
 
     private(set) var isAnimating = false
 
@@ -861,6 +868,18 @@ final class BlobLayer: SimpleShapeLayer {
 
     private var blobAnimation: DisplayLinkAnimator?
 
+    override init(layer: Any) {
+        self.pointsCount = 0
+        self.minRandomness = 0
+        self.maxRandomness = 0
+        self.minSpeed = 0
+        self.maxSpeed = 0
+        self.minScale = 0
+        self.maxScale = 0
+
+        self.smoothness = 0
+        super.init(layer: layer)
+    }
 
     private let shapeLayer: SimpleShapeLayer = {
             let layer = SimpleShapeLayer()

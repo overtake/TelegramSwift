@@ -103,3 +103,4 @@ done
 
 
 
+sh $SCRIPT_DIR/../submodules/telegram-ios/third-party/td/macos-cleanup.sh $SCRIPT_DIR/../submodules/telegram-ios/third-party/td/td $SCRIPT_DIR/../submodules/telegram-ios/third-party/td/TdBinding/SharedHeaders

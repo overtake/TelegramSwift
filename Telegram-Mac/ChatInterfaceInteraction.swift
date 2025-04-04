@@ -669,6 +669,7 @@ final class ChatInteraction : InterfaceObserver  {
                 
                 let peerId = self.peerId
                 let context = self.context
+                let isChannel = self.peer?.isChannel == true
                 
                 let joinCall:(GroupCallPanelData)->Void = { [weak self] data in
                     if data.groupCall?.call.peerId != peerId, let peer = self?.peer {
@@ -685,14 +686,14 @@ final class ChatInteraction : InterfaceObserver  {
                 }
                 let call: Signal<GroupCallPanelData?, GetCurrentGroupCallError> = context.engine.calls.updatedCurrentPeerGroupCall(peerId: peerId) |> mapToSignalPromotingError { call -> Signal<GroupCallSummary?, GetCurrentGroupCallError> in
                     if let call = call {
-                        return context.engine.calls.getCurrentGroupCall(callId: call.id, accessHash: call.accessHash, peerId: peerId)
+                        return context.engine.calls.getCurrentGroupCall(reference: .id(id: call.id, accessHash: call.accessHash), peerId: peerId)
                     } else {
                         return .single(nil)
                     }
                 } |> mapToSignal { data in
                     if let data = data {
                         return context.sharedContext.groupCallContext |> take(1) |> mapToSignalPromotingError { groupCallContext in
-                            return .single(GroupCallPanelData(peerId: peerId, info: data.info, topParticipants: data.topParticipants, participantCount: data.info.participantCount, activeSpeakers: [], groupCall: groupCallContext))
+                            return .single(GroupCallPanelData(peerId: peerId, isChannel: isChannel, info: data.info, topParticipants: data.topParticipants, participantCount: data.info.participantCount, activeSpeakers: [], groupCall: groupCallContext))
                         }
                     } else {
                         return .single(nil)

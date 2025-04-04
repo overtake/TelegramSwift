@@ -2631,6 +2631,8 @@ class ChatRowItem: TableRowItem {
                        return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    case .phoneCall:
                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
+                   case let .conferenceCall(call):
+                       return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
 //                   case .starGift:
 //                       return ChatServiceStarsGiftItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    default:

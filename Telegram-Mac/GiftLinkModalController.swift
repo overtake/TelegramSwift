@@ -220,7 +220,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if state.info.fromPeerId != nil || state.info.toPeerId == arguments.context.peerId {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: {
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: { _ in
                 arguments.copyLink(state.link)
             }), singleLine: true)
         }))

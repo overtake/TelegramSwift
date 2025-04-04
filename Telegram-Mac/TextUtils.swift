@@ -1025,6 +1025,13 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
             }
+        case let .conferenceCall(сonferenceCall):
+            if authorId == account.peerId {
+                text = strings().notificationGroupCallOutgoing
+            } else {
+                text = strings().notificationGroupCallIncoming
+            }
+
         }
     }
     return (text, entities, media)

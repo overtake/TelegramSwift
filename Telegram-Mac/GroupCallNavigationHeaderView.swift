@@ -67,6 +67,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         |> map { summary -> GroupCallPanelData in
             return GroupCallPanelData(
                 peerId: peerId,
+                isChannel: summary.callState.isChannel,
                 info: summary.info,
                 topParticipants: summary.topParticipants,
                 participantCount: summary.participantCount,

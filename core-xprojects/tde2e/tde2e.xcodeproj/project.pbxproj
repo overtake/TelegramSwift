@@ -157,7 +157,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/tde2e/build.sh $PROJECT_DIR/td_with_e2e $PROJECT_DIR/build     $PROJECT_DIR/../openssl/build/openssl\nfi\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/tde2e/build.sh $PROJECT_DIR/../../submodules/telegram-ios/third-party/td/td $PROJECT_DIR/build     $PROJECT_DIR/../openssl/build/openssl\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

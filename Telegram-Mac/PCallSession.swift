@@ -119,7 +119,7 @@ public struct CallAuxiliaryServer {
         case connecting(Data?)
         case active(Double, Int32?, Data)
         case reconnecting(Double, Int32?, Data)
-        case terminating
+        case terminating(CallSessionTerminationReason?)
         case terminated(CallId?, CallSessionTerminationReason?, Bool)
     }
     
@@ -160,7 +160,10 @@ public struct CallAuxiliaryServer {
     let remoteAudioState: RemoteAudioState
     let remoteBatteryLevel: RemoteBatteryLevel
     let isScreenCapture: Bool
-    init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool) {
+    let participants: [EnginePeer]
+    let conferenceReference: MessageId?
+     
+    init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool, participants: [EnginePeer], conferenceReference: MessageId?) {
         self.state = state
         self.videoState = videoState
         self.remoteVideoState = remoteVideoState
@@ -170,6 +173,8 @@ public struct CallAuxiliaryServer {
         self.remoteAudioState = remoteAudioState
         self.remoteBatteryLevel = remoteBatteryLevel
         self.isScreenCapture = isScreenCapture
+        self.participants = participants
+        self.conferenceReference = conferenceReference
     }
 }
 
@@ -336,7 +341,18 @@ class PCallSession {
     private let enableTCP: Bool
     public let preferredVideoCodec: String?
     
+    private let incomingConferenceSource: EngineMessage.Id?
+    private let conferenceStableId: Int64?
     
+    weak var window: Window?
+
+
+    
+    var isIncomingConference: Bool {
+        return incomingConferenceSource != nil
+    }
+
+    private var incomingParticipants: [EnginePeer]
     
     private var callWasActive = false
     private var videoWasActive = false
@@ -369,7 +385,7 @@ class PCallSession {
     private var upgradedToConferenceCompletions = Bag<(PresentationGroupCall) -> Void>()
 
     
-    
+    private var isAcceptingIncomingConference: Bool = false
     private var waitForConferenceCallReadyDisposable: Disposable?
     private let conferenceStatePromise = ValuePromise<PresentationCallConferenceState?>(nil)
     public private(set) var conferenceStateValue: PresentationCallConferenceState? {
@@ -388,17 +404,24 @@ class PCallSession {
     private var devices: IODevices = .init(camera: [], audioInput: [], audioOutput: [], loading: true)
     private let devicesListDisposable = MetaDisposable()
     
-    init(accountContext: AccountContext, account: Account, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool, data: PCallSession.InitialData) {
+    init(accountContext: AccountContext, account: Account, isOutgoing: Bool, incomingConferenceSource: EngineMessage.Id?, incomingParticipants: [EnginePeer], peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool, data: PCallSession.InitialData) {
         
         self.account = account
         self.accountContext = accountContext
         self.peerId = peerId
         self.internalId = id
+        self.incomingParticipants = incomingParticipants
         self.callSessionManager = account.callSessionManager
         self.updatedNetworkType = account.networkType
         self.isOutgoing = isOutgoing
+        self.incomingConferenceSource = incomingConferenceSource
         
-        
+        if let _ = incomingConferenceSource {
+            self.conferenceStableId = Int64.random(in: Int64.min ..< Int64.max)
+        } else {
+            self.conferenceStableId = nil
+        }
+
         
         self.isScreenCapture = false
         self.isVideo = initialState?.type == .video
@@ -447,9 +470,9 @@ class PCallSession {
         
         if self.isVideo {
             self.videoCapturer = OngoingCallVideoCapturer(devicesContext.currentCameraId ?? "")
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active(self.isVideoAvailable) : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture))
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active(self.isVideoAvailable) : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource))
         } else {
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture))
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource))
         }
         
         
@@ -483,21 +506,68 @@ class PCallSession {
             }
         }))
         
-        
-        var callSessionState: Signal<CallSession, NoError> = .complete()
-        if let initialState = initialState {
-            callSessionState = .single(initialState)
-        }
-        callSessionState = callSessionState
-        |> then(callSessionManager.callState(internalId: id))
-        
-        let signal = callSessionState |> deliverOn(callQueue)
-        
-        self.sessionStateDisposable.set(signal.start(next: { [weak self] sessionState in
-            if let strongSelf = self {
-                strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: strongSelf.reception)
+        if let incomingConferenceSource = incomingConferenceSource {
+            self.sessionStateDisposable.set((context.engine.data.subscribe(
+                TelegramEngine.EngineData.Item.Messages.Message(id: incomingConferenceSource)
+            )
+            |> deliverOnMainQueue).startStrict(next: { [weak self] message in
+                guard let self else {
+                    return
+                }
+
+                let state: CallSessionState
+                if let message = message {
+                    var foundAction: TelegramMediaAction?
+                    for media in message.media {
+                        if let action = media as? TelegramMediaAction {
+                            foundAction = action
+                            break
+                        }
+                    }
+
+                    if let action = foundAction, case let .conferenceCall(conferenceCall) = action.action {
+                        if conferenceCall.flags.contains(.isMissed) || conferenceCall.duration != nil {
+                            state = .terminated(id: nil, reason: .ended(.hungUp), options: CallTerminationOptions())
+                        } else {
+                            state = .ringing
+                        }
+                    } else {
+                        state = .terminated(id: nil, reason: .ended(.hungUp), options: CallTerminationOptions())
+                    }
+                } else {
+                    state = .terminated(id: nil, reason: .ended(.hungUp), options: CallTerminationOptions())
+                }
+                
+                self.updateSessionState(
+                    sessionState: CallSession(
+                        id: self.internalId,
+                        stableId: self.conferenceStableId,
+                        isOutgoing: false,
+                        type: self.isVideo ? .video : .audio,
+                        state: state,
+                        isVideoPossible: true
+                    ),
+                    callContextState: nil,
+                    reception: nil
+                )
+            }))
+        } else {
+            var callSessionState: Signal<CallSession, NoError> = .complete()
+            if let initialState = initialState {
+                callSessionState = .single(initialState)
             }
-        }))
+            callSessionState = callSessionState
+            |> then(callSessionManager.callState(internalId: id))
+            
+            let signal = callSessionState |> deliverOn(callQueue)
+            
+            self.sessionStateDisposable.set(signal.start(next: { [weak self] sessionState in
+                if let strongSelf = self {
+                    strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: strongSelf.reception)
+                }
+            }))
+        }
+        
         DispatchQueue.main.async {
             accountContext.sharedContext.showCall(with: self)
         }
@@ -555,7 +625,31 @@ class PCallSession {
     }
     private func acceptAfterAccess() {
         callAcceptedTime = CFAbsoluteTimeGetCurrent()
-        account.callSessionManager.accept(internalId: internalId)
+        
+        if self.incomingConferenceSource != nil {
+            self.conferenceStateValue = .preparing
+            self.isAcceptingIncomingConference = true
+            self.sessionStateDisposable.dispose()
+            
+            self.updateSessionState(sessionState: CallSession(
+                id: self.internalId,
+                stableId: self.conferenceStableId,
+                isOutgoing: false,
+                type: self.isVideo ? .video : .audio,
+                state: .ringing,
+                isVideoPossible: true
+            ),
+            callContextState: nil, reception: nil)
+            
+            let context = self.accountContext
+            guard let window = self.window else {
+                return
+            }
+            
+            
+        } else {
+            account.callSessionManager.accept(internalId: internalId)
+        }
     }
     
     func acceptCallSession() {
@@ -713,30 +807,28 @@ class PCallSession {
         
         switch sessionState.state {
         case .ringing:
-            presentationState = CallState(state: .ringing, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+            presentationState = CallState(state: .ringing, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
         case .accepting:
             self.callWasActive = true
-            presentationState = CallState(state: .connecting(nil), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case .dropping:
-            presentationState = CallState(state: .terminating, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+            presentationState = CallState(state: .connecting(nil), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
+        case let .dropping(reason):
+            presentationState = CallState(state: .terminating(reason), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
         case let .terminated(id, reason, options):
-            presentationState = CallState(state: .terminated(id, reason, options.contains(.reportRating)), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .requesting(ringing, _):
-            presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .active(_, _, keyVisualHash, _, _, _, _, _, _, _), let .switchedToConference(_, keyVisualHash, _):
+            presentationState = CallState(state: .terminated(id, reason, options.contains(.reportRating)), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
+        case let .requesting(ringing):
+            presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
+        case .active(_, _, _, _, _, _, _, _), .switchedToConference:
             self.callWasActive = true
             
             var isConference = false
-            if case let .active(_, _, _, _, _, _, _, _, conferenceCall, _) = sessionState.state {
-                isConference = conferenceCall != nil
-            } else if case .switchedToConference = sessionState.state {
+            if case .switchedToConference = sessionState.state {
                 isConference = true
             }
             
-            if let callContextState = callContextState, !isConference {
+            if let callContextState = callContextState, !isConference, case let .active(_, _, keyVisualHash, _, _, _, _, _) = sessionState.state {
                 switch callContextState.state {
                 case .initializing:
-                    presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+                    presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
                 case .failed:
                     presentationState = nil
                     self.callSessionManager.drop(internalId: self.internalId, reason: .disconnect, debugLog: .single(nil))
@@ -748,7 +840,7 @@ class PCallSession {
                         timestamp = CFAbsoluteTimeGetCurrent()
                         self.activeTimestamp = timestamp
                     }
-                    presentationState = CallState(state: .active(timestamp, reception, keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+                    presentationState = CallState(state: .active(timestamp, reception, keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
                 case .reconnecting:
                     let timestamp: Double
                     if let activeTimestamp = self.activeTimestamp {
@@ -757,174 +849,162 @@ class PCallSession {
                         timestamp = CFAbsoluteTimeGetCurrent()
                         self.activeTimestamp = timestamp
                     }
-                    presentationState = CallState(state: .reconnecting(timestamp, reception, keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+                    presentationState = CallState(state: .reconnecting(timestamp, reception, keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
                 }
-            } else if !isConference {
-                presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+            } else if !isConference, case let .active(_, _, keyVisualHash, _, _, _, _, _) = sessionState.state {
+                presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture, participants: self.incomingParticipants, conferenceReference: self.incomingConferenceSource)
             }
         }
         
         
-        var conferenceCallData: (key: Data, keyVisualHash: Data, conferenceCall: GroupCallReference)?
-        var conferenceFromCallId: CallId?
-        switch sessionState.state {
-        case let .active(id, key, keyVisualHash, _, _, _, _, _, conferenceCall, _):
-            if let conferenceCall {
-                conferenceFromCallId = id
-                conferenceCallData = (key, keyVisualHash, conferenceCall)
+        var conferenceCallData: InternalGroupCallReference?
+        if let incomingConferenceSource = self.incomingConferenceSource {
+            if self.isAcceptingIncomingConference {
+                conferenceCallData = .message(id: incomingConferenceSource)
             }
-        case let .switchedToConference(key, keyVisualHash, conferenceCall):
-            conferenceCallData = (key, keyVisualHash, conferenceCall)
-        default:
-            break
+        } else {
+            switch sessionState.state {
+            case let .switchedToConference(slug):
+                conferenceCallData = .link(slug: slug)
+            default:
+                break
+            }
         }
+
         
-        if let (key, _, conferenceCall) = conferenceCallData {
+        if let conferenceCallData {
             if self.conferenceCallDisposable == nil {
-                self.conferenceCallDisposable = EmptyDisposable
-                
-                
-                
-                let conferenceCall = PresentationGroupCallImpl(
-                    accountContext: self.accountContext,
-                    initialCall: .init(
-                        id: conferenceCall.id,
-                        accessHash: conferenceCall.accessHash,
-                        title: nil,
-                        scheduleTimestamp: nil,
-                        subscribedToScheduled: false,
-                        isStream: false
-                    ),
-                    internalId: CallSessionInternalId(),
-                    peerId: nil,
-                    invite: nil,
-                    joinAsPeerId: nil,
-                    initialInfo: nil,
-                    isStream: false,
-                    encryptionKey: (key, 1),
-                    conferenceFromCallId: conferenceFromCallId,
-                    isConference: true
-                )
-                self.conferenceCallImpl = conferenceCall
-                conferenceCall.upgradedConferenceCall = self
-                
-                conferenceCall.setInvitedPeers(self.pendingInviteToConferencePeerIds)
-                
-                for peerId in self.pendingInviteToConferencePeerIds {
-                    let _ = conferenceCall.invitePeer(peerId)
-                }
-                
-                
-                let waitForLocalVideo = self.videoCapturer != nil
-                
-                let waitForRemotePeerId: EnginePeer.Id? = self.peerId
-                var waitForRemoteVideo: EnginePeer.Id?
-                if let callContextState = self.callContextState {
-                    switch callContextState.remoteVideoState {
-                    case .active, .paused:
-                        waitForRemoteVideo = self.peerId
-                    case .inactive:
-                        break
-                    }
-                }
-                
-                self.conferenceStateValue = .preparing
-                
-                self.waitForConferenceCallReadyDisposable?.dispose()
-                self.waitForConferenceCallReadyDisposable = (combineLatest(queue: .mainQueue(),
-                    conferenceCall.state,
-                    conferenceCall.members
-                )
-                |> filter { state, members in
-                    if state.networkState != .connected {
-                        return false
-                    }
-                    if let waitForRemotePeerId {
-                        var found = false
-                        if let members {
-                            for participant in members.participants {
-                                if participant.peer.id == waitForRemotePeerId {
-                                    found = true
-                                    break
-                                }
-                            }
-                        }
-                        if !found {
-                            return false
-                        }
-                    }
-                    if waitForLocalVideo {
-                        if let members {
-                            for participant in members.participants {
-                                if participant.peer.id == state.myPeerId {
-                                    if participant.videoDescription == nil {
-                                        return false
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if let waitForRemoteVideo {
-                        if let members {
-                            for participant in members.participants {
-                                if participant.peer.id == waitForRemoteVideo {
-                                    if participant.videoDescription == nil {
-                                        return false
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return true
-                }
-                |> map { _, _ -> Void in
-                    return Void()
-                }
-                |> take(1)
-                |> timeout(10.0, queue: .mainQueue(), alternate: .single(Void()))).start(next: { [weak self] _ in
+                let conferenceCallSignal = self.accountContext.engine.calls.getCurrentGroupCall(reference: conferenceCallData)
+                self.conferenceCallDisposable = (conferenceCallSignal
+                |> deliverOnMainQueue).startStrict(next: { [weak self] groupCall in
                     guard let self else {
                         return
                     }
+                    let keyPair: TelegramKeyPair? = TelegramE2EEncryptionProviderImpl.shared.generateKeyPair()
+                    guard let keyPair, let groupCall else {
+                        self.updateSessionState(sessionState: CallSession(
+                            id: self.internalId,
+                            stableId: self.conferenceStableId,
+                            isOutgoing: false,
+                            type: .audio,
+                            state: .terminated(id: nil, reason: .ended(.switchedToConference(slug: "")), options: CallTerminationOptions()),
+                            isVideoPossible: true
+                        ),
+                        callContextState: nil, reception: nil)
+                        return
+                    }
                     
-                    self.ongoingContext?.disableVideo()
+                    var initialOutput: GroupCallInitialOutput = .init(isMuted: self.isMuted)
                     
-                    self.ongoingContext?.stop(debugLogValue: Promise())
-                    self.ongoingContext = nil
-                    self.ongoingContextStateDisposable?.dispose()
-                    
-                    self.conferenceStateValue = .ready
-                    
-                    conferenceCall.setIsMuted(action: self.isMuted ? .muted(isPushToTalkActive: false) : .unmuted)
                     if let videoCapturer = self.videoCapturer {
-                        delay(0.1, closure: { [weak self] in
-                            guard let self else {
-                                return
+                        if let screenCaptureSource {
+                            initialOutput.screencast = .init(capturer: OngoingCallVideoCapturer(videoCapturer.deviceId), source: screenCaptureSource)
+                        } else {
+                            let device = self.devices.camera.first(where: { self.devicesContext.currentCameraId == $0.uniqueID })
+                            if let device {
+                                initialOutput.video = .init(capturer: OngoingCallVideoCapturer(videoCapturer.deviceId), source: CameraCaptureDevice(device))
                             }
-                            if let screenCaptureSource {
-                                conferenceCall.requestScreencast(deviceId: videoCapturer, source: screenCaptureSource)
-                            } else {
-                                let device = self.devices.camera.first(where: { self.devicesContext.currentCameraId == $0.uniqueID })
-                                if let device {
-                                    conferenceCall.requestVideo(deviceId: videoCapturer, source: CameraCaptureDevice(device))
-                                }
-                            }
-                        })
+                        }
+                    }
+                    
+                    let conferenceCall = PresentationGroupCallImpl(
+                        accountContext: self.accountContext,
+                        initialCall: (EngineGroupCallDescription(
+                            id: groupCall.info.id,
+                            accessHash: groupCall.info.accessHash,
+                            title: nil,
+                            scheduleTimestamp: nil,
+                            subscribedToScheduled: false,
+                            isStream: false
+                        ), conferenceCallData),
+                        internalId: CallSessionInternalId(),
+                        peerId: nil,
+                        isChannel: false,
+                        invite: nil,
+                        joinAsPeerId: nil,
+                        initialInfo: nil,
+                        isStream: false,
+                        keyPair: keyPair,
+                        conferenceSourceId: self.internalId,
+                        isConference: true,
+                        initialOutput: initialOutput
+                    )
+                    self.conferenceCallImpl = conferenceCall
+                    conferenceCall.upgradedConferenceCall = self
+                    
+                    for peerId in self.pendingInviteToConferencePeerIds {
+                        let _ = conferenceCall.invitePeer(peerId)
+                    }
+                    
+                    
+                    
+                    
+                    self.conferenceStateValue = .preparing
+                    
+                    self.waitForConferenceCallReadyDisposable?.dispose()
+                    self.waitForConferenceCallReadyDisposable = (combineLatest(queue: .mainQueue(),
+                        conferenceCall.state,
+                        conferenceCall.members
+                    )
+                    |> filter { state, members in
+                        if state.networkState != .connected {
+                            return false
+                        }
+                        return true
+                    }
+                    |> map { _, _ -> Void in
+                        return Void()
+                    }
+                    |> take(1)
+                    |> timeout(10.0, queue: .mainQueue(), alternate: .single(Void()))).start(next: { [weak self] _ in
+                        guard let self else {
+                            return
+                        }
                         
+                        self.ongoingContextStateDisposable?.dispose()
+                        
+                        self.conferenceStateValue = .ready
+                        
+                        let upgradedToConferenceCompletions = self.upgradedToConferenceCompletions.copyItems()
+                        self.upgradedToConferenceCompletions.removeAll()
+                        for f in upgradedToConferenceCompletions {
+                            f(conferenceCall)
+                        }
+                        
+                        guard let window else {
+                            return
+                        }
+                        
+                        let callContext = GroupCallContext(call: conferenceCall, peerMemberContextsManager: accountContext.peerChannelMemberCategoriesContextsManager, window: window)
+                        accountContext.sharedContext.dropCrossCall()
+                        accountContext.sharedContext.peerCall?.contextObject = nil
+                        accountContext.sharedContext.peerCall?.onCompletion?()
+                        applyGroupCallResult(accountContext.sharedContext, callContext)
+                        
+                    })
+                }, error: { [weak self] _ in
+                    guard let self else {
+                        return
                     }
-                    let upgradedToConferenceCompletions = self.upgradedToConferenceCompletions.copyItems()
-                    self.upgradedToConferenceCompletions.removeAll()
-                    for f in upgradedToConferenceCompletions {
-                        f(conferenceCall)
-                    }
+                    self.updateSessionState(sessionState: CallSession(
+                        id: self.internalId,
+                        stableId: self.conferenceStableId,
+                        isOutgoing: false,
+                        type: .audio,
+                        state: .terminated(id: nil, reason: .error(.generic), options: CallTerminationOptions()),
+                        isVideoPossible: true
+                    ),
+                    callContextState: nil, reception: nil)
                 })
             }
         }
+
         
         
         switch sessionState.state {
         case .requesting:
             break
-        case let .active(id, key, _, connections, maxLayer, version, _, allowsP2P, conference, _):
+        case let .active(id, key, _, connections, maxLayer, version, customParameters, allowsP2P):
             if !wasActive {
                 let logName = "\(id.id)_\(id.accessHash)"
                 
@@ -1080,6 +1160,7 @@ class PCallSession {
         settingsDisposable?.dispose()
         devicesDisposable.dispose()
         devicesListDisposable.dispose()
+        conferenceCallDisposable?.dispose()
     }
     
     private func playRingtone() {
@@ -1415,7 +1496,7 @@ func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, 
                     return context.sharedContext.endCurrentCall()
                 }
             } |> mapToSignal { _ in
-                return context.account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible, conferenceCall: nil)
+                return context.account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
             }
             |> mapToSignal { id in
                 return getPrivateCallSessionData(context.account, accountManager: context.sharedContext.accountManager, peerId: peerId) |> map {
@@ -1424,7 +1505,7 @@ func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, 
             }
             |> deliverOn(callQueue)
             |> map { id, data in
-                return .success(PCallSession(accountContext: context, account: context.account, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible, data: data))
+                return .success(PCallSession(accountContext: context, account: context.account, isOutgoing: true, incomingConferenceSource: nil, incomingParticipants: [], peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible, data: data))
             }
         } else {
             verifyAlert_button(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
@@ -1445,7 +1526,7 @@ enum CallConfirmationType {
     case voiceChat
 }
 
-func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId, newCallType: CallConfirmationType, ignoreSame: Bool = false) -> Signal<Bool, NoError> {
+func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId?, newCallType: CallConfirmationType, ignoreSame: Bool = false) -> Signal<Bool, NoError> {
     if accountContext.sharedContext.hasActiveCall {
         let currentCallType: CallConfirmationType
         let currentPeerId: PeerId?
@@ -1471,9 +1552,15 @@ func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId, 
                 return nil
             }
         }
-        let to = accountContext.account.postbox.transaction {
-            return $0.getPeer(newPeerId)
+        let to: Signal<Peer?, NoError>
+        if let newPeerId {
+            to = accountContext.account.postbox.transaction {
+                return $0.getPeer(newPeerId)
+            }
+        } else {
+            to = .single(nil)
         }
+        
         return combineLatest(from, to) |> map { (from: $0, to: $1) }
         |> deliverOnMainQueue
         |> mapToSignal { values in

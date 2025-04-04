@@ -917,11 +917,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
         let globalStorySearchState = self.globalStorySearchState.get()
-        var ids:[PeerId:PeerId] = [:]
 
         
         let searchItems = combineLatest(globalTagsValue.get(), searchQuery.get(), viewOnStage |> filter { $0 } |> distinctUntilChanged) |> mapToSignal { globalTags, query, _ -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
             let query = query ?? ""
+            var ids:[PeerId:PeerId] = [:]
             if !query.isEmpty || !globalTags.isEmpty {
                 
 
@@ -1720,7 +1720,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 self.scrollup()
             }
             
-            ids.removeAll()
             
             self.scrollupOnNextTransition = false
             if let searchMessagesResult, let searchMessagesState {
