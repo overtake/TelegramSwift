@@ -86,6 +86,7 @@ struct GroupCallTheme {
     static let settingsIcon: CGImage = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon: CGImage = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
     static let inviteIcon: CGImage = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
+    static let shareIcon: CGImage = NSImage(named: "Icon_BotAffiliate_Link")!.precomposed(.white)
     static let video_back = NSImage(named: "Icon_ChatNavigationBack")!.precomposed(NSColor.white)
     static let video_paused = NSImage(named: "Icon_VoiceChat_PausedVideo")!.precomposed(NSColor.white)
     static let videoBox_muted: CGImage = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
@@ -238,10 +239,10 @@ struct GroupCallTheme {
     }
     
     static var customTheme: GeneralRowItem.Theme {
-        GeneralRowItem.Theme(backgroundColor:                                            GroupCallTheme.membersColor,
+        GeneralRowItem.Theme(backgroundColor: GroupCallTheme.membersColor,
                                         grayBackground: GroupCallTheme.windowBackground,
                                         grayForeground: GroupCallTheme.grayStatusColor,
-                                        highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
+                                        highlightColor: GroupCallTheme.windowBackground.withAlphaComponent(0.25),
                                         borderColor: GroupCallTheme.memberSeparatorColor,
                                         accentColor: GroupCallTheme.blueStatusColor,
                                         secondaryColor: GroupCallTheme.grayStatusColor,
@@ -455,7 +456,7 @@ final class GroupCallContext {
     }
     
     @objc private func _readyPresent() {
-        call.sharedContext.updateCurrentGroupCallValue(self)
+        self.call.sharedContext.updateCurrentGroupCallValue(self)
         self.window.window.alphaValue = 1
         self.window.window.makeKeyAndOrderFront(nil)
         self.window.window.orderFrontRegardless()

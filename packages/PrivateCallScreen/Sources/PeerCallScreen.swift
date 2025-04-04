@@ -36,6 +36,8 @@ public final class PeerCallScreen : ViewController {
     public var contextObject: Any?
     
     private var videoViewState: PeerCallVideoViewState = .init()
+    
+    private let isConference: Bool
 
     
     private let statePromise = ValuePromise<PeerCallState>(ignoreRepeated: true)
@@ -51,9 +53,10 @@ public final class PeerCallScreen : ViewController {
     }
     
     
-    public init(external: PeerCallArguments) {
+    public init(external: PeerCallArguments, isConference: Bool) {
         self.external = external
-        let size = NSMakeSize(720, 560)
+        self.isConference = isConference
+        let size = isConference ? NSMakeSize(380, 600) : NSMakeSize(720, 560)
         if let screen = NSScreen.main {
             self.screen = Window(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled, .closable], backing: .buffered, defer: true, screen: screen)
             self.screen.minSize = size
@@ -205,6 +208,8 @@ public final class PeerCallScreen : ViewController {
             }
         }, makeAvatar: { [weak self] view, peerId in
             return self?.external.makeAvatar(view, peerId)
+        }, makeParticipants: { [weak self] view, participants in
+            return self?.external.makeParticipants(view, participants) ?? NSView()
         }, openSettings: { [weak self] in
             guard let self else {
                 return
@@ -212,6 +217,10 @@ public final class PeerCallScreen : ViewController {
             let isClosed = self.stateValue.with { $0.externalState.canBeRemoved == true }
             if !isClosed {
                 self.external.openSettings(self.screen)
+            }
+        }, addMembers: { [weak self] in
+            if let window = self?.window as? Window {
+                self?.external.upgradeToConference(window)
             }
         })
         
@@ -353,13 +362,6 @@ public final class PeerCallScreen : ViewController {
         screen.set(mouseHandler: updateMouse, with: self, for: .mouseExited)
         screen.set(mouseHandler: updateMouse, with: self, for: .mouseEntered)
 
-        
-        screen.set(handler: { [weak self] event in
-            if let window = event.window as? Window {
-                self?.external.upgradeToConference(window)
-            }
-            return .invoked
-        }, with: self, for: .T, modifierFlags: [.command])
     }
     
     private var previousState: PeerCallState?

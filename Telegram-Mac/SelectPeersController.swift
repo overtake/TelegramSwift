@@ -178,7 +178,10 @@ struct SelectPeerValue : Equatable {
     let ignoreStatus: Bool
     let isLookSavedMessage: Bool
     let savedStatus: String?
-    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil, ignoreStatus: Bool = false, isLookSavedMessage: Bool = true, savedStatus: String? = nil) {
+    let selectLeft: Bool
+    let passLeftAction: Bool
+    let rightActions:ShortPeerRowItem.RightActions
+    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil, ignoreStatus: Bool = false, isLookSavedMessage: Bool = true, savedStatus: String? = nil, selectLeft: Bool = false, passLeftAction: Bool = false, rightActions:ShortPeerRowItem.RightActions = .init()) {
         self.peer = peer
         self.presence = presence
         self.subscribers = subscribers
@@ -186,6 +189,9 @@ struct SelectPeerValue : Equatable {
         self.ignoreStatus = ignoreStatus
         self.isLookSavedMessage = isLookSavedMessage
         self.savedStatus = savedStatus
+        self.selectLeft = selectLeft
+        self.passLeftAction = passLeftAction
+        self.rightActions = rightActions
     }
     
     static func == (lhs: SelectPeerValue, rhs: SelectPeerValue) -> Bool {
@@ -213,6 +219,15 @@ struct SelectPeerValue : Equatable {
             return false
         }
         if lhs.isLookSavedMessage != rhs.isLookSavedMessage {
+            return false
+        }
+        if lhs.selectLeft != rhs.selectLeft {
+            return false
+        }
+        if lhs.passLeftAction != rhs.passLeftAction {
+            return false
+        }
+        if lhs.rightActions != rhs.rightActions {
             return false
         }
         return true
@@ -432,7 +447,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                 if singleAction != nil {
                     interactionType = .plain
                 } else {
-                    interactionType = .selectable(interactions, side: .right)
+                    interactionType = .selectable(interactions, side: peer.selectLeft ? .left : .right)
                 }
                 
                 var (status, color) = peer.status(context.account)
@@ -443,7 +458,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                     if let singleAction = singleAction {
                         singleAction(peer.peer)
                     }
-                }, highlightVerified: true, customTheme: peer.customTheme)
+                }, highlightVerified: true, customTheme: peer.customTheme, passLeftAction: peer.passLeftAction, rightActions: peer.rightActions)
             case let .searchEmpty(theme, icon):
                 return SearchEmptyRowItem(initialSize, stableId: entry.stableId, icon: icon, customTheme: theme)
             case let .empty(_, _, callback):
@@ -457,7 +472,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                     if close {
                         interactions.close()
                     }
-                }, thumb: GeneralThumbAdditional(thumb: image, textInset: 41), inset: NSEdgeInsetsMake(0, 6, 0, 0), customTheme: customTheme)
+                }, drawCustomSeparator: false, thumb: GeneralThumbAdditional(thumb: image, textInset: 41), inset: NSEdgeInsetsMake(0, 6, 0, 0), customTheme: customTheme)
             case let .requirements(string):
                 return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: string, border: [.Top], inset: NSEdgeInsets(left: 10, right: 10, top: 0, bottom: 4))
             }
@@ -1633,6 +1648,7 @@ class SelectPeersModalController : ModalViewController, Notifable {
         let initialSize = atomicSize
         let account = context.account
         genericView.customTheme = behavior.customTheme
+        
         
         let selectedPeerIds = self.selectedPeerIds
         

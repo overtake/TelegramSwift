@@ -15,7 +15,7 @@ import Postbox
 
 class ChatCallRowItem: ChatRowItem {
     
-    private(set) var headerLayout:TextViewLayout
+    private(set) var headerLayout:TextViewLayout?
     private(set) var timeLayout:TextViewLayout?
     
     let outgoing:Bool
@@ -46,12 +46,12 @@ class ChatCallRowItem: ChatRowItem {
         }
         self.isVideo = video
         
-        headerLayout = TextViewLayout(.initialize(string: outgoing ? (video ? strings().chatVideoCallOutgoing : strings().chatCallOutgoing) : (video ? strings().chatVideoCallIncoming : strings().chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
         case let .phoneCall(_, reason, duration, _):
             let attr = NSMutableAttributedString()
             
-           
+            headerLayout = TextViewLayout(.initialize(string: outgoing ? (video ? strings().chatVideoCallOutgoing : strings().chatCallOutgoing) : (video ? strings().chatVideoCallIncoming : strings().chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
+
 
             if let duration = duration, duration > 0 {
                 _ = attr.append(string: String.stringForShortCallDurationSeconds(for: duration), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
@@ -72,7 +72,46 @@ class ChatCallRowItem: ChatRowItem {
                 failed = true
             }
             timeLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
-            break
+        case let .conferenceCall(call):
+            
+            var hasMissed = false
+            var conferenceIsDeclined = false
+
+            let missedTimeout: Int32
+            #if DEBUG
+            missedTimeout = 5
+            #else
+            missedTimeout = 30
+            #endif
+            let currentTime = Int32(Date().timeIntervalSince1970)
+            if call.flags.contains(.isMissed) {
+                conferenceIsDeclined = true
+            } else if message.timestamp < currentTime - missedTimeout {
+                hasMissed = true
+            }
+
+            let title: String
+            //TODOLANG
+            if conferenceIsDeclined {
+                title = "Declined Group Call"
+            } else if hasMissed {
+                title = "Missed Group Call"
+            } else {
+                title = "Group call"
+            }
+
+            
+            headerLayout = TextViewLayout(.initialize(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
+            
+            let attr = NSMutableAttributedString()
+            
+            
+            //TODOLANG
+            _ = attr.append(string: outgoing ? strings().chatCallOutgoing : strings().chatCallIncoming, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
+
+            
+            timeLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
+            failed = false
         default:
             failed = true
         }
@@ -82,20 +121,57 @@ class ChatCallRowItem: ChatRowItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         timeLayout?.measure(width: width)
-        headerLayout.measure(width: width)
+        headerLayout?.measure(width: width)
         
-        let widths:[CGFloat] = [timeLayout?.layoutSize.width ?? width, headerLayout.layoutSize.width]
+        let widths:[CGFloat] = [timeLayout?.layoutSize.width ?? width, headerLayout?.layoutSize.width ?? width]
         
         return NSMakeSize((widths.max() ?? 0) + 60, 36)
     }
     
     func requestCall() {
-        if let peerId = message?.id.peerId {
+        if let peerId = message?.id.peerId, let message {
             let context = self.context
             
-            requestSessionId.set((phoneCall(context: context, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(context, result)
-            }))
+            let action = message.media[0] as! TelegramMediaAction
+
+            switch action.action {
+            case .phoneCall:
+                requestSessionId.set((phoneCall(context: context, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context, result)
+                }))
+            case let .conferenceCall(conferenceCall):
+                
+                if conferenceCall.duration != nil {
+                    return
+                }
+
+                _ = showModalProgress(signal: context.engine.peers.joinCallInvitationInformation(messageId: message.id), for: context.window).startStandalone(next: { [weak self] info in
+                    guard let self else {
+                        return
+                    }
+                    self.requestSessionId.set(requestOrJoinConferenceCall(context: context, initialInfo: .init(id: info.id, accessHash: info.accessHash, participantCount: info.totalMemberCount, streamDcId: nil, title: nil, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: false, defaultParticipantsAreMuted: nil, isVideoEnabled: false, unmutedVideoLimit: 0, isStream: false, isCreator: false), reference: .message(id: message.id)).start(next: { result in
+                        switch result {
+                        case let .samePeer(callContext):
+                            applyGroupCallResult(context.sharedContext, callContext)
+                        case let .success(callContext):
+                            applyGroupCallResult(context.sharedContext, callContext)
+                        default:
+                            alert(for: context.window, info: strings().errorAnError)
+                        }
+                    }))
+                }, error: { error in
+                    switch error {
+                    case .flood:
+                        showModalText(for: context.window, text: strings().loginFloodWait)
+                    case .generic:
+                        showModalText(for: context.window, text: strings().groupCallInviteNotAvailable)
+                    }
+                })
+                
+            default:
+                break
+            }
+            
         }
     }
     
@@ -157,7 +233,7 @@ private class ChatCallRowView : ChatRowView {
             imageView.image = theme.chat.chatCallIcon(item)
             imageView.sizeToFit()
             headerView.update(item.headerLayout, origin: NSMakePoint(fallbackControl.frame.maxX + 10, 0))
-            timeView.update(item.timeLayout, origin: NSMakePoint(fallbackControl.frame.maxX + 14 + imageView.frame.width, item.headerLayout.layoutSize.height + 3))
+            timeView.update(item.timeLayout, origin: NSMakePoint(fallbackControl.frame.maxX + 14 + imageView.frame.width, headerView.frame.height + 3))
         }
     }
     

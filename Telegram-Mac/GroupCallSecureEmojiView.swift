@@ -8,15 +8,131 @@
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
+import ObjcUtils
 
 final class GroupCallSecureEmojiView: Control {
+    
+    private class EmojiView : View {
+        private(set) var stable: ImageView?
+        private var pendingEmojiValues: [CGImage]?
+        private var pendingContainerView: View?
+        private var pendingEmojiViews: [SimpleLayer] = []
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(emoji: CGImage?, emojiSize: NSSize, animated: Bool) {
+
+            let prevEmojiSize = self.frame.size
+            
+            if let emoji {
+                let current: ImageView
+                let isNew: Bool
+                if let view = self.stable {
+                    current = view
+                    isNew = false
+                } else {
+                    current = ImageView()
+                    addSubview(current)
+                    self.stable = current
+                    isNew = true
+                }
+                current.image = emoji
+                current.setFrameSize(emojiSize)
+                
+                if isNew, animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                
+                if let pendingContainerView = self.pendingContainerView {
+                    self.pendingContainerView = nil
+                    performSubviewRemoval(pendingContainerView, animated: animated)
+                    self.pendingEmojiViews.removeAll()
+                }
+                
+            } else {
+                
+                if let stable = self.stable {
+                    self.stable = nil
+                    performSubviewRemoval(stable, animated: animated)
+                }
+                
+                let borderEmoji = 2
+                let numEmoji = borderEmoji * 2 + 3
+                
+                if self.pendingEmojiValues?.count != numEmoji {
+                    var pendingEmojiValuesValue: [CGImage] = []
+                    for _ in 0 ..< numEmoji - borderEmoji - 1 {
+                        let emoji = ObjcUtils.randomCallsEmoji()
+                        let image = generateTextIcon(.initialize(string: emoji, color: .white, font: .medium(30)), minSize: false)
+                        pendingEmojiValuesValue.append(image)
+                    }
+                    for i in 0 ..< borderEmoji + 1 {
+                        pendingEmojiValuesValue.append(pendingEmojiValuesValue[i])
+                    }
+                    self.pendingEmojiValues = pendingEmojiValuesValue
+                }
+                
+                
+                if let pendingEmojiValues, pendingEmojiValues.count == numEmoji {
+                    let pendingContainerView: View
+                    if let current = self.pendingContainerView {
+                        pendingContainerView = current
+                    } else {
+                        pendingContainerView = View()
+                        self.pendingContainerView = pendingContainerView
+                    }
+                    let size = emojiSize
+
+                    for i in 0 ..< numEmoji {
+                        let pendingEmojiView: SimpleLayer
+                        if self.pendingEmojiViews.count > i {
+                            pendingEmojiView = self.pendingEmojiViews[i]
+                        } else {
+                            pendingEmojiView = SimpleLayer()
+                            self.pendingEmojiViews.append(pendingEmojiView)
+                            pendingContainerView.layer?.addSublayer(pendingEmojiView)
+                        }
+                        pendingEmojiView.contents = pendingEmojiValues[i]
+                        pendingEmojiView.frame = CGRect(origin: CGPoint(x: 0.0, y: CGFloat(i) * size.height), size: emojiSize)
+                    }
+
+                    pendingContainerView.frame = CGRect(origin: CGPoint(), size: size)
+
+                    if pendingContainerView.superview == nil || emojiSize != prevEmojiSize {
+                        self.addSubview(pendingContainerView)
+
+                        let animation = CABasicAnimation(keyPath: "sublayerTransform.translation.y")
+                        //animation.duration = 4.2
+                        animation.duration = 0.7
+                        animation.fromValue = -CGFloat(numEmoji - borderEmoji) * size.height
+                        animation.toValue = CGFloat(borderEmoji - 3) * size.height
+                        animation.timingFunction = CAMediaTimingFunction(name: .linear)
+                        animation.autoreverses = false
+                        animation.repeatCount = .infinity
+                        
+                        pendingContainerView.layer?.add(animation, forKey: "offsetCycle")
+                    }
+                }
+            }
+        }
+    }
+    
     private let textView = TextView()
-    private let emojiesView: [ImageView] = [ImageView(), ImageView(), ImageView(), ImageView()]
+    private let emojiesView: [EmojiView] = [EmojiView(frame: .zero), EmojiView(frame: .zero), EmojiView(frame: .zero), EmojiView(frame: .zero)]
     
     private var infoTextView: TextView?
     
     private var closeView: TextView?
     private var closeBorderView: View?
+    
+
+
     
     private var state: GroupCallUIState?
     
@@ -67,7 +183,7 @@ final class GroupCallSecureEmojiView: Control {
         return rects
     }
     
-    func update(_ state: GroupCallUIState, _ account: Account, toggle: @escaping()->Void, transition: ContainedViewLayoutTransition) -> NSSize {
+    func update(_ state: GroupCallUIState, encryptionKeyEmoji: [String]?, _ account: Account, toggle: @escaping()->Void, transition: ContainedViewLayoutTransition) -> NSSize {
     
         let animated = transition.isAnimated
         self.state = state
@@ -78,8 +194,6 @@ final class GroupCallSecureEmojiView: Control {
         self.textView.update(textLayout)
         
         
-       
-        
         background = GroupCallTheme.membersColor
         
         setSingle(handler: { _ in
@@ -88,18 +202,19 @@ final class GroupCallSecureEmojiView: Control {
         
         let views = self.emojiesView
         
-        assert(state.conferenceEmojies.count == views.count)
         let width = textView.frame.width + 84 + 10 + 10
-        
-        var emojiRects = emojiesRects(state, width: width)
-        
+        let emojiRects = emojiesRects(state, width: width)
+
         for (i, view) in views.enumerated() {
-            let emoji = state.conferenceEmojies[i]
-            let image = generateTextIcon(.initialize(string: emoji, color: .white, font: .medium(30)), minSize: false)
-            let isNew: Bool = view.image == nil
-            view.image = image
-            view.contentGravity = .resizeAspectFill
-                        
+            var image: CGImage? = nil
+            if let encryptionKeyEmoji {
+                let emoji = encryptionKeyEmoji[i]
+                image = generateTextIcon(.initialize(string: emoji, color: .white, font: .medium(30)), minSize: false)
+            }
+            let isNew: Bool = view.stable == nil
+            
+            view.update(emoji: image, emojiSize: emojiRects[i].size, animated: animated)
+                                    
             if isNew {
                 view.frame = emojiRects[i]
             } else {
@@ -107,7 +222,6 @@ final class GroupCallSecureEmojiView: Control {
             }
         }
         
-
         
         self.textView.change(opacity: state.showConferenceKey ? 0 : 1, animated: animated)
         

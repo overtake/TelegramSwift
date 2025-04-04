@@ -825,7 +825,7 @@ class ChatMessageItem: ChatRowItem {
 
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
-                    copyToClipboard(link)
+                    copyToClipboard(link.trimmed)
                     context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
                 }), range: range)
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)

@@ -666,7 +666,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if fromId != arguments.context.peerId, let slug = slug, unclaimed {
             let link = "t.me/giftcode/\(slug.prefixWithDots(20))"
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(link), comparable: nil, item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: {
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: { _ in
                     arguments.copyLink("t.me/giftcode/\(slug)")
                 }), customTheme: .initialize(arguments.presentation))
             }))

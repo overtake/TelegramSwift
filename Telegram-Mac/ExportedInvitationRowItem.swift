@@ -140,7 +140,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
                 return nil
             }
         } else if let publicAddress = publicAddress {
-            return publicAddress
+            return "https://t.me/\(publicAddress)"
         } else {
             return nil
         }

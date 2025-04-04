@@ -267,8 +267,8 @@ class GeneralRowItem: TableRowItem {
         let unselectedImage: CGImage
         let selectedImage: CGImage
         
-        static func initialize(_ theme: TelegramPresentationTheme) -> GeneralRowItem.Theme {
-            return .init(backgroundColor: theme.colors.background,
+        static func initialize(_ theme: TelegramPresentationTheme, background: NSColor? = nil) -> GeneralRowItem.Theme {
+            return .init(backgroundColor: background ?? theme.colors.background,
                          grayBackground: theme.colors.grayBackground,
                          grayForeground: theme.colors.grayForeground,
                          highlightColor: theme.colors.grayHighlight,

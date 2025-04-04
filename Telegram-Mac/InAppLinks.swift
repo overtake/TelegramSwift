@@ -1295,7 +1295,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         afterComplete(true)
     case let .joinGroupCall(_, context, peerId, callId):
         selectGroupCallJoiner(context: context, peerId: peerId, completion: { peerId, schedule, isStream in
-            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId), for: getWindow(context)).start(next: { result in
+            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId, reference: nil), for: getWindow(context)).start(next: { result in
                 switch result {
                 case let .success(callContext), let .samePeer(callContext):
                     applyGroupCallResult(context.sharedContext, callContext)
@@ -1475,6 +1475,18 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().unknownError)
             }
         })
+    case let .joinCall(_, slug, context):
+                
+        _ = showModalProgress(signal: context.engine.calls.getCurrentGroupCall(reference: .link(slug: slug)), for: getWindow(context)).start(next: { summary in
+            if let summary {
+                showModal(with: JoinGroupCallController(context: context, summary: summary, reference: .link(slug: slug)), for: getWindow(context))
+            }
+        }, error: { error in
+            switch error {
+            case .generic:
+                showModalText(for: getWindow(context), text: strings().groupCallInviteLinkExpired)
+            }
+        })
     }
     
 }
@@ -1618,6 +1630,7 @@ enum inAppLink {
     case starsTopup(link: String, amount: Int64, purpose: String, context: AccountContext)
     case multigift(link: String, context: AccountContext)
     case nft(link: String, slug: String, context: AccountContext)
+    case joinCall(link: String, slug: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1693,6 +1706,8 @@ enum inAppLink {
             return link
         case let .nft(link, _, _):
             return link
+        case let .joinCall(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1702,10 +1717,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/", "nft/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/", "nft/", "call/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call"]
 
 
 let ton_scheme:String = "ton://"
@@ -2002,6 +2017,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let data = string.components(separatedBy: "/")
                         if let context = context, data.count == 2 {
                             return .nft(link: urlString, slug: data[1], context: context)
+                        }
+                    case actions_me[15]:
+                        let data = string.components(separatedBy: "/")
+                        if let context = context, data.count == 2 {
+                            return .joinCall(link: urlString, slug: data[1], context: context)
                         }
                     default:
                         break
@@ -2546,6 +2566,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[24]:
                     if let context = context, let slug = vars[keyURLSlug] {
                         return .nft(link: urlString, slug: slug, context: context)
+                    }
+                case known_scheme[25]:
+                    if let context = context, let slug = vars[keyURLSlug] {
+                        return .joinCall(link: urlString, slug: slug, context: context)
                     }
                 default:
                     break

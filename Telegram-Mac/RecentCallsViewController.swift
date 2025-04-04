@@ -53,14 +53,18 @@ private final class RecentCallsArguments {
     let call:(PeerId)->Void
     let removeCalls:([MessageId], Peer) -> Void
     let context:AccountContext
-    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId], Peer) ->Void ) {
+    let newCallLink:()->Void
+    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId], Peer) ->Void, newCallLink:@escaping()->Void) {
         self.context = context
         self.removeCalls = removeCalls
         self.call = call
+        self.newCallLink = newCallLink
     }
 }
 
 private enum RecentCallEntry : TableItemListNodeEntry {
+    case newCallLink
+    case recentCalls
     case calls(Message, [Message], Bool, Bool) // editing, failed
     case empty(Bool)
     static func <(lhs:RecentCallEntry, rhs:RecentCallEntry) -> Bool {
@@ -71,7 +75,15 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 return MessageIndex(lhsMessage) < MessageIndex(rhsMessage)
             case .empty:
                 return false
+            case .newCallLink :
+                return true
+            case .recentCalls:
+                return true
             }
+        case .newCallLink:
+            return false
+        case .recentCalls:
+            return false
         case .empty:
             return true
         }
@@ -112,6 +124,18 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
+        case .newCallLink:
+            if case .newCallLink = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .recentCalls:
+            if case .recentCalls = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
 
@@ -122,6 +146,10 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             return message.chatStableId
         case .empty:
             return "empty"
+        case .newCallLink:
+            return "newCallLink"
+        case .recentCalls:
+            return "recentCalls"
         }
     }
     
@@ -129,6 +157,11 @@ private enum RecentCallEntry : TableItemListNodeEntry {
     
     func item(_ arguments: RecentCallsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
+        case .newCallLink:
+            //TODOLANG
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "New Call Link", icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, viewType: .legacy, action: arguments.newCallLink, inset: NSEdgeInsets(left: 10, right: 0), disableBorder: true)
+        case .recentCalls:
+            return SeparatorRowItem(initialSize, stableId, string: "RECENT CALLS")
         case let .calls(message, messages, editing, failed):
             let peer = coreMessageMainPeer(message)!
 
@@ -177,7 +210,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
                 if !editing {
                     arguments.call(peer.id)
                 }
@@ -185,9 +218,10 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 return .single([ContextMenuItem(strings().recentCallsDelete, handler: {
                     arguments.removeCalls(messages.map{ $0.id }, peer)
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
-            }, highlightVerified: true)
+            }, highlightVerified: true, statusImage: theme.icons.callOutgoing)
         case .empty(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right])
+            //TODO:LANG
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right], action: .init(click: arguments.newCallLink, title: "New Call Link"))
         }
     }
 }
@@ -342,6 +376,9 @@ private struct RecentCallsControllerState: Equatable {
 
 private func makeEntries(from: CallListViewUpdate, state: RecentCallsControllerState) -> [RecentCallEntry] {
     var entries:[RecentCallEntry] = []
+    
+    
+    
     for entry in from.view.items {
         switch entry {
         case let .message(message, messages):
@@ -366,6 +403,12 @@ private func makeEntries(from: CallListViewUpdate, state: RecentCallsControllerS
             break
         }
     }
+    
+    if !from.view.items.isEmpty {
+        entries.append(.recentCalls)
+        entries.append(.newCallLink)
+    }
+    
     if entries.isEmpty {
         entries.append(.empty(false))
     }
@@ -432,6 +475,12 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 self?.againDisposable.set((Signal<()->Void, NoError>.single({ [weak self] in
                     self?.viewWillAppear(false)
                 }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
+            })
+        }, newCallLink: {
+            
+            _ = showModalProgress(signal: context.engine.calls.createConferenceCall(), for: context.window).startStandalone(next: { groupCall in
+                showModal(with: GroupCallInviteLinkController(context: context, source: .groupCall(groupCall), mode: .basic, presentation: theme), for: context.window)
+
             })
         })
         

@@ -14,11 +14,20 @@ class SearchEmptyRowItem: GeneralRowItem {
     let isLoading:Bool
     let icon:CGImage
     let text:TextViewLayout?
+    
+    struct Action {
+        var click:()->Void
+        var title: String
+    }
+    
+    let buttonAction: Action?
 
+    
     private let _heightValue: CGFloat?
-    init(_ initialSize: NSSize, stableId:AnyHashable, height: CGFloat? = nil, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil) {
+    init(_ initialSize: NSSize, stableId:AnyHashable, height: CGFloat? = nil, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil, action: Action? = nil) {
         self.isLoading = isLoading
         self.icon = icon
+        self.buttonAction = action
         self._heightValue = height
         if let text = text {
             self.text = TextViewLayout(.initialize(string: text, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .normal(.title)), alignment: .center)
@@ -65,6 +74,7 @@ class SearchEmptyRowView : TableRowView {
     private let imageView:ImageView = ImageView()
     private let textView:TextView = TextView()
     private let indicator:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 35, 35))
+    private var action: TextButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(indicator)
@@ -97,6 +107,10 @@ class SearchEmptyRowView : TableRowView {
         if let item = item as? SearchEmptyRowItem {
             textView.update(item.text)
             textView.center()
+            
+            if let action {
+                action.frame = NSMakeRect(20, textView.frame.maxY + 10, frame.width - 40, 40)
+            }
         }
     }
     
@@ -123,6 +137,33 @@ class SearchEmptyRowView : TableRowView {
             
             textView.isHidden = item.text == nil || item.isLoading
             textView.backgroundColor = backdorColor
+            
+            if let action = item.buttonAction {
+                let current: TextButton
+                if let view = self.action {
+                    current = view
+                } else {
+                    current = TextButton()
+                    self.action = current
+                    self.addSubview(current)
+                }
+                current.set(font: .normal(.text), for: .Normal)
+                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.set(background: theme.colors.accent, for: .Normal)
+                current.set(text: action.title, for: .Normal)
+                current.sizeToFit(.zero, NSMakeSize(frame.width - 40, 40), thatFit: true)
+                current.autoSizeToFit = false
+                current.scaleOnClick = true
+                current.layer?.cornerRadius = 10
+                
+                current.removeAllHandlers()
+                
+                current.set(handler: { _ in
+                    action.click()
+                }, for: .Click)
+            }
+            
+            
             self.needsLayout = true
         }
     }

@@ -42,6 +42,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     private var customAction: TextView?
     
+    private var rightsActions: [ImageButton] = []
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -193,6 +194,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                             
                             let sY = tY + title.0.size.height + 1.0
                             if hiddenStatus {
+                                if let statusImage = item.statusImage {
+                                    ctx.draw(statusImage, in: CGRect(origin: NSMakePoint(item.textInset(false), sY + 2), size: statusImage.backingSize))
+                                }
                                 status.1.draw(NSMakeRect(item.textInset(true), sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                             }
                         }
@@ -218,6 +222,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                             
                             let sY = tY + title.0.size.height + 1.0
                             if hiddenStatus {
+                                if let statusImage = item.statusImage {
+                                    ctx.draw(statusImage, in: CGRect(origin: NSMakePoint(item.textInset(false), sY + 2), size: statusImage.backingSize))
+                                }
                                 status.1.draw(NSMakeRect(item.textInset(true), sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                             }
                         }
@@ -280,18 +287,35 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 switch item.interactionType {
                 case .plain, .interactable:
                     container.frame = bounds
-                case .selectable:
-                    container.frame = .init(x: 0, y: 0, width: frame.width, height: frame.height)
+                case let .selectable(_, side):
+                    switch side {
+                    case .left:
+                        container.frame = .init(x: 30, y: 0, width: frame.width - 30, height: frame.height)
+                    case .right:
+                        container.frame = .init(x: 0, y: 0, width: frame.width, height: frame.height)
+                    }
                 default :
                     container.frame = .init(x: 30, y: 0, width: frame.width - 30, height: frame.height)
                 }
-                
-                if let deleteControl = deleteControl {
-                    deleteControl.centerY(x: item.deleteInset)
+                                
+                switch item.interactionType {
+                case .deletable:
+                    if let deleteControl = deleteControl {
+                        deleteControl.centerY(x: item.deleteInset)
+                    }
+                case let .selectable(_, side):
+                    if let selectControl = selectControl {
+                        switch side {
+                        case .right:
+                            selectControl.centerY(x: containerView.frame.width - selectControl.frame.width - item.inset.right)
+                        case .left:
+                            selectControl.centerY(x: item.deleteInset)
+                        }
+                    }
+                default:
+                    break
                 }
-                if let selectControl = selectControl {
-                    selectControl.centerY(x: frame.width - selectControl.frame.width - item.inset.right)
-                }
+
                 
                 photoContainer.frame = NSMakeRect(item.inset.left + (item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
                 image.frame = item.photoSize.bounds
@@ -314,7 +338,20 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - item.inset.left)
                 }
                 
-                separator.frame = NSMakeRect(item.textInset(true), containerView.frame.height - .borderSize, containerView.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset(false), .borderSize)
+                var addOffset: CGFloat = 0
+                switch item.interactionType {
+                case .selectable(_, let side):
+                    switch side {
+                    case .left:
+                        addOffset += 30
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+                
+                separator.frame = NSMakeRect(item.textInset(false) + addOffset, containerView.frame.height - .borderSize, containerView.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset(false), .borderSize)
                 
                 #if !SHARE
                 if let view = activities?.view {
@@ -440,6 +477,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         if let customAction {
             customAction.centerY(x: containerView.frame.width - customAction.frame.width - 10)
+        }
+        
+        if !rightsActions.isEmpty {
+            var x: CGFloat = containerView.frame.width - rightsActions[rightsActions.count - 1].frame.width - 10
+            for action in rightsActions.reversed() {
+                action.centerY(x: x)
+                x -= (action.frame.width + 10)
+            }
         }
     }
     
@@ -811,6 +856,35 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             self.customAction = nil
         }
         
+        if !item.rightActions.actions.isEmpty {
+            while self.rightsActions.count > item.rightActions.actions.count {
+                self.rightsActions.removeLast().removeFromSuperview()
+            }
+            while self.rightsActions.count < item.rightActions.actions.count {
+                let view = ImageButton()
+                containerView.addSubview(view)
+                self.rightsActions.append(view)
+            }
+            
+            for (i, action) in item.rightActions.actions.enumerated() {
+                let view = self.rightsActions[i]
+                view.set(image: action.icon, for: .Normal)
+                view.scaleOnClick = true
+                view.autohighlight = false
+                view.sizeToFit()
+                view.setSingle(handler: { [weak item] _ in
+                    if let item {
+                        item.rightActions.callback(item.peerId, i)
+                    }
+                }, for: .Click)
+            }
+
+        } else {
+            while !self.rightsActions.isEmpty {
+                self.rightsActions.removeLast().removeFromSuperview()
+            }
+        }
+        
         
         
         self.image._change(opacity: item.enabled ? 1 : 0.8, animated: animated)
@@ -828,7 +902,17 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .selectable(interaction, side):
             switch side {
             case .left:
-                interaction.action(item.peerId, nil)
+                if item.passLeftAction {
+                    if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
+                        if !interaction.openForum(item.peerId) {
+                            interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+                        }
+                    } else {
+                        interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+                    }
+                } else {
+                    interaction.action(item.peerId, nil)
+                }
             default:
                 if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
                     if !interaction.openForum(item.peerId) {

@@ -16,8 +16,12 @@ import SwiftSignalKit
 
 final class GroupCallInviteRowItem : GeneralRowItem {
     fileprivate let videoMode: Bool
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void) {
+    fileprivate let text: String
+    fileprivate let share: Bool
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, text: String, videoMode: Bool, share: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void) {
         self.videoMode = videoMode
+        self.text = text
+        self.share = share
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType, action: action, inset: NSEdgeInsets())
     }
     
@@ -34,7 +38,7 @@ final class GroupCallInviteRowItem : GeneralRowItem {
     }
     
     override var hasBorder: Bool {
-        return !isVertical
+        return !isVertical && viewType.position != .last
     }
     
     override var instantlyResize: Bool {
@@ -99,12 +103,12 @@ private final class GroupCallInviteRowView : GeneralContainableRowView {
             return
         }
         
-        thumbView.image = GroupCallTheme.inviteIcon
+        thumbView.image = item.share ? GroupCallTheme.shareIcon : GroupCallTheme.inviteIcon
         thumbView.sizeToFit()
         
         textView.change(opacity: item.isVertical ? 0 : 1, animated: animated)
         
-        let layout = TextViewLayout(.initialize(string: strings().voiceChatInviteInviteMembers, color: GroupCallTheme.customTheme.textColor, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: item.text, color: GroupCallTheme.customTheme.textColor, font: .normal(.title)))
         layout.measure(width: frame.width - 80)
         textView.update(layout)
 

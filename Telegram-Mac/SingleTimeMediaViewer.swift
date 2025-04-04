@@ -445,11 +445,16 @@ final class SingleTimeMediaViewer : ModalViewController {
     
     private let context: AccountContext
     private let message: Message
+    private let disposable = MetaDisposable()
     
     init(context: AccountContext, message: Message) {
         self.context = context
         self.message = message
         super.init()
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     private var genericView: SingleTimeMediaView {
@@ -458,6 +463,15 @@ final class SingleTimeMediaViewer : ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let exists = context.account.postbox.messageView(message.id) |> map { $0.message != nil } |> deliverOnMainQueue
+        
+        disposable.set(exists.startStrict(next: { [weak self] value in
+            if !value {
+                self?.close()
+            }
+        }))
+    
         
         genericView.update(context: context, message: message)
         

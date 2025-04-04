@@ -107,8 +107,12 @@ final class GroupCallUIState : Equatable {
     let initialTimestamp: TimeInterval
     
     let showConferenceKey: Bool
+    
+    let isConference: Bool
+    
+    let encryptionKeyEmoji: [String]?
         
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer?, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval, showConferenceKey: Bool) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer?, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval, isConference: Bool, showConferenceKey: Bool, encryptionKeyEmoji: [String]?) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -125,6 +129,8 @@ final class GroupCallUIState : Equatable {
         self.mode = activeVideoViews.isEmpty ? mode : .video
         self.videoSources = videoSources
         self.version = version
+        self.isConference = isConference
+        self.encryptionKeyEmoji = encryptionKeyEmoji
         self.activeVideoViews = activeVideoViews
         self.hideParticipants = hideParticipants
         self.isVideoEnabled = isVideoEnabled
@@ -184,13 +190,7 @@ final class GroupCallUIState : Equatable {
         return (!videoJoined) && !memberDatas.filter({ $0.videoEndpointId != nil || $0.presentationEndpointId != nil }).isEmpty
     }
     
-    var isConference: Bool {
-        return false
-    }
     
-    var conferenceEmojies: [String] {
-        return ["🥉", "⭐️", "🦆", "💰"]
-    }
     
     var title: String {
         if state.scheduleTimestamp != nil {
@@ -295,6 +295,12 @@ final class GroupCallUIState : Equatable {
         if lhs.showConferenceKey != rhs.showConferenceKey {
             return false
         }
+        if lhs.encryptionKeyEmoji != rhs.encryptionKeyEmoji {
+            return false
+        }
+        if lhs.isConference != rhs.isConference {
+            return false
+        }
         return true
     }
     
@@ -302,9 +308,7 @@ final class GroupCallUIState : Equatable {
         return activeVideoMembers[mode] ?? []
     }
     
-    func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, pinnedData: self.pinnedData, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker, controlsTooltip: self.controlsTooltip, dismissedTooltips: self.dismissedTooltips, videoJoined: self.videoJoined, isStream: self.isStream, windowIsFullscreen: self.windowIsFullscreen, initialTimestamp: self.initialTimestamp, showConferenceKey: self.showConferenceKey)
-    }
+    
 }
 
 

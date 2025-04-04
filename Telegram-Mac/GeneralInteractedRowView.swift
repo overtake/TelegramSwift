@@ -285,6 +285,9 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
+            if item.viewType == .legacy, item.customTheme != nil {
+                self.background = .clear
+            }
             let highlighted = isSelect ? self.backdorColor : highlightColor
             descriptionView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             textView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor

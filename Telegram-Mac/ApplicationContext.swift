@@ -160,7 +160,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var leftSidebarController: LeftSidebarController?
     
     private let loggedOutDisposable = MetaDisposable()
-    private let ringingStatesDisposable = MetaDisposable()
     
     private let settingsDisposable = MetaDisposable()
     private let suggestedLocalizationDisposable = MetaDisposable()
@@ -528,7 +527,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
                 
-            showModal(with: JoinGroupCallController(context: context), for: window)
+//            showModal(with: WebappTransferDataController(context: context, storedKeys: [WebAppSecureStorage.ExistingKey(uuid: "1", accountName: "Test Account", timestamp: context.timestamp)], completion: { _ in
+//                
+//            }), for: window)
             
           //  showModal(with: StarGift_Nft_Controller(context: context), for: window)
           //  context.bindings.rootNavigation().push(Affiliate_StartController(context: context))
@@ -539,7 +540,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
                         
-            context.bindings.rootNavigation().push(Affiliate_PeerController(context: context, peerId: context.peerId))
+           // showModal(with: GroupCallInviteLinkController(context: context, link: .init(link: "t.me/call/+kd93KsOsdd239k"), presentation: darkAppearance), for: window)
 
             return .invoked
         }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
@@ -885,7 +886,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.loggedOutDisposable.dispose()
         window.removeAllHandlers(for: self)
         settingsDisposable.dispose()
-        ringingStatesDisposable.dispose()
         suggestedLocalizationDisposable.dispose()
         audioDisposable.dispose()
         alertsDisposable.dispose()

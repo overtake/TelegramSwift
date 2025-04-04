@@ -381,7 +381,7 @@ private final class SVideoControlsView : Control {
             togglePip.set(image: controlStyle.isPip ? theme.icons.videoPlayerPIPOut : theme.icons.videoPlayerPIPIn, for: .Normal)
             toggleFullscreen.set(image: controlStyle.isPip ? theme.icons.videoPlayerClose : controlStyle.isFullScreen ? theme.icons.videoPlayerExitFullScreen : theme.icons.videoPlayerEnterFullScreen, for: .Normal)
             menuItems.isHidden = controlStyle.isPip || isControlsLimited || controlStyle.isCompact
-            togglePip.isHidden = isControlsLimited || controlStyle.isCompact
+//            togglePip.isHidden = isControlsLimited || controlStyle.isCompact
             toggleFullscreen.isHidden = isControlsLimited || controlStyle.isCompact
             playOrPause.isHidden = isControlsLimited
             volumeContainer.isHidden = isControlsLimited || controlStyle.isCompact

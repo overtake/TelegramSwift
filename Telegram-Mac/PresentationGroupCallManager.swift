@@ -19,6 +19,7 @@ public struct PresentationGroupCallRequestedVideo {
     }
 
     public var audioSsrc: UInt32
+    public var peerId: Int64
     public var endpointId: String
     public var ssrcGroups: [SsrcGroup]
     public var minQuality: Quality
@@ -43,7 +44,7 @@ extension GroupCallParticipantsContext.Participant {
         guard let videoDescription = self.videoDescription else {
             return nil
         }
-        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: videoDescription.endpointId, ssrcGroups: videoDescription.ssrcGroups.map { group in
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, peerId: self.peer.id.id._internalGetInt64Value(), endpointId: videoDescription.endpointId, ssrcGroups: videoDescription.ssrcGroups.map { group in
             PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
         }, minQuality: minQuality, maxQuality: maxQuality)
     }
@@ -55,7 +56,7 @@ extension GroupCallParticipantsContext.Participant {
         guard let presentationDescription = self.presentationDescription else {
             return nil
         }
-        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: presentationDescription.endpointId, ssrcGroups: presentationDescription.ssrcGroups.map { group in
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, peerId: self.peer.id.id._internalGetInt64Value(), endpointId: presentationDescription.endpointId, ssrcGroups: presentationDescription.ssrcGroups.map { group in
             PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
         }, minQuality: minQuality, maxQuality: maxQuality)
     }
@@ -213,6 +214,8 @@ public struct PresentationGroupCallState: Equatable {
     public var subscribedToScheduled: Bool
     public var isVideoEnabled: Bool
     public var isStream: Bool
+    public var isChannel: Bool
+    public var isConference: Bool
     
     public var sources: VideoSources = .init()
 
@@ -230,7 +233,9 @@ public struct PresentationGroupCallState: Equatable {
         scheduleTimestamp: Int32?,
         subscribedToScheduled: Bool,
         isVideoEnabled: Bool,
-        isStream: Bool
+        isStream: Bool,
+        isChannel: Bool,
+        isConference: Bool
     ) {
         self.myPeerId = myPeerId
         self.networkState = networkState
@@ -245,6 +250,8 @@ public struct PresentationGroupCallState: Equatable {
         self.subscribedToScheduled = subscribedToScheduled
         self.isVideoEnabled = isVideoEnabled
         self.isStream = isStream
+        self.isChannel = isChannel
+        self.isConference = isConference
     }
     
     var scheduleState: ScheduleState? {
@@ -293,7 +300,7 @@ enum GroupCallVideoMode {
     case screencast
 }
 
-protocol PresentationGroupCall: class {
+protocol PresentationGroupCall : class {
     
 
     
@@ -311,14 +318,19 @@ protocol PresentationGroupCall: class {
     var members: Signal<PresentationGroupCallMembers?, NoError> { get }
     var audioLevels: Signal<[(PeerId, UInt32, Float, Bool)], NoError> { get }
     var myAudioLevel: Signal<Float, NoError> { get }
-    var invitedPeers: Signal<[PeerId], NoError> { get }
+    var invitedPeers: Signal<[PresentationGroupCallInvitedPeer], NoError> { get }
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
     var callInfo: Signal<GroupCallInfo?, NoError> { get }
     var stateVersion: Signal<Int, NoError> { get }
     var isSpeaking: Signal<Bool, NoError> { get }
     
+    var callId: Int64? { get }
+    
     var isStream: Bool { get }
+    var isConference: Bool { get }
+
+    var e2eEncryptionKeyHash: Signal<Data?, NoError> { get }
 
     var mustStopSharing:(()->Void)? { get set }
     var mustStopVideo:(()->Void)? { get set }
@@ -339,7 +351,8 @@ protocol PresentationGroupCall: class {
     func setVolume(peerId: PeerId, volume: Int32, sync: Bool)
     func setIsMuted(action: PresentationGroupCallMuteAction)
     func updateMuteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState?
-    func invitePeer(_ peerId: PeerId) -> Bool
+    func invitePeer(_ peerId: PeerId, isVideo: Bool) -> Bool
+    func kickPeer(id: EnginePeer.Id)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
     func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo])
@@ -362,3 +375,22 @@ protocol PresentationGroupCall: class {
     func startScheduled()
     func toggleScheduledSubscription(_ subscribe: Bool)
 }
+
+
+
+public struct PresentationGroupCallInvitedPeer: Equatable {
+    public enum State {
+        case requesting
+        case ringing
+        case connecting
+    }
+    
+    public var id: EnginePeer.Id
+    public var state: State?
+    
+    public init(id: EnginePeer.Id, state: State?) {
+        self.id = id
+        self.state = state
+    }
+}
+

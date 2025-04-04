@@ -2097,8 +2097,10 @@ private class SearchContainer : Control {
                 }
                 
                 if state.peerTag == nil, state.forumPeer == nil, !state.mode.isForumLike {
-                    items.append(.init(title: strings().chatListDownloadsTag, index: index, uniqueId: -3, selected: state.selectedTag == .downloads, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
-                    index += 1
+                    if state.hasDownloads {
+                        items.append(.init(title: strings().chatListDownloadsTag, index: index, uniqueId: -3, selected: state.selectedTag == .downloads, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                        index += 1
+                    }
                     items.append(.init(title: strings().chatListChannelsTag, index: index, uniqueId: -2, selected: state.selectedTag == .channels, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                     items.append(.init(title: strings().chatListAppsTag, index: index, uniqueId: -1, selected: state.selectedTag == .apps, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
@@ -2653,7 +2655,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let arguments = Arguments(context: context, joinGroupCall: { info in
             if case let .forum(peerId, _, _) = mode {
                 let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
-                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: info.activeCall, initialInfo: info.data?.info, joinHash: nil), for: context.window).start(next: { result in
+                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: info.activeCall, initialInfo: info.data?.info, joinHash: nil, reference: nil), for: context.window).start(next: { result in
                         switch result {
                         case let .samePeer(callContext):
                             applyGroupCallResult(context.sharedContext, callContext)

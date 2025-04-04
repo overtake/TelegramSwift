@@ -74,12 +74,14 @@ final class ChatPinnedMessage: Equatable {
 struct GroupCallPanelData : Equatable {
     let peerId: PeerId?
     let info: GroupCallInfo?
+    let isChannel: Bool
     let topParticipants: [GroupCallParticipantsContext.Participant]
     let participantCount: Int
     let activeSpeakers: Set<PeerId>
     private(set) weak var groupCall: GroupCallContext?
     init(
         peerId: PeerId?,
+        isChannel: Bool,
         info: GroupCallInfo?,
         topParticipants: [GroupCallParticipantsContext.Participant],
         participantCount: Int,
@@ -88,6 +90,7 @@ struct GroupCallPanelData : Equatable {
     ) {
         self.peerId = peerId
         self.info = info
+        self.isChannel = isChannel
         self.topParticipants = topParticipants
         self.participantCount = participantCount
         self.activeSpeakers = activeSpeakers
@@ -111,6 +114,9 @@ struct GroupCallPanelData : Equatable {
             return false
         }
         if lhs.participantCount != rhs.participantCount {
+            return false
+        }
+        if lhs.isChannel != rhs.isChannel {
             return false
         }
         return true

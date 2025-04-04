@@ -1617,6 +1617,8 @@ public final class L10n {
   public static var callStatusRequesting: String  { return L10n.tr("Localizable", "Call.StatusRequesting") }
   /// Ringing...
   public static var callStatusRinging: String  { return L10n.tr("Localizable", "Call.StatusRinging") }
+  /// Switching to conference...
+  public static var callStatusSwitchingToConference: String  { return L10n.tr("Localizable", "Call.StatusSwitchingToConference") }
   /// Undefined error, please try later.
   public static var callUndefinedError: String  { return L10n.tr("Localizable", "Call.UndefinedError") }
   /// Video
@@ -1665,6 +1667,12 @@ public final class L10n {
   public static var callSameDeviceError: String  { return L10n.tr("Localizable", "Call.SameDevice.Error") }
   /// Telegram needs access for Screen Sharing.
   public static var callScreenError: String  { return L10n.tr("Localizable", "Call.Screen.Error") }
+  /// Group Call
+  public static var callStatusGroupCall: String  { return L10n.tr("Localizable", "Call.Status.GroupCall") }
+  /// Group Call → %@
+  public static func callStatusGroupCallAccount(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Status.GroupCall.Account", p1)
+  }
   /// %@'s camera is off
   public static func callToastCameraOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.CameraOff", p1)
@@ -3543,6 +3551,8 @@ public final class L10n {
   public static func chatInviteRequestInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.InviteRequestInfo", p1, p2)
   }
+  /// JOIN CALL
+  public static var chatJoinGroupCall: String  { return L10n.tr("Localizable", "Chat.JoinGroupCall") }
   /// Live Location
   public static var chatLiveLocation: String  { return L10n.tr("Localizable", "Chat.LiveLocation") }
   /// owner
@@ -10597,6 +10607,12 @@ public final class L10n {
   public static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   public static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// Group call is not longer available
+  public static var groupCallInviteNotAvailable: String  { return L10n.tr("Localizable", "GroupCall.Invite.NotAvailable") }
+  /// This link is no longer active
+  public static var groupCallInviteLinkExpired: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Expired") }
+  /// The invite link has been revoked
+  public static var groupCallInviteLinkRevoked: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Revoked") }
   /// **%1$@** and **%2$@** already joined this call.
   public static func groupCallJoinDouble(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "GroupCall.Join.Double", p1, p2)
@@ -12573,6 +12589,10 @@ public final class L10n {
   public static func notificationGroupReacted(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Notification.Group.Reacted", p1, p2, p3)
   }
+  /// Incoming Group Call
+  public static var notificationGroupCallIncoming: String  { return L10n.tr("Localizable", "Notification.GroupCall.Incoming") }
+  /// Outgoing Group Call
+  public static var notificationGroupCallOutgoing: String  { return L10n.tr("Localizable", "Notification.GroupCall.Outgoing") }
   /// Type message...
   public static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
   /// Saved Gift
@@ -21069,6 +21089,8 @@ public final class L10n {
   public static var voiceChatSetReminder: String  { return L10n.tr("Localizable", "VoiceChat.SetReminder") }
   /// Settings
   public static var voiceChatSettings: String  { return L10n.tr("Localizable", "VoiceChat.Settings") }
+  /// Share Invite Link
+  public static var voiceChatShareInviteLink: String  { return L10n.tr("Localizable", "VoiceChat.ShareInviteLink") }
   /// Show Info
   public static var voiceChatShowInfo: String  { return L10n.tr("Localizable", "VoiceChat.ShowInfo") }
   /// Start Now
@@ -21133,6 +21155,8 @@ public final class L10n {
   public static var voiceChatInfoOpenProfile: String  { return L10n.tr("Localizable", "VoiceChat.Info.OpenProfile") }
   /// Send Message
   public static var voiceChatInfoSendMessage: String  { return L10n.tr("Localizable", "VoiceChat.Info.SendMessage") }
+  /// Add Member
+  public static var voiceChatInviteAddMember: String  { return L10n.tr("Localizable", "VoiceChat.Invite.AddMember") }
   /// CHATS
   public static var voiceChatInviteChats: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Chats") }
   /// contacts
@@ -21155,6 +21179,8 @@ public final class L10n {
   public static var voiceChatInviteTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Title") }
   /// Invite Members
   public static var voiceChatInviteChannelsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Channels.Title") }
+  /// Invite Members
+  public static var voiceChatInviteConferenceTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Conference.Title") }
   /// Voice Chat
   public static var voiceChatInviteConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Header") }
   /// Send

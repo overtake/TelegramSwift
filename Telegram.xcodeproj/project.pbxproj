@@ -508,9 +508,10 @@
 		27867A272AE0364200E25BB8 /* bot_menu_web_app.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */; };
 		27867A292AE2876100E25BB8 /* BoostReassignController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27867A282AE2876100E25BB8 /* BoostReassignController.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
-		278751592D91A8B90005D9F9 /* libtde2e.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 278751582D91A8A50005D9F9 /* libtde2e.a */; };
 		2787515B2D9283750005D9F9 /* WebAppSecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787515A2D9283750005D9F9 /* WebAppSecureStorage.swift */; };
 		2787515D2D9289090005D9F9 /* GroupCallSecureEmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787515C2D9288FD0005D9F9 /* GroupCallSecureEmojiView.swift */; };
+		278751632D9548930005D9F9 /* GroupCallInviteLinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278751622D9548850005D9F9 /* GroupCallInviteLinkController.swift */; };
+		278751652D96D9F90005D9F9 /* WebappTransferDataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278751642D96D9F10005D9F9 /* WebappTransferDataController.swift */; };
 		2787AD622BEA4DE00046578E /* VCardModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2787AD612BEA4DE00046578E /* VCardModalController.swift */; };
 		2787AD692BED0DCE0046578E /* menu_adult.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2787AD672BED0DCD0046578E /* menu_adult.tgs */; };
 		2787AD6A2BED0DCE0046578E /* menu_adult_slash.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */; };
@@ -688,6 +689,12 @@
 		27BCE40F2A409FDD0015E5EE /* StoryContactHiddenItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */; };
 		27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */; };
 		27BCE41D2A49D0F10015E5EE /* ChatListEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */; };
+		27BE52422D9AC72600F40837 /* TdBinding in Frameworks */ = {isa = PBXBuildFile; productRef = 27BE52412D9AC72600F40837 /* TdBinding */; };
+		27BE52442D9B05D600F40837 /* libtde2e.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 278751582D91A8A50005D9F9 /* libtde2e.a */; };
+		27BE52462D9B0A8600F40837 /* libtdutils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27BE52452D9B0A8600F40837 /* libtdutils.a */; };
+		27BE52482D9C1BFD00F40837 /* GroupCallIncomingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE52472D9C1BED00F40837 /* GroupCallIncomingView.swift */; };
+		27BE524A2D9C227C00F40837 /* GroupCallIncomingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE52492D9C227B00F40837 /* GroupCallIncomingController.swift */; };
+		27BE524C2D9C389C00F40837 /* CallParticipantsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE524B2D9C389700F40837 /* CallParticipantsView.swift */; };
 		27C1FF452B71F35A00B086E3 /* InteractiveTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */; };
 		27C1FF472B7275EE00B086E3 /* PeerInfoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */; };
 		27C1FF4D2B749D6D00B086E3 /* ShelfPack in Frameworks */ = {isa = PBXBuildFile; productRef = 27C1FF4C2B749D6D00B086E3 /* ShelfPack */; };
@@ -2176,6 +2183,8 @@
 		278751582D91A8A50005D9F9 /* libtde2e.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtde2e.a; path = "core-xprojects/tde2e/build/tde2e/lib/libtde2e.a"; sourceTree = "<group>"; };
 		2787515A2D9283750005D9F9 /* WebAppSecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppSecureStorage.swift; sourceTree = "<group>"; };
 		2787515C2D9288FD0005D9F9 /* GroupCallSecureEmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSecureEmojiView.swift; sourceTree = "<group>"; };
+		278751622D9548850005D9F9 /* GroupCallInviteLinkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteLinkController.swift; sourceTree = "<group>"; };
+		278751642D96D9F10005D9F9 /* WebappTransferDataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebappTransferDataController.swift; sourceTree = "<group>"; };
 		2787AD612BEA4DE00046578E /* VCardModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VCardModalController.swift; sourceTree = "<group>"; };
 		2787AD672BED0DCD0046578E /* menu_adult.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_adult.tgs; sourceTree = "<group>"; };
 		2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_adult_slash.tgs; sourceTree = "<group>"; };
@@ -2313,6 +2322,11 @@
 		27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryContactHiddenItem.swift; sourceTree = "<group>"; };
 		27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_save_to_profile.tgs; sourceTree = "<group>"; };
 		27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListEmptyItem.swift; sourceTree = "<group>"; };
+		27BE52402D9AC71600F40837 /* TdBinding */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TdBinding; path = "submodules/telegram-ios/third-party/td/TdBinding"; sourceTree = "<group>"; };
+		27BE52452D9B0A8600F40837 /* libtdutils.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtdutils.a; path = "core-xprojects/tde2e/build/tde2e/lib/libtdutils.a"; sourceTree = "<group>"; };
+		27BE52472D9C1BED00F40837 /* GroupCallIncomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallIncomingView.swift; sourceTree = "<group>"; };
+		27BE52492D9C227B00F40837 /* GroupCallIncomingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallIncomingController.swift; sourceTree = "<group>"; };
+		27BE524B2D9C389700F40837 /* CallParticipantsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallParticipantsView.swift; sourceTree = "<group>"; };
 		27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveTextView.swift; sourceTree = "<group>"; };
 		27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = PrivateCallScreen; path = packages/PrivateCallScreen; sourceTree = "<group>"; };
 		27C2B1A727C3D54F004BC87B /* StoreDownloadedMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDownloadedMedia.swift; sourceTree = "<group>"; };
@@ -3338,6 +3352,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27BE52462D9B0A8600F40837 /* libtdutils.a in Frameworks */,
+				27BE52442D9B05D600F40837 /* libtde2e.a in Frameworks */,
 				27C1FF512B74CD2A00B086E3 /* PrivateCallScreen in Frameworks */,
 				2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */,
 				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
@@ -3406,7 +3422,6 @@
 				275E851C2B20C4EC007A72CA /* ShelfPack in Frameworks */,
 				277DFE6127842E6600F78396 /* Translate in Frameworks */,
 				27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */,
-				278751592D91A8B90005D9F9 /* libtde2e.a in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
 				27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */,
 				27B8361C2B5FCD0300E82683 /* Dock in Frameworks */,
@@ -3418,6 +3433,7 @@
 				27A7FBDD2CF73EE000AE9432 /* libdav1d.a in Frameworks */,
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
+				27BE52422D9AC72600F40837 /* TdBinding in Frameworks */,
 				271891F82B08A7DB0008B238 /* LokiRng in Frameworks */,
 				279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */,
 				27D43DC3279191A5006968A6 /* OpenSSLEncryption in Frameworks */,
@@ -3688,6 +3704,7 @@
 		2738CAD42707047E00CDB1BF /* request-join */ = {
 			isa = PBXGroup;
 			children = (
+				278751622D9548850005D9F9 /* GroupCallInviteLinkController.swift */,
 				27F219712D8D334D003C5F97 /* JoinGroupCallController.swift */,
 				2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */,
 				2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */,
@@ -3791,6 +3808,7 @@
 		2761549C2C2081CA0090BFFC /* mini-apps */ = {
 			isa = PBXGroup;
 			children = (
+				278751642D96D9F10005D9F9 /* WebappTransferDataController.swift */,
 				2787515A2D9283750005D9F9 /* WebAppSecureStorage.swift */,
 				27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */,
 				27352DDE2CE378C900220A87 /* FileDownload.swift */,
@@ -3845,6 +3863,7 @@
 		276B5978261C77C20029FD3F /* views */ = {
 			isa = PBXGroup;
 			children = (
+				27BE52472D9C1BED00F40837 /* GroupCallIncomingView.swift */,
 				2787515C2D9288FD0005D9F9 /* GroupCallSecureEmojiView.swift */,
 				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */,
@@ -4425,6 +4444,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27BE52402D9AC71600F40837 /* TdBinding */,
 				271A195A2CF7485C00FAE5FB /* TelegramAudio */,
 				27528F5A2CABE98E0003810A /* TelegramSystem */,
 				27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */,
@@ -6335,6 +6355,7 @@
 		D00B191A24E54B83006CCB87 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				27BE524B2D9C389700F40837 /* CallParticipantsView.swift */,
 				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
 				D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */,
 				D00B191D24E54F20006CCB87 /* CallStatusView.swift */,
@@ -6597,6 +6618,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27BE52452D9B0A8600F40837 /* libtdutils.a */,
 				278751582D91A8A50005D9F9 /* libtde2e.a */,
 				27A7FBDB2CF73E7A00AE9432 /* libdav1d.a */,
 				2739A4AF2CABC4260065186B /* libopenh264.a */,
@@ -6722,6 +6744,7 @@
 				27A0A4E525F7762F00B789AF /* profile */,
 				27B15D2D259B28C700C7F280 /* capturer */,
 				D0E7BD19256A7D350068644D /* GroupCallWindow.swift */,
+				27BE52492D9C227B00F40837 /* GroupCallIncomingController.swift */,
 				D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */,
 				D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */,
 				D0E7BD78256AE4B00068644D /* GroupCallController.swift */,
@@ -6913,6 +6936,7 @@
 				27C1FF502B74CD2A00B086E3 /* PrivateCallScreen */,
 				273C04022C2B75E400AF2751 /* TelegramMediaPlayer */,
 				27B29E402CABEC55007FDA6B /* TelegramSystem */,
+				27BE52412D9AC72600F40837 /* TdBinding */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7644,6 +7668,7 @@
 				27A6975C273D085A00B33415 /* GroupCallController.swift in Sources */,
 				27A6975B273D085500B33415 /* PresentationGroupCallManager.swift in Sources */,
 				27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */,
+				27BE524C2D9C389C00F40837 /* CallParticipantsView.swift in Sources */,
 				27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */,
 				9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */,
 				275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */,
@@ -7979,6 +8004,7 @@
 				2771FC5A2BC81B9D009A5DDE /* Auth_Word.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				270340622823FE5200D0156C /* PremiumLimitConfig.swift in Sources */,
+				27BE524A2D9C227C00F40837 /* GroupCallIncomingController.swift in Sources */,
 				A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */,
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,
@@ -8149,6 +8175,7 @@
 				270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */,
 				9F21A7D521C16CB90037784F /* InstantPagePeerReferenceItem.swift in Sources */,
 				A7D28237236C5B2C0000A9BF /* PhoneNumberUtils.swift in Sources */,
+				27BE52482D9C1BFD00F40837 /* GroupCallIncomingView.swift in Sources */,
 				27ABFD332858DF9E006C3301 /* PremiumStickersDemoView.swift in Sources */,
 				9F7D422C222415C9007B68BB /* SharedAccountContext.swift in Sources */,
 				27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */,
@@ -8174,6 +8201,7 @@
 				2733F0ED291BB4C700A4552B /* TopicReplyItemView.swift in Sources */,
 				27ABFD192858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift in Sources */,
 				27424F962D3174BA00EDC12A /* SimilarBotsController.swift in Sources */,
+				278751632D9548930005D9F9 /* GroupCallInviteLinkController.swift in Sources */,
 				9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,
 				C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */,
@@ -8485,6 +8513,7 @@
 				D06C7BBB247FAE3E00E67C3C /* GifPlayerBufferView.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
 				A7E831F0255040B70095A167 /* ChatPresentationInputQueryResult.swift in Sources */,
+				278751652D96D9F90005D9F9 /* WebappTransferDataController.swift in Sources */,
 				9F6314E121CAA0AB009FD379 /* NewPollController.swift in Sources */,
 				277840972BAABDDC0026CC3A /* BusinessLinksController.swift in Sources */,
 				27EE1E1E2C3C90780002BAF8 /* Star_Subscription.swift in Sources */,
@@ -8815,6 +8844,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 245682;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -9407,6 +9437,10 @@
 		27B8E7C527425279001B8DF7 /* TGModernGrowingTextView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGModernGrowingTextView;
+		};
+		27BE52412D9AC72600F40837 /* TdBinding */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TdBinding;
 		};
 		27C1FF4C2B749D6D00B086E3 /* ShelfPack */ = {
 			isa = XCSwiftPackageProductDependency;
