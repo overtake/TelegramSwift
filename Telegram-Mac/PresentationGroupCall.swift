@@ -1942,6 +1942,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
                 var stateValue = self.stateValue
                 
+                
                 stateValue.canManageCall = initialState.isCreator || initialState.adminIds.contains(self.accountContext.account.peerId)
                 if stateValue.canManageCall && initialState.defaultParticipantsAreMuted.canChange {
                     stateValue.defaultParticipantMuteState = initialState.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted

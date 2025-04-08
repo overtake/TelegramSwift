@@ -182,7 +182,7 @@ private final class ButtonsRowItem: GeneralRowItem {
     override var height: CGFloat {
         var height: CGFloat = 40
         if case .basic = mode {
-            height += joinLayout.layoutSize.height + 5
+            height += joinLayout.layoutSize.height + 5 + 30
         }
         return height
     }
