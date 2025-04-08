@@ -28,11 +28,14 @@ class ChatCallRowItem: ChatRowItem {
     
     private let callId: Int64?
     
+    private var activeConferenceUpdateTimer: SwiftSignalKit.Timer?
+    
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let message = object.message!
         let action = message.media[0] as! TelegramMediaAction
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
+        var updateConferenceTimerEndTimeout: Int32? = nil
         outgoing = !message.flags.contains(.Incoming)
         
         let video: Bool
@@ -72,7 +75,7 @@ class ChatCallRowItem: ChatRowItem {
                 failed = true
             }
             timeLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
-        case let .conferenceCall(call):
+        case let .conferenceCall(conferenceCall):
             
             var hasMissed = false
             var conferenceIsDeclined = false
@@ -83,22 +86,27 @@ class ChatCallRowItem: ChatRowItem {
             #else
             missedTimeout = 30
             #endif
-            let currentTime = Int32(Date().timeIntervalSince1970)
-            if call.flags.contains(.isMissed) {
-                conferenceIsDeclined = true
-            } else if message.timestamp < currentTime - missedTimeout {
-                hasMissed = true
-            }
+            
 
             let title: String
+
             //TODOLANG
-            if conferenceIsDeclined {
+            let currentTime = context.timestamp
+            if conferenceCall.flags.contains(.isMissed) {
                 title = "Declined Group Call"
-            } else if hasMissed {
+            } else if message.timestamp < currentTime - missedTimeout {
                 title = "Missed Group Call"
+            } else if conferenceCall.duration != nil {
+                title = "Cancelled Group Call"
             } else {
-                title = "Group call"
+                if isIncoming {
+                    title = "Incoming Group Call"
+                } else {
+                    title = "Outgoing Group Call"
+                }
+                updateConferenceTimerEndTimeout = (message.timestamp + missedTimeout) - currentTime
             }
+
 
             
             headerLayout = TextViewLayout(.initialize(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
@@ -106,7 +114,6 @@ class ChatCallRowItem: ChatRowItem {
             let attr = NSMutableAttributedString()
             
             
-            //TODOLANG
             _ = attr.append(string: outgoing ? strings().chatCallOutgoing : strings().chatCallIncoming, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
 
             
@@ -117,7 +124,26 @@ class ChatCallRowItem: ChatRowItem {
         }
         
         super.init(initialSize, chatInteraction, context, object, theme: theme)
+        
+        
+        if let activeConferenceUpdateTimer = self.activeConferenceUpdateTimer {
+            activeConferenceUpdateTimer.invalidate()
+            self.activeConferenceUpdateTimer = nil
+        }
+        if let updateConferenceTimerEndTimeout, updateConferenceTimerEndTimeout >= 0 {
+            self.activeConferenceUpdateTimer?.invalidate()
+            self.activeConferenceUpdateTimer = SwiftSignalKit.Timer(timeout: Double(updateConferenceTimerEndTimeout) + 0.5, repeat: false, completion: { [weak self] in
+                guard let self else {
+                    return
+                }
+                self.copyAndUpdate(animated: true)
+            }, queue: .mainQueue())
+            self.activeConferenceUpdateTimer?.start()
+        }
+
     }
+    
+    
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         timeLayout?.measure(width: width)

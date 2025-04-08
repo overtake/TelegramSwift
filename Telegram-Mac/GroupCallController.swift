@@ -1375,7 +1375,7 @@ final class GroupCallUIController : ViewController {
                             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                         }
                     }
-                } else if let inviteState = data.inviteState?.state, let state = self?.genericView.state {
+                } else if let inviteState = data.inviteState?.state {
                     switch inviteState {
                     case .ringing, .requesting:
                         thirdBlock.append(ContextMenuItem(strings().voiceChatConferenceStopCalling, handler: {
@@ -2103,7 +2103,7 @@ final class GroupCallUIController : ViewController {
         CATransaction.begin()
         self.genericView.applyUpdates(state, transition, call, animated: transition.animated)
         CATransaction.commit()
-        canManageCall = state.state.canManageCall
+        canManageCall = state.summaryState?.info?.isCreator == true || state.state.canManageCall
         
         
         self.checkMicro(state)
