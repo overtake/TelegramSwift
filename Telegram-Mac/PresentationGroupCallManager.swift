@@ -353,6 +353,7 @@ protocol PresentationGroupCall : class {
     func updateMuteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState?
     func invitePeer(_ peerId: PeerId, isVideo: Bool) -> Bool
     func kickPeer(id: EnginePeer.Id)
+    func removedPeer(_ peerId: PeerId)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
     func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo])

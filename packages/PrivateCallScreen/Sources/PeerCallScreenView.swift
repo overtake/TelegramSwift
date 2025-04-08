@@ -937,7 +937,7 @@ final class PeerCallScreenView : Control {
         addPeerView.isEnabled = state.isActive
         settingsView.isEnabled = state.isActive
 
-        addPeerView.isHidden = state.externalState.conferenceReference != nil
+        addPeerView.isHidden = state.externalState.conferenceReference != nil || !state.externalState.supportsConferenceCalls
         settingsView.isHidden = state.externalState.conferenceReference != nil
 
     }

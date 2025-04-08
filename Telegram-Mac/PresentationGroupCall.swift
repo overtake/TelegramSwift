@@ -206,14 +206,35 @@ private final class ConferenceCallE2EContextStateImpl: ConferenceCallE2EContextS
         return self.call.takeOutgoingBroadcastBlocks()
     }
 
-    func encrypt(message: Data) -> Data? {
-        return self.call.encrypt(message)
+    func encrypt(message: Data, channelId: Int32) -> Data? {
+        return self.call.encrypt(message, channelId: channelId)
     }
 
     func decrypt(message: Data, userId: Int64) -> Data? {
         return self.call.decrypt(message, userId: userId)
     }
 }
+
+class OngoingGroupCallEncryptionContextImpl: OngoingGroupCallEncryptionContext {
+    private let e2eCall: Atomic<ConferenceCallE2EContext.ContextStateHolder>
+    private let channelId: Int32
+    
+    init(e2eCall: Atomic<ConferenceCallE2EContext.ContextStateHolder>, channelId: Int32) {
+        self.e2eCall = e2eCall
+        self.channelId = channelId
+    }
+    
+    func encrypt(message: Data) -> Data? {
+        let channelId = self.channelId
+        return self.e2eCall.with({ $0.state?.encrypt(message: message, channelId: channelId) })
+    }
+    
+    func decrypt(message: Data, userId: Int64) -> Data? {
+        return self.e2eCall.with({ $0.state?.decrypt(message: message, userId: userId) })
+    }
+}
+
+
 
 
 public final class TelegramE2EEncryptionProviderImpl: TelegramE2EEncryptionProvider {
@@ -1613,29 +1634,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         }
         
-        class OngoingGroupCallEncryptionContextImpl: OngoingGroupCallEncryptionContext {
-            private let e2eCall: Atomic<ConferenceCallE2EContext.ContextStateHolder>
-            
-            init(e2eCall: Atomic<ConferenceCallE2EContext.ContextStateHolder>) {
-                self.e2eCall = e2eCall
-            }
-            
-            func encrypt(message: Data) -> Data? {
-                return self.e2eCall.with({ $0.state?.encrypt(message: message) })
-            }
-            
-            func decrypt(message: Data, userId: Int64) -> Data? {
-                return self.e2eCall.with({ $0.state?.decrypt(message: message, userId: userId) })
-            }
+        
+  
 
-        }
+
         
         var encryptionContext: OngoingGroupCallEncryptionContext?
         if let e2eContext = self.e2eContext {
-            encryptionContext = OngoingGroupCallEncryptionContextImpl(e2eCall: e2eContext.state)
+            encryptionContext = OngoingGroupCallEncryptionContextImpl(e2eCall: e2eContext.state, channelId: 0)
         } else if self.isConference {
             // Prevent non-encrypted conference calls
-            encryptionContext = OngoingGroupCallEncryptionContextImpl(e2eCall: Atomic(value: ConferenceCallE2EContext.ContextStateHolder()))
+            encryptionContext = OngoingGroupCallEncryptionContextImpl(e2eCall: Atomic(value: ConferenceCallE2EContext.ContextStateHolder()), channelId: 0)
         }
                                    
         let prioritizeVP8 = self.accountContext.appConfiguration.getBoolValue("macos_calls_prioritize_vp8", orElse: false)
@@ -3334,7 +3343,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     public func kickPeer(id: EnginePeer.Id) {
         if self.isConference {
             self.removedPeer(id)
-            
             self.e2eContext?.kickPeer(id: id)
         }
     }
@@ -3344,6 +3352,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         var updatedInvitedPeers = self.invitedPeersValue
         updatedInvitedPeers.removeAll(where: { $0.id == peerId})
         self.invitedPeersValue = updatedInvitedPeers
+        
+        if let conferenceInvitationContext = self.conferenceInvitationContexts[peerId] {
+            self.conferenceInvitationContexts.removeValue(forKey: peerId)
+            if let messageId = conferenceInvitationContext.messageId {
+                self.accountContext.engine.account.callSessionManager.dropOutgoingConferenceRequest(messageId: messageId)
+            }
+        }
+
     }
     
     func updateTitle(_ title: String, force: Bool) {

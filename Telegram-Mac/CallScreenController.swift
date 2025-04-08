@@ -163,7 +163,7 @@ private func mapCallState(_ state: CallState, canBeRemoved: Bool) -> ExternalPee
         remoteBatteryLevel = .low
     }
     
-    return .init(state: externalState, videoState: videoState, remoteVideoState: remoteVideoState, isMuted: state.isMuted, isOutgoingVideoPaused: state.isOutgoingVideoPaused, remoteAspectRatio: state.remoteAspectRatio, remoteAudioState: remoteAudioState, remoteBatteryLevel: remoteBatteryLevel, isScreenCapture: state.isScreenCapture, canBeRemoved: canBeRemoved, participants: state.participants, conferenceReference: state.conferenceReference)
+    return .init(state: externalState, videoState: videoState, remoteVideoState: remoteVideoState, isMuted: state.isMuted, isOutgoingVideoPaused: state.isOutgoingVideoPaused, remoteAspectRatio: state.remoteAspectRatio, remoteAudioState: remoteAudioState, remoteBatteryLevel: remoteBatteryLevel, isScreenCapture: state.isScreenCapture, canBeRemoved: canBeRemoved, participants: state.participants, conferenceReference: state.conferenceReference, supportsConferenceCalls: state.supportsConferenceCalls)
 }
 
 
