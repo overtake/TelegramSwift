@@ -665,8 +665,7 @@ open class ViewController : NSObject {
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
             
-            let vz = viewClass() as! NSView.Type
-            _view = vz.init(frame: _frameRect);
+            _view = defaultInitializer();
             _view?.autoresizingMask = [.width,.height]
             
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
@@ -674,6 +673,11 @@ open class ViewController : NSObject {
             _ = atomicSize.swap(_view!.frame.size)
             viewDidLoad()
         }
+    }
+    
+    open func defaultInitializer() -> NSView {
+        let vz = viewClass() as! NSView.Type
+        return vz.init(frame: _frameRect)
     }
     
     open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {

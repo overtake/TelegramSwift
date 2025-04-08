@@ -92,7 +92,7 @@ final class GroupCallView : View {
     
     let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 380, 54))
     private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 340, 329))
-    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 360, height: 320))
+    let controlsContainer: GroupCallControlsView
     
     private var scheduleView: GroupCallScheduleView?
     private(set) var tileView: GroupCallTileView?
@@ -159,7 +159,8 @@ final class GroupCallView : View {
     private let content = Content()
     
     
-    required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect, callMode: GroupCallUIState.Mode) {
+        controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 360, height: 320), callMode: callMode)
         super.init(frame: frameRect)
         
         self.addSubview(visualBackgroundView)
@@ -414,7 +415,7 @@ final class GroupCallView : View {
         
         let hasVideo = isFullScreen && (self.tileView != nil)
         
-        let isVideo = state?.mode == .video
+        let isVideo = controlsContainer.callMode == .video
         
         transition.updateFrame(view: backgroundContainerView, frame: size.bounds)
         transition.updateFrame(view: visualBackgroundView, frame: size.bounds)
@@ -428,15 +429,15 @@ final class GroupCallView : View {
         transition.updateFrame(view: peersTableContainer, frame: substrateRect())
         if hasVideo {
             if isFullScreen, state?.hideParticipants == true {
-                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75))
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: size.height - controlsContainer.frame.height + 75))
             } else {
-                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: -peersTable.frame.width / 2))
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: size.height - controlsContainer.frame.height + 75, addition: -peersTable.frame.width / 2))
             }
         } else {
             if isVideo {
-                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 100))
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: size.height - controlsContainer.frame.height + 100))
             } else {
-                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: size.height - controlsContainer.frame.height + 50))
             }
         }
         
@@ -511,7 +512,7 @@ final class GroupCallView : View {
                     size = NSMakeSize(width, frame.height - 180 - max(0, videoHeight) - 5)
                 }
             } else {
-                switch state.mode {
+                switch controlsContainer.callMode {
                 case .voice:
                     size = NSMakeSize(width, frame.height - 271)
                 case .video:
@@ -914,5 +915,8 @@ final class GroupCallView : View {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
 }

@@ -74,6 +74,7 @@ final class GroupCallUIArguments {
     let takeTileView:() -> (NSSize, GroupCallTileView)?
     let getSource:(VideoSourceMacMode)->VideoSourceMac?
     let toggleShowConferenceKey: (Bool)->Void
+    let getConferenceLimit: ()->Int32
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -109,7 +110,8 @@ final class GroupCallUIArguments {
     focusVideo: @escaping(String?)->Void,
     takeTileView:@escaping() -> (NSSize, GroupCallTileView)?,
     getSource:@escaping(VideoSourceMacMode)->VideoSourceMac?,
-    toggleShowConferenceKey: @escaping(Bool)->Void) {
+    toggleShowConferenceKey: @escaping(Bool)->Void,
+    getConferenceLimit: @escaping()->Int32) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -146,6 +148,7 @@ final class GroupCallUIArguments {
         self.takeTileView = takeTileView
         self.getSource = getSource
         self.toggleShowConferenceKey = toggleShowConferenceKey
+        self.getConferenceLimit = getConferenceLimit
     }
 }
 
@@ -285,8 +288,17 @@ struct PeerGroupCallData : Equatable, Comparable {
                 string = strings().voiceChatStatusConnecting.lowercased()
                 color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
             }
-        } else if isInvited {
-            string = strings().voiceChatStatusInvited
+        } else if let inviteState {
+            switch inviteState.state {
+            case .requesting:
+                string = strings().voiceChatStatusInvited
+            case .ringing:
+                string = strings().voiceChatStatusCalling
+            case .connecting:
+                string = strings().voiceChatStatusConnecting
+            case .none:
+                string = strings().voiceChatStatusInvited
+            }
         }
         return (string, color)
     }
@@ -493,7 +505,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView?, state: P
     
     let main = activeParticipants.first(where: { $0.peer.id == accountPeerId })
 
-    if isStream {
+    if isStream || state.isConference {
         mode = .video
     } else {
         if main?.joinedVideo == false {
@@ -576,6 +588,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     let index: Int32 = 0
     
+    let conferenceLimit = arguments.getConferenceLimit()
     
     if state.isStream {
         return []
@@ -583,7 +596,13 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     let members = state.memberDatas
 
-    let canInvite: Bool = !members.contains(where: { $0.isVertical })
+    var canInvite: Bool = !members.contains(where: { $0.isVertical })
+    
+    if canInvite, state.isConference {
+        if members.count == conferenceLimit {
+            canInvite = false
+        }
+    }
     
     let pushInvite: ()->Void = {
         if canInvite {
@@ -630,9 +649,15 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         pushInvite()
     }
     
+    
     for (i, data) in members.enumerated() {
 
-        let drawLine = i != members.count - 1
+        var drawLine = i != members.count - 1
+        
+        if state.isConference, canInvite {
+            drawLine = true
+        }
+        
 
         var viewType: GeneralViewType = bestGeneralViewType(members, for: i)
         if i == 0, canInvite {
@@ -705,7 +730,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             })
             
             entries.append(.custom(sectionId: 0, index: 1, value: .none, identifier: stableId, equatable: InputDataEquatable(tuple), comparable: comparable, item: { initialSize, stableId in
-                return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: tuple.data, baseEndpoint: tuple.baseEndpoint, canManageCall: tuple.canManageCall, isInvited: tuple.data.isInvited, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
+                return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: tuple.data, baseEndpoint: tuple.baseEndpoint, canManageCall: tuple.canManageCall, inviteState: tuple.data.inviteState, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
                     arguments.openInfo(data.peer)
                 }, invite: arguments.invite, contextMenu: {
                     return .single(arguments.contextMenuItems(tuple.data))
@@ -788,12 +813,15 @@ final class GroupCallUIController : ViewController {
         self.size.set(size)
     }
     
+    override func defaultInitializer() -> NSView {
+        return GroupCallView(frame: _frameRect, callMode: self.data.call.isConference ? .video : .voice)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         NotificationCenter.default.addObserver(self, selector: #selector(_viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: genericView.peersTable)
-
-                
+        
         
         let dominantSpeakerSignal:ValuePromise<GroupCallUIState.PinnedData> = ValuePromise(GroupCallUIState.PinnedData(), ignoreRepeated: true)
         let dominantSpeakerValue:Atomic<GroupCallUIState.PinnedData> = Atomic(value: GroupCallUIState.PinnedData())
@@ -1225,6 +1253,8 @@ final class GroupCallUIController : ViewController {
             }
         }, toggleShowConferenceKey: { [weak self] value in
             self?.showConferenceKey.set(value)
+        }, getConferenceLimit: { [weak self] in
+            return self?.data.call.accountContext.appConfiguration.getGeneralValue("conference_call_size_limit", orElse: 10) ?? 10
         })
         
         self.statusBar = .init(callState.get() |> deliverOnMainQueue, arguments: arguments, sharedContext: data.call.sharedContext)
@@ -1339,6 +1369,26 @@ final class GroupCallUIController : ViewController {
                                 arguments.remove(data.peer)
                             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                         }
+                        if data.canManageCall {
+                            thirdBlock.append(ContextMenuItem(strings().voiceChatRemovePeer, handler: {
+                                self?.data.call.removedPeer(data.peer.id)
+                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        }
+                    }
+                } else if let inviteState = data.inviteState?.state, let state = self?.genericView.state {
+                    switch inviteState {
+                    case .ringing, .requesting:
+                        thirdBlock.append(ContextMenuItem(strings().voiceChatConferenceStopCalling, handler: {
+                            self?.data.call.kickPeer(id: data.peer.id)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
+                        
+                        thirdBlock.append(ContextMenuItem(strings().voiceChatConferenceDiscardInvite, handler: {
+                            self?.data.call.removedPeer(data.peer.id)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    case .connecting:
+                        thirdBlock.append(ContextMenuItem(strings().voiceChatRemovePeer, handler: {
+                            self?.data.call.removedPeer(data.peer.id)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                 }
                 

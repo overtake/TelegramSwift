@@ -357,21 +357,21 @@ final class GroupCallContext {
             let currentView = window.contentView
             
             // Set initial alpha for the new view
-            newView.alphaValue = 0.0
+            newView.alphaValue = 1.0
             newView.frame = currentView?.frame ?? .zero
             
             // Add the new view below the current one
-            window.contentView?.addSubview(newView, positioned: .above, relativeTo: nil)
-
-            // Animate the fade-out of the old view and fade-in of the new one
-            NSAnimationContext.runAnimationGroup({ context in
-                context.duration = duration
-                currentView?.animator().alphaValue = 0.0
-                newView.animator().alphaValue = 1.0
-            }) {
-                // Once animation completes, remove the old view and set the new one
-                window.contentView = newView
-            }
+            window.contentView = newView
+//
+//            // Animate the fade-out of the old view and fade-in of the new one
+//            NSAnimationContext.runAnimationGroup({ context in
+//                context.duration = duration
+//                currentView?.animator().alphaValue = 0.0
+//                newView.animator().alphaValue = 1.0
+//            }) {
+//                // Once animation completes, remove the old view and set the new one
+//                window.contentView = newView
+//            }
         }
         
         transitionToNewView(newView: self.navigation.view)

@@ -21137,6 +21137,10 @@ public final class L10n {
   }
   /// press ⎵
   public static var voiceChatClickToUnmuteSecondaryPressDefault: String  { return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.PressDefault") }
+  /// Discard Invite
+  public static var voiceChatConferenceDiscardInvite: String  { return L10n.tr("Localizable", "VoiceChat.Conference.DiscardInvite") }
+  /// Stop Calling
+  public static var voiceChatConferenceStopCalling: String  { return L10n.tr("Localizable", "VoiceChat.Conference.StopCalling") }
   /// Leave
   public static var voiceChatEndOK: String  { return L10n.tr("Localizable", "VoiceChat.End.OK") }
   /// Are you sure you want to leave this voice chat?
@@ -21393,7 +21397,9 @@ public final class L10n {
   public static var voiceChatSharingPlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Sharing.Placeholder") }
   /// Stop
   public static var voiceChatSharingStop: String  { return L10n.tr("Localizable", "VoiceChat.Sharing.Stop") }
-  /// Connecting...
+  /// calling...
+  public static var voiceChatStatusCalling: String  { return L10n.tr("Localizable", "VoiceChat.Status.Calling") }
+  /// connecting...
   public static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
   /// invited
   public static var voiceChatStatusInvited: String  { return L10n.tr("Localizable", "VoiceChat.Status.Invited") }

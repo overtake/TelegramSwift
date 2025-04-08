@@ -150,7 +150,9 @@ public struct ExternalPeerCallState: Equatable {
     public var canBeRemoved: Bool
     public var participants: [EnginePeer]
     public var conferenceReference: MessageId?
-    public init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool, canBeRemoved: Bool, participants: [EnginePeer], conferenceReference: MessageId?) {
+    public var supportsConferenceCalls: Bool
+    
+    public init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool, canBeRemoved: Bool, participants: [EnginePeer], conferenceReference: MessageId?, supportsConferenceCalls: Bool) {
         self.state = state
         self.videoState = videoState
         self.remoteVideoState = remoteVideoState
@@ -163,6 +165,7 @@ public struct ExternalPeerCallState: Equatable {
         self.canBeRemoved = canBeRemoved
         self.participants = participants
         self.conferenceReference = conferenceReference
+        self.supportsConferenceCalls = supportsConferenceCalls
     }
 }
 
@@ -256,7 +259,7 @@ public struct PeerCallState : Equatable {
     
     var mouseInside: Bool = true
     
-    public var externalState: ExternalPeerCallState = .init(state: .connecting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false, canBeRemoved: false, participants: [], conferenceReference: nil)
+    public var externalState: ExternalPeerCallState = .init(state: .connecting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false, canBeRemoved: false, participants: [], conferenceReference: nil, supportsConferenceCalls: true)
     
     var status: PeerCallStatusValue {
         if self.externalState.canBeRemoved {
