@@ -1554,6 +1554,7 @@ class SelectPeersModalController : ModalViewController, Notifable {
     private let completeDisposable = MetaDisposable()
     private let tokenDisposable = MetaDisposable()
     private let selectedPeerIds: Set<PeerId>
+    private let okTitle: String
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
             if behavior.limit > 1 {
@@ -1723,13 +1724,14 @@ class SelectPeersModalController : ModalViewController, Notifable {
     
     private let linkInvation: ((Int)->Void)?
     
-    init(context: AccountContext, title:String, settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, confirmation:@escaping([PeerId])->Signal<Bool,NoError>, behavior: SelectPeersBehavior? = nil, linkInvation:((Int)->Void)? = nil, selectedPeerIds: Set<PeerId> = Set()) {
+    init(context: AccountContext, title:String, settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, confirmation:@escaping([PeerId])->Signal<Bool,NoError>, behavior: SelectPeersBehavior? = nil, linkInvation:((Int)->Void)? = nil, selectedPeerIds: Set<PeerId> = Set(), okTitle: String = strings().modalOK) {
         self.context = context
         self.defaultTitle = title
         self.confirmation = confirmation
         self.linkInvation = linkInvation
         self.behavior = behavior ?? SelectContactsBehavior(settings: settings, excludePeerIds: excludePeerIds, limit: limit)
         self.selectedPeerIds = selectedPeerIds
+        self.okTitle = okTitle
         super.init(frame: NSMakeRect(0, 0, 360, 380))
         bar = .init(height: 0)
         completeDisposable.set((onComplete.get() |> take(1) |> deliverOnMainQueue).start(completed: { [weak self] in
@@ -1780,7 +1782,7 @@ class SelectPeersModalController : ModalViewController, Notifable {
         if behavior.limit == 1 {
             return nil
         } else {
-            return ModalInteractions(acceptTitle: behavior.okTitle ?? strings().modalOK, accept: { [weak self] in
+            return ModalInteractions(acceptTitle: behavior.okTitle ?? self.okTitle, accept: { [weak self] in
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
@@ -1803,9 +1805,9 @@ class SelectPeersModalController : ModalViewController, Notifable {
 }
 
 
-func selectModalPeers(window: Window, context: AccountContext, title:String , settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT_MAX, behavior: SelectPeersBehavior? = nil, confirmation:@escaping ([PeerId]) -> Signal<Bool,NoError> = {_ in return .single(true) }, linkInvation:((Int)->Void)? = nil, selectedPeerIds: Set<PeerId> = Set()) -> Signal<[PeerId], NoError> {
+func selectModalPeers(window: Window, context: AccountContext, title:String , settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT_MAX, behavior: SelectPeersBehavior? = nil, confirmation:@escaping ([PeerId]) -> Signal<Bool,NoError> = {_ in return .single(true) }, linkInvation:((Int)->Void)? = nil, selectedPeerIds: Set<PeerId> = Set(), okTitle: String = strings().modalOK) -> Signal<[PeerId], NoError> {
     
-    let modal = SelectPeersModalController(context: context, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation, selectedPeerIds: selectedPeerIds)
+    let modal = SelectPeersModalController(context: context, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation, selectedPeerIds: selectedPeerIds, okTitle: okTitle)
     
     showModal(with: modal, for: window)
     

@@ -2417,8 +2417,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         "value": value ?? NSNull()
                     ]
                     self?.sendEvent(name: "secure_storage_key_restored", data: data.string)
-                    //TODOLANG
-                    showModalText(for: window, text: "Data successfully imported")
+                    showModalText(for: window, text: strings().webAppTransferDataTransfered)
                 })
             })
         }), for: window)

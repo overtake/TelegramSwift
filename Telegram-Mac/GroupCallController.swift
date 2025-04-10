@@ -1379,11 +1379,11 @@ final class GroupCallUIController : ViewController {
                     switch inviteState {
                     case .ringing, .requesting:
                         thirdBlock.append(ContextMenuItem(strings().voiceChatConferenceStopCalling, handler: {
-                            self?.data.call.kickPeer(id: data.peer.id)
+                            self?.data.call.removedPeer(data.peer.id)
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_clear_history.value))
                         
                         thirdBlock.append(ContextMenuItem(strings().voiceChatConferenceDiscardInvite, handler: {
-                            self?.data.call.removedPeer(data.peer.id)
+                            self?.data.call.kickPeer(id: data.peer.id)
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     case .connecting:
                         thirdBlock.append(ContextMenuItem(strings().voiceChatRemovePeer, handler: {

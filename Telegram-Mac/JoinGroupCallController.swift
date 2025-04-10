@@ -30,9 +30,8 @@ private final class HeaderItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, inviter: EnginePeer, participants: [EnginePeer], context: AccountContext) {
         self.context = context
         self.participants = participants
-        //TODOLANG
-        self.headerLayout = .init(.initialize(string: "Group Call", color: theme.colors.text, font: .medium(.header)), alignment: .center)
-        self.infoLayout = .init(.initialize(string: "You are invited to join a group call.", color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: strings().callGroupCall, color: theme.colors.text, font: .medium(.header)), alignment: .center)
+        self.infoLayout = .init(.initialize(string: strings().groupCallInviteLinksInvited, color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
         
 
         self.usersInfoLayout = .init(.initialize(string: formattedJoinedMessage(from: participants.map { $0._asPeer().compactDisplayTitle }), color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)))
@@ -323,9 +322,7 @@ func JoinGroupCallController(context: AccountContext, summary: GroupCallSummary,
         
         _ = requestOrJoinConferenceCall(context: context, initialInfo: summary.info, reference: reference).startStandalone(next: { result in
             switch result {
-            case let .samePeer(callContext):
-                applyGroupCallResult(context.sharedContext, callContext)
-            case let .success(callContext):
+            case let .samePeer(callContext), let .success(callContext):
                 applyGroupCallResult(context.sharedContext, callContext)
             default:
                 alert(for: context.window, info: strings().errorAnError)
@@ -337,8 +334,7 @@ func JoinGroupCallController(context: AccountContext, summary: GroupCallSummary,
         return .none
     }
 
-    //TODOLANG
-    let modalInteractions = ModalInteractions(acceptTitle: "Join Group Call", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().groupCallJoinTitle, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true, customTheme: {
         .init(background: theme.colors.background, listBackground: theme.colors.background)

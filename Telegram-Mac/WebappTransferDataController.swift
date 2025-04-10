@@ -181,8 +181,7 @@ func WebappTransferDataController(context: AccountContext, peer: EnginePeer, sto
     let controller = InputDataController(dataSignal: signal, title: " ")
     
     
-    //TODOLANG
-    controller.centerModalHeader = .init(title: "Import Data")
+    controller.centerModalHeader = .init(title: strings().webAppTransferDataImportData)
     
     getController = { [weak controller] in
         return controller
@@ -214,7 +213,7 @@ func WebappTransferDataController(context: AccountContext, peer: EnginePeer, sto
         }
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Import", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().webAppTransferDataImport, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     
