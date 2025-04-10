@@ -224,8 +224,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
             }, highlightVerified: true, statusImage: theme.icons.callOutgoing)
         case .empty(let loading):
-            //TODO:LANG
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right], action: .init(click: arguments.newCallLink, title: "New Call Link"))
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right], action: .init(click: arguments.newCallLink, title: strings().recentCallsNewCall))
         }
     }
 }
