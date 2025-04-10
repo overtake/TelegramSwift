@@ -188,8 +188,7 @@ final class GroupCallSecureEmojiView: Control {
         let animated = transition.isAnimated
         self.state = state
         
-        //TODOLANG
-        let textLayout = TextViewLayout(.initialize(string: "End-to-end Encrypted", color: .white, font: .normal(.text)), alignment: .center)
+        let textLayout = TextViewLayout(.initialize(string: strings().groupCallEndToEndTitle, color: .white, font: .normal(.text)), alignment: .center)
         textLayout.measure(width: .greatestFiniteMagnitude)
         self.textView.update(textLayout)
         

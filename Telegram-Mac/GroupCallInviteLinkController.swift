@@ -33,15 +33,14 @@ private final class HeaderItem : GeneralRowItem {
         self.context = context
         self.presentation = presentation
         self.dismiss = dismiss
-        //TODOLANG
-        self.headerLayout = .init(.initialize(string: "Call Link", color: presentation.colors.text, font: .medium(.header)), alignment: .center)
+        self.headerLayout = .init(.initialize(string: strings().groupCallInviteLinkTitle, color: presentation.colors.text, font: .medium(.header)), alignment: .center)
         
         let text: String
         switch mode {
         case .basic:
-            text = "Anyone on Telegram will be able to join your call by following this link."
+            text = strings().groupCallInviteLinkBasic
         case .share:
-            text = "Anyone on Telegram can join your call by following the link below.";
+            text = strings().groupCallInviteLinkShare
         }
         
         self.infoLayout = .init(.initialize(string: text, color: presentation.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
@@ -162,8 +161,7 @@ private final class ButtonsRowItem: GeneralRowItem {
         self.shareLink = shareLink
         self.mode = mode
         self.presentation = presentation
-        //TODOLANG
-        let attr = parseMarkdownIntoAttributedString("Be first to join the call and add people from there.\n[Open Call >](open)", attributes: .init(body: .init(font: .normal(.text), textColor: presentation.colors.text), link: .init(font: .normal(.text), textColor: presentation.colors.link), linkAttribute: { url in
+        let attr = parseMarkdownIntoAttributedString(strings().groupCallInviteLinksBeFirst, attributes: .init(body: .init(font: .normal(.text), textColor: presentation.colors.text), link: .init(font: .normal(.text), textColor: presentation.colors.link), linkAttribute: { url in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(url, { _ in
                 openCall()
             }))
@@ -264,8 +262,7 @@ private final class ButtonsRowView: GeneralRowView {
         copyButton.set(background: item.presentation.colors.accent, for: .Normal)
         copyButton.set(font: .medium(.text), for: .Normal)
         copyButton.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
-        //TODOLANG
-        copyButton.set(text: "Copy Link", for: .Normal)
+        copyButton.set(text: strings().groupCallInviteLinksCopyLink, for: .Normal)
         copyButton.layer?.cornerRadius = 10
         copyButton.autohighlight = false
         copyButton.scaleOnClick = true
@@ -278,8 +275,7 @@ private final class ButtonsRowView: GeneralRowView {
         shareButton.set(background: item.presentation.colors.accent, for: .Normal)
         shareButton.set(font: .medium(.text), for: .Normal)
         shareButton.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
-        //TODOLANG
-        shareButton.set(text: "Share Link", for: .Normal)
+        shareButton.set(text: strings().groupCallInviteLinksShareLink, for: .Normal)
         shareButton.layer?.cornerRadius = 10
         shareButton.autohighlight = false
         shareButton.scaleOnClick = true
@@ -458,9 +454,7 @@ func GroupCallInviteLinkController(context: AccountContext, source: GroupCallInv
             if let summary {
                 _ = requestOrJoinConferenceCall(context: context, initialInfo: summary.info, reference: initialState.reference).startStandalone(next: { result in
                     switch result {
-                    case let .samePeer(callContext):
-                        applyGroupCallResult(context.sharedContext, callContext)
-                    case let .success(callContext):
+                    case let .samePeer(callContext), let .success(callContext):
                         applyGroupCallResult(context.sharedContext, callContext)
                     default:
                         alert(for: context.window, info: strings().errorAnError)

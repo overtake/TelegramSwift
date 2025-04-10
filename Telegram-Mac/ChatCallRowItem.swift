@@ -90,19 +90,18 @@ class ChatCallRowItem: ChatRowItem {
 
             let title: String
 
-            //TODOLANG
             let currentTime = context.timestamp
             if conferenceCall.flags.contains(.isMissed) {
-                title = "Declined Group Call"
+                title = strings().chatServiceDeclinedGroupCall//"Declined Group Call"
             } else if message.timestamp < currentTime - missedTimeout {
-                title = "Missed Group Call"
+                title = strings().chatServiceMissedGroupCall
             } else if conferenceCall.duration != nil {
-                title = "Cancelled Group Call"
+                title = strings().chatServiceCancelledGroupCall
             } else {
                 if isIncoming {
-                    title = "Incoming Group Call"
+                    title = strings().chatServiceIncomingGroupCall
                 } else {
-                    title = "Outgoing Group Call"
+                    title = strings().chatServiceOutgoingGroupCall
                 }
                 updateConferenceTimerEndTimeout = (message.timestamp + missedTimeout) - currentTime
             }
@@ -113,9 +112,14 @@ class ChatCallRowItem: ChatRowItem {
             
             let attr = NSMutableAttributedString()
             
+
             
             _ = attr.append(string: outgoing ? strings().chatCallOutgoing : strings().chatCallIncoming, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
 
+            
+            if let duration = conferenceCall.duration {
+                _ = attr.append(string: ", " + String.stringForShortCallDurationSeconds(for: duration), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
+            }
             
             timeLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
             failed = false
@@ -177,9 +181,7 @@ class ChatCallRowItem: ChatRowItem {
                     }
                     self.requestSessionId.set(requestOrJoinConferenceCall(context: context, initialInfo: .init(id: info.id, accessHash: info.accessHash, participantCount: info.totalMemberCount, streamDcId: nil, title: nil, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: false, defaultParticipantsAreMuted: nil, isVideoEnabled: false, unmutedVideoLimit: 0, isStream: false, isCreator: false), reference: .message(id: message.id)).start(next: { result in
                         switch result {
-                        case let .samePeer(callContext):
-                            applyGroupCallResult(context.sharedContext, callContext)
-                        case let .success(callContext):
+                        case let .samePeer(callContext), let .success(callContext):
                             applyGroupCallResult(context.sharedContext, callContext)
                         default:
                             alert(for: context.window, info: strings().errorAnError)
@@ -190,6 +192,8 @@ class ChatCallRowItem: ChatRowItem {
                     case .flood:
                         showModalText(for: context.window, text: strings().loginFloodWait)
                     case .generic:
+                        showModalText(for: context.window, text: strings().unknownError)
+                    case .doesNotExist:
                         showModalText(for: context.window, text: strings().groupCallInviteNotAvailable)
                     }
                 })

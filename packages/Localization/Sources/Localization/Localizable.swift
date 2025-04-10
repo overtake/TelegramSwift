@@ -5855,6 +5855,10 @@ public final class L10n {
   }
   /// You allowed this bot to message you when you added it in the attachment menu.
   public static var chatServiceBotWriteAllowed: String  { return L10n.tr("Localizable", "Chat.Service.BotWriteAllowed") }
+  /// Cancelled Group Call
+  public static var chatServiceCancelledGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.CancelledGroupCall") }
+  /// Declined Group Call
+  public static var chatServiceDeclinedGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.DeclinedGroupCall") }
   /// %1$@ disabled the chat theme
   public static func chatServiceDisabledTheme(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.DisabledTheme", p1)
@@ -5895,8 +5899,14 @@ public final class L10n {
   }
   /// no groups
   public static var chatServiceGroupsInCommonZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_ZeroValueHolder") }
+  /// Incoming Group Call
+  public static var chatServiceIncomingGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.IncomingGroupCall") }
+  /// Missed Group Call
+  public static var chatServiceMissedGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.MissedGroupCall") }
   /// Not an official account
   public static var chatServiceNotOfficial: String  { return L10n.tr("Localizable", "Chat.Service.NotOfficial") }
+  /// Outgoing Group Call
+  public static var chatServiceOutgoingGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.OutgoingGroupCall") }
   /// You have successfully transferred **%1$@** to **%2$@** for **%3$@**
   public static func chatServicePaymentSent1(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent1", p1, p2, p3)
@@ -10607,12 +10617,28 @@ public final class L10n {
   public static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   public static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// End-to-end Encrypted
+  public static var groupCallEndToEndTitle: String  { return L10n.tr("Localizable", "GroupCall.EndToEnd.Title") }
   /// Group call is not longer available
   public static var groupCallInviteNotAvailable: String  { return L10n.tr("Localizable", "GroupCall.Invite.NotAvailable") }
+  /// Anyone on Telegram will be able to join your call by following this link.
+  public static var groupCallInviteLinkBasic: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Basic") }
   /// This link is no longer active
   public static var groupCallInviteLinkExpired: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Expired") }
   /// The invite link has been revoked
   public static var groupCallInviteLinkRevoked: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Revoked") }
+  /// Anyone on Telegram can join your call by following the link below.
+  public static var groupCallInviteLinkShare: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Share") }
+  /// Call Link
+  public static var groupCallInviteLinkTitle: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Title") }
+  /// Be first to join the call and add people from there.\n[Open Call >](open)
+  public static var groupCallInviteLinksBeFirst: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.BeFirst") }
+  /// Copy Link
+  public static var groupCallInviteLinksCopyLink: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.CopyLink") }
+  /// You are invited to join a group call.
+  public static var groupCallInviteLinksInvited: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.Invited") }
+  /// Share Link
+  public static var groupCallInviteLinksShareLink: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.ShareLink") }
   /// **%1$@** and **%2$@** already joined this call.
   public static func groupCallJoinDouble(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "GroupCall.Join.Double", p1, p2)
@@ -10627,6 +10653,8 @@ public final class L10n {
   public static func groupCallJoinSingle(_ p1: String) -> String {
     return L10n.tr("Localizable", "GroupCall.Join.Single", p1)
   }
+  /// Join Group Call
+  public static var groupCallJoinTitle: String  { return L10n.tr("Localizable", "GroupCall.Join.Title") }
   /// %d
   public static func groupCallJoinMultipleOthersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_countable", p1)
@@ -15557,6 +15585,14 @@ public final class L10n {
   public static var recentCallsDeleteHeader: String  { return L10n.tr("Localizable", "RecentCalls.DeleteHeader") }
   /// Your recent calls will appear here
   public static var recentCallsEmpty: String  { return L10n.tr("Localizable", "RecentCalls.Empty") }
+  /// Create New Call
+  public static var recentCallsNewCall: String  { return L10n.tr("Localizable", "RecentCalls.NewCall") }
+  /// New Call Link
+  public static var recentCallsNewCallLink: String  { return L10n.tr("Localizable", "RecentCalls.NewCallLink") }
+  /// Recent Calls
+  public static var recentCallsRecentCalls: String  { return L10n.tr("Localizable", "RecentCalls.RecentCalls") }
+  /// Call
+  public static var recentCallsNewCallOK: String  { return L10n.tr("Localizable", "RecentCalls.NewCall.OK") }
   /// These devices have no access to your account. The code was entered correctly, but no correct password was given.
   public static var recentSessionsIncompleteAttemptDesc: String  { return L10n.tr("Localizable", "RecentSessions.IncompleteAttemptDesc") }
   /// INCOMPLETE LOGIN ATTEMPTS
@@ -21703,6 +21739,12 @@ public final class L10n {
   }
   /// Wi-Fi required for location service
   public static var webAppLocationPermissionWifiError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.WifiError") }
+  /// Import
+  public static var webAppTransferDataImport: String  { return L10n.tr("Localizable", "WebApp.TransferData.Import") }
+  /// Import Data
+  public static var webAppTransferDataImportData: String  { return L10n.tr("Localizable", "WebApp.TransferData.ImportData") }
+  /// Data successfully imported
+  public static var webAppTransferDataTransfered: String  { return L10n.tr("Localizable", "WebApp.TransferData.Transfered") }
   /// Disconnect
   public static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites

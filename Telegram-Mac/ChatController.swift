@@ -8275,9 +8275,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                 _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil, reference: nil), for: context.window).start(next: { result in
                     switch result {
-                    case let .samePeer(callContext):
-                        applyGroupCallResult(context.sharedContext, callContext)
-                    case let .success(callContext):
+                    case let .samePeer(callContext), let .success(callContext):
                         applyGroupCallResult(context.sharedContext, callContext)
                     default:
                         alert(for: context.window, info: strings().errorAnError)

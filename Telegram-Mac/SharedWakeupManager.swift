@@ -160,7 +160,7 @@ class SharedWakeupManager {
                         #endif
                         
                         
-                        if let accountContext = appDelegate?.activeContext(for: account.id) {
+                        if let accountContext = appDelegate?.activeContext(for: account.id), state.peerId != account.peerId {
                             showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, incomingConferenceSource: state.conferenceSource, incomingParticipants: otherParticipants, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
                             
                         }
