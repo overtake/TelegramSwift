@@ -985,7 +985,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.generic!.price)))
             }
-        case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let savedId):
+        case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let savedId, _):
             
             let authorName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? authorName
             

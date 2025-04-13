@@ -2104,8 +2104,10 @@ enum UserInfoEntry: PeerInfoEntry {
             if let value {
                 text = "\(clown) \(value.description)"
             } else {
-                text = "\(clown) This bot is verified as official by the representatives of Telegram."
+                text = strings().peerInfoVerified(clown)
             }
+            
+            
             
             attr.append(string: text, color: theme.colors.listGrayText, font: .normal(.text))
 
@@ -2114,7 +2116,8 @@ enum UserInfoEntry: PeerInfoEntry {
             } else {
                 attr.insertEmbedded(.embedded(name: "Icon_Verified_Telegram", color: theme.colors.grayIcon, resize: false), for: clown)
             }
-            
+            attr.detectLinks(type: [.Links], color: theme.colors.listGrayText)
+
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .attributed(attr), viewType: viewType, context: arguments.context)
         case let .birthday(_, text, canBirth, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)

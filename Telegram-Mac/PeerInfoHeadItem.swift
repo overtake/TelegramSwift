@@ -1238,7 +1238,7 @@ private class GiftIconLayer: SimpleLayer {
             for attribute in gift.attributes {
                 if case let .model(_, fileValue, _) = attribute {
                     file = fileValue
-                } else if case let .backdrop(_, innerColor, _, _, _, _) = attribute {
+                } else if case let .backdrop(_, _, innerColor, _, _, _, _) = attribute {
                     color = NSColor(rgb: UInt32(bitPattern: innerColor))
                 }
             }
@@ -1290,7 +1290,7 @@ private class GiftIconLayer: SimpleLayer {
             for attribute in gift.attributes {
                 if case let .model(_, fileValue, _) = attribute {
                     file = fileValue
-                } else if case let .backdrop(_, innerColor, _, _, _, _) = attribute {
+                } else if case let .backdrop(_, _, innerColor, _, _, _, _) = attribute {
                     color = NSColor(rgb: UInt32(bitPattern: innerColor))
                 }
             }

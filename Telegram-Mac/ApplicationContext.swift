@@ -527,6 +527,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
                 
+            showModal(with: StarGift_MarketplaceController(context: context), for: window)
+            
 //            showModal(with: WebappTransferDataController(context: context, storedKeys: [WebAppSecureStorage.ExistingKey(uuid: "1", accountName: "Test Account", timestamp: context.timestamp)], completion: { _ in
 //                
 //            }), for: window)

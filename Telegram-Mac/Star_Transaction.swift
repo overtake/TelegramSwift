@@ -41,7 +41,7 @@ extension StarGift.UniqueGift {
     var patternColor: NSColor? {
         for attribute in self.attributes {
             inner: switch attribute {
-            case let .backdrop(_, _, _, patternColor, _, _):
+            case let .backdrop(_, _, _, _, patternColor, _, _):
                 return NSColor(UInt32(patternColor))
             default:
                 break inner
@@ -52,7 +52,7 @@ extension StarGift.UniqueGift {
     var backdrop: [NSColor]? {
         for attribute in self.attributes {
             inner: switch attribute {
-            case let .backdrop(_, innerColor, outerColor, _, _, _):
+            case let .backdrop(_, _, innerColor, outerColor, _, _, _):
                 return [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
             default:
                 break inner
@@ -525,7 +525,7 @@ private final class HeaderView : GeneralContainableRowView {
 
                 for attribute in uniqueGift.attributes {
                     switch attribute {
-                    case let .backdrop(_, innerColor, outerColor, _, _, _):
+                    case let .backdrop(_, _, innerColor, outerColor, _, _, _):
                         colors = [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
                     default:
                         break
@@ -550,7 +550,7 @@ private final class HeaderView : GeneralContainableRowView {
                     switch attribute {
                     case .pattern(_, let file, _):
                         patternFile = file
-                    case let .backdrop(_, _, _, color, _, _):
+                    case let .backdrop(_, _, _, _, color, _, _):
                         patternColor = NSColor(UInt32(color)).withAlphaComponent(0.3)
                     default:
                         break
@@ -1323,7 +1323,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     rows.append(.init(left: .init(.initialize(string: strings().giftUniqueModel, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 10).string)%", callback: {}))))
                 case .pattern(let name, _, let rarity):
                     rows.append(.init(left: .init(.initialize(string: strings().giftUniqueSymbol, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 10).string)%", callback: {}))))
-                case .backdrop(let name, _, _, _, _, let rarity):
+                case .backdrop(let name, _, _, _, _, _, let rarity):
                     rows.append(.init(left: .init(.initialize(string: strings().giftUniqueBackdrop, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 10).string)%", callback: {}))))
                 default:
                     break
@@ -1429,7 +1429,7 @@ extension StarGift {
         if let unique {
             for attribute in unique.attributes {
                 switch attribute {
-                case .backdrop(_, let innerColor, let outerColor, let patternColor, _, _):
+                case .backdrop(_, _, let innerColor, let outerColor, let patternColor, _, _):
                     return [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
                 default:
                     break
@@ -1527,6 +1527,17 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
                 return current
             }
         }))
+    } else {
+        switch transaction.peer {
+        case .peer(let enginePeer):
+            updateState { current in
+                var current = current
+                current.ownerPeer = enginePeer
+                return current
+            }
+        default:
+            break
+        }
     }
     
     if let starrefPeerId = transaction.starrefPeerId {

@@ -2805,7 +2805,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsAskQuestion: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)) },
                                                settingsFaq: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)) },
                                                settingsStories: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(flipVertical: true)) },
-                                                settingsGeneral: { NSImage(resource: .iconSettingsGeneral).precomposed(flipVertical: true) },
+                                                settingsGeneral: { generateSettingsIcon(NSImage(resource: .iconSettingsGeneral).precomposed(flipVertical: true)) },
                                                settingsLanguage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)) },
                                                settingsNotifications: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)) },
                                                settingsSecurity: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },

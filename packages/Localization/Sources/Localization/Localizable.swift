@@ -13545,6 +13545,10 @@ public final class L10n {
   public static var peerInfoUnblockUser: String  { return L10n.tr("Localizable", "PeerInfo.UnblockUser") }
   /// username
   public static var peerInfoUsername: String  { return L10n.tr("Localizable", "PeerInfo.username") }
+  /// %@ This bot is verified as official by the representatives of Telegram.
+  public static func peerInfoVerified(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Verified", p1)
+  }
   /// Verify Accounts
   public static var peerInfoVerifyAccounts: String  { return L10n.tr("Localizable", "PeerInfo.VerifyAccounts") }
   /// Description
@@ -17819,12 +17823,16 @@ public final class L10n {
   public static var starListTransactionsEmptyIncoming: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Incoming") }
   /// No Outgoing Transactions
   public static var starListTransactionsEmptyOutgoing: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Outgoing") }
+  /// sell
+  public static var starNftSell: String  { return L10n.tr("Localizable", "Star.Nft.Sell") }
   /// Share
   public static var starNftShare: String  { return L10n.tr("Localizable", "Star.Nft.Share") }
   /// take off
   public static var starNftTakeOff: String  { return L10n.tr("Localizable", "Star.Nft.TakeOff") }
   /// Transfer
   public static var starNftTransfer: String  { return L10n.tr("Localizable", "Star.Nft.Transfer") }
+  /// unlist
+  public static var starNftUnlist: String  { return L10n.tr("Localizable", "Star.Nft.Unlist") }
   /// wear
   public static var starNftWear: String  { return L10n.tr("Localizable", "Star.Nft.Wear") }
   /// You worn %@

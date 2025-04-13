@@ -740,6 +740,8 @@ public extension NSView {
                     return NSPointInRect(location, self.bounds)
                 } else if let view = view as? EventLessView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
+                } else if let _ = view as? VisualEffect {
+                    return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
                     return NSPointInRect(location, self.bounds)

@@ -85,6 +85,8 @@ final class GiftOptionsRowItem : GeneralRowItem {
         let invisible: Bool
         let pinned: Bool
         
+        let priceBadge: TextViewLayout?
+        
         var starsPrice: TextViewLayout?
         
         var nativePayment: PremiumPaymentOption?
@@ -118,7 +120,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 starsPrice = nil
             }
             
-            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, colors: colors, textColor: .white )}, peer: nil, invisible: false, pinned: false, starsPrice: starsPrice, nativePayment: option)
+            return .init(file: option.media.file, text: option.text, type: .price(option.total), badge: option.discount.flatMap { .init(text: $0, colors: colors, textColor: .white )}, peer: nil, invisible: false, pinned: false, priceBadge: nil, starsPrice: starsPrice, nativePayment: option)
         }
         static func initialize(_ option: PeerStarGift) -> Option {
             let badge: Badge?
@@ -145,11 +147,11 @@ final class GiftOptionsRowItem : GeneralRowItem {
             } else {
                 badge = nil
             }
-            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, pinned: false, nativeStarGift: option)
+            return .init(file: option.media, text: nil, type: .stars(option.stars), badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarGift: option)
         }
         
         static func initialize(_ option: StarGift.UniqueGift) -> Option {
-            return .init(file: option.file!, text: nil, type: .none, badge: nil, peer: nil, invisible: false, pinned: false, nativeStarUniqueGift: option)
+            return .init(file: option.file!, text: nil, type: .none, badge: nil, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
         }
         
         
@@ -163,8 +165,20 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 blueColor = [theme.colors.accent.withMultipliedBrightnessBy(1.1), theme.colors.accent.withMultipliedBrightnessBy(0.9)]
             }
             
+            var priceBadge: TextViewLayout? = nil
+            
             let badge: Badge?
-            if let availability = option.gift.generic?.availability {
+            if let resellStars = option.gift.unique?.resellStars {
+                //TODOLANG
+                badge = .init(text: "sale", colors: [NSColor(0x74b036), NSColor(0x87d151)], textColor: theme.colors.underSelectedColor)
+                
+                let attr = NSMutableAttributedString()
+                attr.append(.initialize(string: "\(clown_space)\(resellStars)", color: .white, font: .normal(.text)))
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+                
+                priceBadge = .init(attr)
+                priceBadge?.measure(width: .greatestFiniteMagnitude)
+            } else if let availability = option.gift.generic?.availability {
                 badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), colors: blueColor, textColor: theme.colors.underSelectedColor)
             } else if let unique = option.gift.unique {
                 badge = .init(text: "\(unique.number)", colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
@@ -179,7 +193,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             case .unique(let uniqueGift):
                 file = uniqueGift.file!
             }            
-            return .init(file: file, text: nil, type: transfrarable ? .price(strings().starNftTransfer) : .none, badge: badge, peer: option.fromPeer, invisible: !option.savedToProfile, pinned: option.pinnedToTop, nativeProfileGift: option)
+            return .init(file: file, text: nil, type: transfrarable ? .price(strings().starNftTransfer) : .none, badge: badge, peer: option.fromPeer, invisible: !option.savedToProfile, pinned: option.pinnedToTop, priceBadge: priceBadge, nativeProfileGift: option)
         }
         
         var height: CGFloat {
@@ -286,6 +300,33 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
             }
         }
         
+        final class PriceBadgeView : VisualEffect {
+            private let textView = InteractiveTextView()
+            override init(frame frameRect: NSRect) {
+                super.init(frame: frameRect)
+                addSubview(textView)
+                textView.isEventLess = true
+                textView.userInteractionEnabled = false
+            }
+            
+            required init?(coder: NSCoder) {
+                fatalError("init(coder:) has not been implemented")
+            }
+            
+            func update(_ layout: TextViewLayout, context: AccountContext) {
+                self.textView.set(text: layout, context: context)
+                
+                setFrameSize(NSMakeSize(layout.layoutSize.width + 10, layout.layoutSize.height + 6))
+                
+                self.layer?.cornerRadius = self.frame.height / 2
+            }
+            
+            override func layout() {
+                super.layout()
+                textView.center()
+            }
+        }
+        
         private let sticker = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 80, 80))
         private var textView: TextView?
         private var badgeView: ImageView?
@@ -298,6 +339,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
         private var selectionView: View?
         private var starsPrice: InteractiveTextView?
         private var pinnedView: ImageView?
+        private var priceBadgeView: PriceBadgeView?
 
 
         private class PriceView: View {
@@ -533,7 +575,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
 
                     for attribute in uniqueGift.attributes {
                         switch attribute {
-                        case let .backdrop(_, innerColor, outerColor, _, _, _):
+                        case let .backdrop(_, _, innerColor, outerColor, _, _, _):
                             colors = [NSColor(UInt32(innerColor)), NSColor(UInt32(outerColor))]
                         default:
                             break
@@ -559,7 +601,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                         switch attribute {
                         case .pattern(_, let file, _):
                             patternFile = file
-                        case let .backdrop(_, _, _, color, _, _):
+                        case let .backdrop(_, _, _, _, color, _, _):
                             patternColor = NSColor(UInt32(color)).withAlphaComponent(0.7)
                         default:
                             break
@@ -613,6 +655,22 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
             } else if let view = self.starsPrice {
                 performSubviewRemoval(view, animated: animated)
                 self.starsPrice = nil
+            }
+            
+            if let priceBadge = option.priceBadge {
+                let current: PriceBadgeView
+                if let view = self.priceBadgeView {
+                    current = view
+                } else {
+                    current = PriceBadgeView(frame: .zero)
+                    self.priceBadgeView = current
+                    addSubview(current)
+                }
+                
+                current.update(priceBadge, context: context)
+            } else if let view = self.priceBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.priceBadgeView = nil
             }
             
             if selected {
@@ -677,6 +735,10 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
             
             if let selectionView {
                 selectionView.frame = bounds.insetBy(dx: 3, dy: 3)
+            }
+            
+            if let priceBadgeView {
+                priceBadgeView.centerX(y: frame.height - priceBadgeView.frame.height - 10)
             }
         }
     }
