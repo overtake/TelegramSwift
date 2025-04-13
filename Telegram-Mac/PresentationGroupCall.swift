@@ -323,13 +323,7 @@ private final class PendingConferenceInvitationContext {
             guard let self else {
                 return
             }
-            guard let messageId else {
-                if !self.didNotifyEnded {
-                    self.didNotifyEnded = true
-                    onEnded(false)
-                }
-                return
-            }
+
             self.messageId = messageId
             
             onStateUpdated(.ringing)
@@ -1811,7 +1805,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     }
 
                     strongSelf.updateSessionState(internalState: .established(info: joinCallResult.callInfo, connectionMode: joinCallResult.connectionMode, clientParams: clientParams, localSsrc: ssrc, initialState: joinCallResult.state))
-                    strongSelf.e2eContext?.begin()
+                    strongSelf.e2eContext?.begin(initialState: joinCallResult.e2eState)
 
                 }, error: { error in
                     guard let strongSelf = self else {
