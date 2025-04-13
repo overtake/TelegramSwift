@@ -695,6 +695,7 @@
 		27BE52482D9C1BFD00F40837 /* GroupCallIncomingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE52472D9C1BED00F40837 /* GroupCallIncomingView.swift */; };
 		27BE524A2D9C227C00F40837 /* GroupCallIncomingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE52492D9C227B00F40837 /* GroupCallIncomingController.swift */; };
 		27BE524C2D9C389C00F40837 /* CallParticipantsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE524B2D9C389700F40837 /* CallParticipantsView.swift */; };
+		27BE52522DA9307C00F40837 /* StarGift_MarketplaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BE52512DA9307400F40837 /* StarGift_MarketplaceController.swift */; };
 		27C1FF452B71F35A00B086E3 /* InteractiveTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */; };
 		27C1FF472B7275EE00B086E3 /* PeerInfoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */; };
 		27C1FF4D2B749D6D00B086E3 /* ShelfPack in Frameworks */ = {isa = PBXBuildFile; productRef = 27C1FF4C2B749D6D00B086E3 /* ShelfPack */; };
@@ -2327,6 +2328,7 @@
 		27BE52472D9C1BED00F40837 /* GroupCallIncomingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallIncomingView.swift; sourceTree = "<group>"; };
 		27BE52492D9C227B00F40837 /* GroupCallIncomingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallIncomingController.swift; sourceTree = "<group>"; };
 		27BE524B2D9C389700F40837 /* CallParticipantsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallParticipantsView.swift; sourceTree = "<group>"; };
+		27BE52512DA9307400F40837 /* StarGift_MarketplaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarGift_MarketplaceController.swift; sourceTree = "<group>"; };
 		27C1FF442B71F35A00B086E3 /* InteractiveTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveTextView.swift; sourceTree = "<group>"; };
 		27C1FF4F2B74C7B500B086E3 /* PrivateCallScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = PrivateCallScreen; path = packages/PrivateCallScreen; sourceTree = "<group>"; };
 		27C2B1A727C3D54F004BC87B /* StoreDownloadedMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDownloadedMedia.swift; sourceTree = "<group>"; };
@@ -3664,6 +3666,7 @@
 		27361ED2282122B500808241 /* premium */ = {
 			isa = PBXGroup;
 			children = (
+				27BE52512DA9307400F40837 /* StarGift_MarketplaceController.swift */,
 				27ABFD152857B9AC006C3301 /* features */,
 				27361ED3282122C700808241 /* StickerPremiumHolderView.swift */,
 				27361ED52821234200808241 /* PremiumReactionsModal.swift */,
@@ -8215,6 +8218,7 @@
 				D0D139252524A31E005FCF35 /* RepliesHeaderRowItem.swift in Sources */,
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
 				9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */,
+				27BE52522DA9307C00F40837 /* StarGift_MarketplaceController.swift in Sources */,
 				D0276B7D22BD6511003155D8 /* DisplayLink.swift in Sources */,
 				2769768F2C04C9B80016BACB /* FoldingTextView.swift in Sources */,
 				9F0B8F171FFB7F1A00073D3F /* AccentColorRowItem.swift in Sources */,

@@ -1333,13 +1333,15 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
 
-                case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let saverId):
+                case let .starGiftUnique(gift, isUpgrade, isTransferred, savedToProfile, canExportDate, transferStars, refunded, peerId, senderId, saverId, resaleStars):
                     if case let .unique(gift) = gift {
                         var text: String = ""
                         if let messagePeer = message.peers[message.id.peerId] {
                             let peerName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? messagePeer.compactDisplayTitle
                             let peerIds: [(Int, EnginePeer.Id?)] = [(0, messagePeer.id)]
-                            if isUpgrade {
+                            if let resaleStars {
+                                fatalError("todo")
+                            } else if isUpgrade {
                                 if message.author?.id == context.account.peerId {
                                     text = strings().notificationStarsGiftUpgradeYou(peerName)
                                 } else {
@@ -1398,7 +1400,7 @@ class ChatServiceItem: ChatRowItem {
                         
                         for attribute in gift.attributes {
                             switch attribute {
-                            case let .backdrop(name, _, outerColor, _, _, _):
+                            case let .backdrop(name, _, _, outerColor, _, _, _):
                                 attributes.append(.init(name: .init(.initialize(string: strings().giftUniqueBackdrop, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
                                                         value: .init(.initialize(string: name, color: NSColor.white, font: .medium(.text)))))
                                 backdropColor = NSColor(UInt32(outerColor)).withAlphaComponent(0.7)
@@ -2054,7 +2056,7 @@ class ChatServiceRowView: TableRowView {
 
                     for attribute in uniqueGift.attributes {
                         switch attribute {
-                        case let .backdrop(_, innerColor, outerColor, _, _, _):
+                        case let .backdrop(_, _, innerColor, outerColor, _, _, _):
                             colors = [NSColor(UInt32(innerColor)).withAlphaComponent(1), NSColor(UInt32(outerColor)).withAlphaComponent(1)]
                         default:
                             break
@@ -2079,7 +2081,7 @@ class ChatServiceRowView: TableRowView {
                         switch attribute {
                         case .pattern(_, let file, _):
                             patternFile = file
-                        case let .backdrop(_, _, _, color, _, _):
+                        case let .backdrop(_, _, _, _, color, _, _):
                             patternColor = NSColor(UInt32(color)).withAlphaComponent(0.3)
                         default:
                             break
