@@ -27,8 +27,10 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let infoLayout: TextViewLayout
     fileprivate let usersInfoLayout: TextViewLayout
     fileprivate let participants: [EnginePeer]
-    init(_ initialSize: NSSize, stableId: AnyHashable, inviter: EnginePeer, participants: [EnginePeer], context: AccountContext) {
+    fileprivate let dismiss: ()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, inviter: EnginePeer, participants: [EnginePeer], context: AccountContext, dismiss: @escaping()->Void) {
         self.context = context
+        self.dismiss = dismiss
         self.participants = participants
         self.headerLayout = .init(.initialize(string: strings().callGroupCall, color: theme.colors.text, font: .medium(.header)), alignment: .center)
         self.infoLayout = .init(.initialize(string: strings().groupCallInviteLinksInvited, color: theme.colors.text, font: .normal(.text)).detectBold(with: .medium(.text)), alignment: .center)
@@ -160,6 +162,10 @@ private final class HeaderItemView: GeneralRowView {
         
         self.separator.backgroundColor = theme.colors.border
         
+        dismiss.setSingle(handler: { [weak item] _ in
+            item?.dismiss()
+        }, for: .SingleClick)
+        
         
         let duration = Double(0.2)
         let timingFunction = CAMediaTimingFunctionName.easeOut
@@ -247,8 +253,10 @@ private final class HeaderItemView: GeneralRowView {
 
 private final class Arguments {
     let context: AccountContext
-    init(context: AccountContext) {
+    let dismiss:()->Void
+    init(context: AccountContext, dismiss:@escaping()->Void) {
         self.context = context
+        self.dismiss = dismiss
     }
 }
 
@@ -267,7 +275,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let inviter = state.inviter {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return HeaderItem(initialSize, stableId: stableId, inviter: inviter, participants: state.participants, context: arguments.context)
+            return HeaderItem(initialSize, stableId: stableId, inviter: inviter, participants: state.participants, context: arguments.context, dismiss: arguments.dismiss)
         }))
     }
    
@@ -284,7 +292,7 @@ func JoinGroupCallController(context: AccountContext, summary: GroupCallSummary,
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(inviter: context.myPeer.flatMap(EnginePeer.init), participants: summary.topParticipants.map { .init($0.peer) }, summary: summary)
+    let initialState = State(inviter: context.myPeer.flatMap(EnginePeer.init), participants: summary.topParticipants.compactMap { $0.peer }, summary: summary)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -301,7 +309,9 @@ func JoinGroupCallController(context: AccountContext, summary: GroupCallSummary,
         }
     }
 
-    let arguments = Arguments(context: context)
+    let arguments = Arguments(context: context, dismiss: {
+        close?()
+    })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
