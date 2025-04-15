@@ -1613,7 +1613,9 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
             var index:Int = 0
             let participants = participants
             for participant in participants {
-                topPeers.append(Avatar(peer: participant.peer, index: index))
+                if let participantPeer = participant.peer {
+                    topPeers.append(Avatar(peer: participantPeer._asPeer(), index: index))
+                }
                 index += 1
             }
 
