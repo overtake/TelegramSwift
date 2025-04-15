@@ -174,7 +174,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             
             let allMembers: Signal<([InvitationPeer], [InvitationPeer], [InvitationPeer]), NoError> = combineLatest(groupMembers, members, contacts, globalSearch, invited) |> map { recent, participants, contacts, global, invited in
                 let membersList = recent.filter { value in
-                    if participants.participants.contains(where: { $0.peer.id == value.peer.id }) {
+                    if participants.participants.contains(where: { $0.id == .peer(value.peer.id) }) {
                         return false
                     }
                     return !value.peer.isBot
@@ -183,7 +183,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 }
                 var contactList:[InvitationPeer] = []
                 for contact in contacts.0 {
-                    let containsInCall = participants.participants.contains(where: { $0.peer.id == contact.id })
+                    let containsInCall = participants.participants.contains(where: { $0.id == .peer(contact.id) })
                     let containsInMembers = membersList.contains(where: { $0.peer.id == contact.id })
                     if !containsInMembers && !containsInCall {
                         contactList.append(InvitationPeer(peer: contact, presence: contacts.1[contact.id], contact: true, enabled: !invited.contains(where: { $0.id == contact.id })))
@@ -193,7 +193,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 var globalList:[InvitationPeer] = []
                 
                 for peer in global {
-                    let containsInCall = participants.participants.contains(where: { $0.peer.id == peer.id })
+                    let containsInCall = participants.participants.contains(where: { $0.id == .peer(peer.id) })
                     let containsInMembers = membersList.contains(where: { $0.peer.id == peer.id })
                     let containsInContacts = contactList.contains(where: { $0.peer.id == peer.id })
                     
@@ -378,10 +378,17 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
             
             
             let allMembers: Signal<([InvitationPeer], [InvitationPeer]), NoError> = combineLatest(members, dialogs, globalSearch, invited) |> map { recent, contacts, global, invited in
-                let membersList = recent.participants.map { value in
-                    InvitationPeer(peer: value.peer, presence: nil, contact: false, enabled: !invited.contains(where: { $0.id == value.peer.id}))
+                let membersList = recent.participants.compactMap { value in
+                    if let peer = value.peer {
+                        return InvitationPeer(peer: peer._asPeer(), presence: nil, contact: false, enabled: !invited.contains(where: { $0.id == peer.id}))
+                    } else {
+                        return nil
+                    }
                 }
                 var contactList:[InvitationPeer] = []
+                var globalList:[InvitationPeer] = []
+
+                
                 for contact in contacts {
                     let containsInMembers = membersList.contains(where: { $0.peer.id == contact.id })
                     if !containsInMembers, !contact.isBot {
@@ -389,7 +396,6 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     }
                 }
                 
-                var globalList:[InvitationPeer] = []
                 
                 for peer in global {
                     let containsInMembers = membersList.contains(where: { $0.peer.id == peer.id })
