@@ -434,7 +434,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView?, state: P
 
         memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, inviteState: nil, unsyncVolume: unsyncVolumes[accountPeerId], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: hasVideo(accountPeerId), activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil))
         index += 1
-    } 
+    }
 
     let addMember:(GroupCallParticipantsContext.Participant, Int, Bool)->Void = { value, activityIndex, isVertical in
         

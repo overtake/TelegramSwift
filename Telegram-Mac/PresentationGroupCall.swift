@@ -210,9 +210,10 @@ private final class ConferenceCallE2EContextStateImpl: ConferenceCallE2EContextS
         return self.call.takeOutgoingBroadcastBlocks()
     }
 
-    func encrypt(message: Data, channelId: Int32) -> Data? {
-        return self.call.encrypt(message, channelId: channelId)
+    func encrypt(message: Data, channelId: Int32, plaintextPrefixLength: Int) -> Data? {
+        return self.call.encrypt(message, channelId: channelId, plaintextPrefixLength: plaintextPrefixLength)
     }
+
 
     func decrypt(message: Data, userId: Int64) -> Data? {
         return self.call.decrypt(message, userId: userId)
@@ -228,10 +229,11 @@ class OngoingGroupCallEncryptionContextImpl: OngoingGroupCallEncryptionContext {
         self.channelId = channelId
     }
     
-    func encrypt(message: Data) -> Data? {
+    func encrypt(message: Data, plaintextPrefixLength: Int) -> Data? {
         let channelId = self.channelId
-        return self.e2eCall.with({ $0.state?.encrypt(message: message, channelId: channelId) })
+        return self.e2eCall.with({ $0.state?.encrypt(message: message, channelId: channelId, plaintextPrefixLength: plaintextPrefixLength) })
     }
+
     
     func decrypt(message: Data, userId: Int64) -> Data? {
         return self.e2eCall.with({ $0.state?.decrypt(message: message, userId: userId) })
@@ -3706,7 +3708,7 @@ func requestOrJoinConferenceCall(context: AccountContext, initialInfo: GroupCall
 
 private func startGroupCall(context: AccountContext, peerId: PeerId?, joinAs: PeerId, initialCall: CachedChannelData.ActiveCall?, initialInfo: GroupCallInfo? = nil, internalId: CallSessionInternalId = CallSessionInternalId(), joinHash: String? = nil, peer: Peer? = nil, conferenceFromCallId: CallId?, isConference: Bool, isChannel: Bool, reference: InternalGroupCallReference?) -> GroupCallContext {
     
-    let keyPair: TelegramKeyPair? = TelegramE2EEncryptionProviderImpl.shared.generateKeyPair()
+    let keyPair: TelegramKeyPair? = isConference ? TelegramE2EEncryptionProviderImpl.shared.generateKeyPair() : nil
     
     var initial: (description: EngineGroupCallDescription, reference: InternalGroupCallReference)?
     
@@ -3719,6 +3721,15 @@ private func startGroupCall(context: AccountContext, peerId: PeerId?, joinAs: Pe
             subscribedToScheduled: initialCall.subscribedToScheduled,
             isStream: false
         ), reference)
+    } else if let initialInfo {
+        initial = (EngineGroupCallDescription(
+            id: initialInfo.id,
+            accessHash: initialInfo.accessHash,
+            title: initialInfo.title,
+            scheduleTimestamp: initialInfo.scheduleTimestamp,
+            subscribedToScheduled: initialInfo.subscribedToScheduled,
+            isStream: false
+        ), .id(id: initialInfo.id, accessHash: initialInfo.accessHash))
     }
     
     
