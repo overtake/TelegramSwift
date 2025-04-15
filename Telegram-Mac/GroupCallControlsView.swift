@@ -289,7 +289,7 @@ final class GroupCallControlsView : View {
                     view.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
                         if completed {
                             view?.layer?.transform = fr
-                            view?.layer?.sublayerTransform = fr
+                          //  view?.layer?.sublayerTransform = fr
                             view?.layer?.removeAnimation(forKey: "transform")
                         } else {
                             var bp = 0
@@ -298,7 +298,7 @@ final class GroupCallControlsView : View {
                     })
                 } else {
                     view.layer?.transform = fr
-                    view.layer?.sublayerTransform = fr
+                   // view.layer?.sublayerTransform = fr
                     view.layer?.removeAnimation(forKey: "transform")
                 }
             }

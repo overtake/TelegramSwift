@@ -328,6 +328,10 @@ private final class StarGiftFilterRowItem : GeneralRowItem {
             case .stars(let int64):
                 attr.append(string: "\(clown_space)\(int64)", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+            case .resale:
+                //TODOLANG
+                attr.append(string: "Resale", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             default:
                 break
             }
@@ -453,6 +457,7 @@ private struct State : Equatable {
         case myGifts
         case limited
         case available
+        case resale
         case stars(Int64)
     }
     
@@ -578,6 +583,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return list.filter { $0.stars == stars }
             case .available:
                 return list.filter({ !$0.limited || $0.native.generic?.soldOut == nil })
+            case .resale:
+                return list.filter({ $0.native.generic?.availability?.minResaleStars != nil })
             default:
                 return list
             }
@@ -716,6 +723,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             current.disallowedGifts = disallowedGifts ?? []
             current.collectibles = myGifts.filteredGifts
 
+            
             if let gifts {
                 current.starGifts = gifts.compactMap { $0.generic }.map {
                     .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: .generic($0))
@@ -745,8 +753,15 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                     })
                 }
                 
-                let customFilters: [State.StarGiftFilter] = current.starGifts.compactMap { $0.native.generic }.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
+                var customFilters: [State.StarGiftFilter] = current.starGifts.compactMap { $0.native.generic }.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
                 
+                let hasResale = current.starGifts.contains(where: {
+                    $0.native.generic?.availability?.minResaleStars != nil
+                })
+                
+                if hasResale {
+                    customFilters.insert(.resale, at: 0)
+                }
                 
                 
                 current.starFilters = [.emptyLeft, .all] + (current.collectibles.isEmpty ? [] : [.myGifts]) + [.limited, .available] + customFilters + [.emptyRight]
@@ -782,7 +797,9 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }, openGift: { option in
         let state = stateValue.with { $0 }
         if let peer = state.peer {
-            if option.native.generic?.availability?.remains == 0 {
+            if let gift = option.native.generic, gift.availability?.minResaleStars != nil {
+                showModal(with: StarGift_MarketplaceController(context: context, giftId: gift.id), for: window)
+            } else if option.native.generic?.availability?.remains == 0 {
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil), purpose: .unavailableGift), for: context.window)
             } else {
                 showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer, disallowedGifts: state.disallowedGifts, starGiftsProfile: starGiftsContext), for: window)

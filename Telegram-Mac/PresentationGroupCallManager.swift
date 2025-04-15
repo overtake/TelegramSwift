@@ -44,7 +44,11 @@ extension GroupCallParticipantsContext.Participant {
         guard let videoDescription = self.videoDescription else {
             return nil
         }
-        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, peerId: self.peer.id.id._internalGetInt64Value(), endpointId: videoDescription.endpointId, ssrcGroups: videoDescription.ssrcGroups.map { group in
+        guard let peer = self.peer else {
+            return nil
+        }
+
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, peerId: peer.id.id._internalGetInt64Value(), endpointId: videoDescription.endpointId, ssrcGroups: videoDescription.ssrcGroups.map { group in
             PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
         }, minQuality: minQuality, maxQuality: maxQuality)
     }
@@ -56,7 +60,10 @@ extension GroupCallParticipantsContext.Participant {
         guard let presentationDescription = self.presentationDescription else {
             return nil
         }
-        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, peerId: self.peer.id.id._internalGetInt64Value(), endpointId: presentationDescription.endpointId, ssrcGroups: presentationDescription.ssrcGroups.map { group in
+        guard let peer = self.peer else {
+            return nil
+        }
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, peerId: peer.id.id._internalGetInt64Value(), endpointId: presentationDescription.endpointId, ssrcGroups: presentationDescription.ssrcGroups.map { group in
             PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
         }, minQuality: minQuality, maxQuality: maxQuality)
     }

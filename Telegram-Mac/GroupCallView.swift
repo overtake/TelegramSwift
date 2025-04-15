@@ -159,6 +159,23 @@ final class GroupCallView : View {
     private let content = Content()
     
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            var bp = 0
+            bp += 1
+        }
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        
+        if superview == nil {
+            var bp = 0
+            bp += 1
+        }
+    }
+    
     required init(frame frameRect: NSRect, callMode: GroupCallUIState.Mode) {
         controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 360, height: 320), callMode: callMode)
         super.init(frame: frameRect)
