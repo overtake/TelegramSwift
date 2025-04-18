@@ -15591,7 +15591,7 @@ public final class L10n {
   public static var recentCallsEmpty: String  { return L10n.tr("Localizable", "RecentCalls.Empty") }
   /// Create New Call
   public static var recentCallsNewCall: String  { return L10n.tr("Localizable", "RecentCalls.NewCall") }
-  /// New Call Link
+  /// Create Call Link
   public static var recentCallsNewCallLink: String  { return L10n.tr("Localizable", "RecentCalls.NewCallLink") }
   /// Recent Calls
   public static var recentCallsRecentCalls: String  { return L10n.tr("Localizable", "RecentCalls.RecentCalls") }

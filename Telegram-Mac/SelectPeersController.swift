@@ -290,7 +290,10 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
     
     if let accountPeer = accountPeer {
         let searchPeers = searchView.peers.map { $0.value }.filter { !$0.isDeleted }.sorted(by: <)
-        let peers = view.peers.map { $0._asPeer() }.filter { !$0.isDeleted }.sorted(by: <)
+        var peers = view.peers.map { $0._asPeer() }.filter { !$0.isDeleted }.sorted(by: <)
+        
+        let allPeers = peers + [accountPeer]
+
         
         var isset:[PeerId:PeerId] = [:]
         for peer in searchPeers {
@@ -309,7 +312,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
         
         if !blocks.isEmpty {
             for block in blocks {
-                let found = peers.filter({ block.peerIds.contains($0.id) })
+                let found = allPeers.filter({ block.peerIds.contains($0.id) })
                 if !found.isEmpty {
                     entries.append(.separator(index, theme, block.separator))
                     index += 1
@@ -338,15 +341,21 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
         if let recentPeers = recentPeers {
             switch recentPeers {
             case let .peers(recent):
+                let recent = recent.filter({
+                    isset[$0.id] == nil
+                })
                 if !recent.isEmpty {
                     entries.append(.separator(index, theme, strings().selectPeersFrequent))
                     for peer in recent {
-                        if !peer.isEqual(accountPeer), isset[peer.id] == nil {
+                        if !peer.isEqual(accountPeer) {
                             isset[peer.id] = peer.id
                             entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil, customTheme: theme, isLookSavedMessage: isLookSavedMessage, savedStatus: savedStatus), index, !excludeIds.contains(peer.id)))
                             index += 1
                         }
                     }
+                    peers = peers.filter({
+                        isset[$0.id] == nil
+                    })
                     if !peers.isEmpty {
                         entries.append(.separator(index, theme, strings().selectPeersContacts))
                     }

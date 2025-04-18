@@ -5,6 +5,78 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+private final class EmptyRowItem: GeneralRowItem {
+    fileprivate let arguments: Arguments
+    fileprivate let titleLayout: TextViewLayout
+    fileprivate let clearLayout: TextViewLayout
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, arguments: Arguments) {
+        self.arguments = arguments
+        //TODOLANG
+        self.titleLayout = .init(.initialize(string: "No Matching Gifts", color: theme.colors.text, font: .normal(.title)), alignment: .center)
+        self.titleLayout.measure(width: .greatestFiniteMagnitude)
+        
+        self.clearLayout = .init(.initialize(string: "Clear Filters", color: theme.colors.accent, font: .normal(.text)), alignment: .center)
+        self.clearLayout.measure(width: .greatestFiniteMagnitude)
+
+        super.init(initialSize, stableId: stableId)
+    }
+    
+    override var height: CGFloat {
+        return 270
+    }
+    
+    override func viewClass() -> AnyClass {
+        return EmptyRowView.self
+    }
+}
+
+fileprivate class EmptyRowView : GeneralRowView {
+    fileprivate let titleView = TextView()
+    fileprivate let clearView = TextView()
+    fileprivate let animationView = MediaAnimatedStickerView(frame: .zero)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(titleView)
+        addSubview(clearView)
+        addSubview(animationView)
+        
+        titleView.isSelectable = false
+        clearView.isSelectable = false
+        
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? EmptyRowItem else {
+            return
+        }
+        
+        titleView.update(item.titleLayout)
+        clearView.update(item.clearLayout)
+        
+        animationView.update(with: LocalAnimatedSticker.duck_empty.file, size: NSMakeSize(100, 100), context: item.arguments.context, table: item.table, animated: animated)
+        
+        clearView.setSingle(handler: { [weak item] _ in
+            item?.arguments.clearFilters()
+        }, for: .Click)
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        animationView.centerX(y: 30)
+        titleView.centerX(y: animationView.frame.maxY + 10)
+        clearView.centerX(y: titleView.frame.maxY + 5)
+    }
+}
+
 
 private extension StarGift.UniqueGift.Attribute {
     var resaleAttr: ResaleGiftsContext.Attribute {
@@ -161,9 +233,9 @@ private final class HeaderItem : GeneralRowItem {
     struct AttributeItem {
         let text: TextViewLayout
         let attribute: State.Attribute
-        init(attribute: State.Attribute) {
+        init(attribute: State.Attribute, resaleState: ResaleGiftsContext.State?) {
             self.attribute = attribute
-            self.text = .init(.initialize(string: attribute.string, color: theme.colors.darkGrayText, font: .medium(.text)))
+            self.text = .init(.initialize(string: attribute.string(resaleState), color: theme.colors.darkGrayText, font: .medium(.text)))
             self.text.measure(width: .greatestFiniteMagnitude)
         }
     }
@@ -182,10 +254,10 @@ private final class HeaderItem : GeneralRowItem {
         self.balanceLayout = .init(balanceAttr, alignment: .right)
 
         
-        self.headerLayout = .init(.initialize(string: "Plush Pepe", color: theme.colors.text, font: .normal(.title)))
-        self.infoLayout = .init(.initialize(string: "455 for resale", color: theme.colors.grayText, font: .normal(.small)))
+        self.headerLayout = .init(.initialize(string: state.gift.title ?? "-", color: theme.colors.text, font: .normal(.title)))
+        self.infoLayout = .init(.initialize(string: "\(state.count) for resale", color: theme.colors.grayText, font: .normal(.small)))
         
-        self.items = State.Attribute.all.map { .init(attribute: $0) }
+        self.items = State.Attribute.all.map { .init(attribute: $0, resaleState: state.resaleState) }
 
         super.init(initialSize, stableId: stableId)
     }
@@ -203,7 +275,7 @@ private final class HeaderItem : GeneralRowItem {
     
     
     override var height: CGFloat {
-        return 110
+        return 105
     }
     
     override func viewClass() -> AnyClass {
@@ -220,6 +292,8 @@ private class HeaderItemView: GeneralRowView {
     private let dismiss = ImageButton()
     
     private let documentView = View()
+    
+    private let separatorView = View()
     
     private class AttributeItemView : Control {
         private let textView = TextView()
@@ -291,6 +365,8 @@ private class HeaderItemView: GeneralRowView {
         top_Container.addSubview(headerView)
         top_Container.addSubview(statusView)
         top_Container.addSubview(balanceView)
+        
+        //addSubview(separatorView)
     }
     
     required init?(coder: NSCoder) {
@@ -317,16 +393,17 @@ private class HeaderItemView: GeneralRowView {
             let view = documentView.subviews[i] as! AttributeItemView
             view.set(item: attr, arguments: item.arguments, animated: animated)
             view.centerY(x: x)
-            x += view.frame.width + 5
+            x += view.frame.width + 10
         }
         
-        documentView.frame = NSMakeRect(0, 0, x + 5, 30)
+        documentView.frame = NSMakeRect(0, 0, x - 10, 30)
         bottom_Container.documentView = documentView
 
         headerView.update(item.headerLayout)
         statusView.update(item.infoLayout)
         balanceView.set(text: item.balanceLayout, context: item.context)
         
+        separatorView.backgroundColor = theme.colors.border
         
         dismiss.setSingle(handler: { [weak item] _ in
             item?.arguments.dismiss()
@@ -334,6 +411,10 @@ private class HeaderItemView: GeneralRowView {
         
         needsLayout = true
         
+    }
+    
+    func updateBorder(visible: Bool) {
+        separatorView.change(opacity: visible ? 1 : 0)
     }
     
     
@@ -356,6 +437,7 @@ private class HeaderItemView: GeneralRowView {
             x += view.frame.width + 5
         }
         
+        separatorView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
 }
 
@@ -365,46 +447,103 @@ private final class Arguments {
     let getMenuItems:(State.Attribute)->[ContextMenuItem]
     let toggleAttribute:(ResaleGiftsContext.Attribute)->Void
     let selectAll:(ResaleGiftsContext.Attribute)->Void
+    let open:(StarGift.UniqueGift)->Void
+    let clearFilters:()->Void
     init(context: AccountContext, dismiss:@escaping()->Void, getMenuItems:@escaping(State.Attribute)->[ContextMenuItem], toggleAttribute:@escaping(ResaleGiftsContext.Attribute)->Void,
-         selectAll:@escaping(ResaleGiftsContext.Attribute)->Void) {
+         selectAll:@escaping(ResaleGiftsContext.Attribute)->Void,
+         open:@escaping(StarGift.UniqueGift)->Void,
+         clearFilters:@escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
         self.getMenuItems = getMenuItems
         self.toggleAttribute = toggleAttribute
         self.selectAll = selectAll
+        self.open = open
+        self.clearFilters = clearFilters
     }
 }
 
 private struct State : Equatable {
     
     enum Attribute {
-        case price
+        case sort
         case model
         case backdrop
         case symbol
         
-        var string: String {
+        func string(_ state: ResaleGiftsContext.State?) -> String {
+            //TODOLANG
             switch self {
-            case .price:
-                return "Price"
+            case .sort:
+                switch state?.sorting {
+                case .date:
+                    return "Date"
+                case .value:
+                    return "Price"
+                case .number:
+                    return "Number"
+                case .none:
+                    return "Date"
+                }
             case .model:
-                return "Model"
+                let attrs = state?.filterAttributes.filter({
+                    switch $0 {
+                    case .model:
+                        return true
+                    default:
+                        return false
+                    }
+                }).count ?? 0
+                if attrs > 0 {
+                    return "\(attrs) Models"
+                } else {
+                    return "Model"
+                }
             case .backdrop:
-                return "Backdrop"
+                let attrs = state?.filterAttributes.filter({
+                    switch $0 {
+                    case .backdrop:
+                        return true
+                    default:
+                        return false
+                    }
+                }).count ?? 0
+                if attrs > 0 {
+                    return "\(attrs) Backdrops"
+                } else {
+                    return "Backdrop"
+                }
             case .symbol:
-                return "Symbol"
+                let attrs = state?.filterAttributes.filter({
+                    switch $0 {
+                    case .pattern:
+                        return true
+                    default:
+                        return false
+                    }
+                }).count ?? 0
+                if attrs > 0 {
+                    return "\(attrs) Symbols"
+                } else {
+                    return "Symbol"
+                }
             }
         }
         
         static var all: [Attribute] {
-            return [.price, .model, .backdrop, .symbol]
+            return [.sort, .model, .backdrop, .symbol]
         }
     }
     
+    var gift: StarGift.Gift
     
     var starsState: StarsContext.State?
     var myBalance: Int64 {
         return starsState?.balance.value ?? 0
+    }
+    
+    var count: Int64 {
+        return self.resaleState?.count.flatMap(Int64.init) ?? self.gift.availability?.resale ?? 0
     }
     
     var resaleState: ResaleGiftsContext.State?
@@ -412,6 +551,8 @@ private struct State : Equatable {
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
+private let _id_loading = InputDataIdentifier("_id_loading")
+private let _id_empty = InputDataIdentifier("_id_empty")
 private func _id_stars_gifts(_ index: Int) -> InputDataIdentifier {
     return InputDataIdentifier("_id_stars_gifts_\(index)")
 }
@@ -421,42 +562,64 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return HeaderItem(initialSize, stableId: stableId, state: state, context: arguments.context, arguments: arguments)
-    }))
-    sectionId += 1
+//    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+//        return HeaderItem(initialSize, stableId: stableId, state: state, context: arguments.context, arguments: arguments)
+//    }))
+//    sectionId += 1
   
     if let resaleState = state.resaleState {
-        
-        let chunks = resaleState.gifts.chunks(3)
-        
-        for (i, chunk) in chunks.enumerated() {
-            if !chunk.isEmpty {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0.unique!) }, insets: .init(left: 10, right: 10), callback: { option in
-                        
-                    })
-                }))
                 
-                entries.append(.sectionId(sectionId, type: .customModern(10)))
-                sectionId += 1
-            }
+        let chunks = resaleState.gifts.filter { $0.unique?.resellStars != nil }.chunks(3)
+        
+        let isLoading: Bool
+        switch resaleState.dataState {
+        case .loading:
+            isLoading = true
+        case .ready:
+            isLoading = false
         }
+        
+        if !chunks.isEmpty {
+            for (i, chunk) in chunks.enumerated() {
+                if !chunk.isEmpty {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
+                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0.unique!) }, insets: .init(left: 5, right: 5), callback: { option in
+                            if let gift = option.nativeStarUniqueGift {
+                                arguments.open(gift)
+                            }
+                        })
+                    }))
+                    
+                    entries.append(.sectionId(sectionId, type: .customModern(10)))
+                    sectionId += 1
+                }
+            }
+        } else if isLoading {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .legacy, height: 270)
+            }))
+        } else {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return EmptyRowItem(initialSize, stableId: stableId, arguments: arguments)
+            }))
+        }
+        
+        
     }
     
     // entries
     
-    entries.append(.sectionId(sectionId, type: .customModern(10)))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .customModern(0)))
+//    sectionId += 1
     
     return entries
 }
 
-func StarGift_MarketplaceController(context: AccountContext, giftId: Int64) -> InputDataModalController {
+func StarGift_MarketplaceController(context: AccountContext, peerId: PeerId, gift: StarGift.Gift) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let initialState = State(gift: gift)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -464,9 +627,9 @@ func StarGift_MarketplaceController(context: AccountContext, giftId: Int64) -> I
         statePromise.set(stateValue.modify (f))
     }
     
-    let resaleContext = ResaleGiftsContext(account: context.account, giftId: giftId)
+    let resaleContext = ResaleGiftsContext(account: context.account, giftId: gift.id)
     
-    var getController:(()->ViewController?)? = nil
+    var getController:(()->InputDataController?)? = nil
     var close:(()->Void)? = nil
     
     var window:Window {
@@ -547,9 +710,13 @@ func StarGift_MarketplaceController(context: AccountContext, giftId: Int64) -> I
         })
         
         resaleContext?.updateFilterAttributes(currentFilterAttributes)
+    }, open: { [weak resaleContext] gift in
+        showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .quickLook(nil, gift), purpose: .starGift(gift: .unique(gift), convertStars: nil, text: nil, entities: nil, nameHidden: false, savedToProfile: false, converted: false, fromProfile: false, upgraded: true, transferStars: nil, canExportDate: nil, reference: nil, sender: nil, saverId: nil), resaleContext: resaleContext, toPeerId: peerId), for: window)
+    }, clearFilters: { [weak resaleContext] in
+        resaleContext?.updateFilterAttributes([])
     })
     
-    getMenuItems = { [weak arguments] attribute in
+    getMenuItems = { [weak arguments, weak resaleContext] attribute in
         
         guard let arguments else {
             return []
@@ -558,18 +725,20 @@ func StarGift_MarketplaceController(context: AccountContext, giftId: Int64) -> I
         
         var items: [ContextMenuItem] = []
         switch attribute {
-        case .price:
+        case .sort:
+            
+            //TODOLANG
             items.append(ContextMenuItem("Sort by Price", handler: {
-                
-            }, itemImage: MenuAnimation.menu_sort_up.value))
+                resaleContext?.updateSorting(.value)
+            }, state: state.resaleState?.sorting == .value ? .on : nil, itemImage: MenuAnimation.menu_cash_up.value))
             
             items.append(ContextMenuItem("Sort by Date", handler: {
-                
-            }, itemImage: MenuAnimation.menu_sort_up.value))
+                resaleContext?.updateSorting(.date)
+            }, state: state.resaleState?.sorting == .date ? .on : nil, itemImage: MenuAnimation.menu_calendar_up.value))
             
             items.append(ContextMenuItem("Sort by Number", handler: {
-                
-            }, itemImage: MenuAnimation.menu_sort_up.value))
+                resaleContext?.updateSorting(.number)
+            }, state: state.resaleState?.sorting == .number ? .on : nil, itemImage: MenuAnimation.menu_hashtag_up.value))
         default:
             if let resaleState = state.resaleState {
                 
@@ -602,13 +771,17 @@ func StarGift_MarketplaceController(context: AccountContext, giftId: Int64) -> I
                 let allSelected: Bool = filteredAttrs.isEmpty
     
                 //TODOLANG
-                items.append(ContextMenuItem("Select All", handler: {
-                    if let first = attrs.first?.resaleAttr {
-                        arguments.selectAll(first)
-                    }
-                }, state: allSelected ? .on : nil))
+                if !allSelected {
+                    items.append(ContextMenuItem("Select All", handler: {
+                        if let first = attrs.first?.resaleAttr {
+                            arguments.selectAll(first)
+                        }
+                    }, state: allSelected ? .on : nil))
+                    
+                    items.append(ContextSeparatorItem())
+                }
                 
-                items.append(ContextSeparatorItem())
+                
                 
                 for attr in attrs {
                     let count = resaleState.attributeCount[attr.resaleAttr] ?? 0
@@ -632,19 +805,55 @@ func StarGift_MarketplaceController(context: AccountContext, giftId: Int64) -> I
     
     controller.contextObject = resaleContext
     
-    controller.didLoad = { controller, _ in
+    
+    let view = HeaderItemView(frame: NSMakeRect(0, 0, 368, 105))
+
+    
+    controller.contextObject_second = view
+    
+    controller.afterTransaction = { controller in
+        let view = controller.contextObject_second as? HeaderItemView
+        let item = HeaderItem(controller.frame.size, stableId: InputDataEntryId.custom(_id_header), state: stateValue.with { $0 }, context: context, arguments: arguments)
+        view?.set(item: item, animated: false)
+    }
+    
+    
+    controller.didLoad = { [weak resaleContext] controller, _ in
         controller.tableView.getBackgroundColor = {
             return theme.colors.background
         }
+        
+        
+        controller.tableView.setScrollHandler { position in
+            switch position.direction {
+            case .bottom:
+                resaleContext?.loadMore()
+            default:
+                break
+            }
+        }
+        
+        controller.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak view, weak controller] scroll in
+            guard let view, let controller else {
+                return
+            }
+            let visible = scroll.rect.minY >= (controller.tableView.frame.height)
+            view.updateBorder(visible: visible)
+        }))
+    }
+    
+    controller.afterViewDidLoad = { [weak resaleContext] in
+        guard let controller = getController?() else {
+            return
+        }
+        let view = controller.contextObject_second as? HeaderItemView
+        controller.genericView.set(view)
     }
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "PAY", accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
-    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(368, 0))
     
