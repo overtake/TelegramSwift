@@ -2958,6 +2958,13 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
             strongSelf.participantsContext?.updateVideoState(peerId: strongSelf.joinAsPeerId, isVideoMuted: nil, isVideoPaused: false, isPresentationPaused: paused)
         })
+        
+        var encryptionContext: OngoingGroupCallEncryptionContext?
+        if let e2eContext = self.e2eContext {
+            encryptionContext = OngoingGroupCallEncryptionContextImpl(e2eCall: e2eContext.state, channelId: 1)
+        } else if self.isConference {
+            encryptionContext = OngoingGroupCallEncryptionContextImpl(e2eCall: Atomic(value: ConferenceCallE2EContext.ContextStateHolder()), channelId: 1)
+        }
 
         let screencastCallContext = OngoingGroupCallContext(audioSessionActive: .single(true), video: self.screenCapturer, requestMediaChannelDescriptions: { _, completion in
             completion([])
@@ -2972,11 +2979,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             prioritizeVP8: false,
             logPath: "",
             onMutedSpeechActivityDetected: { _ in },
-            isConference: isConference,
+            isConference: false,
             audioIsActiveByDefault: false,
             isStream: false,
             sharedAudioDevice: nil,
-            encryptionContext: nil
+            encryptionContext: encryptionContext
         )
 
         self.screencastCallContext = screencastCallContext
