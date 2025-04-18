@@ -159,8 +159,26 @@ final class GiftOptionsRowItem : GeneralRowItem {
             return .init(file: option.media, text: nil, type: .stars(option.native.generic?.availability?.minResaleStars ?? option.stars, false), badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarGift: option)
         }
         
-        static func initialize(_ option: StarGift.UniqueGift, resale: Bool = false) -> Option {
-            return .init(file: option.file!, text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true) : .none, badge: nil, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
+        static func initialize(_ option: StarGift.UniqueGift, resale: Bool = false, showNumber: Bool = false) -> Option {
+            
+            let badge: Option.Badge?
+            
+            var blueColor: [NSColor] = []
+            
+            if theme.colors.isDark {
+                blueColor = [NSColor(0x142e42), NSColor(0x354f5b)]
+            } else {
+                blueColor = [theme.colors.accent.withMultipliedBrightnessBy(1.1), theme.colors.accent.withMultipliedBrightnessBy(0.9)]
+            }
+            
+            
+            if showNumber {
+                badge = .init(text: "#\(option.number)", colors: option.backdrop ?? blueColor, textColor: theme.colors.underSelectedColor)
+            } else {
+                badge = nil
+            }
+            
+            return .init(file: option.file!, text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true) : .none, badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
         }
         
         
@@ -190,7 +208,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             } else if let availability = option.gift.generic?.availability {
                 badge = .init(text: strings().starTransactionAvailabilityOf(1, Int(availability.total).prettyNumber), colors: blueColor, textColor: theme.colors.underSelectedColor)
             } else if let unique = option.gift.unique {
-                badge = .init(text: "\(unique.number)", colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
+                badge = .init(text: "#\(unique.number)", colors: option.gift.backdropColor ?? blueColor, textColor: theme.colors.underSelectedColor)
             } else {
                 badge = nil
             }
