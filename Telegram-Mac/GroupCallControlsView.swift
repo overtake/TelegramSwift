@@ -285,10 +285,10 @@ final class GroupCallControlsView : View {
                 fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
                 
                 if animated {
-                    view.layer?.transform = CATransform3DIdentity
+                    view.layer?.sublayerTransform = CATransform3DIdentity
                     view.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
                         if completed {
-                            view?.layer?.transform = fr
+                           // view?.layer?.transform = fr
                            // view?.layer?.sublayerTransform = fr
                             view?.layer?.removeAnimation(forKey: "transform")
                         } else {
@@ -297,8 +297,8 @@ final class GroupCallControlsView : View {
                         }
                     })
                 } else {
-                    view.layer?.transform = fr
-                   // view.layer?.sublayerTransform = fr
+                   // view.layer?.transform = fr
+                    view.layer?.sublayerTransform = fr
                     view.layer?.removeAnimation(forKey: "transform")
                 }
             }
