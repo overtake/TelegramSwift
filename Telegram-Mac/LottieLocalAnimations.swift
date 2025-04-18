@@ -311,6 +311,9 @@ enum LocalAnimatedSticker : String {
     case menu_transfer
     case menu_wear
     case menu_wearoff
+    case menu_calendar_up
+    case menu_cash_up
+    case menu_hashtag_up
     
     case emoji_category_activities
     case emoji_category_angry

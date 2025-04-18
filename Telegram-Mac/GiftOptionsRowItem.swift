@@ -11,6 +11,12 @@ import SwiftSignalKit
 import TGUIKit
 import TelegramCore
 
+extension StarGift {
+    var id: Int64 {
+        return self.generic?.id ?? self.unique?.id ?? 0
+    }
+}
+
 struct PremiumPaymentOption : Equatable {
     var title: String
     var desc: String
@@ -127,7 +133,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             
             var redColor: [NSColor] = []
             var blueColor: [NSColor] = []
-            
+            var greenColor: [NSColor] = [NSColor(0x74b036), NSColor(0x87d151)]
             if theme.colors.isDark {
                 redColor = [NSColor(0x522124), NSColor(0x653634)]
                 blueColor = [NSColor(0x142e42), NSColor(0x354f5b)]
@@ -139,7 +145,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             if let availability = option.native.generic?.availability {
                 if availability.minResaleStars != nil {
                     //TODOLANG
-                    badge = .init(text: "resale", colors: blueColor, textColor: .white)
+                    badge = .init(text: "resale", colors: greenColor, textColor: .white)
                 } else if availability.remains == 0 {
                     badge = .init(text: strings().giftSoldOut, colors: redColor, textColor: .white)
                 } else {
@@ -790,7 +796,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
         
         for (i, subview) in content.subviews.enumerated() {
             let view = subview as? OptionView
-            if view?.option?.nativeStarGift?.native.generic?.id != item.options[i].nativeStarGift?.native.generic?.id {
+            if view?.option?.gift?.id != item.options[i].gift?.id {
                 if animated {
                     view?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35)
                 }

@@ -1201,7 +1201,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 
                 
-                if let resellStars = gift.resellStars {
+                if let resellStars = gift.resellStars, badge != nil {
                     //TODOLANG
                     rows.append(.init(left: .init(.initialize(string: "Sale", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(resellStars)", color: theme.colors.text, font: .normal(.text))), leftView: { previous in
                         let control: ImageView
@@ -1331,8 +1331,10 @@ struct GiftPinnedInfo : Equatable {
     var reference: StarGiftReference
 }
 
-func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil, pinnedInfo: GiftPinnedInfo? = nil) -> InputDataModalController {
+func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil, resaleContext: ResaleGiftsContext? = nil, pinnedInfo: GiftPinnedInfo? = nil, toPeerId: PeerId? = nil) -> InputDataModalController {
 
+    let toPeerId = toPeerId ?? context.peerId
+    
     let actionsDisposable = DisposableSet()
     
     let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, purpose: purpose, attributes: source.attributes, accountPeerId: context.peerId, pinnedInfo: pinnedInfo)
@@ -1437,7 +1439,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
     switch source {
     case let .quickLook(_, gift):
         if let _ = gift.resellStars {
-            let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: .starGiftResale(slug: gift.slug, toPeerId: context.peerId), themeParams: nil)
+            let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId), themeParams: nil)
             
             actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { form in
                 updateState { current in
@@ -1454,25 +1456,44 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
     
     
     
-    let buyResellGift:(StarGift.UniqueGift)->Void = { gift in
+    let buyResellGift:(StarGift.UniqueGift, EnginePeer)->Void = { [weak giftsContext, weak resaleContext] gift, peer in
         let state = stateValue.with { $0 }
         let myBalance = state.myBalance ?? .init(value: 0, nanos: 0)
         let resellStars = gift.resellStars!
         
+        let infoText: String
+        if peer.id == context.peerId {
+            infoText = "Are you sure you want to buy **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))**"
+        } else {
+            infoText = "Are you sure you want to buy **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))** and gift it to **\(peer._asPeer().displayTitle)**"
+        }
+        
         //TODOLANG
-        verifyAlert(for: window, header: "Buy Gift", information: "Are you sure you want to buy **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))**", ok: "Buy", successHandler: { _ in
+        verifyAlert(for: window, header: "Buy Gift", information: infoText, ok: "Buy for \(strings().starListItemCountCountable(Int(resellStars)))", successHandler: { _ in
             
             if resellStars > myBalance.value {
                 let sourceValue: Star_ListScreenSource
                 sourceValue = .buy(suffix: nil, amount: resellStars)
                 showModal(with: Star_ListScreen(context: context, source: sourceValue), for: window)
             } else if let formId = state.formId {
-                _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: formId, source: .starGiftResale(slug: gift.slug, toPeerId: context.peerId)), for: window).startStandalone(next: { result in
+                
+                
+                _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: formId, source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId)), for: window).startStandalone(next: { result in
                     switch result {
                     case let .done(receiptMessageId, subscriptionPeerId, _):
                         PlayConfetti(for: window, stars: true)
                         context.starsContext.load(force: true)
                         context.starsSubscriptionsContext.load(force: true)
+                        giftsContext?.removeStarGift(gift: .unique(gift))
+                        resaleContext?.removeStarGift(gift: .unique(gift))
+                        
+                        let successText: String
+                        if peer.id == context.peerId {
+                            successText = "You successfully bought **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))**"
+                        } else {
+                            successText = "You successfully bought **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))** and gifted it to **\(peer._asPeer().displayTitle)**"
+                        }
+                        showModalText(for: window, text: successText)
                         
                         close?()
                     default:
@@ -1763,8 +1784,15 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                             giftsContext?.updateStarGiftAddedToProfile(reference: reference, added: !savedToProfile)
                         }
                         close?()
-                    } else if let resellStars = gift.resellStars {
-                        buyResellGift(gift)
+                    } else if let _ = gift.resellStars {
+                        let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: toPeerId)) |> deliverOnMainQueue
+                        
+                        _ = signal.start(next: { peer in
+                            if let peer {
+                                buyResellGift(gift, peer)
+                            }
+                            
+                        })
                     }
                 default:
                     close?()

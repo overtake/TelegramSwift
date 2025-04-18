@@ -390,6 +390,9 @@
 		276B5D1A2C89121900DB82E2 /* PreviewStarGiftController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D192C89121900DB82E2 /* PreviewStarGiftController.swift */; };
 		276B5D1C2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */; };
 		276B5D1E2C8A57C600DB82E2 /* GiftOptionsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5D1D2C8A57C600DB82E2 /* GiftOptionsRowItem.swift */; };
+		276D8E002DB101F5005D04F7 /* menu_calendar_up.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276D8DFD2DB101F5005D04F7 /* menu_calendar_up.tgs */; };
+		276D8E012DB101F5005D04F7 /* menu_cash_up.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276D8DFE2DB101F5005D04F7 /* menu_cash_up.tgs */; };
+		276D8E022DB101F5005D04F7 /* menu_hashtag_up.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276D8DFF2DB101F5005D04F7 /* menu_hashtag_up.tgs */; };
 		276E767B2B3BEA9B00440A4F /* ChannelWallpapersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */; };
 		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
 		276F9B8A2935FD7800E35997 /* pirate_flag.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B892935FD7800E35997 /* pirate_flag.tgs */; };
@@ -2058,6 +2061,9 @@
 		276B5D1B2C8A4D1E00DB82E2 /* PeerMediaGiftsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGiftsController.swift; sourceTree = "<group>"; };
 		276B5D1D2C8A57C600DB82E2 /* GiftOptionsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftOptionsRowItem.swift; sourceTree = "<group>"; };
 		276C1EBE261B451500FE41C9 /* Currency.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
+		276D8DFD2DB101F5005D04F7 /* menu_calendar_up.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_calendar_up.tgs; sourceTree = "<group>"; };
+		276D8DFE2DB101F5005D04F7 /* menu_cash_up.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_cash_up.tgs; sourceTree = "<group>"; };
+		276D8DFF2DB101F5005D04F7 /* menu_hashtag_up.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_hashtag_up.tgs; sourceTree = "<group>"; };
 		276E76422B373E1B00440A4F /* libswiftAppKit.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswiftAppKit.tbd; path = usr/lib/swift/libswiftAppKit.tbd; sourceTree = SDKROOT; };
 		276E767A2B3BEA9B00440A4F /* ChannelWallpapersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelWallpapersController.swift; sourceTree = "<group>"; };
 		276F9B872931155D00E35997 /* menu_bio.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_bio.tgs; sourceTree = "<group>"; };
@@ -4201,6 +4207,9 @@
 				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
 				275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */,
 				27B836472B6396E500E82683 /* menu_hd_lock.tgs */,
+				276D8DFD2DB101F5005D04F7 /* menu_calendar_up.tgs */,
+				276D8DFE2DB101F5005D04F7 /* menu_cash_up.tgs */,
+				276D8DFF2DB101F5005D04F7 /* menu_hashtag_up.tgs */,
 				276143292BD7E2900034338C /* menu_ban.tgs */,
 				2787AD682BED0DCE0046578E /* menu_adult_slash.tgs */,
 				2787AD672BED0DCD0046578E /* menu_adult.tgs */,
@@ -7193,6 +7202,9 @@
 				275549152747C24F0098A3CD /* device_ipad.tgs in Resources */,
 				C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */,
 				C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */,
+				276D8E002DB101F5005D04F7 /* menu_calendar_up.tgs in Resources */,
+				276D8E012DB101F5005D04F7 /* menu_cash_up.tgs in Resources */,
+				276D8E022DB101F5005D04F7 /* menu_hashtag_up.tgs in Resources */,
 				9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */,
 				A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */,
 				27CE37672760960A007E6F1B /* menu_pin.tgs in Resources */,

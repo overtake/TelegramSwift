@@ -172,7 +172,7 @@ private final class HeaderRowView : TableRowView {
         }
         
         self.scene.hideStar()
-        self.scene.sceneBackground = theme.colors.listBackground
+       // self.scene.sceneBackground = theme.colors.listBackground
         
         self.avatars.change(opacity: 1, animated: animated)
 
@@ -651,7 +651,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
 //
 
@@ -677,7 +677,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
         statePromise.set(stateValue.modify (f))
     }
     
-    var getController:(()->ViewController?)? = nil
+    var getController:(()->InputDataController?)? = nil
     var close:(()->Void)? = nil
     var window:Window {
         get {
@@ -792,13 +792,16 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             current.selectedStarFilter = filter
             return current
         }
+        
+        getController?()?.tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_star_filters), innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+        
     }, executeLink: { link in
         
     }, openGift: { option in
         let state = stateValue.with { $0 }
         if let peer = state.peer {
             if let gift = option.native.generic, gift.availability?.minResaleStars != nil {
-                showModal(with: StarGift_MarketplaceController(context: context, giftId: gift.id), for: window)
+                showModal(with: StarGift_MarketplaceController(context: context, peerId: peer.id, gift: gift), for: window)
             } else if option.native.generic?.availability?.remains == 0 {
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil), purpose: .unavailableGift), for: context.window)
             } else {

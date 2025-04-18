@@ -1340,7 +1340,16 @@ class ChatServiceItem: ChatRowItem {
                             let peerName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? messagePeer.compactDisplayTitle
                             let peerIds: [(Int, EnginePeer.Id?)] = [(0, messagePeer.id)]
                             if let resaleStars {
-                                fatalError("todo")
+                                //TODOLANG
+                                if message.author?.id == context.account.peerId {
+                                    if message.id.peerId == context.account.peerId {
+                                        text = "You bought **\(gift.title) #\(gift.number)** for **\(strings().starListItemCountCountable(Int(resaleStars)))**"
+                                    } else {
+                                        text = "You bought **\(gift.title) #\(gift.number)** for **\(strings().starListItemCountCountable(Int(resaleStars)))** and gifted it to **\(peerName)**"
+                                    }
+                                } else {
+                                    text = "\(peerName) bought **\(gift.title) #\(gift.number)** for **\(strings().starListItemCountCountable(Int(resaleStars)))** and gifted it to you"
+                                }
                             } else if isUpgrade {
                                 if message.author?.id == context.account.peerId {
                                     text = strings().notificationStarsGiftUpgradeYou(peerName)
@@ -1362,6 +1371,7 @@ class ChatServiceItem: ChatRowItem {
                         
                         let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         
+                        
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
                             if range.location != NSNotFound {
@@ -1370,6 +1380,7 @@ class ChatServiceItem: ChatRowItem {
                                 attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             }
                         }
+                        attributedString.detectBoldColorInString(with: .medium(.text))
                         
                         let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
                         
