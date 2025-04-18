@@ -179,6 +179,10 @@ final class GroupCallView : View {
         addSubview(peersTableContainer)
         addSubview(peersTable)
         
+        peersTable.layer?.cornerRadius = 10
+        peersTable.clipView.layer?.cornerRadius = 10
+        peersTableContainer.layer?.cornerRadius = 10
+        
         addSubview(content)
 
         addSubview(controlsContainer)
@@ -538,6 +542,7 @@ final class GroupCallView : View {
         
         if let state = state, state.isConference, isFullScreen || state.videoActive(.main).isEmpty {
             rect.origin.y += 40
+            rect.size.height -= 40
         }
         
         return rect
@@ -608,6 +613,7 @@ final class GroupCallView : View {
         }
         if let state, state.isConference {
             rect.origin.y += 40
+            rect.size.height -= 40
         }
         return rect
     }

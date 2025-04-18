@@ -244,7 +244,7 @@ private final class HeaderItemView: GeneralRowView {
         usersInfoView.centerX(y: frame.height - 20 - usersInfoView.frame.height)
         
         
-        var avatarRect = self.focus(avatarsContainer.subviewsWidthSize)
+        var avatarRect = self.focus(NSMakeSize(avatarsContainer.subviews.max(by: { $0.frame.maxX < $1.frame.maxX })?.frame.maxX ?? 0, avatarsContainer.subviewsWidthSize.height))
         avatarRect.origin.y = usersInfoView.frame.minY - avatarRect.height - 20
         self.avatarsContainer.frame = avatarRect
         
