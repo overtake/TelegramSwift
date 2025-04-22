@@ -2312,6 +2312,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         var action:ChatInitialAction? = nil
                         loop: for (key,value) in vars {
                             switch key {
+                            case keyURLStartapp:
+                                action = .makeWebview(appname: "", command: value)
                             case keyURLStart:
                                 action = .start(parameter: escape(with: value, addPercent: false), behavior: .none)
                                 break loop;

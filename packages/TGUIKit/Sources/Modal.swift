@@ -1173,6 +1173,7 @@ public func showModal(with controller:ModalViewController, for window:Window, is
     if #available(OSX 10.12.2, *) {
         window.touchBar = nil
     }
+    window.makeKeyAndOrderFront(nil)
     controller.modal?.show()
 }
 

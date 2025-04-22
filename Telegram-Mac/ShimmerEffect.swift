@@ -166,7 +166,7 @@ final class ShimmerEffectForegroundView: View {
         if isStatic {
             animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
                 if completed {
-                    self?.disposable = delaySignal(2 - duration).startStrict(completed: {
+                    self?.disposable = delaySignal(2 - duration).startStandalone(completed: {
                         self?.addImageAnimation()
                     })
                 }
