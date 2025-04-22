@@ -45,6 +45,7 @@ enum LocalAnimatedSticker : String {
     case police
     case duck_empty
     case ton_logo
+    case bulb
     
     case affiliate_link
     

@@ -903,6 +903,8 @@
 		27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444B297FD91B0077AA0F /* DateUtils */; };
 		27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444D297FD9950077AA0F /* CalendarUtils */; };
 		27EE44502981AD000077AA0F /* HelloView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE444F2981AD000077AA0F /* HelloView.swift */; };
+		27EF5EB52DB6A2FC004C3475 /* SuggestPostController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EF5EB42DB6A2EE004C3475 /* SuggestPostController.swift */; };
+		27EF5EB72DB6ABC5004C3475 /* bulb.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27EF5EB62DB6ABC5004C3475 /* bulb.tgs */; };
 		27EF749529C3161E009FA57B /* SharedFolderClosureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EF749429C3161E009FA57B /* SharedFolderClosureController.swift */; };
 		27EF749729C44078009FA57B /* ShareCloudFolderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EF749629C44077009FA57B /* ShareCloudFolderController.swift */; };
 		27EFF4BB27BAF19600006834 /* Auth_CodeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */; };
@@ -2524,6 +2526,8 @@
 		27EE1E1B2C3C7BA00002BAF8 /* Star_SubscriptionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_SubscriptionRowItem.swift; sourceTree = "<group>"; };
 		27EE1E1D2C3C90780002BAF8 /* Star_Subscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_Subscription.swift; sourceTree = "<group>"; };
 		27EE444F2981AD000077AA0F /* HelloView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloView.swift; sourceTree = "<group>"; };
+		27EF5EB42DB6A2EE004C3475 /* SuggestPostController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestPostController.swift; sourceTree = "<group>"; };
+		27EF5EB62DB6ABC5004C3475 /* bulb.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = bulb.tgs; sourceTree = "<group>"; };
 		27EF749429C3161E009FA57B /* SharedFolderClosureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedFolderClosureController.swift; sourceTree = "<group>"; };
 		27EF749629C44077009FA57B /* ShareCloudFolderController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCloudFolderController.swift; sourceTree = "<group>"; };
 		27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_CodeEntry.swift; sourceTree = "<group>"; };
@@ -6016,6 +6020,7 @@
 		C2AF3B801E5CD77800DFDD81 /* controllers */ = {
 			isa = PBXGroup;
 			children = (
+				27EF5EB42DB6A2EE004C3475 /* SuggestPostController.swift */,
 				27A01AD42B9AF75200C59661 /* fragment */,
 				27AAE00F28E2DADE004DA38D /* forum */,
 				27D006DD25AF3AD100EE3EB1 /* invitelinks */,
@@ -6428,6 +6433,7 @@
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
 				273AF9932CCB7E4F00C2067E /* improving_video.tgs */,
+				27EF5EB62DB6ABC5004C3475 /* bulb.tgs */,
 				2729C3CB2D8023A200BD64CC /* freeze_duck.tgs */,
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				270375F02C9CDF20003EC235 /* duck_passcode.tgs */,
@@ -7099,6 +7105,7 @@
 				27CE1566297966D8001F8CE8 /* emoji_category_arrow_to_search.tgs in Resources */,
 				273AF9942CCB7E4F00C2067E /* improving_video.tgs in Resources */,
 				271892162B18D9CD0008B238 /* transcription_locked.tgs in Resources */,
+				27EF5EB72DB6ABC5004C3475 /* bulb.tgs in Resources */,
 				2751E7A527F72078003E3937 /* menu_note_slash.tgs in Resources */,
 				27672EB526F8D63500297DB4 /* 7.m4a in Resources */,
 				2751E79727F34374003E3937 /* menu_clear_messages.tgs in Resources */,
@@ -8162,6 +8169,7 @@
 				2726BDDF286B0BAE0044D260 /* PremiumGiftRowItem.swift in Sources */,
 				27BA045726E4F3E9008FC1A3 /* MessageReadMenuItem.swift in Sources */,
 				27F37A282857A92000AC8B90 /* PremiumDemoPhoneControl.swift in Sources */,
+				27EF5EB52DB6A2FC004C3475 /* SuggestPostController.swift in Sources */,
 				277E228828EC22B900001689 /* TopicInfoEntries.swift in Sources */,
 				27916F1B28771BC90046DB44 /* InlineStickerItemLayer.swift in Sources */,
 				C24BA3BD1E9D30F800E8970B /* DeleteSupergroupMessagesModalController.swift in Sources */,

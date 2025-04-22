@@ -1251,11 +1251,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         let isFullscreen = window?.isFullScreen ?? false
         
         let contentInsetsData = "{top:\(isFullscreen ? 60 : 0), bottom:0.0, left:0.0, right:0.0}"
-        sendEvent(name: "content_safe_area_changed", data: contentInsetsData)
+        sendEvent(name: "safe_area_changed", data: contentInsetsData)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.window?.onToggleFullScreen = { [weak self] fullscreen in
+            let paramsString = "{is_fullscreen: \( fullscreen ? "true" : "false" )}"
+            self?.sendEvent(name: "fullscreen_changed", data: paramsString)
+
+        }
         
         if let data = self.settings?.placeholderData, let svg = generateStickerPlaceholderImage(data: data, size: NSMakeSize(50, 50), scale: System.backingScale, imageSize: NSMakeSize(512, 512), backgroundColor: nil, foregroundColor: theme.colors.grayText) {
             self.genericView.placeholderIcon = (svg, true)
@@ -1617,18 +1623,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     let inputQuery = "@\(address)" + " " + query
 
                     if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
-                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { [weak self] peerId, threadId in
+                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { peerId, threadId in
                             let action: ChatInitialAction = .inputText(text: .init(inputText: inputQuery), behavior: .automatic)
                             if let threadId = threadId {
                                 _ = ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
                             } else {
                                 context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: action))
                             }
-                            self?.needCloseConfirmation = false
-                            self?.close()
                             return .complete()
                         }))
-                        showModal(with: controller, for: window)
+                        showModal(with: controller, for: context.window)
+                        
+                        self.needCloseConfirmation = false
+                        self.close()
+
                     } else {
                         self.needCloseConfirmation = false
                         self.close()
@@ -1657,6 +1665,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
             }
+            self.updateSize()
         case "web_app_setup_secondary_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {
@@ -1678,6 +1687,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
             }
+            self.updateSize()
         case "web_app_request_viewport":
             self.updateSize()
         case "web_app_expand":
@@ -2172,14 +2182,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_request_fullscreen":
             if !window.isFullScreen {
                 window.toggleFullScreen(nil)
-                self.sendEvent(name: "fullscreen_changed", data: nil)
-            } else {
-                self.sendEvent(name: "fullscreen_failed", data: nil)
             }
         case "web_app_exit_fullscreen":
             if window.isFullScreen {
                 window.toggleFullScreen(nil)
-                self.sendEvent(name: "fullscreen_changed", data: nil)
             }
         case "web_app_request_safe_area":
             updateSafeInsets()
@@ -2369,6 +2375,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     })
                 }
             }
+        case "web_app_request_theme":
+            self.sendThemeChangedEvent()
         case "web_app_secure_storage_clear":
             if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
                 let _ = (WebAppSecureStorage.clearStorage(context: self.context, botId: botId)
@@ -2423,6 +2431,23 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }), for: window)
         
         
+    }
+    
+    private func sendThemeChangedEvent() {
+        let themeParams = generateWebAppThemeParams(theme)
+        var themeParamsString = "{theme_params: {"
+        for (key, value) in themeParams {
+            if let value = value as? Int32 {
+                let color = NSColor(rgb: UInt32(bitPattern: value))
+                
+                if themeParamsString.count > 16 {
+                    themeParamsString.append(", ")
+                }
+                themeParamsString.append("\"\(key)\": \"\(color.hexString)\"")
+            }
+        }
+        themeParamsString.append("}}")
+        self.sendEvent(name: "theme_changed", data: themeParamsString)
     }
     
     fileprivate func openLocationSettings() {
@@ -2805,6 +2830,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         if let contentSize = window?.screen?.frame.size {
            measure(size: contentSize)
         }
+        self.sendEvent(name: "viewport_changed", data: nil)
     }
     
     private func poupDidClose(_ id: String) {
@@ -2832,22 +2858,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        
-        let themeParams = generateWebAppThemeParams(theme)
-        var themeParamsString = "{theme_params: {"
-        for (key, value) in themeParams {
-            if let value = value as? Int32 {
-                let color = NSColor(rgb: UInt32(bitPattern: value))
-                
-                if themeParamsString.count > 16 {
-                    themeParamsString.append(", ")
-                }
-                themeParamsString.append("\"\(key)\": \"\(color.hexString)\"")
-            }
-        }
-        themeParamsString.append("}}")
-        
-        self.sendEvent(name: "theme_changed", data: themeParamsString)
+        self.sendThemeChangedEvent()
         
         
         genericView.updateHeader(title: self.defaultBarTitle, subtitle: strings().presenceMiniapp, left: isBackButton ? .back : .dismiss, animated: true, leftCallback: { [weak self] in
