@@ -945,6 +945,7 @@ func initialize() -> [String] {
     array.append("channel_feature_emoji_pack")
     array.append("channel_feature_voice_to_text")
     array.append("channel_feature_no_ads")
+    array.append("channel_feature_autotranslate")
 
     array.append("chat_hidden_author")
     array.append("chat_my_notes")
@@ -968,6 +969,7 @@ func initialize() -> [String] {
     array.append("chatlist_apps")
     
     array.append("chat_input_channel_gift")
+    array.append("chat_input_suggest_message")
 
     
 

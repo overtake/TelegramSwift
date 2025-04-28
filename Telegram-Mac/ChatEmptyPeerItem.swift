@@ -139,6 +139,9 @@ class ChatEmptyPeerItem: TableRowItem {
                 attr.detectBoldColorInString(with: .medium(.text))
             case .searchHashtag:
                 _ = attr.append(string: strings().chatEmptySearchHashtag, color: theme.colors.text, font: .medium(.text))
+            case .suggestMessages:
+                //TODOLANG
+                _ = attr.append(string: "Suggest Messages", color: theme.colors.text, font: .medium(.text))
             }
             self._shouldBlurService = false
         case let .customLink(contents):

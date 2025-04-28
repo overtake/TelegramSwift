@@ -526,22 +526,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-                
-           // showModal(with: StarGift_MarketplaceController(context: context), for: window)
-            
-//            showModal(with: WebappTransferDataController(context: context, storedKeys: [WebAppSecureStorage.ExistingKey(uuid: "1", accountName: "Test Account", timestamp: context.timestamp)], completion: { _ in
-//                
-//            }), for: window)
-            
-          //  showModal(with: StarGift_Nft_Controller(context: context), for: window)
-          //  context.bindings.rootNavigation().push(Affiliate_StartController(context: context))
-            
+            context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
+
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-                        
+                       
+            showModal(with: SuggetMessageModalController(context: context), for: window)
+
            // showModal(with: GroupCallInviteLinkController(context: context, link: .init(link: "t.me/call/+kd93KsOsdd239k"), presentation: darkAppearance), for: window)
 
             return .invoked

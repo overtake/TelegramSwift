@@ -101,7 +101,8 @@ public struct PremiumConfiguration {
             minGroupCustomWallpaperLevel: 9,
             minGroupEmojiPackLevel: 9,
             minGroupAudioTranscriptionLevel: 9,
-            minChannelWearGiftLevel: 8
+            minChannelWearGiftLevel: 8,
+            minChannelAutotranslationLevel: 3
         )
     }
     
@@ -129,7 +130,7 @@ public struct PremiumConfiguration {
     public let minGroupCustomWallpaperLevel: Int32
     public let minGroupEmojiPackLevel: Int32
     public let minGroupAudioTranscriptionLevel: Int32
-    
+    public let minChannelAutotranslationLevel: Int32
     fileprivate init(
         isPremiumDisabled: Bool,
         showPremiumGiftInAttachMenu: Bool,
@@ -152,7 +153,8 @@ public struct PremiumConfiguration {
         minGroupCustomWallpaperLevel: Int32,
         minGroupEmojiPackLevel: Int32,
         minGroupAudioTranscriptionLevel: Int32,
-        minChannelWearGiftLevel: Int32
+        minChannelWearGiftLevel: Int32,
+        minChannelAutotranslationLevel: Int32
     ) {
         self.isPremiumDisabled = isPremiumDisabled
         self.showPremiumGiftInAttachMenu = showPremiumGiftInAttachMenu
@@ -176,6 +178,7 @@ public struct PremiumConfiguration {
         self.minGroupEmojiPackLevel = minGroupEmojiPackLevel
         self.minGroupAudioTranscriptionLevel = minGroupAudioTranscriptionLevel
         self.minChannelWearGiftLevel = minChannelWearGiftLevel
+        self.minChannelAutotranslationLevel = minChannelAutotranslationLevel
     }
     
     public static func with(appConfiguration: AppConfiguration) -> PremiumConfiguration {
@@ -206,7 +209,8 @@ public struct PremiumConfiguration {
                 minGroupCustomWallpaperLevel: get(data["group_custom_wallpaper_level_min"]) ?? defaultValue.minGroupCustomWallpaperLevel,
                 minGroupEmojiPackLevel: get(data["group_emoji_stickers_level_min"]) ?? defaultValue.minGroupEmojiPackLevel,
                 minGroupAudioTranscriptionLevel: get(data["group_transcribe_level_min"]) ?? defaultValue.minGroupAudioTranscriptionLevel,
-                minChannelWearGiftLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelWearGiftLevel
+                minChannelWearGiftLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelWearGiftLevel,
+                minChannelAutotranslationLevel: get(data["channel_autotranslation_level_min"]) ?? defaultValue.minChannelWearGiftLevel
             )
         } else {
             return defaultValue

@@ -2399,7 +2399,12 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
             let language = Translate.find(translate.to)
             if let language = language {
                 if translate.translate {
-                    textView.set(text: strings().chatTranslateShowOriginal, for: .Normal)
+                    if let from = translate.from.flatMap(Translate.find) {
+                        textView.set(text: strings().chatTranslateShowOriginal + " (\(from.language))", for: .Normal)
+                    } else {
+                        textView.set(text: strings().chatTranslateShowOriginal, for: .Normal)
+
+                    }
                 } else {
                     let toString = _NSLocalizedString("Translate.Language.\(language.language)")
                     textView.set(text: strings().chatTranslateTo(toString), for: .Normal)

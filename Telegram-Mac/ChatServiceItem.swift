@@ -210,7 +210,7 @@ class ChatServiceItem: ChatRowItem {
                 let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
                 
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     if let unique = gift.unique {
                         showModal(with: StarGift_Nft_Controller(context: context, gift: gift, source: .quickLook(nil, unique), transaction: transaction, purpose: purpose), for: context.window)
                         return
@@ -1289,7 +1289,7 @@ class ChatServiceItem: ChatRowItem {
                         info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                     }
                     
-                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
+                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId, canTransferDate: nil, canResaleDate: nil)
                     
                     let ribbon: ChatServiceItem.GiftData.Ribbon?
                     if let availability = gift.availability {
@@ -1333,7 +1333,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
 
-                case let .starGiftUnique(gift, isUpgrade, isTransferred, savedToProfile, canExportDate, transferStars, refunded, peerId, senderId, saverId, resaleStars):
+                case let .starGiftUnique(gift, isUpgrade, isTransferred, savedToProfile, canExportDate, transferStars, refunded, peerId, senderId, saverId, resaleStars, canTransferDate, canResaleDate):
                     if case let .unique(gift) = gift {
                         var text: String = ""
                         if let messagePeer = message.peers[message.id.peerId] {
@@ -1382,7 +1382,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                         attributedString.detectBoldColorInString(with: .medium(.text))
                         
-                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
+                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId, canTransferDate: canTransferDate, canResaleDate: canResaleDate)
                         
 
                         
@@ -1928,7 +1928,7 @@ class ChatServiceRowView: TableRowView {
             switch data.source {
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     switch gift {
                     case let .unique(gift):
                         uniqueGift = gift
@@ -2009,7 +2009,7 @@ class ChatServiceRowView: TableRowView {
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     switch gift {
                     case let .unique(gift):
                         if let file = gift.file {

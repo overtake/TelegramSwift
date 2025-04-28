@@ -349,7 +349,7 @@ enum ChatState : Equatable {
     case normal
     case selecting
     case block(String)
-    case action(String, (ChatInteraction)->Void, AdditionAction?)
+    case action(String, (ChatInteraction)->Void, right: AdditionAction?, left: AdditionAction?)
     case botStart(String, (ChatInteraction)->Void)
     case channelWithDiscussion(discussionGroupId: PeerId?, leftAction: String, rightAction: String)
     case editing
@@ -396,8 +396,8 @@ func ==(lhs:ChatState, rhs:ChatState) -> Bool {
         } else {
             return false
         }
-    case let .action(lhsAction,_, _):
-        if case let .action(rhsAction, _, _) = rhs {
+    case let .action(lhsAction,_, _, _):
+        if case let .action(rhsAction, _, _, _) = rhs {
             return lhsAction == rhsAction
         } else {
             return false
@@ -714,14 +714,14 @@ class ChatPresentationInterfaceState: Equatable {
             if case .searchHashtag = chatMode.customChatContents?.kind {
                 return .action(strings().navigationClose, { chatInteraction in
                     chatInteraction.context.bindings.rootNavigation().back()
-                }, nil)
+                }, right: nil, left: nil)
             }
             
             
             if self.peer?.restrictionText(contentSettings) != nil {
                 return .action(strings().navigationClose, { chatInteraction in
                     chatInteraction.context.bindings.rootNavigation().back()
-                }, nil)
+                }, right: nil, left: nil)
             }
 
             if chatMode.customChatContents != nil, let count = self.historyCount {
@@ -737,7 +737,7 @@ class ChatPresentationInterfaceState: Equatable {
                         search.showAll = !search.showAll
                         return current.updatedSearchMode(search)
                     }
-                }, nil)
+                }, right: nil, left: nil)
             }
             
 //            if let cachedData = cachedData as? CachedUserData, let starsState, let starsAmount = cachedData.sendPaidMessageStars, let peer {
@@ -769,14 +769,14 @@ class ChatPresentationInterfaceState: Equatable {
             if chatLocation.peerId == repliesPeerId {
                 return .action(notificationSettings?.isMuted ?? false ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
                     chatInteraction.toggleNotifications(nil)
-                }, nil)
+                }, right: nil, left: nil)
             }
 
             if chatMode.isSavedMessagesThread, let threadId64 = chatMode.threadId64 {
                 if PeerId(threadId64) != accountPeer?.id {
                     return .action(strings().chatInputOpenChat, { chatInteraction in
                         chatInteraction.openInfo(PeerId(threadId64), true, nil, nil)
-                    }, nil)
+                    }, right: nil, left: nil)
                 }
             }
             
@@ -784,7 +784,7 @@ class ChatPresentationInterfaceState: Equatable {
             if chatMode.isThreadMode, chatLocation.peerId == accountPeer?.id, let threadId64 = chatMode.threadId64 {
                 return .action(strings().chatInputOpenChat, { chatInteraction in
                     chatInteraction.openInfo(PeerId(threadId64), true, nil, nil)
-                }, nil)
+                }, right: nil, left: nil)
             }
             
             switch chatMode {
@@ -793,12 +793,12 @@ class ChatPresentationInterfaceState: Equatable {
                     return .action(strings().chatPinnedUnpinAllCountable(pinnedMessageId?.totalCount ?? 0), { chatInteraction in
                         let navigation = chatInteraction.context.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
-                    }, nil)
+                    }, right: nil, left: nil)
                 } else {
                     return .action(strings().chatPinnedDontShow, { chatInteraction in
                         let navigation = chatInteraction.context.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
-                    }, nil)
+                    }, right: nil, left: nil)
                 }
                 
             default:
@@ -822,20 +822,20 @@ class ChatPresentationInterfaceState: Equatable {
                     if peer.participationStatus == .left {
                         return .action(strings().chatInputJoin, { chatInteraction in
                             chatInteraction.joinChannel()
-                        }, nil)
+                        }, right: nil, left: nil)
                     } else if peer.adminRights == nil && !peer.groupAccess.isCreator {
                         if let notificationSettings = notificationSettings {
                             return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)
-                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { _, control in
+                            }, right: .init(icon: theme.icons.chat_gigagroup_info, action: { _, control in
                                 tooltip(for: control, text: strings().chatGigagroupHelp)
-                            }))
+                            }), left: nil)
                         } else {
                             return .action(strings().chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)
-                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { _, control in
+                            }, right: .init(icon: theme.icons.chat_gigagroup_info, action: { _, control in
 
-                            }))
+                            }), left: nil)
                         }
                     }
 
@@ -852,7 +852,7 @@ class ChatPresentationInterfaceState: Equatable {
                         if peer.flags.contains(.joinToSend) || chatMode.isTopicMode {
                             return .action(strings().chatInputJoin, { chatInteraction in
                                 chatInteraction.joinChannel()
-                            }, nil)
+                            }, right: nil, left: nil)
                         } else {
                             return .normal
                         }
@@ -880,17 +880,19 @@ class ChatPresentationInterfaceState: Equatable {
                 if peer.participationStatus == .left {
                     return .action(strings().chatInputJoin, { chatInteraction in
                         chatInteraction.joinChannel()
-                    }, nil)
+                    }, right: nil, left: nil)
                 } else if peer.participationStatus == .kicked {
                     return .action(strings().chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
-                    }, nil)
+                    }, right: nil, left: nil)
                 } else if !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings, peer.isChannel {
                     if let cachedData = cachedData as? CachedChannelData, cachedData.flags.contains(.starGiftsAvailable)  {
                         return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
                             chatInteraction.toggleNotifications(nil)
-                        }, .init(icon: theme.icons.chat_input_channel_gift, action: { chatInteraction, _ in
+                        }, right: .init(icon: theme.icons.chat_input_channel_gift, action: { chatInteraction, _ in
                             showModal(with: GiftingController(context: chatInteraction.context, peerId: peer.id, isBirthday: false), for: chatInteraction.context.window)
+                        }), left: .init(icon: theme.icons.chat_input_suggest_message, action: { chatInteraction, _ in
+                            chatInteraction.openSuggestMessages()
                         }))
                     }
                    
@@ -899,11 +901,11 @@ class ChatPresentationInterfaceState: Equatable {
                 if  peer.membership == .Left {
                     return .action(strings().chatInputReturn,{ chatInteraction in
                         chatInteraction.returnGroup()
-                    }, nil)
+                    }, right: nil, left: nil)
                 } else if peer.membership == .Removed {
                     return .action(strings().chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
-                    }, nil)
+                    }, right: nil, left: nil)
                 }
             } else if let peer = peer as? TelegramSecretChat, let mainPeer = mainPeer {
                 
@@ -911,7 +913,7 @@ class ChatPresentationInterfaceState: Equatable {
                 case .terminated:
                     return .action(strings().chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
-                    }, nil)
+                    }, right: nil, left: nil)
                 case .handshake:
                     return .restricted(strings().chatInputSecretChatWaitingToUserOnline(mainPeer.compactDisplayTitle))
                 default:
@@ -922,7 +924,7 @@ class ChatPresentationInterfaceState: Equatable {
             if let peer = peer, !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings, peer.isChannel {
                 return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
                     chatInteraction.toggleNotifications(nil)
-                }, nil)
+                }, right: nil, left: nil)
             }
             
             //, !peer.hasPermission(.sendSomething)
@@ -937,7 +939,7 @@ class ChatPresentationInterfaceState: Equatable {
                         if boostsToRestrict > appliedBoosts {
                             return .action(strings().boostGroupChatInputAction, { chatInteraction in
                                 chatInteraction.boostToUnrestrict(.unblockText(boostsToRestrict))
-                            }, nil)
+                            }, right: nil, left: nil)
                         }
                     } else {
                         return .restricted(text)
@@ -951,12 +953,12 @@ class ChatPresentationInterfaceState: Equatable {
                     return .action(strings().chatInputRestart, { chatInteraction in
                         chatInteraction.unblock()
                         chatInteraction.startBot()
-                    }, nil)
+                    }, right: nil, left: nil)
                 }
                 
                 return .action(strings().chatInputUnblock, { chatInteraction in
                     chatInteraction.unblock()
-                }, nil)
+                }, right: nil, left: nil)
             }
             
             if let peer = peer as? TelegramUser {

@@ -756,7 +756,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                 var customFilters: [State.StarGiftFilter] = current.starGifts.compactMap { $0.native.generic }.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
                 
                 let hasResale = current.starGifts.contains(where: {
-                    $0.native.generic?.availability?.minResaleStars != nil
+                    $0.native.generic?.availability?.minResaleStars != nil && $0.native.generic?.soldOut != nil
                 })
                 
                 if hasResale {
@@ -793,14 +793,14 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             return current
         }
         
-        getController?()?.tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_star_filters), innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+        getController?()?.tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_star_filters), innerId: nil, animated: true, focus: .init(focus: false), inset: -50))
         
     }, executeLink: { link in
         
     }, openGift: { option in
         let state = stateValue.with { $0 }
         if let peer = state.peer {
-            if let gift = option.native.generic, gift.availability?.minResaleStars != nil {
+            if let gift = option.native.generic, gift.availability?.minResaleStars != nil && gift.soldOut != nil {
                 showModal(with: StarGift_MarketplaceController(context: context, peerId: peer.id, gift: gift), for: window)
             } else if option.native.generic?.availability?.remains == 0 {
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil), purpose: .unavailableGift), for: context.window)

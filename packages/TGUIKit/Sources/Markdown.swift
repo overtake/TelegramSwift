@@ -129,20 +129,79 @@ public func parseMarkdownIntoAttributedString(_ string: String, attributes: Mark
 
 private func parseLink(string: NSString, remainingRange: inout NSRange) -> (text: String, contents: String)? {
     var localRemainingRange = remainingRange
-    let closingSquareBraceRange = string.range(of: "]", options: [], range: localRemainingRange)
-    if closingSquareBraceRange.location != NSNotFound {
-        localRemainingRange = NSMakeRange(closingSquareBraceRange.location + closingSquareBraceRange.length, remainingRange.location + remainingRange.length - (closingSquareBraceRange.location + closingSquareBraceRange.length))
-        let openingRoundBraceRange = string.range(of: "(", options: [], range: localRemainingRange)
-        let closingRoundBraceRange = string.range(of: ")", options: [], range: localRemainingRange)
-        if openingRoundBraceRange.location == closingSquareBraceRange.location + closingSquareBraceRange.length && closingRoundBraceRange.location != NSNotFound && openingRoundBraceRange.location < closingRoundBraceRange.location {
-            let linkText = string.substring(with: NSMakeRange(remainingRange.location, closingSquareBraceRange.location - remainingRange.location))
-            let linkContents = string.substring(with: NSMakeRange(openingRoundBraceRange.location + openingRoundBraceRange.length, closingRoundBraceRange.location - (openingRoundBraceRange.location + openingRoundBraceRange.length)))
-            remainingRange = NSMakeRange(closingRoundBraceRange.location + closingRoundBraceRange.length, remainingRange.location + remainingRange.length - (closingRoundBraceRange.location + closingRoundBraceRange.length))
-            return (linkText, linkContents)
+    let maxRange = NSMaxRange(remainingRange)
+
+    // 1. Find unescaped closing square bracket ']'
+    var closingSquareBraceIndex: Int?
+    var i = localRemainingRange.location
+    while i < maxRange {
+        let char = string.character(at: i)
+        if char == UInt16(("]" as UnicodeScalar).value),
+           !(i > 0 && string.character(at: i - 1) == UInt16(("\\" as UnicodeScalar).value)) {
+            closingSquareBraceIndex = i
+            break
         }
+        i += 1
     }
-    return nil
+    guard let closeBracket = closingSquareBraceIndex else {
+        return nil
+    }
+
+    // 2. Prepare to search for ( and )
+    localRemainingRange = NSMakeRange(closeBracket + 1, maxRange - (closeBracket + 1))
+
+    // 3. Check if the next character is unescaped '('
+    guard localRemainingRange.length > 0,
+          string.character(at: localRemainingRange.location) == UInt16(("(" as UnicodeScalar).value) else {
+        return nil
+    }
+
+    // 4. Find unescaped closing parenthesis ')'
+    var closingRoundBraceIndex: Int?
+    i = localRemainingRange.location + 1
+    while i < maxRange {
+        let char = string.character(at: i)
+        if char == UInt16((")" as UnicodeScalar).value),
+           !(i > 0 && string.character(at: i - 1) == UInt16(("\\" as UnicodeScalar).value)) {
+            closingRoundBraceIndex = i
+            break
+        }
+        i += 1
+    }
+    guard let closeParen = closingRoundBraceIndex else {
+        return nil
+    }
+
+    // 5. Extract text and contents
+    let linkTextRange = NSRange(location: remainingRange.location, length: closeBracket - remainingRange.location)
+    let linkContentRange = NSRange(location: localRemainingRange.location + 1, length: closeParen - (localRemainingRange.location + 1))
+
+    let rawText = string.substring(with: linkTextRange)
+    let rawContents = string.substring(with: linkContentRange)
+
+    // 6. Unescape markdown
+    func unescape(_ s: String) -> String {
+        var result = ""
+        var escape = false
+        for c in s {
+            if escape {
+                result.append(c)
+                escape = false
+            } else if c == "\\" {
+                escape = true
+            } else {
+                result.append(c)
+            }
+        }
+        return result
+    }
+
+    // 7. Update remaining range
+    remainingRange = NSMakeRange(closeParen + 1, maxRange - (closeParen + 1))
+
+    return (unescape(rawText), unescape(rawContents))
 }
+
 
 private func parseBold(string: NSString, remainingRange: inout NSRange) -> String? {
     var localRemainingRange = remainingRange
