@@ -10,7 +10,7 @@
 
 DSA_PEM_FILE = dsa_pub.pem
 APPCENTER_SECRET = 4ff72ee6-40ca-438b-a068-7ba14a53e288
-SFEED_URL = https:${SIMPLE_SLASH}/api.appcenter.ms/v0.1/public/sparkle/apps/${APPCENTER_SECRET}
+SFEED_URL = https:$(SIMPLE_SLASH)/mac-updates.telegram.org/beta/versions.xml
 SOURCE = BETA
 
 TYPE = -D'BETA'
