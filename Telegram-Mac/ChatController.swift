@@ -130,6 +130,7 @@ public enum ChatCustomContentsKind: Equatable {
     case awayMessageInput
     case quickReplyMessageInput(shortcut: String)
     case searchHashtag(hashtag: String, onlyMy: Bool)
+    case suggestMessages
     var text: String {
         switch self {
         case .greetingMessageInput:
@@ -140,6 +141,9 @@ public enum ChatCustomContentsKind: Equatable {
             return shortcut
         case let .searchHashtag(hashtag, _):
             return "#\(hashtag)"
+        case .suggestMessages:
+            //TODOLANG
+            return "Message Suggestions"
         }
     }
     
@@ -6007,6 +6011,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }
         
+        chatInteraction.openSuggestMessages = { [weak self] in
+            guard let self else {
+                return
+            }
+            self.chatInteraction.saveState(scrollState: self.immediateScrollState())
+            
+            let messages = HashtagSearchGlobalChatContents(context: context, kind: .suggestMessages, query: "", onlyMy: false, initialState: nil)
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
+        }
         
         chatInteraction.reportSpamAndClose = { [weak self] in
             let title: String
@@ -8389,6 +8402,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .quickReplyMessageInput:
                     title = strings().quickReplyChatRemoveGenericTitle
                     info = strings().quickReplyChatRemoveGenericText
+                case .suggestMessages:
+                    return true
                 case .searchHashtag:
                     return true
                 }

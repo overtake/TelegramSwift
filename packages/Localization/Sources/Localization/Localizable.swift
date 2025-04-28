@@ -2589,6 +2589,8 @@ public final class L10n {
   public static var channelBlacklistEmptyDescrpition: String  { return L10n.tr("Localizable", "ChannelBlacklist.EmptyDescrpition") }
   /// RESTRICTED
   public static var channelBlacklistRestricted: String  { return L10n.tr("Localizable", "ChannelBlacklist.Restricted") }
+  /// Autotranslations of Messages
+  public static var channelBoostAutotranslation: String  { return L10n.tr("Localizable", "ChannelBoost.Autotranslation") }
   /// Boost Channel
   public static var channelBoostBoostChannel: String  { return L10n.tr("Localizable", "ChannelBoost.BoostChannel") }
   /// Boost Group
@@ -2597,6 +2599,10 @@ public final class L10n {
   public static var channelBoostEmojiPack: String  { return L10n.tr("Localizable", "ChannelBoost.EmojiPack") }
   /// Use Emoji Statuses
   public static var channelBoostEmojiStatus: String  { return L10n.tr("Localizable", "ChannelBoost.EmojiStatus") }
+  /// Your channel needs to reach **%1$@ level** to enable autotranslation of messages.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableAutoTranslationText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableAutoTranslationText", p1)
+  }
   /// Enable Colors
   public static var channelBoostEnableColors: String  { return L10n.tr("Localizable", "ChannelBoost.EnableColors") }
   /// Your channel needs **%1$@ level** to change channel color.\n\nAsk your **Premium** subscribers to boost your channel with this link:

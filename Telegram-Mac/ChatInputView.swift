@@ -89,7 +89,8 @@ class ChatInputView: View, Notifable {
     private var recordingPanelView:ChatInputRecordingView?
     private var blockedActionView:TextButton?
     private var blockText: View?
-    private var additionBlockedActionView: ImageButton?
+    private var rightAdditionBlockedActionView: ImageButton?
+    private var leftAdditionBlockedActionView: ImageButton?
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
     private var disallowText:Control?
@@ -299,6 +300,9 @@ class ChatInputView: View, Notifable {
                 return strings().chatInputBusinessGreeting
             case .quickReplyMessageInput:
                 return strings().chatInputBusinessQuickReply
+            case .suggestMessages:
+                //TODOLANG
+                return "Suggest a Message..."
             case .searchHashtag:
                 return ""
             }
@@ -609,14 +613,17 @@ class ChatInputView: View, Notifable {
             inputDidUpdateLayout(animated: animated)
         }
         
-        let prevAdditionFrame = additionBlockedActionView?.frame ?? .zero
-        
+        let prevRightAdditionFrame = rightAdditionBlockedActionView?.frame ?? .zero
+        let prevLeftAdditionFrame = leftAdditionBlockedActionView?.frame ?? .zero
+
         recordingPanelView?.removeFromSuperview()
         recordingPanelView = nil
         blockedActionView?.removeFromSuperview()
         blockedActionView = nil
-        additionBlockedActionView?.removeFromSuperview()
-        additionBlockedActionView = nil
+        rightAdditionBlockedActionView?.removeFromSuperview()
+        rightAdditionBlockedActionView = nil
+        leftAdditionBlockedActionView?.removeFromSuperview()
+        leftAdditionBlockedActionView = nil
         chatDiscussionView?.removeFromSuperview()
         chatDiscussionView = nil
         restrictedView?.removeFromSuperview()
@@ -681,7 +688,7 @@ class ChatInputView: View, Notifable {
                 performSubviewRemoval(view, animated: animated)
                 blockText = nil
             }
-        case let .action(text, action, addition):
+        case let .action(text, action, rightAddition, leftAddition):
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
             
@@ -704,22 +711,40 @@ class ChatInputView: View, Notifable {
             
             self.blockedActionView = blockedActionView
 
-            if let addition = addition {
-                additionBlockedActionView = ImageButton(frame: prevAdditionFrame)
-                additionBlockedActionView?.animates = false
-                additionBlockedActionView?.scaleOnClick = true
-                additionBlockedActionView?.set(image: addition.icon, for: .Normal)
-                additionBlockedActionView?.sizeToFit()
-                addSubview(additionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
+            if let addition = rightAddition {
+                rightAdditionBlockedActionView = ImageButton(frame: prevRightAdditionFrame)
+                rightAdditionBlockedActionView?.animates = false
+                rightAdditionBlockedActionView?.scaleOnClick = true
+                rightAdditionBlockedActionView?.set(image: addition.icon, for: .Normal)
+                rightAdditionBlockedActionView?.sizeToFit()
+                addSubview(rightAdditionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
 
-                additionBlockedActionView?.set(handler: { [weak self] control in
+                rightAdditionBlockedActionView?.set(handler: { [weak self] control in
                     if let chatInteraction = self?.chatInteraction {
                         addition.action(chatInteraction, control)
                     }
                 }, for: .Click)
             } else {
-                additionBlockedActionView?.removeFromSuperview()
-                additionBlockedActionView = nil
+                rightAdditionBlockedActionView?.removeFromSuperview()
+                rightAdditionBlockedActionView = nil
+            }
+            
+            if let addition = leftAddition {
+                leftAdditionBlockedActionView = ImageButton(frame: prevLeftAdditionFrame)
+                leftAdditionBlockedActionView?.animates = false
+                leftAdditionBlockedActionView?.scaleOnClick = true
+                leftAdditionBlockedActionView?.set(image: addition.icon, for: .Normal)
+                leftAdditionBlockedActionView?.sizeToFit()
+                addSubview(leftAdditionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
+
+                leftAdditionBlockedActionView?.set(handler: { [weak self] control in
+                    if let chatInteraction = self?.chatInteraction {
+                        addition.action(chatInteraction, control)
+                    }
+                }, for: .Click)
+            } else {
+                leftAdditionBlockedActionView?.removeFromSuperview()
+                leftAdditionBlockedActionView = nil
             }
 
             self.contentView.isHidden = true
@@ -1013,8 +1038,12 @@ class ChatInputView: View, Notifable {
             transition.updateFrame(view: view, frame: textView.frame)
         }
                 
-        if let view = additionBlockedActionView {
+        if let view = rightAdditionBlockedActionView {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))
+        }
+        
+        if let view = leftAdditionBlockedActionView {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: 22))
         }
         
         if let view = frozenView {

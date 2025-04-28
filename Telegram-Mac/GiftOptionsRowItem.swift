@@ -143,7 +143,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             }
             
             if let availability = option.native.generic?.availability {
-                if availability.minResaleStars != nil {
+                if availability.minResaleStars != nil && option.native.generic?.soldOut != nil {
                     //TODOLANG
                     badge = .init(text: "resale", colors: greenColor, textColor: .white)
                 } else if availability.remains == 0 {

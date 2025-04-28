@@ -232,9 +232,11 @@ private final class HeaderItem : GeneralRowItem {
     
     struct AttributeItem {
         let text: TextViewLayout
+        let image: CGImage?
         let attribute: State.Attribute
         init(attribute: State.Attribute, resaleState: ResaleGiftsContext.State?) {
             self.attribute = attribute
+            self.image = attribute.image(resaleState)
             self.text = .init(.initialize(string: attribute.string(resaleState), color: theme.colors.darkGrayText, font: .medium(.text)))
             self.text.measure(width: .greatestFiniteMagnitude)
         }
@@ -298,6 +300,7 @@ private class HeaderItemView: GeneralRowView {
     private class AttributeItemView : Control {
         private let textView = TextView()
         private let imageView = ImageView()
+        private var leftIconView: ImageView?
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(textView)
@@ -320,25 +323,48 @@ private class HeaderItemView: GeneralRowView {
         func set(item: HeaderItem.AttributeItem, arguments: Arguments, animated: Bool) {
             self.textView.update(item.text)
             
-            self.setFrameSize(NSMakeSize(item.text.layoutSize.width + imageView.frame.width + 23, 30))
-            
-            self.backgroundColor = theme.colors.grayForeground
-
-            
-            self.layer?.cornerRadius = 15
             
             self.contextMenu = {
-                var menu = ContextMenu()
+                let menu = ContextMenu()
                 menu.items = arguments.getMenuItems(item.attribute)
                 return menu
             }
+            
+            if let image = item.image {
+                let current: ImageView
+                if let view = self.leftIconView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    addSubview(current)
+                    self.leftIconView = current
+                }
+                current.image = image
+                current.sizeToFit()
+            } else if let view = self.leftIconView {
+                performSubviewRemoval(view, animated: animated)
+                self.leftIconView = nil
+            }
+            
+            self.setFrameSize(NSMakeSize((leftIconView != nil ? 14 : 0) + item.text.layoutSize.width + imageView.frame.width + 21, 30))
+            self.backgroundColor = theme.colors.grayForeground
+            self.layer?.cornerRadius = 15
+
         }
         
         override func layout() {
             super.layout()
             
-            self.textView.centerY(x: 10)
+            var offset: CGFloat = 10
+            if let leftIconView {
+                leftIconView.centerY(x: 5)
+                offset = leftIconView.frame.maxX + 5
+            }
+            
+            self.textView.centerY(x: offset)
             self.imageView.centerY(x: self.textView.frame.maxX + 3)
+            
+            
         }
     }
     
@@ -470,6 +496,24 @@ private struct State : Equatable {
         case model
         case backdrop
         case symbol
+        
+        func image(_ state: ResaleGiftsContext.State?) -> CGImage? {
+            switch self {
+            case .sort:
+                switch state?.sorting {
+                case .date:
+                    return NSImage(resource: .menuCalendarUp).precomposed(theme.colors.darkGrayText)
+                case .value:
+                    return NSImage(resource: .menuCashUp).precomposed(theme.colors.darkGrayText)
+                case .number:
+                    return NSImage(resource: .menuHashtagUp).precomposed(theme.colors.darkGrayText)
+                case .none:
+                    return nil
+                }
+            default:
+                return nil
+            }
+        }
         
         func string(_ state: ResaleGiftsContext.State?) -> String {
             //TODOLANG
@@ -711,7 +755,7 @@ func StarGift_MarketplaceController(context: AccountContext, peerId: PeerId, gif
         
         resaleContext?.updateFilterAttributes(currentFilterAttributes)
     }, open: { [weak resaleContext] gift in
-        showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .quickLook(nil, gift), purpose: .starGift(gift: .unique(gift), convertStars: nil, text: nil, entities: nil, nameHidden: false, savedToProfile: false, converted: false, fromProfile: false, upgraded: true, transferStars: nil, canExportDate: nil, reference: nil, sender: nil, saverId: nil), resaleContext: resaleContext, toPeerId: peerId), for: window)
+        showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(gift), source: .quickLook(nil, gift), purpose: .starGift(gift: .unique(gift), convertStars: nil, text: nil, entities: nil, nameHidden: false, savedToProfile: false, converted: false, fromProfile: false, upgraded: true, transferStars: nil, canExportDate: nil, reference: nil, sender: nil, saverId: nil, canTransferDate: nil, canResaleDate: nil), resaleContext: resaleContext, toPeerId: peerId), for: window)
     }, clearFilters: { [weak resaleContext] in
         resaleContext?.updateFilterAttributes([])
     })

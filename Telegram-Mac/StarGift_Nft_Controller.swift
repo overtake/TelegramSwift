@@ -566,9 +566,17 @@ private final class HeaderItem : GeneralRowItem {
                     arguments.transfer()
                 }), .init(title: state.weared ? strings().starNftTakeOff : strings().starNftWear, image: NSImage(resource: .iconNFTWear).precomposed(.white), action: {
                     arguments.toggleWear(uniqueGift)
-                }), .init(title: uniqueGift.resellStars != nil ? strings().starNftUnlist : strings().starNftSell, image: NSImage(resource: (uniqueGift.resellStars != nil ? .iconNftUnlist : .iconNftSell)).precomposed(.white), action: {
-                    arguments.sellNft(uniqueGift, false)
                 })]
+                
+                if case .starGift = state.purpose {
+                    actions.append(.init(title: uniqueGift.resellStars != nil ? strings().starNftUnlist : strings().starNftSell, image: NSImage(resource: (uniqueGift.resellStars != nil ? .iconNftUnlist : .iconNftSell)).precomposed(.white), action: {
+                        arguments.sellNft(uniqueGift, false)
+                    }))
+                } else {
+                    actions.append(.init(title: strings().starNftShare, image: NSImage(resource: .iconNFTShare).precomposed(.white), action: {
+                        arguments.shareNft(uniqueGift)
+                    }))
+                }
                 
             }
         default:
@@ -974,7 +982,6 @@ private struct State : Equatable {
         return owner?.emojiStatus?.fileId == gift.unique?.file?.fileId.id
     }
     
-    var convertedGift: ProfileGiftsContext.State.StarGift?
     var upgradeForm: BotPaymentForm?
         
     var attributes: [StarGift.UniqueGift.Attribute]
@@ -999,7 +1006,7 @@ private struct State : Equatable {
         case let .quickLook(peer, gift):
             if let purpose {
                 switch purpose {
-                case let .starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _):
+                case let .starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _, _, _):
                     if let _ = reference {
                         var canManage: Bool
                         let peer = peer ?? owner
@@ -1249,10 +1256,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 if case .quickLook = state.source {
                     entries.append(.sectionId(sectionId, type: .legacy))
                     sectionId += 1
-                } else if state.convertedGift != nil {
-                    entries.append(.sectionId(sectionId, type: .legacy))
-                    sectionId += 1
                 }
+                /*
+                 else if state.convertedGift != nil {
+                     entries.append(.sectionId(sectionId, type: .legacy))
+                     sectionId += 1
+                 }
+                 */
             }
             
           
@@ -1333,7 +1343,10 @@ struct GiftPinnedInfo : Equatable {
 
 func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil, resaleContext: ResaleGiftsContext? = nil, pinnedInfo: GiftPinnedInfo? = nil, toPeerId: PeerId? = nil) -> InputDataModalController {
 
+    
     let toPeerId = toPeerId ?? context.peerId
+    
+    let giftsContext = giftsContext ?? ProfileGiftsContext(account: context.account, peerId: toPeerId)
     
     let actionsDisposable = DisposableSet()
     
@@ -1406,26 +1419,24 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         break
     }
     
-    if let giftsContext {
-        actionsDisposable.add(giftsContext.state.startStrict(next: { state in
-            let unique = state.gifts.first(where: { $0.gift.unique?.slug == gift.unique?.slug })
-            
-            if let unique = unique?.gift.unique {
-                updateState { current in
-                    var current = current
-                    current.gift = .unique(unique)
-                    switch current.source {
-                    case let .quickLook(peer, _):
-                        current.source = .quickLook(peer, unique)
-                    default:
-                        break
-                    }
-                    return current
+    actionsDisposable.add(giftsContext.state.startStrict(next: { state in
+        let unique = state.gifts.first(where: { $0.gift.unique?.slug == gift.unique?.slug })
+        
+        if let unique = unique?.gift.unique {
+            updateState { current in
+                var current = current
+                current.gift = .unique(unique)
+                switch current.source {
+                case let .quickLook(peer, _):
+                    current.source = .quickLook(peer, unique)
+                default:
+                    break
                 }
+                return current
             }
-            
-        }))
-    }
+        }
+        
+    }))
     
     
     var getController:(()->ViewController?)? = nil
@@ -1548,25 +1559,23 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         var additionalItem: SelectPeers_AdditionTopItem?
         
         
-        var canExportDate: Int32?
-        let transferStars: Int64?
-        let convertStars: Int64?
-        let reference: StarGiftReference?
-        if let convertedGift = state.convertedGift, let _canExportDate = convertedGift.canExportDate {
-            canExportDate = _canExportDate
-            transferStars = convertedGift.transferStars
-            convertStars = convertedGift.convertStars
-            reference = convertedGift.reference
-        } else if case let .starGift(_, _convertStars, _, _, _, _, _, _, _, _transferStars, _canExportDate, _reference, _, _) = purpose {
+        var canExportDate: Int32? = nil
+        var transferStars: Int64? = nil
+        var convertStars: Int64? = nil
+        var canTransferDate: Int32? = nil
+        var reference: StarGiftReference? = nil
+        if case let .starGift(_, _convertStars, _, _, _, _, _, _, _, _transferStars, _canExportDate, _reference, _, _, _, _canTransferDate) = state.purpose {
             canExportDate = _canExportDate
             transferStars = _transferStars
             convertStars = _convertStars
             reference = _reference
-        } else {
-            canExportDate = nil
-            transferStars = nil
-            convertStars = nil
-            reference = nil
+            canTransferDate = _canTransferDate
+        }
+        
+        if let canTransferDate, canTransferDate > context.timestamp {
+            //TODOLANG
+            alert(for: window, header: "Too Early", info: "Sorry, you can't transfer this gift until \(stringForFullDate(timestamp: canTransferDate))")
+            return
         }
         
         
@@ -1574,12 +1583,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             additionalItem = .init(title: strings().giftTransferSendViaBlockchain, color: theme.colors.text, icon: NSImage(resource: .iconSendViaTon).precomposed(flipVertical: true), callback: {
                 let currentTime = Int32(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970)
                 
-                var testPass: Bool = false
-                #if DEBUG
-                testPass = arc4random64() % 2 == 0
-                #endif
-                
-                if currentTime > canExportDate || testPass, let unique = state.gift.unique, let reference {
+                if currentTime > canExportDate, let unique = state.gift.unique, let reference {
                     
                     let data = ModalAlertData(title: nil, info: strings().giftWithdrawText(unique.title + " #\(unique.number)"), description: nil, ok: strings().giftWithdrawProceed, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
                         return TransferUniqueGiftHeaderItem(initialSize, stableId: stableId, gift: unique, toPeer: .init(context.myPeer!), context: context)
@@ -1648,11 +1652,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         }))
                         
                         showModalAlert(for: window, data: data, completion: { result in
-                            if let giftsContext {
-                                _ = giftsContext.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
-                            } else {
-                                _ = context.engine.payments.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
-                            }
+                            _ = giftsContext.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                             close?()
                         })
@@ -1666,24 +1666,47 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
     }, shareNft: { gift in
         showModal(with: ShareModalController(ShareLinkObject(context, link: gift.link)), for: window)
     }, sellNft: { gift, updatePrice in
-        if let _ = gift.resellStars, !updatePrice {
-            //TODOLANG
-            verifyAlert(for: window, header: "Unlist this item?", information: "It will no longer be for sale.", ok: "Unlist", successHandler: { _ in
-                giftsContext?.updateStarGiftResellPrice(slug: gift.slug, price: nil)
-            })
-        } else {
-            showModal(with: sellNft(context: context, resellPrice: gift.resellStars, callback: { value in
-                if !updatePrice {
-                    verifyAlert(for: window, header: "Sell Gift", information: "Are you sure you want to sell **\(gift.title)** for **\(strings().starListItemCountCountable(Int(value)))**", successHandler: { _ in
-                        giftsContext?.updateStarGiftResellPrice(slug: gift.slug, price: value)
-                        showModalText(for: window, text: "Gift successfully set on sale")
-                    })
-                } else {
-                    giftsContext?.updateStarGiftResellPrice(slug: gift.slug, price: value)
-                    showModalText(for: window, text: "Price successfully updated")
+        
+        let state = stateValue.with { $0 }
+        
+        if case let .starGift(_, _, _, _, _, _, _, _, _, _, _, reference, _, _, _, canResaleDate) = state.purpose {
+            if let _ = gift.resellStars, !updatePrice, let reference {
+                //TODOLANG
+                verifyAlert(for: window, header: "Unlist this item?", information: "It will no longer be for sale.", ok: "Unlist", successHandler: { _ in
+                    _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: nil, id: gift.id), for: window).startStandalone()
+                })
+            } else if let reference {
+                
+                if let canResaleDate, canResaleDate > context.timestamp {
+                    //TODOLANG
+                    alert(for: window, header: "Too Early", info: "Sorry, you can't sell this gift until \(stringForFullDate(timestamp: canResaleDate))")
+                    return
                 }
-            }), for: window)
+                
+                showModal(with: sellNft(context: context, resellPrice: gift.resellStars, callback: { value in
+                    if !updatePrice {
+                        verifyAlert(for: window, header: "Sell Gift", information: "Are you sure you want to sell **\(gift.title)** for **\(strings().starListItemCountCountable(Int(value)))**", successHandler: { _ in
+                            _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: value, id: gift.id), for: window).startStandalone(error: { error in
+                                switch error {
+                                case let .starGiftResellTooEarly(value):
+                                    //TODOLANG
+                                    showModalText(for: window, text: "TOO EARLY: \(value)")
+                                default:
+                                    break
+                                }
+                            }, completed: {
+                                showModalText(for: window, text: "Gift successfully set on sale")
+                            })
+                        })
+                    } else {
+                        _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: value, id: gift.id), for: window).startStandalone(completed: {
+                            showModalText(for: window, text: "Price successfully updated")
+                        })
+                    }
+                }), for: window)
+            }
         }
+        
     }, toggleWear: { gift in
         
         let weared = stateValue.with { $0.weared }
@@ -1768,9 +1791,9 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         case .preview:
             close?()
         case let .quickLook(peer, gift):
-            if let purpose {
+            if let purpose = state.purpose {
                 switch purpose {
-                case let.starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _):
+                case let.starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _, _, _):
                     if let reference {
                         var canManage: Bool
                         let peer = peer ?? state.owner
@@ -1849,7 +1872,9 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 updateState { current in
                     var current = current
                     current.gift = converted.gift
-                    current.convertedGift = converted
+                    
+                    current.purpose = .starGift(gift: converted.gift, convertStars: converted.convertStars, text: converted.text, entities: converted.entities, nameHidden: converted.nameHidden, savedToProfile: converted.savedToProfile, converted: true, fromProfile: false, upgraded: true, transferStars: converted.transferStars, canExportDate: converted.canExportDate, reference: converted.reference, sender: nil, saverId: nil, canTransferDate: converted.canTransferDate, canResaleDate: converted.canResaleDate)
+                    
                     current.converted = true
                     switch converted.gift {
                     case let .unique(gift):

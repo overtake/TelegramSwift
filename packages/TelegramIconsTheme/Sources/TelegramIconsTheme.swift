@@ -10535,6 +10535,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var channel_feature_autotranslate: CGImage {
+      if let image = cached.with({ $0["channel_feature_autotranslate"] }) {
+          return image
+      } else {
+          let image = _channel_feature_autotranslate()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_feature_autotranslate"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_hidden_author: CGImage {
       if let image = cached.with({ $0["chat_hidden_author"] }) {
           return image
@@ -10699,6 +10712,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chat_input_channel_gift"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_input_suggest_message: CGImage {
+      if let image = cached.with({ $0["chat_input_suggest_message"] }) {
+          return image
+      } else {
+          let image = _chat_input_suggest_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_input_suggest_message"] = image
               return current
           }
           return image
@@ -11515,6 +11541,7 @@ public final class TelegramIconsTheme {
   private let _channel_feature_emoji_pack: ()->CGImage
   private let _channel_feature_voice_to_text: ()->CGImage
   private let _channel_feature_no_ads: ()->CGImage
+  private let _channel_feature_autotranslate: ()->CGImage
   private let _chat_hidden_author: ()->CGImage
   private let _chat_my_notes: ()->CGImage
   private let _premium_required_forward: ()->CGImage
@@ -11528,6 +11555,7 @@ public final class TelegramIconsTheme {
   private let _avatar_star_badge_large_gray: ()->CGImage
   private let _chatlist_apps: ()->CGImage
   private let _chat_input_channel_gift: ()->CGImage
+  private let _chat_input_suggest_message: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -12340,6 +12368,7 @@ public final class TelegramIconsTheme {
       channel_feature_emoji_pack: @escaping()->CGImage,
       channel_feature_voice_to_text: @escaping()->CGImage,
       channel_feature_no_ads: @escaping()->CGImage,
+      channel_feature_autotranslate: @escaping()->CGImage,
       chat_hidden_author: @escaping()->CGImage,
       chat_my_notes: @escaping()->CGImage,
       premium_required_forward: @escaping()->CGImage,
@@ -12352,7 +12381,8 @@ public final class TelegramIconsTheme {
       avatar_star_badge_gray: @escaping()->CGImage,
       avatar_star_badge_large_gray: @escaping()->CGImage,
       chatlist_apps: @escaping()->CGImage,
-      chat_input_channel_gift: @escaping()->CGImage
+      chat_input_channel_gift: @escaping()->CGImage,
+      chat_input_suggest_message: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -13164,6 +13194,7 @@ public final class TelegramIconsTheme {
       self._channel_feature_emoji_pack = channel_feature_emoji_pack
       self._channel_feature_voice_to_text = channel_feature_voice_to_text
       self._channel_feature_no_ads = channel_feature_no_ads
+      self._channel_feature_autotranslate = channel_feature_autotranslate
       self._chat_hidden_author = chat_hidden_author
       self._chat_my_notes = chat_my_notes
       self._premium_required_forward = premium_required_forward
@@ -13177,5 +13208,6 @@ public final class TelegramIconsTheme {
       self._avatar_star_badge_large_gray = avatar_star_badge_large_gray
       self._chatlist_apps = chatlist_apps
       self._chat_input_channel_gift = chat_input_channel_gift
+      self._chat_input_suggest_message = chat_input_suggest_message
   }
 }

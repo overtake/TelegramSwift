@@ -3142,3 +3142,13 @@ public func formatMonthYear(_ dateString: String, locale: Locale = .current) -> 
     
     return outputFormatter.string(from: date)
 }
+
+
+public func escapeMarkdownSpecialCharacters(in text: String) -> String {
+    return text
+        .replacingOccurrences(of: "\\", with: "\\\\")
+        .replacingOccurrences(of: "[", with: "\\[")
+        .replacingOccurrences(of: "]", with: "\\]")
+        .replacingOccurrences(of: "(", with: "\\(")
+        .replacingOccurrences(of: ")", with: "\\)")
+}

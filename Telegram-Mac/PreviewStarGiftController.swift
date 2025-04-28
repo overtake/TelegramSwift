@@ -611,7 +611,8 @@ private final class Arguments {
     let previewUpgrade:(PeerStarGift)->Void
     let buyStars:()->Void
     let togglePayWithStars:()->Void
-    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void, buyStars:@escaping()->Void, togglePayWithStars:@escaping()->Void) {
+    let openMarketplace:()->Void
+    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void, buyStars:@escaping()->Void, togglePayWithStars:@escaping()->Void, openMarketplace:@escaping()->Void) {
         self.context = context
         self.toggleAnonymous = toggleAnonymous
         self.updateState = updateState
@@ -619,6 +620,7 @@ private final class Arguments {
         self.previewUpgrade = previewUpgrade
         self.buyStars = buyStars
         self.togglePayWithStars = togglePayWithStars
+        self.openMarketplace = openMarketplace
     }
 }
 
@@ -646,7 +648,7 @@ private let _id_anonymous = InputDataIdentifier("_id_anonymous")
 private let _id_limit = InputDataIdentifier("_id_limit")
 private let _id_upgrade = InputDataIdentifier("_id_upgrade")
 private let _id_pay_stars = InputDataIdentifier("_id_pay_stars")
-
+private let _id_resale = InputDataIdentifier("_id_resale")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -665,10 +667,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
+            
+            if let _ = limited.minResaleStars {
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_resale, data: .init(name: "Available for Resale", color: theme.colors.text, type: .nextContext("\(limited.resale)"), viewType: .singleItem, action: arguments.openMarketplace)))
+                
+                entries.append(.sectionId(sectionId, type: .customModern(20)))
+                sectionId += 1
+            }
         }
     case .premium(let option):
         break
     }
+    
     
     
     
@@ -864,6 +874,18 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
             var current = current
             current.payWithStars = !current.payWithStars
             return current
+        }
+    }, openMarketplace: {
+        switch option {
+        case .starGift(let option):
+            switch option.native {
+            case .generic(let gift):
+                showModal(with: StarGift_MarketplaceController(context: context, peerId: peer.id, gift: gift), for: window)
+            case .unique:
+                break
+            }
+        case .premium:
+            break
         }
     })
     

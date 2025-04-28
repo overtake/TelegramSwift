@@ -3389,6 +3389,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_feature_emoji_pack: { NSImage(named: "Icon_ChannelFeature_EmojiPack")!.precomposed(palette.accent) },
                               channel_feature_voice_to_text: { NSImage(named: "Icon_ChannelFeature_VoiceToText")!.precomposed(palette.accent) },
                               channel_feature_no_ads: { NSImage(resource: .iconFragmentNoAds).precomposed(palette.accent) },
+                              channel_feature_autotranslate: { NSImage(resource: .iconBoostTranslation).precomposed(palette.accent) },
                               chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) },
                               chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) },
                               premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() },
@@ -3401,7 +3402,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               avatar_star_badge_gray: { generateAvatarStarBadge(color: palette.listBackground) },
                               avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) },
                               chatlist_apps: { NSImage(resource: .iconChatListApps).precomposed(palette.accent) },
-                              chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) }
+                              chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) },
+                              chat_input_suggest_message: { NSImage(resource: .iconChatInputMessageSuggestion).precomposed(palette.accent) }
     )
 }
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {
