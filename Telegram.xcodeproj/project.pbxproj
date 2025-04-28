@@ -5738,7 +5738,6 @@
 				9F0367E622707B6400456348 /* lottie */,
 				9F0AE6B42199904400A8B53A /* sound_a.caf */,
 				9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */,
-				C2786FF21FEBF088001FB044 /* palettes */,
 				C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */,
 				2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */,
 				C27A6F721ECF610C00C65577 /* currencies.json */,
@@ -5862,13 +5861,6 @@
 				271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */,
 			);
 			name = panels;
-			sourceTree = "<group>";
-		};
-		C2786FF21FEBF088001FB044 /* palettes */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = palettes;
 			sourceTree = "<group>";
 		};
 		C27A8E971EC9D45C00C8E7E7 /* quick-switcher */ = {
