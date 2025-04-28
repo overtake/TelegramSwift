@@ -11,6 +11,7 @@ import IOKit
 import CodeSyntax
 import Dock
 import PrivateCallScreen
+import DetectSpeech
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -525,8 +526,15 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
+        
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
+            
+            DetectSpeech.sharedInstance().start(statusChanged: { speech in
+                NSLog("speech: \(speech)")
+            })
+
+            
+           // context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
 
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])

@@ -210,6 +210,7 @@
 		2739A4B02CABC52A0065186B /* libopenh264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2739A4AF2CABC4260065186B /* libopenh264.a */; };
 		2739D4992DB7A44D0086DAEF /* SuggetMessageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2739D4982DB7A4450086DAEF /* SuggetMessageModalController.swift */; };
 		2739D49B2DBB92230086DAEF /* ChatSuggestMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2739D49A2DBB921D0086DAEF /* ChatSuggestMessagesController.swift */; };
+		2739D4A02DBFC3C50086DAEF /* DetectSpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 2739D49F2DBFC3C50086DAEF /* DetectSpeech */; };
 		273AF9922CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273AF9912CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift */; };
 		273AF9942CCB7E4F00C2067E /* improving_video.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 273AF9932CCB7E4F00C2067E /* improving_video.tgs */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
@@ -1887,6 +1888,7 @@
 		2739A4AF2CABC4260065186B /* libopenh264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopenh264.a; path = "core-xprojects/OpenH264/build/output/lib/libopenh264.a"; sourceTree = "<group>"; };
 		2739D4982DB7A4450086DAEF /* SuggetMessageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggetMessageModalController.swift; sourceTree = "<group>"; };
 		2739D49A2DBB921D0086DAEF /* ChatSuggestMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSuggestMessagesController.swift; sourceTree = "<group>"; };
+		2739D49E2DBFC2A10086DAEF /* DetectSpeech */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = DetectSpeech; path = packages/DetectSpeech; sourceTree = "<group>"; };
 		273AF9912CCB7B7500C2067E /* ChatVideoProcessingTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatVideoProcessingTooltip.swift; sourceTree = "<group>"; };
 		273AF9932CCB7E4F00C2067E /* improving_video.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = improving_video.tgs; sourceTree = "<group>"; };
 		273C04042C2B75E900AF2751 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
@@ -3489,6 +3491,7 @@
 				278B89A62791939700ECF71C /* libwebp in Frameworks */,
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
 				273C04052C2B75E900AF2751 /* MediaPlayer.framework in Frameworks */,
+				2739D4A02DBFC3C50086DAEF /* DetectSpeech in Frameworks */,
 				27D696F4274F8451008A723E /* Colors in Frameworks */,
 				2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */,
 				27D696FA274F8462008A723E /* InAppSettings in Frameworks */,
@@ -4473,6 +4476,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				2739D49E2DBFC2A10086DAEF /* DetectSpeech */,
 				27BE52402D9AC71600F40837 /* TdBinding */,
 				271A195A2CF7485C00FAE5FB /* TelegramAudio */,
 				27528F5A2CABE98E0003810A /* TelegramSystem */,
@@ -6961,6 +6965,7 @@
 				273C04022C2B75E400AF2751 /* TelegramMediaPlayer */,
 				27B29E402CABEC55007FDA6B /* TelegramSystem */,
 				27BE52412D9AC72600F40837 /* TdBinding */,
+				2739D49F2DBFC3C50086DAEF /* DetectSpeech */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -9189,6 +9194,10 @@
 		2739A4AB2CABC29D0065186B /* TelegramSystem */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TelegramSystem;
+		};
+		2739D49F2DBFC3C50086DAEF /* DetectSpeech */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DetectSpeech;
 		};
 		273C04022C2B75E400AF2751 /* TelegramMediaPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
