@@ -31,8 +31,7 @@ import RLottie
 import KeyboardKey
 
 #if !APP_STORE
-import AppCenter
-import AppCenterCrashes
+import Firebase
 #endif
 
 
@@ -455,11 +454,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         mw = window
         
+        
         #if BETA || DEBUG
-            if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
-                AppCenter.start(withAppSecret: secret, services: [Crashes.self])
-            }
+        FirebaseApp.configure()
         #endif
+        
         
         
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)

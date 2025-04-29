@@ -261,6 +261,8 @@
 		274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */; };
 		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
+		274DF1DB2DC0BE0400188E7A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 274DF1DA2DC0BE0400188E7A /* GoogleService-Info.plist */; };
+		274DF1DE2DC0BF6F00188E7A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */; };
 		274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274E585F2A825A6600EEBDBF /* PeersStatusView.swift */; };
 		2750B8C22B887E9C0035C37F /* business_chatbot.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BD2B887E980035C37F /* business_chatbot.tgs */; };
 		2750B8C32B887E9C0035C37F /* business_hours.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BE2B887E990035C37F /* business_hours.tgs */; };
@@ -1521,7 +1523,6 @@
 		D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */; };
 		D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */; };
 		D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
-		D0076EE825685A50007EF588 /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076EE725685A50007EF588 /* AppCenter.framework */; };
 		D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */; };
 		D00B191C24E54BA3006CCB87 /* CallReceptionControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */; };
 		D00B191E24E54F20006CCB87 /* CallStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00B191D24E54F20006CCB87 /* CallStatusView.swift */; };
@@ -1588,7 +1589,6 @@
 		D0830FC424127473006198E7 /* new_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* new_folder.tgs */; };
 		D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */; };
 		D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */; };
-		D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E182568373E00467703 /* AppCenterCrashes.framework */; };
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
 		D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D098C71C1D7E175A007784E4 /* MainMenu.xib */; };
@@ -1930,6 +1930,7 @@
 		274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarHeaderRowItem.swift; sourceTree = "<group>"; };
 		274BB56C264013AC00620D03 /* cameraon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraon.tgs; sourceTree = "<group>"; };
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
+		274DF1DA2DC0BE0400188E7A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		274E585F2A825A6600EEBDBF /* PeersStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeersStatusView.swift; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
 		2750B8BD2B887E980035C37F /* business_chatbot.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = business_chatbot.tgs; sourceTree = "<group>"; };
@@ -3398,11 +3399,9 @@
 				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
 				27A697A3273D313000B33415 /* Stripe in Frameworks */,
 				27C2B1A627C3CF13004BC87B /* FetchManager in Frameworks */,
-				D0076EE825685A50007EF588 /* AppCenter.framework in Frameworks */,
 				27B6D05927393A4200C785C7 /* SwiftSignalKit in Frameworks */,
 				2796FEFE274241D600DA653C /* FastBlur in Frameworks */,
 				27D43DA0279176DE006968A6 /* libavformat.a in Frameworks */,
-				D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */,
 				27D43DA627917717006968A6 /* libwebp.a in Frameworks */,
 				27B8E7C027424F2E001B8DF7 /* TGCurrencyFormatter in Frameworks */,
 				27D696F6274F8458008A723E /* ColorPalette in Frameworks */,
@@ -3470,6 +3469,7 @@
 				27EBC7B227579A7200C6A820 /* Reactions in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
+				274DF1DE2DC0BF6F00188E7A /* FirebaseAnalytics in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				27D696F2274F844D008A723E /* Strings in Frameworks */,
 				2796FF01274242D200DA653C /* GZIP in Frameworks */,
@@ -5750,6 +5750,7 @@
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
 				C252532C1DF0440300ADBC98 /* begin_record.caf */,
+				274DF1DA2DC0BE0400188E7A /* GoogleService-Info.plist */,
 				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
 				274B9E3F273008EB009993C7 /* sent.mp3 */,
 				C250B01B1DB670B4004E9FBE /* url-schemes.txt */,
@@ -6966,6 +6967,7 @@
 				27B29E402CABEC55007FDA6B /* TelegramSystem */,
 				27BE52412D9AC72600F40837 /* TdBinding */,
 				2739D49F2DBFC3C50086DAEF /* DetectSpeech */,
+				274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7038,6 +7040,9 @@
 				uk,
 			);
 			mainGroup = D098C70C1D7E175A007784E4;
+			packageReferences = (
+				274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			productRefGroup = D098C7161D7E175A007784E4 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -7272,6 +7277,7 @@
 				27CB174E276325C600DD25E0 /* menu_call.tgs in Resources */,
 				274B9E40273008EB009993C7 /* sent.mp3 in Resources */,
 				27803BF927A3E944007B0FA9 /* menu_folder_read.tgs in Resources */,
+				274DF1DB2DC0BE0400188E7A /* GoogleService-Info.plist in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				27CE155B297966D8001F8CE8 /* emoji_category_away.tgs in Resources */,
 				27CCE83A2B839C1200F7C687 /* lighterTexture.jpg in Resources */,
@@ -9146,6 +9152,17 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		2700B221273ADC94003E4018 /* HotKey */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -9234,6 +9251,11 @@
 		2745FED8274F95CF00546B05 /* ApiCredentials */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ApiCredentials;
+		};
+		274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
 		};
 		2755491C274B7FCB0098A3CD /* TextRecognizing */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -1,0 +1,124 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "abseil",
+        "repositoryURL": "https://github.com/google/abseil-cpp-binary.git",
+        "state": {
+          "branch": null,
+          "revision": "bbe8b69694d7873315fd3a4ad41efe043e1c07c5",
+          "version": "1.2024072200.0"
+        }
+      },
+      {
+        "package": "AppCheck",
+        "repositoryURL": "https://github.com/google/app-check.git",
+        "state": {
+          "branch": null,
+          "revision": "61b85103a1aeed8218f17c794687781505fbbef5",
+          "version": "11.2.0"
+        }
+      },
+      {
+        "package": "Firebase",
+        "repositoryURL": "https://github.com/firebase/firebase-ios-sdk",
+        "state": {
+          "branch": null,
+          "revision": "fbd463894af94d90eb4d6a4e54080459a8179519",
+          "version": "11.12.0"
+        }
+      },
+      {
+        "package": "GoogleAppMeasurement",
+        "repositoryURL": "https://github.com/google/GoogleAppMeasurement.git",
+        "state": {
+          "branch": null,
+          "revision": "f7460ea630bddf172115c28493ae8b3798d95ce3",
+          "version": "11.12.0"
+        }
+      },
+      {
+        "package": "GoogleDataTransport",
+        "repositoryURL": "https://github.com/google/GoogleDataTransport.git",
+        "state": {
+          "branch": null,
+          "revision": "617af071af9aa1d6a091d59a202910ac482128f9",
+          "version": "10.1.0"
+        }
+      },
+      {
+        "package": "GoogleUtilities",
+        "repositoryURL": "https://github.com/google/GoogleUtilities.git",
+        "state": {
+          "branch": null,
+          "revision": "53156c7ec267db846e6b64c9f4c4e31ba4cf75eb",
+          "version": "8.0.2"
+        }
+      },
+      {
+        "package": "gRPC",
+        "repositoryURL": "https://github.com/google/grpc-binary.git",
+        "state": {
+          "branch": null,
+          "revision": "cc0001a0cf963aa40501d9c2b181e7fc9fd8ec71",
+          "version": "1.69.0"
+        }
+      },
+      {
+        "package": "GTMSessionFetcher",
+        "repositoryURL": "https://github.com/google/gtm-session-fetcher.git",
+        "state": {
+          "branch": null,
+          "revision": "4d70340d55d7d07cc2fdf8e8125c4c126c1d5f35",
+          "version": "4.4.0"
+        }
+      },
+      {
+        "package": "InteropForGoogle",
+        "repositoryURL": "https://github.com/google/interop-ios-for-google-sdks.git",
+        "state": {
+          "branch": null,
+          "revision": "040d087ac2267d2ddd4cca36c757d1c6a05fdbfe",
+          "version": "101.0.0"
+        }
+      },
+      {
+        "package": "leveldb",
+        "repositoryURL": "https://github.com/firebase/leveldb.git",
+        "state": {
+          "branch": null,
+          "revision": "a0bc79961d7be727d258d33d5a6b2f1023270ba1",
+          "version": "1.22.5"
+        }
+      },
+      {
+        "package": "nanopb",
+        "repositoryURL": "https://github.com/firebase/nanopb.git",
+        "state": {
+          "branch": null,
+          "revision": "b7e1104502eca3a213b46303391ca4d3bc8ddec1",
+          "version": "2.30910.0"
+        }
+      },
+      {
+        "package": "Promises",
+        "repositoryURL": "https://github.com/google/promises.git",
+        "state": {
+          "branch": null,
+          "revision": "540318ecedd63d883069ae7f1ed811a2df00b6ac",
+          "version": "2.4.0"
+        }
+      },
+      {
+        "package": "SwiftProtobuf",
+        "repositoryURL": "https://github.com/apple/swift-protobuf.git",
+        "state": {
+          "branch": null,
+          "revision": "d72aed98f8253ec1aa9ea1141e28150f408cf17f",
+          "version": "1.29.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
