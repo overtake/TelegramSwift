@@ -8865,7 +8865,7 @@
 					"-Wl,-ld_classic",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -Xfrontend -enable-experimental-feature -Xfrontend AccessLevelOnImport";
+				OTHER_SWIFT_FLAGS = "$(inherited) -enable-experimental-feature AccessLevelOnImport";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -9096,7 +9096,7 @@
 					"-Wl,-ld_classic",
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/macosx/libswiftAppKit.dylib",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -Xfrontend -enable-experimental-feature -Xfrontend AccessLevelOnImport";
+				OTHER_SWIFT_FLAGS = "$(inherited) -enable-experimental-feature AccessLevelOnImport";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
