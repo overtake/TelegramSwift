@@ -529,11 +529,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
-            DetectSpeech.sharedInstance().start(statusChanged: { speech in
-                NSLog("speech: \(speech)")
-            })
-
-            
+           
            // context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
 
             return .invoked
