@@ -3402,7 +3402,7 @@ func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) ->
             return false
         }
     }
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji && entities.count == message.entities.count
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji && entities.count == message.entities.count && message.adAttribute == nil
 }
 
 

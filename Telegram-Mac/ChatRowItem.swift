@@ -1366,6 +1366,9 @@ class ChatRowItem: TableRowItem {
             if entry.additionalData.eventLog != nil {
                 return true
             }
+            if message.adAttribute != nil {
+                return true
+            }
             return !bigEmojiMessage(sharedContext, message: message)
         }
         return true

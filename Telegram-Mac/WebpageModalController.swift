@@ -1072,7 +1072,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         return self.requestData?.bot ?? botPeer ?? data?.bot
     }
     
-    private var biometryState: TelegramBotBiometricsState? {
+    private var biometryState: TelegramBotBiometricsState? = TelegramBotBiometricsState.create() {
         didSet {
             if let biometryState, let bot = requestData?.bot {
                 context.engine.peers.updateBotBiometricsState(peerId: bot.id, update: { _ in
@@ -1313,7 +1313,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         installedBotsDisposable.set(bots.start(next: { [weak self] items in
             self?.installedBots = items.filter { $0.flags.contains(.showInAttachMenu) }.map { $0.peer.id }
         }))
-        
+                
         guard let botPeer = requestData?.bot else {
             return
         }
@@ -2780,9 +2780,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     fileprivate func sendBiometricInfo(biometryState: TelegramBotBiometricsState) {
         
-        guard let botPeer = self.bot else {
-            return
-        }
         let type: String = laContext.biometricTypeString
         var error: NSErrorPointer = .none
         

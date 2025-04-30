@@ -629,7 +629,7 @@ final class GroupCallView : View {
             rect.origin.y = 54 - scrollTempOffset
         }
         if let state, state.isConference {
-            rect.origin.y += 40
+            rect.origin.y = 94
             rect.size.height -= 40
         }
         return rect

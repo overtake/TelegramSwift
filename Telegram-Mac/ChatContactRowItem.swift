@@ -24,6 +24,8 @@ class ChatContactRowItem: ChatRowItem {
     let contact: TelegramMediaContact
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
+        let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
+        
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
             
@@ -62,6 +64,90 @@ class ChatContactRowItem: ChatRowItem {
         }
         
         super.init(initialSize, chatInteraction, context, object, theme: theme)
+        
+        if let message {
+            
+            var text: String
+            var entities: [MessageTextEntity]
+            if let media = message.media[0] as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+                switch story {
+                case let .item(item):
+                    text = item.text
+                    entities = item.entities
+                case .placeholder:
+                    text = ""
+                    entities = []
+                }
+            } else {
+                text = message.text
+                entities = message.textEntities?.entities ?? []
+            }
+            
+            var caption:NSMutableAttributedString = NSMutableAttributedString()
+            _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
+
+            var isLoading: Bool = false
+            if let translate = entry.additionalData.translate {
+                switch translate {
+                case .loading:
+                    isLoading = true
+                case let .complete(toLang):
+                    if let attribute = message.translationAttribute(toLang: toLang) {
+                        text = attribute.text
+                        entities = attribute.entities
+                    }
+                }
+            }
+            
+            let hasEntities: Bool = !entities.isEmpty
+            
+          
+            var mediaDuration: Double? = nil
+            if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+                mediaDuration = Double(duration)
+            }
+            
+            
+            caption = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { _ in
+                
+            }, openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu).mutableCopy() as! NSMutableAttributedString
+            
+            caption.removeWhitespaceFromQuoteAttribute()
+
+            
+            InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
+            
+            let spoilerColor: NSColor
+            if entry.renderType == .bubble {
+                spoilerColor = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+            } else {
+                spoilerColor = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+            }
+            let isSpoilerRevealed = chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)
+            
+            let textLayout = FoldingTextLayout.make(caption, context: context, revealed: object.additionalData.quoteRevealed, takeLayout: { string in
+                let textLayout = TextViewLayout(string, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilerColor: spoilerColor, isSpoilerRevealed: isSpoilerRevealed, onSpoilerReveal: { [weak self] in
+                    self?.chatInteraction.update({
+                        $0.updatedInterfaceState({
+                            $0.withRevealedSpoiler(message.id)
+                        })
+                    })
+                })
+                
+                if let highlightFoundText = object.additionalData.highlightFoundText {
+                   if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
+                       textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+                   }
+                }
+                return textLayout
+            })
+            
+            captionLayouts.append(.init(message: message, id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: textLayout, isLoading: isLoading, contentInset: ChatRowItem.defaultContentInnerInset))
+            captionLayouts[0].layout.applyRanges(selectManager.findAll(entry.stableId))
+
+        }
+        
+        
     }
     
     var color: PeerNameColors.Colors {
