@@ -1390,8 +1390,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         afterComplete(true)
     case let .folder(_, slug, context):
         loadAndShowSharedFolder(context: context, slug: slug)
+        afterComplete(true)
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
+        afterComplete(true)
     case let .boost(_, username, context):
         let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = resolveUsername(username: username, context: context) |> mapToSignal { value in
             if let value = value {
@@ -1418,6 +1420,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 
             }
         })
+        afterComplete(true)
     case let .gift(_, slug, context):
         _ = showModalProgress(signal: context.engine.payments.checkPremiumGiftCode(slug: slug), for: getWindow(context)).start(next: { info in
             if let info = info {
@@ -1426,6 +1429,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 alert(for: getWindow(context), info: strings().unknownError)
             }
         })
+        afterComplete(true)
     case let .multigift(_, context):
         let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
         
@@ -1433,6 +1437,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             
             showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: getWindow(context))
         })
+        afterComplete(true)
     case .businessLink(link: let link, slug: let slug, context: let context):
         _ = showModalProgress(signal: context.engine.peers.resolveMessageLink(slug: slug), for: getWindow(context)).startStandalone(next: { link in
             if let link {
@@ -1452,8 +1457,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().chatLinkUnavailable)
             }
         })
+        afterComplete(true)
     case let .tonsite(link, context):
         BrowserStateContext.get(context).open(tab: .tonsite(url: link))
+        afterComplete(true)
     case let .starsTopup(_, amount, purpose, context):
         let balance = context.starsContext.state |> map { $0?.balance } |> take(1) |> deliverOnMainQueue
         _ = balance.startStandalone(next: { balance in
@@ -1467,6 +1474,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 }
             }
         })
+        afterComplete(true)
     case let .nft(_, slug, context):
         _ = showModalProgress(signal: context.engine.payments.getUniqueStarGift(slug: slug), for: getWindow(context)).start(next: { gift in
             if let gift {
@@ -1475,6 +1483,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().unknownError)
             }
         })
+        afterComplete(true)
     case let .joinCall(_, slug, context):
                 
         _ = showModalProgress(signal: context.engine.calls.getCurrentGroupCall(reference: .link(slug: slug)), for: getWindow(context)).start(next: { summary in
@@ -1487,6 +1496,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().groupCallInviteLinkExpired)
             }
         })
+        afterComplete(true)
+    case let .starsInfo(_, context):
+        showModal(with: Star_ListScreen(context: context, source: .account), for: getWindow(context))
+        afterComplete(true)
     }
     
 }
@@ -1631,6 +1644,7 @@ enum inAppLink {
     case multigift(link: String, context: AccountContext)
     case nft(link: String, slug: String, context: AccountContext)
     case joinCall(link: String, slug: String, context: AccountContext)
+    case starsInfo(link: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1708,6 +1722,8 @@ enum inAppLink {
             return link
         case let .joinCall(link, _, _):
             return link
+        case let .starsInfo(link, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1720,7 +1736,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/", "nft/", "call/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call", "stars"]
 
 
 let ton_scheme:String = "ton://"
@@ -2572,6 +2588,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[25]:
                     if let context = context, let slug = vars[keyURLSlug] {
                         return .joinCall(link: urlString, slug: slug, context: context)
+                    }
+                case known_scheme[26]:
+                    if let context = context{
+                        return .starsInfo(link: urlString, context: context)
                     }
                 default:
                     break

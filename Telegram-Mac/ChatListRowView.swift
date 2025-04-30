@@ -1205,8 +1205,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 if let displayLayout = item.ctxDisplayLayout {
                     
                     var addition:CGFloat = 0
+                    if let statusControl = leftStatusControl {
+                        addition += statusControl.frame.width + 2
+                    }
                     if item.isSecret {
-                        ctx.draw(highlighted ? theme.icons.secretImageSelected : theme.icons.secretImage, in: NSMakeRect(item.leftInset, item.margin + 3, theme.icons.secretImage.backingSize.width, theme.icons.secretImage.backingSize.height))
+                        ctx.draw(highlighted ? theme.icons.secretImageSelected : theme.icons.secretImage, in: NSMakeRect(item.leftInset + addition, item.margin + 3, theme.icons.secretImage.backingSize.width, theme.icons.secretImage.backingSize.height))
                         addition += theme.icons.secretImage.backingSize.height
                         
                     }

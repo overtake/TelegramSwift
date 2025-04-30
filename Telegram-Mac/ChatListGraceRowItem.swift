@@ -35,7 +35,7 @@ final class ChatListGraceRowItem : GeneralRowItem {
     
     func invoke() {
         prem(with: PremiumBoardingController(context: context, source: .grace_period), for: context.window)
-        let _ = self.context.engine.notices.dismissServerProvidedSuggestion(suggestion: .gracePremium).startStandalone()
+        let _ = self.context.engine.notices.dismissServerProvidedSuggestion(suggestion: ServerProvidedSuggestion.gracePremium.id).startStandalone()
     }
     
     func dismiss() {

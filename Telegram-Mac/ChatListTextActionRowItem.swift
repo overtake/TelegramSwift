@@ -68,6 +68,7 @@ private final class ChatListTextActionRowView: TableRowView {
         
         infoView.userInteractionEnabled = false
         
+        
         overlay.set(handler: { [weak self] control in
             if let item = self?.item as? ChatListTextActionRowItem {
                 item.invoke()
@@ -107,6 +108,10 @@ private final class ChatListTextActionRowView: TableRowView {
             return
         }
         
+        overlay.set(background: theme.colors.grayForeground.withAlphaComponent(0.1), for: .Highlight)
+        overlay.set(background: .clear, for: .Hover)
+        overlay.set(background: .clear, for: .Normal)
+
         dismiss.isHidden = !item.canDismiss
         
 //        if !item.canDismiss {

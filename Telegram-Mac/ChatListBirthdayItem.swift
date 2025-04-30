@@ -33,11 +33,11 @@ final class ChatListAddBirthdayItem : GeneralRowItem {
     
     func invoke(_ date: Date) {
         editAccountUpdateBirthday(date, context: context)
-         _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .setupBirthday).startStandalone()
+        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: ServerProvidedSuggestion.setupBirthday.id).startStandalone()
     }
     
     func dismiss() {
-        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .setupBirthday).startStandalone()
+        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: ServerProvidedSuggestion.setupBirthday.id).startStandalone()
     }
     
     override func viewClass() -> AnyClass {
@@ -101,7 +101,7 @@ final class ChatListBirthdayItem : GeneralRowItem {
     }
     
     func dismiss() {
-        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .todayBirthdays).startStandalone()
+        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: ServerProvidedSuggestion.todayBirthdays.id).startStandalone()
     }
     
     
