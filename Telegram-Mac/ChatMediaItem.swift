@@ -26,6 +26,9 @@ class ChatMediaLayoutParameters : Equatable {
     var payAmount: Int64? = nil
     var isProtected: Bool = false
     var canReveal: Bool = true
+    
+    var colors: [LottieColor]
+
 
     var revealMedia:(Message)->Void = { _ in }
     
@@ -96,12 +99,13 @@ class ChatMediaLayoutParameters : Equatable {
     
     var fillContent: Bool? = nil
     
-    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil) {
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil, colors: [LottieColor] = []) {
         self.automaticDownloadFunc = { _ in
             return automaticDownload
         }
         self.presentation = presentation
         self.media = media
+        self.colors = colors
         self.isRevealed = isRevealed ?? false
         self.autoplayMedia = autoplayMedia
         self._automaticDownload = automaticDownload
@@ -272,6 +276,24 @@ class ChatMediaItem: ChatRowItem {
         parameters?.revealMedia = { [weak self] message in
             self?.chatInteraction.revealMedia(message)
         }
+        
+        var videoTimestamp: Int32?
+        if let parent = message {
+            var storedVideoTimestamp: Int32?
+            for attribute in parent.attributes {
+                if let attribute = attribute as? ForwardVideoTimestampAttribute {
+                    videoTimestamp = attribute.timestamp
+                } else if let attribute = attribute as? DerivedDataMessageAttribute {
+                    if let value = attribute.data["mps"]?.get(MediaPlaybackStoredState.self) {
+                        storedVideoTimestamp = Int32(value.timestamp)
+                    }
+                }
+            }
+            if let storedVideoTimestamp {
+                videoTimestamp = storedVideoTimestamp
+            }
+        }
+        self.parameters?.set_timeCodeInitializer(videoTimestamp.flatMap(Double.init))
     }
     
     
@@ -781,6 +803,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
             }
            
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
+            
             
             let transition: ContainedViewLayoutTransition
             if animated {

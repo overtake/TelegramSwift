@@ -54,6 +54,12 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             containerView.frame = content.contentRect
             textView.isHidden = content.textLayout == nil
             
+            if content.isLeadingMedia {
+                textView.setFrameOrigin(NSMakePoint(0, content.contentRect.height - textView.frame.height - (action != nil ? 36 : 0)))
+            } else {
+                textView.setFrameOrigin(.zero)
+            }
+            
             if let current = self.whatThisView, let line = textView.textLayout?.lines.first {
                 current.setFrameOrigin(NSMakePoint(line.frame.maxX + 5, textView.frame.minY + 1))
             }
@@ -88,7 +94,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         
         set(handler: { [weak self] _ in
             self?.content?.invokeAction()
-        }, for: .Click)
+        }, for: .Down)
     }
     
     required init?(coder: NSCoder) {
@@ -250,7 +256,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             
             current.removeAllHandlers()
             current.set(handler: { _ in
-                showModal(with: FragmentAdsInfoController(context: layout.context), for: layout.context.window)
+                showModal(with: FragmentAdsInfoController(context: layout.context, message: layout.parent, interactions: layout.chatInteraction), for: layout.context.window)
             }, for: .Click)
             
             let text = TextViewLayout(.initialize(string: strings().chatAdWhatThis, color: layout.presentation.activity.main, font: .normal(.small)), alignment: .center)

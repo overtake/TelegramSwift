@@ -13,6 +13,54 @@ import TelegramCore
 import SwiftSignalKit
 
 
+final class StarsSendActionView : Control {
+    let text: TextView = TextView()
+    let image: ImageView = ImageView()
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(text)
+        addSubview(image)
+        
+        text.userInteractionEnabled = false
+        text.isSelectable = false
+        
+        image.isEventLess = true
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(price: Int64, context: AccountContext, animated: Bool) {
+        self.backgroundColor = theme.colors.accent
+        
+        self.scaleOnClick = true
+        
+        let layout = TextViewLayout(.initialize(string: price.prettyNumber, color: theme.colors.underSelectedColor, font: .medium(.text)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        
+        text.update(layout)
+        
+        image.image = NSImage(resource: .starSmall).precomposed(theme.colors.underSelectedColor)
+        image.sizeToFit()
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        setFrameSize(NSMakeSize(text.frame.width + 12 + image.frame.width, 24))
+        
+        layer?.cornerRadius = frame.height / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        image.centerY(x: 5)
+        
+        text.centerY(x: image.frame.maxX + 2)
+    }
+}
+
 //
 let iconsInset:CGFloat = 20.0
 
@@ -27,6 +75,8 @@ class ChatInputActionsView: View {
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
     private var scheduled:ImageButton?
+    
+    private var sendPaidMessages: StarsSendActionView?
 
     private var secretTimer:ImageButton?
     private var inlineProgress: ProgressIndicator? = nil
@@ -240,7 +290,9 @@ class ChatInputActionsView: View {
     }
     
     var currentActionView: NSView {
-        if !self.send.isHidden {
+        if let sendPaidMessages {
+            return sendPaidMessages
+        } else if !self.send.isHidden {
             return self.send
         } else if !self.voice.isHidden {
             return self.voice
@@ -255,7 +307,7 @@ class ChatInputActionsView: View {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect || value.sendPaidMessageStars != oldValue.sendPaidMessageStars {
 
                 if chatInteraction.hasSetDestructiveTimer, value.interfaceState.messageEffect == nil {
                     if secretTimer == nil {
@@ -287,7 +339,8 @@ class ChatInputActionsView: View {
                     performSubviewRemoval(view, animated: animated, scale: true)
                     secretTimer = nil
                 }
-
+                
+             
 
                 send.animates = false
                 send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
@@ -353,6 +406,28 @@ class ChatInputActionsView: View {
                     send.isEnabled = true
                 }
                 
+                if let sendPaidMessages = value.sendPaidMessageStars, sNew, !newSlowModeCounter {
+                    let messagesCount = (value.interfaceState.inputState.inputText.isEmpty ? 0 : 1) + value.interfaceState.forwardMessages.count
+                    let current: StarsSendActionView
+                    if let view = self.sendPaidMessages {
+                        current = view
+                    } else {
+                        current = StarsSendActionView(frame: .zero)
+                        addSubview(current)
+                        self.sendPaidMessages = current
+                    }
+                    current.update(price: sendPaidMessages.value * Int64(messagesCount), context: chatInteraction.context, animated: animated)
+                    
+                    current.setSingle(handler: { [weak self] _ in
+                        self?.send.send(event: .Click)
+                    }, for: .Click)
+                    send.isHidden = true
+                } else if let view = sendPaidMessages {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.sendPaidMessages = nil
+                }
+
+                
                 if sNew != sOld || first || newInlineRequest != oldInlineRequest || oldInlineLoading != newInlineLoading || newSlowModeCounter != oldSlowModeCounter {
                     first = false
                     
@@ -364,9 +439,9 @@ class ChatInputActionsView: View {
                     } else if newInlineRequest {
                         newView = inlineCancel
                     } else if oldInlineRequest {
-                        newView = sNew ? send : voice
+                        newView = sNew ? sendPaidMessages ?? send : voice
                     } else {
-                        newView = sNew ? send : voice
+                        newView = sNew ? sendPaidMessages ?? send : voice
                     }
 
                     self.prevView = newView
@@ -476,8 +551,9 @@ class ChatInputActionsView: View {
     
     func size(_ value: ChatPresentationInterfaceState) -> NSSize {
         
+        let sendValue = self.sendPaidMessages ?? send
         
-        var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
+        var size:NSSize = NSMakeSize(sendValue.frame.width + iconsInset + entertaiments.frame.width, frame.height)
         
         if chatInteraction.hasSetDestructiveTimer, chatInteraction.presentation.interfaceState.messageEffect == nil {
             size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
@@ -499,15 +575,19 @@ class ChatInputActionsView: View {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        let sendValue = sendPaidMessages ?? send
+        
         transition.updateFrame(view: inlineCancel, frame: inlineCancel.centerFrameY(x: size.width - inlineCancel.frame.width - iconsInset - 6))
         
         if let view = inlineProgress {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - inlineCancel.frame.width - iconsInset - 10))
         }
         transition.updateFrame(view: voice, frame: voice.centerFrameY(x: size.width - voice.frame.width - iconsInset))
-        transition.updateFrame(view: send, frame: send.centerFrameY(x: size.width - send.frame.width - iconsInset))
+        transition.updateFrame(view: sendValue, frame: sendValue.centerFrameY(x: size.width - sendValue.frame.width - iconsInset))
+        
+        
         transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset + 5))
-        transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: voice.frame.minX - entertaiments.frame.width - 0))
+        transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: sendValue.frame.minX - entertaiments.frame.width - 0))
         transition.updateFrame(view: keyboard, frame: keyboard.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
         transition.updateFrame(view: muteChannelMessages, frame: muteChannelMessages.centerFrameY(x: entertaiments.frame.minX - muteChannelMessages.frame.width))
 
@@ -524,6 +604,7 @@ class ChatInputActionsView: View {
          inlineProgress,
          voice,
          send,
+         sendPaidMessages,
          slowModeTimeout,
          entertaiments,
          keyboard,

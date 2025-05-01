@@ -155,28 +155,48 @@
     {
         NSError *error = nil;
         static NSDataDetector *dataDetector = nil;
-        if (dataDetector == nil)
-            dataDetector = [NSDataDetector dataDetectorWithTypes:(int)(NSTextCheckingTypeLink) error:&error];
-        
+        if (dataDetector == nil) {
+            dataDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:&error];
+        }
+
         NSMutableArray *results = [[NSMutableArray alloc] init];
         @try {
-            [dataDetector enumerateMatchesInString:text options:0 range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult *match, __unused NSMatchingFlags flags, __unused BOOL *stop)
-             {
-                 @try {
-                     NSTextCheckingType type = [match resultType];
-                     NSString *scheme = [[[match URL] scheme] lowercaseString];
-                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] || [scheme isEqualToString:@"ton"] || [scheme isEqualToString:@"mailto"] || scheme == nil))
-                     {
-                         [results addObject:[NSValue valueWithRange:match.range]];
-                     }
-                 } @catch (NSException *exception) {
-                     
-                 }
-                 
-             }];
+            // First, use NSDataDetector to detect standard links
+            [dataDetector enumerateMatchesInString:text options:0 range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult *match, __unused NSMatchingFlags flags, __unused BOOL *stop) {
+                @try {
+                    NSTextCheckingType type = [match resultType];
+                    NSString *scheme = [[[match URL] scheme] lowercaseString];
+                    if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) &&
+                        ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] ||
+                         [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] ||
+                         [scheme isEqualToString:@"mailto"] || scheme == nil))
+                    {
+                        [results addObject:[NSValue valueWithRange:match.range]];
+                    }
+                } @catch (NSException *exception) {
+                    // Handle any exceptions here
+                }
+            }];
+
+            // Custom detection for .ton links without schemes using regular expression
+            NSString *regexPattern = @"\\b[a-zA-Z0-9.-]+\\.ton\\b";
+            NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexPattern options:0 error:&error];
+            if (error) {
+                NSLog(@"Error creating regex: %@", error.localizedDescription);
+            } else {
+                [regex enumerateMatchesInString:text options:0 range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult *match, __unused NSMatchingFlags flags, __unused BOOL *stop) {
+                    @try {
+                        [results addObject:[NSValue valueWithRange:match.range]];
+                    } @catch (NSException *exception) {
+                        // Handle any exceptions here
+                    }
+                }];
+            }
+
         } @catch (NSException *exception) {
-            
+            // Handle any exceptions here
         }
+
         
         
         static NSCharacterSet *characterSet = nil;
@@ -677,6 +697,13 @@
         int64_t num = (((int64_t)bytes[offset] & 0x7F) << 56) | (((int64_t)bytes[offset+1] & 0xFF) << 48) | (((int64_t)bytes[offset+2] & 0xFF) << 40) | (((int64_t)bytes[offset+3] & 0xFF) << 32) | (((int64_t)bytes[offset+4] & 0xFF) << 24) | (((int64_t)bytes[offset+5] & 0xFF) << 16) | (((int64_t)bytes[offset+6] & 0xFF) << 8) | (((int64_t)bytes[offset+7] & 0xFF));
         return num % count;
     }];
+}
+
++(NSString * __nonnull)randomCallsEmoji {
+    
+    NSArray *emojis = @[ @"😉", @"😍", @"😛", @"😭", @"😱", @"😡", @"😎", @"😴", @"😵", @"😈", @"😬", @"😇", @"😏", @"👮", @"👷", @"💂", @"👶", @"👨", @"👩", @"👴", @"👵", @"😻", @"😽", @"🙀", @"👺", @"🙈", @"🙉", @"🙊", @"💀", @"👽", @"💩", @"🔥", @"💥", @"💤", @"👂", @"👀", @"👃", @"👅", @"👄", @"👍", @"👎", @"👌", @"👊", @"✌️", @"✋️", @"👐", @"👆", @"👇", @"👉", @"👈", @"🙏", @"👏", @"💪", @"🚶", @"🏃", @"💃", @"👫", @"👪", @"👬", @"👭", @"💅", @"🎩", @"👑", @"👒", @"👟", @"👞", @"👠", @"👕", @"👗", @"👖", @"👙", @"👜", @"👓", @"🎀", @"💄", @"💛", @"💙", @"💜", @"💚", @"💍", @"💎", @"🐶", @"🐺", @"🐱", @"🐭", @"🐹", @"🐰", @"🐸", @"🐯", @"🐨", @"🐻", @"🐷", @"🐮", @"🐗", @"🐴", @"🐑", @"🐘", @"🐼", @"🐧", @"🐥", @"🐔", @"🐍", @"🐢", @"🐛", @"🐝", @"🐜", @"🐞", @"🐌", @"🐙", @"🐚", @"🐟", @"🐬", @"🐋", @"🐐", @"🐊", @"🐫", @"🍀", @"🌹", @"🌻", @"🍁", @"🌾", @"🍄", @"🌵", @"🌴", @"🌳", @"🌞", @"🌚", @"🌙", @"🌎", @"🌋", @"⚡️", @"☔️", @"❄️", @"⛄️", @"🌀", @"🌈", @"🌊", @"🎓", @"🎆", @"🎃", @"👻", @"🎅", @"🎄", @"🎁", @"🎈", @"🔮", @"🎥", @"📷", @"💿", @"💻", @"☎️", @"📡", @"📺", @"📻", @"🔉", @"🔔", @"⏳", @"⏰", @"⌚️", @"🔒", @"🔑", @"🔎", @"💡", @"🔦", @"🔌", @"🔋", @"🚿", @"🚽", @"🔧", @"🔨", @"🚪", @"🚬", @"💣", @"🔫", @"🔪", @"💊", @"💉", @"💰", @"💵", @"💳", @"✉️", @"📫", @"📦", @"📅", @"📁", @"✂️", @"📌", @"📎", @"✒️", @"✏️", @"📐", @"📚", @"🔬", @"🔭", @"🎨", @"🎬", @"🎤", @"🎧", @"🎵", @"🎹", @"🎻", @"🎺", @"🎸", @"👾", @"🎮", @"🃏", @"🎲", @"🎯", @"🏈", @"🏀", @"⚽️", @"⚾️", @"🎾", @"🎱", @"🏉", @"🎳", @"🏁", @"🏇", @"🏆", @"🏊", @"🏄", @"☕️", @"🍼", @"🍺", @"🍷", @"🍴", @"🍕", @"🍔", @"🍟", @"🍗", @"🍱", @"🍚", @"🍜", @"🍡", @"🍳", @"🍞", @"🍩", @"🍦", @"🎂", @"🍰", @"🍪", @"🍫", @"🍭", @"🍯", @"🍎", @"🍏", @"🍊", @"🍋", @"🍒", @"🍇", @"🍉", @"🍓", @"🍑", @"🍌", @"🍐", @"🍍", @"🍆", @"🍅", @"🌽", @"🏡", @"🏥", @"🏦", @"⛪️", @"🏰", @"⛺️", @"🏭", @"🗻", @"🗽", @"🎠", @"🎡", @"⛲️", @"🎢", @"🚢", @"🚤", @"⚓️", @"🚀", @"✈️", @"🚁", @"🚂", @"🚋", @"🚎", @"🚌", @"🚙", @"🚗", @"🚕", @"🚛", @"🚨", @"🚔", @"🚒", @"🚑", @"🚲", @"🚠", @"🚜", @"🚦", @"⚠️", @"🚧", @"⛽️", @"🎰", @"🗿", @"🎪", @"🎭", @"🇯🇵", @"🇰🇷", @"🇩🇪", @"🇨🇳", @"🇺🇸", @"🇫🇷", @"🇪🇸", @"🇮🇹", @"🇷🇺", @"🇬🇧", @"1️⃣", @"2️⃣", @"3️⃣", @"4️⃣", @"5️⃣", @"6️⃣", @"7️⃣", @"8️⃣", @"9️⃣", @"0️⃣", @"🔟", @"❗️", @"❓", @"♥️", @"♦️", @"💯", @"🔗", @"🔱", @"🔴", @"🔵", @"🔶", @"🔷" ];
+    
+    return emojis[arc4random() % emojis.count];
 }
 
 +(NSSize)gifDimensionSize:(NSString *)path {
@@ -1368,6 +1395,34 @@ NSArray<NSString *> * __nonnull currentAppInputSource()
     }
     
     return inputs;
+}
+
+NSString * __nonnull currentKeyboardLanguage()
+{
+    // Get the current keyboard input source
+    // Get the current keyboard input source
+    TISInputSourceRef currentInputSource = TISCopyCurrentKeyboardInputSource();
+    
+    // Extract the language code(s) of the input source
+    NSArray *languages = (__bridge NSArray *)TISGetInputSourceProperty(currentInputSource, kTISPropertyInputSourceLanguages);
+    
+    // Release the input source object (since we copied it)
+    if (currentInputSource) {
+        CFRelease(currentInputSource);
+    }
+    
+    // Get the first language code and create a locale identifier
+    if (languages && languages.count > 0) {
+        NSString *languageCode = languages[0];
+        
+        // Get the current region code from the user's settings
+        NSString *regionCode = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
+        
+        // Return the combined locale identifier
+        return [NSString stringWithFormat:@"%@-%@", languageCode, regionCode];
+    }
+    
+    return @"Unknown";
 }
 
 NSEvent * __nullable createScrollWheelEvent() {

@@ -483,7 +483,7 @@ public final class EntertainmentInteractions {
     var current:EntertainmentState = .emoji
     
     var sendEmoji:(String, CGRect?) ->Void = { _,_ in }
-    var sendAnimatedEmoji:(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?) ->Void = { _, _, _, _ in}
+    var sendAnimatedEmoji:(StickerPackItem, StarGift.UniqueGift?, StickerPackCollectionInfo?, Int32?, NSRect?) ->Void = { _, _, _, _, _ in}
     var sendSticker:(TelegramMediaFile, Bool, Bool, ItemCollectionId?) ->Void = { _, _, _, _ in}
     var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
@@ -615,7 +615,7 @@ final class EntertainmentView : View {
             }
         }
         current.set(file: file, context: context, callback: { [weak self] in
-            showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
             self?.closePremium()
         })
         current.close = { [weak self] in
@@ -754,7 +754,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker, info, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, info, _, fromRect in
             if self?.mode == .selectAvatar {
               
             } else {
@@ -762,8 +762,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendText, cachedData: cachedData) {
                     showModalText(for: context.window, text: text)
                 } else {
-                    let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").normalizedEmoji
-                    self?.chatInteraction?.appendAttributedText(.makeAnimated(sticker.file, text: text, info: info?.id))
+                    let text = (sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? "😀").normalizedEmoji
+                    self?.chatInteraction?.appendAttributedText(.makeAnimated(sticker.file._parse(), text: text, info: info?.id))
                 }
             }
         }

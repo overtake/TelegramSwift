@@ -406,6 +406,9 @@ public class LocalBundleResource: TelegramMediaResource {
         return to.id == self.id
     }
 
+    public var path: String? {
+        return Bundle.main.path(forResource: name, ofType: ext)
+    }
 }
 
 

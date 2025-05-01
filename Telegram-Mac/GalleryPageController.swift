@@ -264,6 +264,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     let view:GalleryPageView = GalleryPageView()
     private let textView: FoldingTextView = FoldingTextView(frame: .zero)
     private var publicPhotoView: PublicPhotoView?
+    private var adButton: TextButton?
     private let textContainer = View()
     private let textScrollView = ScrollView()
     private let window:Window
@@ -374,6 +375,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             } else if self.textView.mouseInside() {
                 return .invoked
             } else if let view = self.publicPhotoView, NSPointInRect(point, view.frame) {
+                return .invokeNext
+            } else if let view = self.adButton, NSPointInRect(point, view.frame) {
                 return .invokeNext
             }
             if let window = view.window as? Window, self.controller.view._mouseInside() {
@@ -520,6 +523,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             controller.view.addSubview(textScrollView)
         }
         if let view = publicPhotoView, view.superview != nil {
+            view.removeFromSuperview()
+            controller.view.addSubview(view)
+        }
+        if let view = adButton, view.superview != nil {
             view.removeFromSuperview()
             controller.view.addSubview(view)
         }
@@ -884,6 +891,36 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             self.publicPhotoView = nil
         }
         
+        if let message = item.entry.message, let adAttribute = message.adAttribute {
+            let current: TextButton
+            if let view = self.adButton {
+                current = view
+            } else {
+                current = TextButton()
+                self.adButton = current
+                controller.view.addSubview(current)
+                current.scaleOnClick = true
+            }
+            
+            current.setSingle(handler: { [weak self] _ in
+                self?.interactions.invokeAd(message.id.peerId, adAttribute)
+            }, for: .Down)
+            
+            current.set(text: adAttribute.buttonText, for: .Normal)
+            current.set(font: .medium(.text), for: .Normal)
+            current.set(color: .white, for: .Normal)
+            current.set(background: darkAppearance.colors.grayBackground, for: .Normal)
+            current.sizeToFit(.zero, NSMakeSize(300, 40), thatFit: true)
+            current.layer?.cornerRadius = 10
+            
+            current.centerX(y: 30)
+
+            
+        } else if let view = self.adButton {
+            performSubviewRemoval(view, animated: true)
+            self.adButton = nil
+        }
+        
         configureTextAutohide()
     }
     
@@ -1222,7 +1259,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             performSubviewRemoval(view, animated: true)
             self.publicPhotoView = nil
         }
-        
+        if let view = adButton {
+            performSubviewRemoval(view, animated: true)
+            self.adButton = nil
+        }
         
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true
@@ -1255,6 +1295,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 completion?((false, nil))
             })
         }
+    }
+    
+    var recognition: GalleryRecognition? {
+        return (self.controller.selectedViewController?.view as? GMagnifyView)?.recognition
     }
     
     deinit {

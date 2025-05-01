@@ -1,3 +1,0 @@
-#include "./iOS.xcconfig"
-
-EFFECTIVE_PLATFORM_NAME = -iphoneuniversal

@@ -66,7 +66,7 @@ final class ChatInputSendAsView : Control {
     
     private func toggleSendAs(_ peer: SendAsPeer, context: AccountContext) {
         if peer.isPremiumRequired && !context.isPremium {
-            showModal(with: PremiumBoardingController(context: context, source: .send_as), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .send_as), for: context.window)
         } else {
             self.chatInteraction?.toggleSendAs(peer.peer.id)
         }

@@ -17,7 +17,7 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peer: EnginePeer
     fileprivate let request: State.Request
-    fileprivate let myBalance: Int64
+    fileprivate let myBalance: StarsAmount
     fileprivate let close:()->Void
     
     
@@ -25,9 +25,9 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let headerLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
 
-    
+    private(set) var badge: BadgeNode?
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: EnginePeer, myBalance: Int64, request: State.Request, viewType: GeneralViewType, action:@escaping()->Void, close:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: EnginePeer, myBalance: StarsAmount, request: State.Request, viewType: GeneralViewType, action:@escaping()->Void, close:@escaping()->Void) {
         self.context = context
         self.peer = peer
         self.myBalance = myBalance
@@ -35,17 +35,31 @@ private final class HeaderItem : GeneralRowItem {
         self.close = close
         
         let balanceAttr = NSMutableAttributedString()
-        balanceAttr.append(string: strings().starPurchaseBalance("\(clown)\(myBalance)"), color: theme.colors.text, font: .normal(.text))
-        balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
+        balanceAttr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(myBalance)"), color: theme.colors.text, font: .normal(.text))
+        balanceAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         self.balanceLayout = .init(balanceAttr, alignment: .right)
         
-        self.headerLayout = .init(.initialize(string: strings().starPurchaseConfirm, color: theme.colors.text, font: .medium(.title)), alignment: .center)
+        let headerText: String
+        switch request.type {
+        case .bot, .paidMedia:
+            headerText = strings().starPurchaseConfirm
+        case .subscription:
+            headerText = strings().starsPurchaseSubscribe
+        case let .botSubscription(invoice):
+            headerText = invoice.title
+        }
+        
+        self.headerLayout = .init(.initialize(string: headerText, color: theme.colors.text, font: .medium(.title)), alignment: .center)
         
         let infoAttr = NSMutableAttributedString()
         switch request.type {
         case .bot:
             infoAttr.append(string: strings().starPurchaseText(request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(request.count))), color: theme.colors.text, font: .normal(.text))
+        case .subscription:
+            infoAttr.append(string: strings().starsPurchaseSubscribeInfoCountable(peer._asPeer().displayTitle, Int(request.count)), color: theme.colors.text, font: .normal(.text))
+        case let .botSubscription(invoice):
+            infoAttr.append(string: strings().starsPurchaseBotSubscribeInfoCountable(invoice.title, peer._asPeer().displayTitle, Int(request.count)), color: theme.colors.text, font: .normal(.text))
         case let .paidMedia(_, count):
             
             var description: String = ""
@@ -75,6 +89,20 @@ private final class HeaderItem : GeneralRowItem {
         self.infoLayout = .init(infoAttr, alignment: .center)
         
         
+        if case let .botSubscription(invoice) = request.type {
+            
+            var under = theme.colors.underSelectedColor
+
+            let badgeText: String
+            let color: NSColor
+            badgeText = "\(invoice.totalAmount)"
+            color = NSColor(0xFFAC04)
+            under = .white
+            
+            badge = .init(.initialize(string: badgeText, color: under, font: .avatar(.small)), color, aroundFill: theme.colors.background, additionSize: NSMakeSize(16, 7))
+            
+        }
+        
         super.init(initialSize, stableId: stableId, viewType: viewType, action: action, inset: .init())
     }
     
@@ -90,7 +118,12 @@ private final class HeaderItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 10 + 80 + 10 + headerLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10 + 40 + 10 + 10
+        var height = 10 + 80 + 10 + headerLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10 + 40 + 10 + 10
+        
+        if case .botSubscription = request.type {
+            height += 30
+        }
+        return height
     }
     
     override func viewClass() -> AnyClass {
@@ -113,8 +146,17 @@ private final class AcceptView : Control {
     func update(_ item: HeaderItem, animated: Bool) {
         let attr = NSMutableAttributedString()
         
-        attr.append(string: strings().starPurchasePay("\(XTRSTAR)\(TINY_SPACE)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
-        attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
+        switch item.request.type {
+        case .bot, .paidMedia:
+            attr.append(string: strings().starPurchasePay("\(XTRSTAR)\(TINY_SPACE)\(item.request.count)"), color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
+        case .subscription:
+            attr.append(string: strings().starsPurchaseSubscribeAction, color: theme.colors.underSelectedColor, font: .medium(.text))
+        case let .botSubscription(invoice):
+            attr.append(string: strings().starsPurchaseBotSubscribeAcceptMonth("\(XTRSTAR)\(TINY_SPACE)\(invoice.totalAmount.formattedWithSeparator)"), color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: XTRSTAR)
+        }
+        
         
         let layout = TextViewLayout(attr)
         layout.measure(width: item.width - 60)
@@ -219,6 +261,44 @@ private class PreviewMediaView: Control {
 }
 
 private final class HeaderItemView : GeneralContainableRowView {
+ 
+    
+    private final class PeerView: Control {
+        private let avatarView = AvatarControl(font: .avatar(13))
+        private let nameView: TextView = TextView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(avatarView)
+            addSubview(nameView)
+            
+            nameView.userInteractionEnabled = false
+            self.avatarView.setFrameSize(NSMakeSize(26, 26))
+            
+            layer?.cornerRadius = 12.5
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(_ peer: EnginePeer, _ context: AccountContext, maxWidth: CGFloat) {
+            self.avatarView.setPeer(account: context.account, peer: peer._asPeer())
+            
+            let nameLayout = TextViewLayout(.initialize(string: peer._asPeer().displayTitle, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
+            nameLayout.measure(width: maxWidth)
+            
+            nameView.update(nameLayout)
+
+            setFrameSize(NSMakeSize(avatarView.frame.width + 10 + nameLayout.layoutSize.width + 10, 26))
+            
+            self.background = theme.colors.grayForeground
+        }
+        
+        override func layout() {
+            super.layout()
+            nameView.centerY(x: self.avatarView.frame.maxX + 10)
+        }
+    }
     
     private let dismiss = ImageButton()
     private let balance = InteractiveTextView()
@@ -229,6 +309,11 @@ private final class HeaderItemView : GeneralContainableRowView {
     private let info = InteractiveTextView()
     private let sceneView: GoldenStarSceneView
     
+    private var subBadgeView: ImageView?
+    
+    private var subscribeBadge: View?
+    
+    private var subPeerView: PeerView?
     
     private let accept: AcceptView = AcceptView(frame: .zero)
     
@@ -280,6 +365,10 @@ private final class HeaderItemView : GeneralContainableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
             }
+            if let view = self.subBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.subBadgeView = nil
+            }
             if let view = self.photo {
                 performSubviewRemoval(view, animated: animated)
                 self.photo = nil
@@ -294,10 +383,14 @@ private final class HeaderItemView : GeneralContainableRowView {
                 self.paidPreview = current
             }
             current.update(image: image, count: Int(count.total), context: item.context)
-        } else if let photo = item.request.invoice.photo {
+        } else if let photo = item.request.invoice?.photo {
             if let view = self.avatar {
                 performSubviewRemoval(view, animated: animated)
                 self.avatar = nil
+            }
+            if let view = self.subBadgeView {
+                performSubviewRemoval(view, animated: animated)
+                self.subBadgeView = nil
             }
             if let view = self.paidPreview {
                 performSubviewRemoval(view, animated: animated)
@@ -323,6 +416,7 @@ private final class HeaderItemView : GeneralContainableRowView {
             current.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: photo.dimensions?.size ?? NSMakeSize(80, 80), boundingSize: current.frame.size, intrinsicInsets: .init()))
 
             
+            
         } else {
             if let view = self.photo {
                 performSubviewRemoval(view, animated: animated)
@@ -342,6 +436,54 @@ private final class HeaderItemView : GeneralContainableRowView {
                 addSubview(current)
             }
             current.setPeer(account: item.context.account, peer: item.peer._asPeer())
+        }
+        
+        if case .subscription = item.request.type {
+            let current: ImageView
+            if let view = self.subBadgeView {
+                current = view
+            } else {
+                current = ImageView()
+                self.subBadgeView = current
+                addSubview(current)
+            }
+            current.image = theme.icons.avatar_star_badge_large_gray
+            current.sizeToFit()
+        } else if let subBadgeView {
+            performSubviewRemoval(subBadgeView, animated: animated)
+            self.subBadgeView = nil
+        }
+        
+        
+        if let badge = item.badge {
+            let current: View
+            if let view = self.subscribeBadge {
+                current = view
+            } else {
+                current = View()
+                self.subscribeBadge = current
+                addSubview(current)
+            }
+            badge.view = current
+            current.setFrameSize(badge.size)
+        } else if let subscribeBadge = subscribeBadge {
+            performSubviewRemoval(subscribeBadge, animated: animated)
+            self.subscribeBadge = nil
+        }
+        
+        if case .botSubscription(_) = item.request.type {
+            let current: PeerView
+            if let view = self.subPeerView {
+                current = view
+            } else {
+                current = PeerView(frame: .zero)
+                self.subPeerView = current
+                addSubview(current)
+            }
+            current.set(item.peer, item.context, maxWidth: frame.width - 40)
+        } else if let view = self.subPeerView {
+            performSubviewRemoval(view, animated: animated)
+            self.subPeerView = nil
         }
         
         
@@ -370,13 +512,25 @@ private final class HeaderItemView : GeneralContainableRowView {
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2) - 10))
         if let photo {
             photo.centerX(y: 10)
+            
+            if let subscribeBadge {
+                subscribeBadge.centerX(y: photo.frame.maxY - subscribeBadge.frame.height)
+            }
         }
         if let avatar {
             avatar.centerX(y: 10)
+            if let subBadgeView {
+                subBadgeView.setFrameOrigin(avatar.frame.maxX - 25, avatar.frame.midY + 8)
+            }
+            
+            if let subscribeBadge {
+                subscribeBadge.centerX(y: avatar.frame.maxY - subscribeBadge.frame.height / 2)
+            }
         }
         if let paidPreview {
             paidPreview.centerX(y: 10)
         }
+        
         sceneView.centerX(y: -10)
         balance.setFrameOrigin(NSMakePoint(frame.width - 12 - balance.frame.width, floorToScreenPixels((50 - balance.frame.height) / 2) - 10))
         
@@ -385,6 +539,11 @@ private final class HeaderItemView : GeneralContainableRowView {
         header.centerX(y: headerY + 10)
         info.centerX(y: header.frame.maxY + 10)
         accept.centerX(y: frame.height - accept.frame.height - 10)
+        
+        if let subPeerView {
+            subPeerView.centerX(y: info.frame.maxY + 10)
+        }
+        
     }
 }
 
@@ -403,14 +562,14 @@ private struct State : Equatable {
     struct Request : Equatable {
         let count: Int64
         let info: String
-        let invoice: TelegramMediaInvoice
+        let invoice: TelegramMediaInvoice?
         let type: StarPurchaseType
     }
     var request: Request
     var peer: EnginePeer?
-    var myBalance: Int64?
+    var myBalance: StarsAmount?
     var starsState: StarsContext.State?
-    var form: BotPaymentForm?
+    var formId: Int64?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -430,6 +589,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return HeaderItem(initialSize, stableId: stableId, context: arguments.context, peer: peer, myBalance: myBalance, request: state.request, viewType: .legacy, action: arguments.buy, close: arguments.dismiss)
         }))
+        
+        if case .botSubscription = state.request.type {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().starTransactionBotTos, linkHandler: { url in
+                execute(inapp: .external(link: url, false))
+            }), data: .init(color: theme.colors.listGrayText, viewType: .legacy, centerViewAlignment: true, alignment: .center)))
+            sectionId += 1
+
+        }
+        
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return LoadingTableItem(initialSize, height: 219, stableId: stableId, backgroundColor: theme.colors.background)
@@ -457,13 +625,43 @@ enum StarPurchaseType : Equatable {
     
     case bot
     case paidMedia(TelegramMediaImage, PaidMediaCount)
+    case subscription(ExternalJoiningChatState.Invite)
+    case botSubscription(TelegramMediaInvoice)
 }
 
-func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(PaymentCheckoutCompletionStatus)->Void = { _ in }) -> InputDataModalController {
+enum StarPurchaseCompletionStatus : Equatable {
+    case paid(messageId: MessageId?, peerId: PeerId?)
+    case cancelled
+    case failed
+    
+    var rawValue: String {
+        switch self {
+        case .paid:
+            return "paid"
+        case .cancelled:
+            return "cancelled"
+        case .failed:
+            return "failed"
+        }
+    }
+}
+
+func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?, source: BotPaymentInvoiceSource, type: StarPurchaseType = .bot, completion:@escaping(StarPurchaseCompletionStatus)->Void = { _ in }) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(request: .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice, type: type), myBalance: nil)
+    let request: State.Request
+    if let invoice {
+        request = .init(count: invoice.totalAmount, info: invoice.title, invoice: invoice, type: type)
+    } else {
+        if case let .subscription(state) = type {
+            request = .init(count: state.subscriptionPricing!.amount.value, info: "", invoice: nil, type: type)
+        } else {
+            fatalError()
+        }
+    }
+    
+    let initialState = State(request: request, myBalance: nil)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -475,26 +673,49 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     
     let starsContext = context.starsContext
     
-    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil)
+    starsContext.load(force: true)
     
-    actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { [weak actionsDisposable] form in
+    actionsDisposable.add(starsContext.state.startStrict(next: { starsState in
         updateState { current in
             var current = current
-            current.form = form
+            current.myBalance = starsState?.balance
+            current.starsState = starsState
             return current
         }
+    }))
+    
+    switch type {
+    case let .subscription(state):
+        let photo = state.photoRepresentation.flatMap({ [$0] }) ?? []
+        updateState { current in
+            var current = current
+            current.peer = .init(TelegramUser(id: .init(0), accessHash: nil, firstName: state.title, lastName: nil, username: nil, phone: nil, photo: photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: state.nameColor, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil))
+            current.formId = state.subscriptionFormId
+            return current
+        }
+    default:
+        let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil)
         
-        actionsDisposable?.add(combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: form.paymentBotId)), starsContext.state).startStrict(next: { peer, starsState in
+        actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { [weak actionsDisposable] form in
             updateState { current in
                 var current = current
-                current.peer = peer
-                current.myBalance = starsState?.balance
-                current.starsState = starsState
+                current.formId = form.id
                 return current
             }
+            if let paymentBotId = form.paymentBotId {
+                actionsDisposable?.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: paymentBotId)).startStrict(next: { peer in
+                    updateState { current in
+                        var current = current
+                        current.peer = peer
+                        return current
+                    }
+                }))
+            }
+            
         }))
-        
-    }))
+    }
+    
+    
     
     
     
@@ -511,15 +732,21 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
         close?()
     }, buy: {
         let state = stateValue.with { $0 }
-        let myBalance = state.myBalance ?? 0
+        let myBalance = state.myBalance ?? .init(value: 0, nanos: 0)
         if let peer = state.peer {
-            if state.request.count > myBalance {
-                showModal(with: Star_ListScreen(context: context, source: .purchase(peer, state.request.count)), for: window)
+            if state.request.count > myBalance.value {
+                let sourceValue: Star_ListScreenSource
+                if case .starsChatSubscription = source {
+                    sourceValue = .purchaseSubscribe(peer, state.request.count)
+                } else {
+                    sourceValue = .purchase(peer, state.request.count)
+                }
+                showModal(with: Star_ListScreen(context: context, source: sourceValue), for: window)
             } else {
-                if let form = state.form {
-                    _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: source), for: window).startStandalone(next: { result in
+                if let formId = state.formId {
+                    _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: formId, source: source), for: window).startStandalone(next: { result in
                         switch result {
-                        case .done:
+                        case let .done(receiptMessageId, subscriptionPeerId, _):
 //                            starsContext.add(balance: -state.request.count)
                             let text: String
                             switch type {
@@ -527,17 +754,23 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                                 text = strings().starPurchaseSuccess(state.request.info, peer._asPeer().displayTitle, strings().starPurchaseTextInCountable(Int(state.request.count)))
                             case .paidMedia:
                                 text = strings().starPurchasePaidMediaSuccess(strings().starPurchaseTextInCountable(Int(state.request.count)))
+                            case let .subscription(invite):
+                                text = strings().starsPurchaseSubscribeSuccess(invite.title)
+                            case let .botSubscription(invoice):
+                                text = strings().starsPurchaseBotSubscribeSuccess(invoice.title, peer._asPeer().displayTitle)
                             }
                             showModalText(for: window, text: text)
                             
                             switch type {
-                            case .paidMedia:
+                            case .paidMedia, .subscription:
                                 PlayConfetti(for: window, stars: true)
                             default:
                                 break
                             }
+                            context.starsContext.load(force: true)
+                            context.starsSubscriptionsContext.load(force: true)
                             
-                            completion(.paid)
+                            completion(.paid(messageId: receiptMessageId, peerId: subscriptionPeerId))
                             procced = true
                             close?()
                         default:
@@ -554,6 +787,10 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
                             text = strings().checkoutErrorPaymentFailed
                         case .precheckoutFailed:
                             text = strings().checkoutErrorPrecheckoutFailed
+                        case .starGiftOutOfStock:
+                            text = strings().giftSoldOutError
+                        case .disallowedStarGift:
+                            text = strings().giftSendDisallowError
                         }
                         showModalText(for: window, text: text)
                         completion(.failed)
@@ -575,6 +812,9 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+        if !procced {
+            completion(.cancelled)
+        }
     }
     
     controller.contextObject = starsContext
@@ -583,10 +823,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice,
     
     close = { [weak modalController] in
         modalController?.modal?.close()
-        if procced {
-            completion(.cancelled)
-        }
     }
+    
     
     return modalController
 }

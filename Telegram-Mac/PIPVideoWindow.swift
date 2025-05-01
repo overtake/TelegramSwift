@@ -33,7 +33,7 @@ protocol PictureInPictureControl {
 
 
 private class PictureInpictureView : Control {
-    private let __window: Window
+    private weak var __window: Window?
     init(frame: NSRect, window: Window) {
         __window = window
         super.init(frame: frame)

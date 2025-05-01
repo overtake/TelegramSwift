@@ -216,7 +216,7 @@ final class ReactionsWindowController : NSObject {
         
         let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _, fromRect in
             react(sticker, fromRect)
             self?.close(animated: true)
         }

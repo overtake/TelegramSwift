@@ -38,7 +38,6 @@ class MediaGroupPreviewRowItem: TableRowItem {
         self.parameters = messages.map {
             let param = ChatMediaLayoutParameters(presentation: .empty, media: $0.media[0])
             param.forceSpoiler = isSpoiler || payAmount != nil
-            param.fillContent = true
             return param
         }
         super.init(initialSize)
@@ -101,7 +100,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             let attr = NSMutableAttributedString()
             attr.append(string: "\(clown)", color: .white, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             attr.append(string: " \(amount)", color: .white, font: .medium(.text))
             
             let textLayout = TextViewLayout(attr)

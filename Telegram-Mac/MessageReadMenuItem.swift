@@ -244,7 +244,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                     $0.value == value
                 })?.staticIcon
                 if let file = file {
-                    reaction = .builtin(file)
+                    reaction = .builtin(file._parse())
                 } else {
                     switch value {
                     case let .custom(fileId):
@@ -263,7 +263,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
             }, peer: peer.0, context: context, reaction: reaction, readTimestamp: peer.2)
             let signal:Signal<(CGImage?, Bool), NoError>
-            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.nameColor, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.nameColor, peer.0.displayLetters, nil, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
                 if let image = image {
                     item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
@@ -375,7 +375,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
+                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
                 })
                 
                 
@@ -694,7 +694,7 @@ extension ContextMenuItem {
                     item?.stateOnImage = image
                     item?.handler = {
                         showModalText(for: context.window, text: strings().peerForwardPremiumRequired(peer.compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            prem(with: PremiumBoardingController(context: context), for: context.window)
                         })
                     }
                     item?.redraw?()
@@ -709,6 +709,7 @@ final class ReactionPeerMenu : ContextMenuItem {
     enum Source : Equatable {
         case builtin(TelegramMediaFile)
         case custom(Int64, TelegramMediaFile?)
+        case stars(TelegramMediaFile, TelegramMediaFile?)
     }
     enum Destination {
         case common
@@ -720,13 +721,15 @@ final class ReactionPeerMenu : ContextMenuItem {
     private let destination: Destination
     private let readTimestamp: Int32?
     private let disposable = MetaDisposable()
+    private let afterNameBadge: CGImage?
     
-    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, readTimestamp: Int32? = nil, message: Message? = nil, destination: Destination = .common) {
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, readTimestamp: Int32? = nil, message: Message? = nil, destination: Destination = .common, afterNameBadge: CGImage? = nil) {
         self.reaction = reaction
         self.peer = peer
         self.context = context
         self.destination = destination
         self.readTimestamp = readTimestamp
+        self.afterNameBadge = afterNameBadge
         
         super.init(title, handler: handler)
         
@@ -768,7 +771,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                 self?.submenu = menu
             }))
         }
-        ContextMenuItem.makeItemAvatar(self, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message))
+        ContextMenuItem.makeItemAvatar(self, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message, nil))
         ContextMenuItem.checkPremiumRequired(self, context: context, peer: peer)
     }
     
@@ -787,13 +790,16 @@ final class ReactionPeerMenu : ContextMenuItem {
             case let .custom(fileId, _):
                 value.combine("custom")
                 value.combine(fileId)
+            case let .stars(file, _):
+                value.combine("stars")
+                value.combine(file.fileId.id)
             }
         }
         return Int64(value.finalize().hashValue)
     }
     
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return ReactionPeerMenuItem(item: self, peer: peer, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction, readTimestamp: self.readTimestamp)
+        return ReactionPeerMenuItem(item: self, peer: peer, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction, readTimestamp: self.readTimestamp, afterNameBadge: afterNameBadge)
     }
     
     required init(coder decoder: NSCoder) {
@@ -808,11 +814,13 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
     fileprivate let reaction: ReactionPeerMenu.Source?
     fileprivate let peer: Peer
     fileprivate let readTimestamp: Int32?
-    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: ReactionPeerMenu.Source?, readTimestamp: Int32?) {
+    fileprivate let afterNameBadge: CGImage?
+    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: ReactionPeerMenu.Source?, readTimestamp: Int32?, afterNameBadge: CGImage? = nil) {
         self.context = context
         self.reaction = reaction
         self.peer = peer
         self.readTimestamp = readTimestamp
+        self.afterNameBadge = afterNameBadge
         super.init(.zero, item: item, interaction: interaction, presentation: presentation)
         if item.image == nil {
             let image = generateImage(NSMakeSize(imageSize, imageSize), rotatedContext: { size, ctx in
@@ -838,14 +846,15 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
     override var effectiveSize: NSSize {
         var size = super.effectiveSize
         
-        
-        
         if let _ = reaction {
             size.width += 16 + 2 + self.innerInset
         }
         
-        if let s = PremiumStatusControl.controlSize(peer, false) {
+        if let s = PremiumStatusControl.controlSize(peer, false, left: false), peer.id != context.peerId {
             size.width += s.width + 2
+        }
+        if let afterNameBadge {
+            size.width += afterNameBadge.backingSize.width + 2
         }
         return size
     }
@@ -922,6 +931,9 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
     private var statusControl: PremiumStatusControl?
     private let delayDisposable = MetaDisposable()
     private var timestamp: ReadTimestampView?
+    
+    private var afterNameImageView: ImageView?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -942,15 +954,23 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             return
         }
         
+        var maxX: CGFloat = self.textX + item.text.layoutSize.width + 2
+        
         if let statusControl = statusControl {
-            statusControl.centerY(x: self.textX + item.text.layoutSize.width + 2)
+            statusControl.centerY(x: maxX)
             imageView.centerY(x: self.rightX - imageView.frame.width)
+            maxX += statusControl.frame.width + 2
+
         }
         
         imageView.centerY(x: self.rightX - imageView.frame.width)
 
         if let timestamp = timestamp {
             timestamp.centerY(x: self.textX)
+        }
+        
+        if let afterNameBadge = afterNameImageView {
+            afterNameBadge.centerY(x: maxX)
         }
     }
     
@@ -1019,14 +1039,36 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             return
         }
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
-        if let control = control {
-            self.statusControl = control
-            self.addSubview(control)
+        if item.peer.id != item.context.peerId {
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: animated)
+            if let control = control {
+                self.statusControl = control
+                self.addSubview(control)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.statusControl = nil
+            }
         } else if let view = self.statusControl {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
         }
+        
+        if let afterNameBadge = item.afterNameBadge {
+            let current: ImageView
+            if let view = self.afterNameImageView {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.afterNameImageView = current
+            }
+            current.image = afterNameBadge
+            current.sizeToFit()
+        } else if let view = self.afterNameImageView {
+            performSubviewRemoval(view, animated: animated)
+            self.afterNameImageView = nil
+        }
+        
         
         statusControl?.alphaValue = item.item.isEnabled ? 1 : 0.6
         
@@ -1044,6 +1086,8 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
                     layer = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize)
                 case let .builtin(file):
                     layer = .init(account: item.context.account, file: file, size: reactionSize)
+                case let .stars(file, _):
+                    layer = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: reactionSize)
                 }
                 let isLite = item.context.isLite(.emoji)
                 self.imageView.updateLayer(layer, isLite: isLite, animated: animated)

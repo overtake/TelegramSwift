@@ -291,7 +291,7 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
                     
                     let editable:Bool
                     switch participant.participant {
-                    case let .member(_, _, adminInfo, _, _):
+                    case let .member(_, _, adminInfo, _, _, _):
                         if let adminInfo = adminInfo {
                             editable = adminInfo.canBeEditedByAccountPeer
                         } else {
@@ -331,7 +331,7 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
                 
                 let editable:Bool
                 switch participant.participant {
-                case let .member(_, _, adminInfo, _, _):
+                case let .member(_, _, adminInfo, _, _, _):
                     if let adminInfo = adminInfo {
                         editable = adminInfo.canBeEditedByAccountPeer
                     } else {

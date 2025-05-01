@@ -64,7 +64,14 @@ class LeftSidebarFolderItem: TableRowItem {
         self.unreadCount = unreadCount
         self.menuItems = menuItems
         var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
-        nameLayout = TextViewLayout(.initialize(string: folder.title, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
+        
+        let attr = NSMutableAttributedString()
+        attr.append(string: folder.title, color: !selected ? NSColor(0xffffff).withAlphaComponent(0.5) : NSColor(0xffffff), font: .medium(10))
+        InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: folder.entities, isPremium: context.isPremium, playPolicy: folder.enableAnimations ? nil : .framesCount(1))
+
+        nameLayout = TextViewLayout(attr, alignment: .center)
+        
+        
         nameLayout.measure(width: initialSize.width - 10)
         
         
@@ -185,14 +192,14 @@ class LeftSidebarFolderItem: TableRowItem {
 private final class LeftSidebarFolderView : TableRowView {
     private let imageView = ImageView(frame: NSMakeRect(0, 0, 32, 32))
     private let badgeView = ImageView()
-    private let textView = TextView()
+    private let textView = InteractiveTextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(textView)
         addSubview(badgeView)
         textView.userInteractionEnabled = false
-        textView.isSelectable = false
+        textView.textView.isSelectable = false
         textView.isEventLess = true
         badgeView.isEventLess = true
         imageView.isEventLess = true
@@ -260,7 +267,7 @@ private final class LeftSidebarFolderView : TableRowView {
      //   imageView.animates = animated
         imageView.image = item.icon
         imageView.sizeToFit()
-        textView.update(item.nameLayout)
+        textView.set(text: item.nameLayout, context: item.context)
         
         
       //  badgeView.animates = animated

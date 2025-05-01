@@ -418,7 +418,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.openPremium(true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .giftPremium(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGiftPremium, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsSendGift, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stars(_, stars, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStars, icon: theme.icons.settingsStars, activeIcon: theme.icons.settingsStars, type: .nextContext(stars > 0 ? "\(stars)" : ""), viewType: viewType, action: arguments.stars, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .faq(_, viewType):
@@ -635,8 +635,8 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         
         let stars_purchase_blocked = context.appConfiguration.getBoolValue("stars_purchase_blocked", orElse: true)
         
-        if !stars_purchase_blocked, let stars, stars.balance > 0 || !stars.transactions.isEmpty  {
-            entries.append(.stars(index: index, count: stars.balance, viewType: .singleItem))
+        if !stars_purchase_blocked, let stars, stars.balance.value > 0 || !stars.transactions.isEmpty  {
+            entries.append(.stars(index: index, count: stars.balance.value, viewType: .singleItem))
             index += 1
         }
 
@@ -813,6 +813,17 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), (Bool, Bool))> = Promise()
     
+    func updateMessagesPrivacy(noPaidMessages: SelectivePrivacySettings, globalSettings: GlobalPrivacySettings) {
+        let privacy = self.settings.get() |> deliverOnMainQueue |> take(1)
+        _ = privacy.startStandalone(next: { [weak self] privacy, web, proxy, value in
+            var privacy = privacy
+            privacy?.noPaidMessages = noPaidMessages
+            privacy?.globalSettings = globalSettings
+            DispatchQueue.main.async {
+                self?.settings.set(.single((privacy, web, proxy, value)))
+            }
+        })
+    }
     
     func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
         let privacy = self.settings.get() |> deliverOnMainQueue |> take(1)
@@ -838,6 +849,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 privacy?.bio = updated
             case .birthday:
                 privacy?.birthday = updated
+            case .gifts:
+                privacy?.giftsAutoSave = updated
             }
             DispatchQueue.main.async {
                 self?.settings.set(.single((privacy, web, proxy, value)))
@@ -909,8 +922,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         
         
         let setStatus:(Control, TelegramUser)->Void = { control, peer in
-            let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
-                context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
+            let callback:(TelegramMediaFile, StarGift.UniqueGift?, Int32?, CGRect?)->Void = { file, starGift, timeout, fromRect in
+                context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect, starGift: starGift)
             }
             if control.popover == nil {
                 showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
@@ -941,7 +954,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     navigation.push(PremiumBoardingController(context: context, source: .business_standalone), false)
                 }
             } else {
-                showModal(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: business ? .business : .settings), for: context.window)
             }
         }, giftPremium: {
             multigift(context: context)

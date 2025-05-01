@@ -297,13 +297,15 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
             } else {
                 range = NSMakeRange(2, self.genericView.tableView.count - 2)
             }
-            self.genericView.tableView.resortController = TableResortController(resortRange: range, start: { _ in }, resort: { _ in }, complete: { from, to in
-                _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
-                    var filters = filters
-                    filters.move(at: from - 1, to: to - 1)
-                    return filters
-                }).start()
-            })
+            if self.genericView.tableView.resortController?.resortRange != range {
+                self.genericView.tableView.resortController = TableResortController(resortRange: range, start: { _ in }, resort: { _ in }, complete: { from, to in
+                    _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
+                        var filters = filters
+                        filters.move(at: from - 1, to: to - 1)
+                        return filters
+                    }).start()
+                })
+            }
         }))
     }
 }

@@ -21,7 +21,7 @@ struct ReportReasonValue : Equatable {
 
 func reportReasonSelector(context: AccountContext, buttonText: String = strings().reportReasonReport) -> Signal<ReportReasonValue, NoError> {
     let promise: ValuePromise<ReportReasonValue> = ValuePromise()
-    let controller = ReportReasonController(callback: { reason in
+    let controller = ReportReasonController(context: context, callback: { reason in
         promise.set(reason)
     }, buttonText: buttonText)
     showModal(with: controller, for: context.window)
@@ -157,7 +157,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
-    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs, .custom]
     
     for (i, reason) in reasons.enumerated() {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .none, viewType: bestGeneralViewType(reasons, for: i), action: {
@@ -173,7 +173,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     return entries
 }
 
-func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, buttonText: String = strings().reportReasonReport) -> InputDataModalController {
+func ReportReasonController(context: AccountContext, callback: @escaping(ReportReasonValue)->Void, buttonText: String = strings().reportReasonReport) -> InputDataModalController {
     let initialState = ReportReasonState(value: .init(reason: .spam, comment: ""))
     let state: ValuePromise<ReportReasonState> = ValuePromise(initialState)
     let stateValue: Atomic<ReportReasonState> = Atomic(value: initialState)
@@ -184,8 +184,21 @@ func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, button
     
     var getModalController:(()->InputDataModalController?)? = nil
     
+    
+    var window:Window {
+        get {
+            return bestWindow(context, getModalController?())
+        }
+    }
+    
     let arguments = ReportReasonArguments(selectReason: { reason in
-        callback(.init(reason: reason, comment: ""))
+        if reason == .custom {
+            showModal(with: ReportDetailsController(context: context, reason: .init(reason: reason, comment: ""), updated: { value in
+                callback(value)
+            }), for: window)
+        } else {
+            callback(.init(reason: reason, comment: ""))
+        }
         getModalController?()?.close()
     })
     

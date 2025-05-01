@@ -32,6 +32,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case statusBar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case showCallsTab(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case enableRFTCopy(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case sendLargePhotos(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case acceptSecretChats(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchReply(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchEdit(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
@@ -72,30 +73,32 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 12
         case .enableRFTCopy:
             return 13
-        case .acceptSecretChats:
+        case .sendLargePhotos:
             return 14
-        case .forceTouchReply:
+        case .acceptSecretChats:
             return 15
-        case .forceTouchEdit:
+        case .forceTouchReply:
             return 16
-        case .forceTouchForward:
+        case .forceTouchEdit:
             return 17
-        case .forceTouchPreviewMedia:
+        case .forceTouchForward:
             return 18
-        case .forceTouchReact:
+        case .forceTouchPreviewMedia:
             return 19
-        case .enterBehavior:
+        case .forceTouchReact:
             return 20
-        case .cmdEnterBehavior:
+        case .enterBehavior:
             return 21
-        case .callSettings:
+        case .cmdEnterBehavior:
             return 22
-        case .previewChats:
+        case .callSettings:
             return 23
-        case .showProfileId:
+        case .previewChats:
             return 24
-        case .previewChatsInfo:
+        case .showProfileId:
             return 25
+        case .previewChatsInfo:
+            return 26
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -116,6 +119,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .showCallsTab(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .enableRFTCopy(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .sendLargePhotos(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .acceptSecretChats(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -189,6 +194,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .enableRFTCopy(sectionId: _, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsCopyRTF, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleRTFEnabled(!enabled)
+            })
+        case let .sendLargePhotos(sectionId: _, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSendLargePhotos, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleLargePhotos(!enabled)
             })
         case let .acceptSecretChats(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsAcceptSecretChats, type: .switchable(enabled), viewType: viewType, action: {
@@ -282,6 +291,7 @@ private final class GeneralSettingsArguments {
     let toggleBigEmoji: (Bool) -> Void
     let toggleStatusBar: (Bool) -> Void
     let toggleRTFEnabled: (Bool) -> Void
+    let toggleLargePhotos: (Bool) -> Void
     let acceptSecretChats:(Bool)->Void
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
@@ -290,7 +300,7 @@ private final class GeneralSettingsArguments {
     let toggleSpellingKey:(String)->Void
     let showProfileId:()->Void
     let togglePreviewChat:()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void, toggleSpellingKey:@escaping(String)->Void, showProfileId:@escaping()->Void, togglePreviewChat:@escaping()->Void) {
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, toggleLargePhotos: @escaping(Bool) -> Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void, toggleSpellingKey:@escaping(String)->Void, showProfileId:@escaping()->Void, togglePreviewChat:@escaping()->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -313,6 +323,7 @@ private final class GeneralSettingsArguments {
         self.toggleSpellingKey = toggleSpellingKey
         self.showProfileId = showProfileId
         self.togglePreviewChat = togglePreviewChat
+        self.toggleLargePhotos = toggleLargePhotos
     }
    
 }
@@ -387,7 +398,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsAdvancedHeader))
     headerUnique -= 1
-    entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .singleItem))
+    entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .firstItem))
+    entries.append(.sendLargePhotos(sectionId: sectionId, enabled: FastSettings.sendLargePhotos, viewType: .lastItem))
 //    entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
     
     entries.append(.section(sectionId: sectionId))
@@ -492,6 +504,8 @@ class GeneralSettingsViewController: TableViewController {
             }).start()
         }, toggleRTFEnabled: { enable in
             FastSettings.enableRTF = enable
+        }, toggleLargePhotos: { enable in
+            FastSettings.sendLargePhotos(enable)
         }, acceptSecretChats: { enable in
             _ = context.account.postbox.transaction({ transaction -> Void in
                 transaction.updatePreferencesEntry(key: PreferencesKeys.secretChatSettings, { _ in

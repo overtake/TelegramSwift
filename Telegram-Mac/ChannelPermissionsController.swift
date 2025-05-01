@@ -30,7 +30,8 @@ private final class Arguments {
     let convert:()->Void
     let toggleReveal:(TelegramChatBannedRightsFlags)->Void
     let updateBoostNeed:(Int32?)->Void
-    init(context: AccountContext, updatePermission: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, setPeerIdWithRevealedOptions: @escaping (PeerId?, PeerId?) -> Void, addPeer: @escaping  () -> Void, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping (ChannelParticipant) -> Void, openPeerInfo: @escaping (Peer) -> Void, openKicked: @escaping () -> Void, presentRestrictedPublicGroupPermissionsAlert: @escaping() -> Void, updateSlowMode:@escaping(Int32)->Void, convert: @escaping()->Void, toggleReveal:@escaping(TelegramChatBannedRightsFlags)->Void, updateBoostNeed:@escaping(Int32?)->Void) {
+    let updatePrice:(Int64?)->Void
+    init(context: AccountContext, updatePermission: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, setPeerIdWithRevealedOptions: @escaping (PeerId?, PeerId?) -> Void, addPeer: @escaping  () -> Void, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping (ChannelParticipant) -> Void, openPeerInfo: @escaping (Peer) -> Void, openKicked: @escaping () -> Void, presentRestrictedPublicGroupPermissionsAlert: @escaping() -> Void, updateSlowMode:@escaping(Int32)->Void, convert: @escaping()->Void, toggleReveal:@escaping(TelegramChatBannedRightsFlags)->Void, updateBoostNeed:@escaping(Int32?)->Void, updatePrice:@escaping(Int64?)->Void) {
         self.context = context
         self.updatePermission = updatePermission
         self.addPeer = addPeer
@@ -44,6 +45,7 @@ private final class Arguments {
         self.convert = convert
         self.toggleReveal = toggleReveal
         self.updateBoostNeed = updateBoostNeed
+        self.updatePrice = updatePrice
     }
 }
 
@@ -57,6 +59,9 @@ private struct State: Equatable {
     var peer: PeerEquatable?
     var cachedData: CachedDataEquatable?
     var restrictBoosters: Int32? = nil
+    
+    
+    var price: Int64? = nil
     
     var slowmodeTimeout: Int32? {
         if let cachedDatra = cachedData?.data as? CachedChannelData {
@@ -196,6 +201,8 @@ private let _id_kicked = InputDataIdentifier("_id_kicked")
 private let _id_add_peer = InputDataIdentifier("_id_add_peer")
 private let _id_do_not_boosters = InputDataIdentifier("_id_do_not_boosters")
 private let _id_boost_count = InputDataIdentifier("_id_boost_count")
+private let _id_charge_price = InputDataIdentifier("_id_charge_price")
+private let _id_charge = InputDataIdentifier("_id_charge")
 
 private func _id_peer(_ peerId: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(peerId.toInt64())")
@@ -411,6 +418,46 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }
         
+        if !channel.flags.contains(.isGigagroup), cachedData.flags.contains(.paidMessagesAvailable) {
+                        
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_charge, data: .init(name: strings().channelPermissionPaidMessagesChargeStars, color: theme.colors.text, type: .switchable(state.price != nil), viewType: .singleItem, action: {
+                arguments.updatePrice(state.price != nil ? nil : 500)
+            })))
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelPermissionPaidMessagesChargeStarsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+            
+            let maximumStars = arguments.context.appConfiguration.getGeneralValue("stars_paid_message_amount_max", orElse: 10000)
+            let commission = arguments.context.appConfiguration.getGeneralValue("stars_paid_message_commission_permille", orElse: 850).decemial
+
+            
+            if let price = state.price {
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+                
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelPermissionPaidMessagesSetupHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                index += 1
+                
+
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_charge_price, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                    return PrecieSliderRowItem(initialSize, stableId: stableId, current: Double(price) / (Double(maximumStars) - 1), magnit: [], markers: ["1", "\(maximumStars)"], showValue: strings().starListItemCountCountable(Int(price)), update: { value in
+                        arguments.updatePrice(Int64(1 + value * (Double(maximumStars) - 1)))
+                    }, viewType: .singleItem)
+                }))
+                
+
+                
+                let amount = "\(Double(price) * 0.013 * commission)".prettyCurrencyNumberUsd
+                
+
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelPermissionPaidMessagesSetupInfo(commission.string, amount)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                index += 1
+            }
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
+        
 
         if !channel.flags.contains(.isGigagroup) {
             insertSlowMode(cachedData.slowModeTimeout)
@@ -424,6 +471,8 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_kicked, data: .init(name: strings().groupInfoPermissionsRemoved, color: theme.colors.text, type: .nextContext(cachedData.participantsSummary.kickedCount.flatMap({ "\($0 > 0 ? "\($0)" : "")" }) ?? ""), viewType: .singleItem, action: arguments.openKicked)))
 
+        
+        
 
         if !channel.flags.contains(.isGigagroup) {
             entries.append(.sectionId(sectionId, type: .normal))
@@ -436,8 +485,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_peer, equatable: .init(viewType), comparable: nil, item: { initialSize, stableId in
                 return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().groupInfoPermissionsAddException, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
             }))
-
-
 
             struct TuplePeer: Equatable {
                 let participant: RenderedChannelParticipant
@@ -468,7 +515,7 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.participant.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                     var text: String?
                     switch item.participant.participant {
-                    case let .member(_, _, _, banInfo, _):
+                    case let .member(_, _, _, banInfo, _, _):
                         var exceptionsString = ""
                         if let banInfo = banInfo {
                             for (rights, _) in internal_allPossibleGroupPermissionList {
@@ -484,7 +531,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                     default:
                         break
                     }
-                    
                     return ShortPeerRowItem(initialSize, peer: item.participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, status: text, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: item.viewType, action: {
                         if item.canOpen {
                             arguments.openPeer(item.participant.participant)
@@ -602,6 +648,8 @@ final class ChannelPermissionsController : TableViewController {
         let removePeerDisposable = MetaDisposable()
         actionsDisposable.add(removePeerDisposable)
         
+        let updateChannelPaidMessageDisposable = MetaDisposable()
+        
         
         var upgradedToSupergroupImpl: ((PeerId, @escaping () -> Void) -> Void)?
         
@@ -613,7 +661,7 @@ final class ChannelPermissionsController : TableViewController {
         let restrict:(ChannelParticipant, Bool) -> Void = { participant, unban in
             showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
                 switch participant {
-                case let .member(memberId, _, _, _, _):
+                case let .member(memberId, _, _, _, _, _):
                     
                     
                     let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
@@ -678,6 +726,7 @@ final class ChannelPermissionsController : TableViewController {
                 var current = current
                 current.peer = PeerEquatable(peerView.peers[peerId])
                 current.cachedData = CachedDataEquatable(peerView.cachedData)
+                current.price = (current.peer?.peer as? TelegramChannel)?.sendPaidMessageStars?.value
                 if first {
                     current.restrictBoosters = (peerView.cachedData as? CachedChannelData)?.boostsToUnrestrict
                 }
@@ -830,7 +879,7 @@ final class ChannelPermissionsController : TableViewController {
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {
-                        if case let .member(_, _, adminInfo, _, _) = participant.participant {
+                        if case let .member(_, _, adminInfo, _, _, _) = participant.participant {
                             if let adminInfo = adminInfo {
                                 if !adminInfo.canBeEditedByAccountPeer && adminInfo.promotedBy != context.account.peerId {
                                     adminError = true
@@ -852,7 +901,7 @@ final class ChannelPermissionsController : TableViewController {
                 if let p = behavior.participants[memberId] {
                     participant = p
                 } else if let temporary = behavior.result[memberId] {
-                    participant = RenderedChannelParticipant(participant: .member(id: memberId, invitedAt: 0, adminInfo: nil, banInfo: nil, rank: nil), peer: temporary.peer, peers: [memberId: temporary.peer], presences: temporary.presence != nil ? [memberId: temporary.presence!] : [:])
+                    participant = RenderedChannelParticipant(participant: .member(id: memberId, invitedAt: 0, adminInfo: nil, banInfo: nil, rank: nil, subscriptionUntilDate: nil), peer: temporary.peer, peers: [memberId: temporary.peer], presences: temporary.presence != nil ? [memberId: temporary.presence!] : [:])
                 }
                 if let participant = participant {
                     restrict(participant.participant, false)
@@ -942,6 +991,14 @@ final class ChannelPermissionsController : TableViewController {
                 return current
             }
             _ = context.engine.peers.updateChannelBoostsToUnlockRestrictions(peerId: peerId, boosts: value == nil ? 0 : value!).start()
+        }, updatePrice: { value in
+            updateState { current in
+                var current = current
+                current.price = value
+                return current
+            }
+            let starsAmount = value.flatMap { StarsAmount(value: Int64($0), nanos: 0) }
+            updateChannelPaidMessageDisposable.set((context.engine.peers.updateChannelPaidMessagesStars(peerId: peerId, stars: starsAmount) |> delay(2.0, queue: .mainQueue())).start())
         })
         
         let previous = Atomic<[AppearanceWrapperEntry<InputDataEntry>]>(value: [])
@@ -1020,5 +1077,7 @@ final class ChannelPermissionsController : TableViewController {
         }))
         
     }
+    
+    
 }
 

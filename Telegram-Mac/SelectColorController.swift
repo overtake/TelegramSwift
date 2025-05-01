@@ -201,7 +201,7 @@ private final class ProfilePreviewRowView : GeneralContainableRowView {
         nameView.update(item.nameLayout)
         statusView.update(item.statusLayout)
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, color: item.accentColor, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, isBig: true, playTwice: true, color: item.accentColor, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.addSubview(control)
@@ -275,9 +275,9 @@ private class PreviewRowItem: GeneralRowItem {
         
         let previewPeer: Peer?
         if let peer = peer as? TelegramUser {
-            previewPeer = TelegramUser(id: peerId, accessHash: peer.accessHash, firstName: peer.firstName, lastName: peer.lastName, username: peer.username, phone: peer.phone, photo: peer.photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: emojiStatus, usernames: [], storiesHidden: nil, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId)
+            previewPeer = TelegramUser(id: peerId, accessHash: peer.accessHash, firstName: peer.firstName, lastName: peer.lastName, username: peer.username, phone: peer.phone, photo: peer.photo, botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: emojiStatus, usernames: [], storiesHidden: nil, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, subscriberCount: nil, verificationIconFileId: nil)
         } else if let peer = peer as? TelegramChannel {
-            previewPeer = TelegramChannel(id: peerId, accessHash: peer.accessHash, title: peer.title, username: peer.username, photo: peer.profileImageRepresentations, creationDate: peer.creationDate, version: peer.version, participationStatus: peer.participationStatus, info: peer.info, flags: peer.flags, restrictionInfo: peer.restrictionInfo, adminRights: peer.adminRights, bannedRights: peer.bannedRights, defaultBannedRights: peer.defaultBannedRights, usernames: peer.usernames, storiesHidden: peer.storiesHidden, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, emojiStatus: emojiStatus, approximateBoostLevel: nil)
+            previewPeer = TelegramChannel(id: peerId, accessHash: peer.accessHash, title: peer.title, username: peer.username, photo: peer.profileImageRepresentations, creationDate: peer.creationDate, version: peer.version, participationStatus: peer.participationStatus, info: peer.info, flags: peer.flags, restrictionInfo: peer.restrictionInfo, adminRights: peer.adminRights, bannedRights: peer.bannedRights, defaultBannedRights: peer.defaultBannedRights, usernames: peer.usernames, storiesHidden: peer.storiesHidden, nameColor: nameColor, backgroundEmojiId: backgroundEmojiId, profileColor: nameColor, profileBackgroundEmojiId: backgroundEmojiId, emojiStatus: emojiStatus, approximateBoostLevel: nil, subscriptionUntilDate: nil, verificationIconFileId: nil, sendPaidMessageStars: nil)
         } else {
             previewPeer = nil
         }
@@ -294,7 +294,7 @@ private class PreviewRowItem: GeneralRowItem {
             
             let timestamp1: Int32 = 60 * 20 + 60 * 60 * 18
             
-            let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: appName, title: strings().selectColorMessage2PreviewTitle, text: strings().selectColorMessage2PreviewText, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: nil, file: nil, story: nil, attributes: [], instantPage: nil)))
+            let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: appName, title: strings().selectColorMessage2PreviewTitle, text: strings().selectColorMessage2PreviewText, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, imageIsVideoCover: false, image: nil, file: nil, story: nil, attributes: [], instantPage: nil)))
 
             let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: previewPeer.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp1, flags: [.Incoming], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: previewPeer, text: strings().selectColorMessage2, attributes: [ReplyMessageAttribute(messageId: firstMessage.id, threadMessageId: nil, quote: nil, isQuote: false)], media: [media], peers:SimpleDictionary([previewPeer.id : previewPeer]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
             
@@ -752,7 +752,8 @@ private final class Arguments {
     let showEmojiStatus:()->Void
     let showChannelWallpaper:()->Void
     let boost:()->Void
-    init(context: AccountContext, source: SelectColorSource, toggleColor:@escaping(PeerNameColor, SelectColorType) -> Void, showEmojiPanel:@escaping(SelectColorType)->Void, showEmojiPack:@escaping()->Void, removeIcon:@escaping(SelectColorType)->Void, resetColor:@escaping(SelectColorType)->Void, getColor:@escaping(PeerNameColor, SelectColorType)->PeerNameColors.Colors, showEmojiStatus:@escaping()->Void, showChannelWallpaper:@escaping()->Void, boost:@escaping()->Void) {
+    let wearCollectible:(StarGift)->Void
+    init(context: AccountContext, source: SelectColorSource, toggleColor:@escaping(PeerNameColor, SelectColorType) -> Void, showEmojiPanel:@escaping(SelectColorType)->Void, showEmojiPack:@escaping()->Void, removeIcon:@escaping(SelectColorType)->Void, resetColor:@escaping(SelectColorType)->Void, getColor:@escaping(PeerNameColor, SelectColorType)->PeerNameColors.Colors, showEmojiStatus:@escaping()->Void, showChannelWallpaper:@escaping()->Void, boost:@escaping()->Void, wearCollectible:@escaping(StarGift)->Void) {
         self.context = context
         self.source = source
         self.premiumConfiguration = PremiumConfiguration.with(appConfiguration: context.appConfiguration)
@@ -765,6 +766,7 @@ private final class Arguments {
         self.showEmojiStatus = showEmojiStatus
         self.showChannelWallpaper = showChannelWallpaper
         self.boost = boost
+        self.wearCollectible = wearCollectible
     }
 }
 
@@ -779,6 +781,8 @@ private struct State : Equatable {
             return 0
         }
     }
+    
+    var wearable: [RecentStarGiftItem] = []
 
     var peer: EnginePeer
     
@@ -858,6 +862,10 @@ private let _id_emoji_pack = InputDataIdentifier("_id_emoji_pack")
 private let _id_group_block = InputDataIdentifier("_id_group_block")
 
 private let _id_wallpaper = InputDataIdentifier("_id_wallpaper")
+
+private func _id_stars_gifts(_ index: Int) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_stars_gifts_\(index)")
+}
 
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -1188,6 +1196,64 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         break
     }
     
+    switch arguments.source {
+    case .account:
+        if !state.wearable.isEmpty {
+           
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().selectColorUseGiftTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            let selected = state.wearable.first(where: { $0.starGift.file?.fileId.id == state.peer._asPeer().emojiStatus?.fileId })?.starGift
+            
+            let chunks = state.wearable.chunks(3)
+            
+            struct Tuple : Equatable {
+                let chunk: [RecentStarGiftItem]
+                let viewType: GeneralViewType
+                let selected: StarGift.UniqueGift?
+            }
+            
+            var tupls: [Tuple] = []
+            
+            for (i, chunk) in chunks.enumerated() {
+                tupls.append(.init(chunk: chunk, viewType: .innerItem, selected: selected))
+            }
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_s_\(-1)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .firstItem, drawCustomSeparator: false, backgroundColor: theme.colors.background, containable: true)
+            }))
+            
+            for (i, tuple) in tupls.enumerated() {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: tuple.chunk.map { .initialize($0.starGift) }, perRowCount: 3, fitToSize: true, viewType: tuple.viewType, callback: { option in
+                        if let gift = option.gift {
+                            arguments.wearCollectible(gift)
+                        }
+                    }, selected: selected.flatMap { .unique($0) })
+                }))
+                if i != tupls.count - 1 {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_s_\(i)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                        return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .innerItem, drawCustomSeparator: false, backgroundColor: theme.colors.background, containable: true)
+                    }))
+                }
+            }
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_s_\(1000)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .lastItem, drawCustomSeparator: false, backgroundColor: theme.colors.background, containable: true)
+            }))
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().selectColorUseGiftInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+
+
+            entries.append(.sectionId(sectionId, type: .customModern(10)))
+            sectionId += 1
+            
+        }
+    default:
+        break
+    }
+    
     return entries
 }
 
@@ -1273,11 +1339,29 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
 
     let initialState = State(peer: .init(source.peer), selected: source.nameColor(.name), selected_profile: source.nameColor(.profile), backgroundEmojiId: source.backgroundIcon(.name), backgroundEmojiId_profile: source.backgroundIcon(.profile), emojiStatus: source.peer.emojiStatus, theme: theme.withUpdatedEmoticonThemes(context.emoticonThemes))
     
+    
+    
+    
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    actionsDisposable.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peer.id)).start(next: { peer in
+        updateState { current in
+            var current = current
+            if let peer {
+                current.peer = peer
+                current.emojiStatus = peer.emojiStatus
+                current.selected_profile = peer.profileColor
+                current.selected = peer.nameColor
+                current.backgroundEmojiId_profile = peer.profileBackgroundEmojiId
+                current.backgroundEmojiId = peer.backgroundEmojiId
+            }
+            return current
+        }
+    }))
     
     let isGroup: Bool
     switch source {
@@ -1335,6 +1419,33 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
             return current
         }
     }))
+    
+    
+    switch source {
+    case let .account(peer):
+        let signal = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudUniqueStarGifts], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 100)
+        actionsDisposable.add(signal.start(next: { view in
+            for listView in view.orderedItemListsViews {
+                if listView.collectionId == Namespaces.OrderedItemList.CloudUniqueStarGifts {
+                    var items: [RecentStarGiftItem] = []
+                    for item in listView.items {
+                        guard let item = item.contents.get(RecentStarGiftItem.self) else {
+                            continue
+                        }
+                        items.append(item)
+                    }
+                    
+                    updateState { current in
+                        var current = current
+                        current.wearable = items
+                        return current
+                    }
+                }
+            }
+        }))
+    default:
+        break
+    }
     
     var backgroundEmojiId: Int64? = nil
     var color: PeerNameColor?
@@ -1454,7 +1565,7 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
                 switch result {
                 case let .result(info, items, _):
                     if let item = items.first {
-                        return .single((info, item))
+                        return .single((info._parse(), item))
                     } else {
                         return .single(nil)
                     }
@@ -1470,7 +1581,7 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
     actionsDisposable.add(emojiPack.start(next: { info in
         DispatchQueue.main.async {
             if let item = info?.1 {
-                emojiPack_Layer = InlineStickerItemLayer(account: context.account, file: item.file, size: NSMakeSize(25, 25), playPolicy: .framesCount(1), textColor: theme.colors.accent)
+                emojiPack_Layer = InlineStickerItemLayer(account: context.account, file: item.file._parse(), size: NSMakeSize(25, 25), playPolicy: .framesCount(1), textColor: theme.colors.accent)
                 emojiPack_Layer?.isPlayable = true
                 
                 emojiPack_Layer?.contentDidUpdate = { image in
@@ -1543,9 +1654,9 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
         
         let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
 
-        interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, fromRect in
+        interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, _, fromRect in
             
-            if sticker.file.mimeType.hasPrefix("bundle") {
+            if sticker.file._parse().mimeType.hasPrefix("bundle") {
                 updateState { current in
                     var current = current
                     switch type {
@@ -1610,10 +1721,10 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
         }
     }, getColor: getColor, showEmojiStatus: {
         let setStatus:(Control, TelegramUser)->Void = { control, peer in
-            let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
+            let callback:(TelegramMediaFile, StarGift.UniqueGift?, Int32?, CGRect?)->Void = { file, _, timeout, fromRect in
                 updateState { current in
                     var current = current
-                    current.emojiStatus = .init(fileId: file.fileId.id, expirationDate: timeout)
+                    current.emojiStatus = .init(content: .emoji(fileId: file.fileId.id), expirationDate: timeout)
                     return current
                 }
             }
@@ -1634,13 +1745,13 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
                 
                 let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
 
-                interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, expirationDate, fromRect in
+                interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, expirationDate, fromRect in
                     updateState { current in
                         var current = current
-                        if sticker.file.mimeType.hasPrefix("bundle") {
+                        if sticker.file._parse().mimeType.hasPrefix("bundle") {
                             current.emojiStatus = nil
                         } else {
-                            current.emojiStatus = .init(fileId: sticker.file.fileId.id, expirationDate: expirationDate)
+                            current.emojiStatus = .init(content: .emoji(fileId: sticker.file.fileId.id), expirationDate: expirationDate)
                         }
                         return current
                     }
@@ -1673,6 +1784,10 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
         let myBoost = stateValue.with { $0.myStatus }
         if let status = status {
             showModal(with: BoostChannelModalController(context: context, peer: source.peer, boosts: status, myStatus: myBoost, infoOnly: true), for: context.window)
+        }
+    }, wearCollectible: { gift in
+        if let unique = gift.unique {
+            _ = context.engine.accountData.setStarGiftStatus(starGift: unique, expirationDate: nil).start()
         }
     })
     
@@ -1857,7 +1972,7 @@ func SelectColorController(context: AccountContext, peer: Peer, callback: Select
                 })
             } else {
                 showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
             }
         }

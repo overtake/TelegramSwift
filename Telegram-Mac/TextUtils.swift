@@ -22,7 +22,6 @@ enum MessageTextMediaViewType {
     case none
 }
 
-let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
 
 func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
@@ -46,8 +45,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     }
     
     
-    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
-        let regexPattern = #"[\d\-]{5,7}"#
+    if message.id.peerId == servicePeerId || message.id.peerId == verifyCodePeerId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
+        let regexPattern = #"[\d\-]{3,7}"#
         do {
             let regex = try NSRegularExpression(pattern: regexPattern, options: [])
             let range = NSRange(location: 0, length: messageText.utf16.count)
@@ -383,6 +382,10 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                 if currency == XTR {
                     attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
                 }
+            } else if case let .paymentRefunded(_, currency, _, _, _) = action.action {
+                if currency == XTR {
+                    attributedText.insertEmbedded(.embedded(name: XTR_ICON, color: theme.chatList.grayTextColor, resize: false), for: XTR)
+                }
             }
             
             InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
@@ -570,7 +573,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 text = strings().chatServiceGroupAddedMembers1(authorName, peerDebugDisplayTitles(peerIds, message.peers))
             }
         case .phoneNumberRequest:
-            text = "phone number request"
+            text = strings().chatServicePhoneNumberRequest
         case .channelMigratedFromGroup:
             text = ""
         case let .groupCreated(title: title):
@@ -780,14 +783,19 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .webViewData(data):
             text = strings().chatServiceWebData(data)
-        case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount):
-            let formatted = formatCurrencyAmount(amount, currency: currency)
+        case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount, _, _):
+            let formatted: String
+            if currency == XTR {
+                formatted = strings().starListItemCountCountable(Int(amount))
+            } else {
+                formatted = formatCurrencyAmount(amount, currency: currency)
+            }
             if authorId == account.peerId {
                 text = strings().chatServicePremiumGiftSentYou(formatted)
             } else {
                 text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
-        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount, _, _):
             if authorId == account.peerId {
                 text = strings().chatServiceGiftLinkSent
             } else {
@@ -931,16 +939,16 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case .joinedChannel:
             text = strings().chatServiceJoinedChannel
-        case let .giveawayResults(winners, unclaimed):
+        case let .giveawayResults(winners, unclaimed, stars):
             if winners == 0 {
-                text = strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
+                text = stars ? strings().chatServiceGiveawayResultsNoWinnersStarsCountable(Int(unclaimed)) : strings().chatServiceGiveawayResultsNoWinnersCountable(Int(unclaimed))
             } else if unclaimed > 0 {
-                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
-                let winnersString = strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
-                let unclaimedString = strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
+                text = stars ? strings().chatServiceGiveawayResultsStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsCountable(Int(winners))
+                let winnersString = stars ? strings().chatServiceGiveawayResultsMixedWinnersStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsMixedWinnersCountable(Int(winners))
+                let unclaimedString = stars ? strings().chatServiceGiveawayResultsMixedUnclaimedStarsCountable(Int(unclaimed)) : strings().chatServiceGiveawayResultsMixedUnclaimedCountable(Int(unclaimed))
                 text = winnersString + "\n" + unclaimedString
             } else {
-                text = strings().chatServiceGiveawayResultsCountable(Int(winners))
+                text = stars ? strings().chatServiceGiveawayResultsStarsCountable(Int(winners)) : strings().chatServiceGiveawayResultsCountable(Int(winners))
             }
         case let .boostsApplied(boosts):
             if message.author?.id == account.peerId {
@@ -958,6 +966,70 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     let boostsString = strings().notificationBoostTimesCountable(Int(boosts))
                     text = strings().notificationBoostMultiple(peerName, boostsString)
                 }
+            }
+        case let .giftStars(currency, amount, count, cryptoCurrency, cryptoAmount, transactionId):
+            let formatted = formatCurrencyAmount(amount, currency: currency)
+            if authorId == account.peerId {
+                text = strings().chatServicePremiumGiftSentYou(formatted)
+            } else {
+                text = strings().chatServicePremiumGiftSent(authorName, formatted)
+            }
+        case let .paymentRefunded(_, currency, totalAmount, _, _):
+            let peerName = message.author?.compactDisplayTitle ?? ""
+            text = strings().chatServiceRefundedBackCountable(peerName, currency + TINY_SPACE, Int(totalAmount))
+        case let .prizeStars(amount, _, _, _, _):
+            text = strings().chatServiceStarsPrize(authorName, strings().channelBoostBoosterStarsCountable(Int(amount)))
+        case let .starGift(gift, _, messageText, _, _, _, _, _, _, _, _, _, _, _, _):
+            if authorId == account.peerId {
+                text = strings().chatServiceStarGiftSentYou(strings().starListItemCountCountable(Int(gift.generic!.price)))
+            } else {
+                text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.generic!.price)))
+            }
+        case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let savedId):
+            
+            let authorName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? authorName
+            
+            if case let .unique(gift) = gift {
+                if isTransferred {
+                    if authorId == account.peerId {
+                        text = strings().notificationStarsGiftTransferYou
+                    } else {
+                        text = strings().notificationStarsGiftTransfer(authorName)
+                    }
+                } else if isUpgrade {
+                    if authorId == account.peerId {
+                        text = strings().notificationStarsGiftUpgradeYou(authorName)
+                    } else {
+                        if let _ = senderId {
+                            text = strings().notificationStarsGiftUpgradeChannel(authorName)
+                        } else {
+                            text = strings().notificationStarsGiftUpgrade(authorName)
+                        }
+                    }
+                } else {
+                    text = strings().chatListTextUniqueGift(gift.title + " #\(gift.number)")
+                }
+            }
+        case let .paidMessagesRefunded(_, stars):
+            let starsString = strings().starListItemCountCountable(Int(stars))
+            if authorId == account.peerId {
+                text = strings().notificationPaidMessageRefundYou(starsString, authorName)
+            } else {
+                text = strings().notificationPaidMessageRefund(authorName, starsString)
+            }
+        case .paidMessagesPriceEdited(let stars):
+            let starsString = strings().starListItemCountCountable(Int(stars))
+            
+            if authorId == account.peerId {
+                text = strings().notificationPaidMessagePriceChangedYou(starsString)
+            } else {
+                text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
+            }
+        case let .conferenceCall(сonferenceCall):
+            if authorId == account.peerId {
+                text = strings().notificationGroupCallOutgoing
+            } else {
+                text = strings().notificationGroupCallIncoming
             }
 
         }
@@ -1041,7 +1113,13 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
             } else if user.flags.contains(.isSupport) {
                 return PeerStatusStringResult(title, .initialize(string: strings().presenceSupport,  color: theme.statusColor, font: theme.statusFont))
             } else if let _ = user.botInfo {
-                return PeerStatusStringResult(title, .initialize(string: strings().presenceBot,  color: theme.statusColor, font: theme.statusFont))
+                let string: String
+                if let subscriberCount = user.subscriberCount {
+                    string = strings().peerStatusUsersCountable(Int(subscriberCount)).replacingOccurrences(of: "\(subscriberCount)", with: subscriberCount.formattedWithSeparator)
+                } else {
+                    string = strings().presenceBot
+                }
+                return PeerStatusStringResult(title, .initialize(string: string,  color: theme.statusColor, font: theme.statusFont))
             } else if let presence = peerView.peerPresences[peer.id] as? TelegramUserPresence, !ignoreActivity {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 let (string, activity, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp), expanded: expanded)
@@ -1248,7 +1326,7 @@ func parseTextEntities(_ message:String) -> (String, [MessageTextEntity]) {
     
 }
 
-func timeIntervalString( _ value: Int) -> String {
+func timeIntervalString( _ value: Int, months: Bool = false) -> String {
     if value < 60 {
         return strings().timerSecondsCountable(value)
     } else if value < 60 * 60 {
@@ -1259,7 +1337,7 @@ func timeIntervalString( _ value: Int) -> String {
         return strings().timerDaysCountable(max(1, value / (60 * 60 * 24)))
     } else if value < 60 * 60 * 24 * 30 {
         return strings().timerWeeksCountable(max(1, value / (60 * 60 * 24 * 7)))
-    } else if value < 60 * 60 * 24 * 360 {
+    } else if value < 60 * 60 * 24 * 360 || months {
         return strings().timerMonthsCountable(max(1, value / (60 * 60 * 24 * 30)))
     } else {
         return strings().timerYearsCountable(max(1, value / (60 * 60 * 24 * 365)))

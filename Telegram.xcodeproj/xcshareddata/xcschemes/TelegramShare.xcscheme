@@ -60,7 +60,7 @@
       <RemoteRunnable
          runnableDebuggingMode = "0"
          BundleIdentifier = "com.apple.Safari"
-         RemotePath = "/Applications/Safari.app">
+         RemotePath = "/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app">
       </RemoteRunnable>
       <MacroExpansion>
          <BuildableReference

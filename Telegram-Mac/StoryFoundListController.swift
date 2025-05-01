@@ -347,7 +347,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 let viewType: GeneralViewType = .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_block(item), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                    return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: false, peerId: arguments.context.peerId, peerReference: peerReference, items: chunk, selected: nil, pinnedIds: Set(), rowCount: 3, viewType: viewType, openStory: arguments.openStory, toggleSelected: { _ in }, menuItems: { _ in return [] }, presentation: arguments.presentaiton)
+                    return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: false, peerId: arguments.context.peerId, peerReference: peerReference, items: chunk, selected: nil, pinnedIds: [], rowCount: 3, viewType: viewType, openStory: arguments.openStory, toggleSelected: { _ in }, menuItems: { _ in return [] }, presentation: arguments.presentaiton)
                 }))
             }
         }
@@ -362,7 +362,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 private extension SearchStoryListContext.Source {
     var title: String {
         switch self {
-        case .hashtag(let string):
+        case .hashtag(_, let string):
             return string
         case .mediaArea:
             return strings().storyLocationTitle

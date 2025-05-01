@@ -44,7 +44,7 @@ class WPLayout: Equatable {
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
-            if let block = instantPage.blocks.filter({ value in
+            if let block = instantPage._parse().blocks.filter({ value in
                 if case .slideshow = value {
                     return true
                 } else if case .collage = value {
@@ -70,7 +70,7 @@ class WPLayout: Equatable {
     
     var webPage: TelegramMediaWebpage {
         if let game = parent.anyMedia as? TelegramMediaGame {
-            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, imageIsVideoCover: false, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
         }
         return parent.anyMedia as! TelegramMediaWebpage
     }
@@ -87,11 +87,13 @@ class WPLayout: Equatable {
         }
     }
     private let entities: [MessageTextEntity]?
-    private let adAttribute: AdMessageAttribute?
+    let adAttribute: AdMessageAttribute?
+    let uniqueGift: StarGift.UniqueGift?
     
-    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil, uniqueGift: StarGift.UniqueGift? = nil) {
         self.content = content
         self.context = context
+        self.uniqueGift = uniqueGift
         self.presentation = presentation
         self.chatInteraction = chatInteraction
         self.mayCopyText = mayCopyText
@@ -113,6 +115,8 @@ class WPLayout: Equatable {
             }
             _siteNameAttr = .initialize(string: siteName, color: presentation.activity.main, font: .medium(.text))
         }
+        
+    
         
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
@@ -141,7 +145,7 @@ class WPLayout: Equatable {
         }
         
         
-        if let text = text {
+        if let text = text, uniqueGift == nil {
             
             let entitites = entities ?? []
 
@@ -208,10 +212,10 @@ class WPLayout: Equatable {
                             }
                         case "twitter":
                             if url.hasPrefix("@") {
-                                link = .external(link: "https://twitter.com/\(url.nsstring.substring(from: 1))", false)
+                                link = .external(link: "https://x.com/\(url.nsstring.substring(from: 1))", false)
                             }
                             if url.hasPrefix("#") {
-                                link = .external(link: "https://twitter.com/hashtag/\(url.nsstring.substring(from: 1))", false)
+                                link = .external(link: "https://x.com/hashtag/\(url.nsstring.substring(from: 1))", false)
                             }
                         default:
                             link = inApp(for: url.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
@@ -219,7 +223,7 @@ class WPLayout: Equatable {
                         }
                     }
                     if let adAttribute = adAttribute {
-                        chatInteraction.markAdAction(adAttribute.opaqueId)
+                        chatInteraction.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
                     }
                     execute(inapp: link)
                 }
@@ -230,6 +234,10 @@ class WPLayout: Equatable {
         }
 //        attributedText.fixUndefinedEmojies()
         
+    }
+    
+    var isMediaClickable: Bool {
+       return true
     }
     
     var isStory: Bool {
@@ -244,6 +252,9 @@ class WPLayout: Equatable {
     
     var isGalleryAssemble: Bool {
         if content.story != nil {
+            return false
+        }
+        if content.embedType == "iframe" {
             return false
         }
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
@@ -306,7 +317,12 @@ class WPLayout: Equatable {
         if action_text != nil {
             buttonSize += 39
         }
-        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width), size.height + buttonSize)
+        
+        var size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width), size.height + buttonSize)
+        
+        if let uniqueGift {
+            size.height += 50
+        }
         
         self.contentRect = NSMakeRect(insets.left, insets.top, size.width, size.height)
         self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.bottom + insets.top)
@@ -318,6 +334,19 @@ class WPLayout: Equatable {
             return adAtribute.buttonText
         }
         
+        for attribute in content.attributes {
+            switch attribute {
+            case .starGift:
+                return strings().chatViewCollectible
+            default:
+                break
+            }
+        }
+        
+        if self.content.type == "telegram_call" {
+            return strings().chatJoinGroupCall
+        }
+        
         if self.isProxyConfig {
             return strings().chatApplyProxy
         } else if hasInstantPage {
@@ -327,7 +356,7 @@ class WPLayout: Equatable {
             let content = self.content
             let link = inApp(for: content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
             switch link {
-            case let .followResolvedName(_, _, postId, _, action, _):
+            case let .followResolvedName(_, _, postId, _, _, action, _):
                 var actionIsSource: Bool = false
                 if case .source = action {
                     actionIsSource = true
@@ -372,6 +401,8 @@ class WPLayout: Equatable {
                 return strings().chatMessageBoostChannel
             case .comments:
                 return strings().chatMessageActionShowMessage
+            case .joinchat:
+                return strings().chatMessageActionRequestToJoin
             default:
                 break
             }
@@ -391,19 +422,24 @@ class WPLayout: Equatable {
             chatInteraction.removeAd(opaqueId)
             showModalText(for: context.window, text: strings().chatDisableAdTooltip)
         } else {
-            showModal(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
         }
+    }
+    
+    var isLeadingMedia: Bool {
+        return content.type == "telegram_ad" && content.isMediaLargeByDefault == true
     }
     
     func invokeAction() {
         if self.hasInstantPage {
-            showInstantPage(InstantPageViewController(context, webPage: parent.media[0] as! TelegramMediaWebpage, message: parent.text))
+            BrowserStateContext.get(context).open(tab: .instantView(url: self.content.url, webPage: parent.media[0] as! TelegramMediaWebpage, anchor: nil))
+           // showInstantPage(InstantPageViewController(context, webPage: , message: parent.text))
         } else if let proxyConfig = self.proxyConfig {
             applyExternalProxy(proxyConfig, accountManager: context.sharedContext.accountManager)
         } else if let adAttribute = parent.adAttribute {
             let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
-            chatInteraction.markAdAction(adAttribute.opaqueId)
+            chatInteraction.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
         } else {
             let link = inApp(for: self.content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
@@ -415,6 +451,7 @@ class WPLayout: Equatable {
             if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.type == "telegram_album" {
                 return false
             }
+            let instantPage = instantPage._parse()
             if instantPage.blocks.count == 3 {
                 switch instantPage.blocks[2] {
                 case let .collage(_, caption), let .slideshow(_, caption):

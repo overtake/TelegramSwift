@@ -70,6 +70,7 @@ enum PremiumLogEventsSource : Equatable {
     case folder_tags
     case upload_limit
     case grace_period
+    case emoji_status
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -130,6 +131,8 @@ enum PremiumLogEventsSource : Equatable {
             return "business_intro"
         case .grace_period:
             return "grace_period"
+        case .emoji_status:
+            return "emoji_status"
         }
     }
     
@@ -189,6 +192,8 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .grace_period:
             return nil
+        case .emoji_status:
+            return .emoji_status
         }
     }
     
@@ -661,7 +666,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if fromId != arguments.context.peerId, let slug = slug, unclaimed {
             let link = "t.me/giftcode/\(slug.prefixWithDots(20))"
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(link), comparable: nil, item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: {
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: arguments.presentation.icons.fast_copy_link, action: { _ in
                     arguments.copyLink("t.me/giftcode/\(slug)")
                 }), customTheme: .initialize(arguments.presentation))
             }))
@@ -716,7 +721,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if state.source != .business_standalone {
-        for (i, value) in state.values.enumerated() {
+        for (i, value) in state.values.uniqueElements.enumerated() {
             let viewType = bestGeneralViewType(state.values, for: i)
             
             struct Tuple : Equatable {
@@ -1165,7 +1170,7 @@ private final class PremiumBoardingView : View {
 
 final class PremiumBoardingController : ModalViewController {
 
-    private let context: AccountContext
+    fileprivate let context: AccountContext
     private let source: PremiumLogEventsSource
     private let openFeatures: Bool
     private let presentation: TelegramPresentationTheme
@@ -1410,7 +1415,7 @@ final class PremiumBoardingController : ModalViewController {
                                     return context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: false) |> map { pack in
                                         switch pack {
                                         case let .result(info, items, _):
-                                            return (peer, PremiumEmojiStatusInfo(status: status, file: file, info: info, items: items))
+                                            return (peer, PremiumEmojiStatusInfo(status: status, file: file, info: info._parse(), items: items))
                                         default:
                                             return (peer, nil)
                                         }
@@ -1461,7 +1466,7 @@ final class PremiumBoardingController : ModalViewController {
             var result: [TelegramMediaFile] = []
             for item in items {
                 if let mediaItem = item.contents.get(RecentMediaItem.self) {
-                    result.append(mediaItem.media)
+                    result.append(mediaItem.media._parse())
                 }
             }
             return result
@@ -1751,3 +1756,10 @@ final class PremiumBoardingController : ModalViewController {
 
 
 
+func prem(with controller: PremiumBoardingController, for window: Window) {
+    if controller.context.premiumIsBlocked {
+        showModalText(for: window, text: strings().premiumBoardingPaymentNotAvailalbe)
+    } else {
+        showModal(with: controller, for: window)
+    }
+}

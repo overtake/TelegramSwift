@@ -63,7 +63,7 @@ final class RenderAtomic<T> {
 }
 
 
-public let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 2, threadPriority: 1.0)
+public let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 4, threadPriority: 1.0)
 public let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .utility)
 
 
@@ -1139,12 +1139,7 @@ private final class WebmRenderer : RenderContainer {
 
     func render(at frameIndex: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         
-        
-        
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
-        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
-
-        let bufferSize = s.h * bytesPerRow
         
         if let fileSupplyment = fileSupplyment {
             let previous = frameIndex == startFrame ? nil : frames.last ?? previousFrame
@@ -1167,29 +1162,45 @@ private final class WebmRenderer : RenderContainer {
         
         self.index += 1
                 
-        let destBytesPerRow = bytesPerRow
-
-        let memoryData = malloc(bufferSize)!
-        let bytes = memoryData.assumingMemoryBound(to: UInt8.self)
+        func processFrame(frame: MediaTrackFrame, s: (w: Int, h: Int)) -> Data? {
+            let destBytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+            let bufferSize = s.h * destBytesPerRow
+            
+            var destData = Data(count: bufferSize)
+            
+            let result = destData.withUnsafeMutableBytes { (destBytes: UnsafeMutableRawBufferPointer) -> Bool in
+                guard let destBaseAddress = destBytes.baseAddress else { return false }
+                let destBufferPointer = destBaseAddress.assumingMemoryBound(to: UInt8.self)
+                
+                guard let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer) else { return false }
+                CVPixelBufferLockBaseAddress(imageBuffer, CVPixelBufferLockFlags(rawValue: 0))
+                
+                let sourceBytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer)
+                let width = CVPixelBufferGetWidth(imageBuffer)
+                let height = CVPixelBufferGetHeight(imageBuffer)
+                guard let srcData = CVPixelBufferGetBaseAddress(imageBuffer) else {
+                    CVPixelBufferUnlockBaseAddress(imageBuffer, CVPixelBufferLockFlags(rawValue: 0))
+                    return false
+                }
+                
+                var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: sourceBytesPerRow)
+                var destBuffer = vImage_Buffer(data: destBufferPointer, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
+                
+                let error = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
+                
+                CVPixelBufferUnlockBaseAddress(imageBuffer, CVPixelBufferLockFlags(rawValue: 0))
+                
+                return error == kvImageNoError
+            }
+            
+            return result ? destData : nil
+        }
         
-        let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
-        CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        let sourceBytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
-        let width = CVPixelBufferGetWidth(imageBuffer!)
-        let height = CVPixelBufferGetHeight(imageBuffer!)
-        let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
-        
-        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: sourceBytesPerRow)
-        var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
-                   
-        let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
-        
-        CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        
-        
-        let data = Data(bytes: bytes, count: bufferSize)
-        bytes.deallocate()
-        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: data, backingScale: animation.backingScale)
+        if let data = processFrame(frame: frame, s: s) {
+            return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: data, backingScale: animation.backingScale)
+        } else {
+            return nil
+        }
     }
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if let fileSupplyment = fileSupplyment {
@@ -1268,15 +1279,24 @@ private final class LottieRenderer : RenderContainer {
             return nil
         }
         if data == nil {
-            let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
-            let bufferSize = s.h * bytesPerRow
-            let memoryData = malloc(bufferSize)!
-            let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
-            
-            bridge?.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
-                        
-            data = Data(bytes: frameData, count: bufferSize)
-            frameData.deallocate()
+            func renderFrame(s: (w: Int, h: Int), bridge: R_LottieBridge?, frame: Int32) -> Data? {
+                let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+                let bufferSize = s.h * bytesPerRow
+
+                var data = Data(count: bufferSize)
+                
+                let result = data.withUnsafeMutableBytes { (frameData: UnsafeMutableRawBufferPointer) -> Bool in
+                    guard let baseAddress = frameData.baseAddress else { return false }
+                    let frameDataPointer = baseAddress.assumingMemoryBound(to: UInt8.self)
+                    
+                    bridge?.renderFrame(with: frame, into: frameDataPointer, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
+                    return true
+                }
+                
+                return result ? data : nil
+            }
+
+            data = renderFrame(s: s, bridge: bridge, frame: frame)
         }
         
         

@@ -147,7 +147,7 @@ class WPArticleContentView: WPContentView {
         if let content = content?.content, let layout = self.content {
             
             if layout.hasInstantPage {
-                showInstantPage(InstantPageViewController(layout.context, webPage: layout.parent.media[0] as! TelegramMediaWebpage, message: layout.parent.text))
+                BrowserStateContext.get(layout.context).open(tab: .instantView(url: layout.content.url, webPage: layout.parent.media[0] as! TelegramMediaWebpage, anchor: extractAnchor(from: layout.parent.text, matching: layout.content.url)))
                 return
             }
             if layout.isGalleryAssemble {

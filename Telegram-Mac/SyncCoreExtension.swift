@@ -59,12 +59,7 @@ extension Peer {
             return false
         }
         if let peer = self as? TelegramGroup {
-            switch peer.role {
-            case .admin, .creator:
-                return true
-            default:
-                break
-            }
+            return true
         }
         return false
     }
@@ -91,33 +86,40 @@ extension Peer {
         return false
     }
     
-    func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
+    var restrictionInfo: PeerAccessRestrictionInfo? {
         if let peer = self as? TelegramChannel {
-            if let restrictionInfo = peer.restrictionInfo {
-                for rule in restrictionInfo.rules {
-                    #if APP_STORE || STABLE
-                    if rule.platform == "ios" || rule.platform == "all" {
-                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason)
-                    }
-                    #endif
+            return peer.restrictionInfo
+        } else if let peer = self as? TelegramUser {
+            return peer.restrictionInfo
+        } else {
+            return nil
+        }
+    }
+    
+    func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
+        if let restrictionInfo = self.restrictionInfo {
+            for rule in restrictionInfo.rules {
+                #if APP_STORE || STABLE || BETA
+                if rule.platform == "ios" || rule.platform == "all", rule.reason != "sensitive" {
+                    return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason)
                 }
+                #endif
             }
         }
         return false
     }
     
+    
     func restrictionText(_ contentSettings: ContentSettings?) -> String? {
-        if let peer = self as? TelegramChannel {
-            if let restrictionInfo = peer.restrictionInfo {
-                for rule in restrictionInfo.rules {
-                    if rule.platform == "ios" || rule.platform == "all" {
-                        if let contentSettings {
-                            if !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
-                                return rule.text
-                            }
-                        } else {
+        if let restrictionInfo = self.restrictionInfo, self.isRestrictedChannel(contentSettings ?? .default) {
+            for rule in restrictionInfo.rules {
+                if rule.platform == "ios" || rule.platform == "all", rule.reason != "sensitive" {
+                    if let contentSettings {
+                        if !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
                             return rule.text
                         }
+                    } else {
+                        return rule.text
                     }
                 }
             }
@@ -168,6 +170,13 @@ extension Peer {
     var isAdmin: Bool {
         if let peer = self as? TelegramChannel {
             return peer.adminRights != nil || peer.flags.contains(.isCreator)
+        }
+        return false
+    }
+    
+    var isOwner: Bool {
+        if let peer = self as? TelegramChannel {
+            return peer.flags.contains(.isCreator)
         }
         return false
     }

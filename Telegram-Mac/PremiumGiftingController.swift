@@ -672,7 +672,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
         var result: [TelegramMediaFile] = []
         for item in items {
             if let mediaItem = item.contents.get(RecentMediaItem.self) {
-                result.append(mediaItem.media)
+                result.append(mediaItem.media._parse())
             }
         }
         return result
@@ -738,7 +738,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
             return
         }
         
-        let source =  BotPaymentInvoiceSource.giftCode(users: state.peers.map { $0.id }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: Int32(state.peers.count), months: selectedMonths, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount))
+        let source =  BotPaymentInvoiceSource.giftCode(users: state.peers.map { $0.id }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: Int32(state.peers.count), months: selectedMonths, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount), text: nil, entities: nil)
                         
         let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
 
@@ -791,7 +791,7 @@ func PremiumGiftingController(context: AccountContext, peerIds: [PeerId]) -> Inp
                 showModal(with: lockModal, for: context.window)
             }
         })
-        let purpose: AppStoreTransactionPurpose = .giftCode(peerIds: state.peers.map { $0.id }, boostPeer: nil, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
+        let purpose: AppStoreTransactionPurpose = .giftCode(peerIds: state.peers.map { $0.id }, boostPeer: nil, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, text: nil, entities: nil)
         
                 
         let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)

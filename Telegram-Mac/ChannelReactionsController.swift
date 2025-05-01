@@ -225,7 +225,8 @@ private final class Arguments {
     let addReactions:(Control?)->Void
     let updateState:(Updated_ChatTextInputState)->Void
     let updateMaxReactionsCount: (Int32)->Void
-    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, updateMaxReactionsCount: @escaping(Int32)->Void) {
+    let togglePaidReactions:()->Void
+    init(context: AccountContext, interactions: TextView_Interactions, toggleEnabled:@escaping()->Void, createPack:@escaping()->Void, addReactions:@escaping(Control?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, updateMaxReactionsCount: @escaping(Int32)->Void, togglePaidReactions:@escaping()->Void) {
         self.context = context
         self.interactions = interactions
         self.toggleEnabled = toggleEnabled
@@ -233,6 +234,7 @@ private final class Arguments {
         self.addReactions = addReactions
         self.updateState = updateState
         self.updateMaxReactionsCount = updateMaxReactionsCount
+        self.togglePaidReactions = togglePaidReactions
     }
 }
 
@@ -245,6 +247,7 @@ private struct State : Equatable {
     var myStatus: MyBoostStatus?
     
     var maxReactionsCount: Int32?
+    var starsAllowed: Bool? = nil
     
     var selected: [Int64] {
         let attributes = chatTextAttributes(from: state.inputText)
@@ -252,7 +255,7 @@ private struct State : Equatable {
         
         for attribute in attributes {
             switch attribute {
-            case let .animated(_, _, fileId, file, _):
+            case let .animated(_, _, fileId, _, _):
                 files.append(fileId)
             default:
                 break
@@ -284,7 +287,7 @@ private struct State : Equatable {
     var customCount: Int {
         var count: Int = 0
         for fileId in selected {
-            if available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) == nil {
+            if available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) == nil, fileId != LocalAnimatedSticker.premium_reaction_6.file.fileId.id {
                 count += 1
             }
         }
@@ -292,7 +295,7 @@ private struct State : Equatable {
     }
     
     func isCustom(_ fileId: Int64) -> Bool {
-        return available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) == nil
+        return available.reactions.first(where: { $0.activateAnimation.fileId.id == fileId }) == nil && fileId != LocalAnimatedSticker.premium_reaction_6.file.fileId.id
     }
 }
 
@@ -302,6 +305,7 @@ private let _id_enabled = InputDataIdentifier("_id_enabled")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
 private let _id_add = InputDataIdentifier("_id_add")
 private let _id_max_limit = InputDataIdentifier("_id_max_limit")
+private let _id_stars_allowed = InputDataIdentifier("_id_stars_allowed")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -382,7 +386,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelReactionsMaxCountInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
+        if let starsAllowed = state.starsAllowed {
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_stars_allowed, data: .init(name: strings().channelReactionsEnableStars, color: theme.colors.text, type: .switchable(starsAllowed), viewType: .singleItem, action: arguments.togglePaidReactions)))
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().channelReactionsEnableStarsInfo, linkHandler: { link in
+                execute(inapp: .external(link: link, false))
+            }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+
+        }
+        
     }
+   
+    
    
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -391,13 +411,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions, reactionsCount: Int32?) -> InputDataModalController {
+func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions, reactionsCount: Int32?, starsAllowed: Bool?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
 
     let textInteractions = TextView_Interactions()
 
+    if starsAllowed == true {
+        textInteractions.update { _ in
+            return textInteractions.insertText(.makeAnimated(LocalAnimatedSticker.premium_reaction_6.file, text: clown))
+        }
+    }
+    
     var enabled: Bool = true
     if let allowedReactions = allowedReactions {
         
@@ -405,7 +431,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         case .all:
             for reaction in availableReactions.reactions {
                 textInteractions.update { _ in
-                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation._parse(), text: reaction.value.string))
                 }
             }
         case let .limited(reactions):
@@ -414,33 +440,34 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
                 case .builtin:
                     if let first = availableReactions.reactions.first(where: { $0.value == reaction }) {
                         textInteractions.update { _ in
-                            return textInteractions.insertText(.makeAnimated(first.activateAnimation, text: first.value.string))
+                            return textInteractions.insertText(.makeAnimated(first.activateAnimation._parse(), text: first.value.string))
                         }
                     }
                 case let .custom(fileId):
                     textInteractions.update { _ in
                         return textInteractions.insertText(.makeAnimated(fileId, text: clown))
                     }
+                case .stars:
+                    break
                 }
             }
         case .empty:
             for reaction in availableReactions.reactions {
                 textInteractions.update { _ in
-                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation, text: reaction.value.string))
+                    return textInteractions.insertText(.makeAnimated(reaction.activateAnimation._parse(), text: reaction.value.string))
                 }
             }
             enabled = false
         }
     }
     
-    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation, maxReactionsCount: reactionsCount)
+    let initialState = State(enabled: enabled, available: availableReactions, state: textInteractions.presentation, maxReactionsCount: reactionsCount, starsAllowed: starsAllowed)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
-    
 
     
     textInteractions.processEnter = { event in
@@ -470,7 +497,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
 
 
     
-    interactions.sendAnimatedEmoji = { sticker, _, _, _ in
+    interactions.sendAnimatedEmoji = { sticker, _, _, _, _ in
 
         
         let text = stateValue.with { $0.state.inputText }
@@ -490,8 +517,8 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         if let removeRange = removeRange {
             updatedState = textInteractions.insertText(.init(), selectedRange: removeRange.lowerBound ..< removeRange.upperBound)
         } else {
-            let text = sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown
-            updatedState = textInteractions.insertText(.makeAnimated(sticker.file, text: text))
+            let text = sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? clown
+            updatedState = textInteractions.insertText(.makeAnimated(sticker.file._parse(), text: text))
         }
         
         textInteractions.update { _ in
@@ -531,9 +558,23 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
         textInteractions.update { _ in
             return state
         }
+        
+        var starsAllowed: Bool = false
+        state.inputText.enumerateAttribute(TextInputAttributes.customEmoji, in: state.inputText.range, using: { value, range, stop in
+            if let value = value as? TextInputTextCustomEmojiAttribute {
+                if value.fileId == LocalAnimatedSticker.premium_reaction_6.file.fileId.id {
+                    stop.pointee = true
+                    starsAllowed = true
+                }
+            }
+        })
+        
         updateState { current in
             var current = current
             current.state = state
+            if let _ = current.starsAllowed {
+                current.starsAllowed = starsAllowed
+            }
             return current
         }
     }, updateMaxReactionsCount: { count in
@@ -541,6 +582,44 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
             var current = current
             current.maxReactionsCount = count
             return current
+        }
+    }, togglePaidReactions: {
+        
+        let text = stateValue.with { $0.state.inputText }
+        
+        let allowed = stateValue.with { $0.starsAllowed }
+        
+        if let allowed {
+            var removeRange: NSRange? = nil
+            
+            let updatedState: Updated_ChatTextInputState
+            
+            let sticker = LocalAnimatedSticker.premium_reaction_6.file
+            
+            text.enumerateAttribute(TextInputAttributes.customEmoji, in: text.range, using: { value, range, stop in
+                if let value = value as? TextInputTextCustomEmojiAttribute {
+                    if value.fileId == sticker.fileId.id {
+                        removeRange = range
+                        stop.pointee = true
+                    }
+                }
+            })
+            
+            if let removeRange = removeRange {
+                updatedState = textInteractions.insertText(.init(), selectedRange: removeRange.lowerBound ..< removeRange.upperBound)
+            } else {
+                updatedState = textInteractions.insertText(.makeAnimated(sticker, text: clown), selectedRange: 0..<0)
+            }
+            
+            textInteractions.update { _ in
+                return updatedState
+            }
+            updateState { current in
+                var current = current
+                current.state = updatedState
+                current.starsAllowed = removeRange == nil
+                return current
+            }
         }
         
     })
@@ -560,7 +639,7 @@ func ChannelReactionsController(context: AccountContext, peerId: PeerId, allowed
     
     controller.validateData = { _ in
         
-        _ = showModalProgress(signal: context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: stateValue.with { $0.allowedReactions }, maxReactionCount: stateValue.with { $0.maxReactionsCount })), for: context.window).start(error: { error in
+        _ = showModalProgress(signal: context.engine.peers.updatePeerReactionSettings(peerId: peerId, reactionSettings: .init(allowedReactions: stateValue.with { $0.allowedReactions }, maxReactionCount: stateValue.with { $0.maxReactionsCount }, starsAllowed: stateValue.with { $0.starsAllowed })), for: context.window).start(error: { error in
             
             switch error {
             case .boostRequired:

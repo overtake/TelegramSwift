@@ -135,11 +135,12 @@ public func translate(key: String, _ args: [CVarArg]) -> String {
                 if let index = key.range(of: "_")?.lowerBound {
                     var string = String(key[..<index])
                     
+                    let count = Int32(min(count, Int(Int32.max)))
                     
-                    if Int32(count) == 0, _NSLocalizedKeyExist(string + ZeroValueHolder) {
+                    if count == 0, _NSLocalizedKeyExist(string + ZeroValueHolder) {
                         string += ZeroValueHolder
                     } else {
-                        string += "_\(presentationStringsPluralizationForm(code, Int32(count)).name)"
+                        string += "_\(presentationStringsPluralizationForm(code, count).name)"
                     }
                     format = _NSLocalizedString(string)
                     //if args.count > 1 {

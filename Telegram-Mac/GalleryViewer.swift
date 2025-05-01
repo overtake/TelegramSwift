@@ -14,6 +14,9 @@ import InAppSettings
 import Postbox
 import AVFoundation
 import ColorPalette
+import Translate
+import TelegramMediaPlayer
+import TelegramMedia
 
 final class GalleryInteractions {
     var dismiss:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
@@ -35,6 +38,8 @@ final class GalleryInteractions {
     var fastSave:()->Void = {}
     
     var canShare:()->Bool = { true }
+    
+    var invokeAd:(PeerId, AdMessageAttribute)->Void = { _, _ in }
 }
 private(set) var viewer:GalleryViewer?
 
@@ -345,6 +350,22 @@ class GalleryViewer: NSResponder {
         }
         interactions.fastSave = { [weak self] in
             self?.saveAs(true)
+        }
+        
+        interactions.invokeAd = { [weak self] peerId, adAttribute in
+            
+            guard let self else {
+                return
+            }
+            self.close()
+            closeAllModals(window: self.window)
+            
+            let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: { [weak self] peerId, toChat, messageId, action in
+                self?.openInfo(peerId, toChat, messageId, action)
+            })
+            execute(inapp: link)
+            
+            context.engine.messages.markAdAction(opaqueId: adAttribute.opaqueId, media: true, fullscreen: true)
         }
         interactions.canShare = { [weak self] in
             let isProtected = self?.pager.selectedItem?.entry.message?.isCopyProtected() ?? false
@@ -668,42 +689,80 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
-                    let previous = previous.swap(entries)
                     
-                    var inserted: [(Int, MGalleryItem)] = []
                     
-                    inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
+                    let message = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.Message(id: message.id)) |> map {
+                        $0?._asMessage()
+                    }
+                    return message |> map { message in
+                        if let message {
+                            let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
+                            let previous = previous.swap(entries)
+                            
+                            var inserted: [(Int, MGalleryItem)] = []
+                            
+                            inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
 
-                    if let webpage = message.anyMedia as? TelegramMediaWebpage {
-                        let instantMedias = instantPageMedias(for: webpage)
-                        if instantMedias.count > 1 {
-                            for i in 1 ..< instantMedias.count {
-                                let media = instantMedias[i]
-                                if media.media is TelegramMediaImage {
-                                    inserted.append((i, MGalleryPhotoItem(context, .instantMedia(media, message), pagerSize)))
-                                } else if let file = media.media as? TelegramMediaFile {
-                                    if file.isVideo && file.isAnimated {
-                                        inserted.append((i, MGalleryGIFItem(context, .instantMedia(media, message), pagerSize)))
-                                    } else if file.isVideo || file.isVideoFile {
-                                        inserted.append((i, MGalleryVideoItem(context, .instantMedia(media, message), pagerSize)))
+                            if let webpage = message.anyMedia as? TelegramMediaWebpage {
+                                let instantMedias = instantPageMedias(for: webpage)
+                                if instantMedias.count > 1 {
+                                    for i in 1 ..< instantMedias.count {
+                                        let media = instantMedias[i]
+                                        if media.media is TelegramMediaImage {
+                                            inserted.append((i, MGalleryPhotoItem(context, .instantMedia(media, message), pagerSize)))
+                                        } else if let file = media.media as? TelegramMediaFile {
+                                            if file.isVideo && file.isAnimated {
+                                                inserted.append((i, MGalleryGIFItem(context, .instantMedia(media, message), pagerSize)))
+                                            } else if file.isVideo || file.isVideoFile {
+                                                inserted.append((i, MGalleryVideoItem(context, .instantMedia(media, message), pagerSize)))
+                                            }
+                                        } else if media.media is TelegramMediaWebpage {
+                                            inserted.append((i, MGalleryExternalVideoItem(context, .instantMedia(media, message), pagerSize)))
+                                        }
                                     }
-                                } else if media.media is TelegramMediaWebpage {
-                                    inserted.append((i, MGalleryExternalVideoItem(context, .instantMedia(media, message), pagerSize)))
                                 }
                             }
+                            return (UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)
+                        } else {
+                            return (UpdateTransition(deleted: [0], inserted: [], updated: []), previous.with { $0 }, [])
                         }
                         
-                    }
+                    } |> deliverOnMainQueue
                     
-                    return .single((UpdateTransition(deleted: [], inserted: inserted, updated: []), previous, entries)) |> deliverOnMainQueue
-
                 case .history:
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false, translate: translate).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
-                                return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
+                                var firstCheck = message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
+                                
+                                if !firstCheck {
+                                    return false
+                                }
+                                if let peer = message.peers[message.id.peerId] {
+                                    if let group = peer as? TelegramGroup {
+                                        if group.membership == .Removed {
+                                            switch group.role {
+                                            case .creator:
+                                                return true
+                                            case .admin:
+                                                return true
+                                            case .member:
+                                                return false
+                                            }
+                                        }
+                                    }
+                                    if let group = peer as? TelegramChannel {
+                                        switch group.participationStatus {
+                                        case .member, .left:
+                                            return true
+                                        default:
+                                            return group.isAdmin
+                                        }
+                                    }
+                                }
+                                
+                                return true
                             default:
                                 return true
                             }
@@ -824,7 +883,7 @@ class GalleryViewer: NSResponder {
             let entries = current.modify({$0})
             let selectedIndex = min(entries.count - 1, selectedIndex)
             
-            guard let `self` = self else {return}
+            guard let `self` = self, entries.count > 0 else {return}
             
             let current = entries[selectedIndex]
             if let location = current.location {
@@ -871,14 +930,83 @@ class GalleryViewer: NSResponder {
         var items:[ContextMenuItem] = []
         
         let isProtected = pager.selectedItem?.entry.isProtected == true
+        var keepSaveAs: Bool = true
+        let context = self.context
         
         if !isProtected {
-            items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
-                self?.saveAs()
-            }, itemImage: MenuAnimation.menu_save_as.value))
+            
+            
+            if let item = pager.selectedItem as? MGalleryVideoItem, let message = item.entry.message {
+                if let quality = item.videoQualityState() {
+                    
+                    let download = ContextMenuItem(strings().galleryContextSaveVideo, itemImage: MenuAnimation.menu_save_as.value)
+                    let downloadMenu = ContextMenu()
+                    
+                    let downloadOrShow:(TelegramMediaFile)->Void = { [weak self] file in
+                        
+                        let status = chatMessageFileStatus(context: context, message: message, file: file)
+                        |> take(1)
+                        |> deliverOnMainQueue
+                        
+                        _ = status.startStandalone(next: { status in
+                            if let window = self?.window {
+                                let text: String
+                                if status == .Local {
+                                    text = strings().galleryContextAlertDownloaded
+                                } else {
+                                    _ = messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).startStandalone()
+                                    text = strings().galleryContextAlertDownloading
+                                }
+                                showModalText(for: window, text: text, callback: { _ in
+                                    self?.close()
+                                    if status == .Local {
+                                        showInFinder(file, account: context.account)
+                                    } else {
+                                        context.bindings.mainController().makeDownloadSearch()
+                                    }
+                                })
+                            }
+                            
+                        })
+                        
+                       
+                    }
+                    
+                    
+                    if context.isPremium {
+                        if let size = item.media.size {
+                            downloadMenu.addItem(ContextMenuItem(strings().galleryContextOriginal + " (\(String.prettySized(with: size)))", handler: {
+                                downloadOrShow(item.media)
+                            }))
+                        }
+                    }
+                    for value in quality.available {
+                        let q = "\(roundToStandardQuality(size: value))p"
+                        
+                        let file = item.media.alternativeRepresentations.compactMap({
+                            $0 as? TelegramMediaFile
+                        }).first(where: {
+                            $0.dimensions?.height == Int32(value)
+                        })
+                                                
+                        if let file = file, let size = file.size {
+                            downloadMenu.addItem(ContextMenuItem(q + " (\(String.prettySized(with: size)))", handler: {
+                                downloadOrShow(file)
+                            }))
+                        }
+                    }
+                    download.submenu = downloadMenu
+                    items.append(download)
+                    keepSaveAs = false
+                }
+            }
+            if keepSaveAs {
+                items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
+                    self?.saveAs()
+                }, itemImage: MenuAnimation.menu_save_as.value))
+            }
         }
         
-        let context = self.context
         
         var chatMode: ChatMode = self.chatMode ?? .history
         if let message = pager.selectedItem?.entry.message, message.isScheduledMessage {
@@ -920,7 +1048,7 @@ class GalleryViewer: NSResponder {
             }
         }
         
-        if !isProtected {
+        if !isProtected, keepSaveAs {
             items.append(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
                 self?.copy(nil)
             }, itemImage: MenuAnimation.menu_copy.value))
@@ -1196,8 +1324,10 @@ class GalleryViewer: NSResponder {
     
     var contextMenu:ContextMenu {
         let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
-        
-        if let item = self.pager.selectedItem {
+        let context = self.context
+        let window = self.window
+
+        if let item = self.pager.selectedItem, item.entry.message?.adAttribute == nil {
             if !(item is MGalleryExternalVideoItem) {
                 if item.entry.message?.isCopyProtected() == true {
                     
@@ -1214,6 +1344,15 @@ class GalleryViewer: NSResponder {
                     menu.addItem(ContextMenuItem(strings().chatCopySelectedText, handler: {
                         copyToClipboard(text)
                     }, itemImage: MenuAnimation.menu_copy.value))
+                    
+                    let fromLang = Translate.detectLanguage(for: text)
+                    let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
+                    
+                    if fromLang == nil || !toLang.contains(fromLang!) {
+                        menu.addItem(ContextMenuItem.init(strings().peerInfoTranslate, handler: {
+                            showModal(with: TranslateModalController(context: context, from: fromLang, toLang: appAppearance.languageCode, text: text), for: window)
+                        }, itemImage: MenuAnimation.menu_translate.value))
+                    }
                 }
             }
             
@@ -1231,6 +1370,17 @@ class GalleryViewer: NSResponder {
                 }, itemImage: MenuAnimation.menu_copy_media.value))
             }
             
+            if let recognition = self.pager.recognition, self.pager.selectedText == nil {
+                if #available(macOS 10.15, *) {
+                    if recognition.canTranslate() {
+                        let text: String = !recognition.hasTranslation() ? strings().galleryTranslate : strings().galleryHideTranslation
+                        menu.addItem(ContextMenuItem.init(text, handler: { [weak recognition] in
+                            recognition?.toggleTranslate(to: appAppearance.languageCode)
+                        }, itemImage: MenuAnimation.menu_translate.value))
+                    }
+                }
+            }
+            
         }
         
         
@@ -1239,7 +1389,7 @@ class GalleryViewer: NSResponder {
     
     
     func saveAs(_ fast: Bool = false) -> Void {
-        if let item = self.pager.selectedItem {
+        if let item = self.pager.selectedItem, item.entry.message?.adAttribute == nil {
             let isProtected = item.entry.isProtected
 
             if !(item is MGalleryExternalVideoItem), !isProtected {
@@ -1271,9 +1421,9 @@ class GalleryViewer: NSResponder {
                                     } else if let item = item as? MGalleryGIFItem {
                                         file = item.media
                                     } else if let photo = item as? MGalleryPhotoItem {
-                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")], alternativeRepresentations: [])
                                     } else if let photo = item as? MGalleryPeerPhotoItem {
-                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")], alternativeRepresentations: [])
                                     } else {
                                         file = nil
                                     }
@@ -1324,14 +1474,18 @@ class GalleryViewer: NSResponder {
     func showSharedMedia() {
         close()
         if let message = self.pager.selectedItem?.entry.message {
-            context.bindings.rootNavigation().push(PeerMediaController(context: context, peerId: message.id.peerId))
+            context.bindings.rootNavigation().push(PeerMediaController(context: context, peerId: message.id.peerId, isBot: false))
         }
     }
     
-    func openInfo(_ peerId: PeerId) {
+    func openInfo(_ peerId: PeerId, _ toChat: Bool = false, _ messageId: MessageId? = nil, _ initialAction: ChatInitialAction? = nil) {
         close()
         closeAllModals()
-        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+        if toChat {
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: initialAction))
+        } else {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+        }
     }
     
     func share(_ control: Control) -> Void {

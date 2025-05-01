@@ -14,7 +14,8 @@
 @property (nonatomic, strong) NSFont *textFont;
 @property (nonatomic, strong) NSFont *italicFont;
 @property (nonatomic, strong) NSFont *mediumFont;
--(id)initWithDark:(BOOL)dark textColor:(NSColor *)textColor textFont:(NSFont *)textFont italicFont:(NSFont *)italicFont mediumFont:(NSFont *) mediumFont;
+@property (nonatomic, strong) NSDictionary<NSString *, NSColor *> * colors;
+-(id)initWithDark:(BOOL)dark textColor:(NSColor *)textColor textFont:(NSFont *)textFont italicFont:(NSFont *)italicFont mediumFont:(NSFont *) mediumFont themeKeys: (NSDictionary<NSString *, NSColor *> *)colors;
 @end
 
 @interface Syntaxer : NSObject

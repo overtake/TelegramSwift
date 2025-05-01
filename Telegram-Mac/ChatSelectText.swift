@@ -32,6 +32,7 @@ class SelectManager : NSResponder {
     private var ranges:Atomic<[(AnyHashable,WeakReference<TextView>, SelectContainer)]> = Atomic(value: [])
     
     func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable, index: Int) {
+                
         _ = ranges.modify { ranges in
             var ranges = ranges
             let value = (stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, index: index, header: header))
@@ -71,7 +72,7 @@ class SelectManager : NSResponder {
     var selectedText: NSAttributedString {
         let string:NSMutableAttributedString = NSMutableAttributedString()
         
-        var addHeaders: Bool = ranges.with { $0.map { $0.0 } }.uniqueElements.count > 1
+        let addHeaders: Bool = ranges.with { $0.map { $0.0 } }.uniqueElements.count > 1
         
         ranges.with { ranges in
             
@@ -91,7 +92,7 @@ class SelectManager : NSResponder {
                     if container.range.location != 0, ranges.count > 1, addHeaders {
                         _ = string.append(string: "...", color: nil, font: .normal(.text))
                     }
-                    string.append(container.text.attributedSubstring(from: container.range))
+                    string.append(container.text.attributedSubstring(from: container.range).trimmed)
                     if container.range.location + container.range.length != container.text.length, ranges.count > 1, addHeaders {
                         _ = string.append(string: "...", color: nil, font: .normal(.text))
                     }
@@ -183,7 +184,7 @@ class SelectManager : NSResponder {
         var result: Bool = false
         _ = ranges.modify { ranges in
             var ranges = ranges
-            if let first = ranges.first, let textView = first.1.value {
+            if let first = ranges.first, let textView = first.1.value, textView.window?.isKeyWindow == true {
                 if let layout = textView.textLayout {
                     
                     var range = first.2.range

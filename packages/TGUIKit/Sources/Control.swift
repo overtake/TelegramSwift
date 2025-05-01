@@ -83,7 +83,7 @@ open class Control: View {
     
     public var appTooltip: String? {
         didSet {
-            if let tp = appTooltip, (!tooltipOnclick && controlState == .Hover) || (tooltipOnclick && controlState == .Highlight) {
+            if let tp = appTooltip, (!tooltipOnclick && controlState == .Hover) || (tooltipOnclick && controlState == .Highlight), userInteractionEnabled {
                 tooltip(for: self, text: tp)
             }
         }
@@ -169,7 +169,7 @@ open class Control: View {
                     }
                 }
 
-                if let tp = appTooltip, controlState == .Hover {
+                if let tp = appTooltip, controlState == .Hover, userInteractionEnabled {
                     tooltip(for: self, text: tp)
                 }
             }
@@ -314,6 +314,11 @@ open class Control: View {
         let new = ControlStateHandler(identifier: arc4random(), handler: handler, state: state, internal: `internal`)
         stateHandlers.append(new)
         return new.identifier
+    }
+    
+    @discardableResult public func setSingle(handler:@escaping (Control) -> Void, for event:ControlEvent) -> UInt32 {
+        self.removeAllHandlers()
+        return self.set(handler: handler, for: event)
     }
     
     open override func cursorUpdate(with event: NSEvent) {

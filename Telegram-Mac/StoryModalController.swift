@@ -354,7 +354,6 @@ final class StoryArguments {
     let startRecording: (Bool)->Void
     let togglePinned:(StoryContentItem)->Void
     let hashtag:(String)->Void
-    let report:(PeerId, Int32, ReportReason)->Void
     let toggleHide:(Peer, Bool)->Void
     let showFriendsTooltip:(Control, StoryContentItem)->Void
     let showTooltipText:(String, MenuAnimation)->Void
@@ -366,7 +365,7 @@ final class StoryArguments {
     let setupPrivacy:(StoryContentItem)->Void
     let loadForward:(StoryId)->Promise<EngineStoryItem?>
     let openStory:(StoryId)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, repost:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void, loadForward:@escaping(StoryId)->Promise<EngineStoryItem?>, openStory:@escaping(StoryId)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, repost:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void, setupPrivacy:@escaping(StoryContentItem)->Void, loadForward:@escaping(StoryId)->Promise<EngineStoryItem?>, openStory:@escaping(StoryId)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -390,7 +389,6 @@ final class StoryArguments {
         self.startRecording = startRecording
         self.togglePinned = togglePinned
         self.hashtag = hashtag
-        self.report = report
         self.toggleHide = toggleHide
         self.showFriendsTooltip = showFriendsTooltip
         self.showTooltipText = showTooltipText
@@ -568,12 +566,14 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
             switch value.content {
             case let .builtin(emoji):
                 if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                    return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: selectedItems.contains(where: { $0.source == .builtin(emoji) }))
+                    return .builtin(value: generic.value, staticFile: generic.staticIcon._parse(), selectFile: generic.selectAnimation._parse(), appearFile: generic.appearAnimation._parse(), isSelected: selectedItems.contains(where: { $0.source == .builtin(emoji) }))
                 } else {
                     return nil
                 }
             case let .custom(file):
-                return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: selectedItems.contains(where: { $0.source == .custom(file.fileId.id) }))
+                return .custom(value: .custom(file._parse().fileId.id), fileId: file._parse().fileId.id, file._parse(), isSelected: selectedItems.contains(where: { $0.source == .custom(file._parse().fileId.id) }))
+            case .stars:
+                return nil
             }
         }
         
@@ -603,10 +603,10 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
         reveal = { view in
             let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
                 let value: UpdateMessageReaction
-                if let bundle = sticker.file.stickerText {
+                if let bundle = sticker.file._parse().stickerText {
                     value = .builtin(bundle)
                 } else {
-                    value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
+                    value = .custom(fileId: sticker.file._parse().fileId.id, file: sticker.file._parse())
                 }
                 react(.init(item: value, fromRect: fromRect))
                 onClose()
@@ -876,7 +876,9 @@ private final class StoryViewController: Control, Notifable {
                     file = f
                 case let .builtin(string):
                     let reaction = context.reactions.available?.reactions.first(where: { $0.value.string == string })
-                    file = reaction?.selectAnimation
+                    file = reaction?.selectAnimation._parse()
+                case .stars:
+                    break
                 }
                 if let file = file {
                     mediaFile = file
@@ -947,7 +949,7 @@ private final class StoryViewController: Control, Notifable {
             layout.interactions = .init(processURL: { url in
                 if let url = url as? String {
                     if url == "premium" {
-                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: darkAppearance), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: darkAppearance), for: context.window)
                     }
                 }
             })
@@ -1613,8 +1615,10 @@ private final class StoryViewController: Control, Notifable {
             effectFileId = f?.fileId.id
         case let .builtin(string):
             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-            file = reaction?.selectAnimation
-            effectFile = reaction?.aroundAnimation
+            file = reaction?.selectAnimation._parse()
+            effectFile = reaction?.aroundAnimation?._parse()
+        case .stars:
+            break
         }
         
         guard let icon = file else {
@@ -2276,12 +2280,13 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             
             if let messageId = messageId {
-                let _ = ((context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .local)
+                let _ = ((context.engine.messages.getMessagesLoadIfNecessary([messageId], strategy: .cloud(skipLocal: false))
                           |> mapToSignal { result -> Signal<Message?, GetMessagesError> in
                               if case let .result(messages) = result {
                                   return .single(messages.first)
+                              } else {
+                                  return .never()
                               }
-                              return .single(nil)
                           })
                           |> deliverOnMainQueue).startStandalone(next: { message in
                               if let _ = message {
@@ -2457,6 +2462,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendText)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -2464,18 +2471,59 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
-            beforeCompletion()
-            _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
-                afterCompletion()
-                self?.interactions.updateInput(with: "", resetFocus: true)
-                self?.genericView.showTooltip(source)
-            })
+            let invoke:()->Void = {
+                beforeCompletion()
+                _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil, sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
+                    afterCompletion()
+                    self?.interactions.updateInput(with: "", resetFocus: true)
+                    self?.genericView.showTooltip(source)
+                })
+            }
+            
+            guard let self else {
+                return
+            }
+            
+            let presentation = self.chatInteraction.presentation
+            
+            if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+                let starsPrice = Int(payStars.value )
+                let amount = strings().starListItemCountCountable(starsPrice)
+                let messagesCount = 1
+                
+                if !presentation.alwaysPaidMessage {
+                    
+                    let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                    
+                    verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                        
+                        if starsState.balance.value > starsPrice {
+                            chatInteraction.update({ current in
+                                return current
+                                    .withUpdatedAlwaysPaidMessage(result == .thrid)
+                            })
+                            if result == .thrid {
+                                FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                            }
+                            invoke()
+                        } else {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                        }
+                    })
+                    
+                } else {
+                    if starsState.balance.value > starsPrice {
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                }
+            } else {
+                invoke()
+            }
+            
         }
         
-        let report:(PeerId, Int32, ReportReason)->Void = { [weak self] peerId, storyId, reason in
-            _ = context.engine.peers.reportPeerStory(peerId: peerId, storyId: storyId, reason: reason, message: "").start()
-            self?.genericView.showTooltip(.justText(strings().storyReportSuccessText))
-        }
 
         
         let toggleHide:(Peer, Bool)->Void = { [weak self] peer, value in
@@ -2520,11 +2568,13 @@ final class StoryModalController : ModalViewController, Notifable {
             case let .custom(_, file):
                 if let file = file, file.isPremiumEmoji, !context.isPremium {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
+                        prem(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                     })
                 } else {
                     self?.genericView.like(reaction)
                 }
+            case .stars:
+                break
             }
         }
 
@@ -2539,13 +2589,15 @@ final class StoryModalController : ModalViewController, Notifable {
                     if let file = file, let text = file.customEmojiText {
                         if file.isPremiumEmoji, !context.isPremium {
                             showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
+                                prem(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                             })
                         } else {
                             sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil)]), entryId, id, .reaction(reaction))
                             self?.genericView.playReaction(reaction)
                         }
                     }
+                case .stars:
+                    break
                 }
             }
         }
@@ -2644,8 +2696,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile(peer._asPeer()) : .addedToProfile(peer._asPeer()))
             }
         }, hashtag: { string in
-            showModal(with: StoryFoundListController(context: context, source: .hashtag(string), presentation: darkAppearance), for: context.window)
-        }, report: report,
+            showModal(with: StoryFoundListController(context: context, source: .hashtag(nil, string), presentation: darkAppearance), for: context.window)
+        },
         toggleHide: toggleHide,
         showFriendsTooltip: { [weak self] _, story in
             guard let peer = story.peer?._asPeer() else {
@@ -2718,7 +2770,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         }, itemImage: hq ? MenuAnimation.menu_sd.value : MenuAnimation.menu_hd.value))
                     } else {
                         menu.addItem(ContextMenuItem(strings().storyContextIncreaseQuality, handler: {
-                            showModal(with: PremiumBoardingController(context: context, source: .stories_quality, openFeatures: true, presentation: darkAppearance), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .stories_quality, openFeatures: true, presentation: darkAppearance), for: context.window)
                         }, itemImage: MenuAnimation.menu_hd_lock.value))
                     }
                 }
@@ -2727,7 +2779,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     let resource: TelegramMediaFile?
                     if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                         if let res = media.representations.last?.resource {
-                            resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                            resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")], alternativeRepresentations: [])
                         } else {
                             resource = nil
                         }
@@ -2786,19 +2838,10 @@ final class StoryModalController : ModalViewController, Notifable {
                             deleteStory(story)
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     } else {
-                        let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                        let reportItem = ContextMenuItem(strings().storyControlsMenuReport, handler: {
+                            reportComplicated(context: context, subject: .stories(peer.id, [story.storyItem.id]), title: strings().reportComplicatedStoryTitle)
+                        }, itemImage: MenuAnimation.menu_report.value)
                         
-                        let submenu = ContextMenu()
-                                    
-                        let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                        let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                        
-                        for i in 0 ..< options.count {
-                            submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                                report(peerId, story.storyItem.id, options[i])
-                            }, itemImage: animation[i].value))
-                        }
-                        reportItem.submenu = submenu
                         menu.addItem(reportItem)
                     }
                 }
@@ -2815,7 +2858,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                     if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")], alternativeRepresentations: [])
                     } else {
                         resource = nil
                     }
@@ -2852,14 +2895,28 @@ final class StoryModalController : ModalViewController, Notifable {
             activateMediaArea(area)
         }, deactivateMediaArea: { area in
             deactivateMediaArea(area)
-        }, invokeMediaArea: { area in
+        }, invokeMediaArea: { [weak self] area in
             switch area {
             case let .venue(_, venue):
                 showModal(with: StoryFoundListController(context: context, source: .mediaArea(area), presentation: darkAppearance), for: context.window)
             case let .channelMessage(_, messageId):
                 openChat(messageId.peerId, messageId, nil)
             case let .link(_, url):
-                execute(inapp: .external(link: url, false))
+                let link = inApp(for: url.nsstring, context: context, openInfo: { peerId, toChat, messageId, initialAction in
+                    if toChat {
+                        openChat(peerId, messageId, initialAction)
+                    } else {
+                        openPeerInfo(peerId, nil)
+                    }
+                })
+                let previous = context.bindings.rootNavigation().controller
+
+                execute(inapp: link, afterComplete: { [weak self, weak previous] _ in
+                    let current = context.bindings.rootNavigation().controller
+                    if current != previous {
+                        self?.close()
+                    }
+                })
             default:
                 break
             }
@@ -2878,6 +2935,8 @@ final class StoryModalController : ModalViewController, Notifable {
                         selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
                     case let .custom(fileId):
                         selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    case .stars:
+                        break
                     }
                 }
                 _ = storyReactions(context: context, peerId: entryId, react: like, onClose: {
@@ -2922,6 +2981,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendFiles)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -2929,12 +2990,56 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
-            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
-                beforeCompletion()
-                _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
-                    afterCompletion()
-                    self?.genericView.showTooltip(.media([file]))
-                })
+            let invoke:()->Void = {
+                if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                    beforeCompletion()
+                    _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
+                        afterCompletion()
+                        self?.genericView.showTooltip(.media([file]))
+                    })
+                }
+            }
+            
+            guard let self else {
+                return
+            }
+            
+            let presentation = self.chatInteraction.presentation
+            
+            if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+                let starsPrice = Int(payStars.value )
+                let amount = strings().starListItemCountCountable(starsPrice)
+                let messagesCount = 1
+                
+                if !presentation.alwaysPaidMessage {
+                    
+                    let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                    
+                    verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                        
+                        if starsState.balance.value > starsPrice {
+                            chatInteraction.update({ current in
+                                return current
+                                    .withUpdatedAlwaysPaidMessage(result == .thrid)
+                            })
+                            if result == .thrid {
+                                FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                            }
+                            invoke()
+                        } else {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                        }
+                    })
+                    
+                } else {
+                    if starsState.balance.value > starsPrice {
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                }
+            } else {
+                invoke()
             }
             
         }
@@ -2979,6 +3084,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendMedia)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -2988,7 +3095,7 @@ final class StoryModalController : ModalViewController, Notifable {
             
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, messageEffect: messageEffect, leadingText: leadingText).start(completed: {
+                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, messageEffect: messageEffect, leadingText: leadingText, sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media(medias))
                 })
@@ -3002,6 +3109,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
+            let slice = self?.genericView.storyContext?.stateValue?.slice
+            
             let restrictionText = permissionText(from: self?.genericView.storyContext?.stateValue?.slice?.peer._asPeer(), for: .banSendMedia)
             
             if let restrictionText, !canAvoidGroupRestrictions() {
@@ -3009,12 +3118,55 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             
-            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
-                beforeCompletion()
-                _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
-                    afterCompletion()
-                    self?.genericView.showTooltip(.media([]))
-                })
+            let invoke:()->Void = {
+                if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                    beforeCompletion()
+                    _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendPaidMessageStars: slice?.additionalPeerData.paidMessage).start(completed: {
+                        afterCompletion()
+                        self?.genericView.showTooltip(.media([]))
+                    })
+                }
+            }
+            
+            
+            guard let self else {
+                return
+            }
+            
+            let presentation = self.chatInteraction.presentation
+            
+            if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+                let starsPrice = Int(payStars.value )
+                let amount = strings().starListItemCountCountable(starsPrice)
+                let messagesCount = 1
+                
+                if !presentation.alwaysPaidMessage {
+                    
+                    let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                    
+                    verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                        
+                        if starsState.balance.value > starsPrice {
+                            chatInteraction.update({ current in
+                                return current
+                                    .withUpdatedAlwaysPaidMessage(result == .thrid)
+                            })
+                            FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                            invoke()
+                        } else {
+                            showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                        }
+                    })
+                    
+                } else {
+                    if starsState.balance.value > starsPrice {
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                }
+            } else {
+                invoke()
             }
         }
         
@@ -3107,7 +3259,12 @@ final class StoryModalController : ModalViewController, Notifable {
                 return current
             })
         }))
-
+        
+        actionsDisposable.add((context.starsContext.state |> deliverOnMainQueue).start(next: { [weak self] starsState in
+            self?.chatInteraction.update({ current in
+                return current.withUpdatedStarsState(starsState)
+            })
+        }))
         
         disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
             if state.slice == nil {
@@ -3123,6 +3280,11 @@ final class StoryModalController : ModalViewController, Notifable {
                         var current = current
                         current = current.updatedPeer { _ in
                             return state.slice?.peer._asPeer()
+                        }
+                        
+                        if let slice = state.slice {
+                            let paidMessge = state.slice?.additionalPeerData.paidMessage
+                            current = current.withUpdatedSendPaidMessageStars(paidMessge).withUpdatedAlwaysPaidMessage(FastSettings.needConfirmPaid(slice.peer.id, price: Int(paidMessge?.value ?? 0)))
                         }
                         
                         if let slowmode = state.slice?.additionalPeerData.slowModeTimeout, state.slice?.additionalPeerData.canAvoidRestrictions == false {

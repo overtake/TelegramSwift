@@ -11,6 +11,8 @@ import TelegramCore
 import TelegramMedia
 import Postbox
 
+private let version = 1
+
 enum LocalAnimatedSticker : String {
     case brilliant_static
     case brilliant_loading
@@ -43,6 +45,8 @@ enum LocalAnimatedSticker : String {
     case police
     case duck_empty
     case ton_logo
+    
+    case affiliate_link
     
     case voice_chat_raise_hand_1
     case voice_chat_raise_hand_2
@@ -114,6 +118,7 @@ enum LocalAnimatedSticker : String {
     case stories_archive
     
     case share_folder
+    case countdown5s
     
     case text_to_voice
     case voice_to_text
@@ -133,6 +138,13 @@ enum LocalAnimatedSticker : String {
     case show_status_profile
     case show_status_read
     
+    case duck_webapp_error
+    case browser_back_to_close
+    case browser_close_to_back
+    case browser_more
+    
+    case improving_video
+
     case menu_add_to_folder
     case menu_archive
     case menu_clear_history
@@ -293,6 +305,12 @@ enum LocalAnimatedSticker : String {
     case menu_sort_down
     case menu_verification
     case menu_paid
+    case menu_apps
+    case menu_close_multiple
+    case menu_edited
+    case menu_transfer
+    case menu_wear
+    case menu_wearoff
     
     case emoji_category_activities
     case emoji_category_angry
@@ -348,17 +366,28 @@ enum LocalAnimatedSticker : String {
     case chatlist_poll
     case chatlist_voice
     
-    case star_currency
-    case star_currency_part
-
+    case star_currency_new
+    case star_currency_part_new
+    
+    
+    case premium_reaction_6
+    
+    case premium_reaction_effect_1
+    case premium_reaction_effect_2
+    case premium_reaction_effect_3
+    case premium_reaction_effect_4
+    case premium_reaction_effect_5
+    
+    case freeze_duck
+    
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
-        return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
+        return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")], alternativeRepresentations: [])
     }
     
     var monochromeFile: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
-        return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs"), .CustomEmoji(isPremium: false, isSingleColor: true, alt: "", packReference: nil)])
+        return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs"), .CustomEmoji(isPremium: false, isSingleColor: true, alt: "", packReference: nil)], alternativeRepresentations: [])
     }
     
     func menuIcon(_ color: NSColor) -> CGImage? {
@@ -380,6 +409,16 @@ enum LocalAnimatedSticker : String {
             }
         }
         return nil
+    }
+    
+    static func bestForStarsGift(_ amount: Int64) -> LocalAnimatedSticker {
+        if amount < 1000 {
+            return LocalAnimatedSticker.premium_gift_3
+        } else if amount < 2500 {
+            return LocalAnimatedSticker.premium_gift_6
+        } else {
+            return LocalAnimatedSticker.premium_gift_12
+        }
     }
     
     var parameters: ChatAnimatedStickerMediaLayoutParameters {
@@ -482,7 +521,10 @@ enum LocalAnimatedSticker : String {
             playPolicy = .onceEnd
         case .ton_logo:
             playPolicy = .onceEnd
-
+        case .affiliate_link:
+            playPolicy = .onceEnd
+        case .freeze_duck:
+            playPolicy = .onceEnd
         default:
             playPolicy = .loop
             hidePlayer = false

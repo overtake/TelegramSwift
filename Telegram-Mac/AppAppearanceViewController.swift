@@ -548,7 +548,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appearanceSettingsDockIcon), data: .init(viewType: .textTopItem)))
         index += 1
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_dock_icon, equatable: InputDataEquatable(dockTuple), comparable: nil, item: { initialSize, stableId in
-            return DockIconRowItem(initialSize, stableId: stableId, viewType: .singleItem, context: arguments.context, dockIcons: dockIcons, selected: dockTuple.settings.iconSelected, action: arguments.selectAppIcon)
+            return DockIconRowItem(initialSize, stableId: stableId, viewType: .singleItem, context: arguments.context, dockIcons: dockIcons.icons, selected: dockTuple.settings.iconSelected, action: arguments.selectAppIcon)
         }))
         index += 1
         
@@ -744,7 +744,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, selectAppIcon: { icon in
         
         if icon.isPremium, !context.isPremium {
-            showModal(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
             return
         }
         

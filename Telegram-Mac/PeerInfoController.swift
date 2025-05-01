@@ -45,6 +45,8 @@ class PeerInfoArguments {
     let mediaController: ()->PeerMediaController?
     
     let getStarsContext:(()->StarsRevenueStatsContext?)?
+    let getTonContext:(()->RevenueStatsContext?)?
+    let getStarGiftsContext:(()->ProfileGiftsContext?)?
     
     
     let toggleNotificationsDisposable = MetaDisposable()
@@ -101,7 +103,7 @@ class PeerInfoArguments {
             } else {
                 switch subject {
                 case .phoneNumber(let string):
-                    self?.copy(formatPhoneNumber(string))
+                    self?.copy(formatPhoneNumber(context: context, number: string))
                 case .username(let string):
                     self?.copy("@\(string)")
                 }
@@ -144,7 +146,7 @@ class PeerInfoArguments {
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->RevenueStatsContext?)? = nil, getStarGiftsContext: (()->ProfileGiftsContext?)? = nil) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -154,6 +156,8 @@ class PeerInfoArguments {
         self.pullNavigation = pullNavigation
         self.mediaController = mediaController
         self.getStarsContext = getStarsContext
+        self.getTonContext = getTonContext
+        self.getStarGiftsContext = getStarGiftsContext
     }
 
     
@@ -290,6 +294,32 @@ final class PeerInfoView : View {
         addSubview(navigationBarView)
         self.addSubview(borderView)
     }
+    
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        tableView.enumerateItems(with: { item in
+            if let item = item as? PeerInfoHeadItem {
+                item.view?.mouseDown(with: event)
+                return false
+            }
+            return true
+        })
+        
+    }
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        
+        tableView.enumerateItems(with: { item in
+            if let item = item as? PeerInfoHeadItem {
+                item.view?.mouseUp(with: event)
+                return false
+            }
+            return true
+        })
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         navigationBarView.backgroundColor = .clear
@@ -333,7 +363,7 @@ final class PeerInfoView : View {
         navigationBarView.switchLeftView(leftBar, animation: animated ? .crossfade : .none)
         navigationBarView.switchCenterView(centerView, animation: animated ? .crossfade : .none)
         navigationBarView.switchRightView(rightView, animation: animated ? .crossfade : .none)
-
+        
         self.updateLayout(size: self.frame.size, transition: transition)
     }
     
@@ -371,6 +401,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     private let mediaController: PeerMediaController
     
     private let revenueContext: StarsRevenueStatsContext?
+    private let tonRevenueContext: RevenueStatsContext?
+    
+    private let starGiftsProfile: ProfileGiftsContext
     
     let threadInfo: ThreadInfo?
     
@@ -454,25 +487,41 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         }
     }
     
-    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true) {
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil, shake: Bool = true, starGiftsProfile: ProfileGiftsContext? = nil) {
+        
+        
+        guard !context.isFrozen else {
+            context.freezeAlert()
+            return
+        }
+        
         if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
-            controller.view.shake(beep: true)
+            if shake {
+                controller.view.shake(beep: true)
+            }
+            if let mediaMode {
+                controller.mediaController.setMode(mediaMode)
+            }
             return
         }
         let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
         _ = signal.start(next: { [weak navigation] peer in
             if peer.restrictionText(context.contentSettings) == nil {
-                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source), animated, style: animated ? .push : Optional.none)
+                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode, starGiftsProfile: starGiftsProfile), animated, style: animated ? .push : Optional.none)
             }
         })
     }
     
-    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
+    private let mediaMode: PeerMediaCollectionMode?
+    
+    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, mediaMode: PeerMediaCollectionMode? = nil, starGiftsProfile: ProfileGiftsContext? = nil) {
         let peerId = peer.id
         self.peerId = peer.id
         self.peer = peer
         self.source = source
         self.threadInfo = threadInfo
+        self.mediaMode = mediaMode
+        self.starGiftsProfile = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peerId)
         
         if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             self.stories = stories ?? .init(account: context.account, peerId: peerId)
@@ -480,15 +529,32 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             self.stories = nil
         }
         
-        if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
+        var test: Bool = false
+        #if DEBUG
+        test = true
+        #endif
+        
+        if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) || test {
             self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
-        } else if peer.isChannel {
-            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
+            self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+        } else if peer.isChannel || peer.isSupergroup {
+            if peer.isAdmin {
+                self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
+                if peer.isChannel {
+                    self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+                } else {
+                    self.tonRevenueContext = nil
+                }
+            } else {
+                self.revenueContext = nil
+                self.tonRevenueContext = nil
+            }
         } else {
             self.revenueContext = nil
+            self.tonRevenueContext = nil
         }
         
-        self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
+        self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true, isBot: peer.isBot, mode: mediaMode, starGiftsProfile: self.starGiftsProfile)
         super.init(context)
         
         bar = .init(height: 50, enableBorder: false)
@@ -509,6 +575,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
              return self?.mediaController
         }, getStarsContext: { [weak self] in
             return self?.revenueContext
+        }, getTonContext: { [weak self] in
+            return self?.tonRevenueContext
+        }, getStarGiftsContext: { [weak self] in
+            return self?.starGiftsProfile
         })
         
         
@@ -516,6 +586,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             return self?.navigationController
         }, mediaController: { [weak self] in
               return self?.mediaController
+        }, getStarGiftsContext: { [weak self] in
+            return self?.starGiftsProfile
         })
         if let threadInfo = threadInfo {
             _topicArguments = TopicInfoArguments(context: context, peerId: peerId, state: TopicInfoState(threadId: threadInfo.message.threadId), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
@@ -609,8 +681,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         var list: [TelegramMediaFile] = []
                         for number in separateNumbers(Int(year)) {
                             for item in items {
-                                if item.file.customEmojiText == numbers[number] {
-                                    list.append(item.file)
+                                if item.file._parse().customEmojiText == numbers[number] {
+                                    list.append(item.file._parse())
                                 }
                             }
                         }
@@ -728,6 +800,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         _centerBar = super.getCenterBarViewOnce()
         _rightBar = super.getRightBarViewOnce()
         
+        _centerBar.userInteractionEnabled = false
+        _centerBar.isEventLess = true
+        
         genericView.set(leftBar: _leftBar, centerView: _centerBar, rightView: _rightBar , controller: self, animated: false)
 
         super.viewDidLoad()
@@ -751,6 +826,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         if peer.isChannel {
             _ = context.engine.peers.requestRecommendedChannels(peerId: peerId, forceUpdate: true).startStandalone()
+        } else if peer.isBot {
+            _ = context.engine.peers.requestRecommendedBots(peerId: peerId, forceUpdate: true).startStandalone()
         }
         
         
@@ -827,6 +904,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             revenueState = revenueContext.state |> map(Optional.init)
         } else {
             revenueState = .single(nil)
+        }
+        
+        let tonRevenueState: Signal<RevenueStatsContextState?, NoError>
+        if let tonRevenueContext {
+            tonRevenueState = tonRevenueContext.state |> map(Optional.init)
+        } else {
+            tonRevenueState = .single(nil)
         }
         
         let personalChannelSignal: Signal<UserInfoPersonalChannel?, NoError>
@@ -931,13 +1015,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             }
             
             
-           
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal, personalChannelSignal, revenueState)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories, personalChannel, revenueState -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
+            
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal, personalChannelSignal, revenueState, tonRevenueState, webAppPermissionsState(context: context, peerId: peerId))
+            |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories, personalChannel, revenueState, tonRevenueState, webAppPermissionsState -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState, tonRevenueState: tonRevenueState, webAppPermissionsState: webAppPermissionsState).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     

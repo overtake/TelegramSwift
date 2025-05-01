@@ -28,7 +28,8 @@ extension ChatListFilterPeerCategories {
     static let existingChats = ChatListFilterPeerCategories(rawValue: 1 << 9)
     static let newChats = ChatListFilterPeerCategories(rawValue: 1 << 10)
     static let premiumUsers = ChatListFilterPeerCategories(rawValue: 1 << 11)
-    
+    static let miniApps = ChatListFilterPeerCategories(rawValue: 1 << 12)
+
     static let Namespace: Int32 = 7
 }
 
@@ -142,6 +143,9 @@ final class TelegramFilterCategory : Peer {
         if category == .premiumUsers {
             return strings().chatListFilterPremiumUsers
         }
+        if category == .miniApps {
+            return strings().chatListFilterMiniApps
+        }
         return nil
     }
     
@@ -178,6 +182,9 @@ final class TelegramFilterCategory : Peer {
         }
         if category == .premiumUsers {
             return .icon(colors: (top: premiumGradient[1], bottom: premiumGradient[0]), icon: NSImage(resource: .iconPeerPremium).precomposed(.white), iconSize: NSMakeSize(20, 20), cornerRadius: 8)
+        }
+        if category == .miniApps {
+            return .icon(colors: (top: premiumGradient[1], bottom: premiumGradient[0]), icon: NSImage(resource: .iconFilterBots).precomposed(.white), iconSize: NSMakeSize(20, 20), cornerRadius: 8)
         }
         return nil
     }
@@ -579,6 +586,13 @@ extension Peer {
         }
         if let peer = self as? TelegramStoryRepostPeerObject {
             return peer.icon
+        }
+        return nil
+    }
+    
+    var sendPaidMessageStars: StarsAmount? {
+        if let channel = self as? TelegramChannel {
+            return channel.sendPaidMessageStars
         }
         return nil
     }

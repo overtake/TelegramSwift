@@ -375,7 +375,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     if item.isFailed,  let messageId = item.message?.id {
                         item.resendFailed(messageId)
                     } else {
-                        forceSelectItem(item, onRightClick: true)
+                        if item.message?.pendingProcessingAttribute != nil {
+                            tooltip(for: rightView, text: strings().chatVideoProccessingTooltip)
+                        } else {
+                            forceSelectItem(item, onRightClick: true)
+                        }
                     }
                 }
             }
@@ -855,12 +859,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func forwardPhotoPoint(_ item: ChatRowItem) -> NSPoint {
         var point = self.forwardNamePoint(item)
         if let layout = item.forwardNameLayout, let range = item.forwardPhotoPlaceRange {
-            if let rect = layout.rects(range).first {
+            if let rect = layout.rects(range).last {
                 point.x += rect.0.minX + 2
-                point.y += 1
+                point.y += rect.0.minY
             }
         }
-        return point
+        return point.toScreenPixel
     }
     
     override func layout() {
@@ -1983,7 +1987,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             case .previewMedia:
                 result = false
             case .react:
-                result = item.reactAction()
+                let hitView = self.reactionsView?.hitTest(location)
+                if hitView == self.reactionsView || hitView == nil {
+                    result = item.reactAction()
+                } else {
+                    result = false
+                }
             }
             if result {
                 focusAnimation(nil, text: nil)

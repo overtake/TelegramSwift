@@ -15,6 +15,79 @@ import CurrencyFormat
 import InputView
 import GraphCore
 
+
+private final class TransactionTypesItem : GeneralRowItem {
+    fileprivate let context: AccountContext
+    fileprivate let items: [ScrollableSegmentItem]
+    fileprivate let callback:(State.TransactionMode)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transactionMode: State.TransactionMode, list: [State.TransactionMode], viewType: GeneralViewType, callback:@escaping(State.TransactionMode)->Void) {
+        self.context = context
+        self.callback = callback
+        
+        let theme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
+        
+        var items: [ScrollableSegmentItem] = []
+        if list.contains(.all) {
+            items.append(.init(title: strings().starListTransactionsAll, index: 0, uniqueId: 0, selected: transactionMode == .all, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
+        }
+        if list.contains(.incoming) {
+            items.append(.init(title: strings().starListTransactionsIncoming, index: 1, uniqueId: 1, selected: transactionMode == .incoming, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
+        }
+        if list.contains(.outgoing) {
+            items.append(.init(title: strings().starListTransactionsOutgoing, index: 2, uniqueId: 2, selected: transactionMode == .outgoing, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(transactionMode)))
+        }
+
+        self.items = items
+        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return TransactionTypesView.self
+    }
+}
+
+private final class TransactionTypesView: GeneralContainableRowView {
+    fileprivate let segmentControl: ScrollableSegmentView
+    required init(frame frameRect: NSRect) {
+        self.segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        super.init(frame: frameRect)
+        addSubview(segmentControl)
+        
+        segmentControl.didChangeSelectedItem = { [weak self] selected in
+            if let item = self?.item as? TransactionTypesItem {
+                if selected.uniqueId == 0 {
+                    item.callback(.all)
+                } else if selected.uniqueId == 1 {
+                    item.callback(.incoming)
+                } else if selected.uniqueId == 2 {
+                   item.callback(.outgoing)
+                }
+            }
+        }
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? TransactionTypesItem else {
+            return
+        }
+        
+        
+        segmentControl.updateItems(item.items, animated: animated)
+        needsLayout = true
+    }
+    
+    override func layout() {
+        segmentControl.frame = containerView.bounds
+    }
+}
+
 private final class Arguments {
     let context: AccountContext
     let withdraw:()->Void
@@ -22,19 +95,27 @@ private final class Arguments {
     let loadMore:()->Void
     let openTransaction:(Star_Transaction)->Void
     let loadDetailedGraph:(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>
-    init(context: AccountContext, withdraw:@escaping()->Void, executeLink:@escaping(String)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>) {
+    let toggleFilterMode:(State.TransactionMode)->Void
+    init(context: AccountContext, withdraw:@escaping()->Void, executeLink:@escaping(String)->Void, loadMore:@escaping()->Void, openTransaction:@escaping(Star_Transaction)->Void, loadDetailedGraph:@escaping(StatsGraph, Int64) -> Signal<StatsGraph?, NoError>, toggleFilterMode:@escaping(State.TransactionMode)->Void) {
         self.context = context
         self.withdraw = withdraw
         self.executeLink = executeLink
         self.loadMore = loadMore
         self.openTransaction = openTransaction
         self.loadDetailedGraph = loadDetailedGraph
+        self.toggleFilterMode = toggleFilterMode
     }
 }
 
 
 
 private struct State : Equatable {
+    
+    enum TransactionMode : Equatable {
+        case all
+        case incoming
+        case outgoing
+    }
 
     enum TransactionType : Equatable {
         enum Source : Equatable {
@@ -59,11 +140,11 @@ private struct State : Equatable {
     }
     
     struct Balance : Equatable {
-        var stars: Int64
+        var stars: StarsAmount
         var usdRate: Double
         
         var fractional: Double {
-            return currencyToFractionalAmount(value: stars, currency: XTR) ?? 0
+            return currencyToFractionalAmount(value: stars.totalValue, currency: XTR) ?? 0
         }
         
         var usd: String {
@@ -80,11 +161,16 @@ private struct State : Equatable {
         
     var nextWithdrawalTimestamp: Int32? = nil
 
-    var overview: Overview = .init(balance: .init(stars: 0, usdRate: 0), current: .init(stars: 0, usdRate: 0), all: .init(stars: 0, usdRate: 0))
-    var balance: Balance = .init(stars: 0, usdRate: 0)
-    var transactions: [Star_Transaction] = []
-        
-    var transactionsState: StarsTransactionsContext.State?
+    var overview: Overview = .init(balance: .init(stars: .init(value: 0, nanos: 0), usdRate: 0), current: .init(stars: .init(value: 0, nanos: 0), usdRate: 0), all: .init(stars: .init(value: 0, nanos: 0), usdRate: 0))
+    var balance: Balance = .init(stars: .init(value: 0, nanos: 0), usdRate: 0)
+    var allTransactions: [Star_Transaction] = []
+    var incomingTransactions: [Star_Transaction] = []
+    var outgoingTransactions: [Star_Transaction] = []
+
+    var allTransactionsState: StarsTransactionsContext.State?
+    var incomingTransactionsState: StarsTransactionsContext.State?
+    var outgoingTransactionsState: StarsTransactionsContext.State?
+
     var adsUrl: String?
     var inputState: Updated_ChatTextInputState = .init()
     
@@ -104,6 +190,8 @@ private struct State : Equatable {
     
     var revenueGraph: StatsGraph?
     
+    var transactionMode: TransactionMode = .all
+    
 }
 
 
@@ -120,7 +208,7 @@ private let _id_revenue_graph = InputDataIdentifier("_id_revenue_graph")
 
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_load_more = InputDataIdentifier("_id_load_more")
-
+private let _id_transaction_mode = InputDataIdentifier("_id_transaction_mode")
 
 private func entries(_ state: State, arguments: Arguments, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -202,9 +290,9 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
         
         var tuples: [Tuple] = []
         
-        tuples.append(.init(overview: .init(amount: state.overview.balance.stars, usdAmount: state.overview.balance.usd, info: strings().fragmentStarsAvailableBalance, stars: nil), viewType: .firstItem))
+        tuples.append(.init(overview: .init(amount: state.overview.balance.stars.value, usdAmount: state.overview.balance.usd, info: strings().fragmentStarsAvailableBalance, stars: nil), viewType: .firstItem))
         
-        tuples.append(.init(overview: .init(amount: state.overview.current.stars, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .lastItem))
+        tuples.append(.init(overview: .init(amount: state.overview.current.stars.value, usdAmount: state.overview.current.usd, info: strings().fragmentStarsTotalCurrent, stars: nil), viewType: .lastItem))
 
         
         //tuples.append(.init(overview: .init(amount: state.overview.all.stars, usdAmount: state.overview.all.usd, info: strings().fragmentStarsTotalLifetime, stars: nil), viewType: .lastItem))
@@ -225,12 +313,15 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarsBalanceTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+        
+        let buyAds:()->Void = {
+            if let url = state.adsUrl {
+                arguments.executeLink(url)
+            }
+        }
+        
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_balance, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: {
-                if let url = state.adsUrl {
-                    arguments.executeLink(url)
-                }
-            }, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
+            return Fragment_BalanceRowItem(initialSize, stableId: stableId, context: arguments.context, balance: .init(amount: state.balance.stars.totalValue, usd: state.balance.usd, currency: .xtr), canWithdraw: state.canWithdraw, buyAds: state.peer?.id == arguments.context.peerId ? nil : buyAds, nextWithdrawalTimestamp: state.nextWithdrawalTimestamp, viewType: .singleItem, transfer: arguments.withdraw)
         }))
         
         let text: String
@@ -243,40 +334,70 @@ private func entries(_ state: State, arguments: Arguments, detailedDisposable: D
     }
 //
 //
-    if !state.transactions.isEmpty, let transactionsState = state.transactionsState {
+    
+    
+    if !state.allTransactions.isEmpty {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
       
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().monetizationTransactionsTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+        
+        var list: [State.TransactionMode] = [.all]
+        if !state.incomingTransactions.isEmpty {
+            list.append(.incoming)
+        }
+        if !state.outgoingTransactions.isEmpty {
+            list.append(.outgoing)
+        }
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction_mode, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return TransactionTypesItem(initialSize, stableId: stableId, context: arguments.context, transactionMode: state.transactionMode, list: list, viewType: .firstItem, callback: arguments.toggleFilterMode)
+        }))
+        
         struct Tuple : Equatable {
             let transaction: Star_Transaction
             let viewType: GeneralViewType
         }
-        var tuples: [Tuple] = []
-        for (i, transaction) in state.transactions.enumerated() {
-            var viewType = bestGeneralViewType(state.transactions, for: i)
-            if transactionsState.canLoadMore || transactionsState.isLoading {
-                if i == state.transactions.count - 1 {
+        
+        let transactions: [Star_Transaction]
+        var transactionState: StarsTransactionsContext.State?
+        switch state.transactionMode {
+        case .all:
+            transactions = state.allTransactions
+            transactionState = state.allTransactionsState
+        case .incoming:
+            transactions = state.incomingTransactions
+            transactionState = state.incomingTransactionsState
+        case .outgoing:
+            transactions = state.outgoingTransactions
+            transactionState = state.outgoingTransactionsState
+        }
+        
+        if let transactionState {
+            var tuples: [Tuple] = []
+            for (i, transaction) in transactions.enumerated() {
+                var viewType = bestGeneralViewTypeAfterFirst(transactions, for: i)
+                if i == transactions.count - 1, transactionState.canLoadMore || transactionState.isLoading {
                     viewType = .innerItem
                 }
+                tuples.append(.init(transaction: transaction, viewType: viewType))
             }
-            tuples.append(.init(transaction: transaction, viewType: viewType))
+            
+            for tuple in tuples {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction(tuple.transaction.id, type: tuple.transaction.type), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                    return Star_TransactionItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, transaction: tuple.transaction, callback: arguments.openTransaction)
+                }))
+            }
+            
+            if transactionState.isLoading {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
+                    return LoadingTableItem(initialSize, height: 40, stableId: stableId, viewType: .lastItem)
+                }))
+            } else if transactionState.canLoadMore {
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().fragmentStarsShowMore, color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
+            }
         }
         
-        for tuple in tuples {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_transaction(tuple.transaction.id, type: tuple.transaction.type), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                return Star_TransactionItem(initialSize, stableId: stableId, context: arguments.context, viewType: tuple.viewType, transaction: tuple.transaction, callback: arguments.openTransaction)
-            }))
-        }
-        
-        if transactionsState.isLoading {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                return LoadingTableItem(initialSize, height: 40, stableId: stableId, viewType: .lastItem)
-            }))
-        } else if transactionsState.canLoadMore {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().fragmentStarsShowMore, color: theme.colors.accent, type: .none, viewType: .lastItem, action: arguments.loadMore)))
-        }
     }
     
     
@@ -310,39 +431,51 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
     
     class ContextObject {
         let revenue: StarsRevenueStatsContext
-        let transactions: StarsTransactionsContext
-        init(revenue: StarsRevenueStatsContext, transactions: StarsTransactionsContext) {
+        let allTransactions: StarsTransactionsContext
+        let incomingTransactions: StarsTransactionsContext
+        let outgoingTransactions: StarsTransactionsContext
+        init(revenue: StarsRevenueStatsContext, allTransactions: StarsTransactionsContext, incomingTransactions: StarsTransactionsContext, outgoingTransactions: StarsTransactionsContext) {
             self.revenue = revenue
-            self.transactions = transactions
+            self.allTransactions = allTransactions
+            self.incomingTransactions = incomingTransactions
+            self.outgoingTransactions = outgoingTransactions
+            
+            allTransactions.loadMore()
+            incomingTransactions.loadMore()
+            outgoingTransactions.loadMore()
         }
     }
     
     
-    let contextObject = ContextObject(revenue: revenueContext, transactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .all))
+    let contextObject = ContextObject(revenue: revenueContext,
+                                      allTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .all),
+                                      incomingTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .incoming),
+                                      outgoingTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .outgoing))
     
-    contextObject.transactions.loadMore()
     
     let adsUrl: Signal<String?, NoError> = .single(nil) |> then(context.engine.peers.requestStarsRevenueAdsAccountlUrl(peerId: peerId))
     
-    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.transactions.state, adsUrl).startStrict(next: { revenue, transactions, adsUrl in
+    actionsDisposable.add(combineLatest(contextObject.revenue.state, contextObject.allTransactions.state, contextObject.incomingTransactions.state, contextObject.outgoingTransactions.state, adsUrl, context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))).startStrict(next: { revenue, allTransactions, incomingTransactions, outgoingTransactions, adsUrl, peer in
         if let revenue = revenue.stats {
             updateState { current in
                 var current = current
-                
+                current.peer = peer
                 current.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
                 current.overview.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
                 current.overview.all = .init(stars: revenue.balances.overallRevenue, usdRate: revenue.usdRate)
                 current.overview.current = .init(stars: revenue.balances.currentBalance, usdRate: revenue.usdRate)
                 current.config_withdraw = revenue.balances.withdrawEnabled
                 current.nextWithdrawalTimestamp = revenue.balances.nextWithdrawalTimestamp
-                current.transactionsState = transactions
+                current.allTransactionsState = allTransactions
+                current.incomingTransactionsState = incomingTransactions
+                current.outgoingTransactionsState = outgoingTransactions
+
                 current.adsUrl = adsUrl
                 
-                current.revenueGraph = revenue.revenueGraph
-                current.transactions = transactions.transactions.map { value in
+                let map:(StarsContext.State.Transaction)->Star_Transaction = { value in
                     let type: Star_TransactionType
                     var botPeer: EnginePeer?
-                    let incoming: Bool = value.count > 0
+                    let incoming: Bool = value.count.value > 0
                     let source: Star_TransactionType.Source
                     switch value.peer {
                     case let .peer(peer):
@@ -360,6 +493,8 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                         source = .unknown
                     case .ads:
                         source = .ads
+                    case .apiLimitExtension:
+                        source = .apiLimitExtension
                     }
                     if incoming {
                         type = .incoming(source)
@@ -369,6 +504,12 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                     
                     return Star_Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
                 }
+                
+                current.revenueGraph = revenue.revenueGraph
+                current.allTransactions = allTransactions.transactions.map(map)
+                current.incomingTransactions = incomingTransactions.transactions.map(map)
+                current.outgoingTransactions = outgoingTransactions.transactions.map(map)
+
                 return current
             }
         }
@@ -412,11 +553,25 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
     }, executeLink: { link in
         execute(inapp: .external(link: link, false))
     }, loadMore: { [weak contextObject] in
-        contextObject?.transactions.loadMore()
+        let current = stateValue.with { $0.transactionMode }
+        switch current {
+        case .all:
+            contextObject?.allTransactions.loadMore()
+        case .incoming:
+            contextObject?.incomingTransactions.loadMore()
+        case .outgoing:
+            contextObject?.outgoingTransactions.loadMore()
+        }
     }, openTransaction: { transaction in
-        showModal(with: Star_TransactionScreen(context: context, peer: transaction.peer, transaction: transaction.native), for: context.window)
+        showModal(with: Star_TransactionScreen(context: context, fromPeerId: peerId, peer: transaction.peer, transaction: transaction.native), for: context.window)
     }, loadDetailedGraph: { [weak contextObject] graph, x in
         return contextObject?.revenue.loadDetailedGraph(graph, x: x) ?? .complete()
+    }, toggleFilterMode: { filter in
+        updateState { current in
+            var current = current
+            current.transactionMode = filter
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -444,8 +599,8 @@ private final class WithdrawHeaderItem : GeneralRowItem {
         self.arguments = arguments
         self.titleLayout = .init(.initialize(string: strings().fragmentStarWithdraw, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         let attr = NSMutableAttributedString()
-        attr.append(string: strings().starPurchaseBalance("\(clown)\(balance)"), color: theme.colors.text, font: .normal(.text))
-        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+        attr.append(string: strings().starPurchaseBalance("\(clown + TINY_SPACE)\(balance)"), color: theme.colors.text, font: .normal(.text))
+        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
         
         self.balance = .init(attr)
         self.balance.measure(width: .greatestFiniteMagnitude)
@@ -556,7 +711,7 @@ private final class WithdrawInputView : GeneralRowView {
         func update(_ item: WithdrawInputItem, animated: Bool) {
             let attr = NSMutableAttributedString()
             
-            attr.append(string: strings().fragmentStarWithdrawInput("\(clown)\(item.inputState.inputText.string)") , color: theme.colors.underSelectedColor, font: .medium(.text))
+            attr.append(string: strings().fragmentStarWithdrawInput("\(clown + TINY_SPACE)\(item.inputState.inputText.string)") , color: theme.colors.underSelectedColor, font: .medium(.text))
             attr.insertEmbedded(.embedded(name: XTR_ICON, color: theme.colors.underSelectedColor, resize: false), for: clown)
             
             let layout = TextViewLayout(attr)
@@ -607,7 +762,7 @@ private final class WithdrawInputView : GeneralRowView {
             
             let iconAttr = NSMutableAttributedString()
             iconAttr.append(string: clown, color: theme.colors.text, font: .medium(.text))
-            iconAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            iconAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             
             let iconLayout = TextViewLayout(iconAttr)
             iconLayout.measure(width: frame.width - 70)
@@ -653,7 +808,7 @@ private final class WithdrawInputView : GeneralRowView {
             
             let attr = NSMutableAttributedString()
             attr.append(string: clown)
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             
             let layout = TextViewLayout(attr)
             layout.measure(width: .greatestFiniteMagnitude)
@@ -863,14 +1018,14 @@ private func withdrawEntries(_ state: State, arguments: WithdrawArguments) -> [I
     var index: Int32 = 0
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return WithdrawHeaderItem(initialSize, stableId: stableId, balance: state.balance.stars, arguments: arguments)
+        return WithdrawHeaderItem(initialSize, stableId: stableId, balance: state.balance.stars.value, arguments: arguments)
     }))
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().fragmentStarWithdrawPlaceholder), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return WithdrawInputItem(initialSize, stableId: stableId, balance: state.balance.stars, inputState: state.inputState, arguments: arguments)
+        return WithdrawInputItem(initialSize, stableId: stableId, balance: state.balance.stars.value, inputState: state.inputState, arguments: arguments)
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -902,8 +1057,8 @@ private func withdraw(context: AccountContext, state: State, stateValue: Signal<
         let number = Int64(value.string) ?? 0
         
         var value = value
-        if number > state.balance.stars {
-            let string = "\(state.balance.stars)"
+        if number > state.balance.stars.value {
+            let string = state.balance.stars.stringValue
             value = .init(inputText: .initialize(string: string), selectionRange: string.length..<string.length)
             getController?()?.proccessValidation(.fail(.fields([_id_input : .shake])))
         }
@@ -970,5 +1125,19 @@ func withdrawStarBalance(context: AccountContext, stars: StarsContext, state: St
     }
 
     return withdraw(context: context, state: initialState, stateValue: statePromise.get(), updateState: updateState, callback: { _ in })
+    
+}
+
+
+func withdrawStarBalance(context: AccountContext, balance: StarsRevenueStats, callback:@escaping(Int64)->Void) -> InputDataModalController {
+    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("bot_revenue_withdrawal_enabled", orElse: true), balance: .init(stars: balance.balances.availableBalance, usdRate: balance.usdRate))
+
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((State) -> State) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+
+    return withdraw(context: context, state: initialState, stateValue: statePromise.get(), updateState: updateState, callback: callback)
     
 }

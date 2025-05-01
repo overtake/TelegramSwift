@@ -115,15 +115,19 @@ private final class BoosterRowItem : GeneralRowItem {
         let durationMonths = Int32(round(Float(boost.expires - boost.date) / (86400.0 * 30.0)))
         
         if boost.peer == nil {
-            let color: (top: NSColor, bottom: NSColor)
-            if durationMonths > 11 {
-                color = theme.colors.peerColors(0)
-            } else if durationMonths > 5 {
-                color = theme.colors.peerColors(5)
+            if boost.stars == nil {
+                let color: (top: NSColor, bottom: NSColor)
+                if durationMonths > 11 {
+                    color = theme.colors.peerColors(0)
+                } else if durationMonths > 5 {
+                    color = theme.colors.peerColors(5)
+                } else {
+                    color = theme.colors.peerColors(3)
+                }
+                self.empty = .icon(colors: color, icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
             } else {
-                color = theme.colors.peerColors(3)
+                self.empty = .icon(colors: (top: .clear, bottom: .clear), icon: NSImage(resource: .iconGiveawayStars).precomposed(), iconSize: NSMakeSize(37, 37), cornerRadius: nil)
             }
-            self.empty = .icon(colors: color, icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         } else {
             self.empty = nil
         }
@@ -134,7 +138,9 @@ private final class BoosterRowItem : GeneralRowItem {
         if let peer = boost.peer {
             nameString = peer._asPeer().displayTitle
         } else {
-            if boost.flags.contains(.isUnclaimed) {
+            if let stars = boost.stars {
+                nameString = strings().channelBoostBoosterStarsCountable(Int(stars))
+            } else if boost.flags.contains(.isUnclaimed) {
                 nameString = strings().channelBoostBoosterUnclaimed
             } else if boost.flags.contains(.isGiveaway) {
                 nameString = strings().channelBoostBoosterToBeDistributed
@@ -142,8 +148,9 @@ private final class BoosterRowItem : GeneralRowItem {
                 nameString = "Unknown"
             }
             let durationString = strings().channelBoostBoosterDuration(Int(durationMonths))
-
-            expiresString = "\(durationString) • \(stringForFullDate(timestamp: boost.expires))"
+            if boost.stars == nil {
+                expiresString = "\(durationString) • \(stringForFullDate(timestamp: boost.expires))"
+            }
         }
        
         self.name = .init(.initialize(string: nameString, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
@@ -194,6 +201,7 @@ private final class BoosterRowItemView : GeneralContainableRowView {
         addSubview(multiplierView)
         addSubview(reasonView)
         
+        avatar.userInteractionEnabled = false
         self.addSubview(self.avatar)
         self.avatar.setFrameSize(NSMakeSize(36, 36))
         
@@ -754,24 +762,37 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
                 
-        let prepaid:[PrepaidGiveaway] = state.boostStatus?.prepaidGiveaways ?? []
+        let prepaidList:[PrepaidGiveaway] = state.boostStatus?.prepaidGiveaways ?? []
         
         
         
-        if !prepaid.isEmpty {
+        if !prepaidList.isEmpty {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsPrepaidTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
-            for (i, item) in prepaid.enumerated() {
-                let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(item.quantity)", color: theme.colors.accent, font: .avatar(.text)))
+            for (i, prepaid) in prepaidList.enumerated() {
+                let title: String
+                let info: String
+                let icon: CGImage
+                let countIcon: CGImage
+                let viewType = bestGeneralViewType(prepaidList, for: i)
+                switch prepaid.prize {
+                case let .premium(months):
+                    countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(prepaid.quantity)", color: theme.colors.accent, font: .avatar(.text)))
+                    icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(months) % 7)
+                    title = strings().giveawayTypePrepaidTitle(Int(prepaid.quantity))
+                    info = strings().giveawayTypePrepaidDesc(Int(months))
+                case let .stars(stars, boosts):
+                    countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(boosts)", color: theme.colors.accent, font: .avatar(.text)))
+                    icon = NSImage(resource: .iconGiveawayStars).precomposed(flipVertical: true)
+                    title = strings().giveawayStarsPrepaidTitle(Int(stars))
+                    info = strings().giveawayStarsPrepaidDescCountable(Int(prepaid.quantity))
+                }
                 
-                let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(item.months) % 7)
-                let viewType = bestGeneralViewType(prepaid, for: i)
-                
-                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: strings().channelBoostsStatsPrepaidQuantity(Int(item.quantity)), color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: strings().channelBoostsStatsPrepaidMonths(Int(item.months)), descTextColor: theme.colors.grayText, action: {
-                    arguments.giveaway(item)
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(prepaid), data: .init(name: title, color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: info, descTextColor: theme.colors.grayText, action: {
+                    arguments.giveaway(prepaid)
                 })))
             }
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsPrepaidInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -845,7 +866,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         index += 1
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: _ExportedInvitation.initialize(.link(link: state.link, title: nil, isPermanent: true, requestApproval: false, isRevoked: false, adminId: arguments.context.peerId, date: 0, startDate: 0, expireDate: nil, usageLimit: nil, count: nil, requestedCount: nil)), lastPeers: [], viewType: .singleItem, mode: .normal(hasUsage: false), menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: _ExportedInvitation.initialize(.link(link: state.link, title: nil, isPermanent: true, requestApproval: false, isRevoked: false, adminId: arguments.context.peerId, date: 0, startDate: 0, expireDate: nil, usageLimit: nil, count: nil, requestedCount: nil, pricing: nil)), lastPeers: [], viewType: .singleItem, mode: .normal(hasUsage: false), menuItems: {
                 
                 var items:[ContextMenuItem] = []
                 

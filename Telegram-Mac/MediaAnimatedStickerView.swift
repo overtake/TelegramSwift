@@ -268,7 +268,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         let mirror = parameters?.mirror ?? false
 
-        let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
+        let params = parameters as? ChatAnimatedStickerMediaLayoutParameters
                 
         let reference: FileMediaReference
         let mediaResource: MediaResourceReference
@@ -327,7 +327,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             } |> deliverOnMainQueue).start(next: { [weak self] data in
                 if let data = data, let `self` = self {
                     
-                    var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? .loop : .loop)
+                    var playPolicy: LottiePlayPolicy = params?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? .loop : .loop)
                     
                     if isLite(.stickers), parent != nil {
                         playPolicy = .toStart(from: 0)
@@ -343,7 +343,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                         }
                     }
                     let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 30 : 30 : 60
-                    let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.effect) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
+                    let cache: ASCachePurpose = params?.cache ?? (size.width < 200 ? .temporaryLZ4(.effect) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                     let fitzModifier = file.animatedEmojiFitzModifier
                     
                     
@@ -369,10 +369,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), mirror: mirror)
                                
-            if parameters?.noThumb == false || parameters == nil {
+            if params?.noThumb == false || params == nil {
                 self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
                 
-                let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && (parameters == nil || parameters!.shimmer)
+                let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && (params == nil || params!.shimmer)
                 if updated {
                     if hasPlaceholder {
                         let current: StickerShimmerEffectView
@@ -408,7 +408,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     case "image/webp":
                         signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: backingScaleFactor, fetched: true)
                     default:
-                        signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+                        signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: params?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
                     }
                     self.thumbView.setSignal(signal, cacheImage: { [weak self] result in
                         cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
@@ -442,7 +442,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     self.thumbView.removeFromSuperview()
                     self.removePlaceholder(animated: false)
                 case .stoped:
-                    if let parameters = parameters, parameters.hidePlayer == false {
+                    if let parameters = params, parameters.hidePlayer == false {
                         break
                     } else {
                         self.playerView.removeFromSuperview()

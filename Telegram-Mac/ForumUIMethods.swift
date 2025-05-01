@@ -46,12 +46,12 @@ struct ForumUI {
         let colors: ([NSColor], [NSColor]) = topicColor(iconColor)
         
         if isGeneral {
-            return TelegramMediaFile(fileId: .init(namespace: 0, id: 523134), partialReference: nil, resource: LocalBundleResource(name: "Icon_Topic_General", ext: "", color: theme.chatList.badgeMutedBackgroundColor), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+            return TelegramMediaFile(fileId: .init(namespace: 0, id: 523134), partialReference: nil, resource: LocalBundleResource(name: "Icon_Topic_General", ext: "", color: theme.chatList.badgeMutedBackgroundColor), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [], alternativeRepresentations: [])
         }
         
         let resource = ForumTopicIconResource(title: title.prefix(1), bgColors: colors.0, strokeColors: colors.1, iconColor: iconColor)
         let id = Int64(resource.id.stringRepresentation.hashValue)
-        return TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: id), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/topic", size: nil, attributes: [])
+        return TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: id), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/topic", size: nil, attributes: [], alternativeRepresentations: [])
     }
     
     

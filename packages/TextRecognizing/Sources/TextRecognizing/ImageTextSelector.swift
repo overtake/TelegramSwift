@@ -8,21 +8,179 @@
 import Foundation
 import Cocoa
 import TGUIKit
+import AppKit
+
+
 
 @available(macOS 10.15, *)
 public extension TextRecognizing {
     
     final class ImageTextSelector : View {
         
+        class TranslateView : View {
+            
+            
+            private class DrawingTextLayer: SimpleLayer {
+                let textView = TextView()
+                override init() {
+                    super.init()
+                    textView.lockDrawingLayer = true
+                    self.addSublayer(textView.drawingLayer)
+                    
+                    textView.drawingLayer.transform = CATransform3DMakeRotation(.pi, 1, 0, 0)
+                }
+                
+                required init?(coder: NSCoder) {
+                    fatalError("init(coder:) has not been implemented")
+                }
+                func set(translated: TextRecognizing.TranslateResult.Value, rect: NSRect, maxWidth: CGFloat) -> NSRect {
+                    
+                    let font = fontSizeThatFits(text: translated.text, in: rect, initialFont: .medium(30), minFontSize: 10)
+                    
+                    let textLayout = TextViewLayout(.initialize(string: translated.text, color: NSColor.black, font: font), maximumNumberOfLines: 1)
+                    
+                    textLayout.measure(width: maxWidth - rect.minX)
+                    textView.update(textLayout)
+                    
+                    textView.drawingLayer.frame = textLayout.layoutSize.bounds //rect.focusY(textLayout.layoutSize, x: 0)
+                    
+                    return NSMakeRect(rect.minX, rect.minY, max(textView.frame.width, rect.width), max(textView.frame.height, rect.height))
+                }
+            }
+            
+            private var shimmers: [ShimmerLayer] = []
+            private var texts: [DrawingTextLayer] = []
+            
+            private var backgroundImage: SimpleLayer?
+
+            required init(frame frameRect: NSRect) {
+                super.init(frame: frameRect)
+                isEventLess = true
+            }
+            
+            override var isFlipped: Bool {
+                return false
+            }
+            
+            required init?(coder: NSCoder) {
+                fatalError("init(coder:) has not been implemented")
+            }
+            
+            func set(_ translate: TranslateResult) {
+                                
+                switch translate {
+                case let .progress(result):
+                    
+                    if let backgroundImage {
+                        performSublayerRemoval(backgroundImage, animated: true)
+                    }
+                    
+                    for text in texts {
+                        performSublayerRemoval(text, animated: true)
+                    }
+                    
+                    let rects = result.selectableRects(viewSize: bounds.size)
+                    let rotations = result.rotations()
+                    
+                    while shimmers.count > rects.count {
+                        shimmers[shimmers.count - 1].removeFromSuperlayer()
+                    }
+                    while shimmers.count < rects.count {
+                        let current = ShimmerLayer()
+                        shimmers.append(current)
+                        self.layer?.addSublayer(current)
+                        current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    
+                    for (i, shimmerView) in shimmers.enumerated() {
+                        let value = rects[i]
+                        let rotation = rotations[i]
+                        shimmerView.cornerRadius = 4
+                        shimmerView.masksToBounds = true
+                        shimmerView.update(backgroundColor: .blackTransparent, data: nil, size: value.size, imageSize: value.size)
+                        shimmerView.updateAbsoluteRect(value.size.bounds, within: value.size)
+                        shimmerView.frame = value
+                        shimmerView.transform = CATransform3DMakeRotation(rotation, 0, 0, 1)
+                    }
+                    
+                case let .success(translated, result):
+                    for shimmer in shimmers {
+                        performSublayerRemoval(shimmer, animated: true)
+                    }
+                    
+                    var rects = result.selectableRects(viewSize: bounds.size)
+                    let rotations = result.rotations()
+
+                    while texts.count < rects.count {
+                        let current = DrawingTextLayer()
+                        texts.append(current)
+                        self.layer?.addSublayer(current)
+                        current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    for (i, text) in texts.enumerated() {
+                        let rotation = rotations[i]
+                        
+                        rects[i] = text.set(translated: translated[i], rect: rects[i], maxWidth: frame.width)
+                        text.frame = rects[i]
+                        text.transform = CATransform3DMakeRotation(rotation, 0, 0, 1)
+                    }
+                    
+                    do {
+                        let current: SimpleLayer
+                        if let layer = self.backgroundImage {
+                            current = layer
+                        } else {
+                            current = SimpleLayer()
+                            self.backgroundImage = current
+                            self.layer?.insertSublayer(current, at: 0)
+                            current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                        current.frame = self.bounds
+                        
+                        current.contents = generateImage(self.bounds.size, contextGenerator: { size, ctx in
+                            ctx.clear(size.bounds)
+                            ctx.setFillColor(.white)
+                            for (index, rect) in rects.enumerated() {
+                                let rect = rect.insetBy(dx: -4, dy: -4)
+                                let rotationAngle = rotations[index]
+
+                                ctx.saveGState()
+
+                                let centerX = rect.midX
+                                let centerY = rect.midY
+                                ctx.translateBy(x: centerX, y: centerY)
+                                ctx.rotate(by: rotationAngle)
+                                ctx.translateBy(x: -centerX, y: -centerY)
+                                ctx.fill(rect)
+                                ctx.setFillColor(NSColor.grayForeground.withAlphaComponent(0.5).cgColor)
+                                ctx.fill(rect)
+                                ctx.restoreGState()
+                            }
+                        })
+                    }
+
+                }
+            }
+            
+            override func layout() {
+                super.layout()
+            }
+        }
+        
+        
         private var trackingArea:NSTrackingArea?
 
         
         public private(set) var result: Result?
         private var showRects: Bool = false
+        private var translate: TranslateResult? = nil
         private var startPoint: NSPoint? = nil
         private var currentPoint: NSPoint? = nil
         private var finished: Bool = false
         private let linearProgress = LinearProgressControl(progressHeight: 2)
+        
+        private var translateView: TranslateView?
+        
         public required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(linearProgress)
@@ -131,6 +289,7 @@ public extension TextRecognizing {
         public override func layout() {
             super.layout()
             linearProgress.frame = NSMakeRect(0, 0, frame.width, linearProgress.frame.height)
+            translateView?.frame = bounds
         }
         
         public override var isFlipped: Bool {
@@ -146,6 +305,8 @@ public extension TextRecognizing {
             guard let result = result else {
                 return
             }
+            
+            
             if self.showRects {
                 let paths = result.selectablePaths(viewSize: self.frame.size)
                 for path in paths {
@@ -181,10 +342,11 @@ public extension TextRecognizing {
             return nil
         }
         
-        public func set(_ result: Result?, showRects: Bool = false) {
+        public func set(_ result: Result?, translate: TranslateResult? = nil, showRects: Bool = false) {
             self.result = result
             self.showRects = showRects
-            self.userInteractionEnabled = result != nil
+            self.translate = translate
+            self.userInteractionEnabled = result != nil && translate == nil
             self.isEventLess = result == nil
             
             if let result = result {
@@ -196,6 +358,22 @@ public extension TextRecognizing {
                     self.linearProgress.change(opacity: 0)
                 }
             }
+            
+            if let translate {
+                let current: TranslateView
+                if let view = self.translateView {
+                    current = view
+                } else {
+                    current = TranslateView(frame: bounds)
+                    self.translateView = current
+                    addSubview(current)
+                }
+                current.set(translate)
+            } else if let view = self.translateView {
+                performSubviewRemoval(view, animated: false)
+                self.translateView = nil
+            }
+            
             needsDisplay = true
         }
         

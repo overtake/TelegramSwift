@@ -355,7 +355,7 @@ private func eventLogItems(_ entries:[ChannelAdminEventLogEntry], state: State, 
         for (i, entry) in group.enumerated() {
             switch entry.event.action {
             case let .editMessage(prev, new):
-                let updatedMedia: TelegramMediaWebpage = .init(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(.init(url: "", displayUrl: "", hash: 0, type: "edited", websiteName: strings().channelEventLogOriginalMessage, title: nil, text: prev.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: true, image: prev.media.first as? TelegramMediaImage, file: prev.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil)))
+                let updatedMedia: TelegramMediaWebpage = .init(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(.init(url: "", displayUrl: "", hash: 0, type: "edited", websiteName: strings().channelEventLogOriginalMessage, title: nil, text: prev.text, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: true, imageIsVideoCover: false, image: prev.media.first as? TelegramMediaImage, file: prev.media.first as? TelegramMediaFile, story: nil, attributes: [], instantPage: nil)))
                 
                 let new = new.withUpdatedMedia([updatedMedia])
                 
@@ -521,6 +521,14 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         return bar
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let controller = context.sharedContext.getAudioPlayer(), let header = self.navigationController?.header, header.needShown {
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
+            header.view.update(with: object)
+        }
+    }
+    
     override func escapeKeyAction() -> KeyHandlerResult {
         if genericView.inSearch {
             genericView.hideSearch()
@@ -585,6 +593,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         chatInteraction.focusMessageId = { [weak self] messageId, focusTarget, _ in
             self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: focusTarget))
         }
+        
 
         genericView.info.set(handler: { _ in
             alert(for: context.window, header: strings().channelEventLogAlertHeader, info: strings().channelEventLogAlertInfo)

@@ -74,6 +74,11 @@ func initialize() -> [String] {
     array.append("chatChannelViewsInBubble_outgoing")
     array.append("chatChannelViewsOutBubble")
     array.append("chatChannelViewsOverlayBubble")
+    array.append("chatPaidMessageInBubble_incoming")
+    array.append("chatPaidMessageInBubble_outgoing")
+    array.append("chatPaidMessageOutBubble")
+    array.append("chatPaidMessageOverlayBubble")
+
     array.append("chatNavigationBack")
     array.append("peerInfoAddMember")
     array.append("chatSearchUp")
@@ -84,6 +89,8 @@ func initialize() -> [String] {
     array.append("dismissAccessory")
     array.append("chatScrollUp")
     array.append("chatScrollUpActive")
+    array.append("chatScrollDown")
+    array.append("chatScrollDownActive")
     array.append("chatSendMessage")
     array.append("chatSaveEditedMessage")
     array.append("chatRecordVoice")
@@ -384,6 +391,8 @@ func initialize() -> [String] {
     array.append("peerInfoBanned")
     array.append("peerInfoMembers")
     array.append("peerInfoStarsBalance")
+    array.append("peerInfoBalance")
+    array.append("peerInfoTonBalance")
     array.append("peerInfoBotUsername")
     array.append("chatUndoAction")
     array.append("appUpdate")
@@ -422,6 +431,10 @@ func initialize() -> [String] {
     array.append("scheduledInputAction")
     array.append("verifyDialog")
     array.append("verifyDialogActive")
+    
+    array.append("verify_dialog_left")
+    array.append("verify_dialog_active_left")
+
     array.append("chatInputScheduled")
     array.append("appearanceAddPlatformTheme")
     
@@ -945,6 +958,18 @@ func initialize() -> [String] {
     array.append("preview_text_down")
     array.append("preview_text_up")
 
+
+    array.append("avatar_star_badge")
+    array.append("avatar_star_badge_active")
+    
+    array.append("avatar_star_badge_gray")
+    array.append("avatar_star_badge_large_gray")
+
+    array.append("chatlist_apps")
+    
+    array.append("chat_input_channel_gift")
+
+    
 
     return array
 }

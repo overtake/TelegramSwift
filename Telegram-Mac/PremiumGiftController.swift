@@ -18,9 +18,9 @@ import CurrencyFormat
 
 struct PremiumGiftOption : Equatable {
     
-    let option: CachedPremiumGiftOption
+    let option: PremiumGiftProduct
     let storeProduct: InAppPurchaseManager.Product?
-    let options: [CachedPremiumGiftOption]
+    let options: [PremiumGiftProduct]
     let storeProducts:[InAppPurchaseManager.Product]
     let configuration: PremiumPromoConfiguration
     
@@ -31,13 +31,13 @@ struct PremiumGiftOption : Equatable {
     
     var discountString: Int {
         
-        let amount = storeProduct?.priceCurrencyAndAmount.amount ?? option.amount
+        let amount = storeProduct?.priceCurrencyAndAmount.amount ?? option.giftOption.amount
         
         let optionMonthly:Int64 = Int64((CGFloat(amount) / CGFloat(option.months)))
         
         let highestOptionMonthly:Int64 = options.map { option in
-            let store = self.storeProducts.first(where: { $0.id == option.storeProductId })
-            return Int64((CGFloat(store?.priceCurrencyAndAmount.amount ?? option.amount) / CGFloat(option.months)))
+            let store = self.storeProducts.first(where: { $0.id == option.storeProduct?.id })
+            return Int64((CGFloat(store?.priceCurrencyAndAmount.amount ?? option.giftOption.amount) / CGFloat(option.months)))
         }.max()!
         
         
@@ -49,7 +49,7 @@ struct PremiumGiftOption : Equatable {
         if let storeProduct = storeProduct {
             return formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
         }
-        return formatCurrencyAmount(option.amount, currency: option.currency)
+        return formatCurrencyAmount(option.giftOption.amount, currency: option.giftOption.currency)
     }
     var priceDiscountString: String {
         if let storeProduct = storeProduct {
@@ -59,8 +59,8 @@ struct PremiumGiftOption : Equatable {
             return strings().premiumGiftMonth(formatCurrencyAmount(optionMonthly, currency: currency))
         }
         
-        let optionMonthly = Int64((CGFloat(option.amount) / CGFloat(option.months)))
-        return strings().premiumGiftMonth(formatCurrencyAmount(optionMonthly, currency: option.currency))
+        let optionMonthly = Int64((CGFloat(option.giftOption.amount) / CGFloat(option.months)))
+        return strings().premiumGiftMonth(formatCurrencyAmount(optionMonthly, currency: option.giftOption.currency))
         
     }
 }
@@ -70,16 +70,16 @@ struct PremiumGiftOption : Equatable {
 
 private struct State : Equatable {
     var peer: PeerEquatable?
-    var options: [CachedPremiumGiftOption]
-    var option: CachedPremiumGiftOption
+    var options: [PremiumGiftProduct]
+    var option: PremiumGiftProduct
     var premiumConfiguration: PremiumPromoConfiguration
     var premiumProducts: [InAppPurchaseManager.Product] = []
     var canMakePayment: Bool
     var values: [PremiumGiftOption] {
         
-        #if APP_STORE || DEBUG
+        #if APP_STORE
         return self.options.compactMap { value in
-            let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProductId })
+            let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProduct?.id })
             if let storeProduct = storeProduct {
                 return .init(option: value, storeProduct: storeProduct, options: self.options, storeProducts: self.premiumProducts, configuration: self.premiumConfiguration)
             } else {
@@ -89,12 +89,12 @@ private struct State : Equatable {
         #endif
         
         return self.options.map({ value in
-            let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProductId })
+            let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProduct?.id })
             return .init(option: value, storeProduct: storeProduct, options: self.options, storeProducts: self.premiumProducts, configuration: self.premiumConfiguration)
         })
     }
     var value: PremiumGiftOption {
-        let storeProduct = self.premiumProducts.first(where: { $0.id == self.option.storeProductId })
+        let storeProduct = self.premiumProducts.first(where: { $0.id == self.option.storeProduct?.id })
         return .init(option: self.option, storeProduct: storeProduct, options: self.options, storeProducts: self.premiumProducts, configuration: self.premiumConfiguration)
     }
 }
@@ -390,8 +390,8 @@ final class PremiumGiftController : ModalViewController {
 
     private let context: AccountContext
     private let peerId: PeerId
-    private let options: [CachedPremiumGiftOption]
-    init(context: AccountContext, peerId: PeerId, options: [CachedPremiumGiftOption]) {
+    private let options: [PremiumGiftProduct]
+    init(context: AccountContext, peerId: PeerId, options: [PremiumGiftProduct]) {
         self.context = context
         self.peerId = peerId
         self.options = options
@@ -643,26 +643,38 @@ final class PremiumGiftController : ModalViewController {
             })
 
         }
-        let buyNonAppStore: ()->Void = {
+        let buyNonAppStore:(PremiumGiftProduct)->Void = { premiumProduct in
+            let state = stateValue.with { $0 }
             
-            let url = inApp(for: stateValue.with { $0.option.botUrl.nsstring }, context: context, openInfo: arguments.openInfo)
-            switch url {
-            case let .invoice(_, context, slug):
-                arguments.buy(slug)
-            case .followResolvedName:
-                execute(inapp: url)
-            default:
-                break
-            }
+            let peer = state.peer
+            
+            let source = BotPaymentInvoiceSource.giftCode(users: [peerId], currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: .init(users: 1, months: premiumProduct.months, storeProductId: nil, storeQuantity: 0, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount), text: "", entities: [])
+                            
+            let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
+
+            actionsDisposable.add(invoice.start(next: { invoice in
+                showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+                    switch status {
+                    case .paid:
+                        PlayConfetti(for: context.window)
+                        close()
+                    default:
+                        break
+                    }
+                }), for: context.window)
+            }, error: { error in
+                showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+            }))
             
         }
+
         
         genericView.accept = {
             
             #if APP_STORE// || DEBUG
             buyAppStore()
             #else
-            buyNonAppStore()
+            buyNonAppStore(stateValue.with({ $0.option }))
             #endif
             
 

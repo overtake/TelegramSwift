@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
-private func generateAfterMedia(_ count: String, revealed: Bool) -> CGImage {
+func generateAfterMedia(_ count: String, revealed: Bool) -> CGImage {
     
     let layout = TextNode.layoutText(.initialize(string: count, color: theme.colors.text, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
     let image = NSImage(resource: revealed ? .iconSmallChevronUp : .iconSmallChevronDown).precomposed(theme.colors.text, flipVertical: true)

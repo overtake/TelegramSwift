@@ -82,13 +82,11 @@ public class SectionControllerView : View {
             previous?.viewWillDisappear(animated)
         }
         
-        let duration: Double = 0.2
+        let duration: Double = controller.animationStyle.duration
         
         container.addSubview(controller.view)
         
         if animated {
-            CATransaction.begin()
-            let container = header.subviews[index]
             selector.change(pos: NSMakePoint(container.frame.minX, selector.frame.minY), animated: animated, duration: duration, timingFunction: .spring)
             
             
@@ -104,15 +102,14 @@ public class SectionControllerView : View {
                 nfrom = NSMakePoint(-container.frame.width, 0)
             }
             
-            previous?.view._change(pos: pto, animated: animated, duration: duration, timingFunction: .spring, completion: { [weak previous, weak controller] complete in
+            previous?.view._change(pos: pto, animated: animated, duration: duration, timingFunction: controller.animationStyle.function, completion: { [weak previous, weak controller] complete in
                 if complete {
                     previous?.view.removeFromSuperview()
                     previous?.viewDidDisappear(animated)
                     controller?.viewDidAppear(animated)
                 }
             })
-            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: .spring, removeOnCompletion: true)
-            CATransaction.commit()
+            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: controller.animationStyle.function, removeOnCompletion: true)
         } else {
             container.removeAllSubviews()
             previous?.viewDidDisappear(animated)
@@ -174,7 +171,7 @@ public class SectionControllerView : View {
 }
 
 public class SectionControllerItem {
-    let title: ()->String
+    public let title: ()->String
     public let controller: ViewController
     public init(title: @escaping()->String, controller: ViewController) {
         self.title = title
@@ -185,7 +182,7 @@ public class SectionControllerItem {
 
 open class SectionViewController: GenericViewController<SectionControllerView> {
 
-    private var sections:[SectionControllerItem] = []
+    public private(set) var sections:[SectionControllerItem] = []
     public var selectedSection:SectionControllerItem
     public private(set) var selectedIndex: Int = -1
     private let disposable = MetaDisposable()
@@ -264,6 +261,7 @@ open class SectionViewController: GenericViewController<SectionControllerView> {
             if !self.selectedSection.controller.supportSwipes {
                 return .nothing
             }
+            
             
             switch direction {
             case let .left(state):

@@ -32,9 +32,10 @@ final class PeerMediaCollectionInteraction : InterfaceObserver {
 }
 
 enum PeerMediaCollectionMode : Int32 {
-    case savedMessages = -5
-    case members = -4
-    case stories = -3
+    case stories = -6
+    case gifts = -5
+    case savedMessages = -4
+    case members = -3
     case archiveStories = -2
     case photoOrVideo = -1
     case saved = 0
@@ -45,6 +46,7 @@ enum PeerMediaCollectionMode : Int32 {
     case commonGroups = 5
     case gifs = 6
     case similarChannels = 7
+    case similarBots = 8
     var tagsValue:MessageTags {
         switch self {
         case .photoOrVideo:
@@ -69,9 +71,13 @@ enum PeerMediaCollectionMode : Int32 {
             return []
         case .similarChannels:
             return []
+        case .similarBots:
+            return []
         case .savedMessages:
             return []
         case .saved:
+            return []
+        case .gifts:
             return []
         }
     }

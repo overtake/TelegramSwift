@@ -195,7 +195,7 @@ public final class TextViewBlockQuoteData: NSObject {
     
     var minimumHeaderSize: CGFloat {
         if let header = header {
-            return header.0.size.width + 20
+            return header.0.size.width
         } else {
             return 0
         }
@@ -949,7 +949,13 @@ public final class TextViewLayout : Equatable {
         var fontLineSpacing:CGFloat = lineSpacing ?? floor(fontLineHeight * 0.12)
 
         
-        let attributedString = self.attributedString
+        let attributedString = self.attributedString.mutableCopy() as! NSMutableAttributedString
+        
+        attributedString.enumerateAttributes(in: attributedString.range, options: []) { attributes, range, _ in
+            if let _ = attributes[TextInputAttributes.embedded] as? AnyHashable {
+                attributedString.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+            }
+        }
         
         var maybeTypesetter: CTTypesetter?
         
@@ -1019,8 +1025,19 @@ public final class TextViewLayout : Equatable {
                 if !rawRightOffset.isEqual(to: secondaryRightOffset) {
                     rightOffset = ceil(secondaryRightOffset)
                 }
+                
+                let lineRange = NSMakeRange(CTLineGetStringRange(line).location, CTLineGetStringRange(line).length)
+                let range = NSMakeRange(startIndex, endIndex - startIndex)
+                                
+                if lineRange.intersection(range) != range {
+                    return
+                }
+                if lineRange.location != startIndex, rawLeftOffset == 0 {
+                    return
+                }
+               // return;
                                         
-                if abs(rightOffset - leftOffset) < 150, abs(rightOffset - leftOffset) > 8 {
+                if abs(rightOffset - leftOffset) < 200 {
                     let x = floor(min(leftOffset, rightOffset)) + 1
                     var width = floor(abs(rightOffset - leftOffset) + rightInset)
                     if Int(width) % 2 != 0 {
@@ -1204,25 +1221,34 @@ public final class TextViewLayout : Equatable {
                 
                 if brokenLineRange.location >= 0 && brokenLineRange.length > 0 && brokenLineRange.location + brokenLineRange.length <= attributedString.length {
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
-                        if let _ = attributes[.strikethroughStyle] {
+                        if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
+                            var ascent: CGFloat = 0.0
+                            var descent: CGFloat = 0.0
+                            CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
+                            
+                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.min, endIndex: range.max)
+                        } else if let _ = attributes[.strikethroughStyle] {
                             let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
+                            
                             
                             
                             let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
                             var upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, min(range.location + range.length, lineRange.location + lineRange.length), nil))
                             
+                            let lineStartIndex = CTLineGetStringIndexForPosition(coreTextLine, NSMakePoint(lowerX, lineFrame.minY))
+
+                            
                             if lowerX > 0 && upperX == 0 {
                                 upperX = lineWidth
                             }
                             
-                            let x = lowerX < upperX ? lowerX : upperX
-                            strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
-                            var ascent: CGFloat = 0.0
-                            var descent: CGFloat = 0.0
-                            CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
+                            if lowerX == 0, !range.contains(lineStartIndex) {
+                                
+                            } else {
+                                let x = lowerX < upperX ? lowerX : upperX
+                                strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                            }
                             
-                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
                         }
 
                     }
@@ -1275,18 +1301,21 @@ public final class TextViewLayout : Equatable {
                     }
 
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
-                        if let _ = attributes[.strikethroughStyle] {
-                            let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
-                            let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
-                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
-                            let x = lowerX < upperX ? lowerX : upperX
-                            strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
+                        if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
                             var ascent: CGFloat = 0.0
                             var descent: CGFloat = 0.0
                             CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
                                                         
                             addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
+                        } else if let _ = attributes[.strikethroughStyle] {
+                            let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
+                            let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
+                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
+                            let x = lowerX < upperX ? lowerX : upperX
+                            let value = attributes.contains(where: { $0.key == TextInputAttributes.customEmoji })
+                            if !value {
+                                strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                            }
                         }
 
                     }
@@ -1508,7 +1537,7 @@ public final class TextViewLayout : Equatable {
                 rects[i].size.height = height
                 if self.penFlush == 0.5 {
                     rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
-                    rects[i].size.width += 14
+                    rects[i].size.width += 20
                 } else {
                     rects[i].size.width += 10
                     rects[i].origin.x -= 5
@@ -1742,6 +1771,7 @@ public final class TextViewLayout : Equatable {
             selectedRange.location = map(start, byWord: byWord, forward: false)
             selectedRange.length = map(end, byWord: byWord, forward: true) - selectedRange.location
         }
+        
         return selectedRange
     }
 
@@ -2224,6 +2254,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private let drawLayer: TextDrawLayer = TextDrawLayer()
     private var blockMask: SimpleLayer?
     
+    public var lockDrawingLayer: Bool = false
+    
     
     var hasBackground: Bool {
         return blurBackground != nil
@@ -2314,7 +2346,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.draw(dirtyRect)
     }
     
-    public var drawingLayer: CALayer? {
+    public var drawingLayer: CALayer {
         return drawLayer
     }
     
@@ -2706,14 +2738,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         let glyphCount = CTRunGetGlyphCount(run)
                         let range = CTRunGetStringRange(run)
                                                 
-                        let under = line.embeddedItems.contains(where: { value in
-                            return value.range == NSMakeRange(range.location, range.length)
-                        })
+//                        let under = layout.embeddedItems.contains(where: { value in
+//                            return value.range.intersection(NSMakeRange(range.location, range.length)) != nil
+//                        })
+                        
+                        
                         ctx.textPosition = textPosition
                         
-                        if !under {
+                     //   if !under {
                             CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
-                        }
+                      //  }
                     }
                 }
                 for strikethrough in line.strikethrough {
@@ -2927,13 +2961,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public override func setNeedsDisplayLayer() {
         self.layer?.setNeedsDisplay()
-        self.drawingLayer?.setNeedsDisplay()
+        self.drawingLayer.setNeedsDisplay()
        // self.drawLayer.displayIfNeeded()
     }
     
     public override func setNeedsDisplay() {
         self.layer?.setNeedsDisplay()
-        self.drawingLayer?.setNeedsDisplay()
+        self.drawingLayer.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
@@ -3185,6 +3219,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     private func updateBackgroundBlur() {
         
+        if lockDrawingLayer {
+            return
+        }
+        
         self.layer?.masksToBounds = blurBackground != nil
         if let blurBackground = blurBackground {
 
@@ -3211,7 +3249,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
                 
                 blockMask?.transform = fr
-                blockMask?.contentsScale = 2.0
+                blockMask?.contentsScale = backingScaleFactor
                 blockMask?.contents = blockImage
                 blockMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
                 self.layer?.mask = blockMask

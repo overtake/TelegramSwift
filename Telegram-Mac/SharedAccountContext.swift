@@ -68,7 +68,12 @@ class SharedAccountContext {
     let accountManager: AccountManager<TelegramAccountManagerTypes>
 
     #if !SHARE
-    var peerCall: PeerCallScreen?
+    var peerCall: PeerCallScreen? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
     
     let inputSource: InputSources = InputSources()
     let devicesContext: DevicesContext
@@ -528,7 +533,7 @@ class SharedAccountContext {
         
         let signal = self.activeAccountsWithInfoPromise.get() |> mapToSignal { (primary, accounts) -> Signal<(primary: AccountRecordId?, accounts: [AccountWithInfo], [PeerId : CGImage]), NoError> in
             let photos:[Signal<(PeerId, CGImage?), NoError>] = accounts.map { info in
-                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.nameColor, info.peer.displayLetters, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
+                return peerAvatarImage(account: info.account, photo: .peer(info.peer, info.peer.smallProfileImage, info.peer.nameColor, info.peer.displayLetters, nil, nil), displayDimensions: NSMakeSize(32, 32)) |> map {
                     (info.account.peerId, $0.0)
                 }
             }
@@ -553,6 +558,7 @@ class SharedAccountContext {
             self.activeAccountsInfoValue = (primary, accounts)
             self.accountPhotos = photos
             self.updateStatusBarMenuItem()
+            BrowserStateContext.checkActive(accounts.map { $0.account.id })
             
             #if !SHARE
             spotlights.removeAll()
@@ -745,6 +751,7 @@ class SharedAccountContext {
     }
     func endInlinePlayer(animated: Bool) -> Void {
         let value = crossInlinePlayer.swap(nil)
+        value?.controller.stop()
         appDelegate?.enumerateAccountContexts { accountContext in
             let header = accountContext.bindings.rootNavigation().header
             header?.hide(animated)
@@ -756,7 +763,8 @@ class SharedAccountContext {
             let header = accountContext.bindings.rootNavigation().header
             header?.show(true, contextObject: object)
         }
-        _ = crossInlinePlayer.swap(object)
+        let previous = crossInlinePlayer.swap(object)
+        previous?.controller.stop()
     }
     
     func getAudioPlayer() -> APController? {

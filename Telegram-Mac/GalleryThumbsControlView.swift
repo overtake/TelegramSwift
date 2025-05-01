@@ -16,9 +16,9 @@ private class GalleryThumb {
         if let item = item as? MGalleryPhotoItem {
             signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: System.backingScale, small: true, secureIdAccessContext: item.secureIdAccessContext)
         } else if let item = item as? MGalleryGIFItem {
-            signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
+            signal = chatMessageVideo(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
         } else if let item = item as? MGalleryVideoItem {
-            signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
+            signal = chatMessageVideo(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
         } else if let item = item as? MGalleryPeerPhotoItem {
             signal = chatMessagePhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: System.backingScale)
         }

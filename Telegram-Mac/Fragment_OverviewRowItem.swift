@@ -9,17 +9,18 @@
 import Foundation
 import TGUIKit
 import CurrencyFormat
+import TelegramCore
 
 final class Fragment_OverviewRowItem : GeneralRowItem {
     
     struct Overview: Equatable {
         
         struct Stars : Equatable {
-            let amount: Int64
+            let amount: StarsAmount
             let usdRate: Double
                         
             var fractional: Double {
-                return currencyToFractionalAmount(value: amount, currency: XTR) ?? 0
+                return currencyToFractionalAmount(value: amount.totalValue, currency: XTR) ?? 0
             }
             var usdAmount: String {
                 return "$" + "\(self.fractional * self.usdRate)".prettyCurrencyNumberUsd
@@ -66,7 +67,7 @@ final class Fragment_OverviewRowItem : GeneralRowItem {
         if let starsAmount = overview.stars {
             let attr = NSMutableAttributedString()
             attr.append(string: "\(clown) \(starsAmount.amount)", color: theme.colors.text, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             attr.append(string: " =", color: theme.colors.grayText, font: .normal(.text))
             let usdAmount = NSAttributedString.initialize(string: starsAmount.usdAmount, color: theme.colors.grayText, font: .normal(.text)).smallDecemial
             attr.append(usdAmount)

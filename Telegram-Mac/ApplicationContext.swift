@@ -70,14 +70,9 @@ final class UnauthorizedApplicationContext {
         self.modal = AuthModalController(rootController)
         rootController.alwaysAnimate = true
 
-        
         account.shouldBeServiceTaskMaster.set(.single(.now))
         
- 
-        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
-        
     }
-    
     
     func applyExternalLoginCode(_ code: String) {
         authController.applyExternalLoginCode(code)
@@ -89,9 +84,6 @@ final class UnauthorizedApplicationContext {
         NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
     
-    @objc func receiveWakeNote(_ notificaiton:Notification) {
-        account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.now)))
-    }
     
 }
 
@@ -168,7 +160,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var leftSidebarController: LeftSidebarController?
     
     private let loggedOutDisposable = MetaDisposable()
-    private let ringingStatesDisposable = MetaDisposable()
     
     private let settingsDisposable = MetaDisposable()
     private let suggestedLocalizationDisposable = MetaDisposable()
@@ -272,12 +263,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.rightController.controller.show(toaster: toaster, animated: animated)
-        }, globalSearch: { [weak self] search, peerId in
+        }, globalSearch: { [weak self] search, peerId, cached in
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.leftController.tabController.select(index: self.leftController.chatIndex)
-            self.leftController.globalSearch(search, peerId: peerId)
+            self.leftController.globalSearch(search, peerId: peerId, cached: cached)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
             guard let `self` = self else {
                 return EntertainmentViewController.init(size: NSZeroSize, context: context)
@@ -327,6 +318,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if value {
                 let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                 FastSettings.clear_uuid(context.account.id.int64)
+                BrowserStateContext.cleanup(context.account.id)
             }
         }))
         
@@ -534,18 +526,25 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         self.context.window.set(handler: { _ -> KeyHandlerResult in
+                
+//            showModal(with: WebappTransferDataController(context: context, storedKeys: [WebAppSecureStorage.ExistingKey(uuid: "1", accountName: "Test Account", timestamp: context.timestamp)], completion: { _ in
+//                
+//            }), for: window)
             
-            //showModal(with: StoryFoundListController(context: context, source: .hashtag("#telegram"), presentation: theme), for: context.window)
-            
-            showModal(with: Star_ReactionsController(context: context), for: context.window)
-            
-           // showModal(with: Star_TransactionScreen(context: context, peer: .init(context.myPeer!), transaction: StarsContext.State.Transaction.init(id: "kqwjeflklqwkejflqwkejflqkwejflqkwejf", count: 1000, date: Int32(Date().timeIntervalSince1970), peer: StarsContext.State.Transaction.Peer.appStore)), for: context.window)
-//            showModal(with: FactCheckController(context: context), for: context.window)
-          //  showModal(with: Star_PurschaseInApp(context: context, peerId: context.peerId), for: context.window)
-            
+          //  showModal(with: StarGift_Nft_Controller(context: context), for: window)
+          //  context.bindings.rootNavigation().push(Affiliate_StartController(context: context))
             
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        
+        
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+                        
+           // showModal(with: GroupCallInviteLinkController(context: context, link: .init(link: "t.me/call/+kd93KsOsdd239k"), presentation: darkAppearance), for: window)
+
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+        
         
         #endif
         
@@ -887,7 +886,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.loggedOutDisposable.dispose()
         window.removeAllHandlers(for: self)
         settingsDisposable.dispose()
-        ringingStatesDisposable.dispose()
         suggestedLocalizationDisposable.dispose()
         audioDisposable.dispose()
         alertsDisposable.dispose()

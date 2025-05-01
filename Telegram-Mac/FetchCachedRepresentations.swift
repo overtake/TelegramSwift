@@ -261,7 +261,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
                 
                 CGImageDestinationAddImage(colorDestination, fullSizeImage, options as CFDictionary)
                 if CGImageDestinationFinalize(colorDestination) {
-                    subscriber.putNext(.temporaryPath(path))
+                    subscriber.putNext(.tempFile(TempBox.shared.tempFile(fileName: path.nsstring.lastPathComponent)))
                     subscriber.putCompletion()
                 }
             }

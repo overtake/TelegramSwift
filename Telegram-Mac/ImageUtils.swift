@@ -175,13 +175,13 @@ extension PeerNameColors {
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
-    case peer(Peer, TelegramMediaImageRepresentation?, PeerNameColor?, [String], Message?)
+    case peer(Peer, TelegramMediaImageRepresentation?, PeerNameColor?, [String], Message?, CGFloat?)
     case topic(EngineMessageHistoryThread.Info, Bool)
 }
 
 private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
 
-private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
+private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool, disableForum: Bool = false, cornerRadius: CGFloat? = nil) -> Signal<(CGImage?, Bool), NoError> {
     
     let isForum: Bool = peer.isForum && !disableForum
     
@@ -241,7 +241,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             return .single((image, false))
                         } else {
                             let size = NSMakeSize(max(15, displayDimensions.width), max(15, displayDimensions.height))
-                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? floor(size.height / 3) : -1)
+                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? floor(size.height / 3) : (cornerRadius ?? -1))
                             _ = capHolder.modify { current in
                                 var current = current
                                 current[key] = image
@@ -257,7 +257,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             
                         var image:CGImage?
                         if let data = data {
-                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 : -1, scale: scale)
+                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 : (cornerRadius ?? -1), scale: scale)
                         } else {
                             image = nil
                         }
@@ -344,8 +344,8 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
 func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
-    case let .peer(peer, representation, peerNameColor, displayLetters, message):
-        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad, disableForum: disableForum)
+    case let .peer(peer, representation, peerNameColor, displayLetters, message, cornerRadius):
+        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad, disableForum: disableForum, cornerRadius: cornerRadius)
     case let .topic(info, isGeneral):
         #if !SHARE
       

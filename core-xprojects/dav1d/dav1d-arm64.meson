@@ -1,0 +1,17 @@
+[binaries]
+c = ['clang', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk']
+ar = 'ar'
+strip = 'strip'
+
+[properties]
+needs_exe_wrapper = false
+
+[host_machine]
+system = 'darwin'
+cpu_family = 'arm64'
+cpu = 'arm64'
+endian = 'little'
+
+[built-in options]
+c_args = ['-mmacosx-version-min=10.13']
+c_link_args = ['-mmacosx-version-min=10.13']

@@ -32,7 +32,7 @@ private class AvatarNodeParameters: NSObject {
 
 enum AvatarNodeState: Equatable {
     case Empty
-    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, PeerNameColor?, Message?, NSSize?, Bool)
+    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, PeerNameColor?, Message?, NSSize?, Bool, CGFloat?)
     case ArchivedChats
 }
 
@@ -40,8 +40,8 @@ func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     switch (lhs, rhs) {
     case (.Empty, .Empty):
         return true
-    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, lhsPeerNameColor, _, lhsSize, lhsForum), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, rhsPeerNameColor, _, rhsSize, rhsForum)):
-        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations && lhsSize == rhsSize && lhsForum == rhsForum && lhsPeerNameColor == rhsPeerNameColor
+    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, lhsPeerNameColor, _, lhsSize, lhsForum, lhsCornerRadius), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, rhsPeerNameColor, _, rhsSize, rhsForum, rhsCornerRadius)):
+        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations && lhsSize == rhsSize && lhsForum == rhsForum && lhsPeerNameColor == rhsPeerNameColor && lhsCornerRadius == rhsCornerRadius
     case (.ArchivedChats, .ArchivedChats):
         return true
     default:
@@ -139,12 +139,12 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false) {
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false, cornerRadius: CGFloat? = nil) {
         self.account = account
         self.disableForum = disableForum
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, message, size, peer.isForum && !disableForum)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, message, size, peer.isForum && !disableForum, cornerRadius)
         } else {
             state = .Empty
         }
@@ -223,7 +223,7 @@ class AvatarControl: NSView {
                 let photo: PeerPhoto?
                 var updatedSize: NSSize = self.frame.size
                 switch state {
-                case let .PeerAvatar(peer, letters, representation, nameColor, message, size, _):
+                case let .PeerAvatar(peer, letters, representation, nameColor, message, size, _, cornerRadius):
                     if let peer = peer as? TelegramUser, peer.firstName == nil && peer.lastName == nil {
                         photo = nil
                         self.setState(account: account, state: .Empty)
@@ -231,7 +231,7 @@ class AvatarControl: NSView {
                         self.setSignal(generateEmptyPhoto(updatedSize, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id._internalGetInt64Value() % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, updatedSize.width - 20), min(updatedSize.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
                         return
                     } else {
-                        photo = .peer(peer, representation, nameColor, letters, message)
+                        photo = .peer(peer, representation, nameColor, letters, message, cornerRadius)
                     }
                     updatedSize = size ?? frame.size
                 case .Empty:

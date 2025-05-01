@@ -267,8 +267,8 @@ class GeneralRowItem: TableRowItem {
         let unselectedImage: CGImage
         let selectedImage: CGImage
         
-        static func initialize(_ theme: TelegramPresentationTheme) -> GeneralRowItem.Theme {
-            return .init(backgroundColor: theme.colors.background,
+        static func initialize(_ theme: TelegramPresentationTheme, background: NSColor? = nil) -> GeneralRowItem.Theme {
+            return .init(backgroundColor: background ?? theme.colors.background,
                          grayBackground: theme.colors.grayBackground,
                          grayForeground: theme.colors.grayForeground,
                          highlightColor: theme.colors.grayHighlight,
@@ -378,12 +378,15 @@ class GeneralRowItem: TableRowItem {
         return _ignoreAtInitialization
     }
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false) {
+    let containable: Bool
+    
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false, containable: Bool = false) {
         self.type = type
         _height = height
         _stableId = stableId
         self.border = border
         self._inset = inset
+        self.containable = containable
         self.customTheme = customTheme
         self._ignoreAtInitialization = ignoreAtInitialization
         if let backgroundColor = backgroundColor {
@@ -415,7 +418,7 @@ class GeneralRowItem: TableRowItem {
     }
     
     var hasBorder: Bool {
-        return viewType.hasBorder
+        return viewType.hasBorder && (drawCustomSeparator || !containable)
     }
     
     override var instantlyResize: Bool {
@@ -437,7 +440,11 @@ class GeneralRowItem: TableRowItem {
     }
     
     override func viewClass() -> AnyClass {
-        return GeneralRowView.self
+        if containable {
+            return GeneralContainableRowView.self
+        } else {
+            return GeneralRowView.self
+        }
     }
     
 }

@@ -13,6 +13,103 @@ import SwiftSignalKit
 import Postbox
 import TGUIKit
 
+private final class SubscriptionFeeRowItem: GeneralRowItem {
+    private let pricing: StarsSubscriptionPricing
+    fileprivate let context: AccountContext
+    
+    fileprivate let textLayout: TextViewLayout
+    fileprivate let infoLayout: TextViewLayout
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, invitation: PeerInvitationImportersState, pricing: StarsSubscriptionPricing, viewType: GeneralViewType) {
+        self.pricing = pricing
+        self.context = context
+        
+        let attr = NSMutableAttributedString()
+        attr.append(string: "\(clown_space)\(pricing.amount) / month x \(invitation.count)", color: theme.colors.text, font: .medium(.text))
+        attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+        
+        
+        textLayout = .init(attr, maximumNumberOfLines: 1)
+        
+        let infoText: String
+        if invitation.count == 0 {
+            infoText = strings().inviteLinkJoinedNewCountable(0)
+        } else {
+            let amountText = "~$" + "\(Double(invitation.count) * Double(pricing.amount.value) * XTR_USD_RATE)".prettyCurrencyNumberUsd
+            infoText = "You get approximately \(amountText) monthly"
+        }
+        
+        self.infoLayout = .init(.initialize(string: infoText, color: theme.colors.grayText, font: .normal(.text)))
+        
+        super.init(initialSize, stableId: stableId, viewType: viewType)
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        textLayout.measure(width: blockWidth - 36 - viewType.innerInset.right - viewType.innerInset.left - 10)
+        infoLayout.measure(width: blockWidth - 36 - viewType.innerInset.right - viewType.innerInset.left - 10)
+        return true
+    }
+    
+    
+    override func viewClass() -> AnyClass {
+        return SubscriptionFeeRowView.self
+    }
+    
+    override var height: CGFloat {
+        return 50
+    }
+}
+
+private final class SubscriptionFeeRowView: GeneralContainableRowView {
+    private let imageView = ImageView()
+    private let textView = InteractiveTextView()
+    private let infoView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        addSubview(textView)
+        addSubview(infoView)
+        
+        self.textView.userInteractionEnabled = false
+        
+        self.infoView.userInteractionEnabled = false
+        self.infoView.isSelectable = false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? SubscriptionFeeRowItem else {
+            return
+        }
+        
+        self.textView.set(text: item.textLayout, context: item.context)
+        self.infoView.update(item.infoLayout)
+        
+        imageView.image = NSImage(resource: .iconInviteLinkSubscription).precomposed()
+        imageView.sizeToFit()
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        guard let item = item as? GeneralRowItem else {
+            return
+        }
+        imageView.centerY(x: item.viewType.innerInset.left)
+        textView.setFrameOrigin(NSMakePoint(imageView.frame.maxX + 10, 7))
+        infoView.setFrameOrigin(NSMakePoint(imageView.frame.maxX + 10, containerView.frame.height - infoView.frame.height - 7))
+    }
+}
+
+
 private final class ExportInvitationArguments {
     let context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)
     let accountContext: AccountContext
@@ -38,6 +135,9 @@ private struct State : Equatable {
 }
 
 private let _id_link = InputDataIdentifier("_id_link")
+
+private let _id_pricing = InputDataIdentifier("_id_pricing")
+
 private func _id_admin(_ peerId: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_admin_\(peerId.toInt64())")
 }
@@ -99,7 +199,22 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
     dateFormatter.timeStyle = .short
     
     
-    if let admin = admin {
+    if let admin = admin, let joinedState = state.joinedState {
+        
+        
+        if let pricing = invitation.pricing {
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inviteLinkSubFeeHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pricing, equatable: InputDataEquatable(PeerEquatable(admin)), comparable: nil, item: { initialSize, stableId in
+                return SubscriptionFeeRowItem(initialSize, stableId: stableId, context: arguments.accountContext, invitation: joinedState, pricing: pricing, viewType: .singleItem)
+            }))
+        }
+        
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
@@ -108,7 +223,7 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
 
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_admin(admin.id), equatable: InputDataEquatable(PeerEquatable(admin)), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: admin, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(invitation.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem)
+            return ShortPeerRowItem(initialSize, peer: admin, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(invitation.date))), inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: .singleItem)
         }))
     }
     
@@ -138,7 +253,7 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
                 let tuple = Tuple(importer: importer, status: status, viewType: bestGeneralViewType(requestedState.importers, for: importer))
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId, joined: false), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: tuple.viewType, action: {
                         arguments.openProfile(tuple.importer.peer.peerId)
                     }, contextMenuItems: {
                         let items = [ContextMenuItem(strings().exportedInvitationContextOpenProfile, handler: {
@@ -178,7 +293,7 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
                 let tuple = Tuple(importer: importer, status: status, viewType: bestGeneralViewType(joinedState.importers, for: importer))
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId, joined: true), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: tuple.viewType, action: {
                         arguments.openProfile(tuple.importer.peer.peerId)
                     }, contextMenuItems: {
                         let items = [ContextMenuItem(strings().exportedInvitationContextOpenProfile, handler: {
@@ -208,7 +323,7 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
     return entries
 }
 
-func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
+func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerId, isChannel: Bool, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
     
     let actionsDisposable = DisposableSet()
     
@@ -232,7 +347,7 @@ func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerI
         })
     }, editLink: { [weak manager] link in
         getModalController?()?.close()
-        showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
+        showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), isChannel: isChannel, save: { [weak manager] updated in
             let signal = manager?.editPeerExportedInvitation(link: link, title: updated.title, expireDate: updated.date == .max ? 0 : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? 0 : updated.count)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: accountContext.window).start()

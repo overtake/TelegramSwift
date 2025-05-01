@@ -463,6 +463,10 @@ public extension NSColor {
         }
         return 0x000000
     }
+    
+    var underTextColor: NSColor {
+        return lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+    }
 }
 
 public extension CGFloat {

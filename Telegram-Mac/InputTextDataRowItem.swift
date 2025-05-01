@@ -33,6 +33,10 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     var value: InputDataValue {
         return .attributedString(state.inputText)
     }
+    
+    var isTextLimitVisible: Bool {
+        return !(self.state.inputText.string.length < self.limit / 3 * 2 || self.state.inputText.string.length == self.limit)
+    }
         
     override var inset: NSEdgeInsets {
         var inset = super.inset
@@ -51,7 +55,8 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let canMakeTransformations: Bool
     fileprivate let simpleTransform: Bool
     fileprivate let allowedLinkHosts: [String]
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = []) {
+    fileprivate let playAnimation: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = [], playAnimation: Bool = true) {
         self.filter = filter
         self.limit = limit
         self.context = context
@@ -62,6 +67,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.simpleTransform = simpleTransform
         self.rightItem = rightItem
         self.updateState = updateState
+        self.playAnimation = playAnimation
         self.state = state
         self.inputPlaceholder = .initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text))
         self.placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
@@ -92,7 +98,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
         if let placeholder = placeholder {
             return placeholder.hasLimitationText
         } else {
-            return limit > 30
+            return limit > 5
         }
     }
     
@@ -169,8 +175,8 @@ class InputTextDataRowView : GeneralContainableRowView {
         super.init(frame: frameRect)
         self.addSubview(placeholderTextView)
         self.addSubview(textView)
-        self.addSubview(textLimitation)
         self.addSubview(rightActionView)
+        self.addSubview(textLimitation)
         rightActionView.autohighlight = false
         
         containerView.userInteractionEnabled = false
@@ -294,8 +300,8 @@ class InputTextDataRowView : GeneralContainableRowView {
         if let rightItem = item.rightItem {
             switch rightItem {
             case .action:
-                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right, innerInsets.top - 3), size: rightActionView.frame.size))
-                emojiOffset += rightActionView.frame.width + 5
+                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right - (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0), innerInsets.top - 7), size: rightActionView.frame.size))
+                emojiOffset += rightActionView.frame.width + 10 + (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0)
             case .loading:
                 if let loadingView = loadingView  {
                     transition.updateFrame(view: loadingView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - loadingView.frame.width - innerInsets.right, innerInsets.top), size: loadingView.frame.size))
@@ -364,7 +370,6 @@ class InputTextDataRowView : GeneralContainableRowView {
 
         placeholderTextView.isHidden = item.placeholderLayout == nil
         placeholderTextView.update(item.placeholderLayout)
-        
         
 
         
@@ -469,16 +474,16 @@ class InputTextDataRowView : GeneralContainableRowView {
                 
                 current.set(handler: { [weak self] control in
                     if let item = self?.item as? InputTextDataRowItem {
-                        let emojis = EmojiesController(item.context)
+                        let emojis = EmojiesController(item.context, ignorePremium: true)
                         emojis._frameRect = NSMakeRect(0, 0, 350, 300)
                         let interactions = EntertainmentInteractions(.emoji, peerId: item.context.peerId)
                         emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(item.context.peerId), context: item.context))
 
-                        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _ in
+                        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _, _ in
                             if let item = self?.item as? InputTextDataRowItem, let textView = self?.textView {
                                 self?.textView.makeFirstResponder()
-                                let text = sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown
-                                let state = textView.interactions.insertText(.makeAnimated(sticker.file, text: text))
+                                let text = sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? clown
+                                let state = textView.interactions.insertText(.makeAnimated(sticker.file._parse(), text: text))
                                 item.updateState(state)
                                 self?.set(state)
                             }
@@ -513,8 +518,17 @@ class InputTextDataRowView : GeneralContainableRowView {
         textView.interactions.allowedLinkHosts = item.allowedLinkHosts
         textView.interactions.canTransform = item.canMakeTransformations
         textView.interactions.simpleTransform = item.simpleTransform
+        
+        
+        let prevPolicy = textView.interactions.emojiPlayPolicy
+            
+        textView.interactions.emojiPlayPolicy = item.playAnimation ? .loop : .framesCount(1)
 
-
+        if prevPolicy != textView.interactions.emojiPlayPolicy {
+            textView.updatePlayPolicy(textView.interactions.emojiPlayPolicy)
+        }
+        
+        
         textView.interactions.filterEvent = { event in
             if let chars = event.characters {
                 return !item.filter(chars).isEmpty
@@ -574,7 +588,7 @@ class InputTextDataRowView : GeneralContainableRowView {
                 let range = NSRange(string: input.inputText, range: stringRange)
                 if !input.isAnimatedEmoji(at: range) {
                     let query = String(input.inputText[stringRange])
-                    let signal = InputSwapSuggestionsPanelItems(query, peerId: context.peerId, context: context)
+                    let signal = InputSwapSuggestionsPanelItems(query, peerId: context.peerId, context: context, ignorePremium: item.hasEmoji)
                     |> deliverOnMainQueue
                     self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
                         self?.updateTextInputSuggestions(files, range: range, animated: true)

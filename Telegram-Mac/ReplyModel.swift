@@ -340,7 +340,7 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
-            self.message = .init(attr, maximumNumberOfLines: quote != nil && message.replyAttribute == nil && self.modelType == .modern ? 4 : 1, cutout: self.cutout)
+            self.message = .init(attr, maximumNumberOfLines: quote != nil && message.replyAttribute == nil && self.modelType == .modern ? 8 : 1, cutout: self.cutout)
         } else {
             self.header = nil
             self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.enabledText, font: .normal(.text)), maximumNumberOfLines: 1, cutout: self.cutout)
@@ -604,7 +604,7 @@ class ExpiredStoryReplyModel: ChatAccessoryModel {
                 
         let title: String = peer.displayTitle
         let text: NSMutableAttributedString = .init()
-        text.append(string: clown, color: presentation.disabledText, font: .normal(.text))
+        text.append(string: clown_space, color: presentation.disabledText, font: .normal(.text))
         text.append(string: strings().chatReplyExpiredStory, color: presentation.disabledText, font: .normal(.text))
         
 

@@ -278,7 +278,9 @@ func topicInfoEntries(view: PeerView, threadData: MessageHistoryThreadData, argu
         
         applyBlock(infoBlock)
         
-        let addressName: String = group.addressName ?? ""
+        
+        
+        let addressName: String = group.addressName ?? "\(group.id.id._internalGetInt64Value())"
         
         if !addressName.isEmpty {
             aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)/\(state.threadId)", viewType: .singleItem))

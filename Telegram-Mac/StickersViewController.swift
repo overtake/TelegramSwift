@@ -13,6 +13,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import FoundationUtils
+import ObjcUtils
 
 private struct State : Equatable {
     var searchCategories: EmojiSearchCategories?
@@ -32,7 +33,8 @@ final class StickerPanelArguments {
     let openFeatured:(FeaturedStickerPackItem)->Void
     let selectEmojiCategory:(EmojiSearchCategories.Group?)->Void
     let mode: EntertainmentViewController.Mode
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool, Bool, ItemCollectionId?)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, selectEmojiCategory:@escaping(EmojiSearchCategories.Group?)->Void, mode: EntertainmentViewController.Mode) {
+    let canSchedule:()->Bool
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool, Bool, ItemCollectionId?)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, selectEmojiCategory:@escaping(EmojiSearchCategories.Group?)->Void, mode: EntertainmentViewController.Mode, canSchedule:@escaping()->Bool) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
@@ -44,6 +46,7 @@ final class StickerPanelArguments {
         self.openFeatured = openFeatured
         self.mode = mode
         self.selectEmojiCategory = selectEmojiCategory
+        self.canSchedule = canSchedule
     }
 }
 
@@ -436,10 +439,10 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[1].items {
                     if let entry = item.contents.get(SavedStickerItem.self) {
-                        if let id = entry.file.id, ids[id] == nil {
+                        if let id = entry.file._parse().id, ids[id] == nil {
                             if !entry.file.isPremiumSticker || !context.premiumIsBlocked {
                                 ids[id] = id
-                                files.append(entry.file)
+                                files.append(entry.file._parse())
                             }
                         }
                     }
@@ -461,7 +464,7 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[0].items {
                     if let entry = item.contents.get(RecentMediaItem.self) {
-                        let file = entry.media
+                        let file = entry.media._parse()
                         if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
                             if !file.isPremiumSticker || !context.premiumIsBlocked {
                                 ids[id] = id
@@ -500,16 +503,17 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                 var files:[TelegramMediaFile] = []
                 for item in info.1 {
                     if let item = item as? StickerPackItem {
-                        if let id = item.file.id, ids[id] == nil, item.file.isStaticSticker || item.file.isAnimatedSticker {
-                            if !item.file.isPremiumSticker || !context.premiumIsBlocked {
+                        let file = item.file._parse()
+                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
+                            if !file.isPremiumSticker || !context.premiumIsBlocked {
                                 ids[id] = id
-                                files.append(item.file)
+                                files.append(file)
                             }
                         }
                     }
                 }
                 if !files.isEmpty {
-                    entries.append(.pack(index: .speficicPack(info.0.id), files: files, packInfo: .speficicPack(info.0), collectionId: .specificPack(info.0.id)))
+                    entries.append(.pack(index: .speficicPack(info.0.id), files: files, packInfo: .speficicPack(info.0._parse()), collectionId: .specificPack(info.0.id)))
                 }
             }
             
@@ -523,8 +527,9 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                     for (i, entry) in items {
                         if entry.index.collectionId == info.id {
                             if let item = available.remove(at: i).item as? StickerPackItem {
-                                if !item.file.isPremiumSticker || !context.premiumIsBlocked {
-                                    files.insert(item.file, at: 0)
+                                let file = item.file._parse()
+                                if !file.isPremiumSticker || !context.premiumIsBlocked {
+                                    files.insert(file, at: 0)
                                 }
                             }
                         }
@@ -577,7 +582,7 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                             for (i, entry) in items {
                                 if entry.index.collectionId == info.id {
                                     if let item = available.remove(at: i).item as? StickerPackItem {
-                                        files.insert(item.file, at: 0)
+                                        files.insert(item.file._parse(), at: 0)
                                     }
                                 }
                             }
@@ -623,7 +628,7 @@ private func packEntries(view: ItemCollectionsView?, context: AccountContext, sp
 //            }
 //        }
         if let specificPack = specificPack, let info = specificPack._0.packInfo?.0 {
-            entries.append(.specificPack(data: SpecificPackData(info: info, peer: specificPack._1)))
+            entries.append(.specificPack(data: SpecificPackData(info: info._parse(), peer: specificPack._1)))
         }
         
         for (_, info, item) in view.collectionInfos {
@@ -1264,6 +1269,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         genericView.presentation = presentation
         
         let context = self.context
@@ -1348,7 +1354,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 |> mapToSignal { result -> Signal<ItemCollectionId, NoError> in
                     switch result {
                     case let .result(info, items, _):
-                        return context.engine.stickers.addStickerPackInteractively(info: info, items: items) |> map { info.id }
+                        return context.engine.stickers.addStickerPackInteractively(info: info._parse(), items: items) |> map { info.id }
                     default:
                         return .complete()
                     }
@@ -1394,7 +1400,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 searchState = .init(state: .None, request: nil)
             }
             self?.updateSearchState(searchState)
-        }, mode: mode)
+        }, mode: mode, canSchedule: { [weak self] in
+            return self?.chatInteraction?.presentation.sendPaidMessageStars == nil
+        })
         
         let specificPackData: Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> = self.specificPeerId.get() |> mapToSignal { peerId -> Signal<Peer?, NoError> in
             if peerId.toInt64() == 0 {
@@ -1499,7 +1507,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         if !view.orderedItemListsViews[0].items.isEmpty {
                             for item in view.orderedItemListsViews[0].items {
                                 if let entry = item.contents.get(RecentMediaItem.self) {
-                                    files.append(entry.media)
+                                    files.append(entry.media._parse())
                                 }
                             }
                         }
@@ -1514,16 +1522,23 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let searchLocal = context.engine.stickers.searchStickerSets(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
                 let searchRemote = context.engine.stickers.searchStickerSetsRemotely(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
                                 
-                let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
+                
+                let input: Signal<String, NoError> = Signal { subscriber in
+                    subscriber.putNext(currentKeyboardLanguage())
+                    subscriber.putCompletion()
                     
-                    let signals = emojis.map {
-                        context.engine.stickers.searchStickers(query: [$0], scope: [.installed]) |> map { $0.items }
-                    }
-                    return combineLatest(signals) |> map {
-                        $0.reduce([], { current, value in
-                            return current + value.filter { $0.file.stickerText != nil && emojis.contains($0.file.stickerText!) }
-                        })
-                    }
+                    return EmptyDisposable
+                } |> runOn(.mainQueue())
+                
+                
+                let emojiRelated: Signal<[FoundStickerItem], NoError> = combineLatest(context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false), input) |> mapToSignal { emojis, input in
+                    
+                    return context.engine.stickers.searchStickers(query: searchText, emoticon: [], inputLanguageCode: input) |> map { $0.0 }
+//                    return combineLatest(signals) |> map {
+//                        $0.reduce([], { current, value in
+//                            return current + value.0
+//                        })
+//                    }
                 } |> delay(0.2, queue: prepareQueue)
 
                 return combineLatest(searchLocal, searchRemote, emojiRelated, statePromise.get(), premiumStickers) |> map { local, remote, emojiRelated, state, premiumStickers in

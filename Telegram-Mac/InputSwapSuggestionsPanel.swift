@@ -326,13 +326,16 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
 
 }
 
-func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: AccountContext) -> Signal<[TelegramMediaFile], NoError> {
+func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: AccountContext, ignorePremium: Bool = false) -> Signal<[TelegramMediaFile], NoError> {
     
     let query = query.emojiUnmodified
     
-    if (peerId != context.peerId && !context.isPremium ) || !FastSettings.suggestSwapEmoji {
-        return .single([])
+    if !ignorePremium {
+        if (peerId != context.peerId && !context.isPremium) || !FastSettings.suggestSwapEmoji {
+            return .single([])
+        }
     }
+    
     
     let boxKey = ValueBoxKey(query)
     let searchQuery: ItemCollectionSearchQuery = .exact(boxKey)
@@ -356,7 +359,7 @@ func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: Ac
         
         foundItems.append(contentsOf: animated)
         foundItems.append(contentsOf: featured.filter { item in
-            return item.file.customEmojiText?.fixed == query.fixed
+            return item.file._parse().customEmojiText?.fixed == query.fixed
         })
         foundItems = foundItems.reduce([], { current, value in
             if !current.contains(where: { $0.file.fileId == value.file.fileId}) {
@@ -379,7 +382,7 @@ func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: Ac
         
         
         
-        return foundItems.map { $0.file }
+        return foundItems.map { $0.file._parse() }
     }
     
 }

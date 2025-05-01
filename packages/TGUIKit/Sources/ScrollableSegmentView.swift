@@ -126,16 +126,17 @@ extension UIEquatable : CustomReflectable {
 }
 
 public final class ScrollableSegmentItem : Equatable, Comparable, Identifiable {
-    let title: String
-    let selected: Bool
+    public let title: String
+    public let selected: Bool
     let theme: ScrollableSegmentTheme
     let insets: NSEdgeInsets
     let icon: CGImage?
     let equatable: UIEquatable?
     public let index: Int
     public let uniqueId: Int32
+    fileprivate var customTextView: (()->NSView?)?
     
-    public init(title: String, index: Int, uniqueId: Int32, selected: Bool, insets: NSEdgeInsets, icon: CGImage?, theme: ScrollableSegmentTheme, equatable: UIEquatable?) {
+    public init(title: String, index: Int, uniqueId: Int32, selected: Bool, insets: NSEdgeInsets, icon: CGImage?, theme: ScrollableSegmentTheme, equatable: UIEquatable?, customTextView: (()->NSView?)? = nil) {
         self.title = title
         self.index = index
         self.uniqueId = uniqueId
@@ -144,6 +145,7 @@ public final class ScrollableSegmentItem : Equatable, Comparable, Identifiable {
         self.insets = insets
         self.icon = icon
         self.equatable = equatable
+        self.customTextView = customTextView
     }
     
     public var stableId: Int32 {
@@ -169,7 +171,8 @@ private final class SegmentItemView : Control {
     private(set) var item: ScrollableSegmentItem
     private var textLayout: TextViewLayout
     private var imageView: ImageView?
-    private let textView = TextView()
+    private var textView: TextView?
+    private var customTextView: NSView?
     private let callback: (ScrollableSegmentItem)->Void
     private let menuItems:(ScrollableSegmentItem)->Signal<[ContextMenuItem], NoError>
     private let startDraggingIfNeeded: (ScrollableSegmentItem, Control)->Void
@@ -181,31 +184,32 @@ private final class SegmentItemView : Control {
         self.startDraggingIfNeeded = startDraggingIfNeeded
         super.init(frame: NSZeroRect)
         self.handleLongEvent = true
-        addSubview(textView)
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
-        textView.disableBackgroundDrawing = true
-        textView.isEventLess = true
         self.updateItem(item, theme: theme, animated: false)
         
+        /*
+  
+         */
         updateHandlers()
     }
     
     private func updateHandlers() {
         set(handler: { [weak self] _ in
             if self?.item.selected == false {
-                self?.textView.change(opacity: 0.8, animated: true)
+                self?.textView?.change(opacity: 0.8, animated: true)
+                self?.customTextView?._change(opacity: 0.8, animated: true)
                 self?.imageView?.change(opacity: 0.8, animated: true)
             }
         }, for: .Highlight)
         
         set(handler: { [weak self] _ in
-            self?.textView.change(opacity: 1.0, animated: true)
+            self?.textView?.change(opacity: 1.0, animated: true)
+            self?.customTextView?._change(opacity: 1.0, animated: true)
             self?.imageView?.change(opacity: 1.0, animated: true)
-            }, for: .Normal)
+        }, for: .Normal)
         
         set(handler: { [weak self] _ in
-            self?.textView.change(opacity: 1.0, animated: true)
+            self?.textView?.change(opacity: 1.0, animated: true)
+            self?.customTextView?._change(opacity: 1.0, animated: true)
             self?.imageView?.change(opacity: 1.0, animated: true)
         }, for: .Hover)
         
@@ -258,7 +262,35 @@ private final class SegmentItemView : Control {
     func updateItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, animated: Bool) {
         self.item = item
         self.textLayout = buildText(for: item)
-        textView.update(self.textLayout)
+        
+        if let customTextView = item.customTextView?() {
+            self.customTextView?.removeFromSuperview()
+            self.customTextView = customTextView
+            addSubview(customTextView)
+            if let textView {
+                performSubviewRemoval(textView, animated: animated)
+                self.textView = nil
+            }
+        } else {
+            if let customTextView {
+                performSubviewRemoval(customTextView, animated: animated)
+                self.customTextView = nil
+            }
+            let current: TextView
+            if let view = self.textView {
+                current = view
+            } else {
+                current = TextView()
+                self.textView = current
+                self.addSubview(current)
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                current.disableBackgroundDrawing = true
+                current.isEventLess = true
+            }
+            current.update(textLayout)
+        }
+        
         if let image = item.icon {
             if imageView == nil {
                 imageView = ImageView()
@@ -286,12 +318,17 @@ private final class SegmentItemView : Control {
         
         change(size: size, animated: animated, duration: duration)
         self.backgroundColor = .clear
-        textView.backgroundColor = .clear
+        textView?.backgroundColor = .clear
+        customTextView?.background = .clear
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
+        let textView = self.textView ?? self.customTextView
+        guard let textView else {
+            return
+        }
         if textView.frame.width > 0 {
             textView.centerY(x: item.insets.left)
             textView.setFrameOrigin(NSMakePoint(textView.frame.minX, textView.frame.minY - item.insets.bottom + item.insets.top))
@@ -345,12 +382,12 @@ private final class SelectorView : View {
 }
 
 public struct ScrollableSegmentTheme : Equatable {
-    let background: NSColor
-    let border: NSColor
-    let selector: NSColor
-    let inactiveText: NSColor
-    let activeText: NSColor
-    let textFont: NSFont
+    public let background: NSColor
+    public let border: NSColor
+    public let selector: NSColor
+    public let inactiveText: NSColor
+    public let activeText: NSColor
+    public let textFont: NSFont
     public init(background: NSColor, border: NSColor, selector: NSColor, inactiveText: NSColor, activeText: NSColor, textFont: NSFont) {
         self.border = border
         self.selector = selector
@@ -544,7 +581,7 @@ public class ScrollableSegmentView: View {
         }
        
         
-        if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view {
+        if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view, autoscroll {
             let point = NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0)
             if point != scrollView.documentOffset, frame != .zero {
                 scrollView.clipView.scroll(to: point, animated: animated)

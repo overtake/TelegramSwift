@@ -16,6 +16,19 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     if lhsMessage.id != rhsMessage.id {
         return false
     }
+    
+    if lhsMessage.id != rhsMessage.id {
+        return false
+    }
+    
+    if lhsMessage.derivedDataAttribute?.data != rhsMessage.derivedDataAttribute?.data {
+        return false
+    }
+    
+    if lhsMessage.forwardVideoTimestampAttribute?.timestamp != rhsMessage.forwardVideoTimestampAttribute?.timestamp {
+        return false
+    }
+    
     if lhsMessage.stableVersion != rhsMessage.stableVersion {
         return false
     }

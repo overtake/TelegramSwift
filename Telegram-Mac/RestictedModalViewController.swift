@@ -269,7 +269,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         let currentRightsFlags: TelegramChatBannedRightsFlags
         if let updatedFlags = state.updatedFlags {
             currentRightsFlags = updatedFlags
-        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant, let banInfo = maybeBanInfo {
             currentRightsFlags = banInfo.rights.flags
         } else {
             currentRightsFlags = defaultBannedRights.flags
@@ -278,7 +278,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         let currentTimeout: Int32
         if let updatedTimeout = state.updatedTimeout {
             currentTimeout = updatedTimeout
-        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant, let banInfo = maybeBanInfo {
             currentTimeout = banInfo.rights.untilDate
         } else {
             currentTimeout = Int32.max
@@ -345,7 +345,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         let currentRightsFlags: TelegramChatBannedRightsFlags
         if let updatedFlags = state.updatedFlags {
             currentRightsFlags = updatedFlags
-        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant, let banInfo = maybeBanInfo {
             currentRightsFlags = banInfo.rights.flags
         } else {
             currentRightsFlags = defaultBannedRights.flags
@@ -354,7 +354,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         let currentTimeout: Int32
         if let updatedTimeout = state.updatedTimeout {
             currentTimeout = updatedTimeout
-        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant, let banInfo = maybeBanInfo {
             currentTimeout = banInfo.rights.untilDate
         } else {
             currentTimeout = Int32.max
@@ -503,7 +503,7 @@ class RestrictedModalViewController: TableModalViewController {
                         var effectiveRightsFlags: TelegramChatBannedRightsFlags
                         if let updatedFlags = state.updatedFlags {
                             effectiveRightsFlags = updatedFlags
-                        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, banInfo?, _) = initialParticipant {
+                        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, banInfo?, _, _) = initialParticipant {
                             effectiveRightsFlags = banInfo.rights.flags
                         } else {
                             effectiveRightsFlags = defaultBannedRightsFlags
@@ -657,7 +657,7 @@ class RestrictedModalViewController: TableModalViewController {
                         }
                         
                         if updateFlags == nil && updateTimeout == nil {
-                            if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant {
+                            if case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant {
                                 if maybeBanInfo == nil {
                                     updateFlags = defaultBannedRightsFlags
                                     updateTimeout = Int32.max
@@ -669,7 +669,7 @@ class RestrictedModalViewController: TableModalViewController {
                             let currentRightsFlags: TelegramChatBannedRightsFlags
                             if let updatedFlags = updateFlags {
                                 currentRightsFlags = updatedFlags
-                            } else if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+                            } else if case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant, let banInfo = maybeBanInfo {
                                 currentRightsFlags = banInfo.rights.flags
                             } else {
                                 currentRightsFlags = defaultBannedRightsFlags
@@ -678,7 +678,7 @@ class RestrictedModalViewController: TableModalViewController {
                             let currentTimeout: Int32
                             if let updateTimeout = updateTimeout {
                                 currentTimeout = updateTimeout
-                            } else if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+                            } else if case let .member(_, _, _, maybeBanInfo, _, _) = initialParticipant, let banInfo = maybeBanInfo {
                                 currentTimeout = banInfo.rights.untilDate
                             } else {
                                 currentTimeout = Int32.max
@@ -710,7 +710,7 @@ class RestrictedModalViewController: TableModalViewController {
                     }
                     
                     var previousRights: TelegramChatBannedRights?
-                    if let initialParticipant = initialParticipant, case let .member(_, _, _, banInfo, _) = initialParticipant, banInfo != nil {
+                    if let initialParticipant = initialParticipant, case let .member(_, _, _, banInfo, _, _) = initialParticipant, banInfo != nil {
                         previousRights = banInfo?.rights
                     }
                     if let resolvedRights = resolvedRights, previousRights != resolvedRights {

@@ -140,11 +140,11 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     
     let showPremiumAlert:()->Void = {
         showModalText(for: context.window, text: strings().customEmojiPremiumAlert, callback: { _ in
-            showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
         })
     }
     
-    interactions.sendAnimatedEmoji = { sticker, _, _, fromRect in
+    interactions.sendAnimatedEmoji = { sticker, _, _, _, fromRect in
         let pass: Bool
         switch purpose {
         case let .edit(data, _):
@@ -169,7 +169,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
             } else {
                 updateState { current in
                     var current = current
-                    current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
+                    current.icon = .init(file: sticker.file._parse(), fileId: sticker.file.fileId.id, fromRect: fromRect)
                     return current
                 }
             }

@@ -469,7 +469,7 @@ class InstalledStickerPacksController: TableViewController {
                         context.reactions.updateQuick(.custom(file.fileId.id))
                     } else {
                         showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
-                            showModal(with: PremiumBoardingController(context: context, source: .infinite_reactions), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .infinite_reactions), for: context.window)
                         })
                     }
                 }
@@ -514,14 +514,16 @@ class InstalledStickerPacksController: TableViewController {
                 switch settings.quickReaction {
                 case .builtin:
                     if let reaction = available?.enabled.first(where: { $0.value == settings.quickReaction }) {
-                        current.quick = .builtin(value: reaction.value, staticFile: reaction.staticIcon, selectFile: reaction.selectAnimation, appearFile: reaction.appearAnimation, isSelected: false)
+                        current.quick = .builtin(value: reaction.value, staticFile: reaction.staticIcon._parse(), selectFile: reaction.selectAnimation._parse(), appearFile: reaction.appearAnimation._parse(), isSelected: false)
                     }
                 case let .custom(fileId):
                     if context.isPremium {
                         current.quick = .custom(value: settings.quickReaction, fileId: fileId, nil, isSelected: false)
                     } else if let first = available?.enabled.first {
-                        current.quick = .builtin(value: first.value, staticFile: first.staticIcon, selectFile: first.selectAnimation, appearFile: first.appearAnimation, isSelected: false)
+                        current.quick = .builtin(value: first.value, staticFile: first.staticIcon._parse(), selectFile: first.selectAnimation._parse(), appearFile: first.appearAnimation._parse(), isSelected: false)
                     }
+                case .stars:
+                    break
                 }
                 return current
             }

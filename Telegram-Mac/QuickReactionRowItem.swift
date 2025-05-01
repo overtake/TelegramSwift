@@ -129,6 +129,8 @@ private final class QuickReactionRowView : GeneralContainableRowView {
                current = InlineStickerItemLayer(account: item.context.account, file: staticFile, size: size)
             case let .custom(_, fileId, file, _):
                 current = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size)
+            case let .stars(file, isSelected):
+                current = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: item.reaction.fileId, file: file, emoji: ""), size: size)
             }
             current.superview = self
             self.imageLayer = current

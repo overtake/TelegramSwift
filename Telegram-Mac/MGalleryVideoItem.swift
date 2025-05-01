@@ -15,6 +15,7 @@ import SwiftSignalKit
 import TGUIKit
 import AVFoundation
 import AVKit
+import TelegramMedia
 
 class MGalleryVideoItem: MGalleryItem {
     var startTime: TimeInterval = 0
@@ -38,8 +39,13 @@ class MGalleryVideoItem: MGalleryItem {
             }
         } |> deliverOnMainQueue
     }
+    
+    func videoQualityState() -> (current: Int, preferred: UniversalVideoContentVideoQuality, available: [Int])? {
+        return controller.mediaPlayer.videoQualityState()
+    }
+    
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
-        controller = SVideoController(postbox: context.account.postbox, reference: entry.fileReference(entry.file!), isProtected: entry.isProtected)
+        controller = SVideoController(account: context.account, reference: entry.fileReference(entry.file!), message: entry.message, isProtected: entry.isProtected, isControlsLimited: entry.message?.adAttribute != nil)
         super.init(context, entry, pagerSize)
         
         controller.togglePictureInPictureImpl = { [weak self] enter, control in
@@ -56,6 +62,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     deinit {
         updateMagnifyDisposable.dispose()
+        
     }
         
     override func singleView() -> NSView {
@@ -221,7 +228,7 @@ class MGalleryVideoItem: MGalleryItem {
 
         super.request(immediately: immediately)
         
-        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
+        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(account: context.account, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true, noVideoCover: true)
         
         let size = sizeValue
         

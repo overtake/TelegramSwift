@@ -94,11 +94,14 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
             case let .member(_, _, _, peer, presence, inputActivity, stories, memberStatus, editing, menuItems, enabled, viewType):
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer!.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                     let label: String
+                    let isAdmin: Bool
                     switch memberStatus {
                     case let .admin(rank):
                         label = rank
+                        isAdmin = true
                     case .member:
                         label = ""
+                        isAdmin = false
                     }
                     let peer = peer!
                     
@@ -106,7 +109,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                     var color:NSColor = theme.colors.grayText
                     
                     if let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
-                        string = botInfo.flags.contains(.hasAccessToChatHistory) ? strings().peerInfoBotStatusHasAccess : strings().peerInfoBotStatusHasNoAccess
+                        string = botInfo.flags.contains(.hasAccessToChatHistory) || isAdmin ? strings().peerInfoBotStatusHasAccess : strings().peerInfoBotStatusHasNoAccess
                     } else if let presence = presence as? TelegramUserPresence {
                         let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                         (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
@@ -273,7 +276,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
             if !state.temporaryParticipants.isEmpty {
                 for participant in state.temporaryParticipants {
                     if !existingParticipantIds.contains(participant.peer.id) {
-                        updatedParticipants.append(RenderedChannelParticipant(participant: .member(id: participant.peer.id, invitedAt: participant.timestamp, adminInfo: nil, banInfo: nil, rank: nil), peer: participant.peer))
+                        updatedParticipants.append(RenderedChannelParticipant(participant: .member(id: participant.peer.id, invitedAt: participant.timestamp, adminInfo: nil, banInfo: nil, rank: nil, subscriptionUntilDate: nil), peer: participant.peer))
                         if let presence = participant.presence, peerPresences[participant.peer.id] == nil {
                             peerPresences[participant.peer.id] = presence
                         }
@@ -323,7 +326,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                     switch sortedParticipants[i].participant {
                     case let .creator(_, _, rank):
                         memberStatus = .admin(rank: rank ?? strings().chatOwnerBadge)
-                    case let .member(_, _, adminRights, _, rank):
+                    case let .member(_, _, adminRights, _, rank, _):
                         memberStatus = adminRights != nil ? .admin(rank: rank ?? strings().chatAdminBadge) : .member
                     }
                 } else {
@@ -340,7 +343,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                     case .creator:
                         canPromote = false
                         canRestrict = false
-                    case let .member(_, _, adminRights, bannedRights, _):
+                    case let .member(_, _, adminRights, bannedRights, _, _):
                         if channel.hasPermission(.addAdmins) {
                             canPromote = true
                         } else {

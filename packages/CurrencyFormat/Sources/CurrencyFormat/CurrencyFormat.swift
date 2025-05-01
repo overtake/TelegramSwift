@@ -126,7 +126,7 @@ public func fractionalToCurrencyAmount(value: Double, currency: String) -> Int64
     }
 }
 
-public func currencyToFractionalAmount(value: Int64, currency: String) -> Double? {
+public func currencyToFractionalAmount(value: Double, currency: String) -> Double? {
     guard let entry = currencyFormatterEntries[currency] ?? currencyFormatterEntries["USD"] else {
         return nil
     }
@@ -149,8 +149,17 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
                 result.append(" ")
             }
         }
+        
+        if currency == "TON" {
+            var pb = 0
+            pb += 1;
+        }
+        
+        // Handle integer part with thousands separator
         var integerPart = abs(amount)
         var fractional: [Character] = []
+        
+        // Extract fractional digits
         for _ in 0 ..< entry.decimalDigits {
             let part = integerPart % 10
             integerPart /= 10
@@ -158,13 +167,31 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
                 fractional.append(Character(scalar))
             }
         }
-        result.append("\(integerPart)")
+        
+        // Format integer part with thousands separator
+        var integerString = "\(integerPart)"
+        var formattedInteger = ""
+        var count = 0
+        
+        // Add thousands separators from right to left
+        for digit in integerString.reversed() {
+            if count > 0 && count % 3 == 0 {
+                formattedInteger = String(entry.thousandsSeparator) + formattedInteger
+            }
+            formattedInteger = String(digit) + formattedInteger
+            count += 1
+        }
+        
+        result.append(formattedInteger)
+        
+        // Add fractional part if exists
         if !fractional.isEmpty {
             result.append(entry.decimalSeparator)
         }
         for i in 0 ..< fractional.count {
             result.append(fractional[fractional.count - i - 1])
         }
+        
         if !entry.symbolOnLeft {
             if entry.spaceBetweenAmountAndSymbol {
                 result.append(" ")
@@ -182,4 +209,3 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
         return formatter.string(from: (Float(amount) * 0.01) as NSNumber) ?? ""
     }
 }
-

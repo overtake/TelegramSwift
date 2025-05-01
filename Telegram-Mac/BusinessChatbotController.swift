@@ -160,20 +160,84 @@ private final class Arguments {
     let context: AccountContext
     let toggleAccess:(State.Access)->Void
     let selectChats:(SelectChatType)->Void
-    let toggleReplyAccess:()->Void
+    let toggleExpand:(String)->Void
+    let toggleRight:(String)->Void
     let removeSelected:(SelectChatType, PeerId)->Void
     let setBot:(EnginePeer?)->Void
-    init(context: AccountContext, toggleAccess:@escaping(State.Access)->Void, selectChats:@escaping(SelectChatType)->Void, toggleReplyAccess:@escaping()->Void, removeSelected:@escaping(SelectChatType, PeerId)->Void, setBot:@escaping(EnginePeer?)->Void) {
+    init(context: AccountContext, toggleAccess:@escaping(State.Access)->Void, selectChats:@escaping(SelectChatType)->Void, toggleExpand:@escaping(String)->Void, toggleRight:@escaping(String)->Void, removeSelected:@escaping(SelectChatType, PeerId)->Void, setBot:@escaping(EnginePeer?)->Void) {
         self.context = context
         self.toggleAccess = toggleAccess
         self.selectChats = selectChats
-        self.toggleReplyAccess = toggleReplyAccess
+        self.toggleExpand = toggleExpand
+        self.toggleRight = toggleRight
         self.removeSelected = removeSelected
         self.setBot = setBot
     }
 }
 
+private extension Array where Element == State.Permission {
+    func search(_ id: String) -> (Int, Int?)? {
+        for (index, permission) in self.enumerated() {
+            if permission.id == id {
+                return (index, nil)
+            }
+            if let subpermissions = permission.subpermissions {
+                for (subIndex, subpermission) in subpermissions.enumerated() {
+                    if subpermission.id == id {
+                        return (index, subIndex)
+                    }
+                }
+            }
+        }
+        return nil
+    }
+}
+
 private struct State : Equatable {
+    
+    struct Permission : Equatable {
+        var id: String
+        var title: String
+        var value: Bool?
+        var enabled: Bool
+        var subpermissions: [Permission]?
+        var expanded: Bool?
+        
+        var rights: TelegramBusinessBotRights? {
+            switch id {
+            case "read": return .readMessages
+            case "reply": return .reply
+            case "mark": return .readMessages
+            case "deleteSent": return .deleteSentMessages
+            case "deleteReceived": return .deleteReceivedMessages
+            case "name": return .editName
+            case "bio": return .editBio
+            case "avatar": return .editProfilePhoto
+            case "username": return .editUsername
+            case "view": return .viewGifts
+            case "sell": return .sellGifts
+            case "settings": return .changeGiftSettings
+            case "transfer": return .transferAndUpgradeGifts
+            case "transferStars": return .transferStars
+            case "stories": return .manageStories
+            default: return nil
+            }
+        }
+        
+        
+        
+        init(id: String, title: String, value: Bool? = nil, enabled: Bool = true, subpermissions: [Permission]? = nil, expanded: Bool? = nil) {
+            self.id = id
+            self.title = title
+            self.value = value
+            self.enabled = enabled
+            self.subpermissions = subpermissions
+            self.expanded = expanded
+        }
+    }
+
+    
+    
     enum Access : Equatable {
         case all
         case selected
@@ -188,7 +252,25 @@ private struct State : Equatable {
     var botsResult: BotsResult? = nil
     var bot: EnginePeer? = nil
     
-    var replyAccess: Bool = true
+    var permissions: [Permission] = []
+    
+    var botRights: TelegramBusinessBotRights {
+        var botRights: TelegramBusinessBotRights = [.readMessages]
+        for permission in permissions {
+            if let subpermissions = permission.subpermissions {
+                for subpermission in subpermissions {
+                    if let rights = subpermission.rights {
+                        botRights.insert(rights)
+                    }
+                }
+            }
+            if let rights = permission.rights {
+                botRights.insert(rights)
+            }
+        }
+        
+        return botRights
+    }
 
     
     var includeIds: [PeerId] = []
@@ -238,7 +320,7 @@ private struct State : Equatable {
                     categories.insert(.existingChats)
                 }
             }
-            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, excludePeers: Set(excludeIds.filter { $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace }), exclude: self.access == .all), canReply: self.replyAccess)
+            return .init(id: bot.id, recipients: .init(categories: categories, additionalPeers: peerIds, excludePeers: Set(excludeIds.filter { $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace }), exclude: self.access == .all), rights: self.botRights)
         } else {
             return nil
         }
@@ -299,7 +381,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .firstItem, text: "https://t.me/\(bot.addressName ?? "")", font: .normal(.text), color: theme.colors.text)
         }))
     } else {
-        entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .firstItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessChatbotsPlaceholder, filter: { $0 }, limit: 60))
+        entries.append(.input(sectionId: sectionId, index: 0, value: .string(state.username), error: nil, identifier: _id_input, mode: .plain, data: .init(viewType: state.botsResult == nil ? .singleItem : .singleItem, defaultText: ""), placeholder: nil, inputPlaceholder: strings().businessChatbotsPlaceholder, filter: { $0 }, limit: 60))
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatBotsFooter), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
@@ -307,10 +389,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if let result = state.botsResult {
+        
+        
+    
         switch result {
         case .loading:
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+                return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .singleItem)
             }))
         case let .found(peers):
             struct Tuple : Equatable {
@@ -321,21 +411,29 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             var tuples: [Tuple] = []
             
             if peers.isEmpty {
+                
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+                
+                
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_bot(.init(0)), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .lastItem, text: strings().businessChatbotsNotFound, font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
+                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().businessChatbotsNotFound, font: .normal(.text), color: theme.colors.grayText, centerViewAlignment: true)
                 }))
             } else {
+                
                 for (i, peer) in peers.enumerated() {
                     var viewType: GeneralViewType = bestGeneralViewType(peers, for: i)
-                    if i == 0 {
-                        if i < peers.count - 1 {
-                            viewType = .innerItem
-                        } else {
-                            viewType = .lastItem
-                        }
+                    if i == 0, state.bot?.id == peer.id {
+                        viewType = .lastItem
                     }
                     tuples.append(.init(peer: peer, viewType: viewType, selected: state.bot?.id == peer.id))
                 }
+                
+                if tuples.count > 1 || !tuples[0].selected {
+                    entries.append(.sectionId(sectionId, type: .normal))
+                    sectionId += 1
+                }
+                
                 for tuple in tuples {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_bot(tuple.peer.id), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
                         return BusinessBotRowItem(initialSize, stableId: stableId, context: arguments.context, bot: tuple.peer, selected: tuple.selected, viewType: tuple.viewType, action: {
@@ -491,10 +589,47 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatbotsPermissionHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_reply_to_message, data: .init(name: strings().businessChatbotsPermission, color: theme.colors.text, type: .switchable(state.replyAccess), viewType: .singleItem, action: arguments.toggleReplyAccess)))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatbotsPermissionInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
+        for (i, permission) in state.permissions.enumerated() {
+            
+            
+            let string: NSMutableAttributedString = NSMutableAttributedString()
+            string.append(string: permission.title, color: theme.colors.text, font: .normal(.title))
+
+            var afterNameImage: CGImage?
+            
+            var selected = permission.value == true
+            
+            if let subpermissions = permission.subpermissions {
+                var selectedCount = subpermissions.filter({ $0.value == true }).count
+                afterNameImage = generateAfterMedia( "\(selectedCount)/\(subpermissions.count)", revealed: permission.expanded == true)
+                
+                selected = selectedCount == subpermissions.count
+            }
+            let viewType = bestGeneralViewType(state.permissions, for: i)
+            
+            
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(permission.id), data: .init(name: permission.title, color: theme.colors.text, type: .switchable(selected), viewType: viewType, action: {
+                arguments.toggleExpand(permission.id)
+            }, switchAction: {
+                arguments.toggleRight(permission.id)
+            }, afterNameImage: afterNameImage)))
+            
+            
+            if permission.expanded == true, let subpermissions = permission.subpermissions, !subpermissions.isEmpty {
+                for subpermission in subpermissions {
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(subpermission.id), data: .init(name: subpermission.title, color: theme.colors.text, type: .selectableLeft(subpermission.value == true), viewType: .innerItem, enabled: subpermission.enabled, action: {
+                        arguments.toggleRight(subpermission.id)
+                    })))
+                }
+            }
+        }
+//
+//        entries.append(.general(sectionId: sectionId, index: 0, value: .none, error: nil, identifier: _id_reply_to_message, data: .init(name: strings().businessChatbotsPermission, color: theme.colors.text, type: .switchable(state.replyAccess), viewType: .singleItem, action: arguments.toggleReplyAccess)))
+//        
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().businessChatbotsPermissionInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//        index += 1
 
     }
     
@@ -510,8 +645,38 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 func BusinessChatbotController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
+    
+    
+    let makePermissions:(TelegramBusinessBotRights?, [State.Permission])->[State.Permission] = { botRights, previous in
+        return [
+            State.Permission(id: "message", title: strings().businessChatBotManageMessages, subpermissions: [
+             //   State.Permission(id: "read", title: strings().businessChatBotManageMessagesRead, value: botRights?.contains(.readMessages) ?? true, enabled: false),
+                State.Permission(id: "reply", title: strings().businessChatBotManageMessagesReply, value: botRights?.contains(.reply) ?? true),
+                State.Permission(id: "mark", title: strings().businessChatBotManageMessagesMark, value: botRights?.contains(.readMessages) ?? true),
+                State.Permission(id: "deleteSent", title: strings().businessChatBotManageMessagesDeleteSent, value: botRights?.contains(.deleteSentMessages) ?? true),
+                State.Permission(id: "deleteReceived", title: strings().businessChatBotManageMessagesDeleteReceived, value: botRights?.contains(.deleteReceivedMessages) ?? true)
+            ], expanded: previous.first(where: { $0.id == "message"})?.expanded ?? false),
 
-    let initialState = State()
+            State.Permission(id: "profile", title: strings().businessChatBotManageProfile, subpermissions: [
+                State.Permission(id: "name", title: strings().businessChatBotManageProfileName, value: botRights?.contains(.editName) ?? true),
+                State.Permission(id: "bio", title: strings().businessChatBotManageProfileBio, value: botRights?.contains(.editBio) ?? true),
+                State.Permission(id: "avatar", title: strings().businessChatBotManageProfileAvatar, value: botRights?.contains(.editProfilePhoto) ?? true),
+                State.Permission(id: "username", title: strings().businessChatBotManageProfileUsername, value: botRights?.contains(.editUsername) ?? true)
+            ], expanded: previous.first(where: { $0.id == "profile"})?.expanded ?? false),
+
+            State.Permission(id: "gifts", title: strings().businessChatBotManageGifts, subpermissions: [
+                State.Permission(id: "view", title: strings().businessChatBotManageGiftsView, value: botRights?.contains(.viewGifts) ?? true),
+                State.Permission(id: "sell", title: strings().businessChatBotManageGiftsSell, value: botRights?.contains(.sellGifts) ?? true),
+                State.Permission(id: "settings", title: strings().businessChatBotManageGiftsSettings, value: botRights?.contains(.changeGiftSettings) ?? true),
+                State.Permission(id: "transfer", title: strings().businessChatBotManageGiftsTransfer, value: botRights?.contains(.transferAndUpgradeGifts) ?? true),
+                State.Permission(id: "transferStars", title: strings().businessChatBotManageGiftsTransferStars, value: botRights?.contains(.transferStars) ?? true)
+            ], expanded: previous.first(where: { $0.id == "gifts"})?.expanded ?? false),
+
+            State.Permission(id: "stories", title: strings().businessChatBotManageStories, value: botRights?.contains(.manageStories) ?? true)
+        ]
+    }
+
+    let initialState = State(permissions: makePermissions(nil, []))
     
     let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -599,8 +764,9 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
                     current.includeIds.insert(contentsOf: categories, at: 0)
                     current.excludeIds = Array(connectedBot.recipients.excludePeers)
                 }
-                current.replyAccess = connectedBot.canReply
                 current.disableIds = Array(connectedBot.recipients.excludePeers)
+                
+                current.permissions = makePermissions(connectedBot.rights, current.permissions)
             }
             return current
         }
@@ -656,10 +822,36 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
             
             return .complete()
         }, excludePeerIds: Set([context.peerId]))), for: context.window)
-    }, toggleReplyAccess: {
+    }, toggleExpand: { id in
         updateState { current in
             var current = current
-            current.replyAccess = !current.replyAccess
+            let index = current.permissions.firstIndex(where: { $0.id == id })
+            if let index {
+                current.permissions[index].expanded = current.permissions[index].expanded == true ? false : true
+            }
+            return current
+        }
+    }, toggleRight: { id in
+        updateState { current in
+            var current = current
+            guard let (root, sub) = current.permissions.search(id) else {
+                return current
+            }
+            if let sub {
+                let value = current.permissions[root].subpermissions?[sub].value ?? false
+                current.permissions[root].subpermissions?[sub].value = !value
+            } else {
+                if let sub = current.permissions[root].subpermissions {
+                    let selectedCount = sub.filter({ $0.value == true }).count
+                    let value = selectedCount == sub.count
+                    for (i, _) in sub.enumerated() {
+                        current.permissions[root].subpermissions?[i].value = !value
+                    }
+                } else {
+                    let value = current.permissions[root].value ?? false
+                    current.permissions[root].value = !value
+                }
+            }
             return current
         }
     }, removeSelected: { type, peerId in

@@ -78,7 +78,7 @@ private struct FeaturedEntry : TableItemListNodeEntry {
     let index: Int
     let installed: Bool
     func item(_ arguments: StickerPanelArguments, initialSize: NSSize) -> TableRowItem {
-        return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: item.topItems.map { $0.file }, packInfo: .pack(item.info, installed: installed, featured: true), collectionId: .pack(item.info.id), canSend: false)
+        return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: item.topItems.map { $0.file._parse() }, packInfo: .pack(item.info._parse(), installed: installed, featured: true), collectionId: .pack(item.info.id), canSend: false)
     }
     
     var stableId: AnyHashable {
@@ -164,7 +164,7 @@ private class StickersModalView : View {
             }
         }
         current.set(file: file, context: context, callback: { [weak self] in
-            showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
             self?.closePremium()
         })
         current.close = { [weak self] in
@@ -258,9 +258,9 @@ private class StickersModalView : View {
                 
                 switch controllerSource {
                 case .installGroupEmojiPack:
-                    add.set(text: "Set as Group Emoji Pack", for: .Normal)
+                    add.set(text: strings().stickerPackPreviewSetGroup, for: .Normal)
                 case .removeGroupEmojiPack:
-                    add.set(text: "Remove Group Emoji Pack", for: .Normal)
+                    add.set(text: strings().stickerPackPreviewRemoveGroup, for: .Normal)
                 default:
                     break
                 }
@@ -325,7 +325,10 @@ private class StickersModalView : View {
 
             }, selectEmojiCategory: { _ in
                 
-            }, mode: .common)
+            }, mode: .common, canSchedule: {
+                let interactions = (context.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
+                return interactions?.presentation.sendPaidMessageStars == nil
+            })
 
 
             let size = frame.size
@@ -339,7 +342,7 @@ private class StickersModalView : View {
                     var tableItems: [TableRowItem] = []
                     for (i, items) in array.enumerated() {
                         tableItems.append(EmojiesSectionRowItem(size, stableId: arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: i != 0 ? nil : collection.info, items: items, mode: .preview, callback: { item, _, _, _ in
-                            arguments.setEmoji(item.file)
+                            arguments.setEmoji(item.file._parse())
                         }, installPack: { _, _ in
                             arguments.addpack(source, collection, false)
                         }))
@@ -347,7 +350,7 @@ private class StickersModalView : View {
                      return tableItems
                 case .stickers:
                     let files = collection.items.map { item -> TelegramMediaFile in
-                        return item.file
+                        return item.file._parse()
                     }
                     return [StickerPackPanelRowItem(size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(collection.info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)]
                 }
@@ -503,7 +506,7 @@ class StickerPackPreviewModalController: ModalViewController {
                 }
             } else {
                 showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
                 })
             }
             
@@ -661,7 +664,7 @@ class StickerPackPreviewModalController: ModalViewController {
             let collections:[State.Collection] = result.compactMap { value in
                 switch value {
                 case let .result(info, items, installed):
-                    return .init(info: info, items: items, installed: installed)
+                    return .init(info: info._parse(), items: items, installed: installed)
                 default:
                     return nil
                 }

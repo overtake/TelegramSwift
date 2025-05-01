@@ -65,6 +65,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     private var scrollTime: TimeInterval = CFAbsoluteTimeGetCurrent()
     private var alignment:InstantVideoPIPCornerAlignment = .topRight
     private var isShown:Bool = false
+    private let __window: Window
     
     private var timebase: CMTimebase? = nil {
         didSet {
@@ -75,6 +76,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     init(_ controller:APController, context: AccountContext, window:Window) {
         self.controller = controller
         self.context = context
+        self.__window = window
         super.init()
         listener = TableScrollListener({ [weak self] _ in
             self?.updateScrolled()
@@ -84,7 +86,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     
     override var window:Window? {
-        return mainWindow
+        return __window
     }
     
     override func viewDidLoad() {
@@ -159,7 +161,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         isShown = true
         genericView.animatesAlphaOnFirstTransition = false
         if let message = currentMessage, let media = message.anyMedia as? TelegramMediaFile {
-            let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
+            let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(account: context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
             let resource = FileMediaReference.message(message: MessageReference(message), media: media)
             

@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 
@@ -189,7 +189,14 @@ class GalleryModernControlsView: View {
         case let .message(message):
             let cantSave = message.message?.containsSecretMedia == true || message.message?.isCopyProtected() == true
             
-            if message.message?.anyMedia is TelegramMediaImage {
+            if message.message?.adAttribute != nil {
+                zoomInControl.isHidden = true
+                zoomOutControl.isHidden = true
+                rotateControl.isHidden = true
+                fastSaveControl.isHidden = true
+                shareControl.isHidden = true
+                moreControl.isHidden = true
+            } else if message.message?.anyMedia is TelegramMediaImage {
                 zoomInControl.isHidden = false
                 zoomOutControl.isHidden = false
                 rotateControl.isHidden = false
@@ -199,7 +206,7 @@ class GalleryModernControlsView: View {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
-                    fastSaveControl.isHidden = cantSave
+                    fastSaveControl.isHidden = cantSave || isHLSVideo(file: file)
                 } else if !file.isGraphicFile {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false

@@ -234,6 +234,7 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
     private var controllers:[ViewController] = []
     
     private var selected: Int = 0
+    private var disposable: Disposable?
     
     override init(_ context: AccountContext) {
         super.init(context)
@@ -249,7 +250,7 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
     private func presentSelected(_ mode: WidgetListView.PresentMode) {
         let controller = controllers[selected]
         loadController(controller)
-        genericView.present(controller: controller, hasNext: controllers.count - 1 > selected, hasPrev: selected > 0, mode: mode)
+        genericView.present(controller: controller, hasNext: true, hasPrev: true, mode: mode)
     }
     
     override func backKeyAction() -> KeyHandlerResult {
@@ -268,34 +269,43 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
     @discardableResult private func next() -> Bool {
         if selected < controllers.count - 1 {
             selected += 1
-            presentSelected(.rightToLeft)
-            return true
+        } else {
+            selected = 0
         }
-        return false
+        presentSelected(.rightToLeft)
+        runTimer()
+        return true
+
     }
     @discardableResult private func prev() -> Bool {
         if selected > 0 {
             selected -= 1
-            presentSelected(.leftToRight)
-            return true
+        } else {
+            selected = controllers.count - 1
         }
-        return false
+        presentSelected(.leftToRight)
+        runTimer()
+        return true
+
     }
     override func viewDidLoad() {
         super.viewDidLoad()
         
         controllers.append(WidgetAppearanceController(context))
-        controllers.append(WidgetRecentPeersController(context))
-//        controllers.append(WidgetStorageController(context))
-        controllers.append(WidgetStickersController(context))
+        #if BETA || STABLE
+        controllers.append(WidgetAppIconController(context))
+        #endif
 
+        controllers.append(WidgetStickersController(context))
+        controllers.append(WidgetRecentPeersController(context))
+     
         let current = controllers[selected]
         
         loadController(current)
         
         ready.set(current.ready.get())
         
-        genericView.present(controller: current, hasNext: controllers.count - 1 > selected, hasPrev: selected > 0, mode: .immidiate)
+        genericView.present(controller: current, hasNext: true, hasPrev: true, mode: .immidiate)
         
         genericView._next = { [weak self] in
             self?.next()
@@ -303,10 +313,44 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
         genericView._prev = { [weak self] in
             self?.prev()
         }
+        
+        var currentMouseInside = false
+        
+        context.window.set(mouseHandler: { [weak self] _ in
+            let mouseInside = self?.genericView.mouseInside() ?? false
+            if mouseInside {
+                self?.disposable?.dispose()
+            }
+            if currentMouseInside != mouseInside {
+                currentMouseInside = mouseInside
+                if !mouseInside {
+                    self?.runTimer()
+                }
+            }
+            return .rejected
+        }, with: self, for: .mouseMoved)
+        
+        runTimer()
+    }
+    
+    private func runTimer() {
+//        self.disposable?.dispose()
+//        
+//        self.disposable = delaySignal(10).startStrict(completed: { [weak self] in
+//            self?.next()
+//        })
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
     }
     
     deinit {
-        var bp = 0
-        bp += 1
+        disposable?.dispose()
+        context.window.removeAllHandlers(for: self)
     }
 }

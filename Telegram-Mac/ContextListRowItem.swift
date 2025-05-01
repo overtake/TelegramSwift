@@ -66,7 +66,7 @@ class ContextListRowItem: TableRowItem {
                 }
             }
         case let .internalReference(values):
-            if let file = file {
+            if let file = values.file {
                 self.file = file
                 fileResource = file.resource
                 if file.isMusic || file.isVoice {
@@ -145,7 +145,15 @@ class ContextListRowItem: TableRowItem {
         return 60
     }
     
-    let textInset:NSEdgeInsets = NSEdgeInsets(left:70, right:10, top:10)
+    var textInset:NSEdgeInsets {
+        var insets = NSEdgeInsets(left:70, right:10, top:10)
+        
+        if vClass == ContextListAudioView.self {
+            insets.left = 60
+        }
+        
+        return insets
+    }
     
     override func viewClass() -> AnyClass {
         return vClass
@@ -290,12 +298,14 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     private var fetchStatus:MediaResourceStatus?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        progressView.state = .Play
+        progressView.state = .Icon(image: theme.icons.chatMusicPlay)
         progressView.fetchControls = FetchControls(fetch: { [weak self] in
             self?.checkOperation()
         })
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(progressView)
+        
+
     }
     
     func checkOperation() {
@@ -307,6 +317,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
             case .Local, .Remote:
                 if let wrapper = item.audioWrapper {
                     if let controller = item.context.sharedContext.getAudioPlayer(), controller.playOrPause(wrapper) {
+                        
                     } else {
                         let controller = APSingleResourceController(context: item.context, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
@@ -329,29 +340,38 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     }
     
     func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     
     func audioDidCompleteQueue(for controller:APController, animated: Bool) {
-        
+        checkState()
     }
     
     func checkState() {
-        if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
-            if song.entry.isEqual(to: wrapper), case .playing = song.state {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
+        
+        progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+        
+        switch fetchStatus {
+        case let .Fetching(_, progress), let .Paused(progress):
+            self.progressView.state = .Fetching(progress: progress, force: false)
+        default:
+            if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
+                if song.entry.isEqual(to: wrapper), case .playing = song.state {
+                    progressView.state = .Icon(image: theme.icons.chatMusicPause)
+                } else {
+                    progressView.state = .Icon(image: theme.icons.chatMusicPlay)
+                }
             } else {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                progressView.state = .Icon(image: theme.icons.chatMusicPlay)
             }
-        } else {
-            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
         }
+        
     }
     
     override func layout() {
@@ -363,26 +383,19 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         let updated = self.item != item
         super.set(item: item, animated: animated)
         
-        if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
+        if let item = item as? ContextListRowItem, let resource = item.fileResource {
             
             let updatedStatusSignal = item.context.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
 
             statusDisposable.set(updatedStatusSignal.start(next: { [weak self] status in
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
-                    switch status {
-                    case let .Fetching(_, progress), let .Paused(progress):
-                        strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                    case .Local:
-                        strongSelf.progressView.state = .Play
-                    case .Remote:
-                        strongSelf.progressView.state = .Play
-                    }
+                    strongSelf.checkState()
                 }
             }))
-            checkState()
 
         }
+        checkState()
     }
     
     required init?(coder: NSCoder) {

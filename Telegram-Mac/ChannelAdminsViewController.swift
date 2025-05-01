@@ -20,15 +20,15 @@ fileprivate final class ChannelAdminsControllerArguments {
     let removeAdmin: (PeerId) -> Void
     let eventLogs:() -> Void
     let toggleAntispam: (Bool)->Void
-    let toggleSignatures:(Bool)->Void
-    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void, toggleAntispam:@escaping(Bool)->Void, toggleSignatures:@escaping(Bool)->Void) {
+    let toggleSignaturesAndProfile:(Bool, Bool)->Void
+    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void, toggleAntispam:@escaping(Bool)->Void, toggleSignaturesAndProfile:@escaping(Bool, Bool)->Void) {
         self.context = context
         self.addAdmin = addAdmin
         self.openAdmin = openAdmin
         self.removeAdmin = removeAdmin
         self.eventLogs = eventLogs
         self.toggleAntispam = toggleAntispam
-        self.toggleSignatures = toggleSignatures
+        self.toggleSignaturesAndProfile = toggleSignaturesAndProfile
     }
 }
 
@@ -56,8 +56,9 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
     case adminPeerItem(sectionId:Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, GeneralViewType)
     case addAdmin(sectionId:Int32, GeneralViewType)
     case adminsInfo(sectionId:Int32, String, GeneralViewType)
-    case signMessages(sectionId: Int32, sign:Bool, viewType: GeneralViewType)
-    case signMessagesInfo(sectionId: Int32, viewType: GeneralViewType)
+    case signMessages(sectionId: Int32, sign:Bool, show:Bool, viewType: GeneralViewType)
+    case showAuthorProfiles(sectionId: Int32, sign:Bool, show:Bool, viewType: GeneralViewType)
+    case signMessagesInfo(sectionId: Int32, sign: Bool, viewType: GeneralViewType)
     case section(Int32)
     case loading
     var stableId: ChannelAdminsEntryStableId {
@@ -78,8 +79,10 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
             return .index(6)
         case .signMessages:
             return .index(7)
-        case .signMessagesInfo:
+        case .showAuthorProfiles:
             return .index(8)
+        case .signMessagesInfo:
+            return .index(9)
         case let .section(sectionId):
             return .index((sectionId + 1) * 1000 - sectionId)
         case let .adminPeerItem(_, _, participant, _, _):
@@ -104,9 +107,11 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
             return (sectionId * 1000) + stableId.index
         case let .adminsInfo(sectionId, _, _):
             return (sectionId * 1000) + stableId.index
-        case let .signMessages(sectionId, _, _):
+        case let .signMessages(sectionId, _, _, _):
             return (sectionId * 1000) + stableId.index
-        case let .signMessagesInfo(sectionId, _):
+        case let .showAuthorProfiles(sectionId, _, _, _):
+            return (sectionId * 1000) + stableId.index
+        case let .signMessagesInfo(sectionId, _, _):
             return (sectionId * 1000) + stableId.index
         case let .adminPeerItem(sectionId, index, _, _, _):
             return (sectionId * 1000) + index + stableId.index
@@ -122,44 +127,31 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
 
 
 fileprivate struct ChannelAdminsControllerState: Equatable {
-    let editing: Bool
-    let removingPeerId: PeerId?
-    let removedPeerIds: Set<PeerId>
-    let temporaryAdmins: [RenderedChannelParticipant]
-    
-    init() {
-        self.editing = false
-        self.removingPeerId = nil
-        self.removedPeerIds = Set()
-        self.temporaryAdmins = []
-    }
-    
-    init(editing: Bool, removingPeerId: PeerId?, removedPeerIds: Set<PeerId>, temporaryAdmins: [RenderedChannelParticipant]) {
-        self.editing = editing
-        self.removingPeerId = removingPeerId
-        self.removedPeerIds = removedPeerIds
-        self.temporaryAdmins = temporaryAdmins
-    }
-    
+    var editing: Bool = false
+    var removingPeerId: PeerId?
+    var removedPeerIds: Set<PeerId> = Set()
+    var temporaryAdmins: [RenderedChannelParticipant] = []
+    var signature: Bool?
+    var showProfile: Bool?
     
     func withUpdatedEditing(_ editing: Bool) -> ChannelAdminsControllerState {
-        return ChannelAdminsControllerState(editing: editing, removingPeerId: self.removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: self.temporaryAdmins)
+        return ChannelAdminsControllerState(editing: editing, removingPeerId: self.removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: self.temporaryAdmins, signature: self.signature, showProfile: self.showProfile)
     }
     
     func withUpdatedPeerIdWithRevealedOptions(_ peerIdWithRevealedOptions: PeerId?) -> ChannelAdminsControllerState {
-        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: self.removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: self.temporaryAdmins)
+        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: self.removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: self.temporaryAdmins, signature: self.signature, showProfile: self.showProfile)
     }
     
     func withUpdatedRemovingPeerId(_ removingPeerId: PeerId?) -> ChannelAdminsControllerState {
-        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: self.temporaryAdmins)
+        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: self.temporaryAdmins, signature: self.signature, showProfile: self.showProfile)
     }
     
     func withUpdatedRemovedPeerIds(_ removedPeerIds: Set<PeerId>) -> ChannelAdminsControllerState {
-        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: self.removingPeerId, removedPeerIds: removedPeerIds, temporaryAdmins: self.temporaryAdmins)
+        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: self.removingPeerId, removedPeerIds: removedPeerIds, temporaryAdmins: self.temporaryAdmins, signature: self.signature, showProfile: self.showProfile)
     }
     
     func withUpdatedTemporaryAdmins(_ temporaryAdmins: [RenderedChannelParticipant]) -> ChannelAdminsControllerState {
-        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: self.removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: temporaryAdmins)
+        return ChannelAdminsControllerState(editing: self.editing, removingPeerId: self.removingPeerId, removedPeerIds: self.removedPeerIds, temporaryAdmins: temporaryAdmins, signature: self.signature, showProfile: self.showProfile)
     }
 }
 
@@ -215,7 +207,7 @@ private func channelAdminsControllerEntries(context: AccountContext, accountPeer
             switch participant.participant {
             case .creator:
                 editable = false
-            case let .member(id, _, adminInfo, _, _):
+            case let .member(id, _, adminInfo, _, _, _):
                 if id == accountPeerId {
                     editable = false
                 } else if let adminInfo = adminInfo {
@@ -255,10 +247,23 @@ private func channelAdminsControllerEntries(context: AccountContext, accountPeer
                 messagesShouldHaveSignatures = false
             }
             
-            if peer.hasPermission(.changeInfo) {                
-                entries.append(.signMessages(sectionId: sectionId, sign:messagesShouldHaveSignatures, viewType: .singleItem))
-                entries.append(.signMessagesInfo(sectionId: sectionId, viewType: .textBottomItem))
-                
+            let messagesShouldHaveAuthor:Bool
+            switch peer.info {
+            case let .broadcast(info):
+                messagesShouldHaveAuthor = info.flags.contains(.messagesShouldHaveProfiles)
+            default:
+                messagesShouldHaveAuthor = false
+            }
+            
+            if peer.hasPermission(.changeInfo) {        
+                let sign = state.signature ?? messagesShouldHaveSignatures
+                let show = state.showProfile ?? messagesShouldHaveAuthor
+                entries.append(.signMessages(sectionId: sectionId, sign: sign, show: show, viewType: !sign ? .singleItem : .firstItem))
+                if sign {
+                    entries.append(.showAuthorProfiles(sectionId: sectionId, sign: sign, show: show, viewType: .lastItem))
+                }
+                entries.append(.signMessagesInfo(sectionId: sectionId, sign: !sign, viewType: .textBottomItem))
+
                 entries.append(.section(sectionId))
                 sectionId += 1
 
@@ -301,7 +306,7 @@ private func channelAdminsControllerEntries(context: AccountContext, accountPeer
             switch participant.participant {
             case .creator:
                 editable = false
-            case let .member(id, _, adminInfo, _, _):
+            case let .member(id, _, adminInfo, _, _, _):
                 if id == accountPeerId {
                     editable = false
                 } else if let adminInfo = adminInfo {
@@ -346,7 +351,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             switch participant.participant {
             case .creator:
                 peerText = strings().adminsOwner
-            case let .member(_, _, adminInfo, _, _):
+            case let .member(_, _, adminInfo, _, _, _):
                 if let adminInfo = adminInfo, let peer = participant.peers[adminInfo.promotedBy] {
                     peerText =  strings().channelAdminsPromotedBy(peer.displayTitle)
                 } else {
@@ -388,12 +393,16 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
         return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: text, viewType: viewType)
         case let .adminsInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: text, viewType: viewType)
-        case let .signMessages(_, sign, viewType):
+        case let .signMessages(_, sign, show, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().peerInfoSignMessages, type: .switchable(sign), viewType: viewType, action: { [weak arguments] in
-                arguments?.toggleSignatures(!sign)
-            })
-        case let .signMessagesInfo(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: strings().peerInfoSignMessagesDesc, viewType: viewType)
+                arguments?.toggleSignaturesAndProfile(!sign, show)
+            }, enabled: true)
+        case let .showAuthorProfiles(_, sign, show, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().peerInfoShowAuthorProfiles, type: .switchable(show), viewType: viewType, action: { [weak arguments] in
+                arguments?.toggleSignaturesAndProfile(sign, !show)
+            }, enabled: true)
+        case let .signMessagesInfo(_, sign, viewType):
+            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: sign ? strings().peerInfoSignMessagesDesc : strings().peerInfoSignMessagesAndShowAuthorDesc, viewType: viewType)
 
         }
     }
@@ -518,14 +527,38 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             })
         }, toggleAntispam: { value in
             _ = showModalProgress(signal: context.engine.peers.toggleAntiSpamProtection(peerId: peerId, enabled: value), for: context.window).start()
-        }, toggleSignatures: { enabled in
-            _ = context.engine.peers.toggleShouldChannelMessagesSignatures(peerId: peerId, enabled: enabled).startStandalone()
+        }, toggleSignaturesAndProfile: { sign, show in
+            updateState { current in
+                var current = current
+                current.signature = sign
+                current.showProfile = show
+                return current
+            }
         })
+        
+       
         
         let peerView = Promise<PeerView>()
         peerView.set(context.account.viewTracker.peerView(peerId))
+        
+        let stateValue = self.stateValue
 
-       
+        self.onDeinit = {
+            _ = (peerView.get() |> deliverOnMainQueue |> take(1)).start(next: { peerView in
+                if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
+                    switch peer.info {
+                    case .broadcast(let info):
+                        let messagesShouldHaveSignatures = stateValue.with { $0.signature ?? info.flags.contains(.messagesShouldHaveSignatures) }
+                        let messagesShouldHaveAuthor = stateValue.with { $0.showProfile ?? info.flags.contains(.messagesShouldHaveProfiles) }
+                        if messagesShouldHaveSignatures != info.flags.contains(.messagesShouldHaveSignatures) || messagesShouldHaveAuthor != info.flags.contains(.messagesShouldHaveProfiles) {
+                            _ = context.engine.peers.toggleShouldChannelMessagesSignatures(peerId: peerId, signaturesEnabled: messagesShouldHaveSignatures, profilesEnabled: messagesShouldHaveAuthor).startStandalone()
+                        }
+                    default:
+                        break
+                    }
+                }
+            })
+        }
 
         let membersAndLoadMoreControl: (Disposable, PeerChannelMemberCategoryControl?)
         if peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -566,7 +599,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                                 var peers: [PeerId: Peer] = [:]
                                 peers[creator.id] = creator
                                 peers[peer.id] = peer
-                                result.append(RenderedChannelParticipant(participant: .member(id: peer.id, invitedAt: 0, adminInfo: ChannelParticipantAdminInfo(rights: TelegramChatAdminRights(rights: .internal_groupSpecific), promotedBy: creator.id, canBeEditedByAccountPeer: creator.id == context.account.peerId), banInfo: nil, rank: nil), peer: peer, peers: peers))
+                                result.append(RenderedChannelParticipant(participant: .member(id: peer.id, invitedAt: 0, adminInfo: ChannelParticipantAdminInfo(rights: TelegramChatAdminRights(rights: .internal_groupSpecific), promotedBy: creator.id, canBeEditedByAccountPeer: creator.id == context.account.peerId), banInfo: nil, rank: nil, subscriptionUntilDate: nil), peer: peer, peers: peers))
                             case .member:
                                 break
                             }
@@ -617,11 +650,11 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
             let chatController = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
             
             navigationController.removeAll()
-            navigationController.push(chatController, false, style: .none)
+            navigationController.push(chatController, false, style: Optional.none)
             let signal = chatController.ready.get() |> filter {$0} |> take(1) |> deliverOnMainQueue |> ignoreValues
             
             _ = signal.start(completed: { [weak navigationController] in
-                navigationController?.push(ChannelAdminsViewController(context, peerId: upgradedPeerId), false, style: .none)
+                navigationController?.push(ChannelAdminsViewController(context, peerId: upgradedPeerId), false, style: Optional.none)
                 f()
             })
             

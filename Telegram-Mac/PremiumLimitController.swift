@@ -819,7 +819,7 @@ final class PremiumLimitController : ModalViewController {
         
         self.genericView.premium = { [weak self] in
             if !context.premiumIsBlocked {
-                showModal(with: PremiumBoardingController(context: context, source: source), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: source), for: context.window)
             }
             self?.close()
         }

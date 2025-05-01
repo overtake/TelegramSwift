@@ -7,6 +7,7 @@ import Postbox
 import TGUIKit
 import ApiCredentials
 import InAppSettings
+import ThemeSettings
 
 enum LoginAuthViewState {
     case phoneNumber
@@ -400,6 +401,12 @@ class AuthController : GenericViewController<AuthView> {
         #if !APP_STORE
         genericView.updateView = updateController.view
         #endif
+        
+        if otherAccountPhoneNumbers.1.isEmpty {
+            _ = updateThemeInteractivetly(accountManager: sharedContext.accountManager, f: {
+                $0.withUpdatedBubbled(true)
+            }).start()
+        }
         
         let sharedContext = self.sharedContext
                         
@@ -1026,6 +1033,8 @@ class AuthController : GenericViewController<AuthView> {
                 }, takeTerms: {
                     
                 })
+            case .payment:
+                fatalError("not supported")
             }
         }
         

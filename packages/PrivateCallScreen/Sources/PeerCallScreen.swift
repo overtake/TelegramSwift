@@ -17,6 +17,7 @@ import AppKit
 import KeyboardKey
 import TelegramMedia
 import Localization
+import IOKit.pwr_mgt
 
 protocol CallViewUpdater {
     func updateState(_ state: PeerCallState, arguments: Arguments, transition: ContainedViewLayoutTransition)
@@ -35,6 +36,8 @@ public final class PeerCallScreen : ViewController {
     public var contextObject: Any?
     
     private var videoViewState: PeerCallVideoViewState = .init()
+    
+    private let isConference: Bool
 
     
     private let statePromise = ValuePromise<PeerCallState>(ignoreRepeated: true)
@@ -50,9 +53,10 @@ public final class PeerCallScreen : ViewController {
     }
     
     
-    public init(external: PeerCallArguments) {
+    public init(external: PeerCallArguments, isConference: Bool) {
         self.external = external
-        let size = NSMakeSize(720, 560)
+        self.isConference = isConference
+        let size = isConference ? NSMakeSize(380, 600) : NSMakeSize(720, 560)
         if let screen = NSScreen.main {
             self.screen = Window(contentRect: NSMakeRect(floorToScreenPixels((screen.frame.width - size.width) / 2), floorToScreenPixels((screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled, .closable], backing: .buffered, defer: true, screen: screen)
             self.screen.minSize = size
@@ -188,7 +192,7 @@ public final class PeerCallScreen : ViewController {
             guard let self else {
                 return
             }
-            statePromise.set(stateValue.modify (f))
+            self.statePromise.set(self.stateValue.modify (f))
         }
         
         
@@ -204,6 +208,8 @@ public final class PeerCallScreen : ViewController {
             }
         }, makeAvatar: { [weak self] view, peerId in
             return self?.external.makeAvatar(view, peerId)
+        }, makeParticipants: { [weak self] view, participants in
+            return self?.external.makeParticipants(view, participants) ?? NSView()
         }, openSettings: { [weak self] in
             guard let self else {
                 return
@@ -211,6 +217,10 @@ public final class PeerCallScreen : ViewController {
             let isClosed = self.stateValue.with { $0.externalState.canBeRemoved == true }
             if !isClosed {
                 self.external.openSettings(self.screen)
+            }
+        }, addMembers: { [weak self] in
+            if let window = self?.window as? Window {
+                self?.external.upgradeToConference(window)
             }
         })
         
@@ -423,24 +433,20 @@ public final class PeerCallScreen : ViewController {
             if screen.isFullScreen {
                 screen.toggleFullScreen(nil)
             }
-            delay(1.3, closure: {
-                NSAnimationContext.runAnimationGroup({ ctx in
-                    self.screen.animator().alphaValue = 0
-                }, completionHandler: {
-                    closeAllModals(window: self.screen)
-                    self.screen.orderOut(nil)
-                })
-            })
+            closeAllModals(window: self.screen)
+            self.screen.orderOut(nil)
+
             self.onCompletion?()
             self.onCompletion = nil
         }
-       
+        
         self.videoViewState = videoViewState
         self.previousState = state
     }
     
     public func show() {
         
+        _ = disableScreenSleep()
         
         if !screen.isOnActiveSpace {
             self.screen.alphaValue = 0
@@ -461,9 +467,30 @@ public final class PeerCallScreen : ViewController {
         self.genericView.updateLayout(size: screen.frame.size, transition: .immediate)
     }
     
+    
+    private var assertionID: IOPMAssertionID = 0
+    private var success: IOReturn?
+    
+    private func disableScreenSleep() -> Bool? {
+        guard success == nil else { return nil }
+        success = IOPMAssertionCreateWithName( kIOPMAssertionTypeNoDisplaySleep as CFString,
+                                               IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                                               "Phone Call" as CFString,
+                                               &assertionID )
+        return success == kIOReturnSuccess
+    }
+    
+    private func  enableScreenSleep() -> Bool {
+        if success != nil {
+            success = IOPMAssertionRelease(assertionID)
+            success = nil
+            return true
+        }
+        return false
+    }
+    
     deinit {
-        var bp = 0
-        bp += 1
+        _ = enableScreenSleep();
     }
 }
 

@@ -60,7 +60,7 @@ private func formatNumber(_ number: String, country: Country) -> String {
     return formatted
 }
 
-private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
+func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
     
     if countryCode == "FT" {
         return "🏴‍☠️"
@@ -437,8 +437,8 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         numberText.setFrameSize(frame.width - (10 + codeText.frame.width + 10) - 10, 18)
         self.separator.frame = focus(NSMakeSize(frame.width - 20, .borderSize))
         
-        let yCode:CGFloat = codeText.currentEditor() != nil ? 1 : 0
-        let yNumber:CGFloat = numberText.currentEditor() != nil ? 1 : 0
+        let yCode:CGFloat = codeText.currentEditor() != nil ? 0 : 0
+        let yNumber:CGFloat = numberText.currentEditor() != nil ? 0 : 0
         
         codeText.setFrameOrigin(10, frame.height - floor(frame.height / 2 - codeText.frame.height/2) + yCode)
         numberText.setFrameOrigin(10 + codeText.frame.width + 10, frame.height - floor(frame.height / 2 - numberText.frame.height/2) + yNumber)

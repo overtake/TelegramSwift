@@ -22,6 +22,7 @@ struct GroupAccess {
     let canReport: Bool
     let canMakeVoiceChat: Bool
     let canEditMessages: Bool
+    let canManageGifts: Bool
 }
 
 extension Peer {
@@ -37,6 +38,7 @@ extension Peer {
         var canMakeVoiceChat = false
         var canEditMessages = false
         var canPin: Bool
+        var canManageGifts = false
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true
@@ -76,6 +78,7 @@ extension Peer {
             if channel.hasPermission(.inviteMembers) || isCreator || channel.adminRights?.rights.contains(.canInviteUsers) == true {
                 canAddMembers = true
             }
+            canManageGifts = isCreator || channel.adminRights?.rights.contains(.canPostMessages) == true
         }
         
         var canCreateInviteLink = false
@@ -97,7 +100,7 @@ extension Peer {
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts)
     }
     
     var canInviteUsers:Bool {
@@ -142,7 +145,7 @@ extension TelegramChannel {
             return false
         }
         switch participant {
-        case let .member(_, _,  adminInfo, _, _):
+        case let .member(_, _,  adminInfo, _, _, _):
             if let adminInfo = adminInfo {
                 return accountId == adminInfo.promotedBy || flags.contains(.isCreator)
             } else {
@@ -195,11 +198,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank):
+    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank, lhsSuccriptionDate):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank):
+        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank, rhsSuccriptionDate):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

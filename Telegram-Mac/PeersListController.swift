@@ -13,6 +13,7 @@ import TelegramCore
 import Reactions
 import SwiftSignalKit
 import InAppSettings
+import FetchManager
 
 struct PeerListHiddenItems : Equatable {
     var archive: ItemHideStatus
@@ -40,7 +41,10 @@ private final class Arguments {
     let getController:()->ViewController?
     let navigationBarLeftPosition:()->CGFloat
     let contextMenu:()->ContextMenu
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?, navigationBarLeftPosition:@escaping()->CGFloat, contextMenu: @escaping()->ContextMenu) {
+    let selectSearchTag:(PeerListState.SelectedSearchTag)->Void
+    let setPeerAsTag:(Peer?)->Void
+    let toggleContactsSort:(PeerListState.ContactsSort)->Void
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?, navigationBarLeftPosition:@escaping()->CGFloat, contextMenu: @escaping()->ContextMenu, selectSearchTag:@escaping(PeerListState.SelectedSearchTag)->Void, setPeerAsTag:@escaping(Peer?)->Void, toggleContactsSort:@escaping(PeerListState.ContactsSort)->Void) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
@@ -55,11 +59,192 @@ private final class Arguments {
         self.getController = getController
         self.navigationBarLeftPosition = navigationBarLeftPosition
         self.contextMenu = contextMenu
+        self.selectSearchTag = selectSearchTag
+        self.setPeerAsTag = setPeerAsTag
+        self.toggleContactsSort = toggleContactsSort
     }
 }
 
 
 struct PeerListState : Equatable {
+    
+    enum SelectedSearchTag : Int32 {
+        case hashtagThisChat = -7
+        case hashtagMyMessages = -6
+        case hashtagPublicPosts = -5
+        case chats = -4
+        case downloads = -3
+        case channels = -2
+        case apps = -1
+        case photos = 256
+        case videos = 512
+        case links = 8
+        case music = 4
+        case voice = 16
+        case gif = 128
+        case files = 2
+   
+        
+        var menuAnimation: MenuAnimation? {
+            switch self {
+            case .photos:
+                return .menu_shared_media
+            case .videos:
+                return .menu_video
+            case .links:
+                return .menu_copy_link
+            case .music:
+                return .menu_music
+            case .voice:
+                return .menu_voice
+            case .gif:
+                return .menu_add_gif
+            case .files:
+                return .menu_file
+            default:
+                return nil
+            }
+        }
+        
+        func searchTags(_ peerTag: PeerId?, hashtag: Hashtag?) -> SearchTags {
+            switch self {
+            case .chats:
+                return SearchTags(messageTags: nil, peerTag: peerTag)
+            case .downloads:
+                return SearchTags(messageTags: nil, peerTag: nil)
+            case .channels:
+                return SearchTags(messageTags: nil, peerTag: nil, listType: .channels)
+            case .apps:
+                return SearchTags(messageTags: nil, peerTag: nil, listType: .bots)
+            case .hashtagThisChat:
+                return SearchTags(messageTags: nil, peerTag: hashtag?.peer?.id, text: hashtag?.text, publicPosts: false, myMessages: false)
+            case .hashtagMyMessages:
+                return SearchTags(messageTags: nil, peerTag: nil, text: hashtag?.text, publicPosts: false, myMessages: true)
+            case .hashtagPublicPosts:
+                return SearchTags(messageTags: nil, peerTag: nil, text: hashtag?.text, publicPosts: true, myMessages: false)
+            default:
+                return SearchTags(messageTags: self.messageTags, peerTag: peerTag)
+            }
+        }
+        
+        var searchOptions: AppSearchOptions {
+            switch self {
+            case .chats:
+                return [.chats, .messages]
+            case .downloads:
+                return []
+            case .channels:
+                return [.chats]
+            case .apps:
+                return [.chats]
+            default:
+                return [.messages]
+            }
+        }
+        
+        
+        var title: String {
+            switch self {
+            case .chats:
+                return strings().chatListChatsTag
+            case .downloads:
+                return strings().chatListDownloadsTag
+            case .channels:
+                return strings().chatListChannelsTag
+            case .apps:
+                return strings().chatListAppsTag
+            case .photos:
+                return strings().searchFilterPhotos
+            case .videos:
+                return strings().searchFilterVideos
+            case .links:
+                return strings().searchFilterLinks
+            case .music:
+                return strings().searchFilterMusic
+            case .voice:
+                return strings().searchFilterVoice
+            case .gif:
+                return strings().searchFilterGIFs
+            case .files:
+                return strings().searchFilterFiles
+            case .hashtagThisChat:
+                return strings().chatHashtagThisChat
+            case .hashtagMyMessages:
+                return strings().chatHashtagMyMessages
+            case .hashtagPublicPosts:
+                return strings().chatHashtagPublicPosts
+            }
+        }
+        
+        var messageTags: MessageTags? {
+            switch self {
+            case .chats:
+                return nil
+            case .downloads:
+                return nil
+            case .channels:
+                return nil
+            case .apps:
+                return nil
+            case .photos:
+                return .photo
+            case .videos:
+                return .video
+            case .links:
+                return .webPage
+            case .music:
+                return .music
+            case .voice:
+                return .voiceOrInstantVideo
+            case .gif:
+                return .gif
+            case .files:
+                return .file
+            case .hashtagThisChat:
+                return nil
+            case .hashtagMyMessages:
+                return nil
+            case .hashtagPublicPosts:
+                return nil
+            }
+        }
+        
+        static func list(_ state: PeerListState) -> [SelectedSearchTag] {
+            var list: [SelectedSearchTag] = []
+            if state.searchState == .Focus {
+                if state.peerTag == nil, state.forumPeer == nil, !state.mode.isForumLike {
+                    if state.hasDownloads {
+                        list.append(.downloads)
+                    }
+                    list.append(.channels)
+                    list.append(.apps)
+                }
+                
+                list.append(.photos)
+                list.append(.videos)
+                list.append(.links)
+                list.append(.music)
+                list.append(.voice)
+                list.append(.gif)
+                list.append(.files)
+                
+                list.append(.hashtagThisChat)
+                list.append(.hashtagMyMessages)
+                list.append(.hashtagPublicPosts)
+                
+                return list
+
+            } else {
+                return []
+            }
+        }
+        
+    }
+    
+    enum ContactsSort : Int32, Equatable {
+        case lastSeen
+        case name
+    }
     
     enum AppearMode : Equatable {
         case normal
@@ -98,12 +283,14 @@ struct PeerListState : Equatable {
         var peer: TelegramChannel
         var peerView: PeerView
         var online: Int32
+        
     }
     
     var proxySettings: ProxySettings
     var connectionStatus: ConnectionStatus
     var splitState: SplitViewState
     var searchState: SearchFieldState = .None
+    var searchQuery: String = ""
     var peer: PeerEquatable?
     var forumPeer: ForumData?
     var mode: PeerListMode
@@ -119,6 +306,23 @@ struct PeerListState : Equatable {
     var presentation: TelegramPresentationTheme
     var privacy: GlobalPrivacySettings?
     var displaySavedAsTopics: Bool
+    var webapps: BrowserStateContext.FullState? = nil
+    
+    var contactsSort: ContactsSort = FastSettings.contactsSort
+    
+    var selectedTag: SelectedSearchTag = .chats
+    var peerTag: EnginePeer? = nil
+    
+    var hasDownloads = false
+    
+    struct Hashtag : Equatable {
+        var mode: SelectedSearchTag
+        var peer: EnginePeer?
+        var text: String
+    }
+    
+    var hashtag: Hashtag?
+    
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForumLike {
             if self.splitState == .minimisize {
@@ -233,7 +437,7 @@ private final class StatusView : Control {
             self.button = nil
         }
         
-        let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
+        let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
         if let control = control {
             self.button = control
             addSubview(control)
@@ -384,6 +588,246 @@ private final class ActionView : Control {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+}
+
+fileprivate final class WebappsControl : Control {
+    
+    
+    struct WebAppItem : Identifiable, Comparable {
+        static func < (lhs: WebAppItem, rhs: WebAppItem) -> Bool {
+            return lhs.index < rhs.index
+        }
+        let data: BrowserTabData
+        let index: Int
+        var stableId: AnyHashable {
+            return data.unique
+        }
+    }
+    
+    class Control : View {
+        private var avatarView: AvatarControl?
+        private var iconView: ImageView?
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.layer?.cornerRadius = 4
+            self.layer?.borderWidth = 2
+            self.layer?.borderColor = theme.colors.background.cgColor
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+            self.layer?.borderColor = theme.colors.background.cgColor
+        }
+        
+        func update(item: WebAppItem, context: AccountContext) {
+            if let enginePeer = item.data.peer {
+                let current: AvatarControl
+                if let view = self.avatarView {
+                    current = view
+                } else {
+                    current = AvatarControl(font: .avatar(8))
+                    current.setFrameSize(24, 24)
+                    current.userInteractionEnabled = false
+                    self.avatarView = current
+                    addSubview(current)
+                    current.center()
+                }
+                current.setPeer(account: context.account, peer: enginePeer._asPeer())
+            } else if let avatarView {
+                performSubviewRemoval(avatarView, animated: false)
+                self.avatarView = nil
+            }
+            
+            if item.data.external?.isSite == true {
+                let current: ImageView
+                if let view = self.iconView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    current.setFrameSize(24, 24)
+                    current.isEventLess = true
+                    current.layer?.cornerRadius = 4
+                    self.iconView = current
+                    addSubview(current)
+                    current.animates = true
+                    current.center()
+                }
+                
+                let color: NSColor = theme.colors.listBackground
+
+                if case .instantView = item.data.unique {
+                    current.nsImage = generateContextMenuInstantView(color: color, size: NSMakeSize(24, 24))
+                } else  if let favicon = item.data.external?.favicon {
+                    current.nsImage = favicon
+                } else {
+                    current.nsImage = generateContextMenuUrl(color: color, state: item.data.external, size: NSMakeSize(24, 24))
+                }
+            } else if let iconView {
+                performSubviewRemoval(iconView, animated: false)
+                self.iconView = nil
+            }
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            if let avatarView {
+                transition.updateFrame(view: avatarView, frame: size.bounds)
+            }
+            if let iconView {
+                transition.updateFrame(view: iconView, frame: size.bounds)
+            }
+        }
+    }
+    
+    private var views: [Control] = []
+    private var items: [WebAppItem] = []
+    
+    private var imageView: ImageView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.layer?.masksToBounds = false
+        scaleOnClick = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(webapps: [BrowserTabData], context: AccountContext, animated: Bool) {
+        var items: [WebAppItem] = []
+        var index: Int = .max
+        for webapp in webapps.prefix(4).reversed() {
+            items.append(.init(data: webapp, index: index))
+            index -= 1
+        }
+        
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
+        
+        for rdx in deleteIndices.reversed() {
+            performSubviewRemoval(views.remove(at: rdx), animated: animated, scale: true)
+        }
+        
+        let rects = getRects(items)
+        
+        for (idx, item, _) in indicesAndItems {
+            let view = Control(frame: rects[idx])
+            view.update(item: item, context: context)
+            
+            views.insert(view, at: idx)
+            self.addSubview(view)
+            if animated {
+                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.5, bounce: true)
+            }
+           
+        }
+        for (idx, item, _) in updateIndices {
+            let item = item
+            views[idx].update(item: item, context: context)
+        }
+        
+        self.items = items
+        
+        if items.isEmpty {
+            let current: ImageView
+            let isNew: Bool
+            if let view = self.imageView {
+                current = view
+                isNew = false
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.imageView = current
+                isNew = true
+            }
+            current.image = theme.icons.chatlist_apps
+            current.sizeToFit()
+            
+            
+            if animated, isNew {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.5, bounce: true)
+            }
+        } else if let view = self.imageView {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.imageView = nil
+        }
+        
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.35, curve: .spring) : .immediate
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
+        
+        for (i, view) in views.enumerated() {
+            view.layer?.borderWidth = items.count < 4 ? 2 : 0
+            view.layer?.cornerRadius = items.count < 4 ? 6 : 2
+            if animated {
+                view.layer?.animateBorder()
+                view.layer?.animateCornerRadius()
+            }
+        }
+        
+        let size: NSSize
+        if items.count == 4 || items.count == 0 {
+            size = NSMakeSize(28, 24)
+        } else {
+            let last = getRects(items).last!
+            size = NSMakeSize(last.maxX, 24)
+        }
+        transition.updateFrame(view: self, frame: CGRect(origin: self.frame.origin, size: size))
+    }
+    
+    private func getRects(_ items: [WebAppItem]) -> [NSRect] {
+        var rects: [NSRect] = []
+        
+        if items.count < 4 {
+            let size = NSMakeSize(24, 24)
+            if items.count == 1 {
+                rects.append(.init(origin: NSPoint(x: 2, y: 0), size: size))
+            } else {
+                rects.append(.init(origin: NSPoint(x: 0, y: 0), size: size))
+            }
+            if items.count < 3 {
+                rects.append(.init(origin: NSPoint(x: size.width / 2, y: 0), size: size))
+            } else {
+                rects.append(.init(origin: NSPoint(x: floorToScreenPixels(size.width / 3), y: 0), size: size))
+                rects.append(.init(origin: NSPoint(x: floorToScreenPixels(size.width / 3 * 2), y: 0), size: size))
+            }
+        } else {
+            let size = NSMakeSize(11, 11)
+            rects.append(.init(origin: NSPoint(x: 2, y: 2), size: size))
+            rects.append(.init(origin: NSPoint(x: size.width + 4, y: 2), size: size))
+            rects.append(.init(origin: NSPoint(x: 2, y: size.height + 4), size: size))
+            rects.append(.init(origin: NSPoint(x: size.width + 4, y: size.height + 4), size: size))
+            rects = rects.reversed()
+        }
+        
+        return Array(rects.prefix(items.count))
+    }
+    
+    override func layout() {
+        super.layout()
+        self.imageView?.center()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+        
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let rects = self.getRects(self.items)
+        for (i, view) in views.enumerated() {
+            transition.updateFrame(view: view, frame: rects[i])
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
     }
 }
 
@@ -602,9 +1046,12 @@ class PeerListContainerView : Control {
     private var compose:ImageButton?
     private var backButton: ImageButton?
 
+    private var contactsSort: TextButton?
+
+    
     private var forumTitle: TitleForumView?
     
-
+    private var scrollerView: ChatNavigationScroller?
     
     let backgroundView = View(frame: NSZeroRect)
     
@@ -616,12 +1063,11 @@ class PeerListContainerView : Control {
     
     let searchView:SearchView = SearchView(frame:NSMakeRect(10, 0, 0, 0))
     
+    
     fileprivate let titleView = TitleView(frame: .zero)
     
-    
-    fileprivate var showDownloads:(()->Void)? = nil
-    fileprivate var hideDownloads:(()->Void)? = nil
-    
+    private var webapps: WebappsControl?
+        
     
     var searchViewRect: NSRect {
         var y = navigationHeight
@@ -867,6 +1313,16 @@ class PeerListContainerView : Control {
             self.foldersView = nil
         }
         
+       
+        var tags: [SearchView.TagInfo] = []
+//        if let peerTag = state.peerTag {
+//            tags.append(.init(text: peerTag._asPeer().compactDisplayTitle.prefixWithDots(10)))
+//        }
+//        if let hashtag = state.hashtag {
+//            tags.append(.init(text: hashtag.text, isVisible: false))
+//        }
+//        self.searchView.updateTags(tags, theme.search.searchImage)
+        
         if state.mode.groupId == .archive || (state.selectedForum != nil && state.splitState != .minimisize) || state.mode.isForumLike  || state.appear == .short {
             let current: ImageButton
             if let view = self.backButton {
@@ -894,12 +1350,190 @@ class PeerListContainerView : Control {
         }
         
         
+                
+        if let webapps = state.webapps, !webapps.isEmpty, state.mode.groupId == .root, state.splitState != .minimisize, !hasForumTitle || state.forumPeer == nil {
+            let current: WebappsControl
+            let isNew: Bool
+            if let view = self.webapps {
+                current = view
+                isNew = false
+            } else {
+                current = WebappsControl(frame: NSMakeRect(0, 0, 24, 24))
+                containerView.addSubview(current)
+                self.webapps = current
+                isNew = true
+            }
+            
+            let openedItems = Array(webapps.opened.reversed())
+            current.update(webapps: openedItems, context: arguments.context, animated: animated)
+            
+            current.contextMenu = {
+                let menu = ContextMenu()
+                
+                
+                let appItem:(BrowserStateContext.FullState.Recommended)->ContextMenuItem? = { webapp in
+                    if let user = webapp.peer._asPeer() as? TelegramUser {
+                        
+                        let afterNameBadge = generateContextMenuSubsCount((webapp.peer._asPeer() as? TelegramUser)?.subscriberCount)
+                        
+                        return ReactionPeerMenu(title: user.displayTitle, handler: {
+                            BrowserStateContext.get(arguments.context).open(tab: .mainapp(bot: webapp.peer, source: .generic))
+                        }, peer: user, context: arguments.context, reaction: nil, afterNameBadge: afterNameBadge)
+                    } else {
+                        return nil
+                    }
+                }
+                
+                if !webapps.opened.isEmpty {
+                    for webapp in webapps.opened {
+                        switch webapp.data {
+                        case .tonsite:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: webapp.external?.favicon ?? generateContextMenuUrl(color: theme.colors.listBackground, state: webapp.external)))
+                        case .instantView:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: generateContextMenuInstantView(color: theme.colors.listBackground)))
+                        default:
+                            if let peer = webapp.data.peer {
+                                menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                                    BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                                }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                            }
+                        }
+                    }
+                    menu.addItem(ContextMenuItem(strings().chatListAppsCloseAll, handler: {
+                        BrowserStateContext.get(arguments.context).closeAll()
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                }
+                
+                
+                if !webapps.recentlyMenu.isEmpty {
+                    if !menu.items.isEmpty {
+                        menu.addItem(ContextSeparatorItem())
+                    }
+                    for webapp in webapps.recentlyMenu.map(\.tab) {
+                        switch webapp.data {
+                        case .tonsite:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: webapp.external?.favicon ?? generateContextMenuUrl(color: theme.colors.listBackground, state: webapp.external)))
+                        case .instantView:
+                            menu.addItem(ContextMenuItem(webapp.titleText, handler: {
+                                BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                            }, image: generateContextMenuInstantView(color: theme.colors.listBackground)))
+                        default:
+                            if let peer = webapp.data.peer {
+                                menu.addItem(ReactionPeerMenu(title: webapp.titleText, handler: {
+                                    BrowserStateContext.get(arguments.context).open(tab: webapp.data, uniqueId: webapp.unique)
+                                }, peer: peer._asPeer(), context: arguments.context, reaction: nil))
+                            }
+                        }
+                    }
+                    menu.addItem(ContextMenuItem(strings().chatListAppsClear, handler: {
+                        BrowserStateContext.get(arguments.context).clearRecent()
+                    }, itemImage: MenuAnimation.menu_delete.value))
+                }
+                
+               
+
+                if !webapps.recentUsedApps.isEmpty {
+                    
+                    menu.addItem(ContextSeparatorItem())
+                    let header = ContextMenuItem(strings().chatListAppsRecentUsedHeader)
+                    header.isEnabled = false
+                    menu.addItem(header)
+                    
+                    for webapp in webapps.recentUsedApps {
+                        let contains = webapps.recentlyMenu.contains(where: { $0.tab.data.savebleId == webapp.peer.id }) || webapps.opened.contains(where: { $0.data.savebleId == webapp.peer.id })
+                        if !contains {
+                            if let item = appItem(webapp) {
+                                menu.addItem(item)
+                            }
+                        }
+                    }
+                }
+                
+                
+                if !webapps.recommended.isEmpty {
+                    
+                    if !menu.items.isEmpty {
+                        menu.addItem(ContextSeparatorItem())
+                    }
+                                        
+                    let subMenu = ContextMenu()
+                
+                    for webapp in webapps.recommended {
+                        if let item = appItem(webapp) {
+                            subMenu.addItem(item)
+                        }
+                    }
+                    if !subMenu.items.isEmpty {
+                        let item = ContextMenuItem(strings().chatListAppsPopular, itemImage: MenuAnimation.menu_apps.value)
+                        item.submenu = subMenu
+                        menu.addItem(item)
+                    }
+                }
+                
+                
+                return menu
+            }
+            
+            if isNew {
+                current.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - current.frame.height) / 2)))
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+        } else {
+            if let view = self.webapps {
+                performSubviewRemoval(view, animated: animated)
+                self.webapps = nil
+            }
+        }
+        
+        if state.isContacts, self.webapps == nil {
+            let current: TextButton
+            if let view = self.contactsSort {
+                current = view
+            } else {
+                current = TextButton(frame: NSMakeRect(10, 10, 40, 30))
+                self.contactsSort = current
+                current.animates = false
+                current.autohighlight = false
+                current.scaleOnClick = true
+                containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+            }
+            current.set(font: .normal(.text), for: .Normal)
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(text: strings().contactsSortTitle, for: .Normal)
+            current.sizeToFit(NSMakeSize(10, 15))
+            
+            
+            current.contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().contactsSortByLastSeen, handler: {
+                    arguments.toggleContactsSort(.lastSeen)
+                }, state: state.contactsSort == .lastSeen ? .on : nil))
+                menu.addItem(ContextMenuItem(strings().contactsSortByName, handler: {
+                    arguments.toggleContactsSort(.name)
+                }, state: state.contactsSort == .name ? .on : nil))
+                return menu
+            }
+
+        } else if let view = self.contactsSort {
+            performSubviewRemoval(view, animated: animated)
+            self.contactsSort = nil
+        }
         
         if previous?.appear != state.appear {
             self.delta = nil
         } else if previous?.splitState != state.splitState {
             self.delta = nil
         }
+        
+        self.updateScroller(animated: animated)
 
         
         let transition: ContainedViewLayoutTransition
@@ -915,160 +1549,51 @@ class PeerListContainerView : Control {
         self.updateLayout(self.frame.size, transition: transition)
     }
     
-    
-    private func updateTags(_ state: PeerListState,updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
-        var currentTag: MessageTags?
-        var currentPeerTag: Peer?
-        let tags:[(MessageTags?, String, CGImage)] = [(nil, strings().searchFilterClearFilter, theme.icons.search_filter),
-                                            (.photo, strings().searchFilterPhotos, theme.icons.search_filter_media),
-                                            (.video, strings().searchFilterVideos, theme.icons.search_filter_media),
-                                            (.webPage, strings().searchFilterLinks, theme.icons.search_filter_links),
-                                            (.music, strings().searchFilterMusic, theme.icons.search_filter_music),
-                                            (.voiceOrInstantVideo, strings().searchFilterVoice, theme.icons.search_filter_music),
-                                            (.gif, strings().searchFilterGIFs, theme.icons.search_filter_media),
-                                            (.file, strings().searchFilterFiles, theme.icons.search_filter_files)]
-        
-        let collectTags: ()-> ([SearchView.TagInfo], CGImage) = {
-            var values: [String] = []
-            let image: CGImage
-
-            if let tag = currentPeerTag {
-                values.append(tag.compactDisplayTitle.prefix(10))
-            }
-            if let tag = currentTag {
-                if let found = tags.first(where: { $0.0 == tag }) {
-                    values.append(found.1)
-                    image = found.2
-                } else {
-                    image = theme.icons.search_filter
-                }
-            } else {
-                image = theme.icons.search_filter
-            }
-            return (values.map { .init(text: $0) }, image)
+    func updateScroller(animated: Bool) {
+        guard let state else {
+            return
         }
         
-        switch state.searchState {
-        case .Focus:
-            if searchView.customSearchControl == nil {
-                searchView.customSearchControl = CustomSearchController(clickHandler: { [weak self] control, updateTitle in
-                    
-                    var items: [ContextMenuItem] = []
-
-                    if state.forumPeer == nil, !state.mode.isForumLike {
-                        items.append(ContextMenuItem(strings().chatListDownloadsTag, handler: { [weak self] in
-                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
-                            self?.showDownloads?()
-                        }, itemImage: MenuAnimation.menu_save_as.value))
-                    }
-                    
-                    if state.forumPeer == nil, !state.mode.isForumLike {
-                        items.append(ContextMenuItem(strings().chatListChannelsTag, handler: {
-                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil, isChannels: true))
-                            updateTitle([.init(text: strings().chatListChannelsTag)], theme.icons.search_filter)
-
-                        }, itemImage: MenuAnimation.menu_channel.value))
-                    }
-                    
-                    for tag in tags {
-                        var append: Bool = false
-                        if currentTag != tag.0 {
-                            append = true
-                        }
-                        
-                        if append {
-                            if let messagetag = tag.0 {
-                                let itemImage: MenuAnimation?
-                                switch messagetag {
-                                case .photo:
-                                    itemImage = .menu_shared_media
-                                case .video:
-                                    itemImage = .menu_video
-                                case .webPage:
-                                    itemImage = .menu_copy_link
-                                case .voiceOrInstantVideo:
-                                    itemImage = .menu_voice
-                                case .gif:
-                                    itemImage = .menu_add_gif
-                                case .file:
-                                    itemImage = .menu_file
-                                default:
-                                    itemImage = nil
-                                }
-                                if let itemImage = itemImage {
-                                    items.append(ContextMenuItem(tag.1, handler: { [weak self] in
-                                        currentTag = tag.0
-                                        updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                                        let collected = collectTags()
-                                        updateTitle(collected.0, collected.1)
-                                        self?.hideDownloads?()
-                                    }, itemImage: itemImage.value))
-                                }
-                            }
-                            
-                        }
-                    }
-                    
-                    let menu = ContextMenu()
-                    for item in items {
-                        menu.addItem(item)
-                    }
-                    
-                    let value = AppMenu(menu: menu)
-                    if let event = NSApp.currentEvent {
-                        value.show(event: event, view: control)
-                    }
-                }, deleteTag: { [weak self] index in
-                    var count: Int = 0
-                    if currentTag != nil {
-                        count += 1
-                    }
-                    if currentPeerTag != nil {
-                        count += 1
-                    }
-                    if index == 1 || count == 1 {
-                        currentTag = nil
-                    }
-                    if index == 0 {
-                        currentPeerTag = nil
-                    }
-                    let collected = collectTags()
-                    updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                    self?.searchView.updateTags(collected.0, collected.1)
-                    self?.hideDownloads?()
-                }, icon: theme.icons.search_filter)
+        let isShown: Bool = !state.filterData.isTop || tableView.documentOffset.y > tableView.frame.height
+        
+        if !state.isContacts, isShown {
+            let current: ChatNavigationScroller
+            if let view = self.scrollerView {
+                current = view
+            } else {
+                current = ChatNavigationScroller(.scrollerUp)
+                current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, frame.height - current.frame.height - 10))
+                addSubview(current)
+                self.scrollerView = current
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             }
+            current.setSingle(handler: { [weak self] _ in
+                self?.arguments?.getController()?.scrollup()
+            }, for: .Click)
             
-            updatePeerTag( { [weak self] updatedPeerTag in
-                guard let `self` = self else {
-                    return
-                }
-                currentPeerTag = updatedPeerTag
-                updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                self.searchView.setString("")
-                let collected = collectTags()
-                self.searchView.updateTags(collected.0, collected.1)
-            })
-            
-            updateMessageTags( { [weak self] updatedMessageTags in
-                guard let `self` = self else {
-                    return
-                }
-                currentTag = updatedMessageTags
-                updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                let collected = collectTags()
-                self.searchView.updateTags(collected.0, collected.1)
-            })
-            
-        case .None:
-            searchView.customSearchControl = nil
+        } else if let view = self.scrollerView {
+            performSubviewRemoval(view, animated: animated)
+            self.scrollerView = nil
         }
     }
     
-    fileprivate func searchStateChanged(_ state: PeerListState, arguments: Arguments, animated: Bool, updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
-                        
-        self.updateTags(state, updateSearchTags: updateSearchTags, updatePeerTag: updatePeerTag, updateMessageTags: updateMessageTags)
-
+    
+    
+    private func updateTags(_ state: PeerListState,updateSearchTags: @escaping(PeerListState.SelectedSearchTag)->Void) {
+        if searchView.customSearchControl == nil {
+            searchView.customSearchControl = CustomSearchController(clickHandler: { _, _ in
+                
+            }, deleteTag: { index in
+                updateSearchTags(.chats)
+            }, icon: theme.search.searchImage)
+        }
+    }
+    
+    fileprivate func searchStateChanged(_ state: PeerListState, arguments: Arguments, animated: Bool, updateSearchTags: @escaping(PeerListState.SelectedSearchTag)->Void) {
+        self.updateTags(state, updateSearchTags: updateSearchTags)
         self.updateState(state, arguments: arguments, animated: animated)
     }
     
@@ -1255,6 +1780,14 @@ class PeerListContainerView : Control {
             
         }
         
+        if let view = self.webapps {
+            transition.updateFrame(view: view, frame: CGRect(origin: NSMakePoint(10, floorToScreenPixels((50 - view.frame.height) / 2)), size: view.frame.size))
+        }
+        
+        if let view = self.scrollerView {
+            transition.updateFrame(view: view, frame: NSMakeRect(size.width - view.frame.width - 10, size.height - view.frame.height - 10, view.frame.width, view.frame.height))
+        }
+        
 
         let titlePlusStorySize = titleView.frame.width + (59)
         var titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
@@ -1401,8 +1934,7 @@ class PeerListContainerView : Control {
                 }
             }
             current.update(state, context: context, arguments: arguments, animated: animated)
-            current.removeAllHandlers()
-            current.set(handler: { _ in
+            current.setSingle(handler: { _ in
                 arguments.open()
             }, for: .Click)
         } else if let view = self.downloads {
@@ -1498,6 +2030,118 @@ enum PeerListMode : Equatable {
     }
 }
 
+private class SearchContainer : Control {
+    let tagsView: ScrollableSegmentView
+    let searchView: NSView
+    
+    init(frame frameRect: NSRect, searchView: NSView) {
+        self.searchView = searchView
+        self.tagsView = .init(frame:NSMakeRect(0, -10, frameRect.width, 40))
+        super.init(frame: frameRect)
+        addSubview(tagsView)
+        addSubview(searchView)
+        border = [.Right]
+    }
+    
+    override var sendRightMouseAnyway: Bool {
+        return false
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var state: PeerListState?
+    
+    fileprivate func update(_ state: PeerListState, animated: Bool, arguments: Arguments?) {
+        
+        self.backgroundColor = theme.colors.background
+        
+        let previous = self.state
+        if state.searchState == .Focus {
+            let current: ScrollableSegmentView = self.tagsView
+            
+            let presentation = ScrollableSegmentTheme(background: .clear, border: theme.colors.border, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
+            
+            var items: [ScrollableSegmentItem] = []
+            let insets = NSEdgeInsets(left: 10, right: 10)
+            var index: Int = 0
+            
+            if let peer = state.hashtag?.peer {
+                let tags: [PeerListState.SelectedSearchTag] = [.hashtagThisChat, .hashtagMyMessages, .hashtagPublicPosts]
+                for tag in tags {
+                    let title: String
+                    if tag == .hashtagThisChat {
+                        title = peer._asPeer().compactDisplayTitle
+                    } else {
+                        title = tag.title
+                    }
+                    items.append(.init(title: title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+                }
+            } else {
+                
+                let isForum = state.forumPeer != nil
+                
+                items.append(.init(title: isForum ? strings().chatListTopicsTag : state.peerTag == nil ? strings().chatListChatsTag : strings().chatListMessagesTag, index: index, uniqueId: -4, selected: state.selectedTag == .chats, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                index += 1
+                
+                if state.hashtag != nil {
+                    let tag = PeerListState.SelectedSearchTag.hashtagPublicPosts
+                    items.append(.init(title: tag.title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+                }
+                
+                if state.peerTag == nil, state.forumPeer == nil, !state.mode.isForumLike {
+                    if state.hasDownloads {
+                        items.append(.init(title: strings().chatListDownloadsTag, index: index, uniqueId: -3, selected: state.selectedTag == .downloads, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                        index += 1
+                    }
+                    items.append(.init(title: strings().chatListChannelsTag, index: index, uniqueId: -2, selected: state.selectedTag == .channels, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+                    items.append(.init(title: strings().chatListAppsTag, index: index, uniqueId: -1, selected: state.selectedTag == .apps, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+                }
+                
+                
+                let tags:[(MessageTags, String)] = [(.photo, strings().searchFilterPhotos),
+                                                    (.video, strings().searchFilterVideos),
+                                                    (.webPage, strings().searchFilterLinks),
+                                                    (.music, strings().searchFilterMusic),
+                                                    (.voiceOrInstantVideo, strings().searchFilterVoice),
+                                                    (.gif, strings().searchFilterGIFs),
+                                                    (.file, strings().searchFilterFiles)]
+                
+                for tag in tags {
+                    items.append(.init(title: tag.1, index: index, uniqueId: Int32(tag.0.rawValue), selected: state.selectedTag.rawValue == tag.0.rawValue, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+                }
+            }
+                        
+            current.updateItems(items, animated: animated, autoscroll: previous?.selectedTag != state.selectedTag)
+            current.theme = presentation
+            
+            current.didChangeSelectedItem = { [weak arguments] item in
+                if let tag = PeerListState.SelectedSearchTag(rawValue: item.uniqueId) {
+                    arguments?.selectSearchTag(tag)
+                }
+            }
+                        
+        }
+        self.state = state
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        tagsView.frame = NSMakeRect(0, -10, frame.width, 40)
+        self.searchView.frame = NSMakeRect(0, tagsView.frame.maxY, frame.width, frame.height - tagsView.frame.maxY)
+    }
+}
 
 class PeersListController: TelegramGenericViewController<PeerListContainerView>, TableViewDelegate {
     
@@ -1530,29 +2174,17 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private let followGlobal:Bool
     private let searchOptions: AppSearchOptions
     
-    private var downloadsController: ViewController?
     
     
     private var tempImportersContext: PeerInvitationImportersContext? = nil
     
+    private(set) var searchSection: SectionViewController? = nil
+    private var searchContainer: SearchContainer?
 
     private let appearMode: ValuePromise<PeerListState.AppearMode> = ValuePromise(.normal, ignoreRepeated: true)
     private let controllerAppear: ValuePromise<PeerListState.AppearMode> = ValuePromise(.normal, ignoreRepeated: true)
     
     let mode:PeerListMode
-    private(set) var searchController:SearchController? {
-        didSet {
-            if let controller = searchController {
-                genericView.customHandler.size = { [weak controller, weak self] size in
-                    let frame = self?.genericView.searchViewRect ?? size.bounds
-                    controller?.view.frame = frame
-                }
-                progressDisposable.set((controller.isLoading.get() |> deliverOnMainQueue).start(next: { [weak self] isLoading in
-                    self?.genericView.searchView.isLoading = isLoading
-                }))
-            }
-        }
-    }
     
     func updateState(_ f:(PeerListState)->PeerListState) -> Void {
         self.stateSignal.set(self.stateValue.modify(f))
@@ -1621,49 +2253,75 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         super.viewDidResized(size)
     }
     
+    func makeDownloadSearch() {
+        showDownloads(animated: true)
+    }
+    
     func showDownloads(animated: Bool) {
         
         self.genericView.searchView.change(state: .Focus,  true)
-        let context = self.context
-        if let controller = self.searchController {
+        if let controller = self.searchSection {
             let ready = controller.ready.get()
             |> filter { $0 }
             |> take(1)
             
-            _ = ready.start(next: { [weak self] _ in
-                guard let `self` = self else {
+            _ = ready.startStandalone(next: { [weak self] _ in
+                guard let `self` = self, let searchSection = self.searchSection else {
                     return
                 }
-                let controller: ViewController
-                if let current = self.downloadsController {
-                    controller = current
-                } else {
-                    controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
-                    self.downloadsController = controller
-                    
-                    controller.frame = self.genericView.searchViewRect
-                    self.navigationController?.addSubview(controller.view)
-                    
-                    if animated {
-                        controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                        controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
-                    }
+                
+                let index = searchSection.sections.firstIndex(where: { $0.title() == "\(PeerListState.SelectedSearchTag.downloads.rawValue)"})
+                
+                if let index {
+                    searchSection.select(index, false)
                 }
-                self.genericView.searchView.updateTags([.init(text: strings().chatListDownloadsTag)], theme.icons.search_filter_downloads)
             })
         }
     }
     
-    private func hideDownloads(animated: Bool) {
-        if let downloadsController = downloadsController {
-            downloadsController.viewWillDisappear(animated)
-            self.downloadsController = nil
-            downloadsController.viewDidDisappear(animated)
+    func updatePinnedItems(_ items: [PinnedItemId]) {
+        if let searchSection {
+            for section in searchSection.sections {
+                if let controller = section.controller as? SearchController, controller.isLoaded() {
+                    controller.pinnedItems = items
+                }
+            }
+        }
+    }
+    
+    func updateHighlightEvents(_ hasChat: Bool) {
+        if let searchSection {
+            for section in searchSection.sections {
+                if let controller = section.controller as? SearchController, controller.isLoaded() {
+                    controller.updateHighlightEvents(hasChat)
+                }
+            }
+        }
+    }
+    
+    func makeHashtag(_ hashtag: PeerListState.Hashtag, cached: CachedSearchMessages? = nil) {
+        self.updateState { current in
+            var current = current
+            current.hashtag = hashtag
+            current.selectedTag = hashtag.mode
+            current.searchQuery = hashtag.text
+            return current
+        }
+
+        self.genericView.searchView.setString(hashtag.text)
+
+        if hashtag.peer == nil {
+                        
+            if let cached {
+                let section = self.searchSection?.sections.first(where:  {
+                    $0.title() == "\(PeerListState.SelectedSearchTag.hashtagPublicPosts.rawValue)"
+                })?.controller as? SearchController
+                
+                section?.setCachedMessages(cached)
+            }
             
-            let view = downloadsController.view
-            downloadsController.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                view?.removeFromSuperview()
-            })
+            self.takeArguments()?.selectSearchTag(.hashtagPublicPosts)
+
         }
     }
     
@@ -1673,6 +2331,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let mode = self.mode
         let isContacts = self.isContacts
         
+        
+        genericView.customHandler.size = { [weak self] size in
+            let frame = self?.genericView.searchViewRect ?? size.bounds
+            self?.searchContainer?.frame = frame
+        }
         
         
         switch mode {
@@ -1705,13 +2368,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
         genericView.tableView.addScroll(listener: revealListener)
         
-        genericView.showDownloads = { [weak self] in
-            self?.showDownloads(animated: true)
-        }
-        genericView.hideDownloads = { [weak self] in
-            self?.hideDownloads(animated: true)
-        }
+        genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.genericView.updateScroller(animated: true)
+        }))
         
+
         genericView.titleView.set(handler: { [weak self] _ in
             self?.toggleStoriesState()
         }, for: .Click)
@@ -1876,7 +2537,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
        
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance in
+        let hasRecentDownload = recentDownloadItems(postbox: context.account.postbox) |> map { $0.count > 0 }
+        let hasDownloading = (context.fetchManager as! FetchManagerImpl).entriesSummary |> map { $0.count > 0 }
+        
+        let hasDownloads = combineLatest(hasRecentDownload, hasDownloading) |> map { $0 && $1 }
+        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal, BrowserStateContext.get(context).fullState(), hasDownloads).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance, webappsState, hasDownloads in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0
@@ -1892,6 +2558,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.isContacts = isContacts
                 current.presentation = appearance.presentation
                 current.privacy = privacy
+                current.webapps = webappsState
+                current.hasDownloads = hasDownloads
                 return current
             }
         }))
@@ -1937,38 +2605,45 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.openStatus = { control in
             let peer = stateValue.with { $0.peer?.peer }
             if let peer = peer as? TelegramUser {
-                let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
-                    context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
+                let callback:(TelegramMediaFile, StarGift.UniqueGift?, Int32?, CGRect?)->Void = { file, starGift, timeout, fromRect in
+                    context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect, starGift: starGift)
                 }
                 if control.popover == nil {
                     showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
                 }
             }
         }
-
-
-        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+        
+        let updateSearch:(SearchState)->Void = { [weak self] state in
             updateState { current in
                 var current = current
                 current.searchState = state.state
+                current.searchQuery = state.request
+                if !current.searchQuery.hasPrefix("#") && !current.searchQuery.hasPrefix("$"), current.hashtag != nil {
+                    current.hashtag = nil
+                    current.peerTag = nil
+                    current.selectedTag = .chats
+                }
                 return current
             }
+            let selected = self?.state?.selectedTag ?? .chats
+            let sectionIndex = self?.searchSection?.sections.firstIndex(where: { $0.title() == "\(selected.rawValue)" })
+            
+            if let sectionIndex {
+                self?.searchSection?.select(sectionIndex, true)
+            }
+        }
+
+        genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+            updateSearch(state)
             switch state.state {
             case .Focus:
-                //assert(self?.searchController == nil)
                 self?.showSearchController(animated: animated)
                 
             case .None:
                 self?.hideSearchController(animated: animated)
             }
-        }, { [weak self] state in
-            updateState { current in
-                var current = current
-                current.searchState = state.state
-                return current
-            }
-            self?.searchController?.request(with: state.request)
-        }, responderModified: { [weak self] state in
+        }, updateSearch, responderModified: { [weak self] state in
             self?.context.isInGlobalSearch = state.responder
         })
         
@@ -1980,11 +2655,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let arguments = Arguments(context: context, joinGroupCall: { info in
             if case let .forum(peerId, _, _) = mode {
                 let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
-                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: info.activeCall, initialInfo: info.data?.info, joinHash: nil), for: context.window).start(next: { result in
+                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: info.activeCall, initialInfo: info.data?.info, joinHash: nil, reference: nil), for: context.window).start(next: { result in
                         switch result {
-                        case let .samePeer(callContext):
-                            applyGroupCallResult(context.sharedContext, callContext)
-                        case let .success(callContext):
+                        case let .samePeer(callContext), let .success(callContext):
                             applyGroupCallResult(context.sharedContext, callContext)
                         default:
                             alert(for: context.window, info: strings().errorAnError)
@@ -2003,7 +2676,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             if let importersContext = self?.tempImportersContext, case let .forum(peerId, _, _) = mode {
                 let navigation = context.bindings.rootNavigation()
                 navigation.push(RequestJoinMemberListController(context: context, peerId: peerId, manager: importersContext, openInviteLinks: { [weak navigation] in
-                    navigation?.push(InviteLinksController(context: context, peerId: peerId, manager: nil))
+                    navigation?.push(InviteLinksController(context: context, peerId: peerId, isChannel: false,  manager: nil))
                 }))
             }
         }, dismissPendingRequests: { peerIds in
@@ -2081,11 +2754,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         _ = context.engine.peers.updateForumViewAsMessages(peerId: peer.peer.id, value: true).start()
                     }, itemImage: MenuAnimation.menu_read.value))
                 }
-                if let cachedData = self?.state?.forumPeer?.peerView.cachedData as? CachedChannelData {
-                    if case .thread = chatController?.chatInteraction.chatLocation {
-                        
-                    }
-                }
+               
 
                 if peer.peer.hasPermission(.manageTopics) {
                     if topicController?.identifier != "ForumTopic" {
@@ -2145,6 +2814,36 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
             }
             return menu
+        }, selectSearchTag: { [weak self] selected in
+            let previous = self?.state
+            self?.updateState { current in
+                var current = current
+                current.selectedTag = selected
+                if selected == previous?.selectedTag, selected == .chats {
+                    current.peerTag = nil
+                    current.hashtag = nil
+                }
+                return current
+            }
+            
+            let sectionIndex = self?.searchSection?.sections.firstIndex(where: { $0.title() == "\(selected.rawValue)" })
+            
+            if let sectionIndex {
+                self?.searchSection?.select(sectionIndex, true)
+            }
+        }, setPeerAsTag: { [weak self] peer in
+            self?.updateState { current in
+                var current = current
+                current.peerTag = peer.flatMap { .init($0) }
+                return current
+            }
+        }, toggleContactsSort: { [weak self] sort in
+            self?.updateState { current in
+                var current = current
+                current.contactsSort = sort
+                return current
+            }
+            FastSettings.contactsSort = sort
         })
         
         self.takeArguments = { [weak arguments] in
@@ -2172,6 +2871,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func updateState(_ state: PeerListState, previous: PeerListState?, arguments: Arguments) {
+        
+       
+        
         if previous?.forumPeer != state.forumPeer {
             if state.forumPeer == nil {
                 switch self.mode {
@@ -2189,7 +2891,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     self.genericView.searchView.change(state: .None,  false)
                 }
             }
-            self.checkSearchMedia()
             self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
                         
 
@@ -2198,13 +2899,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                       
         let animated = state.splitState == previous?.splitState && !context.window.inLiveResize
         
-        self.genericView.searchStateChanged(state, arguments: arguments, animated: animated, updateSearchTags: { [weak self] tags in
-            self?.searchController?.updateSearchTags(tags)
-            self?.sharedMediaWithToken(tags)
-        }, updatePeerTag: { [weak self] f in
-            self?.searchController?.setPeerAsTag = f
-        }, updateMessageTags: { [weak self] f in
-            self?.updateSearchMessageTags = f
+        self.genericView.searchStateChanged(state, arguments: arguments, animated: animated, updateSearchTags: { [weak self] value in
+            self?.takeArguments()?.selectSearchTag(value)
         })
         
         if let forum = state.forumPeer {
@@ -2218,74 +2914,30 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self.genericView.tableView.reloadData()
             }
         }
+        
+        if let searchSection {
+            for section in searchSection.sections {
+                if let controller = section.controller as? SearchController {
+                    if let tagRawValue = Int32(section.title()), let tag = PeerListState.SelectedSearchTag(rawValue: tagRawValue) {
+                        controller.updateSearchTags(tag.searchTags(state.peerTag?.id, hashtag: state.hashtag))
+                        if tag == state.selectedTag {
+                            controller.request(with: state.searchQuery)
+                        }
+                    }
+                }
+            }
+        }
+        
+        self.searchContainer?.update(state, animated: animated, arguments: arguments)
+        
     }
+    
+
         
     private var takeArguments:()->Arguments? = {
         return nil
     }
     
-    private func checkSearchMedia() {
-        let destroy:()->Void = { [weak self] in
-            if let previous = self?.mediaSearchController {
-                self?.context.bindings.rootNavigation().removeImmediately(previous)
-            }
-        }
-        guard context.layout == .dual else {
-            destroy()
-            return
-        }
-        guard let _ = self.searchController else {
-            destroy()
-            return
-        }
-    }
-    private weak var mediaSearchController: PeerMediaController?
-    private var updateSearchMessageTags: ((MessageTags?)->Void)? = nil
-    private func sharedMediaWithToken(_ tags: SearchTags) -> Void {
-        
-        let destroy:()->Void = { [weak self] in
-            if let previous = self?.mediaSearchController {
-                self?.context.bindings.rootNavigation().removeImmediately(previous)
-            }
-        }
-        
-        guard context.layout == .dual else {
-            destroy()
-            return
-        }
-        guard let searchController = self.searchController else {
-            destroy()
-            return
-        }
-        guard let messageTags = tags.messageTags else {
-            destroy()
-            return
-        }
-        if let peerId = tags.peerTag {
-            
-            let onDeinit: ()->Void = { [weak self] in
-                self?.updateSearchMessageTags?(nil)
-            }
-            
-            let navigation = context.bindings.rootNavigation()
-            
-            let signal = searchController.externalSearchMessages
-                |> filter { $0 != nil && $0?.tags == messageTags }
-            
-            let controller = PeerMediaController(context: context, peerId: peerId, isProfileIntended: false, externalSearchData: PeerMediaExternalSearchData(initialTags: messageTags, searchResult: signal, loadMore: { }))
-            
-            controller.onDeinit = onDeinit
-            
-            navigation.push(controller, false, style: nil)
-            
-            if let previous = self.mediaSearchController {
-                previous.onDeinit = nil
-                navigation.removeImmediately(previous, depencyReady: controller)
-            }
-            
-            self.mediaSearchController = controller
-        }
-    }
     
     
     
@@ -2334,104 +2986,166 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func showSearchController(animated: Bool) {
-      
+            
         
-        if searchController == nil {
+        if searchSection == nil, let state = self.state {
             
             self.completeUndefiedStates(animated: true)
+            let rect = self.genericView.searchViewRect
 
-            let initialTags: SearchTags
             let target: SearchController.Target
             if let peerId = self.state?.forumPeer?.peer.id, self.state?.appear == .short {
-                initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .forum(peerId)
             } else if mode == .savedMessagesChats {
-                initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .savedMessages
             } else {
-                initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .common(.root)
             }
-
-            let rect = self.genericView.searchViewRect
-            let searchController = SearchController(context: self.context, open: { [weak self] (id, messageId, close) in
-                if let id = id {
-                    self?.open(with: id, messageId: messageId, close: close)
+            
+            var items: [SectionControllerItem] = []
+            
+            do {
+                let initialTags: SearchTags
+                if let _ = self.state?.forumPeer?.peer.id, self.state?.appear == .short {
+                    initialTags = .init(messageTags: nil, peerTag: nil)
+                } else if mode == .savedMessagesChats {
+                    initialTags = .init(messageTags: nil, peerTag: nil)
                 } else {
-                    self?.genericView.searchView.cancel(true)
+                    initialTags = .init(messageTags: nil, peerTag: nil)
                 }
-            }, options: self.searchOptions, frame: rect, target: target, tags: initialTags)
-            
-            searchController.pinnedItems = self.collectPinnedItems
-            
-            self.searchController = searchController
-            
-            
-            searchController.defaultQuery = self.genericView.searchView.query
-            searchController.navigationController = self.navigationController
-            searchController.viewWillAppear(true)
-            searchController.loadViewIfNeeded()
-            
-            let signal = searchController.ready.get() |> take(1)
-            _ = signal.start(next: { [weak searchController, weak self] _ in
-                if let searchController = searchController {
-                    if animated {
-                        searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
-                            if complete {
-                                self?.searchController?.viewDidAppear(animated)
-                            }
-                        })
-                        searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
-                        searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
 
+                let rect = self.genericView.searchViewRect
+                let searchController = SearchController(context: self.context, open: { [weak self] (id, messageId, close) in
+                    if let id = id {
+                        self?.open(with: id, messageId: messageId, close: close)
                     } else {
-                        self?.completeUndefiedStates(animated: false)
-                        searchController.viewDidAppear(animated)
+                        self?.genericView.searchView.cancel(true)
                     }
-                    self?.navigationController?.addSubview(searchController.view)
+                }, options: self.searchOptions, frame: rect, target: target, tags: initialTags)
+//                searchController.defaultQuery = self.genericView.searchView.query
+                searchController.pinnedItems = self.collectPinnedItems
+                    
+                searchController.setPeerAsTag = { [weak self] peer in
+                    self?.genericView.searchView.setString("")
+                    self?.takeArguments()?.setPeerAsTag(peer)
                 }
-            })
+    
+                searchController.navigationController = self.navigationController
+                
+                items.append(.init(title: { "\(PeerListState.SelectedSearchTag.chats.rawValue)" }, controller: searchController))
+            }
+            
+            
+            for tag in PeerListState.SelectedSearchTag.list(state) {
+                if tag == .downloads {
+                    let controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
+                    controller._frameRect = rect
+                    items.append(.init(title: { "\(tag.rawValue)" }, controller: controller))
+                } else {
+                    let searchController = SearchController(context: self.context, open: { [weak self] (id, messageId, close) in
+                        if let id = id {
+                            self?.open(with: id, messageId: messageId, close: close)
+                        } else {
+                            self?.genericView.searchView.cancel(true)
+                        }
+                    }, options: tag.searchOptions, frame: rect, target: target, tags: tag.searchTags(state.peerTag?.id, hashtag: state.hashtag))
+//                    searchController.defaultQuery = self.genericView.searchView.query
+                    searchController.pinnedItems = self.collectPinnedItems
+                    
+                    searchController.navigationController = self.navigationController
+                    
+                    items.append(.init(title: { "\(tag.rawValue)" }, controller: searchController))
+                }
+            }
+            
+
+            if searchSection == nil {
+                let index = items.firstIndex(where: { $0.title() == "\(state.selectedTag.rawValue)" }) ?? 0
+                let searchSection = SectionViewController(sections: items, selected: index, hasHeaderView: false, hasBar: false)
+                let rect = self.genericView.searchViewRect
+                
+                searchSection._frameRect = rect
+                searchSection.navigationController = self.navigationController
+                searchSection.loadViewIfNeeded()
+                
+                searchSection.selectionUpdateHandler = { [weak self] idx in
+                    if let searchSection = self?.searchSection {
+                        if let sectionTagRaw = Int32(searchSection.sections[idx].title()) {
+                            if let tag = PeerListState.SelectedSearchTag(rawValue: sectionTagRaw) {
+                                self?.takeArguments()?.selectSearchTag(tag)
+                            }
+                        }
+                        if let controller = searchSection.sections[idx].controller as? SearchController {
+                            self?.progressDisposable.set((controller.isLoading.get() |> deliverOnMainQueue).start(next: { [weak self] isLoading in
+                                self?.genericView.searchView.isLoading = isLoading
+                            }))
+                        } else {
+                            self?.progressDisposable.set(nil)
+                            self?.genericView.searchView.isLoading = false
+                        }
+                        
+                    }
+                }
+                
+                self.searchSection = searchSection
+                
+                let signal = searchSection.ready.get() |> take(1)
+                _ = signal.start(next: { [weak searchSection, weak self] _ in
+                    if let searchSection = searchSection, let self {
+                        let container = SearchContainer(frame: rect, searchView: searchSection.view)
+                        container.update(state, animated: false, arguments: self.takeArguments())
+                        if animated {
+                            container.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
+                                if complete {
+                                    self?.searchSection?.viewDidAppear(animated)
+                                }
+                            })
+                            container.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
+                            container.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
+                        } else {
+                            self.completeUndefiedStates(animated: false)
+                            searchSection.viewDidAppear(animated)
+                        }
+                        self.navigationController?.addSubview(container)
+                        self.searchContainer = container
+                        searchSection.didSetReady = true
+                    }
+                })
+            }
             
         }
     }
     
     private func hideSearchController(animated: Bool) {
         
-        if let downloadsController = downloadsController {
-            downloadsController.viewWillDisappear(animated)
-            self.downloadsController = nil
-            downloadsController.viewDidDisappear(animated)
+                
+        if let searchSection = self.searchSection, let container = searchContainer {
             
-            let view = downloadsController.view
-            downloadsController.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                view?.removeFromSuperview()
-            })
-        }
+            let animated = animated && searchSection.didSetReady && !searchSection.view.isHidden
+            
+            searchSection.viewWillDisappear(animated)
+            container.layer?.opacity = animated ? 1.0 : 0.0
         
-        if let searchController = self.searchController {
-            
-            let animated = animated && searchController.didSetReady && !searchController.view.isHidden
-            
-            searchController.viewWillDisappear(animated)
-            searchController.view.layer?.opacity = animated ? 1.0 : 0.0
-        
-            searchController.viewDidDisappear(true)
-            self.searchController = nil
+            searchSection.viewDidDisappear(true)
+            self.searchSection = nil
+            self.searchContainer = nil
             self.genericView.tableView.isHidden = false
             self.genericView.tableView.change(opacity: 1, animated: animated)
-            let view = searchController.view
         
-            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: .spring, completion: { [weak view] completed in
-                view?.removeFromSuperview()
+            container._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: .spring, completion: { [weak container] completed in
+                container?.removeFromSuperview()
             })
             if animated {
-                searchController.view.layer?.animateScaleSpring(from: 1.0, to: 1.05, duration: 0.4, removeOnCompletion: false, bounce: false)
+                container.layer?.animateScaleSpring(from: 1.0, to: 1.05, duration: 0.4, removeOnCompletion: false, bounce: false)
             }
 
         }
-        if let controller = mediaSearchController {
-            context.bindings.rootNavigation().removeImmediately(controller, upNext: false)
-        }
+        
+        self.takeArguments()?.selectSearchTag(.chats)
+        
+        self.progressDisposable.set(nil)
+        self.genericView.searchView.isLoading = false
+
     }
     
     override func focusSearch(animated: Bool, text: String? = nil) {
@@ -2459,8 +3173,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if genericView.searchView.state == .None {
             return genericView.searchView.changeResponder() ? .invoked : .rejected
         } else if genericView.searchView.state == .Focus && genericView.searchView.query.length > 0 {
-            genericView.searchView.change(state: .None,  true)
+            genericView.searchView.change(state: .None, true)
             return .invoked
+        } else if let state = self.state {
+            if state.peerTag != nil || state.hashtag != nil {
+                self.takeArguments()?.selectSearchTag(.chats)
+                return .invoked
+            }
         }
         return .rejected
     }
@@ -2473,13 +3192,25 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return .rejected
     }
     
+    var currentSearchTags: SearchTags? {
+        if let searchSection, let state {
+            if let rawValue = Int32(searchSection.sections[searchSection.selectedIndex].title()), let tag = PeerListState.SelectedSearchTag(rawValue: rawValue) {
+                return tag.searchTags(state.peerTag?.id, hashtag: state.hashtag)
+            } else {
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
+    
     func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false, threadId: Int64? = nil, openAsTopics: Bool = false) ->Void {
         
         let navigation = context.bindings.rootNavigation()
 
         var addition = addition
         var close = close
-        if let searchTags = self.searchController?.searchTags {
+        if let searchTags = self.currentSearchTags {
             if searchTags.peerTag != nil && searchTags.messageTags != nil {
                 addition = true
             }
@@ -2544,13 +3275,22 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 if current?.mode.isForum == true {
                     navigationController?.back()
                 }
+                self.updateState { current in
+                    var current = current
+                    current.selectedTag = .chats
+                    current.peerTag = nil
+                    current.hashtag = nil
+                    return current
+                }
+                self.genericView.searchView.cancelSearch()
+                self.genericView.searchView.change(state: .None, true)
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
         case .birthdays:
             break
         case .grace:
             break
-        case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex:
+        case .systemDeprecated, .sharedFolderUpdated, .reveal, .empty, .loading, .space, .suspicious, .savedMessageIndex, .custom:
             break
         }
         if close {
@@ -2586,11 +3326,23 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     func afterTransaction(_ transition: TableUpdateTransition) {
         self.updateScrollerInset(animated: transition.animated)
     }
+    
 
     private var effectiveTableView: TableView {
         switch genericView.searchView.state {
         case .Focus:
-            return searchController?.genericView ?? genericView.tableView
+            if let searchSection {
+                let controller = searchSection.sections[searchSection.selectedIndex].controller
+                if let controller = controller as? SearchController {
+                    return controller.genericView
+                } else if let controller = controller as? InputDataController {
+                    return controller.tableView
+                } else {
+                    return genericView.tableView
+                }
+            } else {
+                return genericView.tableView
+            }
         case .None:
             return genericView.tableView
         }
@@ -2688,6 +3440,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.updateState { current in
                 var current = current
                 current.selectedForum = peerId
+                if peerId == nil {
+                    current.forumPeer = nil
+                }
                 return current
             }
             let context = self.context
@@ -2718,9 +3473,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             break
         }
-        self.searchController?.view._change(opacity: 0, animated: true, completion: { [weak self] completed in
+        self.searchSection?.view._change(opacity: 0, animated: true, completion: { [weak self] completed in
             if completed {
-                self?.searchController?.view.isHidden = true
+                self?.searchSection?.view.isHidden = true
             }
         })
     }
@@ -2734,8 +3489,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             break
         }
-        self.searchController?.view.isHidden = false
-        self.searchController?.view._change(opacity: 1, animated: true)
+        self.searchSection?.view.isHidden = false
+        self.searchSection?.view._change(opacity: 1, animated: true)
     }
     
     override var stake: StakeSettings {
@@ -2978,7 +3733,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return
         }
         
-        if searchController != nil {
+        if searchSection != nil {
             return
         }
         
@@ -3032,7 +3787,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
          guard genericView.tableView.documentOffset.y == 0, canStoryOverscroll, storyInterfaceState != .empty else {
              return false
          }
-         if searchController != nil {
+         if searchSection != nil {
              return false
          }
         
@@ -3062,7 +3817,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return
         }
         
-        if searchController != nil {
+        if searchSection != nil {
             return
         }
         

@@ -15,6 +15,7 @@ public final class Reactions {
     
     public struct Interactive {
         public let messageId: MessageId
+        public let reaction: MessageReaction.Reaction?
         public let rect: NSRect?
     }
     public struct InteractiveStatus {
@@ -22,6 +23,16 @@ public final class Reactions {
         public let previousFileId: Int64?
         public let rect: NSRect?
     }
+    
+    public var checkStarsAmount:((Int, PeerId)->Signal<(Bool, Bool), NoError>)?
+    public var failStarsAmount:((Int, MessageId)->Void)?
+    public var successStarsAmount:((StarsAmount)->Void)?
+    public var starsDisabled:(()->Void)?
+    
+    public var sentStarReactions: ((MessageId, Int)->Void)? = nil
+    
+    public var forceSendStarReactions: (()->Void)? = nil
+
     
     private(set) public var available: AvailableReactions?
         
@@ -61,16 +72,35 @@ public final class Reactions {
     }
     
     public func react(_ messageId: MessageId, values: [UpdateMessageReaction], fromRect: NSRect? = nil, storeAsRecentlyUsed: Bool = false) {
-        _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
+        _ = _isInteractive.swap(.init(messageId: messageId, reaction: nil, rect: fromRect))
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageIds: [messageId], reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
+    }
+    
+    public func sendStarsReaction(_ messageId: MessageId, count: Int, privacy: TelegramPaidReactionPrivacy = .default, fromRect: NSRect? = nil) {
+        if let signal = checkStarsAmount?(count, messageId.peerId) {
+            _ = signal.start(next: { [weak self] value, starsAllowed in
+                if value && starsAllowed {
+                    _ = self?._isInteractive.swap(.init(messageId: messageId, reaction: .stars, rect: fromRect))
+                    _ = self?.engine.messages.sendStarsReaction(id: messageId, count: count, privacy: privacy).startStandalone()
+                    self?.successStarsAmount?(.init(value: -Int64(count), nanos: 0))
+                    self?.sentStarReactions?(messageId, count)
+                } else {
+                    if !value {
+                        self?.failStarsAmount?(count, messageId)
+                    } else {
+                        self?.starsDisabled?()
+                    }
+                }
+            })
+        }
     }
     
     public func updateQuick(_ value: MessageReaction.Reaction) {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
     
-    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?, handleInteractive: Bool = true) {
-        
+    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?, handleInteractive: Bool = true, starGift: StarGift.UniqueGift? = nil) {
+                
         let emojiStatus = (peer as? TelegramUser)?.emojiStatus
         
         let expiryDate: Int32?
@@ -79,7 +109,20 @@ public final class Reactions {
         } else {
             expiryDate = nil
         }
-        if file.mimeType.hasPrefix("bundle") {
+        
+        if let starGift {
+            if file.fileId.id == emojiStatus?.fileId {
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(nil)
+                }
+                _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
+            } else {
+                if handleInteractive {
+                    _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
+                }
+                _ = engine.accountData.setStarGiftStatus(starGift: starGift, expirationDate: expiryDate).start()
+            }
+        } else if file.mimeType.hasPrefix("bundle") {
             if handleInteractive {
                 if emojiStatus != nil {
                     _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))

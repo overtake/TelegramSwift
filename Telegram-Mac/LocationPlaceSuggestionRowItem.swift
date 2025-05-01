@@ -78,7 +78,7 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
                     if let type = venue.type {
                         let resource = HttpReferenceMediaResource(url: "https://ss3.4sqi.net/img/categories_v2/\(type)_88.png", size: nil)
                         let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 60, height: 60), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(resource.url.hashValue)), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     }
                 }
                 self.color = venueIconColor(type: media.venue?.type ?? "")
@@ -151,7 +151,7 @@ private final class LocationPlaceSuggestionRowView : TableRowView {
         imageView.isHidden = item.image == nil
         if let image = item.image {
             imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, small: true))
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 25), imageSize: NSMakeSize(50, 50), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsetsZero))
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: NSMakeSize(50, 50), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsetsZero))
         }
     }
     

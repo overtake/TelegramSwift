@@ -435,6 +435,11 @@ private final class ModalHeaderView: View {
             background = .clear
             borderColor = customTheme().border
         }
+        if customTheme().hideUnactiveText {
+            self.titleView.change(opacity: state == .normal ? 0 : 1, animated: animated)
+        } else {
+            self.titleView.change(opacity: 1, animated: animated)
+        }
         if animated, self.layer?.animation(forKey: "backgroundColor") == nil {
             self.layer?.animateBackground()
         }
@@ -970,6 +975,7 @@ public class Modal: NSObject {
             disposable.set((controller.ready.get() |> take(1)).start(next: { [weak self, weak controller] ready in
                 NSCursor.arrow.set()
                 
+                
                 if let strongSelf = self, let controller = controller {
                     let view = strongSelf.topView
                     if controller.contentBelowBackground {
@@ -979,11 +985,16 @@ public class Modal: NSObject {
                             controller.view.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.4, timingFunction: .spring)
                         }
                     }
+                    let bounds = view.bounds.insetBy(dx: strongSelf.window.modalInset, dy: strongSelf.window.modalInset)
+
+                    strongSelf.background.layer?.cornerRadius = strongSelf.window.modalInset
+
+                    
                     strongSelf.controller?.viewWillAppear(true)
-                    strongSelf.visualEffectView?.frame = view.bounds
-                    strongSelf.background.frame = view.bounds
+                    strongSelf.visualEffectView?.frame = bounds
+                    strongSelf.background.frame = bounds
                     if controller.isFullScreen {
-                        strongSelf.container.frame = view.bounds
+                        strongSelf.container.frame = bounds
                     } else {
                         strongSelf.container.center()
                     }

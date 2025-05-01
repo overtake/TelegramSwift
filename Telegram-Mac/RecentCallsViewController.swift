@@ -50,17 +50,21 @@ private extension EngineCallList.Item {
 
 
 private final class RecentCallsArguments {
-    let call:(PeerId)->Void
+    let call:(PeerId, MessageId, TelegramMediaActionType.ConferenceCall?)->Void
     let removeCalls:([MessageId], Peer) -> Void
     let context:AccountContext
-    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId], Peer) ->Void ) {
+    let newCallLink:()->Void
+    init(context: AccountContext, call:@escaping(PeerId, MessageId, TelegramMediaActionType.ConferenceCall?)->Void, removeCalls:@escaping([MessageId], Peer) ->Void, newCallLink:@escaping()->Void) {
         self.context = context
         self.removeCalls = removeCalls
         self.call = call
+        self.newCallLink = newCallLink
     }
 }
 
 private enum RecentCallEntry : TableItemListNodeEntry {
+    case newCallLink
+    case recentCalls
     case calls(Message, [Message], Bool, Bool) // editing, failed
     case empty(Bool)
     static func <(lhs:RecentCallEntry, rhs:RecentCallEntry) -> Bool {
@@ -71,7 +75,15 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 return MessageIndex(lhsMessage) < MessageIndex(rhsMessage)
             case .empty:
                 return false
+            case .newCallLink :
+                return true
+            case .recentCalls:
+                return true
             }
+        case .newCallLink:
+            return false
+        case .recentCalls:
+            return false
         case .empty:
             return true
         }
@@ -112,6 +124,18 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
+        case .newCallLink:
+            if case .newCallLink = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .recentCalls:
+            if case .recentCalls = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
 
@@ -122,6 +146,10 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             return message.chatStableId
         case .empty:
             return "empty"
+        case .newCallLink:
+            return "newCallLink"
+        case .recentCalls:
+            return "recentCalls"
         }
     }
     
@@ -129,6 +157,10 @@ private enum RecentCallEntry : TableItemListNodeEntry {
     
     func item(_ arguments: RecentCallsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
+        case .newCallLink:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().recentCallsNewCall, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, viewType: .legacy, action: arguments.newCallLink, inset: NSEdgeInsets(left: 10, right: 0), disableBorder: true)
+        case .recentCalls:
+            return SeparatorRowItem(initialSize, stableId, string: strings().recentCallsRecentCalls)
         case let .calls(message, messages, editing, failed):
             let peer = coreMessageMainPeer(message)!
 
@@ -151,10 +183,15 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 outgoing = false
             }
             
+            var conference: TelegramMediaActionType.ConferenceCall? = nil
+            
             
             
             let statusText:String
-            if failed {
+            if let action = message.media.first as? TelegramMediaAction, case let .conferenceCall(call) = action.action {
+                statusText = strings().callStatusGroupCall
+                conference = call
+            } else if failed {
                 statusText = strings().callRecentMissed
             } else {
                 let text = outgoing ? strings().callRecentOutgoing : strings().callRecentIncoming
@@ -177,17 +214,17 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.last!.timestamp)), action: {
                 if !editing {
-                    arguments.call(peer.id)
+                    arguments.call(peer.id, message.id, conference)
                 }
             }, contextMenuItems: {
                 return .single([ContextMenuItem(strings().recentCallsDelete, handler: {
                     arguments.removeCalls(messages.map{ $0.id }, peer)
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
-            }, highlightVerified: true)
+            }, highlightVerified: true, statusImage: theme.icons.callOutgoing)
         case .empty(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right])
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right], action: .init(click: arguments.newCallLink, title: strings().recentCallsNewCall))
         }
     }
 }
@@ -342,6 +379,9 @@ private struct RecentCallsControllerState: Equatable {
 
 private func makeEntries(from: CallListViewUpdate, state: RecentCallsControllerState) -> [RecentCallEntry] {
     var entries:[RecentCallEntry] = []
+    
+    
+    
     for entry in from.view.items {
         switch entry {
         case let .message(message, messages):
@@ -359,6 +399,8 @@ private func makeEntries(from: CallListViewUpdate, state: RecentCallsControllerS
                         }
                     }
                     failed = !outgoing && missed
+                } else if case let .conferenceCall(call) = action.action {
+                    failed = !outgoing && call.flags.contains(.isMissed)
                 }
             }
             entries.append(.calls( message._asMessage(), messages.map { $0._asMessage() }, state.editing, failed))
@@ -366,6 +408,12 @@ private func makeEntries(from: CallListViewUpdate, state: RecentCallsControllerS
             break
         }
     }
+    
+    if !from.view.items.isEmpty {
+        entries.append(.recentCalls)
+        entries.append(.newCallLink)
+    }
+    
     if entries.isEmpty {
         entries.append(.empty(false))
     }
@@ -412,10 +460,41 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             }
         }
         
-        let arguments = RecentCallsArguments(context: context, call: { [weak self] peerId in
-            self?.callDisposable.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(context, result)
-            }))
+        let arguments = RecentCallsArguments(context: context, call: { [weak self] peerId, messageId, conferenceCall in
+            
+            
+            if let conferenceCall {
+                if conferenceCall.duration != nil {
+                    return
+                }
+
+                _ = showModalProgress(signal: context.engine.peers.joinCallInvitationInformation(messageId: messageId), for: context.window).startStandalone(next: { [weak self] info in
+                    guard let self else {
+                        return
+                    }
+                    self.callDisposable.set(requestOrJoinConferenceCall(context: context, initialInfo: .init(id: info.id, accessHash: info.accessHash, participantCount: info.totalMemberCount, streamDcId: nil, title: nil, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: false, defaultParticipantsAreMuted: nil, isVideoEnabled: false, unmutedVideoLimit: 0, isStream: false, isCreator: false), reference: .message(id: messageId)).start(next: { result in
+                        switch result {
+                        case let .samePeer(callContext), let .success(callContext):
+                            applyGroupCallResult(context.sharedContext, callContext)
+                        default:
+                            alert(for: context.window, info: strings().errorAnError)
+                        }
+                    }))
+                }, error: { error in
+                    switch error {
+                    case .flood:
+                        showModalText(for: context.window, text: strings().loginFloodWait)
+                    case .generic:
+                        showModalText(for: context.window, text: strings().unknownError)
+                    case .doesNotExist:
+                        showModalText(for: context.window, text: strings().groupCallInviteNotAvailable)
+                    }
+                })
+            } else {
+                self?.callDisposable.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context, result)
+                }))
+            }
         }, removeCalls: { [weak self] messageIds, peer in
             verifyAlert(for: context.window, header: strings().recentCallsDeleteHeader, information: strings().recentCallsDeleteCalls, ok: strings().recentCallsDelete, cancel: strings().modalCancel, option: strings().recentCallsDeleteForMeAnd(peer.compactDisplayTitle), optionIsSelected: true, successHandler: { [weak self] result in
                 
@@ -433,6 +512,59 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                     self?.viewWillAppear(false)
                 }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
             })
+        }, newCallLink: { [weak self] in
+            
+            guard let self, let window = self.window else {
+                return
+            }
+            
+            let limit = self.context.appConfiguration.getGeneralValue("conference_call_size_limit", orElse: 10)
+                        
+            let signal = (selectModalPeers(window: window, context: context, title: strings().callGroupCall, settings: [], excludePeerIds: [], limit: limit, behavior: SelectContactsBehavior(limit: limit, additionTopItem: SelectPeers_AdditionTopItem.init(title: strings().recentCallsNewCallLink, color: theme.colors.accent, icon: theme.icons.group_invite_via_link, callback: { [weak window] in
+                closeAllModals(window: window)
+                _ = showModalProgress(signal: context.engine.calls.createConferenceCall(), for: context.window).startStandalone(next: { groupCall in
+                    showModal(with: GroupCallInviteLinkController(context: context, source: .groupCall(groupCall), mode: .basic, presentation: theme), for: context.window)
+                })
+            })), okTitle: strings().recentCallsNewCallOK) |> castError(CreateConferenceCallError.self) |> mapToSignal { peerIds -> Signal<(GroupCallInfo, [PeerId]), CreateConferenceCallError> in
+                return context.engine.calls.createConferenceCall() |> map {
+                    return ($0.callInfo, peerIds)
+                } |> deliverOnMainQueue
+            })
+            
+            _ = signal.startStandalone(next: { info, peerIds in
+                _ = requestOrJoinConferenceCall(context: context, initialInfo: info, reference: .id(id: info.id, accessHash: info.accessHash)).start(next: { result in
+                    switch result {
+                    case let .samePeer(callContext), let .success(callContext):
+                        applyGroupCallResult(context.sharedContext, callContext)
+                        for peerId in peerIds {
+                            _ = callContext.call.invitePeer(peerId, isVideo: false)
+                        }
+                    default:
+                        alert(for: context.window, info: strings().errorAnError)
+                    }
+                })
+            }, error: { [weak window] error in
+                guard let window else {
+                    return
+                }
+                switch error {
+                case .generic:
+                    showModalText(for: window, text: strings().unknownError)
+                }
+            })
+            
+            /*
+             .start(next: { [weak window] info, peerIds in
+                 guard let window else {
+                     return
+                 }
+                 
+                 
+                 
+             })
+             
+             */
+
         })
         
         

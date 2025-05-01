@@ -83,7 +83,7 @@ func faqSearchableItems(context: AccountContext) -> Signal<[SettingsSearchableIt
                 if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage {
                     var processingQuestions = false
                     var currentSection: String?
-                    outer: for block in instantPage.blocks {
+                    outer: for block in instantPage._parse().blocks {
                         if !processingQuestions {
                             switch block {
                             case .blockQuote:
@@ -113,7 +113,7 @@ func faqSearchableItems(context: AccountContext) -> Signal<[SettingsSearchableIt
                                                 nextIndex += 1
                                             }
                                             let item = SettingsSearchableItem(id: .faq(index), title: text.plainText, alternate: [], icon: .faq, breadcrumbs: [strings().accountSettingsFAQ, currentSection], present: { context, _, present in
-                                                showInstantPage(InstantPageViewController(context, webPage: webPage, message: nil, anchor: anchor))
+                                                BrowserStateContext.get(context).open(tab: .instantView(url: url, webPage: webPage, anchor: anchor))
                                             })
                                             if index == 1 {
                                                 results.insert(item, at: 0)

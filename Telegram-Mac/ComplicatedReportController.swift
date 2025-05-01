@@ -14,17 +14,21 @@ import SwiftSignalKit
 
 
 struct ComplicatedReport : Equatable {
+    enum Subject : Equatable {
+        case list([Report])
+        case comment(optional: Bool, id: Data)
+    }
     struct Report : Equatable {
         var string: String
         var id: Data
         var inner: ComplicatedReport?
     }
-    var list: [Report] = []
+    var subject: Subject
     var title: String
 }
 
-func showComplicatedReport(context: AccountContext, title: String, info: String?, data: ComplicatedReport, report: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>) {
-    showModal(with: ReportController(context: context, title: title, info: info, data: data, reportCallback: report), for: context.window)
+func showComplicatedReport(context: AccountContext, title: String, info: String?, header: String, data: ComplicatedReport, report: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>) {
+    showModal(with: ReportController(context: context, title: title, header: header, info: info, data: data, reportCallback: report), for: context.window)
 }
 
 
@@ -42,6 +46,7 @@ private final class Arguments {
 private struct State : Equatable {
     var data: ComplicatedReport
     var info: String?
+    var title: String
 }
 
 private func _id_report(_ report: ComplicatedReport.Report) -> InputDataIdentifier {
@@ -58,11 +63,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatMessageSponsoredReportOptionTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    for (i, report) in state.data.list.enumerated() {
-        let viewType: GeneralViewType = bestGeneralViewType(state.data.list, for: i)
+    var list: [ComplicatedReport.Report] = []
+    
+    switch state.data.subject {
+    case let .list(_list):
+        list = _list
+    default:
+        break
+    }
+    for (i, report) in list.enumerated() {
+        let viewType: GeneralViewType = bestGeneralViewType(list, for: i)
         let type: GeneralInteractedType = report.inner != nil ? .next : .next
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_report(report), data: .init(name: report.string, color: theme.colors.text, type: type, viewType: viewType, action: {
             arguments.select(report)
@@ -84,11 +97,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-private func ReportController(context: AccountContext, title: String, info: String?, data: ComplicatedReport, reportCallback: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>) -> InputDataModalController {
+private func ReportController(context: AccountContext, title: String, header: String, info: String?, data: ComplicatedReport, reportCallback: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(data: data, info: info)
+    let initialState = State(data: data, info: info, title: title)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -99,30 +112,42 @@ private func ReportController(context: AccountContext, title: String, info: Stri
     var close:(()->Void)? = nil
     
     var getModalController:(()->InputDataModalController?)? = nil
+    
+    var invokeNext:(ComplicatedReport.Report)->Void = { _ in }
+    
+    let invoke:(ComplicatedReport.Report)->Void = { report in
+        actionsDisposable.add((reportCallback(report) |> deliverOnMainQueue).startStandalone(next: { value in
+            if let complicated = value {
+                if let controller = getModalController?() {
+                    switch complicated.subject {
+                    case .list:
+                        controller.push(ReportController(context: context, title: complicated.title, info: info, data: complicated, modalController: controller, invokeNext: invokeNext), animated: true)
+                    case let .comment(optional, id):
+                        controller.push(ReportDetailsController(context: context, optional: optional, title: complicated.title, updated: { text in
+                            _ = reportCallback(.init(string: text, id: id)).start()
+                            close?()
+                        }, modalController: controller), animated: true)
+                    }
+                }
+            } else {
+                close?()
+            }
+        }))
+    }
+    
+    invokeNext = { report in
+        invoke(report)
+    }
 
     let arguments = Arguments(context: context, select: { report in
-        if let complicated = report.inner {
-            if let controller = getModalController?() {
-                controller.push(ReportController(context: context, title: complicated.title, info: info, data: complicated, modalController: controller, reportCallback: reportCallback), animated: true)
-            }
-        } else {
-            actionsDisposable.add((reportCallback(report) |> deliverOnMainQueue).startStandalone(next: { value in
-                if let complicated = value {
-                    if let controller = getModalController?() {
-                        controller.push(ReportController(context: context, title: complicated.title, info: info, data: complicated, modalController: controller, reportCallback: reportCallback), animated: true)
-                    }
-                } else {
-                    close?()
-                }
-            }))
-        }
+        invoke(report)
     })
     
     let signal = statePromise.get() |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().chatMessageSponsoredReport, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: header, hasDone: false)
     
     
     controller.onDeinit = {
@@ -150,11 +175,11 @@ private func ReportController(context: AccountContext, title: String, info: Stri
 
 
 
-private func ReportController(context: AccountContext, title: String, info: String?, data: ComplicatedReport, modalController: InputDataModalController, reportCallback: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>) -> InputDataController {
+private func ReportController(context: AccountContext, title: String, info: String?, data: ComplicatedReport, modalController: InputDataModalController, invokeNext:@escaping(ComplicatedReport.Report)->Void) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(data: data, info: info)
+    let initialState = State(data: data, info: info, title: title)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -163,21 +188,7 @@ private func ReportController(context: AccountContext, title: String, info: Stri
     }
     
     let arguments = Arguments(context: context, select: { [weak modalController] report in
-        if let complicated = report.inner {
-            if let controller = modalController {
-                controller.push(ReportController(context: context, title: complicated.title, info: info, data: complicated, modalController: controller, reportCallback: reportCallback), animated: true)
-            }
-        } else {
-            actionsDisposable.add((reportCallback(report) |> deliverOnMainQueue).startStandalone(next: { value in
-                if let complicated = value {
-                    if let controller = modalController {
-                        controller.push(ReportController(context: context, title: complicated.title, info: info, data: complicated, modalController: controller, reportCallback: reportCallback), animated: true)
-                    }
-                } else {
-                    modalController?.close()
-                }
-            }))
-        }
+        invokeNext(report)
     })
     
     let signal = statePromise.get() |> map { state in
@@ -198,3 +209,117 @@ private func ReportController(context: AccountContext, title: String, info: Stri
     return controller
     
 }
+
+
+
+
+
+private final class ReportDetailsArguments {
+    let context: AccountContext
+    let validate:()->Void
+    init(context: AccountContext, validate:@escaping()->Void) {
+        self.context = context
+        self.validate = validate
+    }
+}
+
+private struct ReportDetailsState : Equatable {
+    var text: String
+}
+
+private let _id_input = InputDataIdentifier("_id_input")
+
+private func entries(_ state: ReportDetailsState, arguments: ReportDetailsArguments) -> [InputDataEntry] {
+    var entries:[InputDataEntry] = []
+    
+    var sectionId:Int32 = 0
+    var index: Int32 = 0
+    
+  
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .police, text: .initialize(string: strings().reportAdditionText, color: theme.colors.text, font: .normal(.text)))
+    }))
+    index += 1
+    // entries
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.text), error: nil, identifier: _id_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().reportAdditionTextPlaceholder, filter: { $0 }, limit: 128))
+    index += 1
+
+
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_button"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        return GeneralActionButtonRowItem(initialSize, stableId: stableId, text: strings().reportComplicatedSendReport, viewType: .legacy, action: arguments.validate, inset: .init(left: 10, right: 10))
+    }))
+    
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    return entries
+}
+
+private func ReportDetailsController(context: AccountContext, optional: Bool, title: String, updated: @escaping(String)->Void, modalController: InputDataModalController) -> InputDataController {
+
+    let actionsDisposable = DisposableSet()
+
+    var getController:(()->InputDataController?)? = nil
+    
+    let initialState = ReportDetailsState(text: "")
+    
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((ReportDetailsState) -> ReportDetailsState) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+
+    let arguments = ReportDetailsArguments(context: context, validate: {
+        getController?()?.validateInputValues()
+    })
+    
+    let signal = statePromise.get() |> map { state in
+        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+    }
+    
+    let controller = InputDataController(dataSignal: signal, title: title)
+    controller._frameRect = modalController.frame.size.bounds
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.chatNavigationBack, handler: { [weak modalController] in
+        modalController?.pop(animated: true)
+    })
+    
+    controller.onDeinit = {
+        actionsDisposable.dispose()
+    }
+    controller.updateDatas = { data in
+        updateState { current in
+            var current = current
+            current.text = data[_id_input]?.stringValue ?? ""
+            return current
+        }
+        return .none
+    }
+    
+    controller.validateData = { _ in
+        let text = stateValue.with { $0.text }
+        if optional || !text.isEmpty {
+            updated(text)
+        } else {
+            return .fail(.fields([_id_input: .shake]))
+        }
+        return .none
+    }
+    
+    getController = { [weak controller] in
+        return controller
+    }
+    
+    return controller
+}
+
+
+

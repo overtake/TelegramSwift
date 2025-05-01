@@ -22,6 +22,69 @@ private func tagImage(_ color: NSColor)->NSImage? {
 }
 
 
+final class StarsButtonEffectLayer: SimpleLayer {
+    let emitterLayer = CAEmitterLayer()
+    
+    override init() {
+        super.init()
+        
+        self.addSublayer(self.emitterLayer)
+        
+    }
+    
+    override init(layer: Any) {
+        super.init(layer: layer)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setup() {
+        let color = NSColor(0xffbe27)
+        
+        let emitter = CAEmitterCell()
+        emitter.name = "emitter"
+        emitter.contents = NSImage(resource: .starReactionParticle).precomposed(.white)
+        emitter.birthRate = 20
+        emitter.lifetime = 1.5
+        emitter.velocity = 10.0
+        emitter.velocityRange = 3
+        emitter.scale = 0.1
+        emitter.scaleRange = 0.08
+        emitter.alphaRange = 0.1
+        emitter.emissionRange = .pi * 2.0
+        emitter.setValue(3.0, forKey: "mass")
+        emitter.setValue(2.0, forKey: "massRange")
+        
+        let staticColors: [Any] = [
+            color.withAlphaComponent(0.0).cgColor,
+            color.cgColor,
+            color.cgColor,
+            color.withAlphaComponent(0.0).cgColor
+        ]
+        let staticColorBehavior = createEmitterBehavior(type: "colorOverLife")
+        staticColorBehavior.setValue(staticColors, forKey: "colors")
+        emitter.setValue([staticColorBehavior], forKey: "emitterBehaviors")
+        
+        self.emitterLayer.emitterCells = [emitter]
+    }
+    
+    func update(size: CGSize) {
+        if self.emitterLayer.emitterCells == nil {
+            self.setup()
+        }
+        self.emitterLayer.emitterShape = .circle
+        self.emitterLayer.emitterSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+        self.emitterLayer.emitterMode = .surface
+        self.emitterLayer.frame = CGRect(origin: .zero, size: size)
+        self.emitterLayer.emitterPosition = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
+
+    }
+}
+
+
+
 extension MessageReaction.Reaction {
     var isEmpty: Bool {
         switch self {
@@ -43,6 +106,10 @@ extension MessageReaction.Reaction {
 
 extension MessageReaction {
     static func <(lhs: MessageReaction, rhs: MessageReaction) -> Bool {
+        
+        if rhs.value == .stars {
+            return false
+        }
         var lhsCount = lhs.count
         if lhs.chosenOrder != nil {
             lhsCount -= 1
@@ -87,51 +154,54 @@ final class ChatReactionsLayout {
         let hasWallpaper: Bool
         let tagBackground: NSImage?
         
-        static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, mode: ChatReactionsLayout.Mode) -> Theme {
+        static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, mode: ChatReactionsLayout.Mode, isStars: Bool) -> Theme {
             let bgColor: NSColor
             let textColor: NSColor
             let textSelectedColor: NSColor
             let borderColor: NSColor
             let selectedColor: NSColor
+            
+            let gold_alpha = GOLD.withAlphaComponent(0.2)
+            
             switch mode {
             case .full, .tag:
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
                         if !hasWallpaper {
-                            bgColor = theme.colors.grayIcon.withAlphaComponent(0.2)
-                            textColor = theme.colors.accent
+                            bgColor = isStars ? gold_alpha : theme.colors.grayIcon.withAlphaComponent(0.2)
+                            textColor = isStars ? GOLD : theme.colors.accent
                             borderColor = .clear
-                            selectedColor = theme.colors.accent
-                            textSelectedColor = theme.colors.underSelectedColor
+                            selectedColor = isStars ? GOLD : theme.colors.accent
+                            textSelectedColor = isStars ? NSColor(0xffffff) : theme.colors.underSelectedColor
                         } else {
                             bgColor = theme.blurServiceColor
                             textColor = theme.chatServiceItemTextColor
                             borderColor = .clear
-                            selectedColor = theme.colors.accent
-                            textSelectedColor = theme.colors.underSelectedColor
+                            selectedColor = isStars ? GOLD : theme.colors.accent
+                            textSelectedColor = isStars ? NSColor(0xffffff) : selectedColor.underTextColor
                         }
                     } else {
                         if isIncoming {
-                            bgColor = theme.colors.accent.withAlphaComponent(0.1)
-                            textColor = theme.colors.accent
+                            bgColor = isStars ? gold_alpha : theme.colors.accent.withAlphaComponent(0.1)
+                            textColor = isStars ? GOLD : theme.colors.accent
                             borderColor = .clear
-                            selectedColor = theme.colors.accent
-                            textSelectedColor = theme.colors.underSelectedColor
+                            selectedColor = isStars ? GOLD : theme.colors.accent
+                            textSelectedColor = selectedColor.underTextColor
                         } else {
                             bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
                             textColor = theme.chat.grayText(false, true)
                             borderColor = .clear
-                            selectedColor = theme.chat.grayText(false, true)
-                            textSelectedColor = theme.colors.blendedOutgoingColors
+                            selectedColor = isStars ? GOLD : theme.chat.grayText(false, true)
+                            textSelectedColor = isStars ? NSColor(0xffffff) : theme.colors.blendedOutgoingColors
                         }
                     }
                 case .list:
-                    bgColor = theme.colors.accent.withAlphaComponent(0.1)
-                    textColor = theme.colors.accent
+                    bgColor = isStars ? gold_alpha : theme.colors.accent.withAlphaComponent(0.1)
+                    textColor = isStars ? GOLD : theme.colors.accent
                     borderColor = .clear
-                    selectedColor = theme.colors.accent
-                    textSelectedColor = theme.colors.underSelectedColor
+                    selectedColor = isStars ? GOLD : theme.colors.accent
+                    textSelectedColor = selectedColor.underTextColor
                 }
             }
            
@@ -174,13 +244,15 @@ final class ChatReactionsLayout {
         enum Source : Equatable {
             case builtin(AvailableReactions.Reaction)
             case custom(Int64, TelegramMediaFile?, TelegramMediaFile?)
-            
+            case stars(TelegramMediaFile, TelegramMediaFile?)
             var effect: TelegramMediaFile? {
                 switch self {
                 case let .builtin(reaction):
-                    return reaction.centerAnimation
+                    return reaction.centerAnimation?._parse()
                 case let .custom(_, _, effect):
                     return effect
+                case let .stars(file, _):
+                    return file
                 }
             }
             var file: TelegramMediaFile? {
@@ -189,6 +261,8 @@ final class ChatReactionsLayout {
                     return nil
                 case let .custom(_, file, _):
                     return file
+                case let .stars(file, _):
+                    return file
                 }
             }
         }
@@ -196,7 +270,7 @@ final class ChatReactionsLayout {
         func getInlineLayer(_ mode: ChatReactionsLayout.Mode) -> InlineStickerItemLayer {
             switch source {
             case let .builtin(reaction):
-                return .init(account: context.account, file: reaction.centerAnimation ?? reaction.selectAnimation, size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+                return .init(account: context.account, file: reaction.centerAnimation?._parse() ?? reaction.selectAnimation._parse(), size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             case let .custom(fileId, file, _):
                 var reactionSize: NSSize = presentation.reactionSize
                 reactionSize.width += 3
@@ -209,6 +283,8 @@ final class ChatReactionsLayout {
                     }
                     return colors
                 }, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+            case .stars:
+                return .init(account: context.account, file: LocalAnimatedSticker.premium_reaction_6.file, size: NSMakeSize(presentation.reactionSize.width + 4, presentation.reactionSize.height + 4), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             }
         }
         
@@ -234,6 +310,7 @@ final class ChatReactionsLayout {
         let canViewList: Bool
         let avatars:[Avatar]
         var rect: CGRect = .zero
+        let starReact:()->Void
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.value == rhs.value &&
@@ -254,7 +331,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, savedMessageTags: SavedMessageTags?, currentTag: MessageReaction.Reaction?, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, savedMessageTags: SavedMessageTags?, currentTag: MessageReaction.Reaction?, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void, starReact: @escaping()->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -267,6 +344,7 @@ final class ChatReactionsLayout {
             self.mode = mode
             self.openInfo = openInfo
             self.runEffect = runEffect
+            self.starReact = starReact
             switch mode {
             case .full, .tag:
                 let height = presentation.reactionSize.height + presentation.insetInner * 2
@@ -418,9 +496,11 @@ final class ChatReactionsLayout {
             let source: ReactionPeerMenu.Source
             switch self.source {
             case let .builtin(reaction):
-                source = .builtin(reaction.staticIcon)
+                source = .builtin(reaction.staticIcon._parse())
             case let .custom(fileId, file, _):
                 source = .custom(fileId, file)
+            case let .stars(file, effect):
+                source = .stars(file, effect)
             }
             weak var weakSelf = self
             let makeItem:(_ peer: Peer, _ readTimestamp: Int32?) -> ContextMenuItem = { peer, readTimestamp in
@@ -430,7 +510,7 @@ final class ChatReactionsLayout {
                 }, peer: peer, context: context, reaction: source, readTimestamp: readTimestamp)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
-                signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
                 _ = signal.start(next: { [weak item] image, _ in
                     if let image = image {
                         item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
@@ -488,7 +568,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, savedMessageTags: SavedMessageTags?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, currentTag: MessageReaction.Reaction?, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, savedMessageTags: SavedMessageTags?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, currentTag: MessageReaction.Reaction?, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void, tagAction:@escaping(MessageReaction.Reaction)->Void, starReact:@escaping()->Void) {
         
         var mode: Mode = .full
         if message.id.peerId == context.peerId {
@@ -501,7 +581,7 @@ final class ChatReactionsLayout {
         self.engine = engine
         self.mode = mode
         self.openInfo = openInfo
-        let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode)
+        let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode, isStars: false)
         self.presentation = presentation
         
         var index: Int = 0
@@ -536,6 +616,8 @@ final class ChatReactionsLayout {
                 } else {
                     source = nil
                 }
+            case .stars:
+                source = .stars(LocalAnimatedSticker.premium_reaction_6.file, nil)
             }
             
             if let source = source {
@@ -576,13 +658,20 @@ final class ChatReactionsLayout {
                         }
                     }
                 }
+                
+                let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode, isStars: reaction.value == .stars)
+                
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, savedMessageTags: savedMessageTags, currentTag: currentTag, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, isFilterTag in
                     if message.id.peerId == context.peerId, !isFilterTag, mode == .tag {
                        tagAction(value)
                     } else {
-                        engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
+                        if value == .stars {
+                            engine.sendStarsReaction(message.id, count: 1)
+                        } else {
+                            engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file), isTags: context.peerId == message.id.peerId))
+                        }
                     }
-                }, openInfo: openInfo, runEffect: runEffect)
+                }, openInfo: openInfo, runEffect: runEffect, starReact: starReact)
             } else {
                 return nil
             }
@@ -784,6 +873,11 @@ final class ChatReactionsView : View {
         
         private var effetView: LottiePlayerView?
         private let effectDisposable = MetaDisposable()
+        
+        private var starButtonEffect: StarsButtonEffectLayer?
+        
+        private var starKeyHandler: UInt32?
+        
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             
@@ -791,6 +885,8 @@ final class ChatReactionsView : View {
             addSubview(avatarsContainer)
             avatarsContainer.isEventLess = true
             scaleOnClick = true
+            
+            self.layer?.masksToBounds = false
             
             self.set(handler: { [weak self] _ in
                 if let reaction = self?.reaction {
@@ -806,12 +902,25 @@ final class ChatReactionsView : View {
                 return nil
             }
             
+            self.set(handler: { [weak self] _ in
+                if let reaction = self?.reaction, reaction.value.value == .stars {
+                    reaction.starReact()
+                }
+            }, for: .LongMouseDown)
+            
             
             self.set(handler: { [weak self] _ in
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
-            
-            
+                        
+        }
+        
+        override var sendRightMouseAnyway: Bool {
+            if let reactions = reaction, reaction?.value.value == .stars {
+                return false
+            } else {
+                return true
+            }
         }
         
         override func viewDidMoveToWindow() {
@@ -824,16 +933,30 @@ final class ChatReactionsView : View {
         }
         
         func playEffect() {
-            let size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
+            let size: NSSize
             
-            guard let reaction = reaction, let file = reaction.source.effect else {
+            guard let reaction = reaction, let file = reaction.source.effect, self.effetView == nil else {
                 return
             }
+            
+            switch reaction.value.value {
+            case .stars:
+                size = NSMakeSize(imageView.frame.width + 4, imageView.frame.height + 4)
+            default:
+                size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
+            }
+            
             if isLite(.emoji_effects) {
                 return
             }
 
-            let signal: Signal<LottieAnimation?, NoError> = reaction.context.account.postbox.mediaBox.resourceData(file.resource)
+            let fileSignal: Signal<MediaResourceData, NoError>
+            if let resource = file.resource as? LocalBundleResource, let path = resource.path {
+                fileSignal = .single(MediaResourceData(path: path, offset: 0, size: 0, complete: true))
+            } else {
+                fileSignal = reaction.context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: true)
+            }
+            let signal: Signal<LottieAnimation?, NoError> = fileSignal
             |> filter { $0.complete }
             |> map { value -> Data? in
                 return try? Data(contentsOf: URL(fileURLWithPath: value.path))
@@ -858,13 +981,29 @@ final class ChatReactionsView : View {
         }
         
         private func runAnimationEffect(_ animation: LottieAnimation) {
-            let player = LottiePlayerView(frame: NSMakeRect(2, -3, animation.size.width, animation.size.height))
+            
+            guard let reaction = self.reaction else {
+                return
+            }
+            
+            let point: NSPoint
+            switch reaction.value.value {
+            case .stars:
+                point = self.imageView.frame.origin.offsetBy(dx: -2, dy: -2)
+            default:
+                point = NSMakePoint(2, -3)
+            }
+            
+            let player = LottiePlayerView(frame: CGRect(origin: point, size: animation.size))
 
+            
+            
             player.set(animation, reset: true)
             
             self.effetView = player
             
             addSubview(player)
+            
             
             self.imageView._change(opacity: 0, animated: false)
             
@@ -889,7 +1028,7 @@ final class ChatReactionsView : View {
             let tooltip = reaction.avatars.map { $0.peer.displayTitle }.joined(separator: ", ")
             
             if tooltip.isEmpty {
-                self.toolTip = nil
+                self.toolTip = "\(reaction.value.count.formattedWithSeparator)"
             } else {
                 self.toolTip = tooltip
             }
@@ -972,6 +1111,8 @@ final class ChatReactionsView : View {
             self.peers = reaction.avatars
             
             self.backgroundColor = reaction.presentation.bgColor
+            
+ 
 
             
             if selectedUpdated {
@@ -980,6 +1121,7 @@ final class ChatReactionsView : View {
                     view.isEventLess = true
                     view.layer?.cornerRadius = view.frame.height / 2
                     self.backgroundView = view
+                    view.layer?.masksToBounds = false
                     self.addSubview(view, positioned: .below, relativeTo: subviews.first)
                     
                     if animated {
@@ -996,6 +1138,40 @@ final class ChatReactionsView : View {
 
             self.backgroundView?.backgroundColor = reaction.presentation.selectedColor
 
+            
+            if case .stars = reaction.value.value {
+                let current: StarsButtonEffectLayer
+                if let layer = self.starButtonEffect {
+                    current = layer
+                } else {
+                    current = StarsButtonEffectLayer()
+                    self.starButtonEffect = current
+                }
+                let rect = reaction.rect.size.bounds.insetBy(dx: -5, dy: -5)
+                current.frame = rect
+                current.update(size: rect.size)
+                
+                if let backgroundView {
+                    backgroundView.layer?.addSublayer(current)
+                } else {
+                    self.layer?.addSublayer(current)
+                }
+            } else if let starButtonEffect {
+                performSublayerRemoval(starButtonEffect, animated: animated)
+                self.starButtonEffect = nil
+            }
+            
+            
+            if case .stars = reaction.value.value {
+                if self.starKeyHandler == nil {
+                    self.starKeyHandler = self.set(handler: { [weak self] _ in
+                        self?.reaction?.starReact()
+                    }, for: .RightDown)
+                }
+            } else if let starKeyHandler {
+                self.starKeyHandler = nil
+                self.removeHandler(starKeyHandler)
+            }
             
             if animated {
                 self.layer?.animateBorder()
@@ -1047,6 +1223,7 @@ final class ChatReactionsView : View {
             if let backgroundView = backgroundView {
                 transition.updateFrame(view: backgroundView, frame: size.bounds)
             }
+            
             
             let presentation = reaction.presentation
             
@@ -1106,7 +1283,6 @@ final class ChatReactionsView : View {
             self.set(handler: { [weak self] _ in
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
-            
             
         }
         
@@ -1309,6 +1485,7 @@ final class ChatReactionsView : View {
     private var views:[NSView] = []
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.layer?.masksToBounds = false
     }
     
     func getView(_ value: MessageReaction.Reaction) -> ReactionViewImpl? {
@@ -1381,14 +1558,6 @@ final class ChatReactionsView : View {
                     reusedPix = pix
                 }
             }
-            /*
-             else if inserted.count == 1, removed.count == 1 {
-                let kv = deletedViews.first!
-                prevView = kv.value
-                reused.insert(kv.key)
-                reusedPix = kv.key
-           }
-             */
             let getView: (NSView?)->NSView = { prev in
                 switch layout.mode {
                 case .full:
@@ -1431,6 +1600,7 @@ final class ChatReactionsView : View {
         }
         
         for (i, view) in views.enumerated() {
+            view.layer?.masksToBounds = false
             view.layer?.zPosition = CGFloat(i)
         }
         
@@ -1453,7 +1623,10 @@ final class ChatReactionsView : View {
         
                 
         let new = reactions.filter { $0.value.isSelected }.filter { value in
-            let prev = previous.first(where: { $0.value.value == value.value.value && $0.value.isSelected })
+            var prev = previous.first(where: { $0.value.value == value.value.value && $0.value.isSelected })
+            if value.value.value == .stars {
+                prev = previous.first(where: { $0.value.value == value.value.value && $0.value.count == value.value.count })
+            }
             return prev == nil
         }
         
@@ -1461,7 +1634,8 @@ final class ChatReactionsView : View {
             if let selected = new.first {
                 let interactive = layout.context.reactions.interactive
                 if let interactive = interactive {
-                    if interactive.messageId == layout.message.id {
+                    let stars = selected.value.value == .stars
+                    if interactive.messageId == layout.message.id, !stars || interactive.reaction == .stars  {
                         let view = self.getView(selected.value.value)
                         if let view = view {
                             if let fromRect = interactive.rect {
@@ -1477,12 +1651,15 @@ final class ChatReactionsView : View {
                                     view.lockVisibility()
                                 }
                                 
-                                let completed: (Bool)->Void = { [weak view] _ in
+                                let completed: (Bool)->Void = { [weak view, weak self] _ in
                                     view?.unlockVisibility()
                                     DispatchQueue.main.async {
                                         view?.playEffect()
                                         selected.runEffect(selected.value.value)
                                         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                                        if selected.value.value == .stars, let window = self?.window as? Window {
+                                            PlayConfetti(for: window, stars: true)
+                                        }
                                     }
                                 }
                                 parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: layout.context.window, completion: completed)

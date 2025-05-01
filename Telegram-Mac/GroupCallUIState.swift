@@ -57,37 +57,7 @@ final class GroupCallUIState : Equatable {
         }
     }
     
-    struct VideoSources : Equatable {
-        static func == (lhs: GroupCallUIState.VideoSources, rhs: GroupCallUIState.VideoSources) -> Bool {
-            if let lhsVideo = lhs.video, let rhsVideo = rhs.video {
-                if !lhsVideo.isEqual(rhsVideo) {
-                    return false
-                }
-            } else if (lhs.video != nil) != (rhs.video != nil) {
-                return false
-            }
-            if let lhsScreencast = lhs.screencast, let rhsScreencast = rhs.screencast {
-                if !lhsScreencast.isEqual(rhsScreencast) {
-                    return false
-                }
-            } else if (lhs.screencast != nil) != (rhs.screencast != nil) {
-                return false
-            }
-            if lhs.failed != rhs.failed {
-                return false
-            }
-            return true
-        }
-        
-        var video: VideoSourceMac? = nil
-        var screencast: VideoSourceMac? = nil
-        
-        var failed: Bool = false
-        
-        var isEmpty: Bool {
-            return video == nil && screencast == nil
-        }
-    }
+    
     
     struct PinnedData : Equatable {
         struct Focused: Equatable {
@@ -108,7 +78,7 @@ final class GroupCallUIState : Equatable {
     let isMuted: Bool
     let state: PresentationGroupCallState
     let summaryState: PresentationGroupCallSummaryState?
-    let peer: Peer
+    let peer: Peer?
     let cachedData: CachedChannelData?
     let myAudioLevel: Float
     let voiceSettings: VoiceCallSettings
@@ -135,8 +105,14 @@ final class GroupCallUIState : Equatable {
     let myPeer: PeerGroupCallData?
     
     let initialTimestamp: TimeInterval
+    
+    let showConferenceKey: Bool
+    
+    let isConference: Bool
+    
+    let encryptionKeyEmoji: [String]?
         
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer?, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval, isConference: Bool, showConferenceKey: Bool, encryptionKeyEmoji: [String]?) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -153,6 +129,8 @@ final class GroupCallUIState : Equatable {
         self.mode = activeVideoViews.isEmpty ? mode : .video
         self.videoSources = videoSources
         self.version = version
+        self.isConference = isConference
+        self.encryptionKeyEmoji = encryptionKeyEmoji
         self.activeVideoViews = activeVideoViews
         self.hideParticipants = hideParticipants
         self.isVideoEnabled = isVideoEnabled
@@ -163,6 +141,7 @@ final class GroupCallUIState : Equatable {
         self.isStream = isStream
         self.myPeer = memberDatas.first(where: { $0.peer.id == $0.accountPeerId })
         self.initialTimestamp = initialTimestamp
+        self.showConferenceKey = showConferenceKey
         var modeMembers:[GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]] = [:]
         
         let modes:[GroupCallUIState.ActiveVideo.Mode] = [.list, .main]
@@ -211,13 +190,15 @@ final class GroupCallUIState : Equatable {
         return (!videoJoined) && !memberDatas.filter({ $0.videoEndpointId != nil || $0.presentationEndpointId != nil }).isEmpty
     }
     
+    
+    
     var title: String {
         if state.scheduleTimestamp != nil {
             return strings().voiceChatTitleScheduled
         } else if let custom = state.title, !custom.isEmpty {
             return custom
         } else {
-            return peer.displayTitle
+            return peer?.displayTitle ?? strings().callGroupCall
         }
     }
     
@@ -234,7 +215,11 @@ final class GroupCallUIState : Equatable {
         if lhs.summaryState != rhs.summaryState {
             return false
         }
-        if !lhs.peer.isEqual(rhs.peer) {
+        if let lhsPeer = lhs.peer, let rhsPeer = rhs.peer {
+            if !lhsPeer.isEqual(rhsPeer) {
+                return false
+            }
+        } else if (lhs.peer != nil) != (rhs.peer != nil) {
             return false
         }
         if lhs.voiceSettings != rhs.voiceSettings {
@@ -307,6 +292,15 @@ final class GroupCallUIState : Equatable {
         if lhs.videoJoined != rhs.videoJoined {
             return false
         }
+        if lhs.showConferenceKey != rhs.showConferenceKey {
+            return false
+        }
+        if lhs.encryptionKeyEmoji != rhs.encryptionKeyEmoji {
+            return false
+        }
+        if lhs.isConference != rhs.isConference {
+            return false
+        }
         return true
     }
     
@@ -314,9 +308,7 @@ final class GroupCallUIState : Equatable {
         return activeVideoMembers[mode] ?? []
     }
     
-    func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, pinnedData: self.pinnedData, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker, controlsTooltip: self.controlsTooltip, dismissedTooltips: self.dismissedTooltips, videoJoined: self.videoJoined, isStream: self.isStream, windowIsFullscreen: self.windowIsFullscreen, initialTimestamp: initialTimestamp)
-    }
+    
 }
 
 

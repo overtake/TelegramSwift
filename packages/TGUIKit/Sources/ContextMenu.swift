@@ -49,6 +49,7 @@ open class ContextMenuItem : NSMenuItem {
         case cmdc = "⌘C"
         case cmde = "⌘E"
         case cmdr = "⌘R"
+        case cmdw = "⌘W"
     }
     
     open func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
@@ -61,6 +62,9 @@ open class ContextMenuItem : NSMenuItem {
     
     public var handler:(()->Void)?
     private let dynamicTitle:(()->String)?
+    
+    var customTextView: (()->NSView?)?
+    
     
     public var hover:(()->Void)?
 
@@ -90,7 +94,8 @@ open class ContextMenuItem : NSMenuItem {
     let overrideWidth: CGFloat?
     let removeTail: Bool
     
-    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil) {
+    
+    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil, attributedTitle: NSAttributedString? = nil, customTextView: (()->NSView?)? = nil) {
         self.handler = handler
         self.hover = hover
         self.dynamicTitle = dynamicTitle
@@ -99,6 +104,7 @@ open class ContextMenuItem : NSMenuItem {
         self.removeTail = removeTail
         self.overrideWidth = overrideWidth
         self.keyEquivalentValue = keyEquivalent
+        self.customTextView = customTextView
         super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title.prefixWithDots(removeTail ? cuttail ?? Int.max : Int.max)

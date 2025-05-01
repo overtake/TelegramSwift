@@ -328,7 +328,7 @@ private enum MapItemEntry : TableItemListNodeEntry {
                 arguments.searchVenues(state.request)
             }, { state in
                 arguments.searchVenues(state.request)
-            }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
+            }), inset: NSEdgeInsets(left: 10,right: 10, top: 0, bottom: 0))
         case let .currentLocation(_, state):
             return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, destination: arguments.destination, action: {
                 arguments.sendCurrent()
@@ -536,24 +536,71 @@ class LocationModalController: ModalViewController {
     }
 
     private func sendLocation(_ media: TelegramMediaMap? = nil) {
-        sendDisposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
-            switch state {
-            case let .normal(picked):
-                if let location = picked.location {
-                    self?.chatInteraction.sendLocation(location.coordinate, nil)
-                    self?.close()
+        
+        let invoke:()->Void = { [weak self] in
+            guard let self else {
+                return
+            }
+            self.sendDisposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
+                switch state {
+                case let .normal(picked):
+                    if let location = picked.location {
+                        self?.chatInteraction.sendLocation(location.coordinate, nil)
+                        self?.close()
+                    }
+                case let .expanded(location):
+                    if let media = media {
+                        let coordinate = CLLocationCoordinate2D(latitude: media.latitude, longitude: media.longitude)
+                        self?.chatInteraction.sendLocation(coordinate, media.venue)
+                        self?.close()
+                    } else if let location = location {
+                        self?.chatInteraction.sendLocation(location.coordinate, nil)
+                        self?.close()
+                    }
                 }
-            case let .expanded(location):
-                if let media = media {
-                    let coordinate = CLLocationCoordinate2D(latitude: media.latitude, longitude: media.longitude)
-                    self?.chatInteraction.sendLocation(coordinate, media.venue)
-                    self?.close()
-                } else if let location = location {
-                    self?.chatInteraction.sendLocation(location.coordinate, nil)
-                    self?.close()
+            }))
+        }
+        
+        let presentation = self.chatInteraction.presentation
+        let context = self.chatInteraction.context
+        
+        let messagesCount = 1
+        
+        if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+            let starsPrice = Int(payStars.value * Int64(messagesCount))
+            let amount = strings().starListItemCountCountable(starsPrice)
+            
+            if !presentation.alwaysPaidMessage {
+                
+                let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                
+                verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                    
+                    if starsState.balance.value > starsPrice {
+                        self.chatInteraction.update({ current in
+                            return current
+                                .withUpdatedAlwaysPaidMessage(result == .thrid)
+                        })
+                        if result == .thrid {
+                            FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                        }
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                })
+                
+            } else {
+                if starsState.balance.value > starsPrice {
+                    invoke()
+                } else {
+                    showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
                 }
             }
-        }))
+        } else {
+            invoke()
+        }
+        
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
@@ -622,7 +669,7 @@ class LocationModalController: ModalViewController {
         
         
         
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare") |> mapToSignal { result in
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare", referrer: nil) |> mapToSignal { result in
             switch result {
             case .progress:
                 return .never()

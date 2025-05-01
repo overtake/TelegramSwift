@@ -79,7 +79,7 @@ class MessageSharedRowItem: GeneralRowItem {
         sharesCountLayout?.measure(width: .greatestFiniteMagnitude)
         likesCountLayout?.measure(width: .greatestFiniteMagnitude)
 
-        let titleAndDateWidth: CGFloat = blockWidth - viewType.innerInset.left - viewType.innerInset.right - 34 - 10
+        let titleAndDateWidth: CGFloat = blockWidth - viewType.innerInset.left - viewType.innerInset.right - 34 - 10 - 15
         
         titleLayout.measure(width: titleAndDateWidth)
         dateLayout.measure(width: titleAndDateWidth)

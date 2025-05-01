@@ -74,6 +74,7 @@ public enum PeerCallSessionEndedType : Equatable {
     case hungUp
     case busy
     case missed
+    case switchedToConference
 }
 
 public enum PeerCallSessionTerminationReason: Equatable {
@@ -106,7 +107,7 @@ public struct ExternalPeerCallState: Equatable {
        case connecting
        case active(startTime: Double, reception: Int32?, emoji: String)
        case reconnecting(startTime: Double, reception: Int32?, emoji: String)
-       case terminating
+       case terminating(PeerCallSessionTerminationReason?)
        case terminated(PeerCallSessionTerminationReason?)
    }
    
@@ -147,7 +148,11 @@ public struct ExternalPeerCallState: Equatable {
     public var remoteBatteryLevel: RemoteBatteryLevel
     public var isScreenCapture: Bool
     public var canBeRemoved: Bool
-    public init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool, canBeRemoved: Bool) {
+    public var participants: [EnginePeer]
+    public var conferenceReference: MessageId?
+    public var supportsConferenceCalls: Bool
+    
+    public init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool, remoteAspectRatio: Float, remoteAudioState: RemoteAudioState, remoteBatteryLevel: RemoteBatteryLevel, isScreenCapture: Bool, canBeRemoved: Bool, participants: [EnginePeer], conferenceReference: MessageId?, supportsConferenceCalls: Bool) {
         self.state = state
         self.videoState = videoState
         self.remoteVideoState = remoteVideoState
@@ -158,12 +163,15 @@ public struct ExternalPeerCallState: Equatable {
         self.remoteBatteryLevel = remoteBatteryLevel
         self.isScreenCapture = isScreenCapture
         self.canBeRemoved = canBeRemoved
+        self.participants = participants
+        self.conferenceReference = conferenceReference
+        self.supportsConferenceCalls = supportsConferenceCalls
     }
 }
 
 
 extension ExternalPeerCallState.State {
-    func statusText(_ accountPeer: EnginePeer?, _ videoState: ExternalPeerCallState.VideoState) -> PeerCallStatusValue {
+    func statusText(_ accountPeer: EnginePeer?, _ videoState: ExternalPeerCallState.VideoState, isConference: Bool) -> PeerCallStatusValue {
         let statusValue: PeerCallStatusValue
         switch self {
         case .waiting, .connecting:
@@ -174,9 +182,7 @@ extension ExternalPeerCallState.State {
             } else {
                 statusValue = .text(L10n.callStatusRequesting, nil)
             }
-        case .terminating:
-            statusValue = .text(L10n.callStatusEnded, nil)
-        case let .terminated(reason):
+        case let .terminated(reason), let .terminating(reason):
             if let reason = reason {
                 switch reason {
                 case let .ended(type):
@@ -185,6 +191,8 @@ extension ExternalPeerCallState.State {
                         statusValue = .text(L10n.callStatusBusy, nil)
                     case .hungUp, .missed:
                         statusValue = .text(L10n.callStatusEnded, nil)
+                    case .switchedToConference:
+                        statusValue = .text(L10n.callStatusSwitchingToConference, nil)
                     }
                 case .error:
                     statusValue = .text(L10n.callStatusFailed, nil)
@@ -194,9 +202,17 @@ extension ExternalPeerCallState.State {
             }
         case .ringing:
             if let accountPeer = accountPeer {
-                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
+                if isConference {
+                    statusValue = .text(L10n.callStatusGroupCallAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
+                } else {
+                    statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
+                }
             } else {
-                statusValue = .text(L10n.callStatusCalling, nil)
+                if isConference {
+                    statusValue = .text(L10n.callStatusGroupCall, nil)
+                } else {
+                    statusValue = .text(L10n.callStatusCalling, nil)
+                }
             }
         case .active(let timestamp, let reception, _), .reconnecting(let timestamp, let reception, _):
             if case .reconnecting = self {
@@ -243,13 +259,13 @@ public struct PeerCallState : Equatable {
     
     var mouseInside: Bool = true
     
-    public var externalState: ExternalPeerCallState = .init(state: .connecting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false, canBeRemoved: false)
+    public var externalState: ExternalPeerCallState = .init(state: .connecting, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: false, isOutgoingVideoPaused: true, remoteAspectRatio: 1.0, remoteAudioState: .active, remoteBatteryLevel: .low, isScreenCapture: false, canBeRemoved: false, participants: [], conferenceReference: nil, supportsConferenceCalls: true)
     
     var status: PeerCallStatusValue {
         if self.externalState.canBeRemoved {
             return .text(L10n.callStatusEnded, nil)
         }
-        return self.externalState.state.statusText(accountPeer, externalState.videoState)
+        return self.externalState.state.statusText(accountPeer, externalState.videoState, isConference: externalState.conferenceReference != nil)
     }
     
     var isActive: Bool {
@@ -311,6 +327,9 @@ public struct PeerCallState : Equatable {
     }
     
     var stateIndex: Int {
+        if externalState.conferenceReference != nil {
+            return 3
+        }
         switch externalState.state {
         case .waiting:
             return 0

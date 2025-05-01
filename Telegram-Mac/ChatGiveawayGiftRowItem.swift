@@ -20,11 +20,13 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     
     
     struct GiftData {
-        let slug: String
+        let slug: String?
+        let starsAmount: Int?
         let fromGiveaway: Bool
         let boostPeerId: PeerId?
         let months: Int32
         let unclaimed: Bool
+        let media: TelegramMediaAction
     }
     
     private(set) var headerText: TextViewLayout!
@@ -33,7 +35,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     let data: GiftData
     
     
-    
+    let textColor: NSColor
     
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
@@ -43,17 +45,19 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
 
         
         switch media.action {
-        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount):
-            self.data = .init(slug: slug, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed)
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months, currency, amoun, cryptoCurrency, cryptoAmount, _, _):
+            self.data = .init(slug: slug, starsAmount: nil, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed, media: media)
+        case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
+            self.data = .init(slug: nil, starsAmount: Int(amount), fromGiveaway: true, boostPeerId: boostPeerId, months: 0, unclaimed: isUnclaimed, media: media)
         default:
             fatalError()
         }
-        
-        
+                
+        self.textColor = data.fromGiveaway ? theme.chat.textColor(isIncoming, object.renderType == .bubble) : theme.chatServiceItemTextColor
+
 
         super.init(initialSize, chatInteraction, context, object, theme: theme)
         
-        let textColor = data.fromGiveaway ? theme.chat.textColor(isIncoming, object.renderType == .bubble) : theme.chatServiceItemTextColor
         
         
         let channelName: String
@@ -79,7 +83,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
             title = strings().chatGiftTitleGift
         }
         
-        _ = header_attr.append(string: title, color: wpPresentation.text, font: .normal(.text))
+        _ = header_attr.append(string: title, color: textColor, font: .normal(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
@@ -89,12 +93,16 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         let infoText: String
         if data.fromGiveaway {
-            if data.unclaimed {
-                infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
-            } else if data.fromGiveaway {
-                infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+            if let amount = data.starsAmount {
+                infoText = strings().chatGiftInfoGiveawayStarsCountable(channelName, amount)
             } else {
-                infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
+                if data.unclaimed {
+                    infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
+                } else if data.fromGiveaway {
+                    infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+                } else {
+                    infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
+                }
             }
         } else {
             if isIncoming {
@@ -105,7 +113,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         }
         
 
-        _ = info_attr.append(string: infoText, color: wpPresentation.text, font: .normal(.text))
+        _ = info_attr.append(string: infoText, color: textColor, font: .normal(.text))
         info_attr.detectBoldColorInString(with: .medium(.text))
         
         self.infoText = .init(info_attr, alignment: .center, alwaysStaticItems: true)
@@ -135,13 +143,30 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     }
     
     func openLink() {
-        guard let fromId = message?.author?.id, let toId = message?.id.peerId else {
+        guard let message, let fromId = message.author?.id else {
             return
         }
+        let toId = message.id.peerId
+        
         if data.fromGiveaway {
-            execute(inapp: .gift(link: "", slug: data.slug, context: context))
+            if let slug = data.slug {
+                execute(inapp: .gift(link: "", slug: slug, context: context))
+            } else {
+                switch data.media.action {
+                case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
+                    if let transactionId, let boostPeerId, let peer = message.peers[boostPeerId] {
+                        
+                        let transaction = StarsContext.State.Transaction(flags: [.isGift], id: transactionId, count: .init(value: amount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: giveawayMessageId, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                        
+                        showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: .init(peer), transaction: transaction), for: context.window)
+                    }
+                default:
+                    break
+                }
+                
+            }
         } else {
-            showModal(with: PremiumBoardingController(context: context, source: .gift(from: fromId, to: toId, months: data.months, slug: data.slug, unclaimed: data.unclaimed)), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .gift(from: fromId, to: toId, months: data.months, slug: data.slug, unclaimed: data.unclaimed)), for: context.window)
         }
     }
     
@@ -263,27 +288,33 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
             
             container.backgroundColor = .clear
             
-        } else if let view = visualEffect {
-            performSubviewRemoval(view, animated: animated)
-            self.visualEffect = nil
-            container.backgroundColor = item.presentation.chatServiceItemColor
+        } else {
+            if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+            }
+            container.backgroundColor = item.presentation.colors.chatBackground == item.presentation.colors.background ? item.presentation.colors.listBackground : item.presentation.colors.background
         }
         
-//        container.backgroundColor = theme.colors.background
+//
         
         container.layer?.cornerRadius = 10
         
         action.set(font: .medium(.text), for: .Normal)
         if item.shouldBlurService {
-            action.set(color: item.wpPresentation.text, for: .Normal)
-            action.layer?.borderColor = item.wpPresentation.text.cgColor
+            action.set(color: item.textColor, for: .Normal)
+            action.layer?.borderColor = item.textColor.cgColor
         } else {
             action.set(color: item.wpPresentation.activity.main, for: .Normal)
             action.layer?.borderColor = item.wpPresentation.activity.main.cgColor
         }
 
         if item.data.fromGiveaway {
-            action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
+            if item.data.slug != nil {
+                action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
+            } else {
+                action.set(text: strings().chatMessageOpenGiftStars, for: .Normal)
+            }
         } else {
             action.set(text: strings().chatMessageViewGiftLink, for: .Normal)
         }

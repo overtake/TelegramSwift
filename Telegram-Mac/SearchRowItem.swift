@@ -17,21 +17,21 @@ class SearchRowItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 30 + inset.bottom + inset.top
+        return 50
     }
     
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, searchInteractions:SearchInteractions, isLoading:Bool = false, drawCustomSeparator: Bool = true, border: BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left:30,right:30, top: 10, bottom: 10), viewType: GeneralViewType = .legacy) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, searchInteractions:SearchInteractions, isLoading:Bool = false, drawCustomSeparator: Bool = true, border: BorderType = [], viewType: GeneralViewType = .legacy, inset: NSEdgeInsets = .init(top: 0, left: 20, bottom: 0, right: 20)) {
         self.searchInteractions = searchInteractions
         self.isLoading = isLoading
-        super.init(initialSize, height: 0, stableId: stableId, type: .none, viewType: viewType, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
+        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
     
 }
 
 
-class SearchRowView : TableRowView {
+class SearchRowView : GeneralContainableRowView {
     
     let searchView:SearchView
     
@@ -48,14 +48,15 @@ class SearchRowView : TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? SearchRowItem {
-            searchView.setFrameSize(frame.width - item.inset.left - item.inset.right, searchView.frame.height)
+            searchView.setFrameSize(containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, searchView.frame.height)
             searchView.center()
         }
         
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        super.set(item: item)
+        super.set(item: item, animated: animated)
+        
         if let item = item as? SearchRowItem {
             self.searchView.isLoading = item.isLoading
             self.searchView.updateLocalizationAndTheme(theme: theme)
@@ -73,9 +74,6 @@ class SearchRowView : TableRowView {
         }
     }
 
-    override var backdorColor: NSColor {
-        return theme.colors.background
-    }
     
     override var firstResponder:NSResponder? {
         return searchView.input

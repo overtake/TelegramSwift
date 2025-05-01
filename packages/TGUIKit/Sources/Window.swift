@@ -318,6 +318,8 @@ open class Window: NSWindow {
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
     public  var pastehandler:(()->Void)? = nil
+    
+    public var _layoutIfNeeded:(()->Void)? = nil
 
     public  var masterCopyhandler:(()->Void)? = nil
 
@@ -336,6 +338,8 @@ open class Window: NSWindow {
     public static var controlsInset: CGFloat {
         return 70
     }
+    
+    open var modalInset: CGFloat = 0
 
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     public var keyWindowUpdater: Signal<Bool, NoError> {
@@ -941,7 +945,6 @@ open class Window: NSWindow {
     open override func toggleFullScreen(_ sender: Any?) {
         let newValue = !isFullScreen
         self.onToggleFullScreen?(newValue)
-        
         if let process = processFullScreen {
             process(newValue, { [weak self] value in
                 self?.invokeFullScreen(nil)
@@ -1040,6 +1043,12 @@ open class Window: NSWindow {
     
     public static var statusBarHeight: CGFloat {
         return 22
+    }
+    
+    open override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        
+        _layoutIfNeeded?()
     }
 
 }
