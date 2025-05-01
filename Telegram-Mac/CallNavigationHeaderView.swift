@@ -862,5 +862,9 @@ class CallNavigationHeaderView: CallHeaderBasicView {
         // Drawing code here.
     }
     
+    override func hide(_ animated: Bool) {
+        super.hide(animated)
+    }
+    
 }
 

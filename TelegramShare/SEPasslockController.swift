@@ -12,49 +12,54 @@ import TelegramCore
 import Localization
 import Postbox
 import SwiftSignalKit
-
+//import TelegramMedia
 
 
 
 private class PasscodeLockView : Control, NSTextFieldDelegate {
-    fileprivate let nameView:TextView = TextView()
-    fileprivate let input:NSSecureTextField
-    private let nextButton:TextButton = TextButton()
+    fileprivate let input = NSSecureTextField(frame: NSZeroRect)
+    fileprivate let inputContainer = View()
+    private let nextButton = ImageButton()
     
     fileprivate var cancel:ImageButton = ImageButton()
-    
+    private let animationView: SE_LottiePlayerView = .init(frame: NSMakeRect(0, 0, 150, 150))
+        
     fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
     required init(frame frameRect: NSRect) {
-        input = NSSecureTextField(frame: NSZeroRect)
         input.stringValue = ""
         super.init(frame: frameRect)
-        self.backgroundColor = theme.colors.background
-        nextButton.set(color: theme.colors.accent, for: .Normal)
-        nextButton.set(font: .normal(.title), for: .Normal)
-        nextButton.set(text: L10n.shareExtensionPasscodeNext, for: .Normal)
-        _ = nextButton.sizeToFit()
         
-        cancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
-        _ = cancel.sizeToFit()
+        self.backgroundColor = theme.colors.background
+        
+        cancel.set(image: theme.icons.modalClose, for: .Normal)
+        _ = cancel.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
 
         
-        nameView.backgroundColor = theme.colors.background
-        addSubview(nameView)
-        addSubview(input)
+        inputContainer.addSubview(input)
+        addSubview(animationView)
+        addSubview(inputContainer)
         addSubview(nextButton)
         addSubview(cancel)
         
         input.isBordered = false
         input.isBezeled = false
         input.focusRingType = .none
-        input.alignment = .center
+        input.alignment = .left
         input.delegate = self
+        
+        let path = Bundle.main.path(forResource: "duck_passcode", ofType: "tgs")
+        if let path = path {
+            let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+            if let data = data {
+                animationView.set(SE_LottieAnimation(compressed: data, key: .init(key: .bundle("duck_passcode"), size: NSMakeSize(150, 150)), playPolicy: .onceEnd))
+            }
+        }
         
         let attr = NSMutableAttributedString()
         _ = attr.append(string: L10n.shareExtensionPasscodePlaceholder, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
-        attr.setAlignment(.center, range: attr.range)
+        attr.setAlignment(.left, range: attr.range)
         input.placeholderAttributedString = attr
-        input.backgroundColor = theme.colors.background
+        input.backgroundColor = .clear
         input.font = NSFont.normal(FontSize.text)
         input.textColor = theme.colors.text
         input.textView?.insertionPointColor = theme.colors.text
@@ -79,34 +84,40 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     }
     
     func update() {
-        let layout = TextViewLayout(.initialize(string: L10n.passlockEnterYourPasscode, color: theme.colors.text, font:.normal(.title)))
-        layout.measure(width: frame.width - 40)
-        nameView.update(layout)
+        inputContainer.backgroundColor = theme.colors.grayBackground
+        
+        
+        nextButton.autohighlight = false
+        nextButton.scaleOnClick = true
+        nextButton.set(background: theme.colors.accentIcon, for: .Normal)
+        nextButton.set(image: theme.icons.passcodeLogin, for: .Normal)
+        nextButton.setFrameSize(26, 26)
+        nextButton.scaleOnClick = true
+        nextButton.layer?.cornerRadius = nextButton.frame.height / 2
         
         needsLayout = true
         
     }
     
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(input.frame.minX, input.frame.maxY + 10, input.frame.width, .borderSize))
-    }
-    
+
     override func layout() {
         super.layout()
         
-        nameView.center()
-        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
-        input.setFrameSize(200, input.frame.height)
-        input.centerX(y: nameView.frame.minY + 30 + 20)
-        input.setFrameOrigin(input.frame.minX, input.frame.minY)
-        setNeedsDisplayLayer()
+        animationView.centerX(y: 90)
+
+        inputContainer.setFrameSize(NSMakeSize(frame.width - 80 - 30 - 10, 34))
+        inputContainer.layer?.cornerRadius = inputContainer.frame.height / 2
         
-        nextButton.centerX(y: input.frame.maxY + 30)
+        input.frame = inputContainer.focus(NSMakeSize(inputContainer.frame.width - 20, input.frame.height)).offsetBy(dx: 0, dy: -2)
         
-        cancel.setFrameOrigin(frame.width - cancel.frame.width - 15, 15)
+        inputContainer.setFrameOrigin(NSMakePoint(40, animationView.frame.maxY + 20))
+        
+        
+        nextButton.setFrameOrigin(NSMakePoint(inputContainer.frame.maxX + 10, inputContainer.frame.minY + 4))
+        
+        cancel.setFrameOrigin(10, 10)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -144,7 +155,7 @@ class SEPasslockController: ModalViewController {
                 return
             }
             if !self.checkNextValue(value) {
-                self.genericView.input.shake()
+                self.genericView.inputContainer.shake()
             }
         }))
         

@@ -42,7 +42,7 @@ public final class SoftwareVideoThumbnailView: NSView {
         self.layer?.masksToBounds = true
         
         if let dimensions = fileReference.media.dimensions {
-            self.disposable.set((mediaGridMessageVideo(postbox: account.postbox, fileReference: fileReference, scale: backingScaleFactor, synchronousLoad: synchronousLoad)
+            self.disposable.set((mediaGridMessageVideo(account: account, fileReference: fileReference, scale: backingScaleFactor, synchronousLoad: synchronousLoad)
                 |> deliverOnMainQueue).start(next: { [weak self] transform in
                     var boundingSize = dimensions.size.aspectFilled(CGSize(width: 93.0, height: 93.0))
                     let imageSize = boundingSize

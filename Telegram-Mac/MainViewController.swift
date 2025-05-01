@@ -79,7 +79,7 @@ final class UpdateTabView : Control {
         
         shimmer.isStatic = true
         
-        progressView.progressColor = .white
+        progressView.progressColor = theme.colors.underSelectedColor
         isInstalling = false
         
         let layout = TextViewLayout(.initialize(string: strings().updateUpdateTelegram, color: theme.colors.underSelectedColor, font: .medium(.title)))
@@ -111,6 +111,7 @@ final class UpdateTabView : Control {
         needsLayout = true
         shimmer.updateAbsoluteRect(bounds, within: bounds.size)
         shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: bounds, cornerRadius: bounds.height / 2)], horizontal: true, size: bounds.size)
+        progressView.progressColor = theme.colors.underSelectedColor
     }
     
     override func setFrameOrigin(_ newOrigin: NSPoint) {
@@ -637,23 +638,49 @@ class MainViewController: TelegramViewController {
         }
     }
     
-    func globalSearch(_ query: String, peerId: PeerId?) {
+    func globalSearch(_ query: String, peerId: PeerId?, cached: CachedSearchMessages?) {
+        
+        var query = query
+        
+        let result = extractHashtagAndUsername(from: query)
+        
+        let peerSignal: Signal<EnginePeer?, NoError>
+        
+        if let username = result?.username {
+            peerSignal = context.engine.peers.resolvePeerByName(name: username, referrer: nil) |> mapToSignal { value in
+                switch value {
+                case let .result(peer):
+                    return .single(peer)
+                case .progress:
+                    return .never()
+                }
+            } |> deliverOnMainQueue
+            query = result?.hashtag ?? query
+        } else if let peerId {
+            peerSignal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+        } else {
+            peerSignal = .single(nil)
+        }
+        
         let controller = navigation.empty
         if let controller = controller as? ChatListController {
-            if let peerId {
-                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
-                    controller?.globalSearch(query, peer: value)
-                })
-            } else {
-                controller.globalSearch(query, peer: nil)
-            }
+            _ = peerSignal.startStandalone(next: { [weak controller] value in
+                controller?.globalSearch(query, peer: value, cached: cached, isSuperTag: result != nil)
+            })
         } else if let tabbar = controller as? TabBarController, let controller = tabbar.current as? ChatListController {
-            if let peerId {
-                _ = (controller.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue).startStandalone(next: { [weak controller] value in
-                    controller?.globalSearch(query, peer: value)
-                })
-            } else {
-                controller.globalSearch(query, peer: nil)
+            _ = peerSignal.startStandalone(next: { [weak controller] value in
+                controller?.globalSearch(query, peer: value, cached: cached, isSuperTag: result != nil)
+            })
+        }
+    }
+    
+    func makeDownloadSearch() {
+        if self.tabController.current == navigation {
+            let controller = navigation.controller
+            if let controller = controller as? ChatListController {
+                controller.makeDownloadSearch()
+            } else if let controller = controller as? TabBarController {
+                (controller.current as? ChatListController)?.makeDownloadSearch()
             }
         }
     }

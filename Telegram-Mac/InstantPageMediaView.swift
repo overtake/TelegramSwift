@@ -72,7 +72,7 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
         self.context = context
         self.media = media
         self.arguments = arguments
-        
+                
         switch arguments {
         case .image:
              self.imageView = TransformImageView()
@@ -91,11 +91,12 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
         
         progressView.isHidden = true
         
-        self.imageView.animatesAlphaOnFirstTransition = true
+     //   self.imageView.animatesAlphaOnFirstTransition = true
         self.addSubview(self.imageView)
         addSubview(progressView)
         
 
+        
         
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
             guard let `self` = self else {return}
@@ -152,7 +153,7 @@ final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
             if file.mimeType.hasPrefix("image/") && !file.mimeType.hasSuffix("gif") {
                 self.imageView.setSignal(instantPageImageFile(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
             } else {
-                self.imageView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+                self.imageView.setSignal(chatMessageVideo(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
             }
 
             switch arguments {

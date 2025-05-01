@@ -385,11 +385,11 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
         case let .soundOnHoverDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageAutoplaySoundOnHoverDesc, viewType: viewType)
         case let .sensitiveContent(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "strings().dataAndStorageSensitiveContent", type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageSensitiveContent, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleSensitiveContent(!value)
             }, autoswitch: false)
         case let .sensitiveContentInfo(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: "strings().dataAndStorageSensitiveContentInfo", viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageSensitiveContentInfo, viewType: viewType)
         case .proxyHeader:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsProxyHeader, viewType: .textTopItem)
         case let .proxySettings(_, text, viewType):
@@ -423,7 +423,7 @@ private struct DataAndStorageData: Equatable {
 }
 
 
-private func entries(state: State, data: DataAndStorageData, proxy: ProxySettings, autoplayMedia: AutoplayMediaPreferences) -> [DataAndStorageEntry] {
+private func entries(state: State, data: DataAndStorageData, proxy: ProxySettings, autoplayMedia: AutoplayMediaPreferences, contentSettingsConfiguration: ContentSettingsConfiguration?) -> [DataAndStorageEntry] {
     var entries: [DataAndStorageEntry] = []
     
     var sectionId:Int32 = 1
@@ -459,15 +459,9 @@ private func entries(state: State, data: DataAndStorageData, proxy: ProxySetting
     entries.append(.autoplayVideos(sectionId, autoplayMedia.videos, viewType: .lastItem))
 
     
-//    #if DEBUG
-//    entries.append(.sectionId(sectionId))
-//    sectionId += 1
-//    entries.append(.sensitiveContent(sectionId, false, viewType: .singleItem))
-//    entries.append(.sensitiveContentInfo(sectionId, viewType: .textBottomItem))
-//    #endif
-    
     entries.append(.sectionId(sectionId))
     sectionId += 1
+    
     
     entries.append(.proxyHeader(sectionId))
     let text: String
@@ -483,6 +477,12 @@ private func entries(state: State, data: DataAndStorageData, proxy: ProxySetting
     }
     entries.append(.proxySettings(sectionId, text, viewType: .singleItem))
     
+    if let contentSettingsConfiguration = contentSettingsConfiguration, contentSettingsConfiguration.canAdjustSensitiveContent {
+        entries.append(.sectionId(sectionId))
+        sectionId += 1
+        entries.append(.sensitiveContent(sectionId, contentSettingsConfiguration.sensitiveContentEnabled, viewType: .singleItem))
+        entries.append(.sensitiveContentInfo(sectionId, viewType: .textBottomItem))
+    }
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
@@ -536,6 +536,9 @@ class DataAndStorageViewController: TableViewController {
         let initialSize = self.atomicSize
         
         
+        let updateSensitiveContentDisposable = MetaDisposable()
+        actionsDisposable.add(updateSensitiveContentDisposable)
+        
         let pushControllerImpl:(ViewController)->Void = { [weak self] controller in
             self?.navigationController?.push(controller)
         }
@@ -543,6 +546,13 @@ class DataAndStorageViewController: TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<DataAndStorageEntry>]> = Atomic(value: [])
         let actionsDisposable = self.actionsDisposable
         
+        
+        let updatedContentSettingsConfiguration = contentSettingsConfiguration(network: context.account.network)
+          |> map(Optional.init)
+          let contentSettingsConfiguration = Promise<ContentSettingsConfiguration?>()
+          contentSettingsConfiguration.set(.single(nil)
+          |> then(updatedContentSettingsConfiguration))
+
         
         let dataAndStorageDataPromise = Promise<DataAndStorageData>()
         dataAndStorageDataPromise.set(combineLatest(context.account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]), voiceCallSettings(context.sharedContext.accountManager))
@@ -620,21 +630,37 @@ class DataAndStorageViewController: TableViewController {
             })
             pushControllerImpl(controller)
         }, toggleSensitiveContent: { value in
-            if value {
-//                verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
-//                    
-//                })
+            
+            let update = {
+                let _ = (contentSettingsConfiguration.get()
+                |> take(1)
+                |> deliverOnMainQueue).start(next: { [weak contentSettingsConfiguration] settings in
+                    if var settings = settings {
+                        settings.sensitiveContentEnabled = value
+                        contentSettingsConfiguration?.set(.single(settings))
+                    }
+                })
+                updateSensitiveContentDisposable.set(updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start())
             }
             
+            if value {
+                verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
+                    update()
+                })
+            } else {
+                update()
+            }
         })
         
         let proxy:Signal<ProxySettings, NoError> = proxySettings(accountManager: context.sharedContext.accountManager)
 
         
+     
         
-        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, proxy, autoplayMediaSettings(postbox: context.account.postbox))
-        |> map { state, dataAndStorageData, appearance, proxy, autoplayMediaSettings -> TableUpdateTransition in
-            let entries = entries(state: state, data: dataAndStorageData, proxy: proxy, autoplayMedia: autoplayMediaSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        
+        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, proxy, autoplayMediaSettings(postbox: context.account.postbox), contentSettingsConfiguration.get())
+        |> map { state, dataAndStorageData, appearance, proxy, autoplayMediaSettings, contentSettingsConfiguration -> TableUpdateTransition in
+            let entries = entries(state: state, data: dataAndStorageData, proxy: proxy, autoplayMedia: autoplayMediaSettings, contentSettingsConfiguration: contentSettingsConfiguration).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> beforeNext { [weak self] _ in
             self?.readyOnce()

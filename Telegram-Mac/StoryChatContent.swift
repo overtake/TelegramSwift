@@ -112,6 +112,7 @@ final class StoryContentContextState {
         let slowModeTimeout: Int32?
         let slowModeValidUntilTimestamp: Int32?
         let canAvoidRestrictions: Bool
+        let paidMessage: StarsAmount?
 
         init(
             isMuted: Bool,
@@ -122,7 +123,8 @@ final class StoryContentContextState {
             preferHighQualityStories: Bool,
             slowModeTimeout: Int32?,
             slowModeValidUntilTimestamp: Int32?,
-            canAvoidRestrictions: Bool
+            canAvoidRestrictions: Bool,
+            paidMessage: StarsAmount?
         ) {
             self.isMuted = isMuted
             self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
@@ -133,6 +135,7 @@ final class StoryContentContextState {
             self.slowModeTimeout = slowModeTimeout
             self.slowModeValidUntilTimestamp = slowModeValidUntilTimestamp
             self.canAvoidRestrictions = canAvoidRestrictions
+            self.paidMessage = paidMessage
         }
     }
 
@@ -427,7 +430,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             preferHighQualityStories: preferHighQualityStories,
                             slowModeTimeout: nil,
                             slowModeValidUntilTimestamp: nil,
-                            canAvoidRestrictions: true
+                            canAvoidRestrictions: true,
+                            paidMessage: cachedUserData.sendPaidMessageStars
                         )
                     } else if let cachedChannelData = cachedPeerDataView.cachedPeerData as? CachedChannelData {
                         let boostsToUnrestrict = cachedChannelData.boostsToUnrestrict
@@ -441,7 +445,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             preferHighQualityStories: preferHighQualityStories,
                             slowModeTimeout: cachedChannelData.slowModeTimeout,
                             slowModeValidUntilTimestamp: cachedChannelData.slowModeValidUntilTimestamp,
-                            canAvoidRestrictions: boostsToUnrestrict != nil ? boostsToUnrestrict! <= appliedBoosts : false
+                            canAvoidRestrictions: boostsToUnrestrict != nil ? boostsToUnrestrict! <= appliedBoosts : false,
+                            paidMessage: peer._asPeer().sendPaidMessageStars
                         )
                     } else {
                         additionalPeerData = StoryContentContextState.AdditionalPeerData(
@@ -453,7 +458,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             preferHighQualityStories: preferHighQualityStories,
                             slowModeTimeout: nil,
                             slowModeValidUntilTimestamp: nil,
-                            canAvoidRestrictions: true
+                            canAvoidRestrictions: true,
+                            paidMessage: nil
                         )
                     }
                 }
@@ -467,7 +473,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         preferHighQualityStories: preferHighQualityStories,
                         slowModeTimeout: nil,
                         slowModeValidUntilTimestamp: nil,
-                        canAvoidRestrictions: true
+                        canAvoidRestrictions: true,
+                        paidMessage: nil
                     )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
@@ -495,7 +502,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         timestamp: item.timestamp,
                         expirationTimestamp: item.expirationTimestamp,
                         media: EngineMedia(media),
-                        alternativeMedia: item.alternativeMedia.flatMap(EngineMedia.init),
+                        alternativeMediaList: item.alternativeMediaList.compactMap(EngineMedia.init),
                         mediaAreas: item.mediaAreas,
                         text: item.text,
                         entities: item.entities,
@@ -543,7 +550,7 @@ final class StoryContentContextImpl: StoryContentContext {
                                 timestamp: item.timestamp,
                                 expirationTimestamp: Int32.max,
                                 media: EngineMedia(item.media), 
-                                alternativeMedia: nil,
+                                alternativeMediaList: [],
                                 mediaAreas: item.mediaAreas,
                                 text: item.text,
                                 entities: item.entities,
@@ -1195,7 +1202,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 }
                 
                 var selectedMedia: EngineMedia
-                if let slice = stateValue.slice, let alternativeMedia = item.alternativeMedia, !slice.additionalPeerData.preferHighQualityStories {
+                if let slice = stateValue.slice, let alternativeMedia = item.alternativeMediaList.first, !slice.additionalPeerData.preferHighQualityStories {
                     selectedMedia = alternativeMedia
                 } else {
                     selectedMedia = item.media
@@ -1380,7 +1387,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeTimeout(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeValidUntilTimeout(id: storyId.peerId),
-                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: storyId.peerId)
+                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.SendPaidMessageStars(id: storyId.peerId)
             ),
             item |> mapToSignal { item -> Signal<(Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]), NoError> in
                 return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile], [StoryId: EngineStoryItem?]) in
@@ -1450,7 +1458,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions, paidMessage) = data
             let (item, peers, allEntityFiles, forwardInfoStories) = itemAndPeers
             
             guard let peer = peer else {
@@ -1468,7 +1476,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 preferHighQualityStories: preferHighQualityStories,
                 slowModeTimeout: slowmodeTimeout,
                 slowModeValidUntilTimestamp: slowmodeValidUntilTimeout, 
-                canAvoidRestrictions: canAvoidGroupRestrictions
+                canAvoidRestrictions: canAvoidGroupRestrictions,
+                paidMessage: paidMessage
             )
             
             for (storyId, story) in forwardInfoStories {
@@ -1514,7 +1523,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     timestamp: itemValue.timestamp,
                     expirationTimestamp: itemValue.expirationTimestamp,
                     media: EngineMedia(media),
-                    alternativeMedia: itemValue.alternativeMedia.flatMap(EngineMedia.init),
+                    alternativeMediaList: itemValue.alternativeMediaList.compactMap(EngineMedia.init),
                     mediaAreas: itemValue.mediaAreas,
                     text: itemValue.text,
                     entities: itemValue.entities,
@@ -1669,7 +1678,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.IsPremiumRequiredForMessaging(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeTimeout(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.SlowmodeValidUntilTimeout(id: peerId),
-                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: peerId)
+                TelegramEngine.EngineData.Item.Peer.CanAvoidGroupRestrictions(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.SendPaidMessageStars(id: peerId)
             ),
             listContext.state,
             self.focusedIdUpdated.get(),
@@ -1680,7 +1690,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions) = data
+            let (peer, presence, areVoiceMessagesAvailable, canViewStats, notificationSettings, globalNotificationSettings, premiumRequired, slowmodeTimeout, slowmodeValidUntilTimeout, canAvoidGroupRestrictions, paidMessage) = data
             
             guard let peer = peer else {
                 return
@@ -1697,7 +1707,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 preferHighQualityStories: preferHighQualityStories,
                 slowModeTimeout: slowmodeTimeout,
                 slowModeValidUntilTimestamp: slowmodeValidUntilTimeout, 
-                canAvoidRestrictions: canAvoidGroupRestrictions
+                canAvoidRestrictions: canAvoidGroupRestrictions,
+                paidMessage: paidMessage
             )
             
             self.listState = state
@@ -1854,7 +1865,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                             }
                             
                             var selectedMedia: EngineMedia
-                            if let alternativeMedia = item.alternativeMedia, !preferHighQualityStories {
+                            if let alternativeMedia = item.alternativeMediaList.first, !preferHighQualityStories {
                                 selectedMedia = alternativeMedia
                             } else {
                                 selectedMedia = item.media
@@ -1979,7 +1990,7 @@ func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signa
     case let .file(file):
         var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
         for attribute in file.attributes {
-            if case let .Video(_, _, _, preloadSize) = attribute {
+            if case let .Video(_, _, _, preloadSize, _, _) = attribute {
                 if let preloadSize {
                     fetchRange = (0 ..< Int64(preloadSize), .default)
                 }
@@ -2010,6 +2021,8 @@ func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signa
             if !customReactions.contains(fileId) {
                 customReactions.append(fileId)
             }
+        case .stars:
+            break
         }
     }
     if !builtinReactions.isEmpty {
@@ -2025,7 +2038,7 @@ func preloadStoryMedia(context: AccountContext, info: StoryPreloadInfo) -> Signa
             for reaction in availableReactions.reactions {
                 for value in builtinReactions {
                     if case .builtin(value) = reaction.value {
-                        files.append(reaction.selectAnimation)
+                        files.append(reaction.selectAnimation._parse())
                     }
                 }
             }
@@ -2159,7 +2172,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
         var fetchPriorityDisposable: Disposable?
         
         let selectedMedia: EngineMedia
-        if !preferHighQualityStories, let alternativeMedia = storyItem.alternativeMedia {
+        if !preferHighQualityStories, let alternativeMedia = storyItem.alternativeMediaList.first {
             selectedMedia = alternativeMedia
         } else {
             selectedMedia = storyItem.media
@@ -2202,7 +2215,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
         case let .file(file):
             var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
             for attribute in file.attributes {
-                if case let .Video(_, _, _, preloadSize) = attribute {
+                if case let .Video(_, _, _, preloadSize, _, _) = attribute {
                     if let preloadSize {
                         fetchRange = (0 ..< Int64(preloadSize), .default)
                     }
@@ -2247,6 +2260,8 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
                     if !customReactions.contains(fileId) {
                         customReactions.append(fileId)
                     }
+                case .stars:
+                    break
                 }
             }
         }
@@ -2263,7 +2278,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
                 for reaction in availableReactions.reactions {
                     for value in builtinReactions {
                         if case .builtin(value) = reaction.value {
-                            files.append(reaction.selectAnimation)
+                            files.append(reaction.selectAnimation._parse())
                         }
                     }
                 }
@@ -2400,7 +2415,7 @@ private func getCachedStory(storyId: StoryId, transaction: Transaction) -> Engin
             timestamp: item.timestamp,
             expirationTimestamp: item.expirationTimestamp,
             media: EngineMedia(media),
-            alternativeMedia: item.alternativeMedia.flatMap(EngineMedia.init),
+            alternativeMediaList: item.alternativeMediaList.compactMap(EngineMedia.init),
             mediaAreas: item.mediaAreas,
             text: item.text,
             entities: item.entities,

@@ -307,8 +307,19 @@ final class TelegramChatColors {
         if let chatActionUrl = _chatActionUrl {
             return chatActionUrl
         } else {
-            let image = #imageLiteral(resourceName: "Icon_InlineBotUrl").precomposed(theme.chatServiceItemTextColor)
+            let image = NSImage(resource: .iconInlineBotUrl).precomposed(theme.chatServiceItemTextColor)
             _chatActionUrl = image
+            return image
+        }
+    }
+    
+    private var _chatActionCopy: CGImage?
+    func chatActionCopy(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionUrl = _chatActionCopy {
+            return chatActionUrl
+        } else {
+            let image = NSImage(resource: .iconInlineBotCopy).precomposed(theme.chatServiceItemTextColor)
+            _chatActionCopy = image
             return image
         }
     }
@@ -490,6 +501,10 @@ final class TelegramChatColors {
     
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
+    }
+    
+    func paidMessageIcon(_ item: ChatRowItem) -> CGImage {
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatPaidMessageOverlayServiceBubble : item.presentation.icons.chatPaidMessageOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatPaidMessageInBubble_incoming : item.presentation.icons.chatPaidMessageInBubble_outgoing : item.presentation.icons.chatPaidMessageOutBubble
     }
     
     func messagePinnedIcon(_ item: ChatRowItem) -> CGImage {

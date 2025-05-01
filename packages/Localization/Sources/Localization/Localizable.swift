@@ -133,6 +133,8 @@ public final class L10n {
   public static var accountSettingsProxy: String  { return L10n.tr("Localizable", "AccountSettings.Proxy") }
   /// Read Articles
   public static var accountSettingsReadArticles: String  { return L10n.tr("Localizable", "AccountSettings.ReadArticles") }
+  /// Send a Gift
+  public static var accountSettingsSendGift: String  { return L10n.tr("Localizable", "AccountSettings.SendGift") }
   /// Set a Bio
   public static var accountSettingsSetBio: String  { return L10n.tr("Localizable", "AccountSettings.SetBio") }
   /// Set Profile Photo
@@ -203,6 +205,200 @@ public final class L10n {
   public static var adminsWhoCanInviteEveryone: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Everyone") }
   /// Who can add members
   public static var adminsWhoCanInviteText: String  { return L10n.tr("Localizable", "Admins.WhoCanInvite.Text") }
+  /// Earn Stars
+  public static var affilateProgramEarn: String  { return L10n.tr("Localizable", "AffilateProgram.Earn") }
+  /// Distribute links to mini apps and earn a share of their revenue in Stars
+  public static var affilateProgramEarnInfo: String  { return L10n.tr("Localizable", "AffilateProgram.Earn.Info") }
+  /// You will be able to start a new affiliate program only in:\n\n%@
+  public static func affiliateProgramStartDelay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Affiliate.Program.StartDelay", p1)
+  }
+  /// Copy Link
+  public static var affiliateProgramActionCopyLink: String  { return L10n.tr("Localizable", "AffiliateProgram.ActionCopyLink") }
+  /// Join Program
+  public static var affiliateProgramActionJoin: String  { return L10n.tr("Localizable", "AffiliateProgram.ActionJoin") }
+  /// Commission will be sent to:
+  public static var affiliateProgramCommistionDestinationText: String  { return L10n.tr("Localizable", "AffiliateProgram.CommistionDestinationText") }
+  /// Daily Revenue per User
+  public static var affiliateProgramDailyRevenueText: String  { return L10n.tr("Localizable", "AffiliateProgram.DailyRevenueText") }
+  /// Lifetime
+  public static var affiliateProgramDurationLifetime: String  { return L10n.tr("Localizable", "AffiliateProgram.DurationLifetime") }
+  /// **%1$@** will share **%2$@** of the revenue from each user you refer to it for **%3$@.**
+  public static func affiliateProgramJoinSubtitle(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.JoinSubtitle", p1, p2, p3)
+  }
+  /// By joining this program, you afree to the [terms and conditions](https://telegram.org/terms) of Affiliate Programs.
+  public static var affiliateProgramJoinTerms: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTerms") }
+  /// Affiliate Program
+  public static var affiliateProgramJoinTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.JoinTitle") }
+  /// Share this link with your users to earn a **%1$d** commission on their spending in **%2$@** for **%3$@** after they follow your link.
+  public static func affiliateProgramLinkSubtitle(_ p1: Int, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.LinkSubtitle", p1, p2, p3)
+  }
+  /// Referral Link
+  public static var affiliateProgramLinkTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.LinkTitle") }
+  /// Monthly users
+  public static var affiliateProgramMonthlyText: String  { return L10n.tr("Localizable", "AffiliateProgram.MonthlyText") }
+  /// Off
+  public static var affiliateProgramOff: String  { return L10n.tr("Localizable", "AffiliateProgram.Off") }
+  /// personal account
+  public static var affiliateProgramPeerTypeSelf: String  { return L10n.tr("Localizable", "AffiliateProgram.PeerTypeSelf") }
+  /// Date
+  public static var affiliateProgramSortSelectorDate: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorDate") }
+  /// Profitability
+  public static var affiliateProgramSortSelectorProfitability: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorProfitability") }
+  /// Revenue
+  public static var affiliateProgramSortSelectorRevenue: String  { return L10n.tr("Localizable", "AffiliateProgram.SortSelectorRevenue") }
+  /// %d %@
+  public static func affiliateProgramUserCountFooterCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_countable", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_few", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_many", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_one", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_other", p1, p2)
+  }
+  /// %d user opened %@ through this link.
+  public static func affiliateProgramUserCountFooterTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_two", p1, p2)
+  }
+  /// No one opened %@ through this link yet.
+  public static func affiliateProgramUserCountFooterZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_zero", p1)
+  }
+  /// No one opened %@ through this link yet.
+  public static func affiliateProgramUserCountFooterZeroValueHolder(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.UserCountFooter_ZeroValueHolder", p1)
+  }
+  /// You have successfully connected to referal program
+  public static var affiliateProgramAlertConnected: String  { return L10n.tr("Localizable", "AffiliateProgram.Alert.Connected") }
+  /// You can now copy the referral link.
+  public static var affiliateProgramToastJoinedText: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastJoined.Text") }
+  /// Program joined
+  public static var affiliateProgramToastJoinedTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastJoined.Title") }
+  /// Share this link and earn **%1$@** of what people who use it spend in **%2$@!
+  public static func affiliateProgramToastLinkCopiedText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "AffiliateProgram.ToastLinkCopied.Text", p1, p2)
+  }
+  /// Link copied to clipboard
+  public static var affiliateProgramToastLinkCopiedTitle: String  { return L10n.tr("Localizable", "AffiliateProgram.ToastLinkCopied.Title") }
+  /// No available programs yet. Please check this page later.
+  public static var affiliateProgramsEmpty: String  { return L10n.tr("Localizable", "AffiliatePrograms.Empty") }
+  /// Existing Affiliate Programs
+  public static var affiliateProgramsExistingPrograms: String  { return L10n.tr("Localizable", "AffiliatePrograms.ExistingPrograms") }
+  /// Are you sure you want to leave this program
+  public static var affiliateProgramsConfirmAlert: String  { return L10n.tr("Localizable", "AffiliatePrograms.Confirm.Alert") }
+  /// Leave
+  public static var affiliateProgramsConfirmAlertOK: String  { return L10n.tr("Localizable", "AffiliatePrograms.Confirm.Alert.OK") }
+  /// MY PROGRAMS
+  public static var affiliateSetupConnectedSectionTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.ConnectedSectionTitle") }
+  /// End Affiliate Program
+  public static var affiliateSetupEndAction: String  { return L10n.tr("Localizable", "AffiliateSetup.EndAction") }
+  /// Leave
+  public static var affiliateSetupProgramLeave: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramLeave") }
+  /// COMMISSION
+  public static var affiliateSetupSectionCommission: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionCommission") }
+  /// Define the percentage of star revenue your affiliates earn for referring users to your bot.
+  public static var affiliateSetupSectionCommissionFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionCommissionFooter") }
+  /// DURATION
+  public static var affiliateSetupSectionDuration: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionDuration") }
+  /// Set the duration for which affiliates will earn commissions from referred users.
+  public static var affiliateSetupSectionDurationFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.SectionDurationFooter") }
+  /// SORT BY
+  public static var affiliateSetupSortSectionHeader: String  { return L10n.tr("Localizable", "AffiliateSetup.SortSectionHeader") }
+  /// Start
+  public static var affiliateSetupStart: String  { return L10n.tr("Localizable", "AffiliateSetup.Start") }
+  /// Start Affiliate Program
+  public static var affiliateSetupStartTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.StartTitle") }
+  /// No available programs yet.\nPlease check the page later.
+  public static var affiliateSetupSuggestedSectionEmpty: String  { return L10n.tr("Localizable", "AffiliateSetup.SuggestedSectionEmpty") }
+  /// PROGRAMS
+  public static var affiliateSetupSuggestedSectionTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.SuggestedSectionTitle") }
+  /// By creating an affiliate program, you afree to the [terms and conditions](https://telegram.org/terms) of Affiliate Programs.
+  public static var affiliateSetupTermsFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.TermsFooter") }
+  /// Earn a commission each time a user who first accessed a mini app through your referral link spends **Stars** within it.
+  public static var affiliateSetupTextJoin: String  { return L10n.tr("Localizable", "AffiliateSetup.TextJoin") }
+  /// Affiliate Program
+  public static var affiliateSetupTextNew: String  { return L10n.tr("Localizable", "AffiliateSetup.TextNew") }
+  /// Affiliate Programs
+  public static var affiliateSetupTitleJoin: String  { return L10n.tr("Localizable", "AffiliateSetup.TitleJoin") }
+  /// Affiliate Program
+  public static var affiliateSetupTitleNew: String  { return L10n.tr("Localizable", "AffiliateSetup.TitleNew") }
+  /// Update
+  public static var affiliateSetupUpdate: String  { return L10n.tr("Localizable", "AffiliateSetup.Update") }
+  /// Update Affiliate Program
+  public static var affiliateSetupUpdateTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.UpdateTitle") }
+  /// Start
+  public static var affiliateSetupAlertApplyAction: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.Action") }
+  /// Commission
+  public static var affiliateSetupAlertApplySectionCommission: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.SectionCommission") }
+  /// Duration
+  public static var affiliateSetupAlertApplySectionDuration: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.SectionDuration") }
+  /// Once you start the affiliate program, you won't be able to decrease its commission or duration. You can only increase these parameters or end the program, whuch will disable all previously distributed referral links.
+  public static var affiliateSetupAlertApplyText: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.Text") }
+  /// Warning
+  public static var affiliateSetupAlertApplyTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertApply.Title") }
+  /// End Anyway
+  public static var affiliateSetupAlertTerminateAction: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertTerminate.Action") }
+  /// If you end your affiliate program:\n\n• Any referral links already shared will be disabled in 24 hours.\n\n• All participating affiliates will be notified.\n\n• You will be able to start a new affiliate program only in 24 hours.
+  public static var affiliateSetupAlertTerminateText: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertTerminate.Text") }
+  /// Warning
+  public static var affiliateSetupAlertTerminateTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.AlertTerminate.Title") }
+  /// View Existing Programs
+  public static var affiliateSetupExistingProgramsAction: String  { return L10n.tr("Localizable", "AffiliateSetup.ExistingPrograms.Action") }
+  /// Explore what other mini apps offer.
+  public static var affiliateSetupExistingProgramsFooter: String  { return L10n.tr("Localizable", "AffiliateSetup.ExistingPrograms.Footer") }
+  /// Reward those who help grow your user base
+  public static var affiliateSetupHeaderInfo: String  { return L10n.tr("Localizable", "AffiliateSetup.Header.Info") }
+  /// Receive guaranteed commissions for spending by users you refer.
+  public static var affiliateSetupIntroJoinText1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Text1") }
+  /// Track your commissions from referred users in real time.
+  public static var affiliateSetupIntroJoinText2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Text2") }
+  /// Choose a mini app below, get your referral link, and start earning Stars.
+  public static var affiliateSetupIntroJoinText3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Text3") }
+  /// Reliable
+  public static var affiliateSetupIntroJoinTitle1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Title1") }
+  /// Transparent
+  public static var affiliateSetupIntroJoinTitle2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Title2") }
+  /// Simple
+  public static var affiliateSetupIntroJoinTitle3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroJoin.Title3") }
+  /// Set the commission for revenue generated by users referred to you.
+  public static var affiliateSetupIntroNewText1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Text1") }
+  /// Telegram will feature your program for millions of potential affiliates.
+  public static var affiliateSetupIntroNewText2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Text2") }
+  /// Affiliates will share your referral link with their audience.
+  public static var affiliateSetupIntroNewText3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Text3") }
+  /// Share revenue with affiliates
+  public static var affiliateSetupIntroNewTitle1: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Title1") }
+  /// Launch your affiliate program
+  public static var affiliateSetupIntroNewTitle2: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Title2") }
+  /// Let affiliates promote you
+  public static var affiliateSetupIntroNewTitle3: String  { return L10n.tr("Localizable", "AffiliateSetup.IntroNew.Title3") }
+  /// Copy Link
+  public static var affiliateSetupProgramMenuCopyLink: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.CopyLink") }
+  /// Leave
+  public static var affiliateSetupProgramMenuLeave: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.Leave") }
+  /// Open App
+  public static var affiliateSetupProgramMenuOpenApp: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.OpenApp") }
+  /// Open Bot
+  public static var affiliateSetupProgramMenuOpenBot: String  { return L10n.tr("Localizable", "AffiliateSetup.ProgramMenu.OpenBot") }
+  /// Affiliate Program Started
+  public static var affiliateSetupToastStartedText: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastStarted.Text") }
+  /// Participating affiliates have been notified. All referral links will be disabled in 24 hours.
+  public static var affiliateSetupToastTerminatedText: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastTerminated.Text") }
+  /// Affiliate Program Ended
+  public static var affiliateSetupToastTerminatedTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastTerminated.Title") }
   /// Cancel
   public static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
   /// Discard
@@ -815,6 +1011,22 @@ public final class L10n {
   public static func boostReassignStatusExpiresOn(_ p1: String) -> String {
     return L10n.tr("Localizable", "BoostReassign.Status.ExpiresOn", p1)
   }
+  /// Allow **%@** to send me messages.
+  public static func botAllowSendMessages(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Bot.AllowSendMessages", p1)
+  }
+  /// Launch
+  public static var botLaunchApp: String  { return L10n.tr("Localizable", "Bot.LaunchApp") }
+  /// [More about this bot >](info)
+  public static var botMoreAbout: String  { return L10n.tr("Localizable", "Bot.MoreAbout") }
+  /// Which apps are included here? [Learn >](grossing)
+  public static var botGrossingDisclaimer: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer") }
+  /// Top Mini Apps
+  public static var botGrossingDisclaimerAlertHeader: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer.Alert.Header") }
+  /// Understood
+  public static var botGrossingDisclaimerAlertOk: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer.Alert.ok") }
+  /// This catalogue ranks mini apps based on their daily revenue, measured in Stars. To be listed, developers must set their main mini app in [@botfather](https://t.me/botfather) (as described [here](https://core.telegram.org/api/bots/webapps)), have over **1,000** daily users, and earn a daily revenue above **1,000** Stars, based on the weekly average.
+  public static var botGrossingDisclaimerAlertText: String  { return L10n.tr("Localizable", "Bot.Grossing.Disclaimer.Alert.Text") }
   /// Open Link
   public static var botInlineAuthHeader: String  { return L10n.tr("Localizable", "Bot.InlineAuth.Header") }
   /// Open
@@ -841,6 +1053,16 @@ public final class L10n {
   public static var botTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Desc") }
   /// Two-Step Verification
   public static var botTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Title") }
+  /// By publishing this mini app, you agree to the [Telegram Terms of Service Developers.](https://telegram.org)
+  public static var botInfoLaunchInfo: String  { return L10n.tr("Localizable", "BotInfo.LaunchInfo") }
+  /// Open App
+  public static var botInfoOpenApp: String  { return L10n.tr("Localizable", "BotInfo.OpenApp") }
+  /// https://telegram.org/privacy-tpa
+  public static var botInfoLaunchInfoPrivacyUrl: String  { return L10n.tr("Localizable", "BotInfo.LaunchInfo.PrivacyUrl") }
+  /// By launching this mini app, you agree to the [Telegram Terms of Service Mini Apps.](%@)
+  public static func botInfoLaunchInfoUser(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BotInfo.LaunchInfo.User", p1)
+  }
   /// active
   public static var botUsernameActive: String  { return L10n.tr("Localizable", "BotUsername.Active") }
   /// USERNAME
@@ -867,6 +1089,46 @@ public final class L10n {
   public static var botUsernameListInfo: String  { return L10n.tr("Localizable", "BotUsername.List.Info") }
   /// USERNAMES ORDER
   public static var botUsernameListTitle: String  { return L10n.tr("Localizable", "BotUsername.List.Title") }
+  /// **%@** has been notified and will receive your verification mark and description upon accepting.
+  public static func botVerificationAdded(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BotVerification.Added", p1)
+  }
+  /// You have removed **%@'s** verification.
+  public static func botVerificationRemoved(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BotVerification.Removed", p1)
+  }
+  /// Remove
+  public static var botVerificationRemoveRemove: String  { return L10n.tr("Localizable", "BotVerification.Remove.Remove") }
+  /// Remove Verification
+  public static var botVerificationRemoveTitle: String  { return L10n.tr("Localizable", "BotVerification.Remove.Title") }
+  /// This bot is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveBotText: String  { return L10n.tr("Localizable", "BotVerification.Remove.Bot.Text") }
+  /// This channel is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveChannelText: String  { return L10n.tr("Localizable", "BotVerification.Remove.Channel.Text") }
+  /// This group is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveGroupText: String  { return L10n.tr("Localizable", "BotVerification.Remove.Group.Text") }
+  /// This user is already verified by you. Do you want to remove verification?
+  public static var botVerificationRemoveUserText: String  { return L10n.tr("Localizable", "BotVerification.Remove.User.Text") }
+  /// Description...
+  public static var botVerificationVerifyPlaceholder: String  { return L10n.tr("Localizable", "BotVerification.Verify.Placeholder") }
+  /// Verify
+  public static var botVerificationVerifyVerify: String  { return L10n.tr("Localizable", "BotVerification.Verify.Verify") }
+  /// Do you want to verify this bot with your verification mark and description?
+  public static var botVerificationVerifyBotText: String  { return L10n.tr("Localizable", "BotVerification.Verify.Bot.Text") }
+  /// Verify Bot
+  public static var botVerificationVerifyBotTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.Bot.Title") }
+  /// Do you want to verify this channel with your verification mark and description?
+  public static var botVerificationVerifyChannelText: String  { return L10n.tr("Localizable", "BotVerification.Verify.Channel.Text") }
+  /// Verify Channel
+  public static var botVerificationVerifyChannelTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.Channel.Title") }
+  /// Do you want to verify this group with your verification mark and description?
+  public static var botVerificationVerifyGroupText: String  { return L10n.tr("Localizable", "BotVerification.Verify.Group.Text") }
+  /// Verify Group
+  public static var botVerificationVerifyGroupTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.Group.Title") }
+  /// Do you want to verify this user with your verification mark and description?
+  public static var botVerificationVerifyUserText: String  { return L10n.tr("Localizable", "BotVerification.Verify.User.Text") }
+  /// Verify User
+  public static var botVerificationVerifyUserTitle: String  { return L10n.tr("Localizable", "BotVerification.Verify.User.Title") }
   /// Leave as regular group
   public static var broadcastGroupsCancel: String  { return L10n.tr("Localizable", "BroadcastGroups.Cancel") }
   /// Convert to Broadcast Group
@@ -913,6 +1175,42 @@ public final class L10n {
   public static var businessAwayMessageHeader: String  { return L10n.tr("Localizable", "Business.AwayMessage.Header") }
   /// Away Message
   public static var businessAwayMessageTitle: String  { return L10n.tr("Localizable", "Business.AwayMessage.Title") }
+  /// Manage Gifts and Stars
+  public static var businessChatBotManageGifts: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts") }
+  /// Manage Messages
+  public static var businessChatBotManageMessages: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages") }
+  /// Manage Profile
+  public static var businessChatBotManageProfile: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile") }
+  /// Manage Stories
+  public static var businessChatBotManageStories: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageStories") }
+  /// Sell Gifts
+  public static var businessChatBotManageGiftsSell: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.Sell") }
+  /// Change Gift Settings
+  public static var businessChatBotManageGiftsSettings: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.Settings") }
+  /// Transfer and Upgrade Gifts
+  public static var businessChatBotManageGiftsTransfer: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.Transfer") }
+  /// Transfer Stars
+  public static var businessChatBotManageGiftsTransferStars: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.TransferStars") }
+  /// View Gifts
+  public static var businessChatBotManageGiftsView: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageGifts.View") }
+  /// Delete Received Messages
+  public static var businessChatBotManageMessagesDeleteReceived: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.DeleteReceived") }
+  /// Delete Sent Messages
+  public static var businessChatBotManageMessagesDeleteSent: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.DeleteSent") }
+  /// Mark Messages as Read
+  public static var businessChatBotManageMessagesMark: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.Mark") }
+  /// Read Messages
+  public static var businessChatBotManageMessagesRead: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.Read") }
+  /// Reply to Messages
+  public static var businessChatBotManageMessagesReply: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageMessages.Reply") }
+  /// Edit Profile Picture
+  public static var businessChatBotManageProfileAvatar: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Avatar") }
+  /// Edit Bio
+  public static var businessChatBotManageProfileBio: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Bio") }
+  /// Edit Name
+  public static var businessChatBotManageProfileName: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Name") }
+  /// Edit Username
+  public static var businessChatBotManageProfileUsername: String  { return L10n.tr("Localizable", "Business.ChatBot.ManageProfile.Username") }
   /// This bot doesn't support Telegram Business yet.
   public static var businessChatBotsBotNotSupported: String  { return L10n.tr("Localizable", "Business.ChatBots.BotNotSupported") }
   /// Enter the username or URL of the Telegram bot that you want to automatically process your chats.
@@ -1229,6 +1527,8 @@ public final class L10n {
   public static var callDecline: String  { return L10n.tr("Localizable", "Call.Decline") }
   /// End
   public static var callEnd: String  { return L10n.tr("Localizable", "Call.End") }
+  /// Group Call
+  public static var callGroupCall: String  { return L10n.tr("Localizable", "Call.GroupCall") }
   /// Mute
   public static var callMute: String  { return L10n.tr("Localizable", "Call.Mute") }
   /// %@'s app does not support calls. They need to update their app before you can call them.
@@ -1317,6 +1617,8 @@ public final class L10n {
   public static var callStatusRequesting: String  { return L10n.tr("Localizable", "Call.StatusRequesting") }
   /// Ringing...
   public static var callStatusRinging: String  { return L10n.tr("Localizable", "Call.StatusRinging") }
+  /// Switching to conference...
+  public static var callStatusSwitchingToConference: String  { return L10n.tr("Localizable", "Call.StatusSwitchingToConference") }
   /// Undefined error, please try later.
   public static var callUndefinedError: String  { return L10n.tr("Localizable", "Call.UndefinedError") }
   /// Video
@@ -1365,6 +1667,12 @@ public final class L10n {
   public static var callSameDeviceError: String  { return L10n.tr("Localizable", "Call.SameDevice.Error") }
   /// Telegram needs access for Screen Sharing.
   public static var callScreenError: String  { return L10n.tr("Localizable", "Call.Screen.Error") }
+  /// Group Call
+  public static var callStatusGroupCall: String  { return L10n.tr("Localizable", "Call.Status.GroupCall") }
+  /// Group Call → %@
+  public static func callStatusGroupCallAccount(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Status.GroupCall.Account", p1)
+  }
   /// %@'s camera is off
   public static func callToastCameraOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.CameraOff", p1)
@@ -2457,6 +2765,34 @@ public final class L10n {
   public static func channelBoostBoosterDuration(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Booster.Duration", p1)
   }
+  /// %d
+  public static func channelBoostBoosterStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_countable", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_few", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_many", p1)
+  }
+  /// %d Star
+  public static func channelBoostBoosterStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_one", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_other", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_two", p1)
+  }
+  /// %d Stars
+  public static func channelBoostBoosterStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Stars_zero", p1)
+  }
   /// To Be Distributed
   public static var channelBoostBoosterToBeDistributed: String  { return L10n.tr("Localizable", "ChannelBoost.Booster.ToBeDistributed") }
   /// Unclaimed
@@ -2969,6 +3305,16 @@ public final class L10n {
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
   /// Do Not Restrict Boosters
   public static var channelPermissionRestrictBoosters: String  { return L10n.tr("Localizable", "ChannelPermission.RestrictBoosters") }
+  /// Charge Stars for Messages
+  public static var channelPermissionPaidMessagesChargeStars: String  { return L10n.tr("Localizable", "ChannelPermission.PaidMessages.ChargeStars") }
+  /// If you turn this on, regular members of the group will have to pay Stars to send messages.
+  public static var channelPermissionPaidMessagesChargeStarsInfo: String  { return L10n.tr("Localizable", "ChannelPermission.PaidMessages.ChargeStars.Info") }
+  /// SET YOUR PRICE PER MESSAGE
+  public static var channelPermissionPaidMessagesSetupHeader: String  { return L10n.tr("Localizable", "ChannelPermission.PaidMessages.Setup.Header") }
+  /// Your group will receive %1$@ of the selected fee (~%2$@$) for each incoming message.
+  public static func channelPermissionPaidMessagesSetupInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelPermission.PaidMessages.Setup.Info", p1, p2)
+  }
   /// Choose how many boosts a user must give to the group to bypass restrictions on sending messages.
   public static var channelPermissionRestrictBoostersActive: String  { return L10n.tr("Localizable", "ChannelPermission.RestrictBoosters.Active") }
   /// Turn this on to always allow users who boosted your group to send messages and media.
@@ -2977,6 +3323,8 @@ public final class L10n {
   public static var channelReactionsAdd: String  { return L10n.tr("Localizable", "ChannelReactions.Add") }
   /// Enable Reaction
   public static var channelReactionsEnableReactions: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions") }
+  /// Enable Paid Reactions
+  public static var channelReactionsEnableStars: String  { return L10n.tr("Localizable", "ChannelReactions.EnableStars") }
   /// %d Boost Level Required
   public static func channelReactionsLevelRequired(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelReactions.LevelRequired", p1)
@@ -2993,6 +3341,8 @@ public final class L10n {
   public static var channelReactionsAddInfo: String  { return L10n.tr("Localizable", "ChannelReactions.Add.Info") }
   /// You can add emoji from any emoji pack as a reaction.
   public static var channelReactionsEnableReactionsInfo: String  { return L10n.tr("Localizable", "ChannelReactions.EnableReactions.Info") }
+  /// Switch this on to let your subscribers set paid reactions with Telegram Stars, which you will be able to withdraw later as TON. [Learn More >](https://telegram.org)
+  public static var channelReactionsEnableStarsInfo: String  { return L10n.tr("Localizable", "ChannelReactions.EnableStars.Info") }
   /// Limit the number of different reactions that can be added to a post, including already published posts.
   public static var channelReactionsMaxCountInfo: String  { return L10n.tr("Localizable", "ChannelReactions.MaxCount.Info") }
   /// MAXIMUM REACTIONS PER POST
@@ -3201,6 +3551,8 @@ public final class L10n {
   public static func chatInviteRequestInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.InviteRequestInfo", p1, p2)
   }
+  /// JOIN CALL
+  public static var chatJoinGroupCall: String  { return L10n.tr("Localizable", "Chat.JoinGroupCall") }
   /// Live Location
   public static var chatLiveLocation: String  { return L10n.tr("Localizable", "Chat.LiveLocation") }
   /// owner
@@ -3263,6 +3615,12 @@ public final class L10n {
   public static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
   public static var chatTitleFeed: String  { return L10n.tr("Localizable", "Chat.TitleFeed") }
+  /// This quote is from a private channel
+  public static var chatToastQuoteChatUnavailbalePrivateChannel: String  { return L10n.tr("Localizable", "Chat.ToastQuoteChatUnavailbalePrivateChannel") }
+  /// This quote is from a private chat
+  public static var chatToastQuoteChatUnavailbalePrivateChat: String  { return L10n.tr("Localizable", "Chat.ToastQuoteChatUnavailbalePrivateChat") }
+  /// This quote is from a private group
+  public static var chatToastQuoteChatUnavailbalePrivateGroup: String  { return L10n.tr("Localizable", "Chat.ToastQuoteChatUnavailbalePrivateGroup") }
   /// topic creator
   public static var chatTopicBadge: String  { return L10n.tr("Localizable", "Chat.TopicBadge") }
   /// %d
@@ -3295,6 +3653,8 @@ public final class L10n {
   }
   /// VIEW BACKGROUND
   public static var chatViewBackground: String  { return L10n.tr("Localizable", "Chat.ViewBackground") }
+  /// VIEW COLLECTIBLE
+  public static var chatViewCollectible: String  { return L10n.tr("Localizable", "Chat.ViewCollectible") }
   /// VIEW CONTACT
   public static var chatViewContact: String  { return L10n.tr("Localizable", "Chat.ViewContact") }
   /// %d
@@ -3497,6 +3857,12 @@ public final class L10n {
   }
   /// Reset
   public static var chatAlertUnsavedReset: String  { return L10n.tr("Localizable", "Chat.Alert.Unsaved.Reset") }
+  /// Ad
+  public static var chatBotAd: String  { return L10n.tr("Localizable", "Chat.Bot.Ad") }
+  /// remove
+  public static var chatBotRemove: String  { return L10n.tr("Localizable", "Chat.Bot.Remove") }
+  /// Ad
+  public static var chatBotAdAd: String  { return L10n.tr("Localizable", "Chat.BotAd.Ad") }
   /// bot manages this chat
   public static var chatBotManagerFullAccess: String  { return L10n.tr("Localizable", "Chat.BotManager.FullAccess") }
   /// bot stopped
@@ -3653,6 +4019,10 @@ public final class L10n {
   public static var chatContextDisableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.DisableNotifications") }
   /// Edit
   public static var chatContextEdit1: String  { return L10n.tr("Localizable", "Chat.Context.Edit1") }
+  /// edited %@
+  public static func chatContextEditedAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.EditedAt", p1)
+  }
   /// click on date
   public static var chatContextEditHelp: String  { return L10n.tr("Localizable", "Chat.Context.EditHelp") }
   /// Edit Topic
@@ -3917,6 +4287,10 @@ public final class L10n {
   public static var chatEmptyComments: String  { return L10n.tr("Localizable", "Chat.Empty.Comments") }
   /// Link Preview
   public static var chatEmptyLinkPreview: String  { return L10n.tr("Localizable", "Chat.Empty.LinkPreview") }
+  /// %1$@ charges %2$@ for each message
+  public static func chatEmptyPaidMessage(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Empty.PaidMessage", p1, p2)
+  }
   /// Subscribe to **Premium**\nto message **%@**.
   public static func chatEmptyPremiumRequiredState(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Empty.PremiumRequiredState", p1)
@@ -3945,6 +4319,8 @@ public final class L10n {
   public static var chatEmptyPremiumRequiredAction: String  { return L10n.tr("Localizable", "Chat.Empty.PremiumRequired.Action") }
   /// Send a message or click on the greeting below
   public static var chatEmptyChatInfo: String  { return L10n.tr("Localizable", "Chat.EmptyChat.Info") }
+  /// Previewing this file can potentially expose your IP address to its sender or harm your device.
+  public static var chatFileQuickLookMalf: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Malf") }
   /// Previewing this file can potentially expose your IP address to its sender.
   public static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
   /// Only admins can send messages in this group.
@@ -4205,6 +4581,14 @@ public final class L10n {
   public static func chatGiveawayInfoWon(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Won", p1)
   }
+  /// The giveaway was sponsored by the admins of **%1$@**, who acquired **%2$@** for its followers.
+  public static func chatGiveawayInfoEndedIntroStars(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedIntro.Stars", p1, p2)
+  }
+  /// The giveaway is sponsored by the admins of **%1$@**, who acquired **%2$@** for its followers.
+  public static func chatGiveawayInfoOngoingIntroStars(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingIntro.Stars", p1, p2)
+  }
   /// , 
   public static var chatGiveawayMessageCountriesDelimiter: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.CountriesDelimiter") }
   /// from %@
@@ -4260,6 +4644,62 @@ public final class L10n {
   /// Giveaway Prizes
   public static var chatGiveawayMessagePrizeTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.PrizeTitle") }
   /// %d
+  public static func chatGiveawayMessageStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_countable", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_few", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_many", p1)
+  }
+  /// **%d** Star
+  public static func chatGiveawayMessageStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_one", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_other", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_two", p1)
+  }
+  /// **%d** Stars
+  public static func chatGiveawayMessageStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatGiveawayMessageStarWinnersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_countable", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_few", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_many", p1)
+  }
+  /// among **%d** winner
+  public static func chatGiveawayMessageStarWinnersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_one", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_other", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_two", p1)
+  }
+  /// among **%d** winners
+  public static func chatGiveawayMessageStarWinnersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.StarWinners_zero", p1)
+  }
+  /// %d
   public static func chatGiveawayMessageSubscriptionsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_countable", p1)
   }
@@ -4286,6 +4726,98 @@ public final class L10n {
   /// **%d** Telegram Premium Subscriptions
   public static func chatGiveawayMessageSubscriptionsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_zero", p1)
+  }
+  /// %d
+  public static func chatGiveawayMessageWinnersInfoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_countable", p1)
+  }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoFew: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_few") }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoMany: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_many") }
+  /// The winner received gift link in private messages.
+  public static var chatGiveawayMessageWinnersInfoOne: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_one") }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoOther: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_other") }
+  /// All winners received gift links in private messages.
+  public static var chatGiveawayMessageWinnersInfoTwo: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_two") }
+  /// The winner received their gift link in a private message.
+  public static var chatGiveawayMessageWinnersInfoZero: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo_zero") }
+  /// %d
+  public static func chatGiveawayMessageWinnersSelectedTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_countable", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_few", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_many", p1)
+  }
+  /// **%d** winner of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_one", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_other", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_two", p1)
+  }
+  /// **%d** winners of the [Giveaway]() was randomly selected by Telegram.
+  public static func chatGiveawayMessageWinnersSelectedTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedText_zero", p1)
+  }
+  /// %d
+  public static func chatGiveawayMessageWinnersSelectedTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_countable", p1)
+  }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleFew: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_few") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleMany: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_many") }
+  /// Winner Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleOne: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_one") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleOther: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_other") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleTwo: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_two") }
+  /// Winners Selected!
+  public static var chatGiveawayMessageWinnersSelectedTitleZero: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersSelectedTitle_zero") }
+  /// %1$@ will be distributed\n%2$@.
+  public static func chatGiveawayMessageStarsPrizeText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Stars.PrizeText", p1, p2)
+  }
+  /// %d %@
+  public static func chatGiveawayMessageWinnersInfoStarCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_countable", p1, p2)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarFew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_few", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarMany(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_many", p1)
+  }
+  /// The winner received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarOne(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_one", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarOther(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_other", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarTwo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_two", p1)
+  }
+  /// All winners received a total of %2$@.
+  public static func chatGiveawayMessageWinnersInfoStarZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.WinnersInfo.Star_zero", p1)
   }
   /// Sorry, this group is not accessible.
   public static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
@@ -4375,6 +4907,8 @@ public final class L10n {
   }
   /// Previous message
   public static var chatHeaderPinnedPrevious: String  { return L10n.tr("Localizable", "Chat.Header.PinnedPrevious") }
+  /// Remove Fee
+  public static var chatHeaderRemoveFee: String  { return L10n.tr("Localizable", "Chat.Header.RemoveFee") }
   /// Report Spam
   public static var chatHeaderReportSpam: String  { return L10n.tr("Localizable", "Chat.Header.ReportSpam") }
   /// %d
@@ -4404,6 +4938,22 @@ public final class L10n {
   /// %d Requested to Join
   public static func chatHeaderRequestToJoinZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Header.RequestToJoin_zero", p1)
+  }
+  /// %1$@ must pay %2$@ for each message to you.
+  public static func chatHeaderRemoveFeeText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Header.RemoveFee.Text", p1, p2)
+  }
+  /// Remove Fee
+  public static var chatHeaderRemoveFeeConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Header.RemoveFee.Confirm.Header") }
+  /// Are you sure you want to allow **%@** to message you for free?
+  public static func chatHeaderRemoveFeeConfirmInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Header.RemoveFee.Confirm.Info", p1)
+  }
+  /// Yes
+  public static var chatHeaderRemoveFeeConfirmOK: String  { return L10n.tr("Localizable", "Chat.Header.RemoveFee.Confirm.OK") }
+  /// Refund already paid **%@**?
+  public static func chatHeaderRemoveFeeConfirmOption(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Header.RemoveFee.Confirm.Option", p1)
   }
   /// Starts in %@
   public static func chatHeaderVoiceChatStartsIn(_ p1: String) -> String {
@@ -4669,6 +5219,8 @@ public final class L10n {
   public static var chatMessageLaunchBot: String  { return L10n.tr("Localizable", "Chat.Message.LaunchBot") }
   /// Open Gift Link
   public static var chatMessageOpenGiftLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenGiftLink") }
+  /// Open
+  public static var chatMessageOpenGiftStars: String  { return L10n.tr("Localizable", "Chat.Message.OpenGiftStars") }
   /// Open Link
   public static var chatMessageOpenLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenLink") }
   /// OPEN STORY
@@ -4831,10 +5383,132 @@ public final class L10n {
   public static var chatMessageSponsoredLink: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.Link") }
   /// What are sponsored messages?
   public static var chatMessageSponsoredWhat: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.What") }
+  /// REQUEST TO JOIN
+  public static var chatMessageActionRequestToJoin: String  { return L10n.tr("Localizable", "Chat.MessageAction.RequestToJoin") }
   /// SHOW MESSAGE
   public static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
   /// Message doesn't exist
   public static var chatOpenMessageNotExist: String  { return L10n.tr("Localizable", "Chat.Open.MessageNotExist") }
+  /// Don't ask again
+  public static var chatPayStarsConfirmCheckbox: String  { return L10n.tr("Localizable", "Chat.PayStars.Confirm.Checkbox") }
+  /// %d
+  public static func chatPayStarsConfirmMediasCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_countable", p1)
+  }
+  /// %d medias
+  public static func chatPayStarsConfirmMediasFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_few", p1)
+  }
+  /// %d medias
+  public static func chatPayStarsConfirmMediasMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_many", p1)
+  }
+  /// %d media
+  public static func chatPayStarsConfirmMediasOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_one", p1)
+  }
+  /// %d medias
+  public static func chatPayStarsConfirmMediasOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_other", p1)
+  }
+  /// %d medias
+  public static func chatPayStarsConfirmMediasTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_two", p1)
+  }
+  /// %d medias
+  public static func chatPayStarsConfirmMediasZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Medias_zero", p1)
+  }
+  /// %d
+  public static func chatPayStarsConfirmMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_countable", p1)
+  }
+  /// %d messages
+  public static func chatPayStarsConfirmMessagesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_few", p1)
+  }
+  /// %d messages
+  public static func chatPayStarsConfirmMessagesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_many", p1)
+  }
+  /// %d message
+  public static func chatPayStarsConfirmMessagesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_one", p1)
+  }
+  /// %d messages
+  public static func chatPayStarsConfirmMessagesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_other", p1)
+  }
+  /// %d messages
+  public static func chatPayStarsConfirmMessagesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_two", p1)
+  }
+  /// %d messages
+  public static func chatPayStarsConfirmMessagesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Messages_zero", p1)
+  }
+  /// %d
+  public static func chatPayStarsConfirmPayCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_countable", p1)
+  }
+  /// Pay for %d Messages
+  public static func chatPayStarsConfirmPayFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_few", p1)
+  }
+  /// Pay for %d Messages
+  public static func chatPayStarsConfirmPayMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_many", p1)
+  }
+  /// Pay for %d Message
+  public static func chatPayStarsConfirmPayOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_one", p1)
+  }
+  /// Pay for %d Messages
+  public static func chatPayStarsConfirmPayOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_other", p1)
+  }
+  /// Pay for %d Messages
+  public static func chatPayStarsConfirmPayTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_two", p1)
+  }
+  /// Pay for %d Messages
+  public static func chatPayStarsConfirmPayZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay_zero", p1)
+  }
+  /// **%1$@** charges **%2$@** per incoming message. Would you like to pay **%3$@** to send **%4$@**?
+  public static func chatPayStarsConfirmText(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Text", p1, p2, p3, p4)
+  }
+  /// Confirm Payment
+  public static var chatPayStarsConfirmTitle: String  { return L10n.tr("Localizable", "Chat.PayStars.Confirm.Title") }
+  /// %d
+  public static func chatPayStarsConfirmPayMediaCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_countable", p1)
+  }
+  /// Pay for %d Medias
+  public static func chatPayStarsConfirmPayMediaFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_few", p1)
+  }
+  /// Pay for %d Medias
+  public static func chatPayStarsConfirmPayMediaMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_many", p1)
+  }
+  /// Pay for %d Media
+  public static func chatPayStarsConfirmPayMediaOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_one", p1)
+  }
+  /// Pay for %d Medias
+  public static func chatPayStarsConfirmPayMediaOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_other", p1)
+  }
+  /// Pay for %d Medias
+  public static func chatPayStarsConfirmPayMediaTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_two", p1)
+  }
+  /// Pay for %d Medias
+  public static func chatPayStarsConfirmPayMediaZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.PayStars.Confirm.Pay.Media_zero", p1)
+  }
   /// Don't Show Pinned Messages
   public static var chatPinnedDontShow: String  { return L10n.tr("Localizable", "Chat.Pinned.DontShow") }
   /// %d
@@ -5181,6 +5855,10 @@ public final class L10n {
   }
   /// You allowed this bot to message you when you added it in the attachment menu.
   public static var chatServiceBotWriteAllowed: String  { return L10n.tr("Localizable", "Chat.Service.BotWriteAllowed") }
+  /// Cancelled Group Call
+  public static var chatServiceCancelledGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.CancelledGroupCall") }
+  /// Declined Group Call
+  public static var chatServiceDeclinedGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.DeclinedGroupCall") }
   /// %1$@ disabled the chat theme
   public static func chatServiceDisabledTheme(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.DisabledTheme", p1)
@@ -5191,6 +5869,44 @@ public final class L10n {
   public static func chatServiceGiveawayStarted(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.GiveawayStarted", p1)
   }
+  /// %d
+  public static func chatServiceGroupsInCommonCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_countable", p1)
+  }
+  /// %d groups >
+  public static func chatServiceGroupsInCommonFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_few", p1)
+  }
+  /// %d groups >
+  public static func chatServiceGroupsInCommonMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_many", p1)
+  }
+  /// %d groups >
+  public static func chatServiceGroupsInCommonOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_one", p1)
+  }
+  /// %d groups >
+  public static func chatServiceGroupsInCommonOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_other", p1)
+  }
+  /// %d groups >
+  public static func chatServiceGroupsInCommonTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_two", p1)
+  }
+  /// %d groups >
+  public static func chatServiceGroupsInCommonZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_zero", p1)
+  }
+  /// no groups
+  public static var chatServiceGroupsInCommonZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Service.GroupsInCommon_ZeroValueHolder") }
+  /// Incoming Group Call
+  public static var chatServiceIncomingGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.IncomingGroupCall") }
+  /// Missed Group Call
+  public static var chatServiceMissedGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.MissedGroupCall") }
+  /// Not an official account
+  public static var chatServiceNotOfficial: String  { return L10n.tr("Localizable", "Chat.Service.NotOfficial") }
+  /// Outgoing Group Call
+  public static var chatServiceOutgoingGroupCall: String  { return L10n.tr("Localizable", "Chat.Service.OutgoingGroupCall") }
   /// You have successfully transferred **%1$@** to **%2$@** for **%3$@**
   public static func chatServicePaymentSent1(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent1", p1, p2, p3)
@@ -5225,9 +5941,47 @@ public final class L10n {
   }
   /// pinned message
   public static var chatServicePinnedMessage: String  { return L10n.tr("Localizable", "Chat.Service.PinnedMessage") }
+  /// %@ refunded back %@
+  public static func chatServiceRefund(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Refund", p1, p2)
+  }
+  /// %@ %@%d
+  public static func chatServiceRefundedBackCountable(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_countable", p1, p2, p3)
+  }
+  /// %@ refunded back %@%d
+  public static func chatServiceRefundedBackFew(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_few", p1, p2, p3)
+  }
+  /// %@ refunded back %@%d
+  public static func chatServiceRefundedBackMany(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_many", p1, p2, p3)
+  }
+  /// %@ refunded back %@%d
+  public static func chatServiceRefundedBackOne(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_one", p1, p2, p3)
+  }
+  /// %@ refunded back %@%d
+  public static func chatServiceRefundedBackOther(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_other", p1, p2, p3)
+  }
+  /// %@ refunded back %@%d
+  public static func chatServiceRefundedBackTwo(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_two", p1, p2, p3)
+  }
+  /// %@ refunded back %@%d
+  public static func chatServiceRefundedBackZero(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.RefundedBack_zero", p1, p2, p3)
+  }
   /// Search messages by %@
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
+  }
+  /// Send Another Gift
+  public static var chatServiceSendAnother: String  { return L10n.tr("Localizable", "Chat.Service.SendAnother") }
+  /// Send Gift to %@
+  public static func chatServiceSendGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SendGift", p1)
   }
   /// The story you were mentioned in\nis no longer available
   public static var chatServiceStoryExpiredMentionTextIncoming: String  { return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextIncoming") }
@@ -5311,8 +6065,38 @@ public final class L10n {
   public static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
   /// You disabled the chat theme
   public static var chatServiceDisabledThemeYou: String  { return L10n.tr("Localizable", "Chat.Service.DisabledTheme.You") }
+  /// View
+  public static var chatServiceGiftView: String  { return L10n.tr("Localizable", "Chat.Service.Gift.View") }
   /// You sent a gift
   public static var chatServiceGiftLinkSent: String  { return L10n.tr("Localizable", "Chat.Service.GiftLink.Sent") }
+  /// %1$@ %2$d
+  public static func chatServiceGiveawayStartedStarsCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_countable", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsFew(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_few", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsMany(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_many", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsOne(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_one", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsOther(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_other", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsTwo(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_two", p1, p2)
+  }
+  /// %1$@ just started a giveaway of %2$d Telegram Stars for its followers.
+  public static func chatServiceGiveawayStartedStarsZero(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted.Stars_zero", p1, p2)
+  }
   /// %1$@ invited %2$@
   public static func chatServiceGroupAddedMembers1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers1", p1, p2)
@@ -5445,6 +6229,8 @@ public final class L10n {
   public static func chatServicePeerRequestedMultiple(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PeerRequested.Multiple", p1, p2)
   }
+  /// Unknown user
+  public static var chatServicePremiumUnknown: String  { return L10n.tr("Localizable", "Chat.Service.Premium.Unknown") }
   /// %d
   public static func chatServicePremiumGiftInfoCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_countable", p1)
@@ -5481,6 +6267,10 @@ public final class L10n {
   public static func chatServicePremiumGiftSentYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.SentYou", p1)
   }
+  /// %1$@ sent a gift to %2$@ for %3$@
+  public static func chatServicePremiumGiftSentChannel(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Sent.Channel", p1, p2, p3)
+  }
   /// %@ disabled the auto-delete timer
   public static func chatServiceSecretChatDisabledTimer1(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecretChat.DisabledTimer1", p1)
@@ -5498,6 +6288,22 @@ public final class L10n {
   /// %@ received the following documents: %@
   public static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
+  }
+  /// %1$@ sent a gift to %2$@ for %3$@
+  public static func chatServiceStarGiftChannelSelt(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StarGift.ChannelSelt", p1, p2, p3)
+  }
+  /// Gift from  %@
+  public static func chatServiceStarGiftFrom(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StarGift.From", p1)
+  }
+  /// %1$@ sent you a gift for %2$@
+  public static func chatServiceStarGiftSent(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StarGift.Sent", p1, p2)
+  }
+  /// You sent a gift for %@
+  public static func chatServiceStarGiftSentYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StarGift.SentYou", p1)
   }
   /// You mentioned %@ in a story
   public static func chatServiceStoryMentionedYou(_ p1: String) -> String {
@@ -5887,6 +6693,32 @@ public final class L10n {
   public static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
   /// Outgoing Video Call
   public static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
+  /// The video will be published once converted and optimized.
+  public static var chatVideoProccessingContext: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Context") }
+  /// Improving Video...
+  public static var chatVideoProccessingImproving: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Improving") }
+  /// appx. %@
+  public static func chatVideoProccessingMessageTime(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.VideoProccessing.MessageTime", p1)
+  }
+  /// Video published.
+  public static var chatVideoProccessingPublished: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Published") }
+  /// The video will be published once converted and optimized
+  public static var chatVideoProccessingService: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Service") }
+  /// Processing video may take a few minutes.
+  public static var chatVideoProccessingTooltip: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Tooltip") }
+  /// The video will be published after it's optimized for the best viewing experience.
+  public static var chatVideoProccessingImprovingInfo: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Improving.Info") }
+  /// The forwarded video will be published after it's optimized for the best viewing experience.
+  public static var chatVideoProccessingImprovingInfoForward: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Improving.Info.Forward") }
+  /// View
+  public static var chatVideoProccessingPublishedView: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.Published.View") }
+  /// Wait!
+  public static var chatVideoProccessingSendNowHeader: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.SendNow.Header") }
+  /// This video hasn't been converted and optimized yet. If you send it now, the viewers of the video may experience slow download speed.
+  public static var chatVideoProccessingSendNowInfo: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.SendNow.Info") }
+  /// Send Anyway
+  public static var chatVideoProccessingSendNowOK: String  { return L10n.tr("Localizable", "Chat.VideoProccessing.SendNow.OK") }
   /// Close
   public static var chatVoiceSingleClose: String  { return L10n.tr("Localizable", "Chat.Voice.Single.Close") }
   /// Delete and Close
@@ -5969,9 +6801,43 @@ public final class L10n {
   public static var chatEmptyBusinessLinkText: String  { return L10n.tr("Localizable", "ChatEmpty.BusinessLink.Text") }
   /// Link to Chat
   public static var chatEmptyBusinessLinkTitle: String  { return L10n.tr("Localizable", "ChatEmpty.BusinessLink.Title") }
+  /// Common Groups
+  public static var chatEmptyUserInfoCommonGroups: String  { return L10n.tr("Localizable", "ChatEmpty.UserInfo.CommonGroups") }
+  /// Phone Number
+  public static var chatEmptyUserInfoPhoneNumber: String  { return L10n.tr("Localizable", "ChatEmpty.UserInfo.PhoneNumber") }
+  /// Registration
+  public static var chatEmptyUserInfoRegistration: String  { return L10n.tr("Localizable", "ChatEmpty.UserInfo.Registration") }
   /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **Telegram Premium** subscription for **%2$@** months.
   public static func chatGiftInfoFromGiveAway(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ChatGift.Info.FromGiveAway", p1, p2)
+  }
+  /// %1$@ %2$d
+  public static func chatGiftInfoGiveawayStarsCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_countable", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsFew(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_few", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsMany(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_many", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Star**.
+  public static func chatGiftInfoGiveawayStarsOne(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_one", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsOther(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_other", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsTwo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_two", p1, p2)
+  }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **%2$@ Stars**.
+  public static func chatGiftInfoGiveawayStarsZero(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.GiveawayStars_zero", p1, p2)
   }
   /// You've received a gift from **%1$@**.\n\nYour gift is a **Telegram Premium** subscription for **%2$@** months.
   public static func chatGiftInfoNormal(_ p1: String, _ p2: String) -> String {
@@ -6029,6 +6895,8 @@ public final class L10n {
   public static var chatInputReplyReplyToAnother: String  { return L10n.tr("Localizable", "ChatInput.Reply.ReplyToAnother") }
   /// Sorry, this link doesn't seem to exist.
   public static var chatLinkUnavailable: String  { return L10n.tr("Localizable", "ChatLink.Unavailable") }
+  /// Apps
+  public static var chatListAppsTag: String  { return L10n.tr("Localizable", "ChatList.AppsTag") }
   /// Archived Chats
   public static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
   /// Author Hidden
@@ -6049,6 +6917,22 @@ public final class L10n {
   public static var chatListBirthdayInfoTwo: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfo_two") }
   /// Gift them Telegram Premium.
   public static var chatListBirthdayInfoZero: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfo_zero") }
+  /// %d
+  public static func chatListBirthdayInfoNewCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_countable", p1)
+  }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewFew: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_few") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewMany: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_many") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewOne: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_one") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewOther: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_other") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewTwo: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_two") }
+  /// Send them a Gift.
+  public static var chatListBirthdayInfoNewZero: String  { return L10n.tr("Localizable", "ChatList.BirthdayInfoNew_zero") }
   /// %d
   public static func chatListBirthdayMultipleTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.BirthdayMultipleTitle_countable", p1)
@@ -6083,6 +6967,8 @@ public final class L10n {
   }
   /// Channels
   public static var chatListChannelsTag: String  { return L10n.tr("Localizable", "ChatList.ChannelsTag") }
+  /// Chats
+  public static var chatListChatsTag: String  { return L10n.tr("Localizable", "ChatList.ChatsTag") }
   /// Show All
   public static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// All
@@ -6097,22 +6983,58 @@ public final class L10n {
   public static var chatListEmptyText: String  { return L10n.tr("Localizable", "ChatList.EmptyText") }
   /// Channels
   public static var chatListFeeds: String  { return L10n.tr("Localizable", "ChatList.Feeds") }
+  /// Click to view details and submit an appeal.
+  public static var chatListFreezeAccount: String  { return L10n.tr("Localizable", "ChatList.FreezeAccount") }
   /// Giveaway
   public static var chatListGiveaway: String  { return L10n.tr("Localizable", "ChatList.Giveaway") }
   /// Group Channel
   public static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
   public static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
+  /// Messages
+  public static var chatListMessagesTag: String  { return L10n.tr("Localizable", "ChatList.MessagesTag") }
   /// My Notes
   public static var chatListMyNotes: String  { return L10n.tr("Localizable", "ChatList.MyNotes") }
+  /// OPEN
+  public static var chatListOpenMiniApp: String  { return L10n.tr("Localizable", "ChatList.OpenMiniApp") }
   /// Proxy Sponsor
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Story
   public static var chatListStory: String  { return L10n.tr("Localizable", "ChatList.Story") }
   /// mentioned you in a story
   public static var chatListStoryMentioned: String  { return L10n.tr("Localizable", "ChatList.StoryMentioned") }
+  /// %d
+  public static func chatListSubscriptionsLowBalanceCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_countable", p1)
+  }
+  /// %d Stars needed
+  public static func chatListSubscriptionsLowBalanceFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_few", p1)
+  }
+  /// %d Stars needed
+  public static func chatListSubscriptionsLowBalanceMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_many", p1)
+  }
+  /// %d Stars needed
+  public static func chatListSubscriptionsLowBalanceOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_one", p1)
+  }
+  /// %d Stars needed
+  public static func chatListSubscriptionsLowBalanceOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_other", p1)
+  }
+  /// %d Stars needed
+  public static func chatListSubscriptionsLowBalanceTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_two", p1)
+  }
+  /// %d Stars needed
+  public static func chatListSubscriptionsLowBalanceZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance_zero", p1)
+  }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
+  /// Topics
+  public static var chatListTopicsTag: String  { return L10n.tr("Localizable", "ChatList.TopicsTag") }
   /// Unhide Muted
   public static var chatListUnhideMuted: String  { return L10n.tr("Localizable", "ChatList.UnhideMuted") }
   /// Message is not supported
@@ -6127,6 +7049,16 @@ public final class L10n {
   public static var chatListAddSave: String  { return L10n.tr("Localizable", "ChatList.Add.Save") }
   /// CHAT TYPES
   public static var chatListAddTopSeparator: String  { return L10n.tr("Localizable", "ChatList.Add.TopSeparator") }
+  /// Clear Recent Apps
+  public static var chatListAppsClearRecent: String  { return L10n.tr("Localizable", "ChatList.Apps.ClearRecent") }
+  /// Close All
+  public static var chatListAppsCloseAll: String  { return L10n.tr("Localizable", "ChatList.Apps.CloseAll") }
+  /// Popular Apps
+  public static var chatListAppsPopular: String  { return L10n.tr("Localizable", "ChatList.Apps.Popular") }
+  /// You are not currently using any app.
+  public static var chatListAppsSearchEmptyInfo: String  { return L10n.tr("Localizable", "ChatList.AppsSearch.Empty.Info") }
+  /// No apps yet...
+  public static var chatListAppsSearchEmptyTitle: String  { return L10n.tr("Localizable", "ChatList.AppsSearch.Empty.Title") }
   /// Chats
   public static var chatListArchiveBack: String  { return L10n.tr("Localizable", "ChatList.Archive.Back") }
   /// %d
@@ -6317,6 +7249,8 @@ public final class L10n {
   public static var chatListFilterInviteLink: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink") }
   /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
   public static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
+  /// Mini-Apps
+  public static var chatListFilterMiniApps: String  { return L10n.tr("Localizable", "ChatList.Filter.MiniApps") }
   /// Mute All
   public static var chatListFilterMuteAll: String  { return L10n.tr("Localizable", "ChatList.Filter.MuteAll") }
   /// Muted
@@ -6519,6 +7453,10 @@ public final class L10n {
   public static var chatListFolderColorReset: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorReset") }
   /// FOLDER COLOR
   public static var chatListFolderColorTitle: String  { return L10n.tr("Localizable", "ChatList.Folder.ColorTitle") }
+  /// disable animations
+  public static var chatListFolderDisableAnimations: String  { return L10n.tr("Localizable", "ChatList.Folder.DisableAnimations") }
+  /// enable animations
+  public static var chatListFolderEnableAnimations: String  { return L10n.tr("Localizable", "ChatList.Folder.EnableAnimations") }
   /// Subscribe to Telegram Premium to add colors for your folders.
   public static var chatListFolderPremiumAlert: String  { return L10n.tr("Localizable", "ChatList.Folder.PremiumAlert") }
   /// Show Folders Tags
@@ -6555,6 +7493,8 @@ public final class L10n {
   public static func chatListFolderUpdatesTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_zero", p1)
   }
+  /// Your account is frozen!
+  public static var chatListFreezeAccountTitle: String  { return L10n.tr("Localizable", "ChatList.FreezeAccount.Title") }
   /// Don't lose access to exclusive features.
   public static var chatListGracePeriodInfo: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Info") }
   /// ⚠️ Your Premium subscription is expiring!
@@ -6699,6 +7639,18 @@ public final class L10n {
   public static var chatListStoryExpired: String  { return L10n.tr("Localizable", "ChatList.Story.Expired") }
   /// Unsupported Story
   public static var chatListStoryUnsupported: String  { return L10n.tr("Localizable", "ChatList.Story.Unsupported") }
+  /// Insufficient funds to cover your subscriptions.
+  public static var chatListSubscriptionsLowBalanceMultipleText: String  { return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance.Multiple.Text") }
+  /// %@ for your subscriptions
+  public static func chatListSubscriptionsLowBalanceMultipleTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance.Multiple.Title", p1)
+  }
+  /// Insufficient funds to cover your subscription.
+  public static var chatListSubscriptionsLowBalanceSingleText: String  { return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance.Single.Text") }
+  /// %1$@ for %2$@
+  public static func chatListSubscriptionsLowBalanceSingleTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatList.SubscriptionsLowBalance.Single.Title", p1, p2)
+  }
   /// Archive
   public static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
   /// Delete
@@ -6717,6 +7669,14 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
+  /// Gift %@
+  public static func chatListTextUniqueGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Text.UniqueGift", p1)
+  }
+  /// Clear
+  public static var chatListAppsClear: String  { return L10n.tr("Localizable", "ChatListApps.Clear") }
+  /// RECENT USED APPS
+  public static var chatListAppsRecentUsedHeader: String  { return L10n.tr("Localizable", "ChatListApps.RecentUsed.Header") }
   /// BOOST
   public static var chatMessageBoostChannel: String  { return L10n.tr("Localizable", "ChatMessage.BoostChannel") }
   /// Open App
@@ -6743,6 +7703,40 @@ public final class L10n {
   public static var chatMessageSponsoredReportSuccess: String  { return L10n.tr("Localizable", "ChatMessage.Sponsored.Report.Success") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
+  /// Star reactions have been disabled for this channel.
+  public static var chatReactionStarsDisabled: String  { return L10n.tr("Localizable", "ChatReaction.StarsDisabled") }
+  /// Undo
+  public static var chatReactionUndo: String  { return L10n.tr("Localizable", "ChatReaction.Undo") }
+  /// %d
+  public static func chatReactionUndoReactedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_countable", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_few", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_many", p1)
+  }
+  /// You have reacted with %d star.
+  public static func chatReactionUndoReactedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_one", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_other", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_two", p1)
+  }
+  /// You have reacted with %d stars.
+  public static func chatReactionUndoReactedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatReaction.Undo.Reacted_zero", p1)
+  }
+  /// Stars Sent!
+  public static var chatReactionUndoStarsSent: String  { return L10n.tr("Localizable", "ChatReaction.Undo.StarsSent") }
   /// Tag the message with an emoji for quick search
   public static var chatReactionsTagMessage: String  { return L10n.tr("Localizable", "ChatReactions.TagMessage") }
   /// Organize your Saved Messages with tags\nfor quicker access. [Learn More...]()
@@ -6863,8 +7857,14 @@ public final class L10n {
   public static var chatServiceJoinedChannelByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedChannelByRequest") }
   /// Your request to join the group was approved
   public static var chatServiceJoinedGroupByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedGroupByRequest") }
+  /// phone number request
+  public static var chatServicePhoneNumberRequest: String  { return L10n.tr("Localizable", "ChatService.PhoneNumberRequest") }
   /// Remove
   public static var chatServiceRemoveBackground: String  { return L10n.tr("Localizable", "ChatService.RemoveBackground") }
+  /// You won a prize in a giveaway organized by %1$@.\n\nYour prize is %2$@.
+  public static func chatServiceStarsPrize(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatService.StarsPrize", p1, p2)
+  }
   /// Update Wallpaper
   public static var chatServiceUpdateBackground: String  { return L10n.tr("Localizable", "ChatService.UpdateBackground") }
   /// Setting new wallpaper...\n**%1$@%**
@@ -6889,6 +7889,106 @@ public final class L10n {
   public static func chatServiceYouChangedWallpaperBoth(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.YouChangedWallpaperBoth", p1)
   }
+  /// %d winner of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_countable", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_few", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_many", p1)
+  }
+  /// %d winner of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_one", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_other", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_two", p1)
+  }
+  /// %d winners of the giveaway was randomly selected by Telegram and received their prize in a private message.
+  public static func chatServiceGiveawayResultsStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResults.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_countable", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_few", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_many", p1)
+  }
+  /// %d undistributed prizes code was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_one", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_other", p1)
+  }
+  /// %d undistributed prizes codes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_two", p1)
+  }
+  /// %d undistributed prizes was forwarded to channel administrators
+  public static func chatServiceGiveawayResultsMixedUnclaimedStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedUnclaimed.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatServiceGiveawayResultsMixedWinnersStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_countable", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_few", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_many", p1)
+  }
+  /// **%d** winner of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_one", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_other", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_two", p1)
+  }
+  /// **%d** winners of the giveaway was randomly selected by Telegram and received a private message with prize.
+  public static func chatServiceGiveawayResultsMixedWinnersStarsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsMixedWinners.Stars_zero", p1)
+  }
+  /// %d
+  public static func chatServiceGiveawayResultsNoWinnersStarsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_countable", p1)
+  }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsFew: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_few") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsMany: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_many") }
+  /// Due to the giveaway terms, no winner could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsOne: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_one") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsOther: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_other") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize code was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsTwo: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_two") }
+  /// Due to the giveaway terms, no winners could be selected by Telegram, a prize was forwarded to channel administrators.
+  public static var chatServiceGiveawayResultsNoWinnersStarsZero: String  { return L10n.tr("Localizable", "ChatService.GiveawayResultsNoWinners.Stars_zero") }
   /// You successfully updated your profile photo
   public static var chatServiceSuggestSuccess: String  { return L10n.tr("Localizable", "ChatService.Suggest.Success") }
   /// View Photo
@@ -7231,6 +8331,12 @@ public final class L10n {
   public static var contactsPhoneNumberNotRegistred: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.NotRegistred") }
   /// Phone Number
   public static var contactsPhoneNumberPlaceholder: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.Placeholder") }
+  /// by Last Seen
+  public static var contactsSortByLastSeen: String  { return L10n.tr("Localizable", "Contacts.Sort.ByLastSeen") }
+  /// by Name
+  public static var contactsSortByName: String  { return L10n.tr("Localizable", "Contacts.Sort.ByName") }
+  /// Sort
+  public static var contactsSortTitle: String  { return L10n.tr("Localizable", "Contacts.Sort.Title") }
   /// Copy
   public static var contextCopy: String  { return L10n.tr("Localizable", "Context.Copy") }
   /// Copy to Clipboard
@@ -7433,6 +8539,20 @@ public final class L10n {
   public static var createGroupRequiresUsernamePlaceholder: String  { return L10n.tr("Localizable", "CreateGroup.Requires.Username.Placeholder") }
   /// Group must be a public. Please choose username.
   public static var createGroupUsernameError: String  { return L10n.tr("Localizable", "CreateGroup.Username.Error") }
+  /// Enter Symbols
+  public static var customAvatarEnterSymbol: String  { return L10n.tr("Localizable", "CustomAvatar.EnterSymbol") }
+  /// Maximum length is 2 symbols
+  public static var customAvatarEnterSymbolInfo: String  { return L10n.tr("Localizable", "CustomAvatar.EnterSymbol.Info") }
+  /// Background
+  public static var customAvatarTitleBackground: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Background") }
+  /// Emoji
+  public static var customAvatarTitleEmoji: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Emoji") }
+  /// Monogram
+  public static var customAvatarTitleMonogram: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Monogram") }
+  /// Sticker
+  public static var customAvatarTitleSticker: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Sticker") }
+  /// Text
+  public static var customAvatarTitleText: String  { return L10n.tr("Localizable", "CustomAvatar.Title.Text") }
   /// Artists are welcome to add their own emoji sets using our [@stickers]() bot.
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
@@ -7469,6 +8589,8 @@ public final class L10n {
   public static var dataAndStorageDownloadFolder: String  { return L10n.tr("Localizable", "DataAndStorage.DownloadFolder") }
   /// Network Usage
   public static var dataAndStorageNetworkUsage: String  { return L10n.tr("Localizable", "DataAndStorage.NetworkUsage") }
+  /// Show 18+ Content
+  public static var dataAndStorageSensitiveContent: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent") }
   /// Storage Usage
   public static var dataAndStorageStorageUsage: String  { return L10n.tr("Localizable", "DataAndStorage.StorageUsage") }
   /// AUTOMATIC AUDIO DOWNLOAD
@@ -7523,6 +8645,14 @@ public final class L10n {
   public static var dataAndStorageCateroryFileSizeLimitHeader: String  { return L10n.tr("Localizable", "DataAndStorage.CateroryFileSizeLimit.Header") }
   /// Undo all custom auto-download settings.
   public static var dataAndStorageConfirmResetSettings: String  { return L10n.tr("Localizable", "DataAndStorage.Confirm.ResetSettings") }
+  /// Do not hide media that contain content suitable only for adults.
+  public static var dataAndStorageSensitiveContentInfo: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Info") }
+  /// 18+ Content
+  public static var dataAndStorageSensitiveContentConfirmHeader: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Header") }
+  /// Confirm
+  public static var dataAndStorageSensitiveContentConfirmOk: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Ok") }
+  /// Confirm that you are over 18 years old and update your settings to see potentially explicit and sensitive content.
+  public static var dataAndStorageSensitiveContentConfirmText: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Text") }
   /// Today
   public static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
   /// Delete for all members
@@ -7779,6 +8909,8 @@ public final class L10n {
   public static var emojiActivityAndSport: String  { return L10n.tr("Localizable", "Emoji.ActivityAndSport") }
   /// Animals & Nature
   public static var emojiAnimalsAndNature: String  { return L10n.tr("Localizable", "Emoji.AnimalsAndNature") }
+  /// COLLECTIBLES
+  public static var emojiCollectibles: String  { return L10n.tr("Localizable", "Emoji.Collectibles") }
   /// Flags
   public static var emojiFlags: String  { return L10n.tr("Localizable", "Emoji.Flags") }
   /// Food & Drink
@@ -7919,10 +9051,16 @@ public final class L10n {
   public static var emojiesMessageEffectsTitle: String  { return L10n.tr("Localizable", "Emojies.MessageEffects.Title") }
   /// Appearance
   public static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
+  /// Dock Icon
+  public static var emptyChatAppIcon: String  { return L10n.tr("Localizable", "EmptyChat.AppIcon") }
   /// Suggest Stickers By Emoji
   public static var emptyChatStickers: String  { return L10n.tr("Localizable", "EmptyChat.Stickers") }
   /// Storage Usage
   public static var emptyChatStorageUsage: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage") }
+  /// Get more icons and many others in Settings ⟶ [Appearance](appearance).
+  public static var emptyChatAppIconDesc: String  { return L10n.tr("Localizable", "EmptyChat.AppIcon.Desc") }
+  /// Application Icons
+  public static var emptyChatAppIconShuffle: String  { return L10n.tr("Localizable", "EmptyChat.AppIcon.Shuffle") }
   /// Chat Mode
   public static var emptyChatAppearanceChatMode: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.ChatMode") }
   /// Colorful
@@ -8027,6 +9165,10 @@ public final class L10n {
   public static var errorUsernameUnderscopeEnd: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeEnd") }
   /// A username can't start with an underscore.
   public static var errorUsernameUnderscopeStart: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeStart") }
+  /// %@ added media:
+  public static func eventLogServiceAddedMedia(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.AddedMedia", p1)
+  }
   /// %1$@ and %2$@
   public static func eventLogServiceAnd(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.And", p1, p2)
@@ -8227,6 +9369,8 @@ public final class L10n {
   public static func eventLogServicePromotedChanged1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.Promoted.Changed1", p1, p2)
   }
+  /// Examples
+  public static var exampleAppsTitle: String  { return L10n.tr("Localizable", "ExampleApps.Title") }
   /// Done
   public static var exportedInvitationDone: String  { return L10n.tr("Localizable", "ExportedInvitation.Done") }
   /// joined via folder invite link
@@ -8487,8 +9631,30 @@ public final class L10n {
   public static var fragmentStarsTotalLifetime: String  { return L10n.tr("Localizable", "Fragment.Stars.TotalLifetime") }
   /// Stars from your total balance become avallable for spending on ads and rewards 21 days after they are earned
   public static var fragmentStarsWithdrawInfo: String  { return L10n.tr("Localizable", "Fragment.Stars.WithdrawInfo") }
+  /// Click to view details
+  public static var freezeAccountClickDetails: String  { return L10n.tr("Localizable", "FreezeAccount.ClickDetails") }
+  /// Submit an Appeal
+  public static var freezeAccountOK: String  { return L10n.tr("Localizable", "FreezeAccount.OK") }
+  /// Your Account is Frozen
+  public static var freezeAccountTitle: String  { return L10n.tr("Localizable", "FreezeAccount.Title") }
+  /// Your account was frozen for breaking Telegram's Terms and Conditions.
+  public static var freezeAccountOption1Text: String  { return L10n.tr("Localizable", "FreezeAccount.Option1.Text") }
+  /// Violation of Terms
+  public static var freezeAccountOption1Title: String  { return L10n.tr("Localizable", "FreezeAccount.Option1.Title") }
+  /// You can access your account but can't send messages or take actions.
+  public static var freezeAccountOption2Text: String  { return L10n.tr("Localizable", "FreezeAccount.Option2.Text") }
+  /// Read-Only Mode
+  public static var freezeAccountOption2Title: String  { return L10n.tr("Localizable", "FreezeAccount.Option2.Title") }
+  /// Appeal via [@SpamBot](appeal) before %@, or your account will be deleted.
+  public static func freezeAccountOption3Text(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FreezeAccount.Option3.Text", p1)
+  }
+  /// Appeal Before Deactivation
+  public static var freezeAccountOption3Title: String  { return L10n.tr("Localizable", "FreezeAccount.Option3.Title") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
+  /// Hide Translatation
+  public static var galleryHideTranslation: String  { return L10n.tr("Localizable", "Gallery.HideTranslation") }
   /// public photo
   public static var galleryPublicPhoto: String  { return L10n.tr("Localizable", "Gallery.PublicPhoto") }
   /// Remove GIF
@@ -8497,18 +9663,28 @@ public final class L10n {
   public static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Edit & Send
   public static var gallerySendHere: String  { return L10n.tr("Localizable", "Gallery.SendHere") }
+  /// Translate
+  public static var galleryTranslate: String  { return L10n.tr("Localizable", "Gallery.Translate") }
   /// Only you can see this photo.
   public static var galleryContactPhotoByYou: String  { return L10n.tr("Localizable", "Gallery.Contact.PhotoByYou") }
   /// Copy to Clipboard
   public static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
   /// Set As Main Photo
   public static var galleryContextMainPhoto: String  { return L10n.tr("Localizable", "Gallery.Context.MainPhoto") }
+  /// Original
+  public static var galleryContextOriginal: String  { return L10n.tr("Localizable", "Gallery.Context.Original") }
   /// Save As...
   public static var galleryContextSaveAs: String  { return L10n.tr("Localizable", "Gallery.Context.SaveAs") }
+  /// Save Video
+  public static var galleryContextSaveVideo: String  { return L10n.tr("Localizable", "Gallery.Context.SaveVideo") }
   /// Shared Media
   public static var galleryContextShowGallery: String  { return L10n.tr("Localizable", "Gallery.Context.ShowGallery") }
   /// Show Message
   public static var galleryContextShowMessage: String  { return L10n.tr("Localizable", "Gallery.Context.ShowMessage") }
+  /// Downloaded. [Show in Finder](finder)
+  public static var galleryContextAlertDownloaded: String  { return L10n.tr("Localizable", "Gallery.Context.Alert.Downloaded") }
+  /// Downloading. [Show in Manager](manager)
+  public static var galleryContextAlertDownloading: String  { return L10n.tr("Localizable", "Gallery.Context.Alert.Downloading") }
   /// %d
   public static func galleryContextShareAllItemsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Gallery.Context.Share.AllItems_countable", p1)
@@ -8661,6 +9837,8 @@ public final class L10n {
   public static var generalSettingsSendByCmdEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByCmdEnter") }
   /// Use Enter to send
   public static var generalSettingsSendByEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByEnter") }
+  /// Send Large Photos
+  public static var generalSettingsSendLargePhotos: String  { return L10n.tr("Localizable", "GeneralSettings.SendLargePhotos") }
   /// Keyboard Shortcuts
   public static var generalSettingsShortcuts: String  { return L10n.tr("Localizable", "GeneralSettings.Shortcuts") }
   /// SHORTCUTS
@@ -8715,6 +9893,238 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// Sorry, %@ is not accepting gifts.
+  public static func giftNotAccepting(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.NotAccepting", p1)
+  }
+  /// sold out
+  public static var giftSoldOut: String  { return L10n.tr("Localizable", "Gift.SoldOut") }
+  /// Unavailable
+  public static var giftUnavailable: String  { return L10n.tr("Localizable", "Gift.Unavailable") }
+  /// Hide
+  public static var giftContextHide: String  { return L10n.tr("Localizable", "Gift.Context.Hide") }
+  /// Show
+  public static var giftContextShow: String  { return L10n.tr("Localizable", "Gift.Context.Show") }
+  /// Take Off
+  public static var giftContextTakeOff: String  { return L10n.tr("Localizable", "Gift.Context.TakeOff") }
+  /// Transfer
+  public static var giftContextTransfer: String  { return L10n.tr("Localizable", "Gift.Context.Transfer") }
+  /// Wear
+  public static var giftContextWear: String  { return L10n.tr("Localizable", "Gift.Context.Wear") }
+  /// Buy yourself a gift to display on your page or reserve for later.\n\nLimited-edition gifts upgraded to collectibles can be gifted to others later.
+  public static var giftOptionsGiftSelfText: String  { return L10n.tr("Localizable", "Gift.Options.GiftSelf.Text") }
+  /// Buy a Gift
+  public static var giftOptionsGiftSelfTitle: String  { return L10n.tr("Localizable", "Gift.Options.GiftSelf.Title") }
+  /// %@ Premium
+  public static func giftPremiumHeader(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.Header", p1)
+  }
+  /// or %@
+  public static func giftPremiumPayOrStars(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.PayOrStars", p1)
+  }
+  /// Pay with %@
+  public static func giftPremiumPayWith(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.PayWith", p1)
+  }
+  /// Only %@ will see your message.
+  public static func giftPremiumPreviewInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.PreviewInfo", p1)
+  }
+  /// Subscription for exclusive Telegram features
+  public static var giftPremiumText: String  { return L10n.tr("Localizable", "Gift.Premium.Text") }
+  /// Your balance is %@. [Get More Stars >]()
+  public static func giftPremiumYourBalance(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Premium.YourBalance", p1)
+  }
+  /// Make Unique for %@
+  public static func giftSendUpgrade(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Upgrade", p1)
+  }
+  /// User is not accepting gifts
+  public static var giftSendDisallowError: String  { return L10n.tr("Localizable", "Gift.Send.Disallow.Error") }
+  /// Enable this to let %1$@ turn your gift into a unique collectible. [Learn More >]()
+  public static func giftSendUpgradeInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Upgrade.Info", p1)
+  }
+  /// Hide my name and message from visitors to my profile.
+  public static var giftSendSelfHideMyNameInfo: String  { return L10n.tr("Localizable", "Gift.SendSelf.HideMyName.Info") }
+  /// This gift has sold out
+  public static var giftSoldOutError: String  { return L10n.tr("Localizable", "Gift.SoldOut.Error") }
+  /// Gift Pinned
+  public static var giftTooltipPinned: String  { return L10n.tr("Localizable", "Gift.Tooltip.Pinned") }
+  /// Gift Unpinned
+  public static var giftTooltipUnpinned: String  { return L10n.tr("Localizable", "Gift.Tooltip.Unpinned") }
+  /// unlocks in %@
+  public static func giftTransferSendUnlocks(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.SendUnlocks", p1)
+  }
+  /// Send via Blockchain
+  public static var giftTransferSendViaBlockchain: String  { return L10n.tr("Localizable", "Gift.Transfer.SendViaBlockchain") }
+  /// Transfer
+  public static var giftTransferTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.Title") }
+  /// Do you want to transfer ownership of **%1$@** to **%2$@** for **%3$@**?
+  public static func giftTransferConfirmationText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Text", p1, p2, p3)
+  }
+  /// Do you want to transfer ownership of **%1$@** to **%2$@**?
+  public static func giftTransferConfirmationTextFree(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.Confirmation.TextFree", p1, p2)
+  }
+  /// Confirm Transfer
+  public static var giftTransferConfirmationTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Title") }
+  /// Transfer for
+  public static var giftTransferConfirmationTransfer: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Transfer") }
+  /// Transfer
+  public static var giftTransferConfirmationTransferFree: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.TransferFree") }
+  /// In %@, you'll be able to send this collectible to any TON blockchain address outside Telegram for sale or auction.
+  public static func giftTransferUnlockPendingText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.UnlockPending.Text", p1)
+  }
+  /// Unlocking In Progress
+  public static var giftTransferUnlockPendingTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.UnlockPending.Title") }
+  /// Please update your Telegram application to the latest version.
+  public static var giftTransferUpdateRequiredText: String  { return L10n.tr("Localizable", "Gift.Transfer.UpdateRequired.Text") }
+  /// Update Required
+  public static var giftTransferUpdateRequiredTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.UpdateRequired.Title") }
+  /// Proceed
+  public static var giftTransferTonOK: String  { return L10n.tr("Localizable", "Gift.TransferTon.OK") }
+  /// Only %@ of such collectibles have this attribute.
+  public static func giftUniqueAttributeDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.AttributeDescription", p1)
+  }
+  /// Availability
+  public static var giftUniqueAvailability: String  { return L10n.tr("Localizable", "Gift.Unique.Availability") }
+  /// Backdrop
+  public static var giftUniqueBackdrop: String  { return L10n.tr("Localizable", "Gift.Unique.Backdrop") }
+  /// Collectible
+  public static var giftUniqueCollectible: String  { return L10n.tr("Localizable", "Gift.Unique.Collectible") }
+  /// %@ issued
+  public static func giftUniqueIssued(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.Issued", p1)
+  }
+  /// Model
+  public static var giftUniqueModel: String  { return L10n.tr("Localizable", "Gift.Unique.Model") }
+  /// Gifted to %1$@ on %2$@.
+  public static func giftUniqueOriginalInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfo", p1, p2)
+  }
+  /// Gifted by %1$@ to %2$@ on %3$@.
+  public static func giftUniqueOriginalInfoSender(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfoSender", p1, p2, p3)
+  }
+  /// Gifted by %1$@ to %2$@ on %3$@ with comment "%4$@"
+  public static func giftUniqueOriginalInfoSenderWithText(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfoSenderWithText", p1, p2, p3, p4)
+  }
+  /// Gifted to %1$@ on %2$@ with comment "%3$@"
+  public static func giftUniqueOriginalInfoWithText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Gift.Unique.OriginalInfoWithText", p1, p2, p3)
+  }
+  /// Owner
+  public static var giftUniqueOwner: String  { return L10n.tr("Localizable", "Gift.Unique.Owner") }
+  /// Symbol
+  public static var giftUniqueSymbol: String  { return L10n.tr("Localizable", "Gift.Unique.Symbol") }
+  /// change
+  public static var giftUniqueTransfer: String  { return L10n.tr("Localizable", "Gift.Unique.Transfer") }
+  /// Subscribe to [Telegram Premium](premium) to wear this collectible.
+  public static var giftUniqueNeedsPremium: String  { return L10n.tr("Localizable", "Gift.Unique.Needs.Premium") }
+  /// Add my name to the gift
+  public static var giftUpgradeAddMyName: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddMyName") }
+  /// Add sender's name
+  public static var giftUpgradeAddName: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddName") }
+  /// Add sender's name and comment
+  public static var giftUpgradeAddNameAndComment: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddNameAndComment") }
+  /// Confirm
+  public static var giftUpgradeConfirm: String  { return L10n.tr("Localizable", "Gift.Upgrade.Confirm") }
+  /// Turn your gift into a unique collectible that you can transfer or auction.
+  public static var giftUpgradeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Description") }
+  /// Let %@ turn your gift into a unique collectible.
+  public static func giftUpgradeIncludeDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Upgrade.IncludeDescription", p1)
+  }
+  /// Make Unique
+  public static var giftUpgradeIncludeTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.IncludeTitle") }
+  /// Pay %@
+  public static func giftUpgradePay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Upgrade.Pay", p1)
+  }
+  /// This gift was downgraded because a request to refund the payment related to this gift was made, and the money was returned.
+  public static var giftUpgradeRefunded: String  { return L10n.tr("Localizable", "Gift.Upgrade.Refunded") }
+  /// Upgrade Gift
+  public static var giftUpgradeTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Title") }
+  /// Upgrade
+  public static var giftUpgradeUpgrade: String  { return L10n.tr("Localizable", "Gift.Upgrade.Upgrade") }
+  /// You have received a unique number, model, backdrop and symbol for your gift.
+  public static var giftUpgradeSucceedText: String  { return L10n.tr("Localizable", "Gift.Upgrade.Succeed.Text") }
+  /// The gift is now collectible
+  public static var giftUpgradeSucceedTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Succeed.Title") }
+  /// Sell or auction your gift on third-party NFT marketplaces.
+  public static var giftUpgradeTradableDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Tradable.Description") }
+  /// The recipient will be able to auction the gift on third-party NFT marketplaces.
+  public static var giftUpgradeTradableIncludeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Tradable.IncludeDescription") }
+  /// Tradable
+  public static var giftUpgradeTradableTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Tradable.Title") }
+  /// Send your upgraded gift to any of your friends on Telegram.
+  public static var giftUpgradeTransferableDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Transferable.Description") }
+  /// The recipient will be able to send the gift to anyone Telegram.
+  public static var giftUpgradeTransferableIncludeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Transferable.IncludeDescription") }
+  /// Transferable
+  public static var giftUpgradeTransferableTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Transferable.Title") }
+  /// Get a unique number, model, backdrop, and symbol for your gift.
+  public static var giftUpgradeUniqueDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Unique.Description") }
+  /// The recipient will get a unique number, model, backdrop, and symbol for the gift.
+  public static var giftUpgradeUniqueIncludeDescription: String  { return L10n.tr("Localizable", "Gift.Upgrade.Unique.IncludeDescription") }
+  /// Unique
+  public static var giftUpgradeUniqueTitle: String  { return L10n.tr("Localizable", "Gift.Upgrade.Unique.Title") }
+  /// The gift is visible on your Page. [Hide >]()
+  public static var giftViewDisplayedInfoHide: String  { return L10n.tr("Localizable", "Gift.View.DisplayedInfoHide") }
+  /// You can keep this gift, upgrade it, or sell it for %@. [More About Stars >]()
+  public static func giftViewKeepUpgradeOrConvertDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.View.KeepUpgradeOrConvertDescription", p1)
+  }
+  /// Status
+  public static var giftViewStatus: String  { return L10n.tr("Localizable", "Gift.View.Status") }
+  /// Your channel can keep this gift in your Profile or convert it to %@. [More About Stars >](https://telegram.org)
+  public static func giftViewKeepOrConvertDescriptionChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.View.KeepOrConvertDescription.Channel", p1)
+  }
+  /// Your channel can keep this gift, upgrade it, or sell it for %@. [More About Stars >](https://telegram.org)
+  public static func giftViewKeepUpgradeOrConvertDescriptionChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.View.KeepUpgradeOrConvertDescription.Channel", p1)
+  }
+  /// Non-Unique
+  public static var giftViewStatusNonUnique: String  { return L10n.tr("Localizable", "Gift.View.Status.NonUnique") }
+  /// upgrade
+  public static var giftViewStatusUpgrade: String  { return L10n.tr("Localizable", "Gift.View.Status.Upgrade") }
+  /// Start Wearing
+  public static var giftWearStart: String  { return L10n.tr("Localizable", "Gift.Wear.Start") }
+  /// The glittering icon of this item will be displayed next to your channel's name.
+  public static var giftWearBadgeChannelText: String  { return L10n.tr("Localizable", "Gift.Wear.Badge.ChannelText") }
+  /// The glittering icon of this item will be displayed next to your name.
+  public static var giftWearBadgeText: String  { return L10n.tr("Localizable", "Gift.Wear.Badge.Text") }
+  /// Radiant Badge
+  public static var giftWearBadgeTitle: String  { return L10n.tr("Localizable", "Gift.Wear.Badge.Title") }
+  /// Your channel's page will get the color and the symbol of this item.
+  public static var giftWearDesignChannelText: String  { return L10n.tr("Localizable", "Gift.Wear.Design.ChannelText") }
+  /// Your profile page will get the color and the symbol of this item.
+  public static var giftWearDesignText: String  { return L10n.tr("Localizable", "Gift.Wear.Design.Text") }
+  /// Unqiue Profile Design
+  public static var giftWearDesignTitle: String  { return L10n.tr("Localizable", "Gift.Wear.Design.Title") }
+  /// Tapping the icon of this item next to your channel's name will show its info and owner.
+  public static var giftWearProofChannelText: String  { return L10n.tr("Localizable", "Gift.Wear.Proof.ChannelText") }
+  /// Tapping the icon of this item next to your name will show its info and owner.
+  public static var giftWearProofText: String  { return L10n.tr("Localizable", "Gift.Wear.Proof.Text") }
+  /// Proof of Ownership
+  public static var giftWearProofTitle: String  { return L10n.tr("Localizable", "Gift.Wear.Proof.Title") }
+  /// Open Fragment
+  public static var giftWithdrawProceed: String  { return L10n.tr("Localizable", "Gift.Withdraw.Proceed") }
+  /// You can use Fragment, a third-party service, to transfer **%@** to your TON account. After that, you can manage it as an NFT with any TON wallet outside Telegram.\n\nYou can also move such NFTs back to your Telegram account via Fragment.
+  public static func giftWithdrawText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Withdraw.Text", p1)
+  }
+  /// Manage with Fragment
+  public static var giftWithdrawTitle: String  { return L10n.tr("Localizable", "Gift.Withdraw.Title") }
   /// No Recipient
   public static var giftLinkNoRecipient: String  { return L10n.tr("Localizable", "GiftLink.NoRecipient") }
   /// Gift Link
@@ -8757,6 +10167,38 @@ public final class L10n {
   public static var giftLinkRowReasonGiftJustGift: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Gift.JustGift") }
   /// Incomplete Giveaway
   public static var giftLinkRowReasonGiveawayIncomplete: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway.Incomplete") }
+  /// My Gifts
+  public static var giftingMyGifts: String  { return L10n.tr("Localizable", "Gifting.MyGifts") }
+  /// Gift Premium or Stars
+  public static var giftingTitle: String  { return L10n.tr("Localizable", "Gifting.Title") }
+  /// **%1$@** charges **%2$@** for each message. That price has been added to the cost of the gift.
+  public static func giftingUserChargeStars(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gifting.UserChargeStars", p1, p2)
+  }
+  /// Are you sure you want to gift **Telegram Premium** to **%1$@** for **%2$@**?
+  public static func giftingPremWithStarsConfirmInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gifting.PremWithStars.Confirm.Info", p1, p2)
+  }
+  /// Send a Gift
+  public static var giftingPremWithStarsConfirmTitle: String  { return L10n.tr("Localizable", "Gifting.PremWithStars.Confirm.Title") }
+  /// Give %@ access to exclusive features with Telegram Premium. [See Features >](premium)
+  public static func giftingPremiumInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gifting.Premium.Info", p1)
+  }
+  /// Gift Premium
+  public static var giftingPremiumTitle: String  { return L10n.tr("Localizable", "Gifting.Premium.Title") }
+  /// All
+  public static var giftingStarGiftAll: String  { return L10n.tr("Localizable", "Gifting.StarGift.All") }
+  /// Give %@ gifts that can be kept on the profile or converted to Stars. [What are Stars >](stars)
+  public static func giftingStarGiftInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gifting.StarGift.Info", p1)
+  }
+  /// In Stock
+  public static var giftingStarGiftInStock: String  { return L10n.tr("Localizable", "Gifting.StarGift.InStock") }
+  /// Limited
+  public static var giftingStarGiftLimited: String  { return L10n.tr("Localizable", "Gifting.StarGift.Limited") }
+  /// Gift Stars
+  public static var giftingStarGiftTitle: String  { return L10n.tr("Localizable", "Gifting.StarGift.Title") }
   /// **%1$@** also included **%2$@** in the prizes. Admins of the channel are responsible for delivering these prizes.
   public static func giveawayAdditionalPrize(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Giveaway.AdditionalPrize", p1, p2)
@@ -8963,6 +10405,80 @@ public final class L10n {
   public static var giveawayReceiverTypeNew: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.New") }
   /// USERS ELIGIBLE FOR THE GIVEAWAY
   public static var giveawayReceiverTypeTitle: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.Title") }
+  /// %d
+  public static func giveawayStarAmountPerCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_countable", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_few", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_many", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_one", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_other", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_two", p1)
+  }
+  /// %d per user
+  public static func giveawayStarAmountPerZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Star.AmountPer_zero", p1)
+  }
+  /// Choose Randomly
+  public static var giveawayStarChooseRandomly: String  { return L10n.tr("Localizable", "Giveaway.Star.ChooseRandomly") }
+  /// Choose how many stars to give away and how many boosts to receive for 1 year.
+  public static var giveawayStarOptionsInfo: String  { return L10n.tr("Localizable", "Giveaway.Star.OptionsInfo") }
+  /// STARS TO DISTRIBUTE
+  public static var giveawayStarOptionsHeader: String  { return L10n.tr("Localizable", "Giveaway.Star.Options.Header") }
+  /// NUMBER OF WINNERS
+  public static var giveawayStarQuantityHeader: String  { return L10n.tr("Localizable", "Giveaway.Star.Quantity.Header") }
+  /// Choose how many winners you want to distribute stars among.
+  public static var giveawayStarQuantityInfo: String  { return L10n.tr("Localizable", "Giveaway.Star.Quantity.Info") }
+  /// %d
+  public static func giveawayStarsPrepaidDescCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_countable", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_few", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_many", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_one", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_other", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_two", p1)
+  }
+  /// for %d users
+  public static func giveawayStarsPrepaidDescZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Desc_zero", p1)
+  }
+  /// %d Telegram Stars
+  public static func giveawayStarsPrepaidTitle(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Stars.Prepaid.Title", p1)
+  }
+  /// Telegram Premium
+  public static var giveawayTypePremiumTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Premium.Title") }
+  /// winners are chosen randomly
+  public static var giveawayTypePremiumRandomText: String  { return L10n.tr("Localizable", "Giveaway.Type.Premium.Random.Text") }
   /// %d-months subscriptions
   public static func giveawayTypePrepaidDesc(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Giveaway.Type.Prepaid.Desc", p1)
@@ -8981,6 +10497,10 @@ public final class L10n {
   public static var giveawayTypeSpecificTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Title") }
   /// Select Users
   public static var giveawayTypeSpecificModalSelectUsers: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Modal.SelectUsers") }
+  /// winners are chosen randomly
+  public static var giveawayTypeStarsText: String  { return L10n.tr("Localizable", "Giveaway.Type.Stars.Text") }
+  /// Telegram Stars
+  public static var giveawayTypeStarsTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Stars.Title") }
   /// Choose the channels users need to be subscribed to take part in the giveaway.
   public static var givewayChannelsInfo: String  { return L10n.tr("Localizable", "Giveway.Channels.Info") }
   /// Choose the groups or channels users need to be subscribed to take part in the giveaway.
@@ -9097,6 +10617,72 @@ public final class L10n {
   public static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   public static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// End-to-end Encrypted
+  public static var groupCallEndToEndTitle: String  { return L10n.tr("Localizable", "GroupCall.EndToEnd.Title") }
+  /// Group call is not longer available
+  public static var groupCallInviteNotAvailable: String  { return L10n.tr("Localizable", "GroupCall.Invite.NotAvailable") }
+  /// Anyone on Telegram will be able to join your call by following this link.
+  public static var groupCallInviteLinkBasic: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Basic") }
+  /// This link is no longer active
+  public static var groupCallInviteLinkExpired: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Expired") }
+  /// The invite link has been revoked
+  public static var groupCallInviteLinkRevoked: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Revoked") }
+  /// Anyone on Telegram can join your call by following the link below.
+  public static var groupCallInviteLinkShare: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Share") }
+  /// Call Link
+  public static var groupCallInviteLinkTitle: String  { return L10n.tr("Localizable", "GroupCall.InviteLink.Title") }
+  /// Be first to join the call and add people from there.\n[Open Call >](open)
+  public static var groupCallInviteLinksBeFirst: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.BeFirst") }
+  /// Copy Link
+  public static var groupCallInviteLinksCopyLink: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.CopyLink") }
+  /// You are invited to join a group call.
+  public static var groupCallInviteLinksInvited: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.Invited") }
+  /// Share Link
+  public static var groupCallInviteLinksShareLink: String  { return L10n.tr("Localizable", "GroupCall.InviteLinks.ShareLink") }
+  /// **%1$@** and **%2$@** already joined this call.
+  public static func groupCallJoinDouble(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Double", p1, p2)
+  }
+  /// **%1$@**, **%2$@** and %3$@ already joined this call.
+  public static func groupCallJoinMultiple(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple", p1, p2, p3)
+  }
+  /// No one has joined this call yet.
+  public static var groupCallJoinNone: String  { return L10n.tr("Localizable", "GroupCall.Join.None") }
+  /// **%1$@** already joined this call.
+  public static func groupCallJoinSingle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Single", p1)
+  }
+  /// Join Group Call
+  public static var groupCallJoinTitle: String  { return L10n.tr("Localizable", "GroupCall.Join.Title") }
+  /// %d
+  public static func groupCallJoinMultipleOthersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_countable", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_few", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_many", p1)
+  }
+  /// %d other
+  public static func groupCallJoinMultipleOthersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_one", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_other", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_two", p1)
+  }
+  /// %d others
+  public static func groupCallJoinMultipleOthersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GroupCall.Join.Multiple.Others_zero", p1)
+  }
   /// Share Screen
   public static var groupCallStatusBarStartScreen: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StartScreen") }
   /// Share Video
@@ -9383,6 +10969,14 @@ public final class L10n {
   public static var inputAttachPopoverPoll: String  { return L10n.tr("Localizable", "InputAttach.Popover.Poll") }
   /// Video
   public static var inputAttachPopoverVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.Video") }
+  /// searches posts from all channels
+  public static var inputContextHashtashHelpBasic: String  { return L10n.tr("Localizable", "InputContext.HashtashHelp.Basic") }
+  /// searches only posts from this channel
+  public static var inputContextHashtashHelpChannel: String  { return L10n.tr("Localizable", "InputContext.HashtashHelp.Channel") }
+  /// Use %@
+  public static func inputContextHashtashHelpUse(_ p1: String) -> String {
+    return L10n.tr("Localizable", "InputContext.HashtashHelp.Use", p1)
+  }
   /// Day:
   public static var inputDataDateDayPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Day.Placeholder") }
   /// Day
@@ -9709,6 +11303,18 @@ public final class L10n {
   public static func inviteLinkStickerTimeLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "InviteLink.Sticker.TimeLeft", p1)
   }
+  /// Charge a subscription fee from people joining your channel via this link. [Learn More >](https://telegram.org)
+  public static var inviteLinkSubInfo: String  { return L10n.tr("Localizable", "InviteLink.Sub.Info") }
+  /// You can't enable admin approval for links that require a monthly fee.
+  public static var inviteLinkSubReqApproval: String  { return L10n.tr("Localizable", "InviteLink.Sub.ReqApproval") }
+  /// Require Monthly Fee
+  public static var inviteLinkSubText: String  { return L10n.tr("Localizable", "InviteLink.Sub.Text") }
+  /// Stars Amount per month
+  public static var inviteLinkSubAmountPlaceholder: String  { return L10n.tr("Localizable", "InviteLink.Sub.Amount.Placeholder") }
+  /// If you need change the subscription fee, create a new invite link with a different price.
+  public static var inviteLinkSubInfoEditing: String  { return L10n.tr("Localizable", "InviteLink.Sub.Info.Editing") }
+  /// SUBSCRIPTION FEE
+  public static var inviteLinkSubFeeHeader: String  { return L10n.tr("Localizable", "InviteLink.SubFee.Header") }
   /// Sorry, you are a member of too many groups and channels. Please leave some before joining one.
   public static var joinChannelsTooMuch: String  { return L10n.tr("Localizable", "Join.ChannelsTooMuch") }
   /// Inactive Chats
@@ -10387,6 +11993,10 @@ public final class L10n {
   public static var messagePlaceholderEdit: String  { return L10n.tr("Localizable", "Message.Placeholder.Edit") }
   /// Message in General...
   public static var messagePlaceholderMessageInGeneral: String  { return L10n.tr("Localizable", "Message.Placeholder.MessageInGeneral") }
+  /// Message for %@...
+  public static func messagePlaceholderPaidMessage(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Message.Placeholder.PaidMessage", p1)
+  }
   /// Reply to %@...
   public static func messagePlaceholderReplyToTopic(_ p1: String) -> String {
     return L10n.tr("Localizable", "Message.Placeholder.ReplyToTopic", p1)
@@ -10475,6 +12085,22 @@ public final class L10n {
   public static var messagesSilentTooltip: String  { return L10n.tr("Localizable", "Messages.Silent.Tooltip") }
   /// subscribers will receive a silent notification.
   public static var messagesSilentTooltipSilent: String  { return L10n.tr("Localizable", "Messages.Silent.Tooltip.Silent") }
+  /// Charge for Messages
+  public static var messagesPrivacyChargeforMessages: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages") }
+  /// EXCEPTIONS
+  public static var messagesPrivacyChargeforMessagesExceptions: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Exceptions") }
+  /// Charge a fee for messages from people outside your contacts or those you haven't messaged first.
+  public static var messagesPrivacyChargeforMessagesInfo: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Info") }
+  /// Add users or entire groups who won't be charged for sending messages to you
+  public static var messagesPrivacyChargeforMessagesExceptionsInfo: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Exceptions.Info") }
+  /// Remove Fee
+  public static var messagesPrivacyChargeforMessagesExceptionsRemoveFee: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Exceptions.RemoveFee") }
+  /// SET YOUR PRICE PER MESSAGE
+  public static var messagesPrivacyChargeforMessagesSelectHeader: String  { return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Select.Header") }
+  /// You will receive %1$@ of the selected fee (~%2$@$) for each incoming message.
+  public static func messagesPrivacyChargeforMessagesSelectInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "MessagesPrivacy.ChargeforMessages.Select.Info", p1, p2)
+  }
   /// Apply
   public static var modalApply: String  { return L10n.tr("Localizable", "Modal.Apply") }
   /// Cancel
@@ -10537,6 +12163,10 @@ public final class L10n {
   public static var monetizationBalanceWithdrawStars: String  { return L10n.tr("Localizable", "Monetization.BalanceWithdraw.Stars") }
   /// Withdraw via Fragment
   public static var monetizationBalanceWithdrawTon: String  { return L10n.tr("Localizable", "Monetization.BalanceWithdraw.Ton") }
+  /// Telegram shares 50%@ of the revenue from ads displayed in your bot. [Learn More >]()
+  public static func monetizationHeaderBot(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Monetization.Header.Bot", p1)
+  }
   /// Earn From Your Channel
   public static var monetizationIntroTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Title") }
   /// Understood
@@ -10561,6 +12191,10 @@ public final class L10n {
   public static var monetizationIntroWithdrawalText: String  { return L10n.tr("Localizable", "Monetization.Intro.Withdrawal.Text") }
   /// Flexible Withdrawals
   public static var monetizationIntroWithdrawalTitle: String  { return L10n.tr("Localizable", "Monetization.Intro.Withdrawal.Title") }
+  /// Earn From Your Bot
+  public static var monetizationIntroBotTitle: String  { return L10n.tr("Localizable", "Monetization.IntroBot.Title") }
+  /// Telegram can display ads in your bot.
+  public static var monetizationIntroBotAdsText: String  { return L10n.tr("Localizable", "Monetization.IntroBot.Ads.Text") }
   /// Balance Available to Withdraw
   public static var monetizationOverviewAvailable: String  { return L10n.tr("Localizable", "Monetization.Overview.Available") }
   /// Proceeds Since Last Withdrawal
@@ -10853,6 +12487,66 @@ public final class L10n {
   public static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
   public static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
+  /// %1$@ paid %2$@ to send a message
+  public static func notificationPaidMessage(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessage", p1, p2)
+  }
+  /// %1$@ paid %2$@ to send %3$@
+  public static func notificationPaidMessageMany(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageMany", p1, p2, p3)
+  }
+  /// %1$@ changed price to %2$@ per message
+  public static func notificationPaidMessagePriceChanged(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessagePriceChanged", p1, p2)
+  }
+  /// You changed price to %1$@ per message
+  public static func notificationPaidMessagePriceChangedYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessagePriceChangedYou", p1)
+  }
+  /// %1$@ refunded you %2$@
+  public static func notificationPaidMessageRefund(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageRefund", p1, p2)
+  }
+  /// You refunded %1$@ to %2$@
+  public static func notificationPaidMessageRefundYou(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageRefundYou", p1, p2)
+  }
+  /// %d
+  public static func notificationPaidMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_countable", p1)
+  }
+  /// %d messages
+  public static func notificationPaidMessagesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_few", p1)
+  }
+  /// %d messages
+  public static func notificationPaidMessagesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_many", p1)
+  }
+  /// %d message
+  public static func notificationPaidMessagesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_one", p1)
+  }
+  /// %d messages
+  public static func notificationPaidMessagesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_other", p1)
+  }
+  /// %d messages
+  public static func notificationPaidMessagesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_two", p1)
+  }
+  /// %d messages
+  public static func notificationPaidMessagesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessages_zero", p1)
+  }
+  /// You paid %1$@ to send a message
+  public static func notificationPaidMessageYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageYou", p1)
+  }
+  /// You paid %1$@ to send %2$@
+  public static func notificationPaidMessageYouMany(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.PaidMessageYouMany", p1, p2)
+  }
   /// %1$@ is now within %2$@ from %3$@
   public static func notificationProximityReached1(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Notification.ProximityReached_1", p1, p2, p3)
@@ -10923,8 +12617,38 @@ public final class L10n {
   public static func notificationGroupReacted(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Notification.Group.Reacted", p1, p2, p3)
   }
+  /// Incoming Group Call
+  public static var notificationGroupCallIncoming: String  { return L10n.tr("Localizable", "Notification.GroupCall.Incoming") }
+  /// Outgoing Group Call
+  public static var notificationGroupCallOutgoing: String  { return L10n.tr("Localizable", "Notification.GroupCall.Outgoing") }
   /// Type message...
   public static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
+  /// Saved Gift
+  public static var notificationStarGiftSelfTitle: String  { return L10n.tr("Localizable", "Notification.StarGift.Self.Title") }
+  /// %@ transferred you a unique collectible
+  public static func notificationStarsGiftTransfer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Transfer", p1)
+  }
+  /// You transferred a unique collectible
+  public static var notificationStarsGiftTransferYou: String  { return L10n.tr("Localizable", "Notification.StarsGift.TransferYou") }
+  /// %@ turned the gift from you to a unique collectible
+  public static func notificationStarsGiftUpgrade(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Upgrade", p1)
+  }
+  /// You turned the gift from %@ to a unique collectible
+  public static func notificationStarsGiftUpgradeYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.UpgradeYou", p1)
+  }
+  /// You bought a gift for %@
+  public static func notificationStarsGiftSelfBought(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Self.Bought", p1)
+  }
+  /// You can display this gift on your page or turn it into a unique collectible and send to others.
+  public static var notificationStarsGiftSubtitleSelf: String  { return L10n.tr("Localizable", "Notification.StarsGift.Subtitle.Self") }
+  /// %@ turned the gift to a unique collectible
+  public static func notificationStarsGiftUpgradeChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StarsGift.Upgrade.Channel", p1)
+  }
   /// Reply
   public static var notificationTitleReply: String  { return L10n.tr("Localizable", "Notification.Title.Reply") }
   /// All Accounts
@@ -11263,6 +12987,8 @@ public final class L10n {
   }
   /// Warning
   public static var paymentsWarninTitle: String  { return L10n.tr("Localizable", "Payments.WarninTitle") }
+  /// Subscription is already active
+  public static var paymentsInvoiceAlreadyActive: String  { return L10n.tr("Localizable", "Payments.Invoice.AlreadyActive") }
   /// Invoice doesn't exist
   public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
   /// I accept the [Terms of Service]() of **%1$@**.
@@ -11541,6 +13267,34 @@ public final class L10n {
   }
   /// today
   public static var peerStatusToday: String  { return L10n.tr("Localizable", "Peer.Status.Today") }
+  /// %d
+  public static func peerStatusUsersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_countable", p1)
+  }
+  /// %d users
+  public static func peerStatusUsersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_few", p1)
+  }
+  /// %d users
+  public static func peerStatusUsersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_many", p1)
+  }
+  /// %d user
+  public static func peerStatusUsersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_one", p1)
+  }
+  /// %d users
+  public static func peerStatusUsersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_other", p1)
+  }
+  /// %d users
+  public static func peerStatusUsersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_two", p1)
+  }
+  /// %d users
+  public static func peerStatusUsersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Status.Users_zero", p1)
+  }
   /// yesterday
   public static var peerStatusYesterday: String  { return L10n.tr("Localizable", "Peer.Status.Yesterday") }
   /// %d
@@ -11603,6 +13357,8 @@ public final class L10n {
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
   /// Add To Group or Channel
   public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
+  /// Affiliate Program
+  public static var peerInfoBotAffiliate: String  { return L10n.tr("Localizable", "PeerInfo.BotAffiliate") }
   /// Appearance
   public static var peerInfoChannelAppearance: String  { return L10n.tr("Localizable", "PeerInfo.ChannelAppearance") }
   /// Channel Color
@@ -11707,6 +13463,8 @@ public final class L10n {
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
   public static var peerInfoReport: String  { return L10n.tr("Localizable", "PeerInfo.Report") }
+  /// Report Bot
+  public static var peerInfoReportBot: String  { return L10n.tr("Localizable", "PeerInfo.ReportBot") }
   /// Block and Report
   public static var peerInfoReportReaction: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction") }
   /// Restart Bot
@@ -11733,6 +13491,8 @@ public final class L10n {
   public static var peerInfoSharelink: String  { return L10n.tr("Localizable", "PeerInfo.sharelink") }
   /// Share My Contact Info
   public static var peerInfoShareMyInfo: String  { return L10n.tr("Localizable", "PeerInfo.ShareMyInfo") }
+  /// Show Authors' Profile
+  public static var peerInfoShowAuthorProfiles: String  { return L10n.tr("Localizable", "PeerInfo.ShowAuthorProfiles") }
   /// Show More
   public static var peerInfoShowMore: String  { return L10n.tr("Localizable", "PeerInfo.ShowMore") }
   /// [more]()
@@ -11785,6 +13545,8 @@ public final class L10n {
   public static var peerInfoUnblockUser: String  { return L10n.tr("Localizable", "PeerInfo.UnblockUser") }
   /// username
   public static var peerInfoUsername: String  { return L10n.tr("Localizable", "PeerInfo.username") }
+  /// Verify Accounts
+  public static var peerInfoVerifyAccounts: String  { return L10n.tr("Localizable", "PeerInfo.VerifyAccounts") }
   /// Description
   public static var peerInfoAboutPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.About.Placeholder") }
   /// Acrhived Stories
@@ -11821,6 +13583,8 @@ public final class L10n {
   public static var peerInfoActionReport: String  { return L10n.tr("Localizable", "PeerInfo.Action.Report") }
   /// Secret
   public static var peerInfoActionSecretChat: String  { return L10n.tr("Localizable", "PeerInfo.Action.SecretChat") }
+  /// Send a Gift
+  public static var peerInfoActionSendGift: String  { return L10n.tr("Localizable", "PeerInfo.Action.SendGift") }
   /// Share
   public static var peerInfoActionShare: String  { return L10n.tr("Localizable", "PeerInfo.Action.Share") }
   /// Statistics
@@ -11861,8 +13625,8 @@ public final class L10n {
   public static var peerInfoBotEditIntro: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Intro") }
   /// Change Bot Settings
   public static var peerInfoBotEditSettings: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Settings") }
-  /// Balance
-  public static var peerInfoBotEditStarsBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsBalance") }
+  /// Stars Balance
+  public static var peerInfoBotEditStarsBalanceNew: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsBalance_New") }
   /// %d
   public static func peerInfoBotEditStarsCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_countable", p1)
@@ -11891,8 +13655,16 @@ public final class L10n {
   public static func peerInfoBotEditStarsCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.BotEdit.StarsCount_zero", p1)
   }
+  /// TON Balance
+  public static var peerInfoBotEditTonBalance: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.TonBalance") }
   /// Username
   public static var peerInfoBotEditUsername: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Username") }
+  /// Geolocation
+  public static var peerInfoBotPermissionsGeo: String  { return L10n.tr("Localizable", "PeerInfo.BotPermissions.Geo") }
+  /// ALLOW ACCESS TO
+  public static var peerInfoBotPermissionsHeader: String  { return L10n.tr("Localizable", "PeerInfo.BotPermissions.Header") }
+  /// Emoji Status
+  public static var peerInfoBotPermissionsStatus: String  { return L10n.tr("Localizable", "PeerInfo.BotPermissions.Status") }
   /// has access to messages
   public static var peerInfoBotStatusHasAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasAccess") }
   /// has no access to messages
@@ -12055,6 +13827,28 @@ public final class L10n {
   public static var peerInfoFirstNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.FirstName.Placeholder") }
   /// The group chat will be devided into topics created by admins or users.
   public static var peerInfoForumInfo: String  { return L10n.tr("Localizable", "PeerInfo.Forum.Info") }
+  /// Notify About New Gifts
+  public static var peerInfoGiftsChannelNotify: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.ChannelNotify") }
+  /// You will not receive a message from Telegram when your channel receives a gift.
+  public static var peerInfoGiftsChannelNotifyDisabledTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.ChannelNotifyDisabledTooltip") }
+  /// You will receive a message from Telegram when your channel receives a gift.
+  public static var peerInfoGiftsChannelNotifyTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.ChannelNotifyTooltip") }
+  /// Displayed
+  public static var peerInfoGiftsDisplayed: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.Displayed") }
+  /// Hidden
+  public static var peerInfoGiftsHidden: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.Hidden") }
+  /// Limited
+  public static var peerInfoGiftsLimited: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.Limited") }
+  /// Send Gift
+  public static var peerInfoGiftsSendGift: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.SendGift") }
+  /// Sort by Date
+  public static var peerInfoGiftsSortByDate: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.SortByDate") }
+  /// Sort by Value
+  public static var peerInfoGiftsSortByValue: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.SortByValue") }
+  /// Unique
+  public static var peerInfoGiftsUnique: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.Unique") }
+  /// Unlimited
+  public static var peerInfoGiftsUnlimited: String  { return L10n.tr("Localizable", "PeerInfo.Gifts.Unlimited") }
   /// Auto-Delete Messages
   public static var peerInfoGroupAutoDeleteMessages: String  { return L10n.tr("Localizable", "PeerInfo.Group.AutoDeleteMessages") }
   /// Delete
@@ -12101,6 +13895,8 @@ public final class L10n {
   public static var peerInfoReportReactionSuccess: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction.Success") }
   /// Append names of the admins to the messages they post.
   public static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
+  /// Add names and photos of admins to the messages they post, linking to their profiles.
+  public static var peerInfoSignMessagesAndShowAuthorDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessagesAndShowAuthor.Desc") }
   /// in %1$@
   public static func peerInfoTopicStatusIn(_ p1: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.TopicStatus.In", p1)
@@ -12109,6 +13905,14 @@ public final class L10n {
   public static func peerInfoUsernamesList(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.Usernames.List", p1, p2)
   }
+  /// This bot is verified as official by the representatives of Telegram.
+  public static var peerInfoVerificationInfoBot: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.Bot") }
+  /// This channel is verified as official by the representatives of Telegram.
+  public static var peerInfoVerificationInfoChannel: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.Channel") }
+  /// This group is verified as official by the representatives of Telegram.
+  public static var peerInfoVerificationInfoGroup: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.Group") }
+  /// https://telegram.org/verify
+  public static var peerInfoVerificationInfoURL: String  { return L10n.tr("Localizable", "PeerInfo.VerificationInfo.URL") }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
   /// Archive Settings
@@ -12133,6 +13937,8 @@ public final class L10n {
   public static var peerMediaFiles: String  { return L10n.tr("Localizable", "PeerMedia.Files") }
   /// GIFs
   public static var peerMediaGifs: String  { return L10n.tr("Localizable", "PeerMedia.Gifs") }
+  /// Gifts
+  public static var peerMediaGifts: String  { return L10n.tr("Localizable", "PeerMedia.Gifts") }
   /// Links
   public static var peerMediaLinks: String  { return L10n.tr("Localizable", "PeerMedia.Links") }
   /// Media
@@ -12143,12 +13949,16 @@ public final class L10n {
   public static var peerMediaMusic: String  { return L10n.tr("Localizable", "PeerMedia.Music") }
   /// Posts
   public static var peerMediaPosts: String  { return L10n.tr("Localizable", "PeerMedia.Posts") }
+  /// Preview
+  public static var peerMediaPreview: String  { return L10n.tr("Localizable", "PeerMedia.Preview") }
   /// Saved
   public static var peerMediaSaved: String  { return L10n.tr("Localizable", "PeerMedia.Saved") }
   /// Chats
   public static var peerMediaSavedMessages: String  { return L10n.tr("Localizable", "PeerMedia.SavedMessages") }
   /// Shared Media
   public static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
+  /// Similar Bots
+  public static var peerMediaSimilarBots: String  { return L10n.tr("Localizable", "PeerMedia.SimilarBots") }
   /// Similar Channels
   public static var peerMediaSimilarChannels: String  { return L10n.tr("Localizable", "PeerMedia.SimilarChannels") }
   /// Stories
@@ -12703,6 +14513,10 @@ public final class L10n {
   }
   /// Gift Telegram Premium
   public static var premiumGiftTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Title") }
+  /// buy yourself a gift
+  public static var premiumGiftContactSelectionBuySelf: String  { return L10n.tr("Localizable", "Premium.Gift.ContactSelection.BuySelf") }
+  /// THIS IS YOU
+  public static var premiumGiftContactSelectionThisIsYou: String  { return L10n.tr("Localizable", "Premium.Gift.ContactSelection.ThisIsYou") }
   /// Get **%1$@** and **%2$@** more access to exclusive features with **Telegram Premium**.
   public static func premiumGiftGetAccessMoreThanThree(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Gift.GetAccess.MoreThanThree", p1, p2)
@@ -13035,6 +14849,8 @@ public final class L10n {
   }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
+  /// mini app
+  public static var presenceMiniapp: String  { return L10n.tr("Localizable", "Presence.miniapp") }
   /// support
   public static var presenceSupport: String  { return L10n.tr("Localizable", "Presence.Support") }
   /// %d
@@ -13059,6 +14875,8 @@ public final class L10n {
   public static var previewSenderArchiveTooltip: String  { return L10n.tr("Localizable", "PreviewSender.ArchiveTooltip") }
   /// Add a caption...
   public static var previewSenderCaptionPlaceholder: String  { return L10n.tr("Localizable", "PreviewSender.CaptionPlaceholder") }
+  /// Change Video Cover
+  public static var previewSenderChangeVideoCover: String  { return L10n.tr("Localizable", "PreviewSender.ChangeVideoCover") }
   /// Group all media into one message
   public static var previewSenderCollageTooltip: String  { return L10n.tr("Localizable", "PreviewSender.CollageTooltip") }
   /// Add a comment...
@@ -13077,8 +14895,12 @@ public final class L10n {
   public static var previewSenderMoveTextDown: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextDown") }
   /// Move Caption Up
   public static var previewSenderMoveTextUp: String  { return L10n.tr("Localizable", "PreviewSender.MoveTextUp") }
+  /// Remove Media
+  public static var previewSenderRemoveMedia: String  { return L10n.tr("Localizable", "PreviewSender.RemoveMedia") }
   /// Remove Paid Content
   public static var previewSenderRemovePaid: String  { return L10n.tr("Localizable", "PreviewSender.RemovePaid") }
+  /// Remove Video Cover
+  public static var previewSenderRemoveVideoCover: String  { return L10n.tr("Localizable", "PreviewSender.RemoveVideoCover") }
   /// Without Compression
   public static var previewSenderSendAsFile: String  { return L10n.tr("Localizable", "PreviewSender.SendAsFile") }
   /// With Compression
@@ -13243,12 +15065,26 @@ public final class L10n {
   }
   /// Ungrouped
   public static var previewSenderUngrouped: String  { return L10n.tr("Localizable", "PreviewSender.Ungrouped") }
+  /// Upload Video Cover
+  public static var previewSenderUploadVideoCover: String  { return L10n.tr("Localizable", "PreviewSender.UploadVideoCover") }
   /// Disable Spoiler
   public static var previewSenderSpoilerTooltipDisable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Disable") }
   /// Hide with Spoiler
   public static var previewSenderSpoilerTooltipEnable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Enable") }
   /// ZIP Archive
   public static var previewSenderTitleArchive: String  { return L10n.tr("Localizable", "PreviewSender.Title.Archive") }
+  /// Accepted Gift Types
+  public static var privacyGiftsAcceptedGiftTypes: String  { return L10n.tr("Localizable", "Privacy.Gifts.AcceptedGiftTypes") }
+  /// Choose the types of gifts that you allow others to send you.
+  public static var privacyGiftsInfo: String  { return L10n.tr("Localizable", "Privacy.Gifts.Info") }
+  /// Limited-Edition
+  public static var privacyGiftsLimitedEdition: String  { return L10n.tr("Localizable", "Privacy.Gifts.LimitedEdition") }
+  /// Premium Subscriptions
+  public static var privacyGiftsPremium: String  { return L10n.tr("Localizable", "Privacy.Gifts.Premium") }
+  /// Unique
+  public static var privacyGiftsUnique: String  { return L10n.tr("Localizable", "Privacy.Gifts.Unique") }
+  /// Unlimited
+  public static var privacyGiftsUnlimited: String  { return L10n.tr("Localizable", "Privacy.Gifts.Unlimited") }
   /// Sorry, you cannot add %@ to channels because of %@'s privacy settings.
   public static func privacyGroupsAndChannelsInviteToChannelError(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelError", p1, p2)
@@ -13315,6 +15151,8 @@ public final class L10n {
   public static var privacySettingsDeleteAccountHeader: String  { return L10n.tr("Localizable", "PrivacySettings.DeleteAccountHeader") }
   /// Forwarded Messages
   public static var privacySettingsForwards: String  { return L10n.tr("Localizable", "PrivacySettings.Forwards") }
+  /// Gifts
+  public static var privacySettingsGifts: String  { return L10n.tr("Localizable", "PrivacySettings.Gifts") }
   /// Auto-Delete Messages
   public static var privacySettingsGlobalTimer: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer") }
   /// %d
@@ -13397,6 +15235,8 @@ public final class L10n {
   public static var privacySettingsVoiceCalls: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceCalls") }
   /// Voice Messages
   public static var privacySettingsVoiceMessages: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceMessages") }
+  /// Mini-apps
+  public static var privacySettingsGiftsEnableForBots: String  { return L10n.tr("Localizable", "PrivacySettings.Gifts.EnableForBots") }
   /// Disable
   public static var privacySettingsGlobalTimerDisable: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Disable") }
   /// Automatically delete messages sent in this group for everyone after a period of time
@@ -13465,6 +15305,8 @@ public final class L10n {
   public static var privacySettingsControllerPhoneCallDescription: String  { return L10n.tr("Localizable", "PrivacySettingsController.PhoneCallDescription") }
   /// WHO CAN CALL ME
   public static var privacySettingsControllerPhoneCallHeader: String  { return L10n.tr("Localizable", "PrivacySettingsController.PhoneCallHeader") }
+  /// Remove Fee
+  public static var privacySettingsControllerRemoveFee: String  { return L10n.tr("Localizable", "PrivacySettingsController.RemoveFee") }
   /// Remove Public Photo
   public static var privacySettingsControllerRemovePublicPhoto: String  { return L10n.tr("Localizable", "PrivacySettingsController.RemovePublicPhoto") }
   /// Set Public Photo
@@ -13529,6 +15371,10 @@ public final class L10n {
   public static var privacySettingsControllerForwardsAlwaysAllowTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.AlwaysAllow.Title") }
   /// Never Allow
   public static var privacySettingsControllerForwardsNeverAllowTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.NeverAllow.Title") }
+  /// Choose whether gifts from specific senders need your approval before they've visible to others on your profile.
+  public static var privacySettingsControllerGiftsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gifts.CustomHelp") }
+  /// WHO CAN DISPLAY GIFTS ON MY PROFILE
+  public static var privacySettingsControllerGiftsWhoCanSee: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gifts.WhoCanSee") }
   /// Always
   public static var privacySettingsControllerP2pAlways: String  { return L10n.tr("Localizable", "PrivacySettingsController.P2p.Always") }
   /// My Contacts
@@ -13739,6 +15585,14 @@ public final class L10n {
   public static var recentCallsDeleteHeader: String  { return L10n.tr("Localizable", "RecentCalls.DeleteHeader") }
   /// Your recent calls will appear here
   public static var recentCallsEmpty: String  { return L10n.tr("Localizable", "RecentCalls.Empty") }
+  /// Create New Call
+  public static var recentCallsNewCall: String  { return L10n.tr("Localizable", "RecentCalls.NewCall") }
+  /// New Call Link
+  public static var recentCallsNewCallLink: String  { return L10n.tr("Localizable", "RecentCalls.NewCallLink") }
+  /// Recent Calls
+  public static var recentCallsRecentCalls: String  { return L10n.tr("Localizable", "RecentCalls.RecentCalls") }
+  /// Call
+  public static var recentCallsNewCallOK: String  { return L10n.tr("Localizable", "RecentCalls.NewCall.OK") }
   /// These devices have no access to your account. The code was entered correctly, but no correct password was given.
   public static var recentSessionsIncompleteAttemptDesc: String  { return L10n.tr("Localizable", "RecentSessions.IncompleteAttemptDesc") }
   /// INCOMPLETE LOGIN ATTEMPTS
@@ -13761,6 +15615,18 @@ public final class L10n {
   public static var reportAdditionTextButton: String  { return L10n.tr("Localizable", "Report.AdditionText.Button") }
   /// Additional details...
   public static var reportAdditionTextPlaceholder: String  { return L10n.tr("Localizable", "Report.AdditionText.Placeholder") }
+  /// Send Report
+  public static var reportComplicatedSendReport: String  { return L10n.tr("Localizable", "Report.Complicated.SendReport") }
+  /// Report Message
+  public static var reportComplicatedMessageTitle: String  { return L10n.tr("Localizable", "Report.Complicated.Message.Title") }
+  /// Report Messages
+  public static var reportComplicatedMessagesTitle: String  { return L10n.tr("Localizable", "Report.Complicated.Messages.Title") }
+  /// Report %@
+  public static func reportComplicatedPeerTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Report.Complicated.Peer.Title", p1)
+  }
+  /// Report Story
+  public static var reportComplicatedStoryTitle: String  { return L10n.tr("Localizable", "Report.Complicated.Story.Title") }
   /// Child Abuse
   public static var reportReasonChildAbuse: String  { return L10n.tr("Localizable", "ReportReason.ChildAbuse") }
   /// Copyright
@@ -13889,20 +15755,42 @@ public final class L10n {
   public static var scheduleControllerAt: String  { return L10n.tr("Localizable", "ScheduleController.at") }
   /// Schedule Message
   public static var scheduleControllerTitle: String  { return L10n.tr("Localizable", "ScheduleController.Title") }
+  /// Ad
+  public static var searchAd: String  { return L10n.tr("Localizable", "Search.Ad") }
+  /// Remove From Recent
+  public static var searchRemoveFromRecent: String  { return L10n.tr("Localizable", "Search.RemoveFromRecent") }
+  /// Remove Ad
+  public static var searchAdRemoveAd: String  { return L10n.tr("Localizable", "Search.Ad.RemoveAd") }
+  /// Sponsor Info
+  public static var searchAdSponsorInfo: String  { return L10n.tr("Localizable", "Search.Ad.SponsorInfo") }
+  /// You can turn off ads by subscribing to Telegram Premium.
+  public static var searchAdAboutRemove: String  { return L10n.tr("Localizable", "Search.Ad.About.Remove") }
   /// Are you sure you want to clear your search history?
   public static var searchConfirmClearHistory: String  { return L10n.tr("Localizable", "Search.Confirm.ClearHistory") }
+  /// All Chats
+  public static var searchFilterAllChats: String  { return L10n.tr("Localizable", "Search.Filter.AllChats") }
+  /// Channels
+  public static var searchFilterChannels: String  { return L10n.tr("Localizable", "Search.Filter.Channels") }
   /// Clear Filter
   public static var searchFilterClearFilter: String  { return L10n.tr("Localizable", "Search.Filter.ClearFilter") }
   /// Files
   public static var searchFilterFiles: String  { return L10n.tr("Localizable", "Search.Filter.Files") }
+  /// From %@
+  public static func searchFilterFrom(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Search.Filter.From", p1)
+  }
   /// GIFs
   public static var searchFilterGIFs: String  { return L10n.tr("Localizable", "Search.Filter.GIFs") }
+  /// Group Chats
+  public static var searchFilterGroupChats: String  { return L10n.tr("Localizable", "Search.Filter.GroupChats") }
   /// Links
   public static var searchFilterLinks: String  { return L10n.tr("Localizable", "Search.Filter.Links") }
   /// Music
   public static var searchFilterMusic: String  { return L10n.tr("Localizable", "Search.Filter.Music") }
   /// Photos
   public static var searchFilterPhotos: String  { return L10n.tr("Localizable", "Search.Filter.Photos") }
+  /// All Chats
+  public static var searchFilterPrivateChats: String  { return L10n.tr("Localizable", "Search.Filter.PrivateChats") }
   /// Videos
   public static var searchFilterVideos: String  { return L10n.tr("Localizable", "Search.Filter.Videos") }
   /// Voice
@@ -13987,6 +15875,10 @@ public final class L10n {
   public static var searchSeparatorShowAsMessages: String  { return L10n.tr("Localizable", "Search.Separator.ShowAsMessages") }
   /// Topics
   public static var searchSeparatorTopics: String  { return L10n.tr("Localizable", "Search.Separator.Topics") }
+  /// POPULAR APPS
+  public static var searchSeparatorAppsPopular: String  { return L10n.tr("Localizable", "Search.Separator.Apps.Popular") }
+  /// APPS YOU USE
+  public static var searchSeparatorAppsYouUse: String  { return L10n.tr("Localizable", "Search.Separator.Apps.YouUse") }
   /// Search
   public static var searchFieldSearch: String  { return L10n.tr("Localizable", "SearchField.Search") }
   /// Off
@@ -14537,6 +16429,10 @@ public final class L10n {
   public static var selectColorTitleChannel: String  { return L10n.tr("Localizable", "SelectColor.Title.Channel") }
   /// Your Name Color
   public static var selectColorTitleUser: String  { return L10n.tr("Localizable", "SelectColor.Title.User") }
+  /// Apply your collectible's unique look to your profile.
+  public static var selectColorUseGiftInfo: String  { return L10n.tr("Localizable", "SelectColor.UseGift.Info") }
+  /// USE A GIFT
+  public static var selectColorUseGiftTitle: String  { return L10n.tr("Localizable", "SelectColor.UseGift.Title") }
   /// Save Countries
   public static var selectCountriesOK: String  { return L10n.tr("Localizable", "SelectCountries.OK") }
   /// Select Countries
@@ -14801,12 +16697,48 @@ public final class L10n {
   public static var settingsSearchSynonymsStickersTitle: String  { return L10n.tr("Localizable", "SettingsSearch.Synonyms.Stickers.Title") }
   /// Copied to Clipboard
   public static var shareLinkCopied: String  { return L10n.tr("Localizable", "Share.Link.Copied") }
+  /// You selected %1$@ who charge Stars for messages. Would you like to pay %2$@ to send %3$@?
+  public static func sharePayConfirmText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.Text", p1, p2, p3)
+  }
+  /// %d
+  public static func sharePayConfirmUserCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_countable", p1)
+  }
+  /// %d users
+  public static func sharePayConfirmUserCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_few", p1)
+  }
+  /// %d users
+  public static func sharePayConfirmUserCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_many", p1)
+  }
+  /// %d user
+  public static func sharePayConfirmUserCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_one", p1)
+  }
+  /// %d users
+  public static func sharePayConfirmUserCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_other", p1)
+  }
+  /// %d users
+  public static func sharePayConfirmUserCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_two", p1)
+  }
+  /// %d users
+  public static func sharePayConfirmUserCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Share.Pay.Confirm.UserCount_zero", p1)
+  }
   /// Cancel
   public static var shareExtensionCancel: String  { return L10n.tr("Localizable", "ShareExtension.Cancel") }
   /// Search
   public static var shareExtensionSearch: String  { return L10n.tr("Localizable", "ShareExtension.Search") }
   /// Share
   public static var shareExtensionShare: String  { return L10n.tr("Localizable", "ShareExtension.Share") }
+  /// Uploading %@
+  public static func shareExtensionUploading(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ShareExtension.Uploading", p1)
+  }
   /// Next
   public static var shareExtensionPasscodeNext: String  { return L10n.tr("Localizable", "ShareExtension.Passcode.Next") }
   /// passcode
@@ -15244,6 +17176,34 @@ public final class L10n {
     return L10n.tr("Localizable", "SharedMedia.ArchiveStoryCount_zero", p1)
   }
   /// %d
+  public static func sharedMediaBotPreviewCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_countable", p1)
+  }
+  /// %d previews
+  public static func sharedMediaBotPreviewCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_few", p1)
+  }
+  /// %d previews
+  public static func sharedMediaBotPreviewCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_many", p1)
+  }
+  /// %d preview
+  public static func sharedMediaBotPreviewCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_one", p1)
+  }
+  /// %d previews
+  public static func sharedMediaBotPreviewCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_other", p1)
+  }
+  /// %d previews
+  public static func sharedMediaBotPreviewCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_two", p1)
+  }
+  /// %d previews
+  public static func sharedMediaBotPreviewCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.BotPreviewCount_zero", p1)
+  }
+  /// %d
   public static func sharedMediaCommonGroupsCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "SharedMedia.CommonGroupsCount_countable", p1)
   }
@@ -15468,6 +17428,34 @@ public final class L10n {
     return L10n.tr("Localizable", "SharedMedia.SavedMessagesCount_zero", p1)
   }
   /// %d
+  public static func sharedMediaSimilarBotsCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_countable", p1)
+  }
+  /// %d similar bots
+  public static func sharedMediaSimilarBotsCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_few", p1)
+  }
+  /// %d similar bots
+  public static func sharedMediaSimilarBotsCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_many", p1)
+  }
+  /// %d similar bots
+  public static func sharedMediaSimilarBotsCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_one", p1)
+  }
+  /// %d similar bots
+  public static func sharedMediaSimilarBotsCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_other", p1)
+  }
+  /// %d similar bots
+  public static func sharedMediaSimilarBotsCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_two", p1)
+  }
+  /// %d similar bots
+  public static func sharedMediaSimilarBotsCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.SimilarBotsCount_zero", p1)
+  }
+  /// %d
   public static func sharedMediaSimilarCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "SharedMedia.SimilarCount_countable", p1)
   }
@@ -15494,6 +17482,34 @@ public final class L10n {
   /// %d similar channels
   public static func sharedMediaSimilarCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "SharedMedia.SimilarCount_zero", p1)
+  }
+  /// %d
+  public static func sharedMediaStarGiftsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_countable", p1)
+  }
+  /// %d gifts
+  public static func sharedMediaStarGiftsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_few", p1)
+  }
+  /// %d gifts
+  public static func sharedMediaStarGiftsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_many", p1)
+  }
+  /// %d gifts
+  public static func sharedMediaStarGiftsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_one", p1)
+  }
+  /// %d gifts
+  public static func sharedMediaStarGiftsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_other", p1)
+  }
+  /// %d gifts
+  public static func sharedMediaStarGiftsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_two", p1)
+  }
+  /// %d gifts
+  public static func sharedMediaStarGiftsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedMedia.StarGifts_zero", p1)
   }
   /// %d
   public static func sharedMediaStoryCountCountable(_ p1: Int) -> String {
@@ -15643,6 +17659,24 @@ public final class L10n {
   public static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
   /// Slow mode is enabled. This text is too long to send as one message.
   public static var slowModeTooLongError: String  { return L10n.tr("Localizable", "SlowMode.TooLong.Error") }
+  /// Buy stars for your expiring subscriptions.
+  public static var starBuyCustomSubs: String  { return L10n.tr("Localizable", "Star.Buy.Custom_subs") }
+  /// With Stars, **%@** will be able to unlock content and services on Telegram. [See Examples >](examples)
+  public static func starBuyScreenGift(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.BuyScreen.Gift", p1)
+  }
+  /// MY SUBSCRIPTIONS
+  public static var starBuyScreenMySubs: String  { return L10n.tr("Localizable", "Star.BuyScreen.MySubs") }
+  /// Buy Stars to keep your subscription for **%@**.
+  public static func starBuyScreenProlongSubs(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.BuyScreen.ProlongSubs", p1)
+  }
+  /// Buy Stars to subscribe for **%@**.
+  public static func starBuyScreenPurschaseSub(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.BuyScreen.PurschaseSub", p1)
+  }
+  /// limited
+  public static var starGiftLimited: String  { return L10n.tr("Localizable", "Star.Gift.Limited") }
   /// Buy Stars and use them on **%@** and other miniapps.
   public static func starListBuyAndUse(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.List.BuyAndUse", p1)
@@ -15689,8 +17723,12 @@ public final class L10n {
   }
   /// Telegram Stars
   public static var starListTelegramStars: String  { return L10n.tr("Localizable", "Star.List.TelegramStars") }
+  /// Top Up
+  public static var starListTopUp: String  { return L10n.tr("Localizable", "Star.List.TopUp") }
   /// By proceeding and purchasing Stars, you agree with the [Terms and Conditions](https://telegram.org).
   public static var starListTos: String  { return L10n.tr("Localizable", "Star.List.Tos") }
+  /// Stats
+  public static var starListWithdraw: String  { return L10n.tr("Localizable", "Star.List.Withdraw") }
   /// your balance
   public static var starListYourBalance: String  { return L10n.tr("Localizable", "Star.List.YourBalance") }
   /// %d
@@ -15781,6 +17819,24 @@ public final class L10n {
   public static var starListTransactionsEmptyIncoming: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Incoming") }
   /// No Outgoing Transactions
   public static var starListTransactionsEmptyOutgoing: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Outgoing") }
+  /// Share
+  public static var starNftShare: String  { return L10n.tr("Localizable", "Star.Nft.Share") }
+  /// take off
+  public static var starNftTakeOff: String  { return L10n.tr("Localizable", "Star.Nft.TakeOff") }
+  /// Transfer
+  public static var starNftTransfer: String  { return L10n.tr("Localizable", "Star.Nft.Transfer") }
+  /// wear
+  public static var starNftWear: String  { return L10n.tr("Localizable", "Star.Nft.Wear") }
+  /// You worn %@
+  public static func starNftTooltipWorn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Tooltip.Worn", p1)
+  }
+  /// and get these benefits:
+  public static var starNftWearInfo: String  { return L10n.tr("Localizable", "Star.Nft.Wear.Info") }
+  /// Wear %@
+  public static func starNftWearTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Wear.Title", p1)
+  }
   /// Balance\n%@
   public static func starPurchaseBalance(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Balance", p1)
@@ -15835,24 +17891,540 @@ public final class L10n {
   public static func starPurchaseTextInZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Text.In_zero", p1)
   }
+  /// %@ / month
+  public static func starSubScreenPrice(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.SubScreen.Price", p1)
+  }
+  /// Subscription
+  public static var starSubScreenTitle: String  { return L10n.tr("Localizable", "Star.SubScreen.Title") }
+  /// Open Bot
+  public static var starSubScreenActionBot: String  { return L10n.tr("Localizable", "Star.SubScreen.Action.Bot") }
+  /// Join Channel
+  public static var starSubScreenActionJoin: String  { return L10n.tr("Localizable", "Star.SubScreen.Action.Join") }
+  /// Open Channel
+  public static var starSubScreenActionOpen: String  { return L10n.tr("Localizable", "Star.SubScreen.Action.Open") }
+  /// Renew Subscription
+  public static var starSubScreenActionRenew: String  { return L10n.tr("Localizable", "Star.SubScreen.Action.Renew") }
+  /// Subscription cancelled
+  public static var starSubScreenCancelledAlert: String  { return L10n.tr("Localizable", "Star.SubScreen.Cancelled.Alert") }
+  /// Renews
+  public static var starSubScreenRowRenew: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.Renew") }
+  /// Subscription
+  public static var starSubScreenRowSub: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.Sub") }
+  /// Bot
+  public static var starSubScreenRowSubBot: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.SubBot") }
+  /// Subscribed
+  public static var starSubScreenRowSubd: String  { return L10n.tr("Localizable", "Star.SubScreen.Row.Subd") }
+  /// If you cancel now, you can still access your subscription until %@.
+  public static func starSubScreenStatusActive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.SubScreen.Status.Active", p1)
+  }
+  /// You have cancelled your subscription.
+  public static var starSubScreenStatusCancelled: String  { return L10n.tr("Localizable", "Star.SubScreen.Status.Cancelled") }
+  /// Your subscription has been expired.
+  public static var starSubScreenStatusExpired: String  { return L10n.tr("Localizable", "Star.SubScreen.Status.Expired") }
+  /// Cancel Subscription
+  public static var starSubScreenStatusActiveCancel: String  { return L10n.tr("Localizable", "Star.SubScreen.Status.Active.Cancel") }
+  /// per month
+  public static var starSubscriptionStatusActive: String  { return L10n.tr("Localizable", "Star.Subscription.Status.Active") }
+  /// cancelled
+  public static var starSubscriptionStatusCancelled: String  { return L10n.tr("Localizable", "Star.Subscription.Status.Cancelled") }
+  /// expired
+  public static var starSubscriptionStatusExpired: String  { return L10n.tr("Localizable", "Star.Subscription.Status.Expired") }
+  /// renews on %@
+  public static func starSubscriptionStatusActiveInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Subscription.Status.Active.Info", p1)
+  }
+  /// expires on %@
+  public static func starSubscriptionStatusCancelledInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Subscription.Status.Cancelled.Info", p1)
+  }
+  /// expired on %@
+  public static func starSubscriptionStatusExpiredInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Subscription.Status.Expired.Info", p1)
+  }
+  /// Referred User
+  public static var starTransacitonReferredUser: String  { return L10n.tr("Localizable", "Star.Transaciton.ReferredUser") }
+  /// Availability
+  public static var starTransactionAvailability: String  { return L10n.tr("Localizable", "Star.Transaction.Availability") }
+  /// By subscribing you agree to the [Terms of Service](https://telegram.org)
+  public static var starTransactionBotTos: String  { return L10n.tr("Localizable", "Star.Transaction.BotTos") }
+  /// %d
+  public static func starTransactionBroadcastMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_countable", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_few", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_many", p1)
+  }
+  /// %d Message
+  public static func starTransactionBroadcastMessagesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_one", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_other", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_two", p1)
+  }
+  /// %d Messages
+  public static func starTransactionBroadcastMessagesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.BroadcastMessages_zero", p1)
+  }
+  /// Commision
+  public static var starTransactionCommission: String  { return L10n.tr("Localizable", "Star.Transaction.Commission") }
   /// Transaction ID copied to clipboard.
   public static var starTransactionCopied: String  { return L10n.tr("Localizable", "Star.Transaction.Copied") }
   /// Date
   public static var starTransactionDate: String  { return L10n.tr("Localizable", "Star.Transaction.Date") }
+  /// First Sale
+  public static var starTransactionFirstSale: String  { return L10n.tr("Localizable", "Star.Transaction.FirstSale") }
   /// From
   public static var starTransactionFrom: String  { return L10n.tr("Localizable", "Star.Transaction.From") }
+  /// Gift
+  public static var starTransactionGift: String  { return L10n.tr("Localizable", "Star.Transaction.Gift") }
   /// Transaction ID
   public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
+  /// Last Sale
+  public static var starTransactionLastSale: String  { return L10n.tr("Localizable", "Star.Transaction.LastSale") }
+  /// %d
+  public static func starTransactionMessageFeeCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee_countable", p1)
+  }
+  /// Fee for %d Messages
+  public static func starTransactionMessageFeeFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee_few", p1)
+  }
+  /// Fee for %d Messages
+  public static func starTransactionMessageFeeMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee_many", p1)
+  }
+  /// Message Fee
+  public static var starTransactionMessageFeeOne: String  { return L10n.tr("Localizable", "Star.Transaction.MessageFee_one") }
+  /// Fee for %d Messages
+  public static func starTransactionMessageFeeOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee_other", p1)
+  }
+  /// Fee for %d Messages
+  public static func starTransactionMessageFeeTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee_two", p1)
+  }
+  /// Fee for %d Messages
+  public static func starTransactionMessageFeeZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee_zero", p1)
+  }
   /// Media
   public static var starTransactionMessageId: String  { return L10n.tr("Localizable", "Star.Transaction.MessageId") }
+  /// Mini App
+  public static var starTransactionMiniApp: String  { return L10n.tr("Localizable", "Star.Transaction.MiniApp") }
+  /// Owner
+  public static var starTransactionOwner: String  { return L10n.tr("Localizable", "Star.Transaction.Owner") }
+  /// Message
+  public static var starTransactionReactionId: String  { return L10n.tr("Localizable", "Star.Transaction.ReactionId") }
+  /// Reason
+  public static var starTransactionReason: String  { return L10n.tr("Localizable", "Star.Transaction.Reason") }
+  /// [Affiliate Program](affiliate)
+  public static var starTransactionReasonAffiliate: String  { return L10n.tr("Localizable", "Star.Transaction.ReasonAffiliate") }
+  /// %d
+  public static func starTransactionSaleForCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_countable", p1)
+  }
+  /// sell for %d stars
+  public static func starTransactionSaleForFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_few", p1)
+  }
+  /// sell for %d stars
+  public static func starTransactionSaleForMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_many", p1)
+  }
+  /// sell for %d star
+  public static func starTransactionSaleForOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_one", p1)
+  }
+  /// sell for %d stars
+  public static func starTransactionSaleForOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_other", p1)
+  }
+  /// sell for %d stars
+  public static func starTransactionSaleForTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_two", p1)
+  }
+  /// sell for %d stars
+  public static func starTransactionSaleForZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.SaleFor_zero", p1)
+  }
+  /// send a gift
+  public static var starTransactionSendGift: String  { return L10n.tr("Localizable", "Star.Transaction.SendGift") }
   /// To
   public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
   /// Review the [Terms of Services](https://telegram.org) for Stars.
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
+  /// [Unknown User](https://fragment.com/stars)
+  public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
+  /// Value
+  public static var starTransactionValue: String  { return L10n.tr("Localizable", "Star.Transaction.Value") }
+  /// Visibility
+  public static var starTransactionVisibility: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility") }
+  /// %1$d of %2$@
+  public static func starTransactionAvailabilityOf(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Availability.Of", p1, p2)
+  }
+  /// %1$@ of %2$@ left
+  public static func starTransactionAvailabilityOfLeft(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Availability.OfLeft", p1, p2)
+  }
+  /// %1$@ of %2$@
+  public static func starTransactionAvailabilityOfText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Availability.OfText", p1, p2)
+  }
+  /// Convert Gift to Stars
+  public static var starTransactionConvertAlertHeader: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Header") }
+  /// Do you want to convert this gift from **%1$@** to **%2$@**?\n\nThis action cannot be undone.
+  public static func starTransactionConvertAlertInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Info", p1, p2)
+  }
+  /// Convert
+  public static var starTransactionConvertAlertOK: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.OK") }
+  /// Sorry, you cant convert this gift to stars anymore.
+  public static var starTransactionConvertAlertTooLate: String  { return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.TooLate") }
+  /// Do you want to convert this gift from **%1$@** to **%2$@**?\n\nConversion option available until %3$@.\n\nThis action cannot be undone.
+  public static func starTransactionConvertAlertInfoUntil(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.ConvertAlert.Info.Until", p1, p2, p3)
+  }
+  /// Collectible %@
+  public static func starTransactionGiftCollectible(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Gift.Collectible", p1)
+  }
+  /// %1$@/%2$@ issued
+  public static func starTransactionGiftUpgradeIssued(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.GiftUpgrade.Issued", p1, p2)
+  }
+  /// You receive **%@** of the price that you charge for each incoming message. [Change Fee >](changeFee)
+  public static func starTransactionMessageFeeInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.MessageFee.Info", p1)
+  }
+  /// Giveaway
+  public static var starTransactionReasonGiveaway: String  { return L10n.tr("Localizable", "Star.Transaction.Reason.Giveaway") }
+  /// Only you can see the sender's name and message.
+  public static var starTransactionStarGiftAnonymous: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.Anonymous") }
+  /// [Convert to %@](convert)
+  public static func starTransactionStarGiftConvertTo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.StarGift.ConvertTo", p1)
+  }
+  /// Display on my Page
+  public static var starTransactionStarGiftDisplayOnMyPage: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.DisplayOnMyPage") }
+  /// Hide from my Page
+  public static var starTransactionStarGiftHideFromMyPage: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.HideFromMyPage") }
+  /// The gift is visible on your page. [View >](view)
+  public static var starTransactionStarGiftSeeInProfile: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.SeeInProfile") }
+  /// Display in Gifts
+  public static var starTransactionStarGiftChannelDisplayOnMyPage: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.Channel.DisplayOnMyPage") }
+  /// Hide from Gifts
+  public static var starTransactionStarGiftChannelHideFromMyPage: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.Channel.HideFromMyPage") }
+  /// You Successfully converted Gift to Stars
+  public static var starTransactionStarGiftConvertToStarsAlert: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.ConvertToStars.Alert") }
+  /// The gift is now displayed in your profile.
+  public static var starTransactionStarGiftDisplayOnPageAlert: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.DisplayOnPage.Alert") }
+  /// The gift is no longer displayed in your profile.
+  public static var starTransactionStarGiftHideFromMyPageAlert: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.HideFromMyPage.Alert") }
+  /// hide
+  public static var starTransactionVisibilityHide: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility.Hide") }
+  /// Visible on your page
+  public static var starTransactionVisibilityInfo: String  { return L10n.tr("Localizable", "Star.Transaction.Visibility.Info") }
+  /// This gift is on TON blockchain. [View >]()
+  public static var starGiftOnBlockchainInfo: String  { return L10n.tr("Localizable", "StarGift.OnBlockchain.Info") }
+  /// Send a Gift
+  public static var starGiftPreviewTitle: String  { return L10n.tr("Localizable", "StarGift.Preview.Title") }
+  /// Buy a Gift
+  public static var starGiftPreviewTitleBuy: String  { return L10n.tr("Localizable", "StarGift.Preview.Title.Buy") }
+  /// %@ Gift Stars to Friends
+  public static func starsGiftToFriends(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftToFriends", p1)
+  }
+  /// You have enough stars. [Buy More]()
+  public static var starsYouHaveEnough: String  { return L10n.tr("Localizable", "Stars.YouHaveEnough") }
   /// Buy Ads
   public static var starsBalanceBuyAds: String  { return L10n.tr("Localizable", "Stars.Balance.BuyAds") }
+  /// Use Stars to unlock content and services on Telegram. [See Examples >](apps)
+  public static var starsExampleAppsText: String  { return L10n.tr("Localizable", "Stars.ExampleApps.Text") }
+  /// Use Stars to unlock content and services on Telegram.
+  public static var starsGiftServiceInfo: String  { return L10n.tr("Localizable", "Stars.Gift.ServiceInfo") }
+  /// Gift Stars
+  public static var starsGiftTitle: String  { return L10n.tr("Localizable", "Stars.Gift.Title") }
+  /// Buy a Gift for %@
+  public static func starsGiftPreviewBuy(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.Buy", p1)
+  }
+  /// CUSTOMIZE YOUR GIFT
+  public static var starsGiftPreviewCustomize: String  { return L10n.tr("Localizable", "Stars.GiftPreview.Customize") }
+  /// Display this gift on your page or convert it to %@
+  public static func starsGiftPreviewDisplay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.Display", p1)
+  }
+  /// Hide My Name
+  public static var starsGiftPreviewHideMyName: String  { return L10n.tr("Localizable", "Stars.GiftPreview.HideMyName") }
+  /// Enter Message
+  public static var starsGiftPreviewMessagePlaceholder: String  { return L10n.tr("Localizable", "Stars.GiftPreview.MessagePlaceholder") }
+  /// Send a Gift for %@
+  public static func starsGiftPreviewSend(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.Send", p1)
+  }
+  /// Display this gift in channel's Gifts or convert it to %@
+  public static func starsGiftPreviewChannelDisplay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.Channel.Display", p1)
+  }
+  /// Hide my name and message from visitors to %1$@'s profile. %2$@ will still see your name and message.
+  public static func starsGiftPreviewHideMyNameInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.HideMyName.Info", p1, p2)
+  }
+  /// Bot API
+  public static var starsIntroTransactionTelegramBotApiSubtitle: String  { return L10n.tr("Localizable", "Stars.Intro.Transaction.TelegramBotApi.Subtitle") }
+  /// Paid Broadcast
+  public static var starsIntroTransactionTelegramBotApiTitle: String  { return L10n.tr("Localizable", "Stars.Intro.Transaction.TelegramBotApi.Title") }
+  /// What are Stars?
+  public static var starsPromoHeader: String  { return L10n.tr("Localizable", "Stars.Promo.Header") }
+  /// Buy Stars on Telegram that let you do following:
+  public static var starsPromoHeaderInfo: String  { return L10n.tr("Localizable", "Stars.Promo.HeaderInfo") }
+  /// Give your friends gifts that can be kept on their profiles or converted to Stars.
+  public static var starsPromoOption1Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option1.Info") }
+  /// Send Gifts to Friends
+  public static var starsPromoOption1Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option1.Title") }
+  /// Buy additional content and services in Telegram miniapps. [See Examples >](examples)
+  public static var starsPromoOption2Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option2.Info") }
+  /// Use Stars in miniapps
+  public static var starsPromoOption2Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option2.Title") }
+  /// Get access to paid content and services in Telegram channels.
+  public static var starsPromoOption3Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option3.Info") }
+  /// Unlock content in channels
+  public static var starsPromoOption3Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option3.Title") }
+  /// Support your favorite channels by sending Star reactions to their posts.
+  public static var starsPromoOption4Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option4.Info") }
+  /// Send Star reactions
+  public static var starsPromoOption4Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option4.Title") }
+  /// Get new subscribers and boosts for your channels by giving away Stars.
+  public static var starsPromoOption5Info: String  { return L10n.tr("Localizable", "Stars.Promo.Option5.Info") }
+  /// Create giveaways in channels
+  public static var starsPromoOption5Title: String  { return L10n.tr("Localizable", "Stars.Promo.Option5.Title") }
+  /// Subscribe to the Bot
+  public static var starsPurchaseBotSubscribe: String  { return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe") }
+  /// Subscribe to the Channel
+  public static var starsPurchaseSubscribe: String  { return L10n.tr("Localizable", "Stars.Purchase.Subscribe") }
+  /// Buy Stars to upgrade yort gift into a unique collectible.
+  public static var starsPurchaseUpgradeStarGiftInfo: String  { return L10n.tr("Localizable", "Stars.Purchase.UpgradeStarGiftInfo") }
+  /// %1$@ %2$@ %3$d
+  public static func starsPurchaseBotSubscribeInfoCountable(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_countable", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoFew(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_few", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoMany(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_many", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoOne(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_one", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoOther(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_other", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoTwo(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_two", p1, p2, p3)
+  }
+  /// Do you want to subscribe to **%1$@** in **%2$@** for **%3$d** Stars per month?
+  public static func starsPurchaseBotSubscribeInfoZero(_ p1: String, _ p2: String, _ p3: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Info_zero", p1, p2, p3)
+  }
+  /// You have successfully subscribed to **%@** in **%@**
+  public static func starsPurchaseBotSubscribeSuccess(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Success", p1, p2)
+  }
+  /// Subscribe for %@ / month
+  public static func starsPurchaseBotSubscribeAcceptMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Accept.Month", p1)
+  }
+  /// Subscribe for %@ / six month
+  public static func starsPurchaseBotSubscribeAcceptSixMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Accept.SixMonth", p1)
+  }
+  /// Subscribe for %@ / year
+  public static func starsPurchaseBotSubscribeAcceptYear(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.BotSubscribe.Accept.Year", p1)
+  }
+  /// Subscribe
+  public static var starsPurchaseSubscribeAction: String  { return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Action") }
+  /// %@ %d
+  public static func starsPurchaseSubscribeInfoCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_countable", p1, p2)
+  }
+  /// Do you want to subscribe for **%@** for **%d** Stars per month?
+  public static func starsPurchaseSubscribeInfoFew(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_few", p1, p2)
+  }
+  /// Do you want to subscribe for **%@** for **%d** Stars per month?
+  public static func starsPurchaseSubscribeInfoMany(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_many", p1, p2)
+  }
+  /// Do you want to subscribe for **%@** for **%d** Star per month?
+  public static func starsPurchaseSubscribeInfoOne(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_one", p1, p2)
+  }
+  /// Do you want to subscribe for **%@** for **%d** Stars per month?
+  public static func starsPurchaseSubscribeInfoOther(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_other", p1, p2)
+  }
+  /// Do you want to subscribe for **%@** for **%d** Stars per month?
+  public static func starsPurchaseSubscribeInfoTwo(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_two", p1, p2)
+  }
+  /// Do you want to subscribe for **%@** for **%d** Stars per month?
+  public static func starsPurchaseSubscribeInfoZero(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Info_zero", p1, p2)
+  }
+  /// You have successfully subscribed to **%@**
+  public static func starsPurchaseSubscribeSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Purchase.Subscribe.Success", p1)
+  }
+  /// Anonymous
+  public static var starsReactScreenAnonymous: String  { return L10n.tr("Localizable", "Stars.ReactScreen.Anonymous") }
+  /// By sending Stars you agree to the [Terms of Service](https://telegram.org).
+  public static var starsReactScreenFooter: String  { return L10n.tr("Localizable", "Stars.ReactScreen.Footer") }
+  /// Choose how many stars you want to send to **%@** to support this post.
+  public static func starsReactScreenInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Info", p1)
+  }
+  /// %@%d
+  public static func starsReactScreenSendCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_countable", p1, p2)
+  }
+  /// Send %@%d
+  public static func starsReactScreenSendFew(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_few", p1, p2)
+  }
+  /// Send %@%d
+  public static func starsReactScreenSendMany(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_many", p1, p2)
+  }
+  /// Send %@%d
+  public static func starsReactScreenSendOne(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_one", p1, p2)
+  }
+  /// Send %@%d
+  public static func starsReactScreenSendOther(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_other", p1, p2)
+  }
+  /// Send %@%d
+  public static func starsReactScreenSendTwo(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_two", p1, p2)
+  }
+  /// Send %@%d
+  public static func starsReactScreenSendZero(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.Send_zero", p1, p2)
+  }
+  /// %d
+  public static func starsReactScreenSentValueCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_countable", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_few", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_many", p1)
+  }
+  /// You sent %d star to support this post.
+  public static func starsReactScreenSentValueOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_one", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_other", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_two", p1)
+  }
+  /// You sent %d stars to support this post.
+  public static func starsReactScreenSentValueZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.ReactScreen.SentValue_zero", p1)
+  }
+  /// Show Me in Top Senders
+  public static var starsReactScreenShowMeInTop: String  { return L10n.tr("Localizable", "Stars.ReactScreen.ShowMeInTop") }
+  /// React with Stars
+  public static var starsReactScreenTitle: String  { return L10n.tr("Localizable", "Stars.ReactScreen.Title") }
+  /// Top Senders
+  public static var starsReactScreenTopSenders: String  { return L10n.tr("Localizable", "Stars.ReactScreen.TopSenders") }
+  /// You can keep this gift in your Profile or convert it to %1$@.
+  public static func starsStarGiftTextIncoming(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.StarGift.Text.Incoming", p1)
+  }
+  /// You can keep this gift in your Profile or hide it.
+  public static var starsStarGiftTextKeepOrHide: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.KeepOrHide") }
+  /// [More about Stars >](stars)
+  public static var starsStarGiftTextLink: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.Link") }
+  /// %1$@ can keep this gift in Profile or convert it to %2$@.
+  public static func starsStarGiftTextOutgoing(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.StarGift.Text.Outgoing", p1, p2)
+  }
+  /// You converted this gift to %1$@.
+  public static func starsStarGiftTextConvertedIncoming(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.StarGift.Text.Converted.Incoming", p1)
+  }
+  /// %1$@ converted this gift to %2$@.
+  public static func starsStarGiftTextConvertedOutgoing(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.StarGift.Text.Converted.Outgoing", p1, p2)
+  }
+  /// Display this gift in channel's Gifts or convert it to %@.
+  public static func starsStarGiftTextIncomingChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.StarGift.Text.Incoming.Channel", p1)
+  }
+  /// You kept this gift in your Profile.
+  public static var starsStarGiftTextKeptOnPageIncoming: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.KeptOnPage.Incoming") }
+  /// %1$@ kept this gift in Profile.
+  public static func starsStarGiftTextKeptOnPageOutgoing(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.StarGift.Text.KeptOnPage.Outgoing", p1)
+  }
+  /// You kept this gift in channel Gifts.
+  public static var starsStarGiftTextKeptOnPageIncomingGifts: String  { return L10n.tr("Localizable", "Stars.StarGift.Text.KeptOnPage.Incoming.Gifts") }
+  /// Daily subscription fee
+  public static var starsSubscriptionPeriodDaily: String  { return L10n.tr("Localizable", "Stars.Subscription.Period.Daily") }
+  /// Monthly subscription fee
+  public static var starsSubscriptionPeriodMonthly: String  { return L10n.tr("Localizable", "Stars.Subscription.Period.Monthly") }
+  /// Subscription fee
+  public static var starsSubscriptionPeriodUnknown: String  { return L10n.tr("Localizable", "Stars.Subscription.Period.Unknown") }
+  /// Weekly subscription fee
+  public static var starsSubscriptionPeriodWeekly: String  { return L10n.tr("Localizable", "Stars.Subscription.Period.Weekly") }
+  /// %@ commission
+  public static func starsTransactionCommission(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stars.Transaction.Commission", p1)
+  }
+  /// Gift
+  public static var starsTransactionGift: String  { return L10n.tr("Localizable", "Stars.Transaction.Gift") }
   /// Media Purchase
   public static var starsTransactionMediaPurchase: String  { return L10n.tr("Localizable", "Stars.Transaction.MediaPurchase") }
+  /// Paid Reaction
+  public static var starsTransactionPaidReaction: String  { return L10n.tr("Localizable", "Stars.Transaction.PaidReaction") }
+  /// Premium %d Months
+  public static func starsTransactionPremiumFor(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stars.Transaction.PremiumFor", p1)
+  }
+  /// Received Gift
+  public static var starsTransactionReceivedGift: String  { return L10n.tr("Localizable", "Stars.Transaction.ReceivedGift") }
+  /// Received Prize
+  public static var starsTransactionReceivedPrize: String  { return L10n.tr("Localizable", "Stars.Transaction.ReceivedPrize") }
+  /// Sent Gift
+  public static var starsTransactionSentGift: String  { return L10n.tr("Localizable", "Stars.Transaction.SentGift") }
   /// Stars Top-Up
   public static var starsTransactionTopUp: String  { return L10n.tr("Localizable", "Stars.Transaction.TopUp") }
   /// %1$@ and %2$@
@@ -16135,6 +18707,12 @@ public final class L10n {
   public static var statsMessageTitle: String  { return L10n.tr("Localizable", "Stats.MessageTitle") }
   /// Monetization
   public static var statsMonetization: String  { return L10n.tr("Localizable", "Stats.Monetization") }
+  /// Revenue in Stars
+  public static var statsRevenueInStars: String  { return L10n.tr("Localizable", "Stats.RevenueInStars") }
+  /// Revenue in TON
+  public static var statsRevenueInTon: String  { return L10n.tr("Localizable", "Stats.RevenueInTon") }
+  /// Revenue in USD
+  public static var statsRevenueInUsd: String  { return L10n.tr("Localizable", "Stats.RevenueInUsd") }
   /// %d
   public static func statsShowMoreCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.ShowMore_countable", p1)
@@ -16167,6 +18745,8 @@ public final class L10n {
   public static var statsStars: String  { return L10n.tr("Localizable", "Stats.Stars") }
   /// Statistics
   public static var statsStatistics: String  { return L10n.tr("Localizable", "Stats.Statistics") }
+  /// TON
+  public static var statsTon: String  { return L10n.tr("Localizable", "Stats.Ton") }
   /// %d
   public static func statsBoostsBoostersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.Boosts.Boosters_countable", p1)
@@ -16301,6 +18881,10 @@ public final class L10n {
   }
   /// Stickers Added
   public static var stickerPackAddedTitle: String  { return L10n.tr("Localizable", "StickerPack.Added.Title") }
+  /// Remove Group Emoji Pack
+  public static var stickerPackPreviewRemoveGroup: String  { return L10n.tr("Localizable", "StickerPack.Preview.RemoveGroup") }
+  /// Set as Group Emoji Pack
+  public static var stickerPackPreviewSetGroup: String  { return L10n.tr("Localizable", "StickerPack.Preview.SetGroup") }
   /// %@ is no longer in your stickers.
   public static func stickerPackRemovedInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "StickerPack.Removed.Info", p1)
@@ -16917,6 +19501,8 @@ public final class L10n {
   public static func storyTooltipStealthModeActive(_ p1: String) -> String {
     return L10n.tr("Localizable", "Story.Tooltip.StealthMode.Active", p1)
   }
+  /// Open Gift
+  public static var storyWidgetOpenGift: String  { return L10n.tr("Localizable", "Story.Widget.OpenGift") }
   /// Stories from %@ will now be shown in Archived Chats.
   public static func storyFeedTooltipArchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryFeed.TooltipArchive", p1)
@@ -17945,6 +20531,10 @@ public final class L10n {
   public static var toastMuted: String  { return L10n.tr("Localizable", "Toast.Muted") }
   /// Unmuted
   public static var toastUnmuted: String  { return L10n.tr("Localizable", "Toast.Unmuted") }
+  /// https://tonviewer.com/%@
+  public static func tonViewerUrl(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TonViewer.Url", p1)
+  }
   /// Attach
   public static var touchBarAttach: String  { return L10n.tr("Localizable", "TouchBar.Attach") }
   /// Call
@@ -18473,6 +21063,8 @@ public final class L10n {
   public static var usernameSettingsInputPlaceholder: String  { return L10n.tr("Localizable", "UsernameSettings.InputPlaceholder") }
   /// Hide Others
   public static var vdrFpXzOTitle: String  { return L10n.tr("Localizable", "Vdr-fp-XzO.title") }
+  /// Auto
+  public static var videoQualityAuto: String  { return L10n.tr("Localizable", "Video.Quality.Auto") }
   /// Cancel
   public static var videoAvatarButtonCancel: String  { return L10n.tr("Localizable", "VideoAvatar.Button.Cancel") }
   /// Set
@@ -18533,6 +21125,8 @@ public final class L10n {
   public static var voiceChatSetReminder: String  { return L10n.tr("Localizable", "VoiceChat.SetReminder") }
   /// Settings
   public static var voiceChatSettings: String  { return L10n.tr("Localizable", "VoiceChat.Settings") }
+  /// Share Invite Link
+  public static var voiceChatShareInviteLink: String  { return L10n.tr("Localizable", "VoiceChat.ShareInviteLink") }
   /// Show Info
   public static var voiceChatShowInfo: String  { return L10n.tr("Localizable", "VoiceChat.ShowInfo") }
   /// Start Now
@@ -18579,6 +21173,10 @@ public final class L10n {
   }
   /// press ⎵
   public static var voiceChatClickToUnmuteSecondaryPressDefault: String  { return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.PressDefault") }
+  /// Discard Invite
+  public static var voiceChatConferenceDiscardInvite: String  { return L10n.tr("Localizable", "VoiceChat.Conference.DiscardInvite") }
+  /// Stop Calling
+  public static var voiceChatConferenceStopCalling: String  { return L10n.tr("Localizable", "VoiceChat.Conference.StopCalling") }
   /// Leave
   public static var voiceChatEndOK: String  { return L10n.tr("Localizable", "VoiceChat.End.OK") }
   /// Are you sure you want to leave this voice chat?
@@ -18597,6 +21195,8 @@ public final class L10n {
   public static var voiceChatInfoOpenProfile: String  { return L10n.tr("Localizable", "VoiceChat.Info.OpenProfile") }
   /// Send Message
   public static var voiceChatInfoSendMessage: String  { return L10n.tr("Localizable", "VoiceChat.Info.SendMessage") }
+  /// Add Member
+  public static var voiceChatInviteAddMember: String  { return L10n.tr("Localizable", "VoiceChat.Invite.AddMember") }
   /// CHATS
   public static var voiceChatInviteChats: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Chats") }
   /// contacts
@@ -18619,6 +21219,8 @@ public final class L10n {
   public static var voiceChatInviteTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Title") }
   /// Invite Members
   public static var voiceChatInviteChannelsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Channels.Title") }
+  /// Invite Members
+  public static var voiceChatInviteConferenceTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Conference.Title") }
   /// Voice Chat
   public static var voiceChatInviteConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Header") }
   /// Send
@@ -18831,7 +21433,9 @@ public final class L10n {
   public static var voiceChatSharingPlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Sharing.Placeholder") }
   /// Stop
   public static var voiceChatSharingStop: String  { return L10n.tr("Localizable", "VoiceChat.Sharing.Stop") }
-  /// Connecting...
+  /// calling...
+  public static var voiceChatStatusCalling: String  { return L10n.tr("Localizable", "VoiceChat.Status.Calling") }
+  /// connecting...
   public static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
   /// invited
   public static var voiceChatStatusInvited: String  { return L10n.tr("Localizable", "VoiceChat.Status.Invited") }
@@ -19039,6 +21643,10 @@ public final class L10n {
   }
   /// Close
   public static var webAppClose: String  { return L10n.tr("Localizable", "WebApp.Close") }
+  /// Exit Fullscreen
+  public static var webAppExitFullscreen: String  { return L10n.tr("Localizable", "WebApp.ExitFullscreen") }
+  /// Fullscreen
+  public static var webAppFullscreen: String  { return L10n.tr("Localizable", "WebApp.Fullscreen") }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
   /// QR Codes for bots are not supported on Desktop. Please use one of Telegram’s mobile apps.
@@ -19107,8 +21715,36 @@ public final class L10n {
   public static func webAppFirstOpenInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.FirstOpen.Info", p1)
   }
+  /// By launching this mini app, you agree to the [Terms of Service for Mini Apps.](%@)
+  public static func webAppFirstOpenTerms(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.FirstOpen.Terms", p1)
+  }
   /// Open Web App
   public static var webAppFirstOpenTitle: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.Title") }
+  /// Allow
+  public static var webAppLocationPermissionAllow: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.Allow") }
+  /// Decline
+  public static var webAppLocationPermissionDecline: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.Decline") }
+  /// Permission Denied
+  public static var webAppLocationPermissionDeniedError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.DeniedError") }
+  /// Location service is not available
+  public static var webAppLocationPermissionDisabledError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.DisabledError") }
+  /// **%@** can now have access to your location.
+  public static func webAppLocationPermissionSucceed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.LocationPermission.Succeed", p1)
+  }
+  /// **%1$@** requests access to your **location**. You will be able to revoke this access in the profile page of **%2$@**.
+  public static func webAppLocationPermissionText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "WebApp.LocationPermission.Text", p1, p2)
+  }
+  /// Wi-Fi required for location service
+  public static var webAppLocationPermissionWifiError: String  { return L10n.tr("Localizable", "WebApp.LocationPermission.WifiError") }
+  /// Import
+  public static var webAppTransferDataImport: String  { return L10n.tr("Localizable", "WebApp.TransferData.Import") }
+  /// Import Data
+  public static var webAppTransferDataImportData: String  { return L10n.tr("Localizable", "WebApp.TransferData.ImportData") }
+  /// Data successfully imported
+  public static var webAppTransferDataTransfered: String  { return L10n.tr("Localizable", "WebApp.TransferData.Transfered") }
   /// Disconnect
   public static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites
@@ -19133,6 +21769,12 @@ public final class L10n {
   public static var webBotAccountDisclaimerThird: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Third") }
   /// Term of Use
   public static var webBotAccountDisclaimerTitle: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Title") }
+  /// **Something went wrong, sorry.**\nPlease try again later.
+  public static var webBrowserError: String  { return L10n.tr("Localizable", "WebBrowser.Error") }
+  /// Instant View
+  public static var webBrowserInstantView: String  { return L10n.tr("Localizable", "WebBrowser.InstantView") }
+  /// Open Main Page
+  public static var webBrowserOpenMainPage: String  { return L10n.tr("Localizable", "WebBrowser.OpenMainPage") }
   /// Allow
   public static var webappAllowMessagesOK: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.OK") }
   /// This will allow the bot %@ to message you on Telegram?
@@ -19141,6 +21783,48 @@ public final class L10n {
   }
   /// Allow Sending Messages?
   public static var webappAllowMessagesTitle: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.Title") }
+  /// Download Document
+  public static var webappDocumentDownload: String  { return L10n.tr("Localizable", "Webapp.Document.Download") }
+  /// Document saved\n[Show In Finder]()
+  public static var webappDocumentDownloadDocument: String  { return L10n.tr("Localizable", "Webapp.Document.Download.Document") }
+  /// Photo saved\n[Show In Finder]()
+  public static var webappDocumentDownloadImage: String  { return L10n.tr("Localizable", "Webapp.Document.Download.Image") }
+  /// %1$@ suggests you to download %2$@.
+  public static func webappDocumentDownloadInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Webapp.Document.Download.Info", p1, p2)
+  }
+  /// Download
+  public static var webappDocumentDownloadOK: String  { return L10n.tr("Localizable", "Webapp.Document.Download.OK") }
+  /// Video saved\n[Show In Finder]()
+  public static var webappDocumentDownloadVideo: String  { return L10n.tr("Localizable", "Webapp.Document.Download.Video") }
+  /// %@ can now set your emoji status anytime.
+  public static func webappEmojiStatusAllowed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.EmojiStatus.Allowed", p1)
+  }
+  /// Emoji Status Not Found
+  public static var webappEmojiStatusNotExists: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.NotExists") }
+  /// **%1$@** requests access to set your **emoji status**. You will be able to revoke this access in the profile page of **%2$@**.
+  public static func webappEmojiStatusRequested(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested", p1, p2)
+  }
+  /// Allow
+  public static var webappEmojiStatusRequestedAllow: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested.Allow") }
+  /// Decline
+  public static var webappEmojiStatusRequestedDecline: String  { return L10n.tr("Localizable", "Webapp.EmojiStatus.Requested.Decline") }
+  /// Set Emoji Status
+  public static var webappSetEmojiHeader: String  { return L10n.tr("Localizable", "Webapp.SetEmoji.Header") }
+  /// Do you want to set this emoji status suggested by %@?
+  public static func webappSetEmojiInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.SetEmoji.Info", p1)
+  }
+  /// %@ mini app suggests you to send this message to a chat you select.
+  public static func webappShareMessageBotInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.ShareMessage.BotInfo", p1)
+  }
+  /// MESSAGE PREVIEW
+  public static var webappShareMessagePreview: String  { return L10n.tr("Localizable", "Webapp.ShareMessage.Preview") }
+  /// Share Message
+  public static var webappShareMessageShare: String  { return L10n.tr("Localizable", "Webapp.ShareMessage.Share") }
   /// Changes that you made may not be saved.
   public static var webpageConfirmClose: String  { return L10n.tr("Localizable", "Webpage.Confirm.Close") }
   /// Close Anyway

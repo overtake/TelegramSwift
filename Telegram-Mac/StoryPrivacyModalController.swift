@@ -179,6 +179,8 @@ private final class StoryPreviewRowView : GeneralContainableRowView {
         }, for: .Click)
 
 
+        self.inputView.set(item.interactions.presentation.textInputState())
+
         self.inputView.interactions = item.interactions
         
         item.interactions.inputDidUpdate = { [weak self] state in
@@ -370,25 +372,35 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if let peer = storyContentItem.peer {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
                 return StoryPreviewHeaderItem(initialSize, stableId: stableId, viewType: .textTopItem, presentation: presentation, context: arguments.context, peer: peer)
-                
             }))
         }
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return StoryPreviewRowItem(initialSize, stableId: stableId, viewType: .singleItem, presentation: presentation, context: arguments.context, story: storyContentItem, interactions: arguments.interactions, state: state.textState, updateState: arguments.updateState, showEmojis: arguments.showEmojis)
-            
         }))
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+    case let .upload(media, peer):
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return StoryPreviewHeaderItem(initialSize, stableId: stableId, viewType: .textTopItem, presentation: presentation, context: arguments.context, peer: peer)
+        }))
         
+        let storyContentItem = StoryContentItem(position: nil, dayCounters: nil, peer: peer, storyItem: .init(id: 0, timestamp: 0, expirationTimestamp: 0, media: .init(media), alternativeMediaList: [], mediaAreas: [], text: "", entities: [], views: nil, privacy: nil, isPinned: false, isExpired: false, isPublic: false, isPending: false, isCloseFriends: false, isContacts: false, isSelectedContacts: false, isForwardingDisabled: false, isEdited: false, isMy: false, myReaction: nil, forwardInfo: nil, author: nil), entityFiles: [:], itemPeer: nil)
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return StoryPreviewRowItem(initialSize, stableId: stableId, viewType: .singleItem, presentation: presentation, context: arguments.context, story: storyContentItem, interactions: arguments.interactions, state: state.textState, updateState: arguments.updateState, showEmojis: arguments.showEmojis)
+        }))
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
     case .settings:
         break
     }
     
         
     switch arguments.reason {
-    case .share:
+    case .share, .upload:
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storyPrivacyPostStoryAs), data: .init(color: presentation.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         let sendAs = state.privacy.sendAsPeerId ?? arguments.context.peerId
@@ -453,7 +465,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
        
         
         switch arguments.reason {
-        case .share:
+        case .share, .upload:
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
@@ -510,15 +522,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 enum StoryPrivacyReason {
     case share(StoryContentItem)
+    case upload(Media, EnginePeer)
     case settings(StoryContentItem)
 }
 
-func StoryPrivacyModalController(context: AccountContext, presentation: TelegramPresentationTheme, reason: StoryPrivacyReason) -> InputDataModalController {
+func StoryPrivacyModalController(context: AccountContext, presentation: TelegramPresentationTheme, reason: StoryPrivacyReason, text: String? = nil) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
     var close:(()->Void)? = nil
     var getController:(()->InputDataController?)? = nil
+    
+    var window: Window {
+        get {
+            return bestWindow(context, getController?())
+        }
+    }
     
     let reveal: Bool
     var initialPrivacy: StoryPosterResultPrivacy = .init(sendAsPeerId: context.peerId, privacyEveryone: .init(base: .everyone, additionallyIncludePeers: []), privacyContacts: .init(base: .contacts, additionallyIncludePeers: []), privacyFriends: .init(base: .closeFriends, additionallyIncludePeers: []), privacyNobody: .init(base: .nobody, additionallyIncludePeers: []), selectedPrivacy: .everyone, isForwardingDisabled: false, pin: true)
@@ -531,9 +550,18 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         }
     case .share:
         reveal = false
+    case .upload:
+        reveal = false
+    }
+    
+    let textInput: Updated_ChatTextInputState
+    if let text {
+        textInput = .init(inputText: .initialize(string: text))
+    } else {
+        textInput = .init()
     }
 
-    let initialState = State(privacy: initialPrivacy, reveal: reveal)
+    let initialState = State(privacy: initialPrivacy, reveal: reveal, textState: textInput)
     
     let statePromise = ValuePromise<State>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -543,7 +571,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         
     
     switch reason {
-    case .share:
+    case .share, .upload:
         let state: Signal<StoryPosterState?, NoError> = storyPosterState(engine: context.engine)
         actionsDisposable.add(state.start(next: { value in
             updateState { current in
@@ -613,7 +641,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         }
         
         let behaviour = SelectContactsBehavior(customTheme: { GeneralRowItem.Theme.initialize(presentation) })
-        _ = selectModalPeers(window: context.window, context: context, title: title, behavior: behaviour, selectedPeerIds: Set(selectedPeerIds)).start(next: { updatedPeerIds in
+        _ = selectModalPeers(window: window, context: context, title: title, behavior: behaviour, selectedPeerIds: Set(selectedPeerIds)).start(next: { updatedPeerIds in
             updateState { current in
                 var current = current
                 switch privacy.base {
@@ -665,7 +693,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
             peerIds = currentIds
         }
         switch reason {
-        case .share:
+        case .share, .upload:
             _ = updateStoryPosterStateInteractively(engine: context.engine, { _ in
                 return .init(privacy: state.privacy)
             }).start()
@@ -696,7 +724,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
         }
     }))
     
-    let textInteractions = TextView_Interactions()
+    let textInteractions = TextView_Interactions(presentation: textInput)
     let emoji = EmojiesController(context, presentation: presentation)
     
     let contextChatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
@@ -710,9 +738,9 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
             updated
         }
     }
-    interactions.sendAnimatedEmoji = { sticker, _, _, fromRect in
-        let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown).fixed
-        let updated = textInteractions.insertText(.makeAnimated(sticker.file, text: text))
+    interactions.sendAnimatedEmoji = { sticker, _, _, _, fromRect in
+        let text = (sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? clown).fixed
+        let updated = textInteractions.insertText(.makeAnimated(sticker.file._parse(), text: text))
         textInteractions.update { _ in
             updated
         }
@@ -817,10 +845,10 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                                     return current
                                 }
                             case .channelBoostRequired:
-                                let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: context.window)
+                                let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: window)
                                 _ = signal.start(next: { stats, myStatus in
                                     if let stats = stats {
-                                        showModal(with: BoostChannelModalController(context: context, peer: peer.peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .story, presentation: presentation), for: context.window)
+                                        showModal(with: BoostChannelModalController(context: context, peer: peer.peer, boosts: stats, myStatus: myStatus, infoOnly: true, source: .story, presentation: presentation), for: window)
                                     }
                                 })
                             default:
@@ -851,7 +879,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     }, updateBlockList: {
         let current = stateValue.with { $0.blockedPeers.map { $0.peerId }}
         let behaviour = SelectContactsBehavior(customTheme: { GeneralRowItem.Theme.initialize(presentation) })
-        _ = selectModalPeers(window: context.window, context: context, title: strings().storyPrivacySelectHideFrom, behavior: behaviour, selectedPeerIds: Set(current)).start(next: { updatedPeerIds in
+        _ = selectModalPeers(window: window, context: context, title: strings().storyPrivacySelectHideFrom, behavior: behaviour, selectedPeerIds: Set(current)).start(next: { updatedPeerIds in
             _ = blockedContext.updatePeerIds(updatedPeerIds).start()
         })
     }, showEmojis: { [weak emoji] control in
@@ -868,6 +896,8 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     switch reason {
     case .share:
         title = strings().storyPrivacyTitleRepost
+    case .upload:
+        title = strings().storyPrivacyTitleRepost
     case .settings:
         title = strings().storyPrivacyTitlePrivacy
     }
@@ -877,7 +907,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     controller.onDeinit = { [weak controller] in
         actionsDisposable.dispose()
         if let controller = controller {
-            context.window.removeObserver(for: controller)
+            window.removeObserver(for: controller)
         }
         _ = blockedContext
         _ = emoji
@@ -921,16 +951,45 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 switch availability {
                 case .available:
                     _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo).start()
-                    showModalText(for: context.window, text: strings().storyPrivacySaveRepost)
+                    showModalText(for: window, text: strings().storyPrivacySaveRepost)
                     close?()
                 default:
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: window)
                 }
                 
             }))
+        case let .upload(media, peer):
+            
+            let target: Stories.PendingTarget
+            if let sendAs = sendAs {
+                target = .peer(sendAs)
+            } else {
+                target = .myStories
+            }
+            
+            var inputMedia: EngineStoryInputMedia? = nil
+            if let media = media as? TelegramMediaImage, let rep = media.representations.last, let resource = rep.resource as? LocalFileReferenceMediaResource {
+                if let data = try? Data.init(contentsOf: URL(fileURLWithPath: resource.localFilePath)) {
+                    inputMedia = .image(dimensions: rep.dimensions, data: data, stickers: [])
+                }
+            } else if let media = media as? TelegramMediaFile {
+                inputMedia = .video(dimensions: media.dimensions ?? .init(.zero), duration: media.duration ?? 0, resource: media.resource, firstFrameFile: nil, stickers: [], coverTime: nil)
+            }
+            if let inputMedia {
+                actionsDisposable.add((context.engine.messages.checkStoriesUploadAvailability(target: target) |> deliverOnMainQueue).start(next: { availability in
+                    switch availability {
+                    case .available:
+                        _ = context.engine.messages.uploadStory(target: target, media: inputMedia, mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: nil).start()
+                        showModalText(for: window, text: strings().storyPrivacySaveRepost)
+                        close?()
+                    default:
+                        prem(with: PremiumBoardingController(context: context), for: window)
+                    }
+                }))
+            }
         case let .settings(story):
             _ = context.engine.messages.editStoryPrivacy(id: story.storyItem.id, privacy: selectedPrivacy).startStandalone()
-            showModalText(for: context.window, text: strings().storyPrivacySavePrivacy)
+            showModalText(for: window, text: strings().storyPrivacySavePrivacy)
             close?()
         }
         return .none
@@ -938,44 +997,44 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
     
     controller.didAppear = { controller in
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.attribute(TextInputAttributes.bold))
             return .invoked
         }, with: controller, for: .B, priority: .modal, modifierFlags: [.command])
 
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.attribute(TextInputAttributes.underline))
             return .invoked
         }, with: controller, for: .U, priority: .modal, modifierFlags: [.shift, .command])
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.attribute(TextInputAttributes.spoiler))
             return .invoked
         }, with: controller, for: .P, priority: .modal, modifierFlags: [.shift, .command])
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.attribute(TextInputAttributes.strikethrough))
             return .invoked
         }, with: controller, for: .X, priority: .modal, modifierFlags: [.shift, .command])
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.clear)
             return .invoked
         }, with: controller, for: .Backslash, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.url)
             return .invoked
         }, with: controller, for: .U, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
+        window.set(handler: { [weak controller] _ -> KeyHandlerResult in
             let view = controller?.tableView.item(stableId: InputDataEntryId.custom(_id_preview))?.view as? StoryPreviewRowView
             view?.inputView.inputApplyTransform(.attribute(TextInputAttributes.italic))
             return .invoked

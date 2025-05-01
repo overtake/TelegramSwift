@@ -102,22 +102,31 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var tagsInfo: [TagInfo] = []
     
-    public struct TagInfo {
+    public struct TagInfo : Equatable {
+        public static func == (lhs: SearchView.TagInfo, rhs: SearchView.TagInfo) -> Bool {
+            return lhs.text == rhs.text && lhs.blockInput == rhs.blockInput && lhs.isTextTied == rhs.isTextTied
+        }
+        
         let text: String
         let image: CGImage?
         let contextMenu:(()->[ContextMenuItem])?
         let blockInput: Bool
         let isTextTied: Bool
-        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false, isTextTied: Bool = false) {
+        let isVisible: Bool
+        public init(text: String, image: CGImage? = nil, contextMenu: (() -> [ContextMenuItem])? = nil, blockInput: Bool = false, isTextTied: Bool = false, isVisible: Bool = true) {
             self.text = text
             self.image = image
             self.contextMenu = contextMenu
             self.blockInput = blockInput
             self.isTextTied = isTextTied
+            self.isVisible = isVisible
         }
     }
     
     public func updateTags(_ tags: [TagInfo], _ image: CGImage, animated: Bool = true) {
+        guard self.tagsInfo != tags || tags.isEmpty else {
+            return
+        }
         self.tagsInfo = tags
         for tag in self.tags {
             if animated {
@@ -136,7 +145,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         var x: CGFloat = 35
         
-        for tag in tags {
+        for tag in tags.filter(\.isVisible) {
             let tagView = TextButton()
             tagView.animates = false
             tagView.set(font: .normal(12), for: .Normal)

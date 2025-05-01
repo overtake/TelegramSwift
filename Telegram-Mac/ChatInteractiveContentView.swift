@@ -19,9 +19,9 @@ extension AutoremoveTimeoutMessageAttribute : Equatable {
     public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
         return lhs.timeout == rhs.timeout && lhs.countdownBeginTime == rhs.countdownBeginTime && lhs.associatedMessageIds == rhs.associatedMessageIds
     }
-    
-    
 }
+
+
 
 final class ChatVideoAutoplayView {
     let mediaPlayer: MediaPlayer
@@ -124,6 +124,57 @@ final class CornerMaskLayer : SimpleShapeLayer {
 
 }
 
+
+final class CornerMaskLayerSimple : SimpleLayer {
+    var positionFlags: LayoutPositionFlags? {
+        didSet {
+            if let positionFlags = positionFlags {
+                
+                let layer = SimpleShapeLayer()
+                
+                let path = CGMutablePath()
+                
+                let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+                let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+                
+                path.move(to: NSMakePoint(minx, midy))
+                
+                var topLeftRadius: CGFloat = .cornerRadius
+                var bottomLeftRadius: CGFloat = .cornerRadius
+                var topRightRadius: CGFloat = .cornerRadius
+                var bottomRightRadius: CGFloat = .cornerRadius
+                
+                
+                
+                if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                    bottomLeftRadius = .cornerRadius * 3 + 2
+                }
+                if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                    bottomRightRadius = .cornerRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                    topLeftRadius = .cornerRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                    topRightRadius = .cornerRadius * 3 + 2
+                }
+                
+                path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+                path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+                
+                layer.path = path
+                
+                self.mask = layer
+            }
+        }
+    }
+
+}
+
+
+
 private let sensitiveImage = NSImage(resource: .iconMediaSensitiveContent).precomposed(.white)
 
 final class MediaInkView : Control {
@@ -192,7 +243,7 @@ final class MediaInkView : Control {
             
             let attr = NSMutableAttributedString()
             attr.append(string: "\(clown)", color: .white, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             attr.append(string: " \(amount)", color: .white, font: .medium(.text))
             
             let textLayout = TextViewLayout(attr)
@@ -350,6 +401,26 @@ final class MediaInkView : Control {
     }
 }
 
+private final class VideoTimestampView : View {
+    let progress: LinearProgressControl = .init(progressHeight: 3)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(progress)
+        self.isEventLess = true
+        
+        self.layer = CornerMaskLayerSimple()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        progress.frame = NSMakeRect(0, frame.height - 3, frame.width, 3)
+    }
+}
+
 class ChatInteractiveContentView: ChatMediaContentView {
 
     private let image:TransformImageView = TransformImageView()
@@ -358,6 +429,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
     private var timableProgressView: TimableProgressView? = nil
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
+    
+    private var videoTimeProgress: VideoTimestampView?
     
     
     private let partDisposable = MetaDisposable()
@@ -573,6 +646,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
 
         }
         
+        if let videoTimeProgress {
+            videoTimeProgress.frame = bounds
+        }
+        
     }
     
     private func updateVideoAccessory(_ status: MediaResourceStatus, file: TelegramMediaFile, mediaPlayerStatus: MediaPlayerStatus? = nil, animated: Bool = false) {
@@ -632,12 +709,15 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         let isStreamable: Bool
         if let parent = parent {
-            isStreamable = !parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) && file.isStreamable
+            isStreamable = !parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) && file.isStreamable && !isHLSVideo(file: file)
         } else {
-            isStreamable = file.isStreamable
+            isStreamable = file.isStreamable && !isHLSVideo(file: file)
         }
         
-        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil || file.isAnimated || frame.width < 200, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
+        let isCompact = parent?.groupingKey != nil || file.isAnimated || frame.width < 200 || isHLSVideo(file: file)
+        
+        
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: isCompact, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
             self?.fetch(userInitiated: true)
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
@@ -681,6 +761,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         if parent?.media.first is TelegramMediaStory {
             return false
+        }
+        if let media = media as? TelegramMediaFile, media.videoCover != nil {
+            return false
+        }
+        if parent == nil {
+            return true
         }
         if let media = media as? TelegramMediaFile, let parameters = self.parameters {
             let autoplay = (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
@@ -741,11 +827,40 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         partDisposable.set(nil)
         
-        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
+        var videoTimestamp: Int32?
+        if let parent = parent {
+            var storedVideoTimestamp: Int32?
+            for attribute in parent.attributes {
+                if let attribute = attribute as? ForwardVideoTimestampAttribute {
+                    videoTimestamp = attribute.timestamp
+                } else if let attribute = attribute as? DerivedDataMessageAttribute {
+                    if let value = attribute.data["mps"]?.get(MediaPlaybackStoredState.self) {
+                        storedVideoTimestamp = Int32(value.timestamp)
+                    }
+                }
+            }
+            if let storedVideoTimestamp {
+                videoTimestamp = storedVideoTimestamp
+            }
+
+        }
+        
+        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion && self.parent?.stableId == parent?.stableId
+        
+        let removeViewAnimated = self.parent == nil || self.parent?.media.first?.id == parent?.media.first?.id
         
         let forceSpoiler = parameters?.forceSpoiler == true
         let messageSpoiler = parent?.isMediaSpoilered ?? false
-        let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
+        
+        
+        let isSensitive: Bool
+        if let parent = parent {
+            isSensitive = parent.isSensitiveContent(platform: "ios")
+        } else {
+            isSensitive = false
+        }
+        
+        let isSpoiler = (messageSpoiler || forceSpoiler || isSensitive) && (parameters?.isRevealed == false)
 
         
         let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || self.frame.size != size || previousIsSpoiler != isSpoiler
@@ -767,6 +882,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
         super.update(with: media, size: size, context: context, parent:parent, table: table, parameters:parameters, positionFlags: positionFlags)
         
         let isProtected = !isSpoiler && (parameters?.isProtected ?? false)
+        
+
         
         
         self.image.preventsCapture = isProtected
@@ -798,7 +915,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let image = media as? TelegramMediaImage {
             dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
         } else if let file = media as? TelegramMediaFile {
-            dimensions = file.dimensions?.size ?? size
+            if let image = file.videoCover {
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+            } else {
+                dimensions = file.dimensions?.size ?? size
+            }
         }
         
 
@@ -859,7 +980,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.containsSecretMedia || isSpoiler {
                     updateImageSignal = chatSecretMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor)
                 } else {
-                    updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
+                    updateImageSignal = chatMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
                 }
                 
                 
@@ -904,7 +1025,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             if let updateImageSignal = updateImageSignal {
                 self.image.ignoreFullyLoad = mediaUpdated
 
-                self.image.setSignal(updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
+                self.image.setSignal(updateImageSignal, animate: removeViewAnimated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
@@ -968,7 +1089,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let current = media as? TelegramMediaImage {
                     image = current
                 } else if let file = media as? TelegramMediaFile {
-                    image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+                    image = TelegramMediaImage(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
                 } else {
                     fatalError()
                 }
@@ -976,12 +1097,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
 
                 
-                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: false, payAmount: parameters?.payAmount)
+                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue, isSensitive: isSensitive, payAmount: parameters?.payAmount)
                 current.frame = size.bounds
             } else {
                 if let view = self.inkView {
                     view.userInteractionEnabled = false
-                    performSubviewRemoval(view, animated: animated)
+                    performSubviewRemoval(view, animated: removeViewAnimated)
                     self.inkView = nil
                 }
                 self.image.layer?.opacity = 1
@@ -1013,12 +1134,22 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         
                         
                         if let file = strongSelf.media as? TelegramMediaFile, strongSelf.autoplayVideo {
+                            
+                           
+                            
                             if strongSelf.autoplayVideoView == nil, !isSpoiler {
                                 let autoplay: ChatVideoAutoplayView
                                 
-                                let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
+                                var fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
                                 
-                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+
+//                                let isHLS: Bool = isHLSVideo(file: fileReference.media)
+//                                
+//                                if isHLS {
+//                                    fileReference = HLSVideoContent.minimizedHLSQuality(file: fileReference)?.file ?? fileReference
+//                                }
+                                
+                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: false), view: MediaPlayerView(backgroundThread: true))
                                 
                                 strongSelf.autoplayVideoView = autoplay
                                 if !strongSelf.blurBackground {
@@ -1088,8 +1219,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
                                 removeProgress = true
                             }
-                            if strongSelf.isStory {
+                            if strongSelf.isStory || (isSensitive && isSpoiler) {
                                 removeProgress = true
+                            }
+                            if let media = media as? TelegramMediaFile {
+                                if isHLSVideo(file: media) {
+                                    removeProgress = true
+                                }
                             }
                             
                             if removeProgress {
@@ -1103,7 +1239,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                         break
                                     }
                                     strongSelf.progressView = nil
-                                     performSubviewRemoval(progressView, animated: animated)
+                                     performSubviewRemoval(progressView, animated: removeViewAnimated)
                                 }
                             } else {
                                 strongSelf.progressView?.layer?.removeAllAnimations()
@@ -1163,14 +1299,42 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         case .Remote:
                             strongSelf.progressView?.state = .Remote
                         }
+                        
+                        
+                        strongSelf.updateVideoTimestamp(videoTimestamp, duration: (media as? TelegramMediaFile)?.duration, animated: animated)
+                        
                         strongSelf.needsLayout = true
                     }
                 }))
                
             }
+        } else {
+            self.updateVideoTimestamp(videoTimestamp, duration: (media as? TelegramMediaFile)?.duration, animated: animated)
+            self.needsLayout = true
         }
-        
-        
+    }
+    
+    private func updateVideoTimestamp(_ videoTimestamp: Int32?, duration: Double?, animated: Bool) {
+        if let videoTimestamp, let duration, duration > 0 {
+            let current: VideoTimestampView
+            if let view = self.videoTimeProgress {
+                current = view
+            } else {
+                current = VideoTimestampView(frame: bounds)
+                self.videoTimeProgress = current
+                addSubview(current)
+            }
+            current.progress.set(progress: Double(videoTimestamp) / duration, animated: animated)
+            current.progress.fetchingColor = theme.colors.redUI
+            current.progress.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
+            current.progress.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
+            
+            (current.layer as? CornerMaskLayerSimple)?.positionFlags = positionFlags
+            
+        } else if let view = self.videoTimeProgress {
+            performSubviewRemoval(view, animated: animated)
+            self.videoTimeProgress = nil
+        }
     }
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -1212,16 +1376,27 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     
     override func preloadStreamblePart() {
-        if let context = context, !isLite(.any) {
+        if let context = context {
             if let media = media as? TelegramMediaFile, let parent = parent {
-                let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
-                
-               // preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
-                
-                
-                let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
-                partDisposable.set(preload.start())
-
+                if isHLSVideo(file: media) {
+                    let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: .message(message: MessageReference(parent), media: media), userLocation: .peer(parent.id.peerId), prefixSeconds: 10, autofetchPlaylist: true, initialQuality: FastSettings.videoQuality)
+                    |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
+                        guard let fileAndRange else {
+                            return .complete()
+                        }
+                        return freeMediaFileResourceInteractiveFetched(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), fileReference: fileAndRange.0, resource: fileAndRange.0.media.resource, range: (fileAndRange.1, .default))
+                        |> ignoreValues
+                        |> `catch` { _ -> Signal<Never, NoError> in
+                            return .complete()
+                        }
+                    }
+                    partDisposable.set(fetchSignal.start())
+                } else {
+                    let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
+                                    
+                    let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                    partDisposable.set(preload.start())
+                }
             }
         }
     }

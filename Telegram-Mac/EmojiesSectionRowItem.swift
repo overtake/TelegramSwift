@@ -120,11 +120,13 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     }
     let mode: Mode
     let color: NSColor?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], isBig: Bool = false, groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    let uniqueGifts: [StarGift.UniqueGift]
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], isBig: Bool = false, groupEmojiPack: Bool = false, mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil, ignorePremium: Bool = false, uniqueGifts: [StarGift.UniqueGift] = []) {
         self.itemSize = isBig ? NSMakeSize(66, 60) : NSMakeSize(40, 34)
         self.info = info
         self.mode = mode
         self.color = color
+        self.uniqueGifts = uniqueGifts
         self._items = items
         self.viewSet = viewSet
         self.installed = installed
@@ -134,13 +136,16 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.showAllItems = showAllItems
         self.openPremium = openPremium
         self.installPack = installPack
-        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions && !groupEmojiPack //&& mode != .defaultTags
+        self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0) && mode != .channelReactions && !groupEmojiPack && !ignorePremium
        
         
         self.context = context
         self.callback = callback
         
-        if stableId != AnyHashable(0), let info = info, !info.title.isEmpty {
+        if !uniqueGifts.isEmpty {
+            let layout = TextViewLayout(.initialize(string: strings().emojiCollectibles, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+            self.nameLayout = layout
+        } else if stableId != AnyHashable(0), let info = info, !info.title.isEmpty {
             let text = info.title.uppercased()
             if groupEmojiPack {
                 sectionLayout = .init(.initialize(string: strings().emojiSectionGroupEmoji, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alignment: .center, alwaysStaticItems: true)
@@ -214,9 +219,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         }
         for item in optimized {
             
-            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
+            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file._parse().stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
             
-            let selected = selectedItems.first(where: { $0.isEqual(to: item.file) })?.type
+            let selected = selectedItems.first(where: { $0.isEqual(to: item.file._parse()) })?.type
             
             let inset: NSPoint
             if selected != nil {
@@ -347,7 +352,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case .statuses:
             if let view = self.view as? EmojiesSectionRowView, let item = view.itemUnderMouse {
                 if let sticker = item.1.item, let window = view.window {
-                    if !sticker.file.mimeType.hasPrefix("bundle") {
+                    if !sticker.file._parse().mimeType.hasPrefix("bundle") {
                         let hours: [Int32] = [60 * 60,
                                               60 * 60 * 2,
                                               60 * 60 * 8,
@@ -464,12 +469,12 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let item = itemUnderMouse?.1, let file = item.item?.file {
-            let emojiReference = file.emojiReference ?? file.stickerReference
+            let emojiReference = file._parse().emojiReference ?? file._parse().stickerReference
             if let emojiReference = emojiReference {
-                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
-                if file.isVideoSticker && !file.isWebm {
+                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file._parse())
+                if file.isVideoSticker && !file._parse().isWebm {
                     return (.file(reference, GifPreviewModalView.self), nil)
-                } else if file.isAnimatedSticker || file.isWebm || file.isCustomEmoji {
+                } else if file.isAnimatedSticker || file._parse().isWebm || file.isCustomEmoji {
                     return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
                 } else if file.isStaticSticker  {
                     return (.file(reference, StickerPreviewModalView.self), nil)
@@ -529,6 +534,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     private var locks:[InlineStickerItemLayer.Key : InlineStickerLockLayer] = [:]
     private var selectedLayers:[InlineStickerItemLayer.Key : SimpleLayer] = [:]
     
+    private var starsLayer: [InlineStickerItemLayer.Key: StarsEffectLayer] = [:]
+
     
     fileprivate let contentView = Control()
     
@@ -904,7 +911,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
             color = isPanel ? theme.colors.text : theme.colors.accent
         }
         
-        self.updateInlineStickers(context: item.context, color: color, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
+        self.updateInlineStickers(context: item.context, color: color, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated, uniqueGifts: item.uniqueGifts)
 
         while !appearanceViews.isEmpty {
             appearanceViews.removeLast().value?.removeFromSuperview()
@@ -931,7 +938,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     private var previousColor: NSColor? = nil
     
-    func updateInlineStickers(context: AccountContext, color: NSColor, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {
+    func updateInlineStickers(context: AccountContext, color: NSColor, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool, uniqueGifts: [StarGift.UniqueGift]) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var validLockIds: [InlineStickerItemLayer.Key] = []
         var validSelectedIds: [InlineStickerItemLayer.Key] = []
@@ -989,10 +996,36 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         performSublayerRemoval(layer, animated: animated, scale: true)
                     }
                     
-                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, playPolicy: isEmojiLite ? .framesCount(1) : .loop, textColor: color)
+                    let uniqueStarAnimation: NSColor? = uniqueGifts.first(where: {
+                        $0.file?.fileId == current.file.fileId
+                    })?.backdrop?.first
+                    
+                    view = InlineStickerItemLayer(account: context.account, file: current.file._parse(), size: rect.size, playPolicy: isEmojiLite ? .framesCount(1) : .loop, textColor: color, uniqueStarAnimation: uniqueStarAnimation)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
+                    
+                    
+                    if let uniqueStarAnimation {
+                        let starsLayer: StarsEffectLayer
+                        if let current = self.starsLayer[id] {
+                            starsLayer = current
+                        } else {
+                            starsLayer = StarsEffectLayer()
+                            contentView.layer?.insertSublayer(starsLayer, at: 0)
+                            self.starsLayer[id] = starsLayer
+                        }
+                        let availableSize = rect.size
+                        let side = floor(availableSize.width * 1.25)
+                        let starsFrame = rect.focus(CGSize(width: side, height: side))
+                        starsLayer.frame = rect
+                        starsLayer.update(color: uniqueStarAnimation, size: starsFrame.size)
+                    } else if let starsLayer = self.starsLayer[id] {
+                        self.starsLayer.removeValue(forKey: id)
+                        starsLayer.removeFromSuperlayer()
+                    }
+                    
                     contentView.layer?.addSublayer(view)
+                    
                     if animated {
                         view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
                         view.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -1048,6 +1081,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
+            self.starsLayer.removeValue(forKey: key)
         }
         
         var removeLockKeys: [InlineStickerItemLayer.Key] = []

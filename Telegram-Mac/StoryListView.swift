@@ -294,10 +294,14 @@ extension MediaArea {
             return strings().storyViewMediaAreaViewLocation
         case .reaction:
             return ""
+        case .weather:
+            return ""
         case .channelMessage:
             return strings().storyViewMediaAreaViewMessage
         case .link:
             return strings().storyViewMediaAreaOpenUrl
+        case .starGift:
+            return strings().storyWidgetOpenGift
         }
     }
     var menu: MenuAnimation {
@@ -310,6 +314,10 @@ extension MediaArea {
             return MenuAnimation.menu_show_message
         case .link:
             return MenuAnimation.menu_copy_link
+        case .weather:
+            return MenuAnimation.menu_copy_link
+        case .starGift:
+            return MenuAnimation.menu_show_message
         }
     }
     var canDraw: Bool {
@@ -322,32 +330,47 @@ extension MediaArea {
             return true
         case .link:
             return false
+        case .weather:
+            return true
+        case .starGift:
+            return false
         }
     }
-    var reaction: MessageReaction.Reaction? {
+    
+    var canClick: Bool {
         switch self {
         case .venue:
-            return nil
+            return true
+        case .channelMessage:
+            return true
+        case .reaction:
+            return false
+        case .link:
+            return true
+        case .weather:
+            return false
+        case .starGift:
+            return true
+        }
+    }
+    
+    var reaction: MessageReaction.Reaction? {
+        switch self {
         case let .reaction(_, reaction, _):
             return reaction
-        case .channelMessage:
-            return nil
-        case .link:
+        default:
             return nil
         }
     }
     var isDark: Bool {
         switch self {
-        case .venue:
-            return false
         case let .reaction(_, _, flags):
             return flags.contains(.isDark)
-        case .channelMessage:
-            return false
-        case .link:
+        default:
             return false
         }
     }
+    
 }
 
 private protocol InteractiveMedia {
@@ -455,6 +478,8 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
                 update = .builtin(string)
             case let .custom(fileId):
                 update = .custom(fileId: fileId, file: layer.file)
+            case .stars:
+                update = .stars
             }
             arguments.like(reaction, arguments.interaction.presentation)
         default:
@@ -540,10 +565,12 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         case .builtin:
             if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
                 let file = animation.selectAnimation
-                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .loop)
+                layer = InlineStickerItemLayer(account: context.account, file: file._parse(), size: size, playPolicy: .loop)
             } else {
                 layer = nil
             }
+        case .stars:
+            layer = nil
         }
         if let layer = layer {
             layer.superview = self
@@ -637,7 +664,9 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
              effectFile = file
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-             effectFile = reaction?.aroundAnimation
+             effectFile = reaction?.aroundAnimation?._parse()
+         case .stars:
+             break
          }
          
                 
@@ -680,6 +709,228 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         completed(true)
      }
     
+}
+
+private final class Weather_InteractiveMedia: EventLessView, InteractiveMedia {
+    
+    var _mediaArea: MediaArea
+    
+    var mediaArea: MediaArea {
+        return _mediaArea
+    }
+    
+    
+    private var emojiView: InlineStickerItemLayer?
+    private var arguments: StoryArguments?
+    
+    private let textView: TextView = TextView()
+    private let temperature: String
+    let color: NSColor
+    let emoji: String
+    let file: Signal<TelegramMediaFile?, NoError>
+    private let disposable = MetaDisposable()
+    private let context: AccountContext
+    
+    private var emojiSize: NSSize = .zero
+    private var emojiFile: TelegramMediaFile? = nil
+    
+    required init(frame frameRect: NSRect, mediaArea: MediaArea, context: AccountContext) {
+        _mediaArea = mediaArea
+        self.context = context
+        switch mediaArea {
+        case .weather(_, let emoji, let temperature, let color):
+            self.emoji = emoji
+            self.temperature = stringForTemperature(temperature).uppercased()
+            self.file = context.diceCache.animatedEmojies |> map {
+                return $0[emoji]?.file._parse()
+            } |> deliverOnMainQueue
+            self.color = NSColor(argb: UInt32(bitPattern: color))
+        default:
+            fatalError("no way to be here")
+        }
+        super.init(frame: frameRect)
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        textView.isEventLess = true
+        
+        addSubview(textView)
+                
+        self.wantsLayer = true
+        self.layer?.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        self.layer?.allowsEdgeAntialiasing = true
+        self.layer?.rasterizationScale = backingScaleFactor
+        self.layer?.shouldRasterize = true
+        self.layer?.edgeAntialiasingMask = [.layerLeftEdge, .layerRightEdge, .layerBottomEdge, .layerTopEdge]
+
+        self.layer?.backgroundColor = color.cgColor
+
+        self.layer?.cornerRadius = 10
+        
+        
+        
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
+        
+        self.rotateView(to: mediaArea.coordinates.rotation)
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+        
+        disposable.set(file.start(next: { [weak self] file in
+            self?.emojiFile = file
+            if let size = self?.frame.size {
+                self?.updateLayout(size: size, transition: .immediate)
+            }
+        }))
+    }
+    
+    func playReaction(_ reaction: StoryReactionAction, context: AccountContext) -> Void {
+         
+        let size = NSMakeSize(self.frame.width * 3.0, self.frame.height * 3.0)
+        
+         var effectFileId: Int64?
+         var effectFile: TelegramMediaFile?
+         switch reaction.item {
+         case let .custom(fileId, file):
+             effectFileId = fileId
+             effectFile = file
+         case let .builtin(string):
+             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
+             effectFile = reaction?.aroundAnimation?._parse()
+         case .stars:
+             break
+         }
+         
+                
+         let play:(NSView)->Void = { [weak self] container in
+             guard let `self` = self else {
+                 return
+             }
+             if let effectFileId = effectFileId {
+                 let player = CustomReactionEffectView(frame: NSMakeSize(size.width * 2, size.height * 2).bounds, context: context, fileId: effectFileId, file: effectFile)
+                 player.isEventLess = true
+                 player.triggerOnFinish = { [weak player] in
+                     player?.removeFromSuperview()
+                 }
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+                 player.frame = rect
+                 container.addSubview(player)
+                 
+             } else if let effectFile = effectFile {
+                 let player = InlineStickerView(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1), controlContent: false)
+                 player.isEventLess = true
+                 player.animateLayer.isPlayable = true
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+
+                 player.frame = rect
+                 
+                 container.addSubview(player)
+                 player.animateLayer.triggerOnState = (.finished, { [weak player] state in
+                     player?.removeFromSuperview()
+                 })
+             }
+         }
+         
+         let completed: (Bool)->Void = { [weak self]  _ in
+             DispatchQueue.main.async {
+                 if let container = self?.superview {
+                     play(container)
+                 }
+             }
+         }
+        completed(true)
+     }
+    
+    private func drawSticker(_ file: TelegramMediaFile, context: AccountContext) {
+        
+        
+        self.emojiView?.removeFromSuperlayer()
+        
+        let layer = InlineStickerItemLayer(account: context.account, file: file, size: emojiSize)
+        layer.superview = self
+        layer.isPlayable = true
+        
+        self.layer?.addSublayer(layer)
+        
+        self.emojiView = layer
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.rotateView(to: _mediaArea.coordinates.rotation)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required override init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    override func updateLayer() {
+        super.updateLayer()
+        self.rotateView(to: _mediaArea.coordinates.rotation)
+    }
+    
+    private func action() {
+        // Define your action here
+    }
+    
+    func apply(area: MediaArea, count: Int32?, arguments: StoryArguments, animated: Bool) {
+        self.arguments = arguments
+        self._mediaArea = area
+        
+        self.rotateView(to: area.coordinates.rotation)
+        
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        let string = NSMutableAttributedString(
+            string: temperature,
+            font: .medium(size.height * 0.69),
+            textColor: color.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+        )
+        string.addAttribute(.kern, value: -(size.height / 38.0) as NSNumber, range: NSMakeRange(0, string.length))
+
+        let layout = TextViewLayout(string)
+        layout.measure(width: .greatestFiniteMagnitude)
+        self.textView.update(layout)
+        
+        transition.updateFrame(view: self.textView, frame: self.textView.centerFrameY(x: size.width - textView.frame.width - size.height * 0.2, addition: -floorToScreenPixels(size.height * 0.1)))
+        
+        
+        let prevEmojiSize = self.emojiSize
+        let emojiSize = CGSize(width: floor(size.height * 0.5), height: floor(size.height * 0.5))
+        if prevEmojiSize != emojiSize, let file = emojiFile {
+            self.emojiSize = emojiSize
+            self.drawSticker(file, context: context)
+        }
+        if let layer = self.emojiView {
+            var rect = layer.frame
+            rect.origin.x = size.height * 0.1
+            rect.origin.y = floorToScreenPixels((size.height - rect.size.height) / 2)
+            transition.updateFrame(layer: layer, frame: rect)
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    private func rotateView(to angle: Double) {
+        let radians = angle * Double.pi / 180.0
+        self.layer?.transform = CATransform3DMakeRotation(CGFloat(radians), 0, 0, 1.0)
+    }
 }
 
 
@@ -1210,6 +1461,8 @@ final class StoryListView : Control, Notifable {
                         selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
                     case let .custom(fileId):
                         selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    case .stars:
+                        break
                     }
                 }
                 let window: Signal<Window?, NoError>
@@ -1278,7 +1531,7 @@ final class StoryListView : Control, Notifable {
     }
     
     func showMediaAreaViewer(_ mediaArea: MediaArea) {
-        guard let event = NSApp.currentEvent else {
+        guard let event = NSApp.currentEvent, let arguments else {
             return
         }
         if let viewer = self.mediaAreaViewer {
@@ -1293,7 +1546,12 @@ final class StoryListView : Control, Notifable {
         
         self.content.addSubview(view)
                 
+//        if case let .weather(_, emoji, _, _) = mediaArea {
+//            return
+//        }
+        
         var items: [ContextMenuItem] = []
+        
         
         items.append(ContextMenuItem(mediaArea.title, handler: { [weak self] in
             self?.arguments?.invokeMediaArea(mediaArea)
@@ -1327,7 +1585,7 @@ final class StoryListView : Control, Notifable {
         let coordinates = area.coordinates
         
         let areaSize = CGSize(width: coordinates.width / 100.0 * referenceSize.width, height: coordinates.height / 100.0 * referenceSize.height)
-        let targetFrame = CGRect(x: coordinates.x / 100.0 * referenceSize.width - areaSize.width * 0.5, y: coordinates.y / 100.0 * referenceSize.height - areaSize.height * 0.5, width: areaSize.width, height: areaSize.height)
+        let targetFrame = CGRect(x: floorToScreenPixels(coordinates.x / 100.0 * referenceSize.width - areaSize.width * 0.5), y: floorToScreenPixels(coordinates.y / 100.0 * referenceSize.height - areaSize.height * 0.5), width: floorToScreenPixels(areaSize.width), height: floorToScreenPixels(areaSize.height))
         
         return targetFrame
     }
@@ -1358,7 +1616,7 @@ final class StoryListView : Control, Notifable {
 
         
         for area in story.storyItem.mediaAreas {
-            if isPoint(point, in: area), !area.canDraw {
+            if isPoint(point, in: area), area.canClick {
                 selectedMediaArea = area
                 break
             }
@@ -1508,8 +1766,12 @@ final class StoryListView : Control, Notifable {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        var bottomInset: CGFloat = 110
+        if self.inputView is StoryBotInputView {
+            bottomInset = 50
+        }
         
-        let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
+        let maxSize = NSMakeSize(frame.width - 100, frame.height - bottomInset)
         let aspect = StoryLayoutView.size.aspectFitted(maxSize)
         let containerSize: NSSize
         if let arguments = self.arguments, arguments.interaction.presentation.wideInput || arguments.interaction.presentation.inputRecording != nil {
@@ -1648,7 +1910,9 @@ final class StoryListView : Control, Notifable {
                 let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
                 let aspect = StoryLayoutView.size.aspectFitted(maxSize)
                 
-                if entry.peer._asPeer() is TelegramChannel {
+                if entry.peer._asPeer().isBot {
+                    self.inputView = StoryBotInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+                } else if entry.peer._asPeer() is TelegramChannel {
                     if entry.peer._asPeer().isSupergroup {
                         self.inputView = StoryInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
                     } else {
@@ -1824,6 +2088,9 @@ final class StoryListView : Control, Notifable {
                 let count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
                 interactiveMedias_values[index].apply(area: media, count: count, arguments: arguments, animated: animated)
                 index += 1
+            case let .weather(_, emoji, temperature, _):
+                interactiveMedias_values[index].apply(area: media, count: nil, arguments: arguments, animated: animated)
+                index += 1
             default:
                 break
             }
@@ -1844,6 +2111,11 @@ final class StoryListView : Control, Notifable {
             case .reaction:
                 let rect = mediaRect(media)
                 let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
+                interactiveMedias.addSubview(view)
+                interactiveMedias_values.append(view)
+            case .weather:
+                let rect = mediaRect(media)
+                let view = Weather_InteractiveMedia(frame: rect, mediaArea: media, context: arguments.context)
                 interactiveMedias.addSubview(view)
                 interactiveMedias_values.append(view)
             default:

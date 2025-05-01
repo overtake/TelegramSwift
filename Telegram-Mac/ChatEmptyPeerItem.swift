@@ -16,7 +16,7 @@ import SwiftSignalKit
 class ChatEmptyPeerItem: TableRowItem {
 
     private(set) var textViewLayout:TextViewLayout
-    private(set) var image: TelegramMediaImage?
+    private(set) var image: Media?
     private(set) var sticker: TelegramMediaFile?
     private(set) var premiumRequired: Bool = false
     
@@ -84,6 +84,10 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: strings().emptyGroupInfoLine3, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
                 _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
+            } else if let padMessageStars = self.chatInteraction.presentation.sendPaidMessageStars, let peer = self.chatInteraction.peer {
+                attr.append(string: strings().chatEmptyPaidMessage(peer.displayTitle, strings().starListItemCountCountable(Int(padMessageStars.value))), color: textColor, font: .medium(.text))
+                lineSpacing = nil
+                //self.standImage = (NSImage(resource: .iconBusinessChatGreetings).precomposed(theme.colors.isDark ? theme.colors.text : theme.colors.accent), 50)
             } else {
                 if let restriction = chatInteraction.presentation.peer?.restrictionText(chatInteraction.context.contentSettings) {
                     _ = attr.append(string: restriction, color: theme.chatServiceItemTextColor, font: .medium(.text))
@@ -166,7 +170,7 @@ class ChatEmptyPeerItem: TableRowItem {
             let sticker: Signal<FoundStickerItem?, NoError> = .single(nil) |> then(chatInteraction.context.engine.stickers.randomGreetingSticker() |> deliverOnMainQueue)
             
             peerViewDisposable.set(combineLatest(cachedData, peer, sticker).start(next: { [weak self] cachedData, peer, sticker in
-                if let cachedData = cachedData as? CachedUserData, let user = peer, let self, self.chatInteraction.mode == .history {
+                if let cachedData = cachedData as? CachedUserData, let user = peer, let self, self.chatInteraction.mode == .history, peer?.restrictionInfo == nil {
                     if let botInfo = cachedData.botInfo {
                         var about = botInfo.description
                         if about.isEmpty {
@@ -184,18 +188,18 @@ class ChatEmptyPeerItem: TableRowItem {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
                         attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
-                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil, nil)
                         }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .left)
                         self.textViewLayout.interactions = globalLinkExecutor
-                        self.image = botInfo.photo
+                        self.image = botInfo.video ?? botInfo.photo
                     } else if cachedData.flags.contains(.premiumRequired), !chatInteraction.context.isPremium {
                         let attr = NSMutableAttributedString()
                         _ = attr.append(string: strings().chatEmptyPremiumRequiredState(user.compactDisplayTitle), color: theme.colors.text, font: .medium(.text))
                         attr.detectBoldColorInString(with: .medium(.text))
                         attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: { hashtag in
-                            chatInteraction.context.bindings.globalSearch(hashtag, nil)
+                            chatInteraction.context.bindings.globalSearch(hashtag, nil, nil)
                         }, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                         self._shouldBlurService = false
                         self.textViewLayout = TextViewLayout(attr, alignment: .center)
@@ -248,7 +252,7 @@ class ChatEmptyPeerItem: TableRowItem {
 
 class ChatEmptyPeerView : TableRowView {
     let textView:TextView = TextView()
-    private var imageView: TransformImageView? = nil
+    private var imageView: ChatMediaContentView? = nil
     private var stickerView: StickerMediaContentView? = nil
     private var visualEffect: VisualEffect?
     private var bgView: View?
@@ -354,27 +358,25 @@ class ChatEmptyPeerView : TableRowView {
             var size = NSMakeSize(max(300, item.textViewLayout.layoutSize.width + 20), 300)
 
             
-            if let image = item.image, let rep = image.representationForDisplayAtSize(PixelDimensions.init(1280, 1280)) {
-                let current: TransformImageView
-                if let view = self.imageView {
-                    current = view
-                } else {
-                    current = TransformImageView()
-                    bgView.addSubview(current)
-                    self.imageView = current
+            let bgWidth = max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20)
+            
+            if let media = item.image {
+                
+                let contentNode = ChatLayoutUtils.contentNode(for: media)
+                let contentSize = ChatLayoutUtils.contentSize(for: media, with: bgWidth)
+
+                if imageView == nil || !imageView!.isKind(of: contentNode) {
+                    if let view = self.imageView {
+                        performSubviewRemoval(view, animated: false)
+                    }
+                    self.imageView = contentNode.init(frame: contentSize.bounds)
+                    bgView.addSubview(self.imageView!)
                 }
                 
-                let signal = chatMessagePhoto(account: item.chatInteraction.context.account, imageReference: .standalone(media: image), peer: item.chatInteraction.peer, scale: System.backingScale, autoFetchFullSize: true)
+                self.imageView?.update(with: media, size: contentSize, context: item.chatInteraction.context, parent: nil, table: item.table)
+                self.imageView?.fetch(userInitiated: true)
+//                let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
                 
-                current.setSignal(signal)
-                
-                size = rep.dimensions.size.aspectFitted(size)
-                
-                let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
-                
-                
-                current.set(arguments: arguments)
-                current.setFrameSize(size)
             } else if let view = self.imageView {
                 performSubviewRemoval(view, animated: false)
                 self.imageView = nil
@@ -455,7 +457,7 @@ class ChatEmptyPeerView : TableRowView {
                     
                     current.set(handler: { [weak item] _ in
                         if let context = item?.chatInteraction.context {
-                            showModal(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
+                            prem(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
                         }
                     }, for: .Click)
                 }
@@ -480,7 +482,7 @@ class ChatEmptyPeerView : TableRowView {
                     
                     current.set(handler: { [weak item] _ in
                         if let context = item?.chatInteraction.context {
-                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            prem(with: PremiumBoardingController(context: context), for: context.window)
                         }
                     }, for: .Click)
                 }
@@ -518,7 +520,7 @@ class ChatEmptyPeerView : TableRowView {
             }
             
             
-            bgView.setFrameSize(NSMakeSize(max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20), h + textView.frame.height + 20))
+            bgView.setFrameSize(NSMakeSize(bgWidth, h + textView.frame.height + 20))
 
             
             bgView.addSubview(self.textView)

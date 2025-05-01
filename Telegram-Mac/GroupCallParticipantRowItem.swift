@@ -30,12 +30,11 @@ private var premiumIcon: CGImage {
 final class GroupCallParticipantRowItem : GeneralRowItem {
     let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
-    
+    fileprivate let inviteState: PresentationGroupCallInvitedPeer?
     fileprivate private(set) var titleLayout: TextViewLayout!
     fileprivate let statusLayout: TextViewLayout
     fileprivate let account: Account
     fileprivate let isLastItem: Bool
-    fileprivate let isInvited: Bool
     fileprivate let drawLine: Bool
     fileprivate let invite:(PeerId)->Void
     fileprivate let canManageCall:Bool
@@ -45,7 +44,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate private(set) var buttonImage: (CGImage, CGImage?)? = nil
     fileprivate let baseEndpoint: String?
     fileprivate let focusVideo:(String?)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, baseEndpoint: String?, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, focusVideo: @escaping(String?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, baseEndpoint: String?, canManageCall: Bool, inviteState: PresentationGroupCallInvitedPeer?, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, focusVideo: @escaping(String?)->Void) {
         self.data = data
         self.audioLevel = audioLevel
         self.account = account
@@ -53,7 +52,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self.invite = invite
         self.focusVideo = focusVideo
         self._contextMenu = contextMenu
-        self.isInvited = isInvited
+        self.inviteState = inviteState
         self.drawLine = drawLine
         self.takeVideo = takeVideo
         self.baseEndpoint = baseEndpoint
@@ -104,7 +103,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                 }
             }
         } else {
-            if isInvited {
+            if inviteState != nil {
                 self.buttonImage = (GroupCallTheme.invitedIcon, nil)
             } else {
                 self.buttonImage = (GroupCallTheme.inviteIcon, nil)
@@ -226,7 +225,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
         let addition: CGFloat
-        if let size = PremiumStatusControl.controlSize(peer, false) {
+        if let size = PremiumStatusControl.controlSize(peer, false, left: false) {
             addition = size.width + 5
         } else {
             addition = 0
@@ -329,7 +328,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var videoBoxImage: [CGImage] {
-        if isInvited {
+        if inviteState != nil {
             return [GroupCallTheme.videoBox_muted_locked]
         }
         var images:[CGImage] = []
@@ -363,7 +362,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         if isActivePeer {
             return canManageCall
         } else {
-            if isInvited {
+            if inviteState != nil {
                 return false
             } else {
                 return true
@@ -833,7 +832,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             }
         }
         
-        let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: nil, isSelected: false, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: nil, left: false, isSelected: false, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.containerView.addSubview(control)

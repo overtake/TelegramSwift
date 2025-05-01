@@ -429,7 +429,7 @@ final class GroupCallTileView: View {
             updateLayout(size: size, transition: .immediate)
         }
         
-        if tiles.isEmpty {
+        if tiles.isEmpty, let peer = state.peer {
             let current: LimitView
             if let v = self.limitView {
                 current = v
@@ -442,7 +442,7 @@ final class GroupCallTileView: View {
                     current.layer?.animateAlpha(from: 0, to: 2, duration: 0.2)
                 }
             }
-            current.update(state.peer, size: size, context: context)
+            current.update(peer, size: size, context: context)
         } else {
             if let view = self.limitView {
                 self.limitView = nil

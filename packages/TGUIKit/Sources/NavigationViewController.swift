@@ -313,6 +313,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     let navigationLeftBorder: View = View()
     var stack:[ViewController] = [ViewController]()
     
+    public var controllerDidChange:(()->Void)? = nil
+    
     public var cleanupAfterDeinit: Bool = true
     
     var lock:Bool = false {
@@ -336,11 +338,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationLeftBorder.backgroundColor = presentation.colors.border
         }
     }
-    
-    private let _window: Window
-    
+        
     open override var window: Window? {
-        return _window
+        return _window ?? view.window as? Window
     }
     
     public var empty:ViewController {
@@ -571,7 +571,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         return false
     }
     open func currentControllerDidChange() {
-        
+        controllerDidChange?()
     }
     
     public override var backgroundColor: NSColor {
@@ -584,13 +584,13 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
-    public init(_ empty:ViewController, _ window: Window) {
+    public init(_ empty:ViewController, _ window: Window?) {
         self.empty = empty
         self.controller = empty
-        self._window = window
         self.stack.append(controller)
         
         super.init()
+        self._window = window
         navigationBar.navigation = self
         bar = .init(height: 0)
         shadowView.getColor = { [weak self] in

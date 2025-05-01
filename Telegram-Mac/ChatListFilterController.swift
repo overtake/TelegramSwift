@@ -12,7 +12,7 @@ import Postbox
 import TelegramCore
 import InAppSettings
 import TGUIKit
-
+import InputView
 
 
 private enum FolderColorEntryId: Hashable {
@@ -353,77 +353,6 @@ func chatListFilterType(_ filter: ChatListFilter) -> ChatListFilterType {
     return filterType
 }
 
-extension ChatListFilter {
-    var data: ChatListFilterData? {
-        switch self {
-        case .allChats:
-            return nil
-        case let .filter(_, _, _, data):
-            return data
-        }
-    }
-    
-    var isAllChats: Bool {
-        switch self {
-        case .allChats:
-            return true
-        case .filter:
-            return false
-        }
-    }
-    
-    var title: String {
-        switch self {
-        case .allChats:
-            return strings().chatListFilterAllChats
-        case let .filter(_, title, _, _):
-            return title
-        }
-    }
-    var emoticon: String? {
-        switch self {
-        case .allChats:
-            return nil
-        case let .filter(_, _, emoticon, _):
-            return emoticon
-        }
-    }
-    var id: Int32 {
-        switch self {
-        case .allChats:
-            return -1
-        case let .filter(id, _, _, _):
-            return id
-        }
-    }
-    
-    func withUpdatedTitle(_ string: String) -> ChatListFilter {
-        switch self {
-        case .allChats:
-            return self
-        case let .filter(id, _, emoticon, data):
-            return .filter(id: id, title: string, emoticon: emoticon, data: data)
-        }
-    }
-    func withUpdatedEmoticon(_ string: String) -> ChatListFilter {
-        switch self {
-        case .allChats:
-            return self
-        case let .filter(id, title, _, data):
-            return .filter(id: id, title: title, emoticon: string, data: data)
-        }
-    }
-    func withUpdatedData(_ data: ChatListFilterData) -> ChatListFilter {
-        switch self {
-        case .allChats:
-            return self
-        case let .filter(id, title, emoticon, _):
-            return .filter(id: id, title: title, emoticon: emoticon, data: data)
-        }
-    }
-}
-
-
 private extension ChatListFilter {
     var additionIncludeItems: [ShareAdditionItem] {
         var items:[ShareAdditionItem] = []
@@ -597,7 +526,7 @@ class SelectCallbackObject : ShareObject {
     }
     
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars: [PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         return callback(peerIds) |> castError(String.self)
     }
     override func limitReached() {
@@ -635,7 +564,9 @@ private struct State: Equatable {
     var inviteLinks: [ExportedChatFolderLink]?
     var creatingLink: Bool
     var linkSaving: String?
-    init(filter: ChatListFilter, isNew: Bool, showAllInclude: Bool, showAllExclude: Bool, changedName: Bool, inviteLinks: [ExportedChatFolderLink]?, creatingLink: Bool, linkSaving: String?) {
+    var inputState: Updated_ChatTextInputState
+    var nameAnimation: Bool
+    init(filter: ChatListFilter, isNew: Bool, showAllInclude: Bool, showAllExclude: Bool, changedName: Bool, inviteLinks: [ExportedChatFolderLink]?, creatingLink: Bool, linkSaving: String?, inputState: Updated_ChatTextInputState, nameAnimation: Bool) {
         self.filter = filter
         self.initialFilter = filter
         self.isNew = isNew
@@ -645,6 +576,8 @@ private struct State: Equatable {
         self.inviteLinks = inviteLinks
         self.creatingLink = creatingLink
         self.linkSaving = linkSaving
+        self.inputState = inputState
+        self.nameAnimation = nameAnimation
     }
     
     mutating func withUpdatedFilter(_ f:(ChatListFilter)->ChatListFilter) {
@@ -669,7 +602,9 @@ private final class ChatListPresetArguments {
     let copy:(String)->Void
     let deleteLink:(ExportedChatFolderLink)->Void
     let toggleColor:(Int32?)->Void
-    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void, toggleColor:@escaping(Int32?)->Void) {
+    let updateState:(Updated_ChatTextInputState)->Void
+    let toggleNameAnimation:()->Void
+    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void, toggleColor:@escaping(Int32?)->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleNameAnimation:@escaping()->Void) {
         self.context = context
         self.toggleOption = toggleOption
         self.toggleExcludeMuted = toggleExcludeMuted
@@ -686,6 +621,8 @@ private final class ChatListPresetArguments {
         self.copy = copy
         self.deleteLink = deleteLink
         self.toggleColor = toggleColor
+        self.updateState = updateState
+        self.toggleNameAnimation = toggleNameAnimation
     }
 }
 
@@ -781,14 +718,26 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
             sectionId += 1
         }
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: state.nameAnimation ? strings().chatListFolderDisableAnimations : strings().chatListFolderEnableAnimations, color: theme.colors.accent, font: .normal(.text)), action: arguments.toggleNameAnimation))))
         index += 1
         
+        //InputTextDataRowItem
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem, rightItem: InputDataRightItem.action(FolderIcon(state.filter).icon(for: .settings), .custom{ item, control in
-            showPopover(for: control, with: ChatListFilterFolderIconController(arguments.context, select: arguments.updateIcon), edge: .minX, inset: NSMakePoint(0,-45))
-        })), placeholder: nil, inputPlaceholder: strings().chatListFilterNamePlaceholder, filter: { $0 }, limit: 12))
-        index += 0
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_name_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.inputState, viewType: .singleItem, placeholder: nil, inputPlaceholder: strings().chatListFilterNamePlaceholder, rightItem: InputDataRightItem.action(FolderIcon(state.filter).icon(for: .settings), .custom{ item, control in
+                showPopover(for: control, with: ChatListFilterFolderIconController(arguments.context, select: arguments.updateIcon), edge: .minX, inset: NSMakePoint(0,-45))
+            }), filter: { $0 }, updateState: arguments.updateState, limit: 12, hasEmoji: true, playAnimation: state.nameAnimation)
+        }))
+        
+        index += 1
+        
+//        entries.append(.sectionId(sectionId, type: .normal))
+//        sectionId += 1
+//        
+//        entries.append(.input(sectionId: sectionId, index: index, value: .string(title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem, rightItem: InputDataRightItem.action(FolderIcon(state.filter).icon(for: .settings), .custom{ item, control in
+//            showPopover(for: control, with: ChatListFilterFolderIconController(arguments.context, select: arguments.updateIcon), edge: .minX, inset: NSMakePoint(0,-45))
+//        })), placeholder: nil, inputPlaceholder: strings().chatListFilterNamePlaceholder, filter: { $0 }, limit: 12))
+//        index += 0
        
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -800,7 +749,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
         
         if hasAddInclude  {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_include, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: includePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: includePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4), context: arguments.context)
             }))
             index += 0
         }
@@ -961,13 +910,16 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
 
         let rightText: NSAttributedString?
         if state.filter.data?.color != nil {
-            rightText = .initialize(string: state.filter.title, color: selected, font: .bold(11))
+            let attr = NSMutableAttributedString()
+            attr.append(string: state.filter.title, color: selected, font: .bold(11))
+            InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: state.filter.entities, isPremium: true)
+            rightText = attr
         } else {
             rightText = nil
         }
         
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: rightText, action: nil, update: nil, alignToText: true, wrap: selected?.withAlphaComponent(0.1)))))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFolderColorTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: rightText, action: nil, update: nil, alignToText: true, wrap: selected?.withAlphaComponent(0.1)), context: arguments.context)))
         index += 1
         
       
@@ -1075,8 +1027,9 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
 func ChatListFilterController(context: AccountContext, filter: ChatListFilter, isNew: Bool = false) -> InputDataController {
     
     
+    let title = ChatTextInputState(inputText: filter.title, selectionRange: filter.title.length..<filter.title.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: filter.entities), associatedMedia: [:]))
     
-    let initialState = State(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew, inviteLinks: nil, creatingLink: false, linkSaving: nil)
+    let initialState = State(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew, inviteLinks: nil, creatingLink: false, linkSaving: nil, inputState: title.textInputState(), nameAnimation: true)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -1371,7 +1324,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                     case .allChats:
                         return true
                     case let .filter(_, title, _, _):
-                        return title.isEmpty
+                        return title.text.isEmpty
                     }
                 }
                 let emptyPeers = stateValue.with { value -> Bool in
@@ -1593,7 +1546,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     }, toggleColor: { color in
         if let _ = color, !context.isPremium {
             showModalText(for: context.window, text: strings().chatListFolderPremiumAlert, button: strings().alertLearnMore, callback: { _ in
-                showModal(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
+                prem(with: PremiumBoardingController(context: context, source: .folder_tags, openFeatures: true), for: context.window)
             })
         } else {
             updateState { current in
@@ -1607,6 +1560,21 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 }
                 return current
             }
+        }
+    }, updateState: { state in
+        updateState { current in
+            var current = current
+            current.inputState = state
+            current.changedName = true
+            current.filter = current.filter.withUpdatedTitle(string: current.inputState.string, entities: current.inputState.textInputState().messageTextEntities(), enableAnimations: current.nameAnimation)
+            return current
+        }
+    }, toggleNameAnimation: {
+        updateState { current in
+            var current = current
+            current.nameAnimation = !current.nameAnimation
+            current.filter = current.filter.withUpdatedTitle(string: current.inputState.string, entities: current.inputState.textInputState().messageTextEntities(), enableAnimations: current.nameAnimation)
+            return current
         }
     })
     
@@ -1650,35 +1618,6 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     let controller = InputDataController(dataSignal: dataSignal, title: isNew ? strings().chatListFilterNewTitle : strings().chatListFilterTitle, removeAfterDisappear: false)
     
-    controller.updateDatas = { data in
-        if let name = data[_id_name_input]?.stringValue {
-            updateState { state in
-                var state = state
-                switch filter {
-                case .allChats:
-                    break
-                case let .filter(_, title, _, _):
-                    if title != name {
-                        state.changedName = true
-                    }
-                }
-               
-                state.withUpdatedFilter { filter in
-                    var filter = filter
-                    switch filter {
-                    case .allChats:
-                        break
-                    case let .filter(id, _, emoticon, data):
-                        filter = .filter(id: id, title: name, emoticon: emoticon, data: data)
-                    }
-                    return filter
-                }
-                return state
-            }
-        }
-        
-        return .none
-    }
     
     controller.backInvocation = { data, f in
         if stateValue.with({ $0.filter != $0.initialFilter }) {
@@ -1723,44 +1662,44 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 //state.name = presentationData.strings.ChatListFolder_NameNonMuted
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultUnmuted)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultUnmuted, entities: [], enableAnimations: false)
                   //  emoticon =
                     return state
                 }
             case .unread:
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultUnread)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultUnread, entities: [], enableAnimations: false)
                     return state
                 }
             case .channels:
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultChannels)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultChannels, entities: [], enableAnimations: false)
                     return state
                 }
             case .groups:
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultGroups)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultGroups, entities: [], enableAnimations: false)
                     return state
                 }
             case .bots:
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultBots)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultBots, entities: [], enableAnimations: false)
                     return state
                 }
             case .contacts:
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultContacts)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultContacts, entities: [], enableAnimations: false)
                     return state
                 }
             case .nonContacts:
                 updateState { state in
                     var state = state
-                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultNonContacts)
+                    state.filter = state.filter.withUpdatedTitle(string: strings().chatListFilterTilteDefaultNonContacts, entities: [], enableAnimations: false)
                     return state
                 }
             }
@@ -1771,15 +1710,15 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     controller.validateData = { data in
         
         return .fail(.doSomething(next: { f in
-            let emptyTitle = stateValue.with { value -> Bool in
+            let titleLength = stateValue.with { value -> Int in
                 switch value.filter {
                 case .allChats:
-                    return true
-                case let .filter(_, title, _, _):
-                    return title.isEmpty
+                    return 1
+                case .filter:
+                    return value.inputState.inputText.string.length
                 }
             }
-            if emptyTitle {
+            if titleLength == 0 || titleLength > 12 {
                 f(.fail(.fields([_id_name_input : .shake])))
                 return
             }

@@ -323,7 +323,7 @@ private final class VideoView : View, MediaView {
         
         playerView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
 
-        playerView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
+        playerView.setSignal(chatMessageVideo(account: context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
             if let media = media {
                 cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
             }
@@ -445,11 +445,16 @@ final class SingleTimeMediaViewer : ModalViewController {
     
     private let context: AccountContext
     private let message: Message
+    private let disposable = MetaDisposable()
     
     init(context: AccountContext, message: Message) {
         self.context = context
         self.message = message
         super.init()
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     private var genericView: SingleTimeMediaView {
@@ -458,6 +463,15 @@ final class SingleTimeMediaViewer : ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let exists = context.account.postbox.messageView(message.id) |> map { $0.message != nil } |> deliverOnMainQueue
+        
+        disposable.set(exists.startStrict(next: { [weak self] value in
+            if !value {
+                self?.close()
+            }
+        }))
+    
         
         genericView.update(context: context, message: message)
         

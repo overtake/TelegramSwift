@@ -380,7 +380,7 @@ final class CustomReactionEffectView: View {
             switch pack {
             case let .result(_, items, _):
                 for item in items {
-                    _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .init(file: item.file), reference: .standalone(resource: item.file.resource), ranges: nil).start()
+                    _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .init(file: item.file._parse()), reference: .standalone(resource: item.file._parse().resource), ranges: nil).start()
                 }
                 return items.randomElement()
             default:
@@ -388,7 +388,7 @@ final class CustomReactionEffectView: View {
             }
         } |> mapToSignal { item -> Signal<Data?, NoError> in
             if let item = item {
-                return context.account.postbox.mediaBox.resourceData(item.file.resource) |> take(1) |> map { resource in
+                return context.account.postbox.mediaBox.resourceData(item.file._parse().resource) |> take(1) |> map { resource in
                     if resource.complete {
                         return try? Data(contentsOf: URL(fileURLWithPath: resource.path))
                     } else {
@@ -412,7 +412,7 @@ final class CustomReactionEffectView: View {
                 return context.reactions.stateValue
                 |> take(1) |> mapToSignal { value in
                     if let reaction = value?.reactions.first(where: { $0.value == .builtin(emoji) }) {
-                        if let animation = reaction.aroundAnimation {
+                        if let animation = reaction.aroundAnimation?._parse() {
                             return context.account.postbox.mediaBox.resourceData(animation.resource)
                             |> take(1)
                             |> map { data in

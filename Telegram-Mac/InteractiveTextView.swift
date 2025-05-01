@@ -50,19 +50,19 @@ final class InteractiveTextView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(text: TextViewLayout?, context: AccountContext?) {
+    func set(text: TextViewLayout?, context: AccountContext?, insetEmoji: CGFloat = 0) {
         self.textView.update(text)
         if let text {
             self.setFrameSize(text.layoutSize)
         }
         if let context, let text {
             self.isLite = context.isLite(.emoji)
-            self.updateInlineStickers(context: context, textLayout: text, itemViews: &inlineStickerItemViews)
+            self.updateInlineStickers(context: context, textLayout: text, itemViews: &inlineStickerItemViews, insetEmoji: insetEmoji)
         }
     }
     
     
-    func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: SimpleLayer]) {
+    func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: SimpleLayer], insetEmoji: CGFloat) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = self.textView.hashValue
         
@@ -82,7 +82,7 @@ final class InteractiveTextView : Control {
                     let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: emoji.color ?? textColor)
                     validIds.append(id)
                     
-                    let rect = item.rect.insetBy(dx: 0, dy: 0)
+                    let rect = item.rect.insetBy(dx: insetEmoji, dy: insetEmoji)
                     
                     let view: InlineStickerItemLayer
                     if let current = itemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size && current.textColor == id.color {

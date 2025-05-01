@@ -161,18 +161,59 @@ enum ShortPeerItemInteractionType {
 
 
 
+
+
 class ShortPeerRowItem: GeneralRowItem {
     let peer:Peer
     let context: AccountContext?
     let account: Account
     let interactionType:ShortPeerItemInteractionType
     let drawSeparatorIgnoringInset:Bool
-    var textInset:CGFloat {
+    
+    struct RightActions : Equatable {
+        static func == (lhs: ShortPeerRowItem.RightActions, rhs: ShortPeerRowItem.RightActions) -> Bool {
+            return lhs.actions == rhs.actions
+        }
+        
+        struct RightAction : Equatable {
+            var icon: CGImage
+            var index: Int
+        }
+        var actions: [RightAction] = []
+        var callback:(PeerId, Int)->Void = { _, _ in }
+    }
+    
+    func textInset(_ status: Bool) -> CGFloat {
         switch viewType {
         case .legacy:
-            return inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            var width = inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            
+            #if !SHARE
+            if self.highlightVerified, (!self.isLookSavedMessage || self.peerId != self.account.peerId) {
+                if let size = PremiumStatusControl.controlSize(self.peer, false, left: true), !status {
+                    width += size.width + 2
+                }
+            }
+            if status, let statusImage {
+                width += statusImage.backingSize.width + 4
+            }
+
+            #endif
+            return width
         case let .modern(_, insets):
-            return photoSize.width + min(10, insets.left) + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            var width = photoSize.width + min(10, insets.left) + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            
+            #if !SHARE
+            if self.highlightVerified, (!self.isLookSavedMessage || self.peerId != self.account.peerId) {
+                if let size = PremiumStatusControl.controlSize(self.peer, false, left: true), !status {
+                    width += size.width + 2
+                }
+            }
+            if status, let statusImage {
+                width += statusImage.backingSize.width + 4
+            }
+            #endif
+            return width
         }
     }
     let badgeNode: GlobalBadgeNode?
@@ -219,14 +260,33 @@ class ShortPeerRowItem: GeneralRowItem {
     let openStory:(StoryInitialIndex?)->Void
     let menuOnAction: Bool
     
-    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, menuOnAction: Bool = false, photoBadge: CGImage? = nil) {
+    let customActionText: TextViewLayout?
+    let customActionTextSelected: TextViewLayout?
+    
+    let customAction: CustomAction?
+    
+    struct CustomAction {
+        var title: String
+        var callback:()->Void
+    }
+    
+    let makeAvatarRound: Bool
+    let drawStarsPaid: StarsAmount?
+    let statusImage: CGImage?
+    let passLeftAction: Bool
+    
+    let rightActions: RightActions
+    
+    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, menuOnAction: Bool = false, photoBadge: CGImage? = nil, customAction: CustomAction? = nil, makeAvatarRound: Bool = false, drawStarsPaid: StarsAmount? = nil, statusImage: CGImage? = nil, passLeftAction: Bool = false, rightActions: RightActions = .init()) {
         self.peer = peer
         self.drawPhotoOuter = drawPhotoOuter
         self.contextMenuItems = contextMenuItems
         self.context = context
         self.account = account
         self._peerId = peerId
+        self.passLeftAction = passLeftAction
         self.story = story
+        self.drawStarsPaid = drawStarsPaid
         self.openStory = openStory
         self.photoSize = photoSize
         self.leftImage = leftImage
@@ -234,6 +294,10 @@ class ShortPeerRowItem: GeneralRowItem {
         self.disabledAction = disabledAction
         self.inputActivity = inputActivity
         self.menuOnAction = menuOnAction
+        self.customAction = customAction
+        self.statusImage = statusImage
+        self.makeAvatarRound = makeAvatarRound
+        self.rightActions = rightActions
         if let deleteInset = deleteInset {
             self.deleteInset = deleteInset
         } else {
@@ -243,6 +307,17 @@ class ShortPeerRowItem: GeneralRowItem {
             case let .modern(_, insets):
                 self.deleteInset = insets.left
             }
+        }
+        
+        if let customAction {
+            self.customActionText = .init(.initialize(string: customAction.title, color: theme.colors.underSelectedColor, font: .medium(.text)), alignment: .center)
+            self.customActionText?.measure(width: .greatestFiniteMagnitude)
+            
+            self.customActionTextSelected = .init(.initialize(string: customAction.title, color: theme.colors.accent, font: .medium(.text)), alignment: .center)
+            self.customActionTextSelected?.measure(width: .greatestFiniteMagnitude)
+        } else {
+            self.customActionText = nil
+            self.customActionTextSelected = nil
         }
         
         self.badgeNode = badgeNode
@@ -351,6 +426,7 @@ class ShortPeerRowItem: GeneralRowItem {
     override func prepare(_ selected:Bool) {
         
         var addition:CGFloat = 0
+        var additionStatus: CGFloat = 0
         switch interactionType {
         case .selectable:
             addition += 30
@@ -385,6 +461,20 @@ class ShortPeerRowItem: GeneralRowItem {
         if self.peer.isFake {
             addition += 20
         }
+        
+        if let statusImage {
+            additionStatus += statusImage.backingSize.width + 4
+        }
+        
+        if !rightActions.actions.isEmpty {
+            
+        }
+        
+        
+        if let customActionText {
+            addition += customActionText.layoutSize.width + 10
+        }
+        
         if self.highlightVerified  {
             if peer.isPremium || peer.isVerified || peer.isScam || peer.isFake {
                 addition += 25
@@ -393,15 +483,15 @@ class ShortPeerRowItem: GeneralRowItem {
         switch viewType {
         case .legacy:
             if let titleAttr = titleAttr {
-                title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
-                titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,true, .left)
+                title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(false) - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
+                titleSelected = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(false) - (inset.right) - addition - textAdditionInset - 10, 20), nil,true, .left)
             }
             if let statusAttr = statusAttr {
-                status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
-                statusSelected = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset - inset.right - addition - textAdditionInset - 10, 20), nil,true, .left)
+                status = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(true) - (inset.right) - addition - textAdditionInset - 10, 20), nil,false, .left)
+                statusSelected = TextNode.layoutText(maybeNode: nil,  statusAttr, nil, 1, .end, NSMakeSize(self.size.width - textInset(true) - inset.right - addition - additionStatus - textAdditionInset - 10, 20), nil,true, .left)
             }
         case let .modern(_, insets):
-            let textSize = NSMakeSize(self.width - textInset - insets.left - insets.right - inset.left - inset.right - addition - textAdditionInset, 20)
+            let textSize = NSMakeSize(self.width - textInset(false) - insets.left - insets.right - inset.left - inset.right - addition - additionStatus - textAdditionInset, 20)
             if let titleAttr = titleAttr {
                 title = TextNode.layoutText(maybeNode: nil,  titleAttr, nil, 1, .end, textSize, nil, false, .left)
                 titleSelected = TextNode.layoutText(maybeNode: nil, titleAttr, nil, 1, .end, textSize, nil,true, .left)

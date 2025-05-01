@@ -160,7 +160,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -d \"$PROJECT_DIR/build\" ]; then\nsh $PROJECT_DIR/webrtc/build.sh $PROJECT_DIR/../../submodules/tg_owt/  $PROJECT_DIR/../openssl/build/openssl/include $PROJECT_DIR/../Mozjpeg/build $PROJECT_DIR/../libopus/build/libopus/include/opus $PROJECT_DIR/../ffmpeg/build/ffmpeg/include $PROJECT_DIR/../libvpx/build/libvpx/include\nfi\n";
+			shellScript = "#!/bin/sh\n\n# Check if the build directory exists; if not, execute the build script\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n    sh $PROJECT_DIR/webrtc/build.sh \\\n    $PROJECT_DIR/../../submodules/tg_owt/ \\\n    $PROJECT_DIR/../openssl/build/openssl/include \\\n    $PROJECT_DIR/../Mozjpeg/build \\\n    $PROJECT_DIR/../libopus/build/libopus/include/opus \\\n    $PROJECT_DIR/../ffmpeg/build/ffmpeg/include \\\n    $PROJECT_DIR/../libvpx/build/libvpx/include \\\n    $PROJECT_DIR/../OpenH264/build/output/include/include\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

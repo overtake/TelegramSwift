@@ -141,6 +141,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 
                 var signals:[Signal<Bool, NoError>] = []
                 
+                
                 appDelegate?.enumerateAccountContexts({ context in
                     closeAllModals(window: context.window)
                     _ = context.sharedContext.getAudioPlayer()?.pause()
@@ -428,7 +429,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let threadData = source.threadData {
                                 photos.append(peerAvatarImage(account: account, photo: .topic(threadData.info, message.threadId == 1), genCap: false) |> map { data in return (message.id, data.0)})
                             } else {
-                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
+                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message, nil), genCap: false) |> map { data in return (message.id, data.0)})
                             }
                         }
                     }
@@ -540,6 +541,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                                     let file = file ?? message.associatedMedia[mediaId] as? TelegramMediaFile
                                     reactionText = (file?.customEmojiText ?? file?.stickerText ?? "").normalizedEmoji
+                                case .stars:
+                                    reactionText = "⭐️"
                                 }
                                 
                                 let msg = pullText(from: message).string as String

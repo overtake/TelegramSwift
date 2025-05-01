@@ -33,6 +33,7 @@ enum InputContextEntry : Comparable, Identifiable {
     case inlineRestricted(String)
     case separator(String, Int64, Int64, CGFloat?)
     case setupQuickReplies
+    case quickSearchHashtag(String, Int64, EnginePeer?)
     var stableId: Int64 {
         switch self {
         case .switchPeer:
@@ -65,6 +66,12 @@ enum InputContextEntry : Comparable, Identifiable {
             return -1000
         case let .separator(_, _, stableId, _):
             return stableId
+        case let .quickSearchHashtag(_, _, peer):
+            if let peer {
+                return peer.id.toInt64()
+            } else {
+                return -2000
+            }
         }
     }
     
@@ -100,6 +107,8 @@ enum InputContextEntry : Comparable, Identifiable {
             return index
         case let .separator(_, index, _, _):
             return index
+        case let .quickSearchHashtag(_, index, _):
+            return index
         }
     }
 }
@@ -122,7 +131,7 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
         } else {
             return false
         }
-    case let .setupQuickReplies:
+    case .setupQuickReplies:
         if case .setupQuickReplies = rhs {
             return true
         } else {
@@ -188,8 +197,15 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
     case let .separator(value1, value2, value3, value4):
         if case .separator(value1, value2, value3, value4) = rhs {
             return true
+        } else {
+            return false
         }
-        return false
+    case let .quickSearchHashtag(hashtag, index, peer):
+        if case .quickSearchHashtag(hashtag, index, peer) = rhs {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
@@ -237,7 +253,7 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case let .emoji(clues, animated, selected, firstWord, _):
             return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, animated: animated, selected: selected, canDisablePrediction: firstWord, presentation: getPresentation?())
         case let .hashtag(hashtag, _):
-            return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)")
+            return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)", context: context, peer: nil)
         case let .shortcut(shortcut, query, _):
             return QuickReplyRowItem(initialSize, stableId: entry.stableId, reply: shortcut, context: context, editing: false, viewType: .legacy, open: { reply in
             }, editName: { reply in
@@ -262,6 +278,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             } else {
                 return SeparatorRowItem(initialSize, entry.stableId, string: string)
             }
+        case let .quickSearchHashtag(hashtag, _, peer):
+            return ContextSearchQuickHashtagItem(initialSize, stableId: entry.stableId, hashtag: hashtag, peer: peer, context: context)
         }
         
     })
@@ -497,7 +515,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 } else {
                     chatInteraction.sendCommand(selectedItem.command)
                 }
-            } else if let selectedItem = selectedItem as? ContextClueRowItem {
+            } else if let selectedItem = selectedItem as? ContextClueRowItem, selectedItem.selectedIndex != -1 {
                 let sources:[ContextClueRowItem.Source] = selectedItem.sources
                 let clue = selectedItem.selectedIndex != nil ? sources[selectedItem.selectedIndex!] : nil
                 
@@ -544,6 +562,20 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             } else if let selectedItem = selectedItem as? QuickReplyRowItem {
                 chatInteraction.sendMessageShortcut(selectedItem.reply)
                 chatInteraction.clearInput()
+            } else if let selectedItem = selectedItem as? ContextSearchQuickHashtagItem {
+                let textInputState = chatInteraction.presentation.effectiveInput
+                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
+                    let inputText = textInputState.inputText
+                    
+                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
+                    let replacementText = selectedItem.hashtag + " "
+                    
+                    let atLength = 1
+                    _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                }
+                if selectedItem.peer != nil {
+                    FastSettings.hasHashtagChannelBadge = true
+                }
             }
             return .invoked
         }
@@ -1041,12 +1073,23 @@ class InputContextHelper: NSObject {
                         entries.append(.command(commands[i], index, Int64(arc4random()) | ((Int64(commands.count) << 40))))
                         index += 1
                     }
-                case .hashtags(let hashtags):
+                case let .hashtags(query, hashtags, peer):
+                    
                     var index:Int64 = 2000
+
+                    if let peer = peer?._asPeer() as? TelegramChannel, query.length >= 4, peer.addressName != nil {
+                        entries.append(.quickSearchHashtag(query, 0, nil))
+                        index += 1
+                        
+                        entries.append(.quickSearchHashtag(query, 1, .init(peer)))
+                        index += 1
+                    }
+                    
                     for i in 0 ..< hashtags.count {
                         entries.append(.hashtag(hashtags[i], index))
                         index += 1
                     }
+                    
                 case let .shortcut(shortcuts, query):
                     if !shortcuts.isEmpty {
                         entries.append(.setupQuickReplies)
@@ -1075,7 +1118,7 @@ class InputContextHelper: NSObject {
                     var index:Int32 = 0
                     let count = clues.count + animated.count
                     if count > 0 {
-                        entries.append(.emoji(clues, animated, nil, firstWord, index))
+                        entries.append(.emoji(clues, FastSettings.suggestSwapEmoji ? animated : [], nil, firstWord, index))
                         index += 1
                     }
                    

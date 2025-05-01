@@ -80,13 +80,13 @@ final class CalendarMonthStruct {
         self.prevMonth = CalendarUtils.stepMonth(-1, date: month)
         self.nextMonth = CalendarUtils.stepMonth(1, date: month)
         self.lastDayOfMonth = CalendarUtils.lastDay(ofTheMonth: month)
-        self.lastDayOfPrevMonth = CalendarUtils.lastDay(ofTheMonth: month)
-        self.lastDayOfNextMonth = CalendarUtils.lastDay(ofTheMonth: month)
+        self.lastDayOfPrevMonth = CalendarUtils.lastDay(ofTheMonth: prevMonth)
+        self.lastDayOfNextMonth = CalendarUtils.lastDay(ofTheMonth: nextMonth)
         self.mode = mode
         self.dayPreview = dayPreview
         
         
-        var calendar = NSCalendar.current
+        let calendar = NSCalendar.current
         
 //        calendar.timeZone = TimeZone(abbreviation: "UTC")!
         let components = calendar.dateComponents([.year, .month, .day], from: month)

@@ -65,8 +65,13 @@ class SharedWakeupManager {
     init(sharedContext: SharedAccountContext, inForeground: Signal<Bool, NoError>) {
         self.sharedContext = sharedContext
         
+        
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.willSleepNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveSleepNote(_:)), name: NSWorkspace.didWakeNotification, object: nil)
+
+        
          NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
-        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidSleepNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveSleepNote(_:)), name: NSWorkspace.screensDidSleepNotification, object: nil)
 
         
         _ = (inForeground |> deliverOnMainQueue).start(next: { value in
@@ -100,12 +105,20 @@ class SharedWakeupManager {
     }
     
     @objc func receiveSleepNote(_ notification: Notification) {
+        if !self.isSleeping {
+            for (account, _, _) in self.accountsAndTasks {
+               account.shouldBeServiceTaskMaster.set(.single(.never))
+            }
+        }
         self.isSleeping = true
+        
     }
     
     @objc func receiveWakeNote(_ notificaiton:Notification) {
-         for (account, _, _) in self.accountsAndTasks {
-            account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.always)))
+        if self.isSleeping {
+            for (account, _, _) in self.accountsAndTasks {
+               account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.always)))
+            }
         }
         self.isSleeping = false
     }
@@ -136,8 +149,20 @@ class SharedWakeupManager {
                     if self.sharedContext.hasActiveCall {
                         account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
                     } else {
-                        if let accountContext = appDelegate?.activeContext(for: account.id) {
-                            showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
+                        
+                        var otherParticipants: [EnginePeer] = state.otherParticipants
+                        
+                        #if DEBUG
+                        let fake = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
+                        
+                        otherParticipants = [.init(fake)]
+                        
+                        #endif
+                        
+                        
+                        if let accountContext = appDelegate?.activeContext(for: account.id), state.peerId != account.peerId {
+                            showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, incomingConferenceSource: state.conferenceSource, incomingParticipants: otherParticipants, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
+                            
                         }
                     }
                 })

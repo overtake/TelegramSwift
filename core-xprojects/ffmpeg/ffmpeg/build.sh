@@ -27,8 +27,9 @@ mkdir -p $BUILD_DIR || true
 
 LIBOPUS_PATH="${BUILD_DIR}../../libopus/build/libopus"
 LIBVPX_PATH="${BUILD_DIR}../../libvpx/build/libvpx"
+LIBDAV1D_PATH="${BUILD_DIR}../../dav1d/build/dav1d"
 
-FF_VERSION="4.1"
+FF_VERSION="7.1"
 SOURCE="$SOURCE_DIR/ffmpeg-$FF_VERSION"
 
 GAS_PREPROCESSOR_PATH="$SOURCE_DIR/gas-preprocessor.pl"
@@ -42,7 +43,7 @@ LIB_NAMES="libavcodec libavformat libavutil libswresample"
 
 
 CONFIGURE_FLAGS="--enable-cross-compile --disable-programs \
-				 --disable-armv5te --disable-armv6 --disable-armv6t2 \
+                 --disable-armv5te --disable-armv6 --disable-armv6t2 \
                  --disable-doc --enable-pic --disable-all --disable-everything \
                  --enable-avcodec  \
                  --enable-swresample \
@@ -50,16 +51,19 @@ CONFIGURE_FLAGS="--enable-cross-compile --disable-programs \
                  --disable-xlib \
                  --enable-libopus \
                  --enable-libvpx \
+                 --enable-libdav1d \
                  --enable-audiotoolbox \
-                 --enable-bsf=aac_adtstoasc \
-                 --enable-decoder=h264,libvpx_vp9,hevc,libopus,mp3,aac,flac,alac,pcm_s16le,pcm_s24le,gsm_ms \
-                 --enable-demuxer=aac,mov,m4v,mp3,ogg,libopus,flac,wav,aiff,matroska \
+                 --enable-bsf=aac_adtstoasc,vp9_superframe,h264_mp4toannexb \
+                 --enable-decoder=h264,libvpx_vp9,hevc,libopus,mp3,aac,flac,alac_at,pcm_s16le,pcm_s24le,pcm_f32le,gsm_ms_at,vorbis,libdav1d \
+                 --enable-encoder=libvpx_vp9,aac_at \
+                 --enable-demuxer=aac,mov,m4v,mp3,ogg,libopus,flac,wav,aiff,matroska,mpegts \
                  --enable-parser=aac,h264,mp3,libopus \
                  --enable-protocol=file \
-                 --enable-muxer=mp4 \
+                 --enable-muxer=mp4,matroska,mpegts \
+                 --enable-hwaccel=h264_videotoolbox,hevc_videotoolbox,av1_videotoolbox \
                  "
 
-
+EXTRA_CFLAGS="-DCONFIG_SAFE_BITSTREAM_READER=1"
 CONFIGURE_FLAGS="$CONFIGURE_FLAGS --disable-debug"
 
 COMPILE="y"
@@ -98,7 +102,7 @@ then
 
 		
 
-		CFLAGS="-arch $ARCH"
+        CFLAGS="$EXTRA_CFLAGS -arch $ARCH"
 		if [ "$ARCH" = "x86_64" ]
 		then
 		    PLATFORM="MacOSX"
@@ -146,7 +150,7 @@ then
 			    --extra-ldflags="$LDFLAGS" \
 			    --prefix="$THIN/$ARCH" \
 			    --pkg-config="$PKG_CONFIG" \
-			    --pkg-config-flags="--libopus_path $LIBOPUS_PATH --libvpx_path $LIBVPX_PATH" \
+                --pkg-config-flags="--libopus_path $LIBOPUS_PATH --libvpx_path $LIBVPX_PATH --libdav1d_path $LIBDAV1D_PATH" \
 			|| exit 1
 			echo "$CONFIGURE_FLAGS" > "$CONFIGURED_MARKER"
 		fi

@@ -301,7 +301,7 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
             
             let url = inApp(for: internalUrl as NSString, context: self.context, peerId: nil, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch url {
-            case let .followResolvedName(_, username, messageId, context, _, _):
+            case let .followResolvedName(_, username, messageId, _, context, _, _):
                 if let messageId = messageId {
                     let signal = downloadAppUpdate(account: context.account, source: username, messageId: messageId) |> deliverOnMainQueue
                     disposable.set(signal.start(next: { [weak self] result in

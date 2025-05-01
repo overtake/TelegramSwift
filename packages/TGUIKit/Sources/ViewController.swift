@@ -232,10 +232,10 @@ open class BackgroundView: View {
                     var shouldTile = false
                     if let colors = colors, !colors.isEmpty {
                         
-                        shouldTile = true
+                        shouldTile = colors.count > 1
                         let intense = Float((abs(intensity ?? 50))) / 100.0
                         
-                        let invertPattern = presentation.colors.isDark && checkDarkPattern
+                        let invertPattern = presentation.colors.isDark && checkDarkPattern || colors.count == 1
                         if invertPattern {
                             self.imageView.compositingFilter = nil
                             imageView.opacity = 1.0
@@ -501,7 +501,8 @@ open class ViewController : NSObject {
         }
     }
     
-    
+    public var _window: Window?
+
     
     fileprivate var _view:NSView?
     public var _frameRect:NSRect
@@ -558,6 +559,11 @@ open class ViewController : NSObject {
     
     public let isKeyWindow:Promise<Bool> = Promise(false)
     
+    private let _viewOnState: ValuePromise<Bool> = .init(false, ignoreRepeated: true)
+    public var viewOnStage: Signal<Bool, NoError> {
+        return _viewOnState.get()
+    }
+    
     open var view:NSView {
         get {
             if(_view == nil) {
@@ -590,12 +596,19 @@ open class ViewController : NSObject {
         return true
     }
     
+    open func menuItems() -> [ContextMenuItem] {
+        return []
+    }
     open var isOnScreen: Bool {
         return self.navigationController?.controller == self && !hasModals()
     }
     
     open func executeReturn() -> Void {
         self.navigationController?.back()
+    }
+    
+    open func measure(size:NSSize) {
+        
     }
     
     open func updateNavigation(_ navigation:NavigationViewController?) {
@@ -652,8 +665,7 @@ open class ViewController : NSObject {
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
             
-            let vz = viewClass() as! NSView.Type
-            _view = vz.init(frame: _frameRect);
+            _view = defaultInitializer();
             _view?.autoresizingMask = [.width,.height]
             
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
@@ -661,6 +673,11 @@ open class ViewController : NSObject {
             _ = atomicSize.swap(_view!.frame.size)
             viewDidLoad()
         }
+    }
+    
+    open func defaultInitializer() -> NSView {
+        let vz = viewClass() as! NSView.Type
+        return vz.init(frame: _frameRect)
     }
     
     open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
@@ -805,7 +822,7 @@ open class ViewController : NSObject {
     
     
     open func viewWillAppear(_ animated:Bool) -> Void {
-        
+        _viewOnState.set(true)
     }
     
     open func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
@@ -850,6 +867,7 @@ open class ViewController : NSObject {
         NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.removeObserver(self, name: NSWindow.didResignKeyNotification, object: window)
         isKeyWindow.set(.single(false))
+        _viewOnState.set(false)
     }
     
     public func isLoaded() -> Bool {
@@ -931,7 +949,7 @@ open class ViewController : NSObject {
     
     open func backKeyAction() -> KeyHandlerResult {
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift), let textView = window?.firstResponder as? TextView, let layout = textView.textLayout, layout.selectedRange.range.max != 0 {
-            _ = layout.selectPrevChar()
+            layout.selectPrevChar()
             textView.needsDisplay = true
             return .invoked
         }
@@ -940,7 +958,7 @@ open class ViewController : NSObject {
     
     open func nextKeyAction() -> KeyHandlerResult {
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift), let textView = window?.firstResponder as? TextView, let layout = textView.textLayout, layout.selectedRange.range.max != 0 {
-            _ = layout.selectNextChar()
+            layout.selectNextChar()
             textView.needsDisplay = true
             return .invoked
         }
@@ -969,7 +987,7 @@ open class ViewController : NSObject {
     }
     
     open var window:Window? {
-        return _view?.window as? Window
+        return _window ?? _view?.window as? Window
     }
     
     open func firstResponder() -> NSResponder? {
@@ -1152,8 +1170,10 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let activeBackground: NSColor
         let activeBorder: NSColor
         let listBackground: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground) {
+        let hideUnactiveText: Bool
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground, hideUnactiveText: Bool = false) {
             self.text = text
+            self.hideUnactiveText = hideUnactiveText
             self.grayText = grayText
             self.background = background
             self.border = border
@@ -1173,8 +1193,10 @@ open class ModalViewController : ViewController, ModalControllerHelper {
             self.activeBackground = presentation.colors.background
             self.activeBorder = presentation.colors.border
             self.listBackground = presentation.colors.listBackground
+            self.hideUnactiveText = false
         }
     }
+    
     
     open var modalTheme:Theme {
         return Theme()
@@ -1247,9 +1269,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         return true
     }
     
-    open func measure(size:NSSize) {
-        
-    }
+ 
     
     open var modalInteractions:ModalInteractions? {
         return nil

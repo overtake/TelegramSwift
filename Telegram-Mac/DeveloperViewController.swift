@@ -330,8 +330,9 @@ class DeveloperViewController: TableViewController {
         }, navigateToLogs: {
             NSWorkspace.shared.activateFileViewerSelecting([ApiEnvironment.containerURL!.appendingPathComponent("logs")])
         }, addAccount: {
-            let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
-            context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
+            verifyAlert(for: context.window, header: "Add Account", information: nil, ok: "Add", option: "Test Environment", optionIsSelected: false, successHandler: { result in
+                context.sharedContext.beginNewAuth(testingEnvironment: result == .thrid)
+            })
         }, toggleMenu: { value in
             _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.withUpdatedLegacyMenu(value)

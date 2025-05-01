@@ -115,7 +115,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
             
             var string:String = strings().peerStatusRecently
             
-            if case let .member(_, _, _, banInfo, _) = participant.participant {
+            if case let .member(_, _, _, banInfo, _, _) = participant.participant {
                 if let banInfo = banInfo, let peer = participant.peers[banInfo.restrictedBy] {
                     if banInfo.rights.flags.contains(.banReadMessages) {
                         string = strings().channelBlacklistBlockedBy(peer.displayTitle)
@@ -342,7 +342,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {
-                        if case let .member(_, _, adminInfo, _, _) = participant.participant {
+                        if case let .member(_, _, adminInfo, _, _, _) = participant.participant {
                             if let adminInfo = adminInfo {
                                 if !adminInfo.canBeEditedByAccountPeer && adminInfo.promotedBy != context.account.peerId {
                                     adminError = true

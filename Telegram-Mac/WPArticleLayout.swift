@@ -67,6 +67,8 @@ class WPArticleLayout: WPLayout {
                     break
                 case .unsupported:
                     break
+                case .starGift:
+                    break
                 }
             }
             
@@ -133,6 +135,8 @@ class WPArticleLayout: WPLayout {
             switch attr {
             case .stickerPack:
                 imageSize = NSMakeSize(50, 50)
+            case .starGift:
+                imageSize = NSMakeSize(70, 70)
             default:
                 break
             }
@@ -201,6 +205,10 @@ class WPArticleLayout: WPLayout {
 //        if let value = content.isMediaLargeByDefault {
 //            return value
 //        }
+        
+        if content.type == "telegram_ad" {
+            return content.isMediaLargeByDefault ?? false
+        }
         
         if content.type == "telegram_background" || content.type == "telegram_theme" {
             return true

@@ -300,13 +300,17 @@ struct InputDataGeneralTextRightData : Equatable {
     let alignToText: Bool
     let wrap: NSColor?
     private let update: UInt32?
-    init(isLoading: Bool, text: NSAttributedString?, action:(()->Void)? = nil, update: UInt32? = nil, alignToText: Bool = false, wrap: NSColor? = nil) {
+    let contextMenu:(()->[ContextMenuItem])?
+    let afterImage: CGImage?
+    init(isLoading: Bool, text: NSAttributedString?, action:(()->Void)? = nil, update: UInt32? = nil, alignToText: Bool = false, wrap: NSColor? = nil, contextMenu:(()->[ContextMenuItem])? = nil, afterImage: CGImage? = nil) {
         self.isLoading = isLoading
         self.text = text
         self.alignToText = alignToText
         self.wrap = wrap
         self.action = action
         self.update = update
+        self.contextMenu = contextMenu
+        self.afterImage = afterImage
     }
 }
 
@@ -323,7 +327,8 @@ final class InputDataGeneralTextData : Equatable {
     let alignment: NSTextAlignment
     let linkColor: NSColor
     let context: AccountContext?
-    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 20, right: 20, top:4, bottom:2), centerViewAlignment: Bool = false, alignment: NSTextAlignment = .left, linkColor: NSColor = theme.colors.link, context: AccountContext? = nil) {
+    let linkExecutor: TextViewInteractions
+    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 20, right: 20, top:4, bottom:2), centerViewAlignment: Bool = false, alignment: NSTextAlignment = .left, linkColor: NSColor = theme.colors.link, context: AccountContext? = nil, linkExecutor: TextViewInteractions = globalLinkExecutor) {
         self.color = color
         self.detectBold = detectBold
         self.viewType = viewType
@@ -336,6 +341,7 @@ final class InputDataGeneralTextData : Equatable {
         self.centerViewAlignment = centerViewAlignment
         self.linkColor = linkColor
         self.context = context
+        self.linkExecutor = linkExecutor
     }
     static func ==(lhs: InputDataGeneralTextData, rhs: InputDataGeneralTextData) -> Bool {
         return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.fontSize == rhs.fontSize && lhs.clickable == rhs.clickable && lhs.inset == rhs.inset && lhs.centerViewAlignment == rhs.centerViewAlignment && lhs.alignment == rhs.alignment && lhs.linkColor == rhs.linkColor
@@ -500,7 +506,7 @@ enum InputDataEntry : Identifiable, Comparable {
             }
             return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
         case let .desc(_, _, text, data):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, linkColor: data.linkColor, alignment: data.alignment, inset: data.inset, centerViewAlignment: data.centerViewAlignment, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize, contextMenu: data.contextMenu, clickable: data.clickable, context: data.context)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, linkColor: data.linkColor, alignment: data.alignment, inset: data.inset, centerViewAlignment: data.centerViewAlignment, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize, contextMenu: data.contextMenu, clickable: data.clickable, context: data.context, linkExecutor: data.linkExecutor)
         case let .custom(_, _, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, viewType, values):
@@ -524,7 +530,7 @@ enum InputDataEntry : Identifiable, Comparable {
                 update(state)
             }, { state in
                 update(state)
-            }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
+            }), inset: NSEdgeInsets(left: 10,right: 10))
         }
     }
 }

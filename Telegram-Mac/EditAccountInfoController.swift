@@ -310,7 +310,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: strings().editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(username), viewType: .firstItem, action: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .innerItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(context: arguments.context, number: state.phone!) : ""), viewType: .innerItem, action: nil)))
     index += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: theme.colors.text, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: state.peer, context: arguments.context), ""), viewType: .innerItem, action: arguments.userNameColor)))
@@ -418,7 +418,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             putToTemp(image: $0, compress: true)
         } |> deliverOnMainQueue
         _ = signal.start(next: { path in
-            let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
+            let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true))
             showModal(with: controller, for: context.window, animationType: .scaleCenter)
             
             let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in

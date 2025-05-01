@@ -283,6 +283,9 @@ private final class AudioPlayerRendererContext {
         }
     }
     
+
+
+    
     fileprivate func flushBuffers(at timestamp: CMTime, completion: () -> Void) {
         assert(audioPlayerRendererQueue.isCurrent())
         
@@ -828,6 +831,8 @@ final class MediaPlayerAudioRenderer {
             }
         }
     }
+    
+    
     
     func flushBuffers(at timestamp: CMTime, completion: @escaping () -> Void) {
         audioPlayerRendererQueue.async {

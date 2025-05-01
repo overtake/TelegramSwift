@@ -13,6 +13,51 @@ import ColorPalette
 import RangeSet
 import TelegramMedia
 import TelegramMediaPlayer
+import TelegramCore
+
+private func selectBestQualityIcon(for quality: UniversalVideoContentVideoQuality) -> NSImage {
+    
+    
+    enum VideoIcon: Int {
+        case auto = 0
+        case hd = 1
+        case sd = 2
+    }
+
+    let icons: [NSImage] = [
+        NSImage(resource: .iconVideoSettingsAuto),
+        NSImage(resource: .iconVideoSettingsHD),
+        NSImage(resource: .iconVideoSettingsSD)
+    ]
+    
+    switch quality {
+    case .auto:
+        return icons[VideoIcon.auto.rawValue]
+    case let .quality(size):
+        let quality = roundToStandardQuality(size: size)
+        if quality >= 720 {
+            return icons[VideoIcon.hd.rawValue]
+        } else {
+            return icons[VideoIcon.sd.rawValue]
+        }
+    }
+    
+}
+
+func roundToStandardQuality(size: Int) -> Int {
+    // List of standard video qualities
+    let standardQualities = [360, 480, 720, 1080, 1440, 2160]
+    
+    // Find the closest value using `min` and a closure to calculate the absolute difference
+    guard let closestQuality = standardQualities.min(by: { abs($0 - size) < abs($1 - size) }) else {
+        return size // Return the original size if no standard qualities are found
+    }
+    
+    return closestQuality
+}
+
+
+
 
 private final class SVideoPipControls : Control {
     
@@ -304,6 +349,15 @@ final class SVideoInteractions {
 
 private final class SVideoControlsView : Control {
     
+    fileprivate weak var mediaPlayer: (UniversalVideoContentView & NSView)?
+    
+    var isControlsLimited: Bool = false {
+        didSet {
+            let controlStyle = self.controlStyle
+            self.controlStyle = controlStyle
+        }
+    }
+    
     var bufferingRanges:[Range<CGFloat>] = [] {
         didSet {
             progress.set(fetchingProgressRanges: bufferingRanges, animated: oldValue != bufferingRanges)
@@ -321,12 +375,16 @@ private final class SVideoControlsView : Control {
     
     var controlStyle: SVideoControlsStyle = .regular(pip: false, fullScreen: false, hideRewind: false) {
         didSet {
-            rewindBackward.isHidden = controlStyle.hideRewind
-            rewindForward.isHidden = controlStyle.hideRewind
+            rewindBackward.isHidden = controlStyle.hideRewind || isControlsLimited
+            rewindForward.isHidden = controlStyle.hideRewind || isControlsLimited
             volumeContainer.isHidden = controlStyle.isCompact
             togglePip.set(image: controlStyle.isPip ? theme.icons.videoPlayerPIPOut : theme.icons.videoPlayerPIPIn, for: .Normal)
             toggleFullscreen.set(image: controlStyle.isPip ? theme.icons.videoPlayerClose : controlStyle.isFullScreen ? theme.icons.videoPlayerExitFullScreen : theme.icons.videoPlayerEnterFullScreen, for: .Normal)
-            menuItems.isHidden = controlStyle.isPip
+            menuItems.isHidden = controlStyle.isPip || isControlsLimited || controlStyle.isCompact
+//            togglePip.isHidden = isControlsLimited || controlStyle.isCompact
+            toggleFullscreen.isHidden = isControlsLimited || controlStyle.isCompact
+            playOrPause.isHidden = isControlsLimited
+            volumeContainer.isHidden = isControlsLimited || controlStyle.isCompact
             layout()
         }
     }
@@ -453,6 +511,7 @@ private final class SVideoControlsView : Control {
         durationView.needsDisplay = true
         
         updateBaseRate()
+        
 
     }
     
@@ -654,9 +713,18 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
+        let image: CGImage
         
-        menuItems.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true), for: .Normal)
+        
+        if let mediaPlayer, let quality = mediaPlayer.videoQualityState(), !quality.available.isEmpty {
+            image = selectBestQualityIcon(for: quality.preferred).precomposed(.white)
+        } else {
+            image = optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true)
+        }
+        menuItems.set(image: image, for: .Normal)
         self.menuItems.sizeToFit()
+        
+        needsLayout = true
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -671,6 +739,7 @@ private final class SVideoControlsView : Control {
         
         rewindBackward.setFrameOrigin(playOrPause.frame.minX - rewindBackward.frame.width - 36, 16)
         rewindForward.setFrameOrigin(playOrPause.frame.maxX + 36, 16)
+        
         
         menuItems.setFrameOrigin(NSMakePoint(frame.width - menuItems.frame.width - 16, 16))
 
@@ -708,6 +777,11 @@ private final class SVideoControlsView : Control {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 
@@ -819,17 +893,24 @@ class SVideoView: NSView {
   
     private let controls: SVideoControlsView = SVideoControlsView(frame: NSZeroRect)
     private var pipControls: SVideoPipControls?
+    var isControlsLimited: Bool = false {
+        didSet {
+            controls.isControlsLimited = isControlsLimited
+        }
+    }
 
-    let mediaPlayer: MediaPlayerView = MediaPlayerView()
+    let mediaPlayer: (NSView & UniversalVideoContentView)
+    
     private let backgroundView: NSView = NSView()
+    
     override func layout() {
         super.layout()
         let oldSize = mediaPlayer.frame.size
         mediaPlayer.frame = bounds
-        mediaPlayer.updateLayout()
+        mediaPlayer.updateLayout(size: bounds.size, transition: .immediate)
         let previousIsCompact: Bool = self.controlsStyle.isCompact
         self.controlsStyle = self.controlsStyle.withUpdatedStyle(compact: frame.width < 300).withUpdatedHideRewind(hideRewind: frame.width < 400)
-        controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), 94)
+        controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), self.isControlsLimited ? 46 : 94)
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus
         if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact || oldSize != frame.size {
@@ -967,6 +1048,9 @@ class SVideoView: NSView {
         
     }
     
+    override init(frame frameRect: NSRect) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -983,7 +1067,9 @@ class SVideoView: NSView {
         controls.rewindForward.send(event: .Click)
     }
     
-    required override init(frame frameRect: NSRect) {
+    init(frame frameRect: NSRect, mediaPlayer: (NSView & UniversalVideoContentView)) {
+        self.mediaPlayer = mediaPlayer
+        self.controls.mediaPlayer = mediaPlayer
         super.init(frame: frameRect)
         addSubview(backgroundView)
         addSubview(mediaPlayer)
@@ -1096,6 +1182,24 @@ class SVideoView: NSView {
                     self?.controls.updateBaseRate()
                 }, itemImage: MenuAnimation.menu_reset.value))
             }
+            
+            menu.addItem(ContextSeparatorItem())
+
+            
+            if let mediaPlayer = self?.mediaPlayer, let quality = mediaPlayer.videoQualityState() {
+                menu.addItem(ContextMenuItem(strings().videoQualityAuto, handler: { [weak mediaPlayer] in
+                    FastSettings.videoQuality = .auto
+                    mediaPlayer?.setVideoQuality(.auto)
+                }, state: quality.preferred == .auto ? .on : nil))
+                
+                for value in quality.available {
+                    menu.addItem(ContextMenuItem("\(roundToStandardQuality(size: value))p", handler: { [weak mediaPlayer] in
+                        FastSettings.videoQuality = .quality(value)
+                        mediaPlayer?.setVideoQuality(.quality(value))
+                    }, state: quality.preferred == .quality(value) ? .on : nil))
+                }
+            }
+
             
             menu.appearance = darkPalette.appearance
             return menu

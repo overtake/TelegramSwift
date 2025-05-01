@@ -164,6 +164,8 @@ public struct OngoingCallContextState: Equatable {
 }
 
 final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueueWebrtc {
+    
+    
     private let queue: Queue
     
     init(queue: Queue) {
@@ -184,6 +186,17 @@ final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadL
     
     func isCurrent() -> Bool {
         return self.queue.isCurrent()
+    }
+    
+    func scheduleBlock(_ f: @escaping () -> Void, after timeout: Double) -> GroupCallDisposable {
+        let timer = SwiftSignalKit.Timer(timeout: timeout, repeat: false, completion: {
+            f()
+        }, queue: self.queue)
+        timer.start()
+        
+        return GroupCallDisposable(block: {
+            timer.invalidate()
+        })
     }
 }
 
@@ -304,6 +317,7 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
     func nativeGetDerivedState() -> Data {
         return self.getDerivedState()
     }
+    
 }
 
 

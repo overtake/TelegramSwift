@@ -21,6 +21,8 @@ import Localization
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
     func remove(animated: Bool)
+    
+    func measure(_ width: CGFloat)
 }
 
 struct EmojiTag : Equatable {
@@ -42,6 +44,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         case promo(EngineChatList.AdditionalItem.PromoInfo.Content)
         case pendingRequests(Int, [PeerInvitationImportersState.Importer])
         case restartTopic
+        case removePaidMessages(Peer, StarsAmount)
         
         static func ==(lhs:Value, rhs: Value) -> Bool {
             switch lhs {
@@ -89,14 +92,71 @@ struct ChatHeaderState : Identifiable, Equatable {
                 return 8
             case .restartTopic:
                 return 9
+            case .removePaidMessages:
+                return 10
             }
         }
-        
     }
+    
+    struct BotAdMessage : Equatable {
+        let header: TextViewLayout
+        let text: TextViewLayout
+        let dismissLayout: TextViewLayout
+        let adHeader: TextViewLayout
+        let message: Message
+        init(message: Message, chatInteraction: ChatInteraction) {
+            self.message = message
+            
+            let dismissLayout = TextViewLayout(.initialize(string: strings().chatAdWhatThis, color: theme.colors.accent, font: .normal(.small)), alignment: .center)
+            dismissLayout.measure(width: .greatestFiniteMagnitude)
+
+            self.dismissLayout = dismissLayout
+            
+            let context = chatInteraction.context
+            
+            adHeader = .init(.initialize(string: strings().chatBotAdAd, color: theme.colors.accent, font: .medium(.text)))
+            adHeader.measure(width: .greatestFiniteMagnitude)
+            
+            let headerAttr = NSMutableAttributedString()
+            
+            headerAttr.append(string: message.author?.displayTitle ?? "", color: theme.colors.text, font: .medium(.text))
+            
+            let headerLayout = TextViewLayout(headerAttr)
+            self.header = headerLayout
+            
+            let entities = message.entities
+            
+            let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: message.text, message: nil, context: context, fontSize: .text, openInfo: chatInteraction.openInfo, textColor: theme.colors.text, linkColor: theme.colors.link, isDark: theme.colors.isDark, bubbled: theme.bubbled, confirm: false).mutableCopy() as! NSMutableAttributedString
+            
+            InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
+            
+            let textLayout = TextViewLayout(attr)
+            
+            self.text = textLayout
+
+        }
+        
+        var height: CGFloat {
+            var height: CGFloat = 10
+            height += adHeader.layoutSize.height + 4
+            height += header.layoutSize.height
+            height += 4
+            height += text.layoutSize.height
+            height += 10
+            return height
+        }
+        
+        func measure(_ width: CGFloat) {
+            self.header.measure(width: width - 40 - 2 - dismissLayout.layoutSize.width - 8)
+            self.text.measure(width: width - 40)
+        }
+    }
+    
     var main: Value
     var voiceChat: ChatActiveGroupCallInfo?
     var translate: ChatPresentationInterfaceState.TranslateState?
     var botManager: ChatBotManagerData?
+    var botAd: BotAdMessage?
     
     var stableId:Int {
         return main.stableId
@@ -122,6 +182,8 @@ struct ChatHeaderState : Identifiable, Equatable {
             return ChatRequestChat.self
         case .restartTopic:
             return ChatRestartTopic.self
+        case .removePaidMessages:
+            return ChatRemovePaidMessage.self
         case .none:
             return nil
         }
@@ -134,6 +196,10 @@ struct ChatHeaderState : Identifiable, Equatable {
     }
     var fourthClass: AnyClass {
         return ChatBotManager.self
+    }
+    
+    var fifthClass: AnyClass {
+        return ChatAdHeaderView.self
     }
     
     var height:CGFloat {
@@ -169,6 +235,8 @@ struct ChatHeaderState : Identifiable, Equatable {
             height += 44
         case .restartTopic:
             height += 44
+        case .removePaidMessages:
+            height += 50
         }
         return height
     }
@@ -192,6 +260,9 @@ struct ChatHeaderState : Identifiable, Equatable {
         if let _ = botManager {
             height += 44
         }
+        if let botAd = botAd {
+            height += botAd.height
+        }
         return height
     }
     
@@ -203,6 +274,10 @@ struct ChatHeaderState : Identifiable, Equatable {
 //        default:
 //            return height
 //        }
+    }
+    
+    func measure(_ width: CGFloat) {
+        self.botAd?.measure(width)
     }
 }
 
@@ -224,11 +299,31 @@ class ChatHeaderController {
         return _headerState
     }
     
+    func measure(_ width: CGFloat) {
+        (self.primaryView as? ChatHeaderProtocol)?.measure(width)
+        (self.seconderyView as? ChatHeaderProtocol)?.measure(width)
+        (self.thirdView as? ChatHeaderProtocol)?.measure(width)
+        (self.fourthView as? ChatHeaderProtocol)?.measure(width)
+
+    }
+    
     func updateState(_ state:ChatHeaderState, animated:Bool, for view:View) -> Void {
         if _headerState != state {
             _headerState = state
+            
 
-            let (primary, secondary, third, fourth) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), thirdSize: NSMakeSize(view.frame.width, state.thirdHeight), fourthSize: NSMakeSize(view.frame.width, state.fourthHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView, t_v: self.thirdView, f_v: self.fourthView)
+            let (primary, secondary, third, fourth) = viewIfNecessary(
+                primarySize: NSMakeSize(view.frame.width, state.primaryHeight),
+                secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight),
+                thirdSize: NSMakeSize(view.frame.width, state.thirdHeight),
+                fourthSize: NSMakeSize(view.frame.width, state.fourthHeight),
+                animated: animated,
+                p_v: self.primaryView,
+                s_v: self.seconderyView,
+                t_v: self.thirdView,
+                f_v: self.fourthView
+            )
+            
 
             let previousPrimary = self.primaryView
             let previousSecondary = self.seconderyView
@@ -239,61 +334,69 @@ class ChatHeaderController {
             self.seconderyView = secondary
             self.thirdView = third
             self.fourthView = fourth
+            
+
 
             var removed: [View] = []
-            var added:[(View, NSPoint, NSPoint, View?)] = []
-            var updated:[(View, NSPoint, View?)] = []
+            var added: [(view: View, fromPosition: NSPoint, toPosition: NSPoint, aboveView: View?)] = []
+            var updated: [(view: View, position: NSPoint, aboveView: View?)] = []
 
-            if previousSecondary == nil || previousSecondary != secondary {
-                if let previousSecondary = previousSecondary {
-                    removed.append(previousSecondary)
-                }
-                if let secondary = secondary {
-                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight + state.fourthHeight), NSMakePoint(0, state.fourthHeight), fourth ?? previousSecondary))
-                }
-            }
+            // Define the views and their respective heights
+            var viewInfos: [(name: String, current: View?, previous: View?, height: CGFloat)] = []
             
-            if previousPrimary == nil || previousPrimary != primary {
-                if let previousPrimary = previousPrimary {
-                    removed.append(previousPrimary)
-                }
-                if let primary = primary {
-                    added.append((primary, NSMakePoint(0, state.secondaryHeight - state.primaryHeight - state.fourthHeight), NSMakePoint(0, state.secondaryHeight + state.fourthHeight), fourth ?? secondary ?? previousPrimary))
-                }
-            }
+            viewInfos.append(("secondary", secondary, previousSecondary, state.secondaryHeight))
+            viewInfos.append(("primary", primary, previousPrimary, state.primaryHeight))
+            viewInfos.append(("third", third, previousThird, state.thirdHeight))
+
             
-            if previousFourth == nil || previousFourth != fourth {
-                if let previousFourth = previousFourth {
-                    removed.append(previousFourth)
-                }
-                if let fourth = fourth {
-                    added.append((fourth, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), previousFourth))
-                }
+            if let fourth, fourth.isKind(of: state.fifthClass) {
+                viewInfos.append(("fourth", fourth, previousFourth, state.fourthHeight))
+            } else {
+                viewInfos.insert(("fourth", fourth, previousFourth, state.fourthHeight), at: 0)
             }
-            
-            if previousThird == nil || previousThird != third {
-                if let previousThird = previousThird {
-                    removed.append(previousThird)
-                }
-                if let third = third {
-                    added.append((third, NSMakePoint(0, (state.primaryHeight + state.secondaryHeight + state.fourthHeight) - state.fourthHeight), NSMakePoint(0, state.primaryHeight + state.secondaryHeight + state.fourthHeight), fourth ?? primary ?? secondary ?? previousThird))
+
+            var cumulativeY: CGFloat = 0
+            var positions: [String: NSPoint] = [:]
+            for info in viewInfos {
+                positions[info.name] = NSMakePoint(0, cumulativeY)
+                if info.current != nil {
+                    cumulativeY += info.height
                 }
             }
 
-            if let fourth = fourth, previousFourth == fourth {
-                updated.append((fourth, NSMakePoint(0, 0), nil))
+            var cumulativeHeightsBelow: [String: CGFloat] = [:]
+            var cumulativeHeightBelow: CGFloat = 0
+            for info in viewInfos.reversed() {
+                cumulativeHeightsBelow[info.name] = cumulativeHeightBelow
+                if info.current != nil {
+                    cumulativeHeightBelow += info.height
+                }
             }
-            
-            if let secondary = secondary, previousSecondary == secondary {
-                updated.append((secondary, NSMakePoint(0, state.fourthHeight), fourth))
+
+            var lastView: View? = nil
+            for info in viewInfos {
+                let (name, currentView, previousView, _) = info
+                let toPosition = positions[name]!
+                let aboveView = lastView
+
+                // Determine if the view was added, removed, or updated
+                if previousView == nil || previousView != currentView {
+                    if let previousView = previousView {
+                        removed.append(previousView)
+                    }
+                    if let currentView = currentView {
+                        // Adjust the fromPosition based on your animation requirements
+                        let fromPositionY = cumulativeHeightsBelow[name]! - state.secondaryHeight - currentView.frame.height
+                        let fromPosition = NSMakePoint(0, fromPositionY)
+                        added.append((view: currentView, fromPosition: fromPosition, toPosition: toPosition, aboveView: aboveView))
+                        lastView = currentView
+                    }
+                } else if let currentView = currentView {
+                    updated.append((view: currentView, position: toPosition, aboveView: aboveView))
+                    lastView = currentView
+                }
             }
-            if let primary = primary, previousPrimary == primary {
-                updated.append((primary, NSMakePoint(0, state.secondaryHeight + state.fourthHeight), fourth ?? secondary))
-            }
-            if let third = third, previousThird == third {
-                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight + state.fourthHeight), fourth ?? primary ?? secondary))
-            }
-           
+
             if !added.isEmpty || primary != nil || secondary != nil || third != nil || fourth != nil {
                 let current: View
                 if let view = currentView {
@@ -306,40 +409,54 @@ class ChatHeaderController {
                     view.addSubview(current)
                     self.currentView = current
                 }
-                
-                for (view, point, above) in updated {
-                    if let above = above {
-                        current.addSubview(view, positioned: .below, relativeTo: above)
+
+                for (view, position, aboveView) in updated {
+                    if let aboveView = aboveView {
+                        current.addSubview(view, positioned: .below, relativeTo: aboveView)
                     } else {
                         current.addSubview(view)
                     }
-                    view.change(pos: point, animated: animated)
+                    view.change(pos: position, animated: animated)
                 }
+
                 for view in removed {
                     if let view = view as? ChatHeaderProtocol {
                         view.remove(animated: animated)
                     }
                     if animated {
-                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                            view?.removeFromSuperview()
-                        })
+                        view.layer?.animatePosition(
+                            from: view.frame.origin,
+                            to: NSMakePoint(0, view.frame.minY - view.frame.height),
+                            duration: 0.2,
+                            removeOnCompletion: false,
+                            completion: { [weak view] _ in
+                                view?.removeFromSuperview()
+                            }
+                        )
                     } else {
                         view.removeFromSuperview()
                     }
                 }
-                for (view, from, to, above) in added {
-                    if let above = above {
-                        current.addSubview(view, positioned: .below, relativeTo: above)
+
+                for (view, fromPosition, toPosition, aboveView) in added {
+                    let justAdded = view.superview == nil
+                    if let aboveView = aboveView {
+                        current.addSubview(view, positioned: .below, relativeTo: aboveView)
                     } else {
                         current.addSubview(view)
                     }
-                    view.setFrameOrigin(to)
-                    
+                    view.setFrameOrigin(toPosition)
+
                     if animated {
-                        view.layer?.animatePosition(from: from, to: to, duration: 0.2)
-                      //  view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        view.layer?.animatePosition(from: fromPosition, to: toPosition, duration: 0.2)
+                        // Uncomment the following line if you need to animate alpha
+                        // view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    } else if justAdded, current.superview != nil {
+                        // view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
+            
+
                 
             } else {
                 if let currentView = currentView {
@@ -354,9 +471,9 @@ class ChatHeaderController {
                     }
                 }
             }
-            
-
         }
+        
+
     }
 
     func applySearchResponder() {
@@ -368,7 +485,7 @@ class ChatHeaderController {
         let primary:View?
         let secondary:View?
         let third: View?
-        let fourth: View?
+        var fourth: View?
 
         let primaryRect: NSRect = .init(origin: .zero, size: primarySize)
         let secondaryRect: NSRect = .init(origin: .zero, size: secondarySize)
@@ -395,6 +512,8 @@ class ChatHeaderController {
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .restartTopic:
                 primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
+            case .removePaidMessages:
+                primary = ChatRemovePaidMessage(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -439,11 +558,25 @@ class ChatHeaderController {
         } else {
             fourth = nil
         }
+        
+        if let _ = self._headerState.botAd {
+            if f_v == nil || f_v?.className != NSStringFromClass(_headerState.fifthClass) {
+                fourth = ChatAdHeaderView(chatInteraction, state: _headerState, frame: thirdRect)
+                fourth?.autoresizingMask = [.width]
+            } else {
+                fourth = f_v
+                (fourth as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
+            }
+        } else {
+            fourth = nil
+        }
+
 
         primary?.setFrameSize(primarySize)
         secondary?.setFrameSize(secondarySize)
         third?.setFrameSize(thirdSize)
         fourth?.setFrameSize(fourthSize)
+        
         return (primary: primary, secondary: secondary, third: third, fourth: fourth)
     }
     
@@ -509,6 +642,8 @@ private extension EngineChatList.AdditionalItem.PromoInfo.Content {
 
 
 private final class ChatSponsoredView : Control, ChatHeaderProtocol {
+    
+    
     private let chatInteraction:ChatInteraction
     private let container:ChatAccessoryView = ChatAccessoryView()
     private let dismiss:ImageButton = ImageButton()
@@ -565,6 +700,10 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
 
         update(with: state, animated: false)
 
+    }
+    
+    func measure(_ width: CGFloat) {
+        
     }
     
     func remove(animated: Bool) {
@@ -687,6 +826,10 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         addSubview(particleList)
 
         update(with: state, animated: false)
+    }
+    
+    func measure(_ width: CGFloat) {
+        
     }
     
     func remove(animated: Bool) {
@@ -933,6 +1076,10 @@ class ChatReportView : Control, ChatHeaderProtocol {
         self.backgroundColor = theme.colors.background
         needsLayout = true
     }
+    
+    func measure(_ width: CGFloat) {
+        
+    }
 
     func remove(animated: Bool) {
         
@@ -1075,6 +1222,10 @@ class ShareInfoView : Control, ChatHeaderProtocol {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    func measure(_ width: CGFloat) {
+        
+    }
+    
     func remove(animated: Bool) {
         
     }
@@ -1179,6 +1330,10 @@ class AddContactView : Control, ChatHeaderProtocol {
         
         self.backgroundColor = theme.colors.background
         needsLayout = true
+    }
+    
+    func measure(_ width: CGFloat) {
+        
     }
 
     func remove(animated: Bool) {
@@ -1426,6 +1581,10 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    func measure(_ width: CGFloat) {
+        
+    }
+    
     func remove(animated: Bool) {
         
     }
@@ -1454,7 +1613,9 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
             var index:Int = 0
             let participants = participants
             for participant in participants {
-                topPeers.append(Avatar(peer: participant.peer, index: index))
+                if let participantPeer = participant.peer {
+                    topPeers.append(Avatar(peer: participantPeer._asPeer(), index: index))
+                }
                 index += 1
             }
 
@@ -1748,6 +1909,10 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
 
     }
     
+    func measure(_ width: CGFloat) {
+        
+    }
+    
     func remove(animated: Bool) {
         
     }
@@ -1858,6 +2023,10 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
         
         update(with: state, animated: false)
 
+    }
+    
+    func measure(_ width: CGFloat) {
+        
     }
     
     func remove(animated: Bool) {
@@ -2013,6 +2182,10 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
         
         update(with: state, animated: false)
 
+    }
+    
+    func measure(_ width: CGFloat) {
+        
     }
     
     func remove(animated: Bool) {
@@ -2174,6 +2347,10 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         menu.items = items
         
         return menu
+        
+    }
+    
+    func measure(_ width: CGFloat) {
         
     }
     
@@ -2343,6 +2520,10 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
     }
     
+    func measure(_ width: CGFloat) {
+        
+    }
+    
     func remove(animated: Bool) {
         
     }
@@ -2352,7 +2533,7 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         if let data = state.botManager  {
             textView.update(TextViewLayout(.initialize(string: data.peer._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1))
             let status: String
-            if data.bot.canReply {
+            if data.bot.rights.contains(.readMessages) {
                 if data.settings.isPaused {
                     status = strings().chatBotManagerPaused
                 } else {
@@ -2361,7 +2542,7 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
             } else {
                 status = strings().chatBotManagerFullAccess
             }
-            stop.isHidden = !data.bot.canReply
+            stop.isHidden = false//!data.bot.canReply
             self.stop.set(text: data.settings.isPaused ? strings().chatBotManagerStart : strings().chatBotManagerStop, for: .Normal)
             infoView.update(TextViewLayout(.initialize(string: status, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
             self.avatar.setPeer(account: chatInteraction.context.account, peer: data.peer._asPeer())
@@ -2404,6 +2585,316 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
         
     }
     
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+
+
+private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private var botAd: ChatHeaderState.BotAdMessage?
+    private let header: TextView = TextView()
+    private let adHeaderView = TextView()
+    private let text = InteractiveTextView()
+    private let whatsThis = TextView()
+    private var dismiss: ImageButton?
+    private var state: ChatHeaderState
+    
+    private var imageView: ChatInteractiveContentView?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self.state = state
+        super.init(frame: frame)
+        
+        addSubview(adHeaderView)
+        addSubview(header)
+        addSubview(text)
+        
+        addSubview(whatsThis)
+        
+        whatsThis.scaleOnClick = true
+        whatsThis.isSelectable = false
+        
+        header.userInteractionEnabled = false
+        header.isSelectable = false
+        
+        text.userInteractionEnabled = false
+        
+        adHeaderView.userInteractionEnabled = false
+        adHeaderView.isSelectable = false
+        
+
+        self.set(handler: { [weak self] _ in
+            if let interactions = self?.chatInteraction, let adAttribute = self?.state.botAd?.message.adAttribute {
+                let context = interactions.context
+                let link: inAppLink = inApp(for: adAttribute.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+                execute(inapp: link)
+                interactions.markAdAction(adAttribute.opaqueId, adAttribute.hasContentMedia)
+            }
+        }, for: .Click)
+        
+        let menu:(Control)->Void = { [weak self] control in
+            if let message = self?.state.botAd?.message, let interactions = self?.chatInteraction {
+                let signal = chatMenuItems(for: message, entry: nil, textLayout: nil, chatInteraction: interactions) |> deliverOnMainQueue
+                if let event = NSApp.currentEvent {
+                    _ = signal.startStandalone(next: { items in
+                        let menu = ContextMenu()
+                        menu.items = items
+                        AppMenu.show(menu: menu, event: event, for: control)
+                    })
+                }
+            }
+        }
+        
+        whatsThis.set(handler: menu, for: .Click)
+        self.set(handler: menu, for: .RightDown)
+        
+        update(with: state, animated: false)
+
+    }
+    
+    func measure(_ width: CGFloat) {
+        self.state.botAd?.measure(width)
+        self.update(with: self.state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        
+        self.botAd = state.botAd
+        self.state = state
+
+        
+        guard let botAd = state.botAd else {
+            return
+        }
+        
+        adHeaderView.update(botAd.adHeader)
+                
+        let context = self.chatInteraction.context
+        
+        self.whatsThis.update(botAd.dismissLayout)
+        self.whatsThis.setFrameSize(NSMakeSize(botAd.dismissLayout.layoutSize.width + 8, botAd.dismissLayout.layoutSize.height + 4))
+        
+        self.whatsThis.layer?.cornerRadius = self.whatsThis.frame.height / 2
+        self.whatsThis.backgroundColor = theme.colors.accent.withAlphaComponent(0.2)
+        
+        self.header.update(botAd.header)
+        
+        self.text.set(text: botAd.text, context: context)
+        
+        
+        if let media = botAd.message.media.first {
+            let current: ChatInteractiveContentView
+            if let view = self.imageView {
+                current = view
+            } else {
+                current = ChatInteractiveContentView(frame: NSMakeRect(0, 0, 40, 40))
+                self.addSubview(current)
+                self.imageView = current
+            }
+            current.layer?.cornerRadius = 4
+            current.update(with: media, size: current.frame.size, context: self.chatInteraction.context, parent: botAd.message, table: nil, animated: false)
+        } else if let view = self.imageView {
+            performSubviewRemoval(view, animated: animated)
+            self.imageView = nil
+        }
+        
+        if botAd.message.media.first == nil {
+            let current: ImageButton
+            if let view = self.dismiss {
+                current = view
+            } else {
+                current = ImageButton()
+                self.dismiss = current
+                addSubview(current)
+                current.autohighlight = false
+                current.scaleOnClick = true
+            }
+            
+            current.set(image: NSImage(resource: .iconStoryClose).precomposed(theme.colors.grayIcon), for: .Normal)
+            current.setSingle(handler: { [weak self] _ in
+                if let interactions = self?.chatInteraction {
+                    let context = interactions.context
+                    if context.isPremium, let opaqueId = self?.botAd?.message.adAttribute?.opaqueId {
+                        _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+                        interactions.removeAd(opaqueId)
+                        showModalText(for: context.window, text: strings().chatDisableAdTooltip)
+                    } else {
+                        prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: context.window)
+                    }
+                }
+            }, for: .Click)
+            
+            current.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+        } else if let dismiss {
+            performSubviewRemoval(dismiss, animated: animated)
+            self.dismiss = nil
+            
+        }
+        if let adAttribute = botAd.message.adAttribute {
+            chatInteraction.markAdAsSeen(adAttribute.opaqueId)
+        }
+        
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        self.adHeaderView.setFrameOrigin(NSMakePoint(20, 10))
+        self.header.setFrameOrigin(NSMakePoint(20, adHeaderView.frame.maxY + 4))
+        self.whatsThis.setFrameOrigin(NSMakePoint(self.adHeaderView.frame.maxX + 5, self.adHeaderView.frame.minY))
+        self.text.setFrameOrigin(NSMakePoint(20, self.header.frame.maxY + 4))
+        self.imageView?.centerY(x: frame.width - 50 - 10)
+        dismiss?.centerY(x: frame.width - 30 - 20)
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+
+
+private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let header: InteractiveTextView = InteractiveTextView()
+    private let dismiss:ImageButton = ImageButton()
+    private let removeFee = TextButton()
+    private var state: ChatHeaderState
+    
+    private var headerLayout: TextViewLayout?
+        
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self.state = state
+        super.init(frame: frame)
+        
+        addSubview(header)
+        addSubview(removeFee)
+        
+        removeFee.scaleOnClick = true
+                
+        switch state.main {
+        case let .removePaidMessages(peer, amount):
+            let attr = NSMutableAttributedString()
+            attr.append(string: strings().chatHeaderRemoveFeeText(peer.compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue), color: theme.colors.grayText, font: .normal(.text))
+            attr.insertEmbedded(.embedded(name: "star_small", color: theme.colors.grayText, resize: false), for: clown)
+            headerLayout = .init(attr, alignment: .center)
+            
+            removeFee.setSingle(handler: { [weak chatInteraction] _ in
+                
+                if let chatInteraction = chatInteraction {
+                    let engine = chatInteraction.context.engine
+                    let window = chatInteraction.context.window
+                    
+                    _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(peerId: peer.id), for: window).startStandalone(next: { amount in
+                        
+                        let option: String?
+                        if let amount, amount.value > 0 {
+                            option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
+                        } else {
+                            option = nil
+                        }
+                        verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeConfirmInfo(peer.displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
+                            _ = engine.peers.addNoPaidMessagesException(peerId: peer.id, refundCharged: result == .thrid).start()
+                        })
+                    })
+                    
+                    
+                }
+                
+            }, for: .Click)
+            
+        default:
+            headerLayout = nil
+        }
+        
+        removeFee.set(text: strings().chatHeaderRemoveFee, for: .Normal)
+        removeFee.set(color: theme.colors.accent, for: .Normal)
+        removeFee.set(font: .medium(.text), for: .Normal)
+        removeFee.sizeToFit()
+        
+        
+        
+        header.userInteractionEnabled = false
+        update(with: state, animated: false)
+
+    }
+    
+    func measure(_ width: CGFloat) {
+        headerLayout?.measure(width: width)
+        self.update(with: self.state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        
+        self.state = state
+   
+        let context = self.chatInteraction.context
+        self.header.set(text: headerLayout, context: context)
+        
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        header.centerX(y: 6)
+        removeFee.centerX(y: frame.height - removeFee.frame.height - 7)
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

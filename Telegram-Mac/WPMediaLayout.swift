@@ -20,8 +20,8 @@ class WPMediaLayout: WPLayout {
     var mediaSize:NSSize = NSZeroSize
     private(set) var media: Media
     let parameters:ChatMediaLayoutParameters?
-    init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences, theme: TelegramPresentationTheme, mayCopyText: Bool) {
-        self.media = (content.file ?? content.image)!
+    init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences, theme: TelegramPresentationTheme, mayCopyText: Bool, entities: [MessageTextEntity]? = nil, adAttribute: AdMessageAttribute? = nil, uniqueGift: StarGift.UniqueGift? = nil) {
+        self.media = uniqueGift?.file ?? (content.file ?? content.image)!
         if let representations = content.image?.representations, let file = self.media as? TelegramMediaFile {
             self.media = file.withUpdatedPreviewRepresentations(representations)
         }
@@ -32,7 +32,8 @@ class WPMediaLayout: WPLayout {
             self.parameters = ChatMediaGalleryParameters(isWebpage: true, media: self.media, automaticDownload: downloadSettings.isDownloable(parent))
         }
         
-                                
+                
+        
                                                   
         self.parameters?.cancelOperation = { [unowned context] message, media in
             if let media = media as? TelegramMediaFile {
@@ -42,15 +43,54 @@ class WPMediaLayout: WPLayout {
             }
         }
         
-        super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue, mayCopyText: mayCopyText)
+        
+        let parsed = inApp(for: content.url.nsstring, context: context, openInfo: { _, _, _, _ in
+            
+        })
+        
+        switch parsed {
+        case let .followResolvedName(_, _, _, _, _, action, _):
+            switch action {
+            case let .openMedia(timemark):
+                if let timemark = timemark {
+                    self.parameters?.set_timeCodeInitializer(Double(timemark))
+                }
+            default:
+                break
+            }
+        default:
+            break
+        }
+        
+        super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue, mayCopyText: mayCopyText, entities: entities, adAttribute: adAttribute, uniqueGift: uniqueGift)
         
     }
+    
+    override var isMediaClickable: Bool {
+        if let adAttribute, adAttribute.hasContentMedia {
+            if let media = media as? TelegramMediaFile {
+                if media.hasNoSound {
+                    return false
+                } else {
+                    return true
+                }
+            }
+            return false
+        }
+        return super.isMediaClickable
+    }
+
     
     override func measure(width: CGFloat) {
         super.measure(width: width)
         
         var contentSize = ChatLayoutUtils.contentSize(for: media, with: width, hasText: textLayout != nil && theme.bubbled)
         
+        
+        if uniqueGift != nil {
+            contentSize.width = 200
+            
+        }
         
         self.mediaSize = contentSize
         

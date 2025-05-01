@@ -9,10 +9,18 @@
 import Foundation
 import TextRecognizing
 import SwiftSignalKit
+import TelegramCore
+import Postbox
+import Translate
 
 final class GalleryRecognition {
     private let item: MGalleryPhotoItem
     private let disposable = MetaDisposable()
+    private let translateDisposable = MetaDisposable()
+    
+    private var result: AnyObject?
+    private var translation: AnyObject?
+    
     let view:NSView
     init?(_ item: MGalleryItem) {
         if let item = item as? MGalleryPhotoItem {
@@ -56,10 +64,124 @@ final class GalleryRecognition {
     }
     deinit {
         disposable.dispose()
+        translateDisposable.dispose()
     }
     @available(macOS 10.15, *)
-    private func applyResult(_ result: TextRecognizing.Result?) {
-        self.selectorView.set(result)
+    func canTranslate() -> Bool {
+        guard let result = result as? TextRecognizing.Result else {
+            return false
+        }
+        
+        switch result {
+        case let .finish(_, text):
+            let text = text.map { $0.text }.joined(separator: "\n")
+            let fromLang = Translate.detectLanguage(for: text)
+            let toLang = item.context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
+            
+            if fromLang == nil || !toLang.contains(fromLang!) {
+                return true
+            }
+        default:
+            break
+        }
+        
+        return false
+        
+    }
+    
+    @available(macOS 10.15, *)
+    func toggleTranslate(to: String) {
+        
+        if let result = result as? TextRecognizing.Result {
+            guard translation == nil else {
+                self.applyResult(result)
+                return
+            }
+            
+            switch result {
+            case let .finish(image, text):
+                var entities: [MessageTextEntity] = []
+                var length = 0
+                var currentText: String = ""
+                let toLang = appAppearance.languageCode
+                for text in text {
+                    entities.append(.init(range: length ..< length + text.text.length, type: .BlockQuote(isCollapsed: false)))
+                    currentText += text.text
+                    length += text.text.length
+                }
+                
+                let signal:Signal<(result: String, entities: [MessageTextEntity])?, TranslationError>
+                signal = item.context.engine.messages.translate(text: currentText, toLang: toLang, entities: entities) |> mapToSignal { value in
+                    if let value = value {
+                        return .single((result: value.0, entities: value.1.filter { value in
+                            switch value.type {
+                            case .BlockQuote:
+                                return true
+                            default:
+                                return false
+                            }
+                        }))
+                    } else {
+                        return .single(nil)
+                    }
+                } |> deliverOnMainQueue
+                
+                translateDisposable.set(signal.startStrict(next: { [weak self] translated in
+                    var texts: [TextRecognizing.TranslateResult.Value] = []
+                    var toRemove: [Int] = []
+                    var filtered = text
+                    if let result = translated {
+                        for (i, entity) in result.1.enumerated() {
+                            let t = result.0.nsstring.substring(with: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                            let onlyText = !text[i].text.trimmingCharacters(in: CharacterSet.decimalDigits).isEmpty
+                            if text[i].text != t, onlyText {
+                                texts.append(.init(text: t, detected: text[i]))
+                            } else {
+                                toRemove.append(i)
+                            }
+                        }
+                    }
+                    for idx in toRemove.reversed() {
+                        filtered.remove(at: idx)
+                    }
+                    if translated == nil || translated?.result.isEmpty == true || translated?.1.isEmpty == true {
+                        self?.applyResult(result, translate: nil)
+                        return
+                    } else {
+                        self?.applyResult(result, translate: .success(translated: texts, original: .finish(image: image, text: filtered)))
+                    }
+                }, error: { [weak self] _ in
+                    self?.applyResult(result)
+                }))
+            default:
+                break
+            }
+            self.applyResult(result, translate: .progress(result))
+        }
+    }
+    
+    @available(macOS 10.15, *)
+    func hideTranslate() {
+        if let result = result as? TextRecognizing.Result {
+            self.applyResult(result)
+        }
+    }
+    
+    func hasTranslation() -> Bool {
+        return translation != nil
+    }
+    
+    
+    @available(macOS 10.15, *)
+    private func applyResult(_ result: TextRecognizing.Result?, translate: TextRecognizing.TranslateResult? = nil) {
+        self.result = result as AnyObject?
+        self.translation = translate as AnyObject?
+        
+        self.selectorView.set(result, translate: translate)
+        
+        if translate == nil {
+            self.translateDisposable.set(nil)
+        }
     }
     
     @available(macOS 10.15, *)

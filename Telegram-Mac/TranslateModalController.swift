@@ -60,7 +60,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         from = strings().translateLanguageAuto
     }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().translateFrom(from).uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
+    let attributedFrom = NSMutableAttributedString()
+    let fromText = strings().translateFrom(from)
+    attributedFrom.append(string: fromText.uppercased(), color: theme.colors.listGrayText, font: .normal(.small))
+    do {
+        let range = fromText.nsstring.range(of: from)
+        attributedFrom.addAttribute(.foregroundColor, value: theme.colors.accent, range: range)
+    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(attributedFrom), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
         
         var items: [ContextMenuItem] = []
         for language in Translate.codes {
@@ -86,7 +93,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else {
         to = strings().translateLanguageAuto
     }
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().translateTo(to).uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
+    
+    let attributedTo = NSMutableAttributedString()
+    let toText = strings().translateTo(to)
+    attributedTo.append(string: toText.uppercased(), color: theme.colors.listGrayText, font: .normal(.small))
+    do {
+        let range = toText.nsstring.range(of: to)
+        attributedTo.addAttribute(.foregroundColor, value: theme.colors.accent, range: range)
+    }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(attributedTo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
         
         var items: [ContextMenuItem] = []
         
@@ -118,7 +134,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     return entries
 }
-private func translate(context: AccountContext, from: String?, to: String, blocks: [(String, [MessageTextEntity])]) -> Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> {
+
+
+
+
+func translateBlocks(context: AccountContext, from: String?, to: String, blocks: [(String, [MessageTextEntity])]) -> Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> {
     var signals:[Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error>] = []
     for block in blocks {
         signals.append(context.engine.messages.translate(text: block.0, toLang: to, entities: block.1) |> `catch` { _ in return .fail(.generic)} |> mapToSignal { value in
@@ -177,7 +197,7 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
 
     
     let request:()->Void = {
-        disposable.set(translate(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
+        disposable.set(translateBlocks(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
             updateState { current in
                 var current = current
                 current.translated = result.result

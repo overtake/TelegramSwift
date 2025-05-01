@@ -291,7 +291,7 @@ final class VoiceChatActionButtonBackgroundView: View {
         }
     }
 
-    func updateGlowAndGradientAnimations(active: Bool?, previousActive: Bool? = nil) {
+    func updateGlowAndGradientAnimations(active: Bool?, previousActive: Bool? = nil, justColors: Bool = false) {
         let effectivePreviousActive = previousActive ?? false
 
         let initialScale: CGFloat = ((self.maskGradientLayer.value(forKeyPath: "presentationLayer.transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (((self.maskGradientLayer.value(forKeyPath: "transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (effectivePreviousActive ? 0.95 : 0.8))
@@ -317,15 +317,19 @@ final class VoiceChatActionButtonBackgroundView: View {
         }
         self.updatedOuterColor?(outerColor)
 
-        self.maskGradientLayer.transform = CATransform3DMakeScale(targetScale, targetScale, 1.0)
-        if let _ = previousActive {
-            self.maskGradientLayer.animateScale(from: initialScale, to: targetScale, duration: 0.3)
+        if justColors {
+            self.foregroundGradientLayer.colors = targetColors
         } else {
-            self.maskGradientLayer.animateSpring(from: initialScale as NSNumber, to: targetScale as NSNumber, keyPath: "transform.scale", duration: 0.45)
-        }
+            self.maskGradientLayer.transform = CATransform3DMakeScale(targetScale, targetScale, 1.0)
+            if let _ = previousActive {
+                self.maskGradientLayer.animateScale(from: initialScale, to: targetScale, duration: 0.3)
+            } else {
+                self.maskGradientLayer.animateSpring(from: initialScale as NSNumber, to: targetScale as NSNumber, keyPath: "transform.scale", duration: 0.45)
+            }
 
-        self.foregroundGradientLayer.colors = targetColors
-        self.foregroundGradientLayer.animate(from: initialColors as AnyObject, to: targetColors as AnyObject, keyPath: "colors", timingFunction: .linear, duration: 0.3)
+            self.foregroundGradientLayer.colors = targetColors
+            self.foregroundGradientLayer.animate(from: initialColors as AnyObject, to: targetColors as AnyObject, keyPath: "colors", timingFunction: .linear, duration: 0.3)
+        }
     }
 
     private func playConnectionDisappearanceAnimation() {
@@ -669,6 +673,13 @@ final class VoiceChatActionButtonBackgroundView: View {
             self.state = state
 
             self.updateAnimations()
+        } else {
+            switch self.state {
+                case let .blob(newActive):
+                updateGlowAndGradientAnimations(active: newActive, previousActive: newActive, justColors: true)
+            default:
+                break
+            }
         }
 
     }
@@ -716,6 +727,13 @@ final class VoiceChatBlobLayer: SimpleLayer {
         didSet {
             self.bigBlob.scaleUpdated = self.scaleUpdated
         }
+    }
+    
+    override init(layer: Any) {
+        self.mediumBlob = .init(pointsCount: 0, minRandomness: 0, maxRandomness: 0, minSpeed: 0, maxSpeed: 0, minScale: 0, maxScale: 0)
+        self.bigBlob = .init(pointsCount: 0, minRandomness: 0, maxRandomness: 0, minSpeed: 0, maxSpeed: 0, minScale: 0, maxScale: 0)
+        self.maxLevel = 1
+        super.init(layer: layer)
     }
 
     private(set) var isAnimating = false
@@ -850,6 +868,18 @@ final class BlobLayer: SimpleShapeLayer {
 
     private var blobAnimation: DisplayLinkAnimator?
 
+    override init(layer: Any) {
+        self.pointsCount = 0
+        self.minRandomness = 0
+        self.maxRandomness = 0
+        self.minSpeed = 0
+        self.maxSpeed = 0
+        self.minScale = 0
+        self.maxScale = 0
+
+        self.smoothness = 0
+        super.init(layer: layer)
+    }
 
     private let shapeLayer: SimpleShapeLayer = {
             let layer = SimpleShapeLayer()

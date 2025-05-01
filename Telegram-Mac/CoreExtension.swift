@@ -42,8 +42,8 @@ extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
         let updated: ChannelParticipant
         switch participant {
-        case let.member(id, invitedAt, adminInfo, _, rank):
-            updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info, rank: rank)
+        case let.member(id, invitedAt, adminInfo, _, rank, subscriptionUntilDate):
+            updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info, rank: rank, subscriptionUntilDate: subscriptionUntilDate)
         case let .creator(id, info, rank):
             updated = ChannelParticipant.creator(id: id, adminInfo: info, rank: rank)
         }
@@ -177,7 +177,7 @@ extension RenderedPeer {
 extension TelegramMediaFile {
     var videoSize:NSSize {
         for attr in attributes {
-            if case let .Video(_,size, _, _) = attr {
+            if case let .Video(_,size, _, _, _, _) = attr {
                 return size.size
             }
         }
@@ -186,7 +186,7 @@ extension TelegramMediaFile {
     
     var isStreamable: Bool {
         for attr in attributes {
-            if case let .Video(_, _, flags, _) = attr {
+            if case let .Video(_, _, flags, _, _, _) = attr {
                 return flags.contains(.supportsStreaming)
             }
         }
@@ -218,7 +218,7 @@ extension TelegramMediaFile {
     
     var videoDuration: Double {
         for attr in attributes {
-            if case let .Video(duration,_, _, _) = attr {
+            if case let .Video(duration,_, _, _, _, _) = attr {
                 return duration
             }
         }
@@ -230,11 +230,11 @@ extension TelegramMediaFile {
     }
     
     func withUpdatedResource(_ resource: TelegramMediaResource) -> TelegramMediaFile {
-        return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
+        return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes, alternativeRepresentations: self.alternativeRepresentations)
     }
     
     func withUpdatedFileId(_ fileId: MediaId) -> TelegramMediaFile {
-        return TelegramMediaFile(fileId: fileId, partialReference: self.partialReference, resource: self.resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
+        return TelegramMediaFile(fileId: fileId, partialReference: self.partialReference, resource: self.resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes, alternativeRepresentations: self.alternativeRepresentations)
     }
 }
 
@@ -300,10 +300,6 @@ extension Media {
     }
 }
 
-enum ChatListIndexRequest :Equatable {
-    case Initial(Int, TableScrollState?)
-    case Index(EngineChatList.Item.Index, TableScrollState?)
-}
 
 
 public extension PeerView {
@@ -454,6 +450,8 @@ extension MessageReaction.Reaction {
             return .custom(fileId: fileId, file: file)
         case let .builtin(emoji):
             return .builtin(emoji)
+        case .stars:
+            return .stars
         }
     }
 }
@@ -666,6 +664,14 @@ public extension Message {
         return nil
     }
     
+    var isAnonymousInStarReaction: Bool {
+        if let attribute = self.reactionsAttribute, let myReactions = attribute.topPeers.first(where: { $0.isMy }) {
+            return myReactions.isAnonymous
+        } else {
+            return false
+        }
+    }
+    
     var extendedMedia: Media? {
         if let media = self.media.first as? TelegramMediaInvoice {
             if let extended = media.extendedMedia {
@@ -727,6 +733,8 @@ public extension Message {
                         let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                         let file = self.associatedMedia[mediaId] as? TelegramMediaFile
                         return .custom(fileId: fileId, file: file)
+                    case .stars:
+                        return .stars
                     }
                 }
                 return nil
@@ -739,7 +747,14 @@ public extension Message {
         } else {
             updated.append(reaction)
         }
-        return updated
+        return updated.filter { value in
+            switch value {
+            case .stars:
+                return false
+            default:
+                return true
+            }
+        }
     }
     
     func effectiveReactions(_ accountPeerId: PeerId, isTags: Bool) -> ReactionsMessageAttribute? {
@@ -814,6 +829,11 @@ public extension Message {
         if let _ = adAttribute {
             return author
         }
+       
+        if self.id.peerId == verifyCodePeerId {
+            return forwardInfo?.author ?? author
+        }
+        
         for attr in attributes {
             if let source = attr as? SourceReferenceMessageAttribute {
                 if let info = forwardInfo {
@@ -827,8 +847,9 @@ public extension Message {
             }
         }
         
+        
         if let peer = coreMessageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
-            _peer = peer
+            _peer = author ?? peer
         } else if let author = effectiveAuthor, _peer == nil {
             if author is TelegramSecretChat {
                 return coreMessageMainPeer(self)
@@ -842,6 +863,15 @@ public extension Message {
     var replyAttribute: ReplyMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    var quoteAttribute: QuotedReplyMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? QuotedReplyMessageAttribute {
                 return attr
             }
         }
@@ -1202,7 +1232,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
                     return true
                 } else {
-                    return peer.canSendMessage(false, threadData: threadData)
+                    return true//peer.canSendMessage(false, threadData: threadData)
                 }
             case .scheduled:
                 return false
@@ -1475,7 +1505,7 @@ extension Media {
         if let media = self as? TelegramMediaFile {
             for attr in media.attributes {
                 switch attr {
-                case let .Video(_, _, flags, _):
+                case let .Video(_, _, flags, _, _, _):
                     return flags.contains(.isSilent)
                 default:
                     return false
@@ -1558,13 +1588,13 @@ func <(lhs:RenderedChannelParticipant, rhs: RenderedChannelParticipant) -> Bool 
     switch lhs.participant {
     case .creator:
         lhsInvitedAt = Int32.min
-    case .member(_, let invitedAt, _, _, _):
+    case .member(_, let invitedAt, _, _, _, _):
         lhsInvitedAt = invitedAt
     }
     switch rhs.participant {
     case .creator:
         rhsInvitedAt = Int32.min
-    case .member(_, let invitedAt, _, _, _):
+    case .member(_, let invitedAt, _, _, _, _):
         rhsInvitedAt = invitedAt
     }
     return lhsInvitedAt < rhsInvitedAt
@@ -2853,7 +2883,7 @@ func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = th
 
 
 func canCollagesFromUrl(_ urls:[URL]) -> Bool {
-    var canCollage: Bool = urls.count > 1
+    var canCollage: Bool = urls.count >= 1
     
     var musicCount: Int = 0
     var voiceCount: Int = 0
@@ -3141,15 +3171,15 @@ enum FaqDestination {
 func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    let url = dest.url + language
+    let url = dest.url + (language == "en" ? "" : language)
     
     _ = showModalProgress(signal: webpagePreview(account: context.account, urls: [url]) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
         switch result {
         case let .result(webpage):
             if let webpage = webpage {
-                showInstantPage(InstantPageViewController(context, webPage: webpage.webpage, message: nil))
+                BrowserStateContext.get(context).open(tab: .instantView(url: url, webPage: webpage.webpage, anchor: nil))
             } else {
-                execute(inapp: .external(link: dest.url + language, true))
+                execute(inapp: .external(link: dest.url, true))
             }
         default:
             break
@@ -3209,6 +3239,9 @@ extension TelegramMediaFile {
 extension MessageIndex {
     func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {
         return MessageIndex(id: self.id, timestamp: timestamp)
+    }
+    func withUpdatedNamespace(_ namespace: MessageId.Namespace) -> MessageIndex {
+        return MessageIndex(id: .init(peerId: self.id.peerId, namespace: namespace, id: self.id.id), timestamp: timestamp)
     }
     init(_ message: Message) {
         self.init(id: message.id, timestamp: message.timestamp)
@@ -3449,13 +3482,13 @@ extension TelegramMediaWebpageLoadedContent {
                 newUrl = self.url + "?t=\(Int(timecode))"
             }
         }
-        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, isMediaLargeByDefault: self.isMediaLargeByDefault, image: self.image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, isMediaLargeByDefault: self.isMediaLargeByDefault, imageIsVideoCover: false, image: self.image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage?._parse())
     }
     func withUpdatedFile(_ file: TelegramMediaFile) -> TelegramMediaWebpageLoadedContent {
-        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, isMediaLargeByDefault: self.isMediaLargeByDefault, image: self.image, file: file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, isMediaLargeByDefault: self.isMediaLargeByDefault, imageIsVideoCover: false, image: self.image, file: file, story: self.story, attributes: self.attributes, instantPage: self.instantPage?._parse())
     }
     func withUpdatedImage(_ image: TelegramMediaImage) -> TelegramMediaWebpageLoadedContent {
-        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, isMediaLargeByDefault: self.isMediaLargeByDefault, image: image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, isMediaLargeByDefault: self.isMediaLargeByDefault, imageIsVideoCover: false, image: image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage?._parse())
     }
     
     var isCrossplatformTheme: Bool {
@@ -3596,7 +3629,7 @@ extension Wallpaper {
         case let .image(representation, settings):
             let resource = representation.last?.resource as? LocalFileMediaResource
             let dimension: PixelDimensions = representation.last?.dimensions ?? .init(WallpaperDimensions)
-            return .file(.init(id: resource?.fileId ?? 0, accessHash: 0, isCreator: true, isDefault: false, isPattern: false, isDark: false, slug: "", file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: resource?.fileId ?? 0), partialReference: nil, resource: representation.last!.resource, previewRepresentations: representation, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.ImageSize(size: dimension)]), settings: settings))
+            return .file(.init(id: resource?.fileId ?? 0, accessHash: 0, isCreator: true, isDefault: false, isPattern: false, isDark: false, slug: "", file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: resource?.fileId ?? 0), partialReference: nil, resource: representation.last!.resource, previewRepresentations: representation, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.ImageSize(size: dimension)], alternativeRepresentations: []), settings: settings))
         default:
             return nil
         }
@@ -3780,13 +3813,7 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 
 func openWebBot(_ bot: AttachMenuBot, context: AccountContext) {
     let open:()->Void = {
-        let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
-        if !WebappWindow.focus(botId: bot.peer.id) {
-            _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
-                WebappWindow.makeAndOrderFront(WebpageModalController(context: context, url: result.url, title: bot.shortName, requestData: .simple(url: result.url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file))
-            })
-        }
-       
+        BrowserStateContext.get(context).open(tab: .simple(bot: bot.peer, url: nil, buttonText: "", source: .settings))
     }
     
     if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
@@ -3847,7 +3874,7 @@ extension NSAttributedString {
     
     static func embedded(name: String, color: NSColor, resize: Bool) -> NSAttributedString {
         
-        let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+        let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [], alternativeRepresentations: [])
         
         let emoji: String = clown
         

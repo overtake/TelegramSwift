@@ -29,6 +29,8 @@ class ChatRightView: View, ViewDisplayDelegate {
         private(set) var postAuthor: NSRect?
         private(set) var pin: NSRect?
         private(set) var edit: NSRect?
+        private(set) var paidMessageCount: NSRect?
+        private(set) var paidMessageImage: NSRect?
         private(set) var date: NSRect?
         private(set) var failed: NSRect?
         private(set) var effect: NSRect?
@@ -95,6 +97,20 @@ class ChatRightView: View, ViewDisplayDelegate {
                 self.edit = rect
                 x = rect.maxX
             }
+            
+            if let paidMessage = item.paidMessage {
+                var rect_i = size.bounds.focus(item.presentation.chat.paidMessageIcon(item).backingSize)
+                rect_i.origin.x = x + 2
+                rect_i.origin.y -= 1
+                x = rect_i.maxX
+                var rect_t = size.bounds.focus(paidMessage.layoutSize)
+                rect_t.origin.x = x + 2
+                x = rect_t.maxX
+                
+                self.paidMessageImage = rect_i
+                self.paidMessageCount = rect_t
+            }
+            
             if item.isFailed {
                 var rect = size.bounds.focus(item.presentation.icons.sentFailed.backingSize)
                 rect.origin.x = x + 2
@@ -171,6 +187,8 @@ class ChatRightView: View, ViewDisplayDelegate {
                          self.read,
                          self.sending,
                          self.effect,
+                         self.paidMessageCount,
+                         self.paidMessageImage,
                          self.replyCount,
                          self.viewsCount,
                          self.viewsImage,
@@ -223,6 +241,8 @@ class ChatRightView: View, ViewDisplayDelegate {
     private(set) var effectTextView: TextView?
     private var replyCountView: TextView?
     private var replyCountImage: ImageView?
+    private var paidMessageCountView: TextView?
+    private var paidMessageImage: ImageView?
     private var viewsCountView: TextView?
     private var viewsImageView: ImageView?
     private var postAuthorView: TextView?
@@ -276,7 +296,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                     self.effectTextView = nil
                 }
                 
-                let file = found ?? effect.effectSticker
+                let file = found?._parse() ?? effect.effectSticker._parse()
                 
                 if self.effectView?.animateLayer.fileId != file.fileId.id {
                     if let view = self.effectView {
@@ -415,6 +435,42 @@ class ChatRightView: View, ViewDisplayDelegate {
             }
             if let view = self.replyCountImage {
                 self.replyCountImage = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+        }
+        
+        if let paidMessage = item.paidMessage, let paidMessageImage = frames.paidMessageImage, let paidMessageCount = frames.paidMessageCount {
+            if self.paidMessageCountView == nil {
+                self.paidMessageCountView = TextView(frame: paidMessageCount)
+                self.paidMessageCountView?.disableBackgroundDrawing = true
+                self.paidMessageCountView?.userInteractionEnabled = false
+                self.paidMessageCountView?.isSelectable = false
+                addSubview(self.paidMessageCountView!)
+                if animated {
+                    self.paidMessageCountView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.paidMessageCountView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            self.paidMessageCountView?.update(paidMessage)
+            
+            if self.paidMessageImage == nil {
+                self.paidMessageImage = ImageView(frame: paidMessageImage)
+                addSubview(self.paidMessageImage!)
+                if animated {
+                    self.paidMessageImage?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.paidMessageImage?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            self.paidMessageImage?.image = item.presentation.chat.paidMessageIcon(item)
+            self.paidMessageImage?.sizeToFit()
+            
+        } else {
+            if let view = self.paidMessageCountView {
+                self.paidMessageCountView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+            if let view = self.paidMessageImage {
+                self.paidMessageImage = nil
                 performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
@@ -614,6 +670,12 @@ class ChatRightView: View, ViewDisplayDelegate {
             transition.updateFrame(view: view, frame: frame)
         }
         if let frame = frames.replyImage, let view = replyCountImage {
+            transition.updateFrame(view: view, frame: frame)
+        }
+        if let frame = frames.paidMessageImage, let view = paidMessageImage {
+            transition.updateFrame(view: view, frame: frame)
+        }
+        if let frame = frames.paidMessageCount, let view = paidMessageCountView {
             transition.updateFrame(view: view, frame: frame)
         }
     }

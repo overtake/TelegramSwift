@@ -485,7 +485,7 @@ class MediaCell : Control {
                 if layout.isSecret {
                     signal = chatSecretMessageVideo(account: context.account, fileReference: fileMedia, scale: backingScaleFactor)
                 } else {
-                    signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileMedia, scale: backingScaleFactor)
+                    signal = chatMessageVideo(account: context.account, fileReference: fileMedia, scale: backingScaleFactor)
                 }
             } else {
                 
@@ -738,8 +738,24 @@ class MediaVideoCell : MediaCell {
             let context = layoutItem.context
             if context.autoplayMedia.preloadVideos {
                 if let fileMedia = layoutItem.fileMedia {
-                    let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.peerId), userContentType: .init(file: fileMedia.media), resourceReference: fileMedia.resourceReference(fileMedia.media.resource), duration: 2.5)
-                    partDisposable.set(preload.start())
+                    
+                    if isHLSVideo(file: fileMedia.media) {
+                        let fetchSignal = HLSVideoContent.minimizedHLSQualityPreloadData(postbox: context.account.postbox, file: fileMedia, userLocation: .peer(layoutItem.peerId), prefixSeconds: 10, autofetchPlaylist: true, initialQuality: FastSettings.videoQuality)
+                        |> mapToSignal { fileAndRange -> Signal<Never, NoError> in
+                            guard let fileAndRange else {
+                                return .complete()
+                            }
+                            return freeMediaFileResourceInteractiveFetched(postbox: context.account.postbox, userLocation: .peer(layoutItem.peerId), fileReference: fileAndRange.0, resource: fileAndRange.0.media.resource, range: (fileAndRange.1, .default))
+                            |> ignoreValues
+                            |> `catch` { _ -> Signal<Never, NoError> in
+                                return .complete()
+                            }
+                        }
+                        partDisposable.set(fetchSignal.start())
+                    } else {
+                        let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.peerId), userContentType: .init(file: fileMedia.media), resourceReference: fileMedia.resourceReference(fileMedia.media.resource), duration: 2.5)
+                        partDisposable.set(preload.start())
+                    }
                 }
             }
         }
@@ -867,7 +883,7 @@ class MediaGifCell : MediaCell {
         let isUpdated = previousLayout == nil || !previousLayout!.isEqual(to: layout)
         super.update(layout: layout, selected: selected, context: context, table: table, animated: animated)
         if isUpdated, let fileMedia = layout.fileMedia {
-            let signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileMedia, scale: backingScaleFactor)
+            let signal = chatMessageVideo(account: context.account, fileReference: fileMedia, scale: backingScaleFactor)
             gifView.update(with: fileMedia, size: frame.size, viewSize: frame.size, context: context, table: nil, iconSignal: signal)
             gifView.userInteractionEnabled = false
         }

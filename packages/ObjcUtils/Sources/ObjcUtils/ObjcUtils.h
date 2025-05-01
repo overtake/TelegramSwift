@@ -32,6 +32,7 @@
 +(NSString * __nonnull)stringForEmojiHashOfData:(NSData *__nonnull)data count:(NSInteger)count positionExtractor:(int32_t (^__nonnull)(uint8_t *__nonnull, int32_t, int32_t))positionExtractor;
 +(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer;
 +(NSString * __nonnull)callEmojies:(NSData *__nonnull)keySha256;
++(NSString * __nonnull)randomCallsEmoji;
 + (NSArray<NSString *> * __nonnull)getEmojiFromString:(NSString * __nonnull)string;
 +(NSOpenPanel * __nonnull)openPanel;
 +(NSSavePanel * __nonnull)savePanel;
@@ -74,6 +75,7 @@ int colorIndexForUid(int32_t uid, int32_t myUserId);
 
 
 NSArray<NSString *> * __nonnull currentAppInputSource();
+NSString * __nonnull currentKeyboardLanguage();
 NSEvent * __nullable createScrollWheelEvent();
 double mappingRange(double x, double in_min, double in_max, double out_min, double out_max);
 

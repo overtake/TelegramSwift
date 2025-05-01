@@ -1,3 +1,0 @@
-PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.appcenter.analytics
-
-OTHER_LDFLAGS=$(inherited) -framework Foundation;

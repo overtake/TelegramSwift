@@ -57,10 +57,9 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     override func update(with contextObject: Any) {
         super.update(with: contextObject)
 
-
         let context = contextObject as! GroupCallContext
-        let peerId = context.call.peerId
 
+        let peerId = context.call.peerId
 
         let data = context.call.summaryState
         |> filter { $0 != nil }
@@ -68,6 +67,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         |> map { summary -> GroupCallPanelData in
             return GroupCallPanelData(
                 peerId: peerId,
+                isChannel: summary.callState.isChannel,
                 info: summary.info,
                 topParticipants: summary.topParticipants,
                 participantCount: summary.participantCount,
@@ -78,7 +78,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
 
         let account = context.call.account
 
-        let signal = Signal<Peer?, NoError>.single(context.call.peer) |> then(context.call.account.postbox.loadedPeerWithId(context.call.peerId) |> map(Optional.init) |> deliverOnMainQueue)
+        let signal = Signal<Peer?, NoError>.single(context.call.peer)
 
         let accountPeer: Signal<Peer?, NoError> = context.call.sharedContext.activeAccounts |> mapToSignal { accounts in
             if accounts.accounts.count == 1 {
@@ -88,15 +88,13 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             }
         }
         
-        
-
         disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members, context.call.summaryState).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members, summary in
             
             let title: String?
             if let custom = state.title, !custom.isEmpty {
                 title = custom
             } else {
-                title = peer?.displayTitle
+                title = peer?.displayTitle ?? strings().callGroupCall
             }
             
             if let title = title {
@@ -112,7 +110,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 self?.hide(true)
             }
         }))
-        let isVisible = context.window.takeOcclusionState |> map { $0.contains(.visible) }
+        let isVisible = context.window.window.takeOcclusionState |> map { $0.contains(.visible) }
         self.audioLevelDisposable.set((combineLatest(isVisible, context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted, context.call.state)
         |> deliverOnMainQueue).start(next: { [weak self] isVisible, myAudioLevel, audioLevels, isMuted, state in
             guard let strongSelf = self else {
@@ -154,8 +152,14 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             }
         case .connected:
             
-            if let first = data.topParticipants.first(where: { members?.speakingParticipants.contains($0.peer.id) ?? false }) {
-                self.status = .text(first.peer.compactDisplayTitle.prefixWithDots(12), nil)
+            if let first = data.topParticipants.first(where: { value in
+                if let peer = value.peer {
+                    return members?.speakingParticipants.contains(peer.id) ?? false
+                } else {
+                    return false
+                }
+            }) {
+                self.status = .text(first.peer!._asPeer().compactDisplayTitle.prefixWithDots(12), nil)
             } else {
                 if state.isStream, data.participantCount == 0 {
                     self.status = .text(strings().voiceChatStatusStream.lowercased(), nil)

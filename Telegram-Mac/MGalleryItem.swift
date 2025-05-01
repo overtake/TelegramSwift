@@ -584,6 +584,10 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 }
             }
             
+            if let adAttribute = message.adAttribute {
+                context.engine.messages.markAdAction(opaqueId: adAttribute.opaqueId, media: true, fullscreen: false)
+            }
+            
             let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: FontSize.text, openInfo: { peerId, toChat, postId, action in
                 let navigation = context.bindings.rootNavigation()
                 let controller = navigation.controller
@@ -603,7 +607,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: message.id.peerId, replyId: nil, threadId: message.threadId, atDate: nil).start()
                 viewer?.close()
             }, hashtag: { hashtag in
-                context.bindings.globalSearch(hashtag, message.id.peerId)
+                context.bindings.globalSearch(hashtag, message.id.peerId, nil)
                 viewer?.close()
             }, applyProxy: { server in
                 applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
@@ -652,7 +656,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             guard let `self` = self else {return}
             
             if let view = view as? MGalleryItemView {
-                view.preventsCapture = entry.isProtected
+                view.preventsCapture = false
             }
             view.layer?.contents = value.image
             

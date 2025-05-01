@@ -25,6 +25,66 @@ import CodeSyntax
 let premiumGradient = [NSColor(rgb: 0x6B93FF), NSColor(rgb: 0x976FFF), NSColor(rgb: 0xE46ACE)]
 
 
+func generateContextMenuInstantView(color: NSColor, size: NSSize = NSMakeSize(20, 20)) -> NSImage {
+    let icon = NSImage(resource: .iconInstantViewFavicon).precomposed(theme.colors.darkGrayText, flipVertical: true)
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, 4)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+        
+        ctx.draw(icon, in: size.bounds.focus(icon.backingSize))
+    }).flatMap {
+        NSImage(cgImage: $0, size: size)
+    }!
+}
+
+#if !SHARE
+func generateContextMenuUrl(color: NSColor, state: WebpageModalState?, size: NSSize = NSMakeSize(20, 20)) -> NSImage {
+    
+    let text: String
+    if state?.error != nil {
+        text = "!"
+    } else if let url = state?.url, let parsedUrl = URL(string: url) {
+        text = parsedUrl.host?.first.flatMap(String.init) ?? "!"
+    } else {
+        text = "!"
+    }
+    
+    let textNode = TextNode.layoutText(.initialize(string: text.uppercased(), color: theme.colors.darkGrayText, font: .medium(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, 4)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+        
+        textNode.1.draw(size.bounds.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    }).flatMap {
+        NSImage(cgImage: $0, size: size)
+    }!
+}
+#endif
+
+func generateContextMenuSubsCount(_ count: Int32?) -> CGImage? {
+    
+    guard let count else {
+        return nil
+    }
+    
+    let presentation = AppMenu.Presentation.current(theme.colors)
+    let membersImage = NSImage(resource: .iconMiniAppMembers).precomposed(presentation.disabledTextColor, flipVertical: true)
+
+    let textNode = TextNode.layoutText(.initialize(string: Int64(count).prettyNumber, color: presentation.disabledTextColor, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    var size = textNode.0.size
+    size.width += membersImage.backingSize.width
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(membersImage, in: size.bounds.focusY(membersImage.backingSize, x: 0))
+        textNode.1.draw(size.bounds.focusY(textNode.0.size, x: membersImage.backingSize.width), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })
+}
+
 func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -> CGImage {
     let layout = TextNode.layoutText(count, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
     let image = NSImage(resource: .iconBoostPrepaid).precomposed(bgColor, flipVertical: true)
@@ -44,6 +104,62 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
         ctx.draw(image, in: imageRect)
     })!
 }
+
+
+func generalSendPaidMessage(bgColor: NSColor, outerColor: NSColor, imageColor: NSColor, count: NSAttributedString) -> CGImage {
+    let layout = TextNode.layoutText(count, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+    let image = NSImage(resource: .starSmall).precomposed(imageColor, flipVertical: true)
+
+    return generateImage(NSMakeSize(layout.0.size.width + 8 + image.backingSize.width, 18), rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, size.height / 2)
+        
+        ctx.setFillColor(outerColor.cgColor)
+        ctx.fill(size.bounds)
+        
+        let path = CGMutablePath()
+        let inner = size.bounds.insetBy(dx: 1, dy: 1)
+        path.addRoundedRect(in: inner, cornerWidth: inner.height / 2, cornerHeight: inner.height / 2)
+        ctx.addPath(path)
+        ctx.setFillColor(bgColor.cgColor)
+        ctx.fillPath()
+
+        var rect = size.bounds.focus(layout.0.size)
+        rect.origin.x = size.width - rect.size.width - 4
+        layout.1.draw(rect, in: ctx, backingScaleFactor: 2, backgroundColor: .clear)
+        
+        var imageRect = size.bounds.focus(image.backingSize)
+        imageRect.origin.x = 3
+        ctx.draw(image, in: imageRect)
+    })!
+}
+
+
+func generateGiftBadgeBackground(background: CGImage, text: String, textColor: NSColor = NSColor.white) -> CGImage {
+    
+    let textNode = TextNode.layoutText(.initialize(string: text, color: textColor, font: .bold(.small)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+
+    let textImage = generateImage(background.systemSize, rotatedContext: { size, ctx in
+        ctx.clear(CGRect(origin: .zero, size: size))
+
+        ctx.saveGState()
+        ctx.translateBy(x: size.width / 2, y: size.height / 2)
+        ctx.rotate(by: CGFloat.pi / 4)
+        ctx.translateBy(x: -size.width / 2, y: -size.height / 2)
+        //-9
+        textNode.1.draw(size.bounds.focus(textNode.0.size).offsetBy(dx: 0, dy: -10), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+
+        ctx.restoreGState()
+
+    })!
+    
+    return generateImage(background.systemSize, contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: .zero, size: size))
+        ctx.draw(background, in: size.bounds)
+        ctx.draw(textImage, in: size.bounds)
+    })!
+}
+
 
 #if !SHARE
 public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImage {
@@ -91,8 +207,109 @@ public func generateDisclosureActionBoostLevelBadgeImage(text: String) -> CGImag
 }
 #endif
 
+public enum GradientImageDirection {
+    case vertical
+    case horizontal
+    case diagonal
+    case mirroredDiagonal
+}
 
-import Cocoa
+
+func generateGradientTintedImage(image: CGImage?, colors: [NSColor], direction: GradientImageDirection = .vertical) -> CGImage? {
+    guard let image = image else {
+        return nil
+    }
+    
+    let imageSize = image.systemSize
+    
+    return generateImage(imageSize, rotatedContext: { size, context in
+        context.clear(size.bounds)
+        
+        let imageRect = CGRect(origin: CGPoint(), size: imageSize)
+        context.saveGState()
+        context.translateBy(x: imageRect.midX, y: imageRect.midY)
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.translateBy(x: -imageRect.midX, y: -imageRect.midY)
+        context.clip(to: imageRect, mask: image)
+
+        if colors.count >= 2 {
+            let gradientColors = colors.map { $0.cgColor } as CFArray
+
+            var locations: [CGFloat] = []
+            for i in 0 ..< colors.count {
+                let t = CGFloat(i) / CGFloat(colors.count - 1)
+                locations.append(t)
+            }
+            let colorSpace = DeviceGraphicsContextSettings.shared.colorSpace
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+
+            let start: CGPoint
+            let end: CGPoint
+            switch direction {
+            case .horizontal:
+                start = .zero
+                end = CGPoint(x: imageRect.width, y: 0.0)
+            case .vertical:
+                start = CGPoint(x: 0.0, y: imageRect.height)
+                end = .zero
+            case .diagonal:
+                start = CGPoint(x: 0.0, y: 0.0)
+                end = CGPoint(x: imageRect.width, y: imageRect.height)
+            case .mirroredDiagonal:
+                start = CGPoint(x: imageRect.width, y: 0.0)
+                end = CGPoint(x: 0.0, y: imageRect.height)
+            }
+            
+            context.drawLinearGradient(gradient, start: start, end: end, options: CGGradientDrawingOptions())
+        } else if !colors.isEmpty {
+            context.setFillColor(colors[0].cgColor)
+            context.fill(imageRect)
+        }
+        
+        context.restoreGState()
+            
+    })
+
+}
+
+
+
+
+private func generateAvatarStarBadge(color: NSColor) -> CGImage {
+    let image = NSImage(resource: .iconStarCurrency).precomposed()
+    let bigImage = NSImage(resource: .iconStarOutline).precomposed()
+    return generateImage(bigImage.systemSize, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        
+        ctx.clip(to: size.bounds, mask: bigImage)
+        ctx.clear(size.bounds)
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+
+        ctx.draw(image, in: size.bounds.focus(image.backingSize))
+    })!
+}
+
+private func generateAvatarStarBadgeLarge(color: NSColor) -> CGImage {
+    let image = NSImage(resource: .iconStarCurrencyBigSize).precomposed()
+    let bigImage = NSImage(resource: .iconStarOutlineBigSize).precomposed()
+    return generateImage(bigImage.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        
+        ctx.clip(to: size.bounds, mask: bigImage)
+        ctx.clear(size.bounds)
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(size.bounds)
+
+        ctx.draw(image, in: size.bounds.focus(image.backingSize))
+    })!
+}
+
+
 
 func generateRoundedRectWithTailPath(rectSize: CGSize, cornerRadius: CGFloat? = nil, tailSize: CGSize = CGSize(width: 20.0, height: 9.0), tailRadius: CGFloat = 4.0, tailPosition: CGFloat? = 0.5, transformTail: Bool = true) -> NSBezierPath {
     let cornerRadius: CGFloat = cornerRadius ?? rectSize.height / 2.0
@@ -286,12 +503,14 @@ func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: 
 }
 
 
-func generateTextIcon(_ text: NSAttributedString) -> CGImage {
+func generateTextIcon(_ text: NSAttributedString, minSize: Bool = true) -> CGImage {
     
-    let textNode = TextNode.layoutText(text, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    let textNode = TextNode.layoutText(text, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
     var size = textNode.0.size
-    size.width = max(size.width, 24)
-    size.width = max(size.height, 23)
+    if minSize {
+        size.width = max(size.width, 24)
+        size.width = max(size.height, 23)
+    }
     return generateImage(textNode.0.size, rotatedContext: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
@@ -300,8 +519,93 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
     })!
 }
 
+
+func generateStarBalanceIcon(_ text: String) -> CGImage {
+    return generateBalanceIcon(text: text, icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
+}
+
+
+func generateTonBalanceIcon(_ text: String) -> CGImage {
+    return generateBalanceIcon(text: text, icon: NSImage(resource: .iconTonCurrency).precomposed(flipVertical: true, zoom: 0.75))
+}
+
+private func generateBalanceIcon(text: String, icon: CGImage) -> CGImage {
+    let textNode = TextNode.layoutText(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    let icon = icon
+    var size = textNode.0.size
+    
+    size.width += icon.backingSize.width + 1
+    size.height = max(size.height, icon.backingSize.height)
+    return generateImage(size, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        let iconRect = size.bounds.focusY(icon.backingSize, x: 0)
+        let textRect = size.bounds.focusY(textNode.0.size, x: iconRect.maxX + 1)
+        ctx.draw(icon, in: iconRect)
+        
+        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
+
+func generateTonAndStarBalanceIcon(ton: String?, stars: String?) -> CGImage {
+    
+    
+    let starsIcon: CGImage?
+    let tonIcon: CGImage?
+    if let stars {
+        starsIcon = generateBalanceIcon(text: stars, icon: NSImage(resource: .iconStarCurrency).precomposed(flipVertical: true, zoom: 0.75))
+    } else {
+        starsIcon = nil
+    }
+    if let ton = ton {
+        tonIcon = generateBalanceIcon(text: ton, icon: NSImage(resource: .iconTonCurrency).precomposed(flipVertical: true, zoom: 0.75))
+    } else {
+        tonIcon = nil
+    }
+
+    var size = NSMakeSize(0, 0)
+    if let tonIcon {
+        size.width += tonIcon.backingSize.width
+        size.height = tonIcon.backingSize.height
+    }
+    if let starsIcon {
+        size.width += starsIcon.backingSize.width
+        size.height = max(size.height, starsIcon.backingSize.height)
+    }
+    if starsIcon != nil, tonIcon != nil {
+        size.width += 2
+    }
+    
+    return generateImage(size, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        if let tonIcon, let starsIcon {
+            let tonRect = size.bounds.focusY(tonIcon.backingSize, x: 0)
+            let starsRect = size.bounds.focusY(starsIcon.backingSize, x: tonRect.maxX + 2)
+            
+            ctx.draw(tonIcon, in: tonRect)
+            ctx.draw(starsIcon, in: starsRect)
+
+        } else if let tonIcon {
+            let tonRect = size.bounds.focusY(tonIcon.backingSize, x: 0)
+            ctx.draw(tonIcon, in: tonRect)
+        } else if let starsIcon {
+            let starsRect = size.bounds.focusY(starsIcon.backingSize, x: 0)
+            ctx.draw(starsIcon, in: starsRect)
+        }
+    })!
+}
+
 func generateTextIcon_NewBadge(bgColor: NSColor, textColor: NSColor) -> CGImage {
     return generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
+}
+
+func generateTextIcon_NewBadge_Flipped(bgColor: NSColor, textColor: NSColor) -> CGImage {
+    let image = generateTextIcon_AccentBadge(text: strings().badgeNew, bgColor: bgColor, textColor: textColor)
+    return generateImage(image.systemSize, rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(image, in: image.systemSize.bounds)
+    })!
 }
 
 func generateTextIcon_AccentBadge(text: String, bgColor: NSColor, textColor: NSColor) -> CGImage {
@@ -414,8 +718,8 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
     })!
 }
 
-private func generatePollIcon(_ image: NSImage, backgound: NSColor, doubleSize: Bool = false) -> CGImage {
-    return generateImage(NSMakeSize(doubleSize ? 36 : 18, doubleSize ? 36 : 18), contextGenerator: { size, ctx in
+private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
@@ -430,9 +734,9 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor, doubleSize: 
             ctx.clip(to: rect, mask: image)
             ctx.clear(rect)
         } else {
-            ctx.draw(image, in: rect.focus(NSMakeSize(image.size.width / System.backingScale * (doubleSize ? 2 : 1), image.size.height / System.backingScale * (doubleSize ? 2 : 1))))
+            ctx.draw(image, in: rect.focus(image.backingSize))
         }
-    }, scale: System.backingScale)!
+    })!
 }
 
 private func generateSecretThumbSmall(_ image: CGImage) -> CGImage {
@@ -865,6 +1169,34 @@ func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bo
         })!
     }
 }
+
+
+func generateDialogVerifyLeft(background: NSColor, foreground: NSColor, reversed: Bool = false) -> CGImage {
+    if reversed {
+        return generateImage(NSMakeSize(16, 16), contextGenerator: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+            let image = NSImage(named: "Icon_Verified_Telegram")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    } else {
+        return generateImage(NSMakeSize(16, 16), rotatedContext: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+            let image = NSImage(named: "Icon_Verified_Telegram")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    }
+}
+
 
 private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
     let image = NSImage(named: "Icon_PollDeleteOption")!.precomposed(color)
@@ -1462,8 +1794,9 @@ private func generateClockMinImage(_ color: NSColor) -> CGImage {
 }
 
 
-private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor: NSColor, arrowColor: NSColor) -> CGImage {
-    return generateImage(CGSize(width: 38.0, height: 38.0), contextGenerator: { size, context in
+private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor: NSColor, arrowColor: NSColor, reversed: Bool = false) -> CGImage {
+    
+    let generator:(NSSize, CGContext)->Void = { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         context.setFillColor(backgroundColor.cgColor)
         context.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
@@ -1481,7 +1814,12 @@ private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor:
         context.addLine(to: CGPoint(x: position.x + 10.0, y: position.y - 10.0))
         context.addLine(to: CGPoint(x: position.x + 19.0, y: position.y - 1.0))
         context.strokePath()
-    })!
+    }
+    if !reversed {
+        return generateImage(CGSize(width: 38.0, height: 38.0), contextGenerator: generator)!
+    } else {
+        return generateImage(CGSize(width: 38.0, height: 38.0), rotatedContext: generator)!
+    }
 }
 
 private func generateConfirmDeleteMessagesAccessory(backgroundColor: NSColor) -> CGImage {
@@ -1923,6 +2261,17 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
+    private var _chatPaidMessageOverlayServiceBubble: CGImage?
+    var chatPaidMessageOverlayServiceBubble: CGImage {
+        if let icon = _chatPaidMessageOverlayServiceBubble {
+            return icon
+        } else {
+            let new = NSImage(resource: .iconPaidMessageStatus).precomposed(self.chatServiceItemTextColor)
+            _chatPaidMessageOverlayServiceBubble = new
+            return new
+        }
+    }
+    
     private var _chat_pinned_message_overlay_service_bubble: CGImage?
     var chat_pinned_message_overlay_service_bubble: CGImage {
         if let icon = _chat_pinned_message_overlay_service_bubble {
@@ -2295,6 +2644,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatChannelViewsInBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing) },
                                                chatChannelViewsOutBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon) },
                                                chatChannelViewsOverlayBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(.white) },
+                                               chatPaidMessageInBubble_incoming: { NSImage(resource: .iconPaidMessageStatus).precomposed(palette.grayIconBubble_incoming) },
+                                               chatPaidMessageInBubble_outgoing: { NSImage(resource: .iconPaidMessageStatus).precomposed(palette.grayIconBubble_outgoing) },
+                                               chatPaidMessageOutBubble: { NSImage(resource: .iconPaidMessageStatus).precomposed(palette.grayIcon) },
+                                               chatPaidMessageOverlayBubble: { NSImage(resource: .iconPaidMessageStatus).precomposed(.white) },
                                                chatNavigationBack: { #imageLiteral(resourceName: "Icon_ChatNavigationBack").precomposed(palette.accentIcon) },
                                                peerInfoAddMember: { #imageLiteral(resourceName: "Icon_NewContact").precomposed(palette.accentIcon, flipVertical: true) },
                                                chatSearchUp: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.accentIcon) },
@@ -2305,6 +2658,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                dismissAccessory: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.grayIcon) },
                                                chatScrollUp: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, arrowColor: palette.grayIcon) },
                                                chatScrollUpActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, arrowColor: palette.accentIcon) },
+                                               chatScrollDown: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, arrowColor: palette.grayIcon, reversed: true) },
+                                               chatScrollDownActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, arrowColor: palette.accentIcon, reversed: true) },
                                                chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.accentIcon) },
                                                chatSaveEditedMessage: { generateSendIcon(NSImage(named: "Icon_SaveEditedMessage")!, palette.accentIcon) },
                                                chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
@@ -2605,6 +2960,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerInfoBanned: { NSImage(named: "Icon_ChatBanned")!.precomposed(flipVertical: true) },
                                                peerInfoMembers: { NSImage(named: "Icon_ChatMembers")!.precomposed(flipVertical: true) },
                                                peerInfoStarsBalance: { NSImage(resource: .iconPeerInfoStarsBalance).precomposed(flipVertical: true) },
+                                               peerInfoBalance: { NSImage(resource: .iconPeerInfoBalance).precomposed(flipVertical: true) },
+                                               peerInfoTonBalance: { NSImage(resource: .iconPeerInfoTonBalance).precomposed(flipVertical: true) },
                                                peerInfoBotUsername: { NSImage(resource: .iconPeerInfoBotUsername).precomposed(flipVertical: true) },
                                                chatUndoAction: { NSImage(named: "Icon_ChatUndoAction")!.precomposed(NSColor(0x29ACFF)) },
                                                appUpdate: { NSImage(named: "Icon_AppUpdate")!.precomposed() },
@@ -2643,6 +3000,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.accentIcon) },
                                                verifyDialog: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
                                                verifyDialogActive: { generateDialogVerify(background: palette.accentIcon, foreground: palette.underSelectedColor, reversed: true) },
+                                              verify_dialog_left: { generateDialogVerifyLeft(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
+                                              verify_dialog_active_left: { generateDialogVerifyLeft(background: palette.accentIcon, foreground: palette.underSelectedColor, reversed: true) },
                                                chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
                                                appearanceAddPlatformTheme: {
                                                 let image = NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon)
@@ -2670,15 +3029,15 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_failed_scroller_active: { generateChatFailed(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
                                                poll_quiz_unselected: { generateUnslectedCap(palette.grayText) },
                                                poll_selected: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity) },
-                                               poll_selection: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity, doubleSize: System.backingScale == 1) },
+                                               poll_selection: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivity) },
                                                poll_selected_correct: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenUI) },
                                                poll_selected_incorrect: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redUI) },
                                                poll_selected_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming) },
-                                               poll_selection_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming, doubleSize: System.backingScale == 1) },
+                                               poll_selection_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_incoming) },
                                                poll_selected_correct_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_incoming) },
                                                poll_selected_incorrect_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_incoming) },
                                                poll_selected_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
-                                               poll_selection_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing, doubleSize: System.backingScale == 1) },
+                                               poll_selection_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
                                                poll_selected_correct_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_outgoing) },
                                                poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) },
                                                chat_filter_edit: { NSImage(named: "Icon_FilterEdit")!.precomposed(palette.accentIcon) },
@@ -3036,8 +3395,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               create_new_message_general: { NSImage(resource: .iconNewMessage).precomposed(palette.accent, flipVertical: true) },
                               bot_manager_settings: { NSImage(resource: .iconBotManagerSettings).precomposed(palette.grayIcon) },
                               preview_text_down: { NSImage(resource: .iconMoveCaptionDown).precomposed(palette.grayIcon) },
-                              preview_text_up: { NSImage(resource: .iconMoveCaptionUp).precomposed(palette.grayIcon) }
-
+                              preview_text_up: { NSImage(resource: .iconMoveCaptionUp).precomposed(palette.grayIcon) },
+                              avatar_star_badge: { generateAvatarStarBadge(color: palette.background) },
+                              avatar_star_badge_active: { generateAvatarStarBadge(color: palette.accentSelect) },
+                              avatar_star_badge_gray: { generateAvatarStarBadge(color: palette.listBackground) },
+                              avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) },
+                              chatlist_apps: { NSImage(resource: .iconChatListApps).precomposed(palette.accent) },
+                              chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) }
     )
 }
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {
@@ -3163,5 +3527,64 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "section_header_text_color": Int32(bitPattern: presentationTheme.colors.listGrayText.rgb),
         "subtitle_text_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
         "destructive_text_color": Int32(bitPattern: presentationTheme.colors.redUI.rgb),
+        "bottom_bar_bg_color": Int32(bitPattern: presentationTheme.colors.grayForeground.rgb),
+        "section_separator_color": Int32(bitPattern: presentationTheme.colors.border.rgb)
     ]
 }
+
+
+#if !SHARE
+func generateSyntaxThemeParams(_ presentationTheme: TelegramPresentationTheme, bubbled: Bool, isIncoming: Bool) -> [String: NSColor] {
+    var textColor = presentationTheme.chat.textColor(isIncoming, bubbled)
+    var grayColor = presentationTheme.chat.grayText(isIncoming, bubbled)
+    var redColor = presentationTheme.chat.redUI(isIncoming, bubbled)
+    var greenColor = presentationTheme.chat.greenUI(isIncoming, bubbled)
+    var blueColor = presentationTheme.chat.linkColor(isIncoming, bubbled)
+    var purpleColor = presentationTheme.colors.peerAvatarVioletTop
+
+    if presentationTheme.colors.isDark {
+        textColor = textColor.lighter(amount: 0.05)
+        grayColor = grayColor.lighter(amount: 0.05)
+        redColor = redColor.lighter(amount: 0.05)
+        greenColor = greenColor.lighter(amount: 0.05)
+        blueColor = blueColor.lighter(amount: 0.05)
+        purpleColor = purpleColor.lighter(amount: 0.05)
+    } else {
+        textColor = textColor.darker(amount: 0.15)
+        grayColor = grayColor.darker(amount: 0.15)
+        redColor = redColor.darker(amount: 0.15)
+        greenColor = greenColor.darker(amount: 0.15)
+        blueColor = blueColor.darker(amount: 0.15)
+        purpleColor = blueColor.darker(amount: 0.15)
+    }
+    return [
+        "comment": grayColor,
+        "block-comment": grayColor,
+        "prolog": grayColor,
+        "doctype": grayColor,
+        "cdata": grayColor,
+        "punctuation": grayColor,
+        "property": purpleColor,
+        "tag": greenColor,
+        "boolean": greenColor,
+        "number": greenColor,
+        "constant": redColor,
+        "symbol": redColor,
+        "deleted": redColor,
+        "selector": redColor,
+        "attr-name": redColor,
+        "string": textColor,
+        "char": purpleColor,
+        "builtin": textColor,
+        "inserted": greenColor,
+        "operator": blueColor,
+        "entity": blueColor,
+        "url": blueColor,
+        "atrule": textColor,
+        "attr-value": blueColor,
+        "keyword": blueColor,
+        "function-definition": greenColor,
+        "class-name": redColor
+    ]
+}
+#endif

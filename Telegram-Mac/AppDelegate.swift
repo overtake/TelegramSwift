@@ -23,11 +23,12 @@ import InAppSettings
 import ThemeSettings
 import ColorPalette
 import WebKit
-import System
+import TelegramSystem
 import CodeSyntax
 import MetalEngine
 import TelegramMedia
 import RLottie
+import KeyboardKey
 
 #if !APP_STORE
 import AppCenter
@@ -245,7 +246,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         return sharedContextPromise.get() |> take(1) |> deliverOnMainQueue
     }
     private(set) var sharedApplicationContextValue: SharedApplicationContext?
-    private(set) var supportAccountContextValue: SupportAccountContext?
+    private(set) var supportAccountContextValue: SupportAccountContext? {
+        didSet {
+            supportAccountContextValue?.didUpdate = { _ in
+                self.updateActiveContexts()
+            }
+        }
+    }
     
     var passlock: Signal<Bool, NoError> {
         return sharedContextPromise.get() |> mapToSignal {
@@ -253,11 +260,25 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
     }
     
-    fileprivate var contextValue: AuthorizedApplicationContext?
+    fileprivate var contextValue: AuthorizedApplicationContext? {
+        didSet {
+            updateActiveContexts()
+        }
+    }
     private let context = Promise<AuthorizedApplicationContext?>()
     
     private var authContextValue: UnauthorizedApplicationContext?
     private let authContext = Promise<UnauthorizedApplicationContext?>()
+    
+    private func effectiveContext(_ account: Account) -> AccountContext? {
+        var current: AccountContext?
+        enumerateAccountContexts({ context in
+            if context.account.id == account.id {
+                current = context
+            }
+        })
+        return current
+    }
 
     private var activeValue: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
 
@@ -297,7 +318,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
 
     var currentContext:AccountContext? {
-        return contextValue?.context
+        var context: AccountContext?
+        self.enumerateAccountContexts({ ctx in
+            if ctx.isCurrent {
+                context = ctx
+            }
+        })
+        return context
     }
     
     private var ctxLayer: CtxInstallLayer?
@@ -308,6 +335,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
+            return BrowserStateContext.checkKey(event)
+        })
+        
         
        // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
       
@@ -783,7 +815,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 useBetaFeatures = false
                 #endif
                 
-                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, externalRequestVerificationStream: .single([:]), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
+                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, externalRequestVerificationStream: .single([:]), externalRecaptchaRequestVerification: { _, _ in return .complete() }, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
                 
                 let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
                 
@@ -852,40 +884,39 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 
                 
                 let notificationsBindings = SharedNotificationBindings(navigateToChat: { account, peerId in
-                    
-                    if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
-                        let navigation = contextValue.context.bindings.rootNavigation()
+                    if let contextValue =  self.effectiveContext(account) {
+                        let navigation = contextValue.bindings.rootNavigation()
                         
                         if let controller = navigation.controller as? ChatController {
                             if controller.chatInteraction.peerId == peerId {
                                 controller.scrollup()
                             } else {
-                                navigation.push(ChatAdditionController(context: contextValue.context, chatLocation: .peer(peerId)))
+                                navigation.push(ChatAdditionController(context: contextValue, chatLocation: .peer(peerId)))
                             }
                         } else {
-                            navigation.push(ChatController(context: contextValue.context, chatLocation: .peer(peerId)))
+                            navigation.push(ChatController(context: contextValue, chatLocation: .peer(peerId)))
                         }
-                        
+                        NSApp.activate(ignoringOtherApps: true)
+                        contextValue.window.deminiaturize(nil)
                     } else {
                         sharedContext.switchToAccount(id: account.id, action: .chat(peerId, necessary: true))
+                        NSApp.activate(ignoringOtherApps: true)
+                        window.deminiaturize(nil)
                     }
-                    NSApp.activate(ignoringOtherApps: true)
-                    window.deminiaturize(nil)
                 }, navigateToThread: { account, threadId, fromId, threadData in
-                    if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
-                        
+                    if let contextValue =  self.effectiveContext(account) {
                         let pushController: (ChatLocation, ChatMode, MessageId?, Atomic<ChatLocationContextHolder?>, Bool) -> Void = { chatLocation, mode, messageId, contextHolder, addition in
-                            let navigation = contextValue.context.bindings.rootNavigation()
+                            let navigation = contextValue.bindings.rootNavigation()
                             let controller: ChatController
                             if addition {
-                                controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatAdditionController(context: contextValue, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             } else {
-                                controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
+                                controller = ChatController(context: contextValue, chatLocation: chatLocation, mode: mode, focusTarget: .init(messageId: messageId), initialAction: nil, chatLocationContextHolder: contextHolder)
                             }
                             navigation.push(controller)
                         }
                         
-                        let navigation = contextValue.context.bindings.rootNavigation()
+                        let navigation = contextValue.bindings.rootNavigation()
                         
                         let currentInChat = navigation.controller is ChatController
                         let controller = navigation.controller as? ChatController
@@ -896,11 +927,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             
                             if let _ = threadData {
                                 
-                                _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: contextValue.context).start()
+                                _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: contextValue).start()
                             } else if let fromId = fromId {
-                                let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
+                                let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue, subject: .channelPost(threadId))
                                 
-                                _ = showModalProgress(signal: signal |> take(1), for: contextValue.context.window).start(next: { result in
+                                _ = showModalProgress(signal: signal |> take(1), for: contextValue.window).start(next: { result in
                                     let chatLocation: ChatLocation = .thread(result.message)
                                     
                                     let updatedMode: ReplyThreadMode
@@ -916,12 +947,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 })
                             }
                         }
-                        
+                        NSApp.activate(ignoringOtherApps: true)
+                        contextValue.window.deminiaturize(nil)
                     } else {
                         sharedContext.switchToAccount(id: account.id, action: .thread(threadId, fromId, threadData, necessary: true))
+                        NSApp.activate(ignoringOtherApps: true)
+                        window.deminiaturize(nil)
                     }
-                    NSApp.activate(ignoringOtherApps: true)
-                    window.deminiaturize(nil)
                 }, updateCurrectController: {
                     if let contextValue = self.contextValue {
                         contextValue.context.bindings.rootNavigation().controller.updateController()
@@ -940,6 +972,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 self.sharedApplicationContextValue = sharedApplicationContext
                 
                 self.supportAccountContextValue = .init(applicationContext: sharedApplicationContext)
+                
                 
                 self.sharedContextPromise.set(accountManager.transaction { transaction -> (SharedApplicationContext, LoggingSettings) in
                     return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings)?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings)
@@ -1093,7 +1126,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         closeAllPopovers(for: window)
                         
                         self.contextValue = context
-                        
+                                                
                         if let context = context {
                             context.context.isCurrent = true
                             context.applyNewTheme()
@@ -1495,7 +1528,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
     }
     
-    
+    func updateActiveContexts() {
+        let records = [self.contextValue?.context.account.id].compactMap { $0 } + (supportAccountContextValue?.accountIds ?? [])
+        BrowserStateContext.focus(records)
+    }
     
     
     func applicationDidResignActive(_ notification: Notification) {

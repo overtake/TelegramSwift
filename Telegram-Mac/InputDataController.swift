@@ -23,6 +23,8 @@ public class InputDataModalController : ModalViewController {
     
     private let isMain: Bool
     
+    public var alwaysActiveHeader: Bool = false
+    
     init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme, isMain: Bool = true) {
         self.controller = controller
         self._modalInteractions = modalInteractions
@@ -246,13 +248,13 @@ public class InputDataModalController : ModalViewController {
     
     override open func measure(size: NSSize) {
         let topHeight = current.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 350))), min(min(size.height - 100, 700), current.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 330))), min(min(size.height - 140, 700), current.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = current.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 100, 700), current.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 330))), min(min(contentSize.height - 140, 700), current.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -303,7 +305,7 @@ public class InputDataModalController : ModalViewController {
         } else {
             self.current.tableView.verticalScrollElasticity = .none
         }
-        if position.rect.minY - self.current.tableView.frame.height > 0 {
+        if position.rect.minY - self.current.tableView.frame.height > 0 || alwaysActiveHeader {
             self.modal?.makeHeaderState(state: .active, animated: true)
         } else {
             self.modal?.makeHeaderState(state: .normal, animated: true)
@@ -550,7 +552,7 @@ extension InputDataController : PeerMediaSearchable {
 class InputDataController: GenericViewController<InputDataView> {
 
     fileprivate var modalTransitionHandler:((Bool)->Void)? = nil
-    fileprivate var prepareAllItems: Bool = false
+    var prepareAllItems: Bool = false
     
     private let values: Promise<InputDataSignalValue> = Promise()
     private let disposable = MetaDisposable()
@@ -585,10 +587,17 @@ class InputDataController: GenericViewController<InputDataView> {
     var _externalFirstResponder:(()->NSResponder?)? = nil
     var _becomeFirstResponder:(()->Bool)?
     var contextObject: Any?
+    var contextObject_second: Any?
     var didAppear: ((InputDataController)->Void)?
     var didDisappear: ((InputDataController)->Void)?
+    var didResize: ((InputDataController)->Void)?
+    
+    var _menuItems:()->[ContextMenuItem] = { return [] }
+
 
     var afterViewDidLoad:(()->Void)?
+    
+    var makeFirstResponder: Bool = true
     
     var _abolishWhenNavigationSame: Bool = false
 
@@ -662,6 +671,10 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     var tableView: TableView {
         return self.genericView.tableView
+    }
+    
+    override func menuItems() -> [ContextMenuItem] {
+        return _menuItems()
     }
     
     func fetchData() -> [InputDataIdentifier : InputDataValue] {
@@ -760,6 +773,11 @@ class InputDataController: GenericViewController<InputDataView> {
     
     func validateInputValues() {
         self.proccessValidation(self.validateData(self.fetchData()))
+    }
+    
+    func updateInputValues() {
+        self.proccessValidation(self.updateDatas(self.fetchData()))
+        self.modalTransitionHandler?(true)
     }
     
     private func validateInput(data: [InputDataIdentifier : InputDataValue]) {
@@ -1010,7 +1028,9 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        _ = self.window?.makeFirstResponder(nextResponder())
+        if makeFirstResponder {
+            _ = self.window?.makeFirstResponder(nextResponder())
+        }
         super.viewDidAppear(animated)
         
         didAppear?(self)
@@ -1191,6 +1211,11 @@ class InputDataController: GenericViewController<InputDataView> {
    
     override func windowDidResignKey() {
         self.keyWindowUpdate(false, self)
+    }
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        self.didResize?(self)
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

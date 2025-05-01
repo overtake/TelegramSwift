@@ -1778,7 +1778,7 @@ extension Array {
 extension Array {
     func chunks(_ chunkSize: Int) -> [[Element]] {
         if self.count == 0 || chunkSize == 0 {
-            return [self]
+            return []
         }
         if chunkSize >= self.count {
             return [self]

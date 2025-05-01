@@ -20,7 +20,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
     private let nextView:ImageView = ImageView()
     private var imageContext:ImageView?
     
-    private let nameView = TextView()
+    private let nameView = InteractiveTextView()
 
     private var badgeView: View?
     
@@ -33,7 +33,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         if let item = item as? GeneralInteractedRowItem {
             
             
-            nameView.update(item.isSelected ? item.nameLayoutSelected : item.nameLayout)
+            nameView.set(text: item.isSelected ? item.nameLayoutSelected : item.nameLayout, context: item.context)
                         
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
@@ -168,6 +168,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 nextView.image = generateCheckSelected(foregroundColor: item.customTheme?.accentColor ?? theme.colors.accent, backgroundColor: item.customTheme?.underSelectedColor ?? theme.colors.underSelectedColor)
                 
                 nextView.sizeToFit()
+                
             }
             if case let .imageContext(image, _) = item.type {
                 nextView.isHidden = false
@@ -198,6 +199,9 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
                 nextView.image = item.isSelected ? nil : NSImage(named: "Icon_GeneralNext")?.precomposed(color)
                 nextView.sizeToFit()
             }
+            
+            nextView.alphaValue = item.enabled ? 1.0 : 0.7
+            
             switch item.viewType {
             case .legacy:
                 containerView.setCorners([], animated: false)
@@ -281,6 +285,9 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
+            if item.viewType == .legacy, item.customTheme != nil {
+                self.background = .clear
+            }
             let highlighted = isSelect ? self.backdorColor : highlightColor
             descriptionView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             textView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
@@ -399,7 +406,7 @@ class GeneralInteractedRowView: GeneralContainableRowView, ViewDisplayDelegate {
         containerView.addSubview(nameView)
         
         nameView.userInteractionEnabled = false
-        nameView.isSelectable = false
+        nameView.textView.isSelectable = false
         
         
         containerView.set(handler: { [weak self] _ in

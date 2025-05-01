@@ -8,12 +8,14 @@
 
 import Cocoa
 import TelegramCore
-
+import TGUIKit
 import Postbox
 import SwiftSignalKit
 
 class ChatScheduleController: ChatController {
-    public override init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .scheduled, focusTarget: ChatFocusTarget? = nil, initialAction:ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
+    private let focusTarget: ChatFocusTarget?
+    override init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .scheduled, focusTarget: ChatFocusTarget? = nil, initialAction:ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
+        self.focusTarget = focusTarget
         super.init(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder)
     }
 
@@ -22,8 +24,46 @@ class ChatScheduleController: ChatController {
         return true
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+    }
+    override func applyTransition(_ transition: TableUpdateTransition, initialData: ChatHistoryCombinedInitialData, isLoading: Bool, processedView: ChatHistoryView) {
+        
+        let removedItems = self.genericView.tableView.allItems.filter({ transition.deleted.contains($0.index) })
+                
+        super.applyTransition(transition, initialData: initialData, isLoading: isLoading, processedView: processedView)
+        
+        let currentItems = self.genericView.tableView.allItems.filter({ $0 is ChatRowItem })
+
+        
+        if !transition.inserted.isEmpty {
+            let messages = transition.inserted.compactMap { ($1 as? ChatRowItem)?.messages }.reduce([], { $0 + $1 })
+            let message = messages.first(where: { $0.id == self.focusTarget?.messageId })
+            if let message, message.pendingProcessingAttribute != nil {
+                self.genericView.showVideoProccessingTooltip(context: context, source: .proccessing(message), animated: true)
+            }
+        } else if !removedItems.isEmpty {
+            let messages = removedItems.compactMap { ($0 as? ChatRowItem)?.messages }.reduce([], { $0 + $1 })
+            
+            let message = messages.first(where: { $0.id == self.focusTarget?.messageId })
+            
+            if let message, message.pendingProcessingAttribute != nil, currentItems.isEmpty {
+                self.navigationController?.back()
+                let controller = self.navigationController?.controller as? ChatController
+                controller?.genericView.showVideoProccessingTooltip(context: context, source: .published(message), animated: true)
+            } else if self.focusTarget == nil, let message = messages.first(where: { $0.pendingProcessingAttribute != nil }) {
+                self.genericView.showVideoProccessingTooltip(context: context, source: .published(message), animated: true)
+            }
+            
+        }
+        
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         chatInteraction.sendPlainText = { _ in
             
         }

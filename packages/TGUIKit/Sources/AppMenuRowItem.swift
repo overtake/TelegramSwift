@@ -156,9 +156,17 @@ open class AppMenuRowItem : AppMenuBasicItem {
     public init(_ initialSize: NSSize, item: ContextMenuItem, interaction: Interaction, presentation: AppMenu.Presentation) {
         self.item = item
         let textColor = presentation.primaryColor(item)
-        let attr = parseMarkdownIntoAttributedString(item.title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: textColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.accentIcon), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, contents)
-        }))
+        
+        let attr: NSAttributedString
+
+        if let attribted = item.attributedTitle {
+            attr = attribted
+        } else {
+            attr = parseMarkdownIntoAttributedString(item.title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: textColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            }))
+        }
+        
         
         self.text = TextViewLayout(attr, maximumNumberOfLines: item.removeTail ? 1 : .max)
         
@@ -305,7 +313,8 @@ open class AppMenuRowItem : AppMenuBasicItem {
 }
 
 open class AppMenuRowView: AppMenuBasicItemView {
-    private let textView = TextView()
+    private var textView: TextView?
+    private var customTextView: NSView?
     private var imageView: ImageView? = nil
     private var keyEquivalent: TextView? = nil
     private var drawable: AppMenuItemImageDrawable? = nil
@@ -318,12 +327,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(contentView)
-        self.addSubview(textView)
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
-        textView.disableBackgroundDrawing = true
 
-        
         containerView.scaleOnClick = true
 
         containerView.layer?.cornerRadius = .cornerRadius
@@ -520,14 +524,14 @@ open class AppMenuRowView: AppMenuBasicItemView {
             } else {
                 drawable.setFrameOrigin(NSMakePoint(item.leftInset, 4))
             }
-            textView.setFrameOrigin(NSMakePoint(drawable.frame.maxX + item.leftInset - 2, textY))
+            currentTextView?.setFrameOrigin(NSMakePoint(drawable.frame.maxX + item.leftInset - 2, textY))
         } else if let imageView = imageView {
             imageView.centerY(x: item.leftInset)
-            textView.setFrameOrigin(NSMakePoint(imageView.frame.maxX + item.leftInset - 2, textY))
+            currentTextView?.setFrameOrigin(NSMakePoint(imageView.frame.maxX + item.leftInset - 2, textY))
         } else if item.hasDrawable {
-            textView.setFrameOrigin(NSMakePoint(item.leftInset + item.imageSize + item.leftInset - 2, textY))
+            currentTextView?.setFrameOrigin(NSMakePoint(item.leftInset + item.imageSize + item.leftInset - 2, textY))
         } else {
-            textView.setFrameOrigin(NSMakePoint(item.leftInset, textY))
+            currentTextView?.setFrameOrigin(NSMakePoint(item.leftInset, textY))
         }
         if let more = more {
             more.centerY(x: containerView.frame.width - item.leftInset - more.frame.width)
@@ -542,14 +546,47 @@ open class AppMenuRowView: AppMenuBasicItemView {
       //  self.drawable?.updateState(.Hover)
     }
     
+    var currentTextView: NSView? {
+        return textView ?? customTextView
+    }
+    
     open override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
         guard let item = item as? AppMenuRowItem else {
             return
         }
-        textView.update(item.text)
-        textView.change(opacity: item.item.title.isEmpty ? 0 : 1, animated: animated)
+        
+        
+        if let customTextView = item.item.customTextView?() {
+            self.customTextView?.removeFromSuperview()
+            self.customTextView = customTextView
+            addSubview(customTextView)
+            if let textView {
+                performSubviewRemoval(textView, animated: animated)
+                self.textView = nil
+            }
+        } else {
+            if let customTextView {
+                performSubviewRemoval(customTextView, animated: animated)
+                self.customTextView = nil
+            }
+            let current: TextView
+            if let view = self.textView {
+                current = view
+            } else {
+                current = TextView()
+                self.textView = current
+                self.addSubview(current)
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                current.disableBackgroundDrawing = true
+                current.isEventLess = true
+            }
+            current.update(item.text)
+        }
+        
+        currentTextView?._change(opacity: item.item.title.isEmpty ? 0 : 1, animated: animated)
         
         let drawable: AppMenuItemImageDrawable?
         if let current = self.drawable, current.isEqual(to: item.item) {

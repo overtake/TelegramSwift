@@ -336,7 +336,7 @@ class GroupStickerSetController: TableViewController {
                     case .none:
                         updateState({$0.withUpdatedLoadedPack(nil).withUpdatedLoading(false).withUpdatedFailed(true)})
                     case let .result(info, items, _):
-                        updateState({$0.withUpdatedLoadedPack((info, items, Int32(items.count))).withUpdatedLoading(false).withUpdatedFailed(false)})
+                        updateState({$0.withUpdatedLoadedPack((info._parse(), items, Int32(items.count))).withUpdatedLoading(false).withUpdatedFailed(false)})
                     }
                 }))
             }
@@ -367,7 +367,7 @@ class GroupStickerSetController: TableViewController {
         
         let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), context.engine.peers.peerSpecificStickerPack(peerId: peerId), appearanceSignal)
             |> map { state, view, specificPack, appearance -> TableUpdateTransition in
-                let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo.flatMap({ ($0.0._parse(), $0.1) })).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
             } |> afterDisposed {
                 actionsDisposable.dispose()

@@ -46,7 +46,7 @@ final class StoryPremRequiredInput : Control, StoryInput {
         let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(.text), textColor: darkAppearance.colors.text), bold: MarkdownAttributeSet(font: .medium(.text), textColor: darkAppearance.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: darkAppearance.colors.link), linkAttribute: { link in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
                 if value == "premium" {
-                    showModal(with: PremiumBoardingController(context: context, presentation: darkAppearance), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, presentation: darkAppearance), for: context.window)
                 }
             }))
         })).detectBold(with: .medium(.text))

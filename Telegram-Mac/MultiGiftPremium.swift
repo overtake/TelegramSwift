@@ -13,7 +13,20 @@ import SwiftSignalKit
 import Postbox
 
 
-func multigift(context: AccountContext, selected: [PeerId] = []) {
+enum MultigiftType {
+    case premium
+    case stars
+    case both
+}
+
+func multigift(context: AccountContext, type: MultigiftType = .both, selected: [PeerId] = []) {
+    
+    
+    var type = type
+    if context.appConfiguration.getBoolValue("stargifts_blocked", orElse: true) {
+        type = .premium
+    }
+    
     let birthdays: Signal<[UIChatListBirthday], NoError> = context.account.stateManager.contactBirthdays |> map {
         return $0.filter {
             $0.value.isEligble
@@ -38,6 +51,9 @@ func multigift(context: AccountContext, selected: [PeerId] = []) {
         let tomorrow = birthdays.filter({ $0.birthday.isTomorrow() })
         let yesterday = birthdays.filter({ $0.birthday.isYesterday() })
         var blocks: [SelectPeersBlock] = []
+        blocks.append(.init(separator: strings().premiumGiftContactSelectionThisIsYou, peerIds: [context.peerId]))
+
+        
         if !today.isEmpty {
             blocks.append(.init(separator: strings().birthdaySeparatorToday, peerIds: today.map { $0.peer.id }))
         }
@@ -62,12 +78,43 @@ func multigift(context: AccountContext, selected: [PeerId] = []) {
             additionTopItem = nil
         }
         
-        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected)
+        let limit: Int32
+        switch type {
+        case .premium:
+            limit = 10
+        case .stars:
+            limit = 1
+        case .both:
+            limit = 1
+        }
+        
+        let behaviour = SelectContactsBehavior(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: limit, blocks: blocks, additionTopItem: additionTopItem, defaultSelected:  selected, isLookSavedMessage: false, savedStatus: strings().premiumGiftContactSelectionBuySelf)
         
         
+        let title: String
+        switch type {
+        case .premium:
+            title = strings().premiumGiftTitle
+        case .stars:
+            title = strings().starsGiftTitle
+        case .both:
+            title = strings().giftingTitle
+        }
         
-        _ = selectModalPeers(window: context.window, context: context, title: strings().premiumGiftTitle, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
-            showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+        _ = selectModalPeers(window: context.window, context: context, title: title, behavior: behaviour, selectedPeerIds: Set(behaviour.defaultSelected)).start(next: { peerIds in
+            switch type {
+            case .premium:
+                showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: context.window)
+            case .stars:
+                let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerIds[0])) |> deliverOnMainQueue
+                _ = signal.start(next: { peer in
+                    if let peer {
+                        showModal(with: Star_ListScreen(context: context, source: .gift(peer)), for: context.window)
+                    }
+                })
+            case .both:
+                showModal(with: GiftingController(context: context, peerId: peerIds[0], isBirthday: true), for: context.window)
+            }
         })
     })
 }

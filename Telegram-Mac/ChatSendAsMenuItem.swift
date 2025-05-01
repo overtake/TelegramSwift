@@ -50,9 +50,17 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
             status = strings().chatSendAsPersonalAccount
         } else {
             if peer.peer.isGroup || peer.peer.isSupergroup {
-                status = strings().chatSendAsGroupCountable(Int(peer.subscribers ?? 0))
+                if peer.subscribers != nil {
+                    status = strings().chatSendAsGroupCountable(Int(peer.subscribers ?? 0))
+                } else {
+                    status = strings().peerStatusGroup
+                }
             } else {
-                status = strings().chatSendAsChannelCountable(Int(peer.subscribers ?? 0))
+                if peer.subscribers != nil {
+                    status = strings().chatSendAsChannelCountable(Int(peer.subscribers ?? 0))
+                } else {
+                    status = strings().peerStatusChannel
+                }
             }
         }
         self.statusLayout = .init(.initialize(string: status, color: presentation.disabledTextColor, font: .normal(.text)))
@@ -63,7 +71,7 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
         
         let peer = self.peer.peer
         
-        signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(25 * System.backingScale, 25 * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false, disableForum: true) |> deliverOnMainQueue
+        signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil, nil), displayDimensions: NSMakeSize(25 * System.backingScale, 25 * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false, disableForum: true) |> deliverOnMainQueue
         disposable.set(signal.start(next: { [weak item] image, _ in
             if let image = image {
                 item?.image = NSImage(cgImage: image, size: NSMakeSize(25, 25))

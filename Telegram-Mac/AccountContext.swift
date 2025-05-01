@@ -18,12 +18,59 @@ import Reactions
 import FetchManager
 #if !SHARE
 import InAppPurchaseManager
+import CurrencyFormat
 #endif
 import ApiCredentials
 
-let clown: String = "🤡"
-let focusIntentEmoji = "⛔️"
 
+#if !SHARE
+struct PremiumGiftProduct: Equatable {
+    let giftOption: PremiumGiftCodeOption
+    let storeProduct: InAppPurchaseManager.Product?
+    
+    var id: String {
+        return self.storeProduct?.id ?? ""
+    }
+    
+    var months: Int32 {
+        return self.giftOption.months
+    }
+    
+    var price: String {
+        if let storeProduct = storeProduct {
+            return formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
+        }
+        return formatCurrencyAmount(giftOption.amount, currency: giftOption.currency)
+    }
+    
+    var pricePerMonth: String {
+        if let storeProduct = storeProduct {
+            return storeProduct.pricePerMonth(Int(self.months))
+        } else {
+            return formatCurrencyAmount(giftOption.amount / Int64(giftOption.months), currency: giftOption.currency)
+        }
+    }
+    var priceCurrencyAndAmount:(currency: String, amount: Int64) {
+        if let storeProduct = storeProduct {
+            return storeProduct.priceCurrencyAndAmount
+        } else {
+            return (currency: giftOption.currency, amount: giftOption.amount)
+        }
+    }
+    
+    func multipliedPrice(count: Int) -> String {
+        if let storeProduct = storeProduct {
+            return storeProduct.multipliedPrice(count: count)
+        } else {
+            return formatCurrencyAmount(giftOption.amount * Int64(count), currency: giftOption.currency)
+        }
+    }
+}
+#endif
+
+
+let servicePeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
+let verifyCodePeerId = PeerId.init(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(489000))
 
 
 func bestWindow(_ accountContext: AccountContext, _ controller: ViewController?) -> Window {
@@ -53,7 +100,8 @@ public struct PremiumConfiguration {
             minGroupWallpaperLevel: 9,
             minGroupCustomWallpaperLevel: 9,
             minGroupEmojiPackLevel: 9,
-            minGroupAudioTranscriptionLevel: 9
+            minGroupAudioTranscriptionLevel: 9,
+            minChannelWearGiftLevel: 8
         )
     }
     
@@ -72,6 +120,7 @@ public struct PremiumConfiguration {
     public let minChannelWallpaperLevel: Int32
     public let minChannelCustomWallpaperLevel: Int32
     public let minChannelRestrictAdsLevel: Int32
+    public let minChannelWearGiftLevel: Int32
 
     
     public let minGroupProfileIconLevel: Int32
@@ -102,7 +151,8 @@ public struct PremiumConfiguration {
         minGroupWallpaperLevel: Int32,
         minGroupCustomWallpaperLevel: Int32,
         minGroupEmojiPackLevel: Int32,
-        minGroupAudioTranscriptionLevel: Int32
+        minGroupAudioTranscriptionLevel: Int32,
+        minChannelWearGiftLevel: Int32
     ) {
         self.isPremiumDisabled = isPremiumDisabled
         self.showPremiumGiftInAttachMenu = showPremiumGiftInAttachMenu
@@ -125,6 +175,7 @@ public struct PremiumConfiguration {
         self.minGroupCustomWallpaperLevel = minGroupCustomWallpaperLevel
         self.minGroupEmojiPackLevel = minGroupEmojiPackLevel
         self.minGroupAudioTranscriptionLevel = minGroupAudioTranscriptionLevel
+        self.minChannelWearGiftLevel = minChannelWearGiftLevel
     }
     
     public static func with(appConfiguration: AppConfiguration) -> PremiumConfiguration {
@@ -154,7 +205,8 @@ public struct PremiumConfiguration {
                 minGroupWallpaperLevel: get(data["group_wallpaper_level_min"]) ?? defaultValue.minGroupWallpaperLevel,
                 minGroupCustomWallpaperLevel: get(data["group_custom_wallpaper_level_min"]) ?? defaultValue.minGroupCustomWallpaperLevel,
                 minGroupEmojiPackLevel: get(data["group_emoji_stickers_level_min"]) ?? defaultValue.minGroupEmojiPackLevel,
-                minGroupAudioTranscriptionLevel: get(data["group_transcribe_level_min"]) ?? defaultValue.minGroupAudioTranscriptionLevel
+                minGroupAudioTranscriptionLevel: get(data["group_transcribe_level_min"]) ?? defaultValue.minGroupAudioTranscriptionLevel,
+                minChannelWearGiftLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelWearGiftLevel
             )
         } else {
             return defaultValue
@@ -332,17 +384,22 @@ enum ApplyThemeUpdate {
     case cloud(TelegramTheme)
 }
 
+struct CachedSearchMessages : Equatable {
+    var result: SearchMessagesResult
+    var state: SearchMessagesState
+}
+
 final class AccountContextBindings {
     #if !SHARE
     let rootNavigation: () -> MajorNavigationController
     let mainController: () -> MainViewController
     let showControllerToaster: (ControllerToaster, Bool) -> Void
-    let globalSearch:(String, PeerId?)->Void
+    let globalSearch:(String, PeerId?, CachedSearchMessages?)->Void
     let switchSplitLayout:(SplitViewState)->Void
     let entertainment:()->EntertainmentViewController
     let needFullsize:()->Void
     let displayUpgradeProgress:(CGFloat)->Void
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String, PeerId?) -> Void = { _, _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String, PeerId?, CachedSearchMessages?) -> Void = { _, _, _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -375,7 +432,14 @@ final class AccountContext {
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
     let starsContext: StarsContext
-    
+    let starsSubscriptionsContext: StarsSubscriptionsContext
+    let currentCountriesConfiguration: Atomic<CountriesConfiguration> = Atomic(value: CountriesConfiguration(countries: loadCountryCodes()))
+    private(set) var contentConfig: ContentSettingsConfiguration = .default
+    private let _countriesConfiguration = Promise<CountriesConfiguration>()
+    var countriesConfiguration: Signal<CountriesConfiguration, NoError> {
+        return self._countriesConfiguration.get()
+    }
+
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -410,9 +474,14 @@ final class AccountContext {
     var privacy:Signal<AccountPrivacySettings?, NoError> {
         return bindings.mainController().settings.privacySettings
     }
+    func updateMessagesPrivacy(noPaidMessages: SelectivePrivacySettings, globalSettings: GlobalPrivacySettings) {
+        bindings.mainController().settings.updateMessagesPrivacy(noPaidMessages: noPaidMessages, globalSettings: globalSettings)
+    }
     func updatePrivacy(_ updated: SelectivePrivacySettings, kind: SelectivePrivacySettingsKind) {
         bindings.mainController().settings.updatePrivacy(updated, kind: kind)
     }
+    
+    private(set) var premiumProductsAndPrice: ([PremiumGiftProduct], (Int64, NSDecimalNumber)) = ([], (0, 0))
     #endif
 
     
@@ -503,6 +572,7 @@ final class AccountContext {
     private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
+    
     private var _peerNameColors: PeerNameColors?
     
     var limitConfiguration: LimitsConfiguration {
@@ -588,7 +658,6 @@ final class AccountContext {
 
 
     
-    
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
         self.sharedContext = sharedContext
         self.account = account
@@ -597,6 +666,10 @@ final class AccountContext {
         self.isSupport = isSupport
         #if !SHARE
         self.inAppPurchaseManager = .init(engine: engine)
+        
+        
+        
+        
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
@@ -611,14 +684,93 @@ final class AccountContext {
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         self.starsContext = engine.payments.peerStarsContext()
-#endif
+        self.starsSubscriptionsContext = engine.payments.peerStarsSubscriptionsContext(starsContext: self.starsContext)
+        
+        _ = self.engine.payments.keepStarGiftsUpdated().start()
+        
+        let _ = self.engine.peers.requestGlobalRecommendedChannelsIfNeeded().startStandalone()
+        let _ = self.engine.peers.requestRecommendedAppsIfNeeded().startStandalone()
+        let _ = self.engine.peers.managedUpdatedRecentApps().startStandalone()
+        
+        self.reactions.checkStarsAmount = { [weak self] amount, peerId in
+            if let self {
+                let starsAllowed = self.engine.data.get(TelegramEngine.EngineData.Item.Peer.ReactionSettings(id: peerId)) |> map { $0.knownValue?.starsAllowed == true }
+                
+                return combineLatest(queue: .mainQueue(), self.starsContext.state
+                                     |> filter { $0 != nil }
+                                     |> map { $0! }
+                                     |> take(1)
+                                     |> map { state in
+                                        return state.balance.value >= amount
+                                     }, starsAllowed)
+            } else {
+                return .single((false, false))
+            }
+        }
+        
+        self.reactions.failStarsAmount = { [weak self] amount, messageId in
+            if let self {
+                let signal = self.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: messageId.peerId)) |> deliverOnMainQueue
+                _ = signal.start(next: { [weak self] peer in
+                    if let peer = peer, let self {
+                        showModal(with: Star_ListScreen(context: self, source: .reactions(peer, Int64(amount))), for: self.window)
+                    }
+                })
+            }
+        }
+        
+        self.reactions.successStarsAmount = { [weak self] amount in
+            self?.starsContext.add(balance: amount)
+        }
+        self.reactions.starsDisabled = { [weak self] in
+            if let self {
+                showModalText(for: self.window, text: strings().chatReactionStarsDisabled)
+            }
+        }
+        
+        let products: Signal<[InAppPurchaseManager.Product], NoError>
+        #if APP_STORE
+        products = inAppPurchaseManager.availableProducts |> map {
+            $0
+        }
+        #else
+        products = .single([])
+        #endif
+        
+        let signal = combineLatest(
+            engine.payments.premiumGiftCodeOptions(peerId: nil),
+            products
+        )
+        |> map { options, products in
+            var gifts: [PremiumGiftProduct] = []
+            for option in options {
+                let product = products.first(where: { $0.id == option.storeProductId })
+                gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
+            }
+            let defaultPrice: (Int64, NSDecimalNumber)
+            if let defaultProduct = products.first(where: { $0.id == "org.telegram.telegramPremium.monthly" }) {
+                defaultPrice = (defaultProduct.priceCurrencyAndAmount.amount, defaultProduct.priceValue)
+            } else if let defaultProduct = options.first(where: { $0.storeProductId == "org.telegram.telegramPremium.threeMonths.code_x1" }) {
+                defaultPrice = (defaultProduct.amount / Int64(defaultProduct.months), NSDecimalNumber(value: 1))
+            } else {
+                defaultPrice = (1, NSDecimalNumber(value: 1))
+            }
+            return (gifts, defaultPrice)
+        } |> deliverOnMainQueue
+        
+        actionsDisposable.add(signal.start(next: { [weak self] value in
+            self?.premiumProductsAndPrice = value
+        }))
+        
+        
+    #endif
         
         
         giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
         |> map { pack in
             switch pack {
             case let .result(_, items, _):
-                return items.map { $0.file }
+                return items.map { $0.file._parse() }
             default:
                 return []
             }
@@ -680,6 +832,13 @@ final class AccountContext {
             self?._chatThemes.set(.single(values))
         }))
         
+        let currentCountriesConfiguration = currentCountriesConfiguration
+        self.actionsDisposable.add((engine.localization.getCountriesList(accountManager: sharedContext.accountManager, langCode: nil)
+        |> deliverOnMainQueue).start(next: { value in
+            let _ = currentCountriesConfiguration.swap(CountriesConfiguration(countries: value))
+        }))
+
+        
         
         let cloudThemes: Signal<[TelegramTheme], NoError> = telegramThemes(postbox: account.postbox, network: account.network, accountManager: sharedContext.accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
             return lhs.count == rhs.count
@@ -730,49 +889,7 @@ final class AccountContext {
                 }
             }
         }
-        
-        
-        let defaultAndCustom: Signal<(SmartThemeCachedData, SmartThemeCachedData?), NoError> = combineLatest(appearanceSignal, themeSettingsView(accountManager: sharedContext.accountManager)) |> map { appearance, value -> (ThemePaletteSettings, TelegramPresentationTheme, ThemePaletteSettings?) in
-            
-            let `default` = value.withUpdatedToDefault(dark: appearance.presentation.dark)
-                .withUpdatedCloudTheme(nil)
-                .withUpdatedPalette(appearance.presentation.colors.parent.palette)
-                .installDefaultWallpaper()
-            
-            
-            let  customData = value.withUpdatedCloudTheme(appearance.presentation.cloudTheme)
-                .withUpdatedPalette(appearance.presentation.colors)
-                .installDefaultWallpaper()
-            
-            var custom: ThemePaletteSettings?
-            if let cloud = customData.cloudTheme, cloud.settings == nil {
-                custom = customData
-            } else if let cloud = customData.cloudTheme {
-                if let settings = cloud.effectiveSettings(for: value.palette.parent.palette) {
-                    if customData.wallpaper.wallpaper != settings.wallpaper?.uiWallpaper {
-                        custom = customData
-                    }
-                }
-            }
-            
-            return (`default`, appearance.presentation, custom)
-        } |> deliverOn(.concurrentBackgroundQueue()) |> mapToSignal { (value, theme, custom) in
-            
-            var signals:[Signal<SmartThemeCachedData, NoError>] = []
-            
-            let  values = [value, custom].compactMap { $0 }
-            for (i, value) in values.enumerated() {
-                let newTheme = theme.withUpdatedColors(value.palette).withUpdatedWallpaper(value.wallpaper)
-                signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: value.wallpaper.wallpaper) |> mapToSignal { _ in
-                    return generateChatThemeThumb(palette: newTheme.colors, bubbled: value.bubbled, backgroundMode: value.bubbled ? newTheme.backgroundMode : .color(color: newTheme.colors.chatBackground))
-                } |> map { previewIcon in
-                    return SmartThemeCachedData(source: .local(value.palette), data: .init(appTheme: newTheme, previewIcon: previewIcon, emoticon: i == 0 ? "🏠" : "🎨"))
-                })
-            }
-            
-            return combineLatest(signals) |> map { ($0[0], $0.count == 2 ? $0[1] : nil) }
-        }
-        
+                
         _cloudThemes.set(cloudThemes |> map { cloudThemes in
             return .init(themes: cloudThemes, list: [:], default: nil, custom: nil)
         })
@@ -791,6 +908,10 @@ final class AccountContext {
         
         reactionSettingsDisposable.set(settings.start(next: { [weak self] settings in
             self?.reactionSettings = settings
+        }))
+        
+        actionsDisposable.add((contentSettingsConfiguration(network: account.network) |> deliverOnMainQueue).startStandalone(next: { [weak self] settings in
+            self?.contentConfig = settings
         }))
         
         #endif
@@ -1101,7 +1222,17 @@ final class AccountContext {
         dockControl.clear()
         #endif
     }
+    
+    var isFrozen: Bool {
+        return appConfiguration.getGeneralValue("freeze_since_date", orElse: 0) != 0
+    }
    
+    
+#if !SHARE
+    func freezeAlert() {
+        showModal(with: FrozenAccountController(context: self), for: self.window)
+    }
+    #endif
     
     func checkFirstRecentlyForDuplicate(peerId:PeerId) {
         if let index = recentlyPeerUsed.firstIndex(of: peerId), index == 0 {
@@ -1237,47 +1368,59 @@ final class AccountContext {
 
     
     func composeCreateGroup(selectedPeers:Set<PeerId> = Set()) {
-        createGroup(with: self, selectedPeers: selectedPeers)
+        if isFrozen {
+            self.freezeAlert()
+        } else {
+            createGroup(with: self, selectedPeers: selectedPeers)
+        }
     }
     func composeCreateChannel() {
-        createChannel(with: self)
+        if isFrozen {
+            self.freezeAlert()
+        } else {
+            createChannel(with: self)
+        }
     }
     func composeCreateSecretChat() {
-        let account = self.account
-        let window = self.window
-        let engine = self.engine
-        let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
-            if let first = peerIds.first, peerIds.count == 1 {
-                return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
+        if isFrozen {
+            self.freezeAlert()
+        } else {
+            let account = self.account
+            let window = self.window
+            let engine = self.engine
+            let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
+                if let first = peerIds.first, peerIds.count == 1 {
+                    return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
+                        return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
+                    }
                 }
+                return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
             }
-            return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
+            let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
+            
+            let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
+                return engine.peers.createSecretChat(peerId: peerId)
+            } |> deliverOnMainQueue
+            
+            _ = create.start(next: { [weak self] peerId in
+                guard let `self` = self else {return}
+                self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
+            }, error: { [weak self] error in
+                guard let context = self else {
+                    return
+                }
+                switch error {
+                case .generic:
+                    showModalText(for: context.window, text: strings().unknownError)
+                case .limitExceeded:
+                    showModalText(for: context.window, text: strings().loginFloodWait)
+                case let .premiumRequired(peer):
+                    showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
+                        prem(with: PremiumBoardingController(context: context), for: context.window)
+                    })
+                }
+            })
         }
-        let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
-        
-        let create = select |> map { $0.first! } |> castError(CreateSecretChatError.self) |> mapToSignal { peerId in
-            return engine.peers.createSecretChat(peerId: peerId)
-        } |> deliverOnMainQueue
-        
-        _ = create.start(next: { [weak self] peerId in
-            guard let `self` = self else {return}
-            self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
-        }, error: { [weak self] error in
-            guard let context = self else {
-                return
-            }
-            switch error {
-            case .generic:
-                showModalText(for: context.window, text: strings().unknownError)
-            case .limitExceeded:
-                showModalText(for: context.window, text: strings().loginFloodWait)
-            case let .premiumRequired(peer):
-                showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
-                })
-            }
-        })
     }
     #endif
 }
@@ -1512,30 +1655,3 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     }
 }
 
-
-/*
- let signal:Signal<Void, NoError> = Signal { subscriber in
-     
-     let signal: Signal<Never, NoError> = account.postbox.transaction {
-         return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
-     } |> mapToSignal { configuration in
-         let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
-         var signals = value.emojis.map {
-             engine.stickers.searchGifs(query: $0)
-         }
-         signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
-         return combineLatest(signals) |> ignoreValues
-     }
-     
-     let disposable = signal.start(completed: {
-         subscriber.putCompletion()
-     })
-     
-     return ActionDisposable {
-         disposable.dispose()
-     }
- }
- 
- let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
- preloadGifsDisposable.set(updated.start())
- */

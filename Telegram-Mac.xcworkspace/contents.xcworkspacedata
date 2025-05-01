@@ -5,15 +5,6 @@
       location = "group:submodules/CodeSyntax/CodeSyntax/CodeSyntax.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/AppCenter-sdk/AppCenter/AppCenter.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:submodules/AppCenter-sdk/AppCenterAnalytics/AppCenterAnalytics.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:submodules/AppCenter-sdk/AppCenterCrashes/AppCenterCrashes.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:submodules/RLottie_Xcode/RLottie_Xcode.xcodeproj">
    </FileRef>
    <FileRef

@@ -29,12 +29,12 @@ final class Star_TransactionItem : GeneralRowItem {
         self.callback = callback
         
         let amountAttr = NSMutableAttributedString()
-        if transaction.amount < 0 {
+        if transaction.amount.value < 0 {
             amountAttr.append(string: "\(transaction.amount) \(clown)", color: theme.colors.redUI, font: .medium(.text))
         } else {
             amountAttr.append(string: "+\(transaction.amount) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
         }
-        amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file, playPolicy: .onceEnd), for: clown)
+        amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
         
         self.amountLayout = .init(amountAttr)
         
@@ -59,6 +59,8 @@ final class Star_TransactionItem : GeneralRowItem {
             name = strings().starListTransactionAds
         case .unknown:
             name = strings().starListTransactionUnknown
+        case .apiLimitExtension:
+            name = strings().starsIntroTransactionTelegramBotApiTitle
         }
         
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
@@ -70,27 +72,56 @@ final class Star_TransactionItem : GeneralRowItem {
         self.dateLayout = .init(.initialize(string: date, color: theme.colors.grayText, font: .normal(.text)))
         
         var descString: String? = nil
-        if !transaction.native.media.isEmpty {
+        if let count = transaction.native.paidMessageCount {
+            descString = strings().starTransactionMessageFeeCountable(Int(count))
+        } else if let premiumGiftMonths = transaction.native.premiumGiftMonths {
+            descString = strings().starsTransactionPremiumFor(Int(premiumGiftMonths))
+        }  else if let commission = transaction.native.starrefCommissionPermille {
+            descString = strings().starsTransactionCommission("\(commission.decemial.string)%")
+        } else if !transaction.native.media.isEmpty {
             switch transaction.native.peer {
             case let .peer(peer):
                 descString = peer._asPeer().displayTitle
             default:
                 break
             }
+        } else if transaction.native.giveawayMessageId != nil {
+            descString = strings().starsTransactionReceivedPrize
+        } else if transaction.native.starGift != nil {
+            descString = strings().starsTransactionGift
+        } else if let floodskipNumber = transaction.native.floodskipNumber {
+            descString = strings().starTransactionBroadcastMessagesCountable(Int(floodskipNumber)).replacingOccurrences(of: "\(floodskipNumber)", with: floodskipNumber.formattedWithSeparator)
         } else {
-            if let desc = transaction.native.description {
-                descString = desc
-            } else {
-                if transaction.amount > 0 {
-                    if transaction.native.flags.contains(.isRefund) {
-                        descString = strings().starListRefund
-                    } else {
-                        descString = strings().starsTransactionTopUp
-                    }
+            if transaction.native.flags.contains(.isGift) {
+                descString = strings().starsTransactionReceivedGift
+            } else if transaction.native.flags.contains(.isReaction) {
+                descString = strings().starsTransactionPaidReaction
+            } else if let period = transaction.native.subscriptionPeriod {
+                if period == 30 * 24 * 60 * 60 {
+                    descString = strings().starsSubscriptionPeriodMonthly
+                } else if period == 7 * 24 * 60 * 60 {
+                    descString = strings().starsSubscriptionPeriodWeekly
+                } else if period == 1 * 24 * 60 * 60 {
+                    descString = strings().starsSubscriptionPeriodDaily
                 } else {
-                    descString = ""
+                    descString = strings().starsSubscriptionPeriodUnknown
+                }
+            } else {
+                if let desc = transaction.native.description {
+                    descString = desc
+                } else {
+                    if transaction.amount.value > 0 {
+                        if transaction.native.flags.contains(.isRefund) {
+                            descString = strings().starListRefund
+                        } else {
+                            descString = strings().starsTransactionTopUp
+                        }
+                    } else {
+                        descString = ""
+                    }
                 }
             }
+           
         }
         
         if let descString {
@@ -221,7 +252,7 @@ private final class TransactionView : GeneralContainableRowView {
             if let image = media as? TelegramMediaImage {
                 updateImageSignal = chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.starsTransaction(transaction: reference, media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             } else if let file = media as? TelegramMediaFile {
-                updateImageSignal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: .starsTransaction(transaction: reference, media: file), scale: backingScaleFactor)
+                updateImageSignal = chatMessageVideo(account: item.context.account, fileReference: .starsTransaction(transaction: reference, media: file), scale: backingScaleFactor)
             }
 
 
@@ -281,6 +312,7 @@ private final class TransactionView : GeneralContainableRowView {
                 current = view
             } else {
                 current = AvatarControl(font: .avatar(20))
+                current.userInteractionEnabled = false
                 current.setFrameSize(NSMakeSize(44, 44))
                 self.avatar = current
                 self.addSubview(current)
@@ -299,25 +331,27 @@ private final class TransactionView : GeneralContainableRowView {
             if let view = self.avatarImage {
                 current = view
             } else {
-                current = ImageView(frame: NSMakeRect(0, 0, 44, 44))
+                current = ImageView(frame: NSMakeRect(0, 0, 40, 40))
                 self.avatarImage = current
                 addSubview(current)
             }
             switch item.transaction.type.source {
             case .appstore:
-                current.image = NSImage(resource: .iconAppStoreStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowStars).precomposed()
             case .fragment:
-                current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
             case .ads:
-                current.image = NSImage(resource: .iconFragmentStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
             case .playmarket:
-                current.image = NSImage(resource: .iconAndroidStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowAndroid).precomposed()
             case .peer:
                 break
             case .premiumbot:
-                current.image = NSImage(resource: .iconPremiumStarTopUp).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowPremiumBot).precomposed()
             case .unknown:
-                current.image = NSImage(resource: .iconStarTransactionPreviewUnknown).precomposed()
+                current.image = NSImage(resource: .iconStarTransactionRowFragment).precomposed()
+            case .apiLimitExtension:
+                current.image = NSImage(resource: .iconStarTransactionRowPaidBroadcast).precomposed()
             }
         }
 

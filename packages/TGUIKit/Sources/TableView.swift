@@ -768,7 +768,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var resortController: TableResortController? {
         didSet {
-            
+            if let oldValue {
+//                resortController?.resortView = oldValue.resortView
+//                resortController?.resortRow = oldValue.resortRow
+//                
+//                resortController?.startLocation = oldValue.startLocation
+//                resortController?.startRowLocation = oldValue.startRowLocation
+//                
+//                resortController?.currentHoleIndex = oldValue.currentHoleIndex
+//                resortController?.prevHoleIndex = oldValue.prevHoleIndex
+            }
+          
         }
     }
    
@@ -1777,6 +1787,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     point.x = 0
                     let difference = (controller.startLocation.y - point.y)
                 
+                    
                     if view.superview != self {
                         view.frame = self.convert(view.frame, from: view.superview)
                         let item = self.item(at: range.location)
@@ -3365,9 +3376,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, (!tableView.isFlipped ? 0 : -contentInsets.top)), documentSize.height - height) + inset.top)
         
+      
+        
         if self.tableView.isFlipped {
             rowRect.origin.y = min(rowRect.origin.y, documentSize.height - clipView.bounds.height)
         }
+        
+        if let string = focus.string, let item {
+            let inset = item.inset(for: string)
+            rowRect.origin.y -= inset
+        }
+        
         if clipView.bounds.minY != rowRect.minY {
             
             var applied = false

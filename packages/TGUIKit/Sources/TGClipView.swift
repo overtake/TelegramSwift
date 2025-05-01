@@ -164,15 +164,15 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.destinationOrigin = point
         
         if animated {
-            if abs(bounds.minY - point.y) > frame.height {
-                let y:CGFloat
-                if bounds.minY < point.y {
-                    y = point.y - frame.height
-                } else {
-                    y = point.y + frame.height
-                }
-                self.scroll(to: NSMakePoint(bounds.minX, y))
-            }
+//            if abs(bounds.minY - point.y) > frame.height {
+//                let y:CGFloat
+//                if bounds.minY < point.y {
+//                    y = point.y - frame.height
+//                } else {
+//                    y = point.y + frame.height
+//                }
+//                self.scroll(to: NSMakePoint(bounds.minX, y))
+//            }
 
             self.point = point
             NSAnimationContext.runAnimationGroup({ ctx in

@@ -38,7 +38,7 @@ private final class RowItem : GeneralRowItem {
         let headerText: String
         switch info.subject {
         case let .phoneNumber(phoneNumber):
-            headerText = strings().collectibleItemInfoPhoneTitle(formatPhoneNumber(phoneNumber))
+            headerText = strings().collectibleItemInfoPhoneTitle(formatPhoneNumber(context: context, number: phoneNumber))
         case let .username(username):
             headerText = strings().collectibleItemInfoUsernameTitle("@\(username)")
         }
@@ -46,7 +46,7 @@ private final class RowItem : GeneralRowItem {
         let copySubject:(String)->Void = { _ in
             switch info.subject {
             case let .phoneNumber(phoneNumber):
-                copyToClipboard(formatPhoneNumber(phoneNumber))
+                copyToClipboard(formatPhoneNumber(context: context, number: phoneNumber))
             case let .username(username):
                 copyToClipboard("@\(username)")
             }
@@ -65,7 +65,7 @@ private final class RowItem : GeneralRowItem {
         case .username(let string):
             infoText = strings().collectibleItemInfoUsernameText(string, date, clown, cryptoFormatted, currencyFormatted)
         case .phoneNumber(let string):
-            infoText = strings().collectibleItemInfoPhoneText(formatPhoneNumber(string), date, clown, cryptoFormatted, currencyFormatted)
+            infoText = strings().collectibleItemInfoPhoneText(formatPhoneNumber(context: context, number: string), date, clown, cryptoFormatted, currencyFormatted)
         }
         let infoAttr = parseMarkdownIntoAttributedString(infoText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", copySubject))
@@ -182,6 +182,7 @@ private final class RowView: GeneralContainableRowView {
         dismiss.setFrameOrigin(NSMakePoint(0, 0))
         iconView.centerX(y: 0)
         stickerView.center()
+        stickerView.frame = stickerView.frame.offsetBy(dx: 0, dy: 2)
         headerView.centerX(y: stickerView.frame.maxY + 20)
         peerView.centerX(y: headerView.frame.maxY + 20)
         infoView.centerX(y: peerView.frame.maxY + 20)
@@ -205,7 +206,10 @@ private final class RowView: GeneralContainableRowView {
         dismiss.set(image: theme.icons.modalClose, for: .Normal)
         dismiss.sizeToFit()
         
-        stickerView.update(with: LocalAnimatedSticker.fragment.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: LocalAnimatedSticker.fragment.parameters, animated: animated)
+        var parameters = LocalAnimatedSticker.fragment.parameters
+        parameters.colors = [.init(keyPath: "", color: theme.colors.underSelectedColor)]
+        
+        stickerView.update(with: LocalAnimatedSticker.fragment.file, size: stickerView.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
         
         needsLayout = true
     }

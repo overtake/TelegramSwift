@@ -22,9 +22,7 @@ let package = Package(
             publicHeadersPath: "Sources",
             cSettings: [
                 .headerSearchPath("Sources"),
-                .unsafeFlags([
-                    "-I../../core-xprojects/libwebp/build/libwebp/include"
-                ])
+                .headerSearchPath("SharedHeaders/libwebp/include"),
             ]),
     ]
 )

@@ -180,7 +180,7 @@ private final class MediaPlayerContext {
                 if let loadedState = maybeLoadedState, let videoBuffer = loadedState.mediaBuffers.videoBuffer {
                     if let (extraVideoFrames, atTime) = loadedState.extraVideoFrames {
                         loadedState.extraVideoFrames = nil
-                        return .restoreState(extraVideoFrames, atTime)
+                        return .restoreState(frames: extraVideoFrames, atTimestamp: atTime, soft: false)
                     } else {
                         return videoBuffer.takeFrame()
                     }
@@ -269,7 +269,7 @@ private final class MediaPlayerContext {
             self.playerStatus.set(status)
         }
         
-        let frameSource = FFMpegMediaFrameSource(queue: self.queue, postbox: self.postbox, userLocation: self.userLocation, userContentType: self.userContentType, resourceReference: self.resourceReference, tempFilePath: nil, streamable: self.streamable, isSeekable: self.isSeekable, video: self.video, preferSoftwareDecoding: self.preferSoftwareDecoding, fetchAutomatically: self.fetchAutomatically)
+        let frameSource = FFMpegMediaFrameSource(queue: self.queue, postbox: self.postbox, userLocation: self.userLocation, userContentType: self.userContentType, resourceReference: self.resourceReference, tempFilePath: nil, limitedFileRange: nil, streamable: self.streamable, isSeekable: self.isSeekable, video: self.video, preferSoftwareDecoding: self.preferSoftwareDecoding, fetchAutomatically: self.fetchAutomatically)
         let disposable = MetaDisposable()
         self.state = .seeking(frameSource: frameSource, timestamp: timestamp, disposable: disposable, action: action, enableSound: self.enableSound)
         
@@ -496,6 +496,14 @@ private final class MediaPlayerContext {
         }
         
     }
+    
+    fileprivate func setSoundEnabled(_ value: Bool) {
+        assert(self.queue.isCurrent())
+        if enableSound != value {
+            toggleSoundEnabled()
+        }
+    }
+    
     
     fileprivate func continuePlayingWithoutSound() {
         if self.enableSound {
@@ -974,6 +982,13 @@ public final class MediaPlayer {
             $0.toggleSoundEnabled()
         }
     }
+    
+    public func setSoundEnabled(_ value: Bool) {
+        contextRef.with {
+            $0.setSoundEnabled(value)
+        }
+    }
+
     
     public func continuePlayingWithoutSound() {
         contextRef.with {

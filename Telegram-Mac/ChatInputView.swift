@@ -95,8 +95,11 @@ class ChatInputView: View, Notifable {
     private var disallowText:Control?
     private var messageEffect: InputMessageEffectView?
     
+    private var paidMessageView: InteractiveTextView?
+    
     private let actionsView:ChatInputActionsView
     
+    private var frozenView:TextView?
 
     
     let textView:UITextView!
@@ -272,6 +275,10 @@ class ChatInputView: View, Notifable {
     private var textPlaceholder: String {
         
         
+        if let amount = chatInteraction.presentation.sendPaidMessageStars {
+            return strings().messagePlaceholderPaidMessage(strings().starListItemCountCountable(Int(amount.value)))
+        }
+        
         if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
@@ -412,8 +419,9 @@ class ChatInputView: View, Notifable {
             
             urlPreviewChanged = urlPreviewChanged || value.interfaceState.composeDisableUrlPreview != oldValue.interfaceState.composeDisableUrlPreview
             
+            let peerIsNotEqual = value.peer.flatMap(EnginePeer.init) != oldValue.peer.flatMap(EnginePeer.init)
             
-            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia {
+            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia || peerIsNotEqual {
                 updateAdditions(value,animated)
             }
             
@@ -440,10 +448,10 @@ class ChatInputView: View, Notifable {
                 inputDidUpdateLayout(animated: animated)
             }
             
-            if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect {
+            if value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect  {
                 self.updateMessageEffect(value.interfaceState.messageEffect, animated: animated)
             }
-            
+            self.messageEffect?.change(opacity: value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil ? 0 : 1, animated: animated)
             self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             
         }
@@ -456,7 +464,7 @@ class ChatInputView: View, Notifable {
                 if let view = self.messageEffect {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker, size: NSMakeSize(16, 16))
+                let current = InputMessageEffectView(account: chatInteraction.context.account, file: messageEffect.effect.effectSticker._parse(), size: NSMakeSize(16, 16))
                 current.userInteractionEnabled = true
                 current.setFrameOrigin(NSMakePoint(frame.width - current.frame.width - 10, 5))
                 
@@ -486,7 +494,7 @@ class ChatInputView: View, Notifable {
                 
                 
                 if let fromRect = messageEffect.fromRect {
-                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker, emoji: ""), size: current.frame.size)
+                    let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: messageEffect.effect.effectSticker.fileId.id, file: messageEffect.effect.effectSticker._parse(), emoji: ""), size: current.frame.size)
                     
                     let toRect = current.convert(current.frame.size.bounds, to: nil)
                     
@@ -513,12 +521,12 @@ class ChatInputView: View, Notifable {
                     }
                     
                     let messageEffect = messageEffect.effect
-                    let file = messageEffect.effectSticker
+                    let file = messageEffect.effectSticker._parse()
                     let signal: Signal<(LottieAnimation, String)?, NoError>
                     
                     let animationSize = NSMakeSize(200, 200)
                                         
-                    if let animation = messageEffect.effectAnimation {
+                    if let animation = messageEffect.effectAnimation?._parse() {
                         signal = context.account.postbox.mediaBox.resourceData(animation.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                 return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(animation.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), animation.stickerText ?? "")
@@ -527,7 +535,7 @@ class ChatInputView: View, Notifable {
                             }
                         }
                     } else {
-                        if let effect = messageEffect.effectSticker.premiumEffect {
+                        if let effect = messageEffect.effectSticker._parse().premiumEffect {
                             signal = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                                 if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
                                     return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
@@ -573,7 +581,7 @@ class ChatInputView: View, Notifable {
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
         if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown || attribute.flags.contains(.persistent) {
             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: keyboardMessage), theme, bottomView.documentView as? View, true)
-            replyMarkupModel?.measureSize(frame.width - 30)
+            replyMarkupModel?.measureSize(frame.width - 40)
             replyMarkupModel?.redraw()
             replyMarkupModel?.layout()
             bottomView.contentView.scroll(to: NSZeroPoint)
@@ -601,6 +609,8 @@ class ChatInputView: View, Notifable {
             inputDidUpdateLayout(animated: animated)
         }
         
+        let prevAdditionFrame = additionBlockedActionView?.frame ?? .zero
+        
         recordingPanelView?.removeFromSuperview()
         recordingPanelView = nil
         blockedActionView?.removeFromSuperview()
@@ -613,6 +623,11 @@ class ChatInputView: View, Notifable {
         restrictedView = nil
         messageActionsPanelView?.removeFromSuperview()
         messageActionsPanelView = nil
+        paidMessageView?.removeFromSuperview()
+        paidMessageView = nil
+        
+        frozenView?.removeFromSuperview()
+        frozenView = nil
         
         blockText?.removeFromSuperview()
         blockText = nil
@@ -652,7 +667,7 @@ class ChatInputView: View, Notifable {
                 let parsed = parseMarkdownIntoAttributedString(string, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.link), linkAttribute: { link in
                     return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
                         if value == "premium" {
-                            showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            prem(with: PremiumBoardingController(context: context), for: context.window)
                         }
                     }))
                 })).detectBold(with: .medium(.text))
@@ -690,19 +705,52 @@ class ChatInputView: View, Notifable {
             self.blockedActionView = blockedActionView
 
             if let addition = addition {
-                additionBlockedActionView = ImageButton()
+                additionBlockedActionView = ImageButton(frame: prevAdditionFrame)
                 additionBlockedActionView?.animates = false
+                additionBlockedActionView?.scaleOnClick = true
                 additionBlockedActionView?.set(image: addition.icon, for: .Normal)
                 additionBlockedActionView?.sizeToFit()
                 addSubview(additionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
 
-                additionBlockedActionView?.set(handler: { control in
-                    addition.action(control)
+                additionBlockedActionView?.set(handler: { [weak self] control in
+                    if let chatInteraction = self?.chatInteraction {
+                        addition.action(chatInteraction, control)
+                    }
                 }, for: .Click)
             } else {
                 additionBlockedActionView?.removeFromSuperview()
                 additionBlockedActionView = nil
             }
+
+            self.contentView.isHidden = true
+            self.contentView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
+        case let .frozen(action):
+            
+            let frozenView = TextView(frame: bounds)
+            
+            let frozenText = NSMutableAttributedString()
+            frozenText.append(string: strings().freezeAccountTitle, color: theme.colors.redUI, font: .medium(.text))
+            frozenText.append(string: "\n")
+            frozenText.append(string: strings().freezeAccountClickDetails, color: theme.colors.grayText, font: .normal(.small))
+            
+            let frozenLayout = TextViewLayout(frozenText, alignment: .center)
+            frozenLayout.measure(width: frame.width - 40)
+            
+            frozenView.update(frozenLayout)
+            frozenView.frame = bounds
+            
+            if animated {
+                frozenView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            frozenView.set(handler: { _ in
+                action(chatInteraction)
+            }, for:.Click)
+
+            self.addSubview(frozenView, positioned: .below, relativeTo: _ts)
+            self.frozenView = frozenView
+            
+            frozenView.isSelectable = false
 
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
@@ -836,7 +884,7 @@ class ChatInputView: View, Notifable {
                 }
             }))
         }
-
+        markNextTextChangeToFalseActivity = false
         
     }
     private var updateFirstTime: Bool = true
@@ -913,7 +961,7 @@ class ChatInputView: View, Notifable {
         
         
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
-        let keyboardWidth = frame.width - 30
+        let keyboardWidth = frame.width - 40
         var leftInset: CGFloat = 0
         let contentHeight:CGFloat = contentHeight(for: size.width)
         
@@ -967,6 +1015,15 @@ class ChatInputView: View, Notifable {
                 
         if let view = additionBlockedActionView {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))
+        }
+        
+        if let view = frozenView {
+            view.resize(size.width - 40)
+            view.frame = size.bounds
+        }
+        
+        if let view = paidMessageView {
+            transition.updateFrame(view: view, frame: size.bounds)
         }
         
         transition.updateFrame(view: _ts, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))

@@ -112,7 +112,7 @@ final class MergedAvatarsView: Control {
                 switch peer {
                 case let .image(peer, representation):
                     if self.disposables[peer.id] == nil {
-                        let signal = peerAvatarImage(account: context.account, photo: PeerPhoto.peer(peer, representation, peer.nameColor, peer.displayLetters, message), displayDimensions: NSMakeSize(mergedImageSize, mergedImageSize), scale: backingScaleFactor, font: avatarFont, synchronousLoad: synchronousLoad)
+                        let signal = peerAvatarImage(account: context.account, photo: PeerPhoto.peer(peer, representation, peer.nameColor, peer.displayLetters, message, nil), displayDimensions: NSMakeSize(mergedImageSize, mergedImageSize), scale: backingScaleFactor, font: avatarFont, synchronousLoad: synchronousLoad)
                         let disposable = (signal
                             |> deliverOnMainQueue).start(next: { [weak self] image in
                                 guard let strongSelf = self else {

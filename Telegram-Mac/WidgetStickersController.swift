@@ -32,10 +32,10 @@ private final class WidgetStickerView : Control {
                 let item = data.0
                 let context = data.1
                 var file: TelegramMediaFile?
-                if let thumbnail = item.info.thumbnail {
-                    file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                if let thumbnail = item.info._parse().thumbnail {
+                    file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)], alternativeRepresentations: [])
                 } else if let item = item.topItems.first {
-                    file = item.file
+                    file = item.file._parse()
                 }
                 if let file = file {
                     self.animatedView.update(with: file, size: NSMakeSize(72, 72), context: context, parent: nil, table: nil, parameters: nil, animated: true, positionFlags: nil, approximateSynchronousValue: false)
@@ -88,7 +88,7 @@ final class WidgetStickersContainer : View {
         self.context = context
         
         
-        runTimer()
+      //  runTimer()
         
         if !animated || stickers.subviews.isEmpty {
             self.reload(state, context: context, animated: animated)
@@ -97,18 +97,17 @@ final class WidgetStickersContainer : View {
         updateLocalizationAndTheme(theme: theme)
     }
     
-    private func runTimer() {
-        timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
-            guard let context = self?.context, let state = self?.state else {
-                return
-            }
-            self?.reload(state, context: context, animated: true)
-        }, queue: .mainQueue())
-        timer?.start()
-    }
+//    private func runTimer() {
+//        timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
+//            guard let context = self?.context, let state = self?.state else {
+//                return
+//            }
+//            self?.reload(state, context: context, animated: true)
+//        }, queue: .mainQueue())
+//        timer?.start()
+//    }
     
     func reload(ignore: Int? = nil) {
-        runTimer()
         guard let context = self.context, let state = self.state else {
             return
         }

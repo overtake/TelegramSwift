@@ -11,55 +11,84 @@ import Localization
 import TGUIKit
 
 class SEModalProgressView: View {
-    private let progress:LinearProgressControl = LinearProgressControl()
-    private let cancel:TextButton = TextButton()
+    private let progress:LinearProgressControl = LinearProgressControl(progressHeight: 8)
+    private let cancel:ImageButton = ImageButton()
     private let header:TextView = TextView()
     private let borderView:View = View()
     private let containerView:View = View()
+    private let animationView: SE_LottiePlayerView = SE_LottiePlayerView(frame: NSMakeRect(0, 0, 150, 150))
     override init() {
         super.init()
+        containerView.addSubview(animationView)
         containerView.addSubview(progress)
         containerView.addSubview(cancel)
         containerView.addSubview(borderView)
         containerView.addSubview(header)
         addSubview(containerView)
-        self.backgroundColor = theme.colors.blackTransparent
-        self.containerView.backgroundColor = theme.colors.grayBackground
-        let layout = TextViewLayout(.initialize(string: L10n.shareExtensionShare, color: theme.colors.text, font: .normal(.title)))
-        layout.measure(width: .greatestFiniteMagnitude)
+        self.containerView.backgroundColor = theme.colors.background
         
-        header.update(layout)
-        header.backgroundColor = theme.colors.grayBackground
-        containerView.setFrameSize(250, 80)
-        containerView.layer?.cornerRadius = .cornerRadius
+        
+
+        let path = Bundle.main.path(forResource: "duck_uploads", ofType: "tgs")
+        if let path = path {
+            let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+            if let data = data {
+                animationView.set(SE_LottieAnimation(compressed: data, key: .init(key: .bundle("duck_uploads"), size: NSMakeSize(150, 150)), playPolicy: .loop))
+            }
+        }
+        
+        
         progress.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: theme.colors.grayBackground)
-        progress.setFrameSize(250, 4)
+        progress.setFrameSize(250, 8)
+        
+        progress.layer?.cornerRadius = 4
         
         
-        cancel.set(font: .medium(.title), for: .Normal)
-        cancel.set(color: theme.colors.accent, for: .Normal)
-        cancel.set(text: L10n.shareExtensionCancel, for: .Normal)
-        _ = cancel.sizeToFit()
+        cancel.set(image: theme.icons.modalClose, for: .Normal)
+        cancel.scaleOnClick = true
+        _ = cancel.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
         
         cancel.set(handler: { [weak self] _ in
             self?.cancelImpl?()
         }, for: .Click)
         
-        progress.set(progress: 0.0)
+        progress.set(progress: 0.5)
     }
     
     var cancelImpl:(()->Void)? = nil
     
     func set(progress: CGFloat) {
         self.progress.set(progress: progress, animated: true)
+        
+        let percent = Int(ceil(progress * 100))
+        
+       
+        let layout = TextViewLayout(.initialize(string:  strings().shareExtensionUploading("\(strings().bullet) \(percent)%"), color: theme.colors.text, font: .normal(.title)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        header.update(layout)
+        
+        needsLayout = true
+    }
+    
+    func markComplete() {
+        let path = Bundle.main.path(forResource: "duck_upload_complete", ofType: "tgs")
+        if let path = path {
+            let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+            if let data = data {
+                animationView.set(SE_LottieAnimation(compressed: data, key: .init(key: .bundle("duck_upload_complete"), size: NSMakeSize(150, 150)), playPolicy: .toEnd(from: self.animationView.currentFrame ?? 0)))
+            }
+        }
     }
     
     override func layout() {
         super.layout()
-        containerView.center()
-        progress.center()
-        cancel.centerX(y: containerView.frame.height - cancel.frame.height - 10)
-        header.centerX(y: 10)
+        containerView.frame = bounds
+        cancel.setFrameOrigin(NSMakePoint(10, 10))
+
+        animationView.centerX(y: 90)
+        header.centerX(y: animationView.frame.maxY + 20)
+        
+        progress.centerX(y: header.frame.maxY + 20)
     }
     
     required init(frame frameRect: NSRect) {

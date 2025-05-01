@@ -348,7 +348,7 @@ private final class StoryViewerRowView: GeneralRowView {
             return
         }
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: animated)
         if let control = control {
             self.statusControl = control
             self.content.addSubview(control)
@@ -445,17 +445,18 @@ private final class StoryViewerRowView: GeneralRowView {
         case .builtin:
             if reaction == .defaultStoryLike {
                 size = NSMakeSize(30, 30)
-                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [], alternativeRepresentations: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
                 if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
                     let file = appear ? animation.activateAnimation : animation.selectAnimation
-                    layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+                    layer = InlineStickerItemLayer(account: context.account, file: file._parse(), size: size, playPolicy: .onceEnd)
                 } else {
                     layer = nil
                 }
             }
-            
+        case .stars:
+            layer = .init(account: context.account, file: LocalAnimatedSticker.star_currency_new.file, size: size)
         }
         
         return layer
@@ -838,7 +839,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             return current
         }
     }, openPremium: {
-        showModal(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: darkAppearance), for: context.window)
+        prem(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: darkAppearance), for: context.window)
     }, openRepostStory: { storyId in
         StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: storyId.peerId, id: storyId.id, messageId: nil, takeControl: { [] peerId, _, storyId in
             return getControl?(peerId, storyId)

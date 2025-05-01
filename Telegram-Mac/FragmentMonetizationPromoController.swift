@@ -50,10 +50,10 @@ private final class RowItem : GeneralRowItem {
     
     let options: [Option]
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isBot: Bool) {
         self.context = context
         
-        let headerText = NSAttributedString.initialize(string: strings().monetizationIntroTitle, color: theme.colors.text, font: .medium(.title))
+        let headerText = NSAttributedString.initialize(string: isBot ? strings().monetizationIntroBotTitle : strings().monetizationIntroTitle, color: theme.colors.text, font: .medium(.title))
         
         let infoHeaderAttr = NSAttributedString.initialize(string: strings().monetizationIntroInfoTitle(clown), color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
         infoHeaderAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: theme.colors.text), for: clown)
@@ -81,7 +81,7 @@ private final class RowItem : GeneralRowItem {
         
         var options:[Option] = []
         
-        options.append(.init(image: NSImage(resource: .iconFragmentAds).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroAdsTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroAdsText, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
+        options.append(.init(image: NSImage(resource: .iconFragmentAds).precomposed(theme.colors.accent), header: .init(.initialize(string:  strings().monetizationIntroAdsTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: isBot ? strings().monetizationIntroBotAdsText : strings().monetizationIntroAdsText, color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
         
         options.append(.init(image: NSImage(resource: .iconFragmentSplitRevenue).precomposed(theme.colors.accent), header: .init(.initialize(string: strings().monetizationIntroSplitTitle, color: theme.colors.text, font: .medium(.text))), text: .init(.initialize(string: strings().monetizationIntroSplitText("%"), color: theme.colors.grayText, font: .normal(.text))), width: initialSize.width - 40))
 
@@ -266,7 +266,7 @@ private final class RowView: GeneralContainableRowView {
 
 private let _id_header = InputDataIdentifier("_id_header")
 
-private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, arguments: Arguments, isBot: Bool) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -276,7 +276,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, stableId: stableId, context: arguments.context)
+        return RowItem(initialSize, stableId: stableId, context: arguments.context, isBot: isBot)
     }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -284,7 +284,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     return entries
 }
-func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
+func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId, isBot: Bool) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -301,7 +301,7 @@ func FragmentMonetizationPromoController(context: AccountContext, peerId: PeerId
     var close:(()->Void)? = nil
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        return InputDataSignalValue(entries: entries(state, arguments: arguments, isBot: isBot))
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")

@@ -100,7 +100,7 @@ func ArchiveSettingsController(context: AccountContext, privacy: GlobalPrivacySe
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(settings: privacy ?? .init(automaticallyArchiveAndMuteNonContacts: false, keepArchivedUnmuted: false, keepArchivedFolders: false, hideReadTime: false, nonContactChatsRequirePremium: false), isPremium: context.isPremium)
+    let initialState = State(settings: privacy ?? .init(automaticallyArchiveAndMuteNonContacts: false, keepArchivedUnmuted: false, keepArchivedFolders: false, hideReadTime: false, nonContactChatsPrivacy: .everybody, disallowedGifts: [], displayGiftButton: false), isPremium: context.isPremium)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -134,7 +134,7 @@ func ArchiveSettingsController(context: AccountContext, privacy: GlobalPrivacySe
         update(stateValue.with { $0.settings })
     }, showPremium: {
         showModalText(for: context.window, text: strings().archiveNewChatsPremium, button: strings().alertLearnMore, callback: { value in
-            showModal(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
+            prem(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
         })
     })
     

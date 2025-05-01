@@ -70,7 +70,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     result.append(hashtag)
                 }
             }
-            return { _ in return .hashtags(result) }
+            return { _ in return .hashtags(query, result, chatPresentationInterfaceState.peer.flatMap(EnginePeer.init)) }
         }
         
         return (inputQuery, signal |> then(hashtags))
@@ -91,7 +91,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 case .installed:
                     scope = [.installed]
                 }
-                return context.engine.stickers.searchStickers(query: [query], scope: scope) |> map { $0.items }
+            return context.engine.stickers.searchStickers(query: query, emoticon: [], scope: scope) |> map { $0.items }
         }
         |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in
@@ -105,7 +105,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     case let .emoji(query, firstWord):
         if !query.isEmpty {
             let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> mapToSignal { results in
-                return context.engine.stickers.searchEmoji(emojiString: results)
+                return context.engine.stickers.searchEmoji(category: .init(id: 0, title: "", identifiers: results, kind: .generic))
                 |> map { ($0.isFinalResult ? results : [], $0.items) }
             } |> deliverOnResourceQueue |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
 
@@ -138,7 +138,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     var selected: [TelegramMediaFile] = []
                     for sort in emojis.animated {
                         let file = animated.filter({ $0.fileId == sort}).first
-                        if let file = file {
+                        if let file = file?._parse() {
                             selected.append(file)
                             if let text = file.customEmojiText {
                                 toRemove.append(text.fixed)
@@ -321,7 +321,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 signal = .single({ _ in return nil })
             }
         }
-        let contextBot = context.engine.peers.resolvePeerByName(name: addressName)
+        let contextBot = context.engine.peers.resolvePeerByName(name: addressName, referrer: nil)
             |> mapToSignal { result -> Signal<Peer?, NoError> in
                 switch result {
                 case .progress:
@@ -494,7 +494,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         
         if !query.isEmpty {
             let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> mapToSignal { results in
-                return context.engine.stickers.searchEmoji(emojiString: results)
+                return context.engine.stickers.searchEmoji(category: .init(id: 0, title: "", identifiers: results, kind: .generic))
                 |> map { ($0.isFinalResult ? results : [], $0.items) }
             } |> deliverOnResourceQueue |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
 
@@ -527,7 +527,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                     var selected: [TelegramMediaFile] = []
                     for sort in emojis.animated {
                         let file = animated.filter({ $0.fileId == sort}).first
-                        if let file = file {
+                        if let file = file?._parse() {
                             selected.append(file)
                             if let text = file.customEmojiText {
                                 toRemove.append(text.fixed)
@@ -638,7 +638,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             subscriber.putNext((detectedUrl, webpagePreview(account: context.account, urls: [detectedUrl]) |> filter { $0 != .progress } |> map { value in
                                 return { _ in return value.result }
                             }))
-                        case let .followResolvedName(_, username, _, _, _, _):
+                        case let .followResolvedName(_, username, _, _, _, _, _):
                             if username.hasPrefix("_private_") {
                                 subscriber.putNext((nil, .single({ _ in return nil })))
                                 subscriber.putCompletion()
@@ -670,7 +670,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             switch link {
                             case .external:
                                 canLoad = true
-                            case let .followResolvedName(_, username, _, _, _, _):
+                            case let .followResolvedName(_, username, _, _, _, _, _):
                                 if !username.hasPrefix("_private_") {
                                     canLoad = true
                                 }

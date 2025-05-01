@@ -57,7 +57,7 @@ class AccountInfoItem: GeneralRowItem {
         self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
         
         if let phone = peer.phone {
-            _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
+            _ = attr.append(string: formatPhoneNumber(context: context, number: phone), color: theme.colors.grayText, font: .normal(.text))
         }
         if let username = peer.username, !username.isEmpty {
             if !attr.string.isEmpty {
@@ -104,7 +104,7 @@ class AccountInfoItem: GeneralRowItem {
         textLayout.measure(width: width - 140)
         activeTextlayout.measure(width: width - 140)
         
-        let hasControl = PremiumStatusControl.hasControl(peer)
+        let hasControl = PremiumStatusControl.hasControl(peer, left: false)
         
         self.titleLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
         self.titleActiveLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
@@ -333,7 +333,7 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = nil
             }
             
-            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
                         
             if let control = control {
                 self.statusControl = control
@@ -380,7 +380,7 @@ private class AccountInfoView : GeneralContainableRowView {
                         self.photoVideoView!.isEventLess = true
                         self.photoVideoView!.frame = self.avatarView.frame
                         
-                        let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                        let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [], alternativeRepresentations: [])
                         
                         let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: .peer(item.context.peerId), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                         

@@ -36,6 +36,7 @@ private final class Arguments {
     let copyToClipboard:(String)->Void
     let toggleHideKey:()->Void
     let revokeStreamKey: ()->Void
+    let shareInviteLink:(GroupCallInviteLinks)->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -55,7 +56,8 @@ private final class Arguments {
          toggleRecordVideo: @escaping()->Void,
          copyToClipboard:@escaping(String)->Void,
          toggleHideKey:@escaping()->Void,
-         revokeStreamKey: @escaping()->Void) {
+         revokeStreamKey: @escaping()->Void,
+         shareInviteLink:@escaping(GroupCallInviteLinks)->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -76,6 +78,7 @@ private final class Arguments {
         self.copyToClipboard = copyToClipboard
         self.toggleHideKey = toggleHideKey
         self.revokeStreamKey = revokeStreamKey
+        self.shareInviteLink = shareInviteLink
     }
 }
 
@@ -102,7 +105,7 @@ final class GroupCallSettingsView : View {
 
         _ = backButton.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
-        let layout = TextViewLayout.init(.initialize(string: strings().voiceChatSettingsTitle, color: GroupCallTheme.customTheme.textColor, font: .medium(.header)))
+        let layout = TextViewLayout.init(.initialize(string: strings().voiceChatSettings, color: GroupCallTheme.customTheme.textColor, font: .medium(.header)))
         layout.measure(width: frame.width - 200)
         title.update(layout)
         tableView.getBackgroundColor = {
@@ -194,7 +197,7 @@ private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
 }
 
-private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, context: AccountContext, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, arguments: Arguments) -> [InputDataEntry] {
+private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, context: AccountContext, peer: Peer?, accountPeer: Peer, joinAsPeerId: PeerId, inviteLinks: GroupCallInviteLinks?, arguments: Arguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     let theme = GroupCallTheme.customTheme
@@ -207,7 +210,17 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     
     let state = callState.state
     
-    
+    if let inviteLinks, peer == nil {
+        if !inviteLinks.listenerLink.isEmpty {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_listening_link, data: .init(name: strings().voiceChatShareInviteLink, color: theme.textColor, viewType: .singleItem, action: {
+                arguments.shareInviteLink(inviteLinks)
+            }, theme: theme)))
+            
+            entries.append(.sectionId(sectionId, type: .customModern(10)))
+            sectionId += 1
+            
+        }
+    }
     
     if state.canManageCall {
 //        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
@@ -280,7 +293,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
             }
         }
         
-    } else {
+    } else if let _ = peer {
         
         if case .sectionId = entries.last {
             
@@ -295,7 +308,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     }
     
     
-    if state.canManageCall && state.scheduleTimestamp == nil {
+    if state.canManageCall && state.scheduleTimestamp == nil, peer != nil, let peer = callState.peer {
         if case .sectionId = entries.last {
             
         } else {
@@ -306,7 +319,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         
         let recordTitle: String
         let recordPlaceholder: String = strings().voiecChatSettingsRecordPlaceholder1
-        if callState.peer.isChannel || callState.peer.isGigagroup {
+        if peer.isChannel || peer.isGigagroup {
             recordTitle = strings().voiecChatSettingsRecordLiveTitle
         } else if !callState.videoActive(.list).isEmpty {
             recordTitle = strings().voiecChatSettingsRecordVideoTitle
@@ -351,7 +364,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     }
     
     
-    if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState, !state.isStream {
+    if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState, !state.isStream, let _ = peer {
         
         if case .sectionId = entries.last {
             
@@ -529,7 +542,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     }
     
 
-    if state.canManageCall, peer.groupAccess.isCreator {
+    if let peer, state.canManageCall, peer.groupAccess.isCreator {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
@@ -717,7 +730,12 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         self.genericView.tableView._mouseDownCanMoveWindow = true
         
         let context = self.context
-        let peerId = self.call.peerId
+        
+        
+//        guard let peerId = self.call.peerId else {
+//            return
+//        }
+        
         let initialState = GroupCallSettingsState(hasPermission: nil, title: nil, recordVideo: true, videoOrientation: .landscape)
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -856,7 +874,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 return current
             }
         }, revokeStreamKey: { [weak self] in
-            if let window = self?.window {
+            if let window = self?.window, let peerId = self?.call.peerId {
                 verifyAlert_button(for: window, header: strings().voiceChatRTMPRevoke, information: strings().voiceChatRTMPRevokeInfo, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { [weak self] _ in
                     
                     let signal = self?.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(peerId.toInt64()), revokePreviousCredentials: true)
@@ -872,6 +890,21 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                     
                 }, presentation: darkAppearance)
             }
+        }, shareInviteLink: { [weak self] inviteLinks in
+            guard let self, let window = self.window else {
+                return
+            }
+            
+            let state = combineLatest(self.call.state, self.call.callInfo) |> take(1) |> deliverOnMainQueue
+            
+            _ = state.startStandalone(next: { state, info in
+                guard let info else {
+                    return
+                }
+                showModal(with: GroupCallInviteLinkController(context: context, source: .groupCall(.init(slug: "", link: inviteLinks.listenerLink, callInfo: info)), mode: .share, presentation: darkAppearance), for: window)
+
+            })
+            
         })
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
@@ -899,14 +932,14 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         
         let rtmp_credentials: Signal<GroupCallStreamCredentials?, NoError>
         
-        if let peer = self.call.peer, peer.groupAccess.isCreator {
-            let credentials = self.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(self.call.peerId.toInt64()), revokePreviousCredentials: false)
+        if let peerId = self.call.peerId, let peer = self.call.peer, peer.groupAccess.isCreator {
+            let credentials = self.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(peerId.toInt64()), revokePreviousCredentials: false)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<GroupCallStreamCredentials?, NoError> in
                 return .single(nil)
             }
             
-           rtmp_credentials = .single(nil) |> then(credentials)
+            rtmp_credentials = .single(nil) |> then(credentials)
         } else {
             rtmp_credentials = .single(nil)
         }
@@ -920,8 +953,15 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         }))
         
         
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(context.peerId), joinAsPeer, self.callState, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
-            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, context: context, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        let peer: Signal<Peer?, NoError>
+        if let peerId = self.call.peerId {
+            peer = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> map { $0?._asPeer() }
+        } else {
+            peer = .single(nil)
+        }
+        
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, peer, self.call.account.postbox.loadedPeerWithId(context.peerId), joinAsPeer, self.callState, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
+            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, context: context, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, inviteLinks: nil, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 

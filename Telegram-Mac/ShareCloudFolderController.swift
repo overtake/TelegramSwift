@@ -99,7 +99,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link, equatable: .init(link), comparable: nil, item: { initialSize, stableId in
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: _ExportedInvitation.initialize(.link(link: link.link, title: link.title, isPermanent: true, requestApproval: false, isRevoked: false, adminId: arguments.context.peerId, date: 0, startDate: 0, expireDate: nil, usageLimit: nil, count: nil, requestedCount: nil)), lastPeers: [], viewType: .singleItem, mode: .normal(hasUsage: false), menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: _ExportedInvitation.initialize(.link(link: link.link, title: link.title, isPermanent: true, requestApproval: false, isRevoked: false, adminId: arguments.context.peerId, date: 0, startDate: 0, expireDate: nil, usageLimit: nil, count: nil, requestedCount: nil, pricing: nil)), lastPeers: [], viewType: .singleItem, mode: .normal(hasUsage: false), menuItems: {
 
                 var items:[ContextMenuItem] = []
                 

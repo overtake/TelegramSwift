@@ -169,7 +169,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         updated = fields.subtracting(.phone)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: strings().checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(receipt.info?.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: strings().checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(context: arguments.context, number: receipt.info?.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
             index += 1
         }
         

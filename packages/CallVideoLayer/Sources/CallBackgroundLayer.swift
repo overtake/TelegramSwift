@@ -11,7 +11,7 @@ import MetalKit
 import MetalPerformanceShaders
 import Accelerate
 import MetalEngine
-
+import ColorPalette
 
 func interpolatePoints(_ point1: SIMD2<Float>, _ point2: SIMD2<Float>, at factor: Float) -> SIMD2<Float> {
     return SIMD2<Float>(x: interpolateFloat(point1.x, point2.x, at: factor), y: interpolateFloat(point1.y, point2.y, at: factor))
@@ -135,6 +135,12 @@ public final class CallBackgroundLayer: MetalEngineSubjectLayer, MetalEngineSubj
                 hexToFloat(0xF09536),
                 hexToFloat(0xCE5081),
                 hexToFloat(0xFC7C4C)
+            ]),
+            ColorSet(colors: [
+                hexToFloat(0x18222C),
+                hexToFloat(0x1D2935),
+                hexToFloat(0x22303E),
+                hexToFloat(0x263646)
             ])
         ]
         self.colorTransition = AnimatedProperty<ColorSet>(colorSets[0])

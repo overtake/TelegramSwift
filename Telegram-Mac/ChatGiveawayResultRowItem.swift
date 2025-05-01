@@ -57,7 +57,7 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
     
         
         let header_attr = NSMutableAttributedString()
-        _ = header_attr.append(string: "Winners Selected!", color: givePresentation.text, font: .medium(.text))
+        _ = header_attr.append(string: strings().chatGiveawayMessageWinnersSelectedTitleCountable(Int(media.winnersCount)), color: givePresentation.text, font: .medium(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
@@ -66,7 +66,7 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
         
         var openReplyMessage:(()->Void)? = nil
         
-        let attributed = parseMarkdownIntoAttributedString("**\(media.winnersCount)** winners of the [Giveaway]() were randomly selected by Telegram.", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: givePresentation.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: givePresentation.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: givePresentation.link), linkAttribute: { contents in
+        let attributed = parseMarkdownIntoAttributedString(strings().chatGiveawayMessageWinnersSelectedTextCountable(Int(media.winnersCount)), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: givePresentation.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: givePresentation.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: givePresentation.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { url in
                 openReplyMessage?()
             }))
@@ -78,13 +78,35 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
         self.prizesInfo.interactions = globalLinkExecutor
         
         let winners_attr = NSMutableAttributedString()
-        _ = winners_attr.append(string: "All winners received gift links in private messages.", color: givePresentation.text, font: .normal(.text))
+        
+        let winnerText: String
+        switch media.prize {
+        case .premium:
+            winnerText = strings().chatGiveawayMessageWinnersInfoCountable(Int(media.winnersCount))
+        case .stars(let amount):
+            winnerText = strings().chatGiveawayMessageWinnersInfoStarCountable(Int(media.winnersCount), strings().chatGiveawayMessageStarsCountable(Int(amount)))
+        }
+        
+        _ = winners_attr.append(string: winnerText, color: givePresentation.text, font: .normal(.text))
+        winners_attr.detectBoldColorInString(with: .medium(.text))
         self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
         
         
-        let under = theme.colors.underSelectedColor
+        var under = theme.colors.underSelectedColor
 
-        badge = .init(.initialize(string: "X\(media.winnersCount)", color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: theme.chat.bubbleBackgroundColor(isIncoming, object.renderType == .bubble), additionSize: NSMakeSize(16, 7))
+        let badgeText: String
+        let color: NSColor
+        switch media.prize {
+        case .premium:
+            badgeText = "X\(media.winnersCount)"
+            color = theme.colors.accent
+        case let .stars(amount):
+            badgeText = "\(amount)"
+            color = NSColor(0xFFAC04)
+            under = .white
+        }
+
+        badge = .init(.initialize(string: badgeText, color: under, font: .avatar(.small)), color, aroundFill: theme.chat.bubbleBackgroundColor(isIncoming, object.renderType == .bubble), additionSize: NSMakeSize(16, 7))
         
         var channels:[Channel] = []
         for peerId in media.winnersPeerIds {
@@ -105,15 +127,26 @@ final class ChatGiveawayResultRowItem : ChatRowItem {
     }
     
     var giftAnimation: LocalAnimatedSticker {
-        switch media.months {
-        case 12:
-            return LocalAnimatedSticker.premium_gift_12
-        case 6:
-            return LocalAnimatedSticker.premium_gift_6
-        case 3:
-            return LocalAnimatedSticker.premium_gift_3
-        default:
-            return LocalAnimatedSticker.premium_gift_3
+        switch media.prize {
+        case .premium(let months):
+            switch months {
+            case 12:
+                return LocalAnimatedSticker.premium_gift_12
+            case 6:
+                return LocalAnimatedSticker.premium_gift_6
+            case 3:
+                return LocalAnimatedSticker.premium_gift_3
+            default:
+                return LocalAnimatedSticker.premium_gift_3
+            }
+        case .stars(let amount):
+            if amount <= 1000 {
+                return LocalAnimatedSticker.premium_gift_3
+            } else if amount < 2500 {
+                return LocalAnimatedSticker.premium_gift_6
+            } else {
+                return LocalAnimatedSticker.premium_gift_12
+            }
         }
     }
     

@@ -518,7 +518,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
     }
 
     let arguments = Arguments(context: context, select: selected, openPremium: {
-        showModal(with: PremiumBoardingController(context: context), for: context.window)
+        prem(with: PremiumBoardingController(context: context), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

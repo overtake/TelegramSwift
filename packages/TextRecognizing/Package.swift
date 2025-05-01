@@ -19,6 +19,7 @@ let package = Package(
         .package(name: "Postbox", path: "../submodules/telegram-ios/submodules/Postbox"),
         .package(name: "TelegramCore", path: "../submodules/telegram-ios/submodules/TelegramCore"),
         .package(name: "TGUIKit", path: "../TGUIKit"),
+        .package(name: "Translate", path: "../Translate"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -26,6 +27,7 @@ let package = Package(
         .target(
             name: "TextRecognizing",
             dependencies: [.product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil),
+                           .product(name: "Translate", package: "Translate", condition: nil),
                            .product(name: "TGUIKit", package: "TGUIKit", condition: nil),
                            .product(name: "TelegramCore", package: "TelegramCore", condition: nil),
                            .product(name: "Postbox", package: "Postbox", condition: nil)]),

@@ -115,7 +115,7 @@ final class WidgetView<T> : View  where T:View {
         titleView.centerX(y: 18)
 
         if buttonsView.subviews.isEmpty {
-            dataView?.frame = NSMakeRect(15, 53, frame.width - 30, 144 + 50)
+            dataView?.frame = NSMakeRect(15, 53, frame.width - 30, 144 + 70)
         } else {
             dataView?.frame = NSMakeRect(15, 103, frame.width - 30, self.data?.contentHeight ?? 144)
         }

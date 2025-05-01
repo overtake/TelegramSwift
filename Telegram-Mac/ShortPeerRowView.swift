@@ -32,6 +32,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
      #if !SHARE
     private var activities: ChatActivitiesModel?
     private var statusControl: PremiumStatusControl?
+    private var leftStatusControl: PremiumStatusControl?
     #endif
     private let rightSeparatorView:View = View()
     private let separator:View = View()
@@ -39,6 +40,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var hiddenStatus: Bool = true
     private var badgeNode: View? = nil
     
+    private var customAction: TextView?
+    
+    private var rightsActions: [ImageButton] = []
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -190,11 +194,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                             
                             let sY = tY + title.0.size.height + 1.0
                             if hiddenStatus {
-                                status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                                if let statusImage = item.statusImage {
+                                    ctx.draw(statusImage, in: CGRect(origin: NSMakePoint(item.textInset(false), sY + 2), size: statusImage.backingSize))
+                                }
+                                status.1.draw(NSMakeRect(item.textInset(true), sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                             }
                         }
                         
-                        title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                        title.1.draw(NSMakeRect(item.textInset(false), tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         
                     }
                 case .modern:
@@ -215,11 +222,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                             
                             let sY = tY + title.0.size.height + 1.0
                             if hiddenStatus {
-                                status.1.draw(NSMakeRect(item.textInset, sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                                if let statusImage = item.statusImage {
+                                    ctx.draw(statusImage, in: CGRect(origin: NSMakePoint(item.textInset(false), sY + 2), size: statusImage.backingSize))
+                                }
+                                status.1.draw(NSMakeRect(item.textInset(true), sY, status.0.size.width, status.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                             }
                         }
                         
-                        title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                        title.1.draw(NSMakeRect(item.textInset(false), tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     }
                 }
             }
@@ -277,18 +287,35 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 switch item.interactionType {
                 case .plain, .interactable:
                     container.frame = bounds
-                case .selectable:
-                    container.frame = .init(x: 0, y: 0, width: frame.width, height: frame.height)
+                case let .selectable(_, side):
+                    switch side {
+                    case .left:
+                        container.frame = .init(x: 30, y: 0, width: frame.width - 30, height: frame.height)
+                    case .right:
+                        container.frame = .init(x: 0, y: 0, width: frame.width, height: frame.height)
+                    }
                 default :
                     container.frame = .init(x: 30, y: 0, width: frame.width - 30, height: frame.height)
                 }
-                
-                if let deleteControl = deleteControl {
-                    deleteControl.centerY(x: item.deleteInset)
+                                
+                switch item.interactionType {
+                case .deletable:
+                    if let deleteControl = deleteControl {
+                        deleteControl.centerY(x: item.deleteInset)
+                    }
+                case let .selectable(_, side):
+                    if let selectControl = selectControl {
+                        switch side {
+                        case .right:
+                            selectControl.centerY(x: containerView.frame.width - selectControl.frame.width - item.inset.right)
+                        case .left:
+                            selectControl.centerY(x: item.deleteInset)
+                        }
+                    }
+                default:
+                    break
                 }
-                if let selectControl = selectControl {
-                    selectControl.centerY(x: frame.width - selectControl.frame.width - item.inset.right)
-                }
+
                 
                 photoContainer.frame = NSMakeRect(item.inset.left + (item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
                 image.frame = item.photoSize.bounds
@@ -311,11 +338,24 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - item.inset.left)
                 }
                 
-                separator.frame = NSMakeRect(item.textInset, containerView.frame.height - .borderSize, containerView.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset, .borderSize)
+                var addOffset: CGFloat = 0
+                switch item.interactionType {
+                case .selectable(_, let side):
+                    switch side {
+                    case .left:
+                        addOffset += 30
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+                
+                separator.frame = NSMakeRect(item.textInset(false) + addOffset, containerView.frame.height - .borderSize, containerView.frame.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset(false), .borderSize)
                 
                 #if !SHARE
                 if let view = activities?.view {
-                    view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
+                    view.setFrameOrigin(item.textInset(false) - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
                 }
                 #endif
             case let .modern(position, innerInsets):
@@ -376,7 +416,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - innerInsets.right)
                 }
                 
-                separator.frame = NSMakeRect(container.frame.minX + item.textInset, containerView.frame.height - .borderSize, container.frame.width - item.textInset, .borderSize)
+                separator.frame = NSMakeRect(container.frame.minX + item.textInset(false), containerView.frame.height - .borderSize, container.frame.width - item.textInset(false), .borderSize)
                 
                 container.needsDisplay = true
                 
@@ -384,7 +424,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             
             #if !SHARE
             if let view = activities?.view {
-                view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
+                view.setFrameOrigin(item.textInset(false) - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
             }
             if let statusControl = self.statusControl, let title = item.title {
                 var tY = NSMinY(focus(title.0.size))
@@ -394,9 +434,22 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     tY = floorToScreenPixels((self.frame.height - t) / 2.0)
                 }
 
-                statusControl.setFrameOrigin(NSMakePoint(item.textInset + title.0.size.width + 2, tY + 1))
+                statusControl.setFrameOrigin(NSMakePoint(item.textInset(false) + title.0.size.width + 2, tY + 1))
 
             }
+            
+            if let statusControl = self.leftStatusControl, let title = item.title {
+                var tY = NSMinY(focus(title.0.size))
+                
+                if let status = (isRowSelected ? item.statusSelected : item.status) {
+                    let t = title.0.size.height + status.0.size.height + 1.0
+                    tY = floorToScreenPixels((self.frame.height - t) / 2.0)
+                }
+
+                statusControl.setFrameOrigin(NSMakePoint(item.textInset(false) - statusControl.frame.width - 2, tY + 1))
+
+            }
+            
             #endif
 
             if let photoOuter = photoOuter {
@@ -404,7 +457,33 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 photoOuter.layer?.cornerRadius = photoOuter.frame.height / 2
             }
             if let photoBadge = self.photoBadge {
-                photoBadge.setFrameOrigin(NSMakePoint(self.image.frame.maxX - photoBadge.frame.width / 2 + 5, self.image.frame.midY + 5))
+                if item.drawStarsPaid != nil {
+                    
+                    if let title = (isRowSelected ? item.titleSelected : item.title) {
+                        var tY = NSMinY(focus(title.0.size))
+                        
+                        if let status = (isRowSelected ? item.statusSelected : item.status) {
+                            let t = title.0.size.height + status.0.size.height + 1.0
+                            tY = floorToScreenPixels(backingScaleFactor, (self.frame.height - t) / 2.0)
+                        }
+                        photoBadge.setFrameOrigin(NSMakePoint(item.textInset(false) + title.0.size.width + 4, tY))
+                    }
+                    
+                } else {
+                    photoBadge.setFrameOrigin(NSMakePoint(self.image.frame.maxX - photoBadge.frame.width / 2 + 5, self.image.frame.midY + 5))
+                }
+            }
+        }
+        
+        if let customAction {
+            customAction.centerY(x: containerView.frame.width - customAction.frame.width - 10)
+        }
+        
+        if !rightsActions.isEmpty {
+            var x: CGFloat = containerView.frame.width - rightsActions[rightsActions.count - 1].frame.width - 10
+            for action in rightsActions.reversed() {
+                action.centerY(x: x)
+                x -= (action.frame.width + 10)
             }
         }
     }
@@ -424,7 +503,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         switch item.viewType {
         case .legacy:
             containerRect = CGRect(origin: NSMakePoint((interactive ? 30 : 0), 0), size: NSMakeSize(containerView.frame.width - (interactive ? 30 : 0), containerView.frame.height))
-            separatorRect = NSMakeRect(item.textInset, containerRect.height - .borderSize, containerRect.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset, .borderSize)
+            separatorRect = NSMakeRect(item.textInset(false), containerRect.height - .borderSize, containerRect.width - (item.drawSeparatorIgnoringInset ? 0 : item.inset.right) - item.textInset(false), .borderSize)
         case let .modern(_, innerInsets):
             switch item.interactionType {
             case .plain, .interactable:
@@ -441,7 +520,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 let offset = innerInsets.left + 24 + innerInsets.right
                 containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
             }
-            separatorRect = NSMakeRect(containerRect.minX + item.textInset, containerRect.height - .borderSize, containerRect.width - item.textInset, .borderSize)
+            separatorRect = NSMakeRect(containerRect.minX + item.textInset(false), containerRect.height - .borderSize, containerRect.width - item.textInset(false), .borderSize)
             
             if let contextLabel = contextLabel {
                 var rect = containerView.focus(contextLabel.frame.size)
@@ -555,7 +634,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         #if !SHARE
         if item.highlightVerified, (!item.isLookSavedMessage || item.peerId != item.account.peerId) {
-            let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, isSelected: isRowSelected, cached: self.statusControl, animated: animated)
+            let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, left: false, isSelected: isRowSelected, cached: self.statusControl, animated: animated)
             if let control = control {
                 self.statusControl = control
                 self.container.addSubview(control)
@@ -566,6 +645,20 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         } else if let view = self.statusControl {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
+        }
+        
+        if item.highlightVerified, (!item.isLookSavedMessage || item.peerId != item.account.peerId) {
+            let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, left: true, isSelected: isRowSelected, cached: self.leftStatusControl, animated: animated)
+            if let control = control {
+                self.leftStatusControl = control
+                self.container.addSubview(control)
+            } else if let view = self.leftStatusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.leftStatusControl = nil
+            }
+        } else if let view = self.leftStatusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.leftStatusControl = nil
         }
         #endif
         
@@ -673,7 +766,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         if let photo = item.photo {
             image.setSignal(photo)
         } else {
-            image.setPeer(account: item.account, peer: item.peer, size: item.photoSize)
+            image.setPeer(account: item.account, peer: item.peer, size: item.photoSize, cornerRadius: item.makeAvatarRound ? 6 : nil)
         }
         
         
@@ -735,9 +828,60 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .interactable(interaction):
             updatePresentation(item: item, value: interaction.presentation, animated: animated)
         default:
-            if let view = self.photoBadge {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                self.photoBadge = nil
+            updatePresentation(item: item, value: nil, animated: animated)
+        }
+        
+        if let customAction = (isRowSelected ? item.customActionTextSelected : item.customActionText) {
+            let current: TextView
+            if let view = self.customAction {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.scaleOnClick = true
+                self.customAction = current
+                containerView.addSubview(current)
+            }
+            current.update(customAction)
+            current.backgroundColor = isRowSelected ? theme.colors.underSelectedColor : theme.colors.accent
+            current.setFrameSize(customAction.layoutSize.bounds.insetBy(dx: -8, dy: -4).size)
+            current.layer?.cornerRadius = current.frame.height / 2
+            
+            current.setSingle(handler: { [weak item] _ in
+                item?.customAction?.callback()
+            }, for: .Click)
+            
+        } else if let view = customAction {
+            performSubviewRemoval(view, animated: animated)
+            self.customAction = nil
+        }
+        
+        if !item.rightActions.actions.isEmpty {
+            while self.rightsActions.count > item.rightActions.actions.count {
+                self.rightsActions.removeLast().removeFromSuperview()
+            }
+            while self.rightsActions.count < item.rightActions.actions.count {
+                let view = ImageButton()
+                containerView.addSubview(view)
+                self.rightsActions.append(view)
+            }
+            
+            for (i, action) in item.rightActions.actions.enumerated() {
+                let view = self.rightsActions[i]
+                view.set(image: action.icon, for: .Normal)
+                view.scaleOnClick = true
+                view.autohighlight = false
+                view.sizeToFit()
+                view.setSingle(handler: { [weak item] _ in
+                    if let item {
+                        item.rightActions.callback(item.peerId, i)
+                    }
+                }, for: .Click)
+            }
+
+        } else {
+            while !self.rightsActions.isEmpty {
+                self.rightsActions.removeLast().removeFromSuperview()
             }
         }
         
@@ -758,7 +902,17 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .selectable(interaction, side):
             switch side {
             case .left:
-                interaction.action(item.peerId, nil)
+                if item.passLeftAction {
+                    if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
+                        if !interaction.openForum(item.peerId) {
+                            interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+                        }
+                    } else {
+                        interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+                    }
+                } else {
+                    interaction.action(item.peerId, nil)
+                }
             default:
                 if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
                     if !interaction.openForum(item.peerId) {
@@ -813,8 +967,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     }
 
     
-    private func updatePresentation(item: ShortPeerRowItem, value: SelectPeerPresentation, animated: Bool) {
-        if value.premiumRequired.contains(item.peerId) {
+    private func updatePresentation(item: ShortPeerRowItem, value: SelectPeerPresentation?, animated: Bool) {
+        if value?.premiumRequired.contains(item.peerId) == true || item.drawStarsPaid != nil {
             let current: ImageView
             var isNew = false
             if let view = self.photoBadge {
@@ -825,9 +979,15 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 self.photoBadge = current
                 isNew = true
             }
-            current.image = theme.icons.premium_required_forward
-            current.setFrameOrigin(NSMakePoint(self.image.frame.maxX - current.frame.width / 2 + 5, self.image.frame.midY + 5))
-            current.sizeToFit()
+            if let drawStarsPaid = item.drawStarsPaid {
+                current.image = generalSendPaidMessage(bgColor: theme.colors.accent, outerColor: theme.colors.background, imageColor: theme.colors.underSelectedColor, count: .initialize(string: drawStarsPaid.value.prettyNumber, color: theme.colors.underSelectedColor, font: .avatar(.small)))
+                current.sizeToFit()
+                current.setFrameOrigin(NSMakePoint(self.image.frame.minX + (self.image.frame.width - current.frame.width) / 2, self.image.frame.midY + 5))
+            } else {
+                current.image = theme.icons.premium_required_forward
+                current.sizeToFit()
+                current.setFrameOrigin(NSMakePoint(self.image.frame.maxX - current.frame.width / 2 + 5, self.image.frame.midY + 5))
+            }
             
             if isNew, animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

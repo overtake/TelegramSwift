@@ -170,15 +170,32 @@ class ChatInputAccessory: View {
             container.contextMenu = { [weak self] in
                 let menu = ContextMenu()
                 
-                menu.addItem(ContextMenuItem(editState.invertMedia ? strings().previewSenderMoveTextDown : strings().previewSenderMoveTextUp, handler: {
-                    self?.chatInteraction.update {
-                        $0.updatedInterfaceState {
-                            $0.updatedEditState {
-                                $0?.withUpdatedInvertMedia(!editState.invertMedia)
+                if !editState.message.media.isEmpty {
+                    menu.addItem(ContextMenuItem(editState.invertMedia ? strings().previewSenderMoveTextDown : strings().previewSenderMoveTextUp, handler: {
+                        self?.chatInteraction.update {
+                            $0.updatedInterfaceState {
+                                $0.updatedEditState {
+                                    $0?.withUpdatedInvertMedia(!editState.invertMedia)
+                                }
                             }
                         }
-                    }
-                }, itemImage: editState.invertMedia ? MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
+                    }, itemImage: editState.invertMedia ? MenuAnimation.menu_sort_down.value : MenuAnimation.menu_sort_up.value))
+                }
+                if !editState.message.media.isEmpty, editState.addedMedia {
+                    menu.addItem(ContextMenuItem(strings().previewSenderRemoveMedia, handler: {
+                        self?.chatInteraction.update {
+                            $0.updatedInterfaceState {
+                                $0.updatedEditState { value in
+                                    if let value = value {
+                                        return .init(message: value.message.withUpdatedMedia([]))
+                                    } else {
+                                        return nil
+                                    }
+                                }
+                            }
+                        }
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                }
                 
                 return menu
             }

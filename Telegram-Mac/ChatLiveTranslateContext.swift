@@ -258,7 +258,7 @@ final class ChatLiveTranslateContext {
     }
         
     private func activateTranslation(for msgIds: [MessageId], state: State) -> Void {
-        let signal = context.engine.messages.translateMessages(messageIds: msgIds, toLang: state.to)
+        let signal = context.engine.messages.translateMessages(messageIds: msgIds, fromLang: nil, toLang: state.to, enableLocalIfPossible: false)
         
         actionsDisposable.add(signal.start(next: { [weak self] results in
             self?.updateState { current in

@@ -1029,7 +1029,6 @@ class PhoneCallWindowController {
     
     init(_ session:PCallSession) {
         self.session = session
-        
         let size = defaultWindowSize
         if let screen = NSScreen.main {
             self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled], backing: .buffered, defer: true, screen: screen)
@@ -1039,6 +1038,8 @@ class PhoneCallWindowController {
         } else {
             fatalError("screen not found")
         }
+        session.window = self.window
+
         view = PhoneCallWindowView(frame: NSMakeRect(0, 0, size.width, size.height))
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
@@ -1462,10 +1463,6 @@ func closeCall(minimisize: Bool = false) {
 }
 
 
-
-
-
-private var peerCall: PeerCallScreen?
 func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
     
     #if arch(arm64)

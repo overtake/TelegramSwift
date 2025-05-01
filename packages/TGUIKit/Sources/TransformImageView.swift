@@ -97,23 +97,23 @@ open class TransformImageView: NSView {
     public var preventsCapture: Bool = false {
         didSet {
             if self.preventsCapture {
-                if self.captureProtectedContentLayer == nil {
-                    let captureProtectedContentLayer = CaptureProtectedContentLayer()
-
-                    captureProtectedContentLayer.frame = self.bounds
-                    
-                    if #available(macOS 10.15, *) {
-                        captureProtectedContentLayer.preventsCapture = true
-                    }
-                    
-                    self.layer?.addSublayer(captureProtectedContentLayer)
-                    
-                    self.captureProtectedContentLayer = captureProtectedContentLayer
-                }
-                self.layer?.contents = nil
-                if let sampleBuffer = self.sampleBuffer {
-                    self.captureProtectedContentLayer?.enqueue(sampleBuffer)
-                }
+//                if self.captureProtectedContentLayer == nil {
+//                    let captureProtectedContentLayer = CaptureProtectedContentLayer()
+//
+//                    captureProtectedContentLayer.frame = self.bounds
+//                    
+//                    if #available(macOS 10.15, *) {
+//                        captureProtectedContentLayer.preventsCapture = true
+//                    }
+//                    
+//                    self.layer?.addSublayer(captureProtectedContentLayer)
+//                    
+//                    self.captureProtectedContentLayer = captureProtectedContentLayer
+//                }
+//                self.layer?.contents = nil
+//                if let sampleBuffer = self.sampleBuffer {
+//                    self.captureProtectedContentLayer?.enqueue(sampleBuffer)
+//                }
             } else {
                 if let captureProtectedContentLayer = self.captureProtectedContentLayer {
                     self.captureProtectedContentLayer = nil
@@ -162,6 +162,9 @@ open class TransformImageView: NSView {
                 self?.layer?.animateContents()
             }
             self?.isFullyLoaded = result?.highQuality ?? false
+            if result?.image != nil {
+                self?.first = false
+            }
         }))
     }
     

@@ -146,6 +146,7 @@ enum UIChatListEntryId : Hashable {
     case suspicious
     case birthdays
     case grace
+    case custom
 }
 
 
@@ -158,33 +159,130 @@ struct UIChatAdditionalItem : Equatable {
     let index: Int
 }
 
-extension EngineChatList.Item {
-    var chatListIndex: ChatListIndex {
-        switch self.index {
-        case let .chatList(index):
-            return index
-        case let .forum(pinnedIndex, timestamp, threadId, namespace, id):
-            let index: UInt16?
-            
-            if threadId == 1, self.threadData?.isHidden == true {
-                index = 0
-            } else {
-                switch pinnedIndex {
-                case .none:
-                    index = nil
-                case let .index(value):
-                    index = UInt16(value + 1)
-                }
-            }
-            
-            return ChatListIndex(pinningIndex: index, messageIndex: .init(id: MessageId(peerId: self.renderedPeer.peerId, namespace: namespace, id: id), timestamp: timestamp))
-        }
-    }
-}
+
 
 struct UIChatListBirthday : Equatable {
     let birthday: TelegramBirthday
     let peer: EnginePeer
+}
+
+struct UIChatListBuyStarsAction : UIChatListTextAction {
+    var text: NSAttributedString
+    
+    var info: NSAttributedString
+    
+    func action() {
+        showModal(with: Star_ListScreen(context: context, source: .prolongSubscription(.init(context.myPeer!), 500)), for: context.window)
+    }
+    
+    func dismiss() {
+        
+    }
+    
+    func isEqual(_ rhs: UIChatListTextAction) -> Bool {
+        if let _ = rhs as? UIChatListBuyStarsAction {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private let context: AccountContext
+    let canDismiss: Bool
+    
+    init(context: AccountContext, state: StarsSubscriptionsContext.State) {
+        self.context = context
+        self.canDismiss = true
+        let amount = state.balance
+        let peers = state.subscriptions.map(\.peer)
+        
+        let title: String
+        let text: String
+        let starsValue = strings().chatListSubscriptionsLowBalanceCountable(Int(amount.value))
+        if let peer = peers.first, peers.count == 1 {
+            title = strings().chatListSubscriptionsLowBalanceSingleTitle(starsValue, peer._asPeer().compactDisplayTitle)
+            text = strings().chatListSubscriptionsLowBalanceSingleText
+        } else {
+            title = strings().chatListSubscriptionsLowBalanceMultipleTitle(starsValue)
+            text = strings().chatListSubscriptionsLowBalanceMultipleText
+        }
+        let attributedTitle = NSMutableAttributedString(string: "\(clown_space)\(title)", font: .normal(.text), textColor: theme.colors.text)
+        attributedTitle.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+        
+        self.text = attributedTitle
+        self.info = NSAttributedString(string: text, font: .normal(.text), textColor: theme.colors.grayText)
+
+    }
+    
+}
+
+struct UIChatFrozenAction : UIChatListTextAction {
+    var text: NSAttributedString
+    
+    var info: NSAttributedString
+    
+    func action() {
+        showModal(with: FrozenAccountController(context: context), for: context.window)
+    }
+    
+    func dismiss() {
+        
+    }
+    
+    func isEqual(_ rhs: UIChatListTextAction) -> Bool {
+        if let _ = rhs as? UIChatFrozenAction {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private let context: AccountContext
+    let canDismiss: Bool
+    
+    init(context: AccountContext, freezeTime: Int32) {
+        self.context = context
+        self.canDismiss = false
+       
+        let attributedTitle = NSMutableAttributedString(string: strings().chatListFreezeAccountTitle, font: .medium(.text), textColor: theme.colors.redUI)
+        
+        self.text = attributedTitle
+        let appealLink = context.appConfiguration.getStringValue("freeze_appeal_url", orElse: "https://t.me/spambot")
+
+        let text = strings().chatListFreezeAccount
+        
+        self.info = parseMarkdownIntoAttributedString(text, attributes: .init(body: .init(font: .normal(.text), textColor: theme.colors.grayText), bold: .init(font: .medium(.text), textColor: theme.colors.grayText), link: .init(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { link in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(link, { value in
+                switch value {
+                case "appeal":
+                    let link = inApp(for: appealLink.nsstring, context: context, openInfo: { peerId, _, _, action in
+                        let chatController = ChatController(context: context, chatLocation: .peer(peerId), initialAction: action)
+                        context.bindings.rootNavigation().push(chatController)
+                    })
+                    execute(inapp: link)
+                default:
+                    execute(inapp: .external(link: value, false))
+                }
+            }))
+        }))
+
+    }
+    
+}
+
+
+
+
+protocol UIChatListTextAction {
+    var text: NSAttributedString { get }
+    var info: NSAttributedString { get }
+    
+    func action() -> Void
+    func dismiss() -> Void
+    
+    var canDismiss: Bool { get }
+    
+    func isEqual(_ rhs: any UIChatListTextAction) -> Bool
 }
 
 enum UIChatListEntry : Identifiable, Comparable {
@@ -196,6 +294,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case sharedFolderUpdated(ChatFolderUpdates)
     case suspicious(NewSessionReview)
     case birthdays([UIChatListBirthday])
+    case custom(any UIChatListTextAction)
     case grace(Bool)
     case space
     case loading(ChatListFilter)
@@ -261,6 +360,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case let .custom(lhsAction):
+            if case let .custom(rhsAction) = rhs {
+                return lhsAction.isEqual(rhsAction)
+            } else {
+                return false
+            }
         case let .loading(filter):
             if case .loading(filter) = rhs {
                 return true
@@ -319,6 +424,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .birthdays:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
+        case .custom:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .grace:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalSuccessor())
         case .loading:
@@ -354,6 +461,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .suspicious
         case .birthdays:
             return .birthdays
+        case .custom:
+            return .custom
         case .grace:
             return .grace
         case .space:
@@ -424,6 +533,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
                 return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) 
+            case let .custom(action):
+                return ChatListTextActionRowItem(initialSize, stableId: entry.stableId, context: arguments.context, title: action.text, info: action.info, canDismiss: action.canDismiss, action: action.action, dismiss: action.dismiss)
             }
         }
         
@@ -491,7 +602,8 @@ struct FilterData : Equatable {
     let request: ChatListIndexRequest
     let badges: ChatListFilterBadges
     let requestTimestamp: TimeInterval
-    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, showTags: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: []), requestTimestamp: TimeInterval = CACurrentMediaTime()) {
+    var isTop: Bool
+    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, showTags: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: []), requestTimestamp: TimeInterval = CACurrentMediaTime(), isTop: Bool = true) {
         self.filter = filter
         self.tabs = tabs
         self.sidebar = sidebar
@@ -499,6 +611,7 @@ struct FilterData : Equatable {
         self.badges = badges
         self.showTags = showTags
         self.requestTimestamp = requestTimestamp
+        self.isTop = isTop
     }
     
     var isEmpty: Bool {
@@ -510,27 +623,31 @@ struct FilterData : Equatable {
     }
     func withUpdatedFilterId(_ filterId: Int32?) -> FilterData {
         let filter = self.tabs.first(where: { $0.id == filterId }) ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedFilter(_ filter: ChatListFilter?) -> FilterData {
         let filter = filter ?? self.tabs.first ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedTabs(_ tabs:  [ChatListFilter]) -> FilterData {
-        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedSidebar(_ sidebar: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedShowTags(_ showTags: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: self.sidebar, showTags: showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: self.sidebar, showTags: showTags, request: self.request, badges: self.badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
     func withUpdatedRequest(_ request: ChatListIndexRequest, removeAnimation: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: self.badges, requestTimestamp: removeAnimation ? CACurrentMediaTime() : self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: self.badges, requestTimestamp: removeAnimation ? CACurrentMediaTime() : self.requestTimestamp, isTop: self.isTop)
+    }
+    func withUpdatedIsTop(_ isTop: Bool) -> FilterData {
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges, requestTimestamp: self.requestTimestamp, isTop: isTop)
     }
     func withUpdatedBadges(_ badges: ChatListFilterBadges) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges, requestTimestamp: self.requestTimestamp)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, showTags: self.showTags, request: request, badges: badges, requestTimestamp: self.requestTimestamp, isTop: self.isTop)
     }
+    
 }
 
 
@@ -557,7 +674,7 @@ class ChatListController : PeersListController {
             var previous = previous
             var current = f(previous.filterData)
             if previous.filterData.filter.id != current.filter.id {
-                current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil), removeAnimation: false)
+                current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil), removeAnimation: false).withUpdatedIsTop(true)
                 changedFolder = true
             }
             previous.filterData = current
@@ -593,6 +710,7 @@ class ChatListController : PeersListController {
     private var preloadStorySubscriptionsDisposable: Disposable?
     private var preloadStoryResourceDisposables: [MediaId: Disposable] = [:]
 
+    private let subContext: StarsSubscriptionsContext?
 
     
     private let filterDisposable = MetaDisposable()
@@ -739,9 +857,8 @@ class ChatListController : PeersListController {
             
             self?.removeHighlightEvents()
             
-            if let searchController = self?.searchController {
-                searchController.updateHighlightEvents(location != nil)
-            }
+            self?.updateHighlightEvents(location != nil)
+            
             if location == nil {
                 self?.setHighlightEvents()
             }
@@ -792,9 +909,19 @@ class ChatListController : PeersListController {
         
         let myBirthday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: context.peerId))
         
+        let subState: Signal<StarsSubscriptionsContext.State?, NoError>
+        if let subContext {
+            subState = subContext.state |> map(Optional.init)
+        } else {
+            subState = .single(nil)
+        }
         
         
-        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), additionalSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday) |> mapToQueue { value, appearance, state, inAppSettings, additionalSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday -> Signal<TableUpdateTransition, NoError> in
+        let appConfiguration = context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+        }
+        
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), additionalSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession, suggestions, birthdays, myBirthday, context.starsContext.state, subState, appConfiguration) |> mapToQueue { value, appearance, state, inAppSettings, additionalSettings, filtersCounter, storyState, suspiciousSession, suggestions, birthdays, myBirthday, starsSubscriptionsState, missingBalanceState, appConfiguration -> Signal<TableUpdateTransition, NoError> in
                                 
             let filterData = value.1
             let folderUpdates = value.3
@@ -878,17 +1005,25 @@ class ChatListController : PeersListController {
             
             var additionItems: [UIChatListEntry] = []
             
+            
             if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState != .minimisize {
                 additionItems.append(.suspicious(suspiciousSession))
             }
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
+                if suggestions.contains(where: { $0 == .starsSubscriptionLowBalance }), let missingBalanceState {
+                    if missingBalanceState.balance.value > 0, !missingBalanceState.subscriptions.isEmpty {
+                        additionItems.append(.custom(UIChatListBuyStarsAction(context: context, state: missingBalanceState)))
+                    }
+                }
+            }
             
-            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(.gracePremium) {
                     additionItems.append(.grace(true))
                 }
             }
             
-            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize {
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(.setupBirthday), myBirthday == nil {
                     additionItems.append(.birthdays([]))
                 } else {
@@ -897,6 +1032,14 @@ class ChatListController : PeersListController {
                     }
                 }
             }
+            
+            let freezeTime = appConfiguration.getGeneralValue("freeze_since_date", orElse: 0)
+            
+            if freezeTime != 0 {
+                additionItems.append(.custom(UIChatFrozenAction(context: context, freezeTime: freezeTime)))
+            }
+
+            
             
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
                 additionItems.append(.systemDeprecated(filterData.filter))
@@ -1011,17 +1154,25 @@ class ChatListController : PeersListController {
             if let strongSelf = self, let view = view {
                 var messageIndex:EngineChatList.Item.Index?
                 
+                let isTop: Bool
+                
                 switch scroll.direction {
                 case .bottom:
                     if view.hasEarlier {
                         messageIndex = view.items.first?.index
+                        isTop = false
+                    } else {
+                        isTop = true
                     }
                 case .top:
                     if view.hasLater {
                         messageIndex = view.items.last?.index
+                        isTop = false
+                    } else {
+                        isTop = true
                     }
                 case .none:
-                    break
+                    isTop = true
                 }
                 if let messageIndex = messageIndex {
                     _ = animated.swap(false)
@@ -1031,7 +1182,11 @@ class ChatListController : PeersListController {
                         }
                     }
                     strongSelf.updateFilter {
-                        $0.withUpdatedRequest(.Index(messageIndex, nil), removeAnimation: true)
+                        $0.withUpdatedRequest(.Index(messageIndex, nil), removeAnimation: true).withUpdatedIsTop(isTop)
+                    }
+                } else {
+                    strongSelf.updateFilter {
+                        $0.withUpdatedIsTop(isTop)
                     }
                 }
             }
@@ -1094,7 +1249,7 @@ class ChatListController : PeersListController {
         switch mode {
         case .folder, .plain, .filter:
             let downloadArguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
-                self?.showDownloads(animated: true)
+                self?.makeDownloadSearch()
             }, navigate: { [weak self] messageId in
                 self?.open(with: .chatId(.chatList(messageId.peerId), messageId.peerId, -1), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
             })
@@ -1208,7 +1363,7 @@ class ChatListController : PeersListController {
             return item.isFixedItem || item.groupId != .root
         }
         
-        self.searchController?.pinnedItems = self.collectPinnedItems
+        self.updatePinnedItems(self.collectPinnedItems)
         self.genericView.tableView.resortController?.resortRange = pinnedRange
         
         
@@ -1334,7 +1489,15 @@ class ChatListController : PeersListController {
             return
         }
         
-        if searchController != nil {
+        if searchSection != nil {
+            updateState { current in
+                var current = current
+                current.peerTag = nil
+                current.hashtag = nil
+                current.selectedTag = .chats
+                current.searchState = .None
+                return current
+            }
             self.genericView.searchView.change(state: .None, true)
             return
         }
@@ -1367,7 +1530,7 @@ class ChatListController : PeersListController {
             if view?.hasLater == true {
                 _ = self.first.swap(true)
                 self.updateFilter {
-                    $0.withUpdatedRequest(.Initial(50, .up(true)), removeAnimation: true)
+                    $0.withUpdatedRequest(.Initial(50, .up(true)), removeAnimation: true).withUpdatedIsTop(true)
                 }
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
@@ -1383,94 +1546,53 @@ class ChatListController : PeersListController {
                 } else {
                     self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
                 }
+                self.updateFilter {
+                    $0.withUpdatedIsTop(true)
+                }
             }
         }
         scrollToTop()
     }
     
     
-    func globalSearch(_ query: String, peer: EnginePeer?) {
+    func globalSearch(_ query: String, peer: EnginePeer?, cached: CachedSearchMessages?, isSuperTag: Bool) {
         let context = self.context
         
-        let invoke = { [weak self] in
-            self?.genericView.searchView.change(state: .Focus, false)
+        if query.isEmpty {
+            self.genericView.searchView.change(state: .Focus, true)
+        } else {
             
-            if let peer {
-                
-                let peerId = peer.id
-                
-                enum SearchMode : Equatable {
-                    case thisChat
-                    case myMessages
-                    case publicPosts
+            let invoke = { [weak self] in
+                if let peer {
+                    let peerId = peer.id
+                    let mode: PeerListState.SelectedSearchTag = isSuperTag ? .hashtagThisChat : peer._asPeer().isChannel ? .hashtagPublicPosts : .hashtagMyMessages
+                    self?.makeHashtag(.init(mode: mode, peer: peer, text: query), cached: cached)
+                } else {
+                    self?.makeHashtag(.init(mode: .hashtagPublicPosts, peer: nil, text: query), cached: cached)
                 }
-                
-                var updateSearchView:(()->Void)? = nil
-                
-                var mode: SearchMode = peer._asPeer().isChannel ? .publicPosts : .myMessages {
-                    didSet {
-                        updateSearchView?()
-                    }
-                }
-                
-                let contextMenu:()->[ContextMenuItem] = {
-                    
-                    var items: [ContextMenuItem] = []
-                    
-                    items.append(.init(strings().chatHashtagThisChat, handler: {
-                        mode = .thisChat
-                    }, state: mode == .thisChat ? .on : nil, itemImage: MenuAnimation.menu_read.value))
-                    
-                    items.append(.init(strings().chatHashtagMyMessages, handler: {
-                        mode = .myMessages
-                    }, state: mode == .myMessages ? .on : nil, itemImage: MenuAnimation.menu_folder_all_chats.value))
-                    
-                    items.append(.init(strings().chatHashtagPublicPosts, handler: {
-                        mode = .publicPosts
-                    }, state: mode == .publicPosts ? .on : nil, itemImage: MenuAnimation.menu_channel.value))
-                    
-                    return items
-                }
-                
-                updateSearchView = { [weak self] in
-                    let text: String
-                    let tags: SearchTags
-                    switch mode {
-                    case .thisChat:
-                        text = strings().chatHashtagThisChat
-                        tags = .init(messageTags: nil, peerTag: peerId, text: nil)
-                    case .myMessages:
-                        text = strings().chatHashtagMyMessages
-                        tags = .init(messageTags: nil, peerTag: nil, text: nil, myMessages: true)
-                    case .publicPosts:
-                        text = strings().chatHashtagPublicPosts
-                        tags = .init(messageTags: nil, peerTag: nil, text: nil, publicPosts: true)
-                    }
-                    self?.genericView.searchView.updateTags([.init(text: text, image: theme.icons.search_hashtag_chevron, contextMenu: contextMenu, isTextTied: true)], theme.icons.search_filter_hashtag, animated: false)
-                    self?.searchController?.updateSearchTags(tags)
-                }
-                
-                updateSearchView?()
+                self?.genericView.searchView.change(state: .Focus, false)
             }
-            self?.genericView.searchView.setString(query)
+            
+            switch context.layout {
+            case .single:
+                context.bindings.rootNavigation().back()
+                Queue.mainQueue().justDispatch(invoke)
+            case .minimisize:
+                context.bindings.needFullsize()
+                Queue.mainQueue().justDispatch(invoke)
+            default:
+                invoke()
+            }
         }
         
-        switch context.layout {
-        case .single:
-            context.bindings.rootNavigation().back()
-            Queue.mainQueue().justDispatch(invoke)
-        case .minimisize:
-            context.bindings.needFullsize()
-            Queue.mainQueue().justDispatch(invoke)
-        default:
-            invoke()
-        }
     }
     
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        
+        subContext?.load(force: true)
         
         let isLocked = (NSApp.delegate as? AppDelegate)?.passlock ?? .single(false)
         
@@ -1831,7 +1953,12 @@ class ChatListController : PeersListController {
     
     init(_ context: AccountContext, modal:Bool = false, mode: PeerListMode = .plain) {
         
-
+        if mode == .plain {
+            self.subContext = context.engine.payments.peerStarsSubscriptionsContext(starsContext: nil, missingBalance: true)
+        } else {
+            self.subContext = nil
+        }
+        
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         let searchOptions:AppSearchOptions
         switch mode {

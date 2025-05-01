@@ -19,6 +19,14 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
    
     private let sceneView: SCNView
     
+    enum Mode {
+        case business
+        case affiliate
+    }
+    
+    var mode: Mode = .business
+    
+    
     private let tapDelay = MetaDisposable()
     private let appearanceDelay = MetaDisposable()
     
@@ -227,7 +235,7 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
             }
             
             if let material = node.geometry?.materials.first {
-                if node.name == "Logos" {
+                if ["Business", "Affiliate", "Plane"].contains(node.name) {
                     material.metalness.intensity = 0.1
                 } else {
                     material.metalness.intensity = 0.3
@@ -251,6 +259,21 @@ final class PremiumCoinSceneView: View, SCNSceneRendererDelegate, PremiumSceneVi
             node.geometry?.materials.first?.emission.addAnimation(group, forKey: "shimmer")
         }
 
+        let visibleLogo: String
+        switch mode {
+        case .business:
+            visibleLogo = "Business"
+        case .affiliate:
+            visibleLogo = "Affiliate"
+        }
+        
+        if let scene = self.sceneView.scene, let node = scene.rootNode.childNode(withName: "star", recursively: false) {
+            for node in node.childNodes {
+                if ["Business", "Affiliate"].contains(node.name) {
+                    node.isHidden = node.name != visibleLogo
+                }
+            }
+        }
 
         
 //        if #available(macOS 14.0, *), let material = node.geometry?.materials.first {

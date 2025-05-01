@@ -136,8 +136,10 @@ final class StoryLikeActionButton: Control {
              effectFileId = fileId
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-             file = reaction?.selectAnimation
-             effectFile = reaction?.aroundAnimation
+             file = reaction?.selectAnimation._parse()
+             effectFile = reaction?.aroundAnimation?._parse()
+         case .stars:
+             break
          }
          
          guard let icon = file else {
@@ -207,18 +209,18 @@ final class StoryLikeActionButton: Control {
         case .builtin:
             if reaction == .defaultStoryLike {
                 size = NSMakeSize(30, 30)
-                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [], alternativeRepresentations: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd, textColor: NSColor(0xffffff))
             } else {
-                
                 if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
-                    let file = appear ? animation.activateAnimation : animation.selectAnimation
+                    let file = appear ? animation.activateAnimation._parse() : animation.selectAnimation._parse()
                     layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
                 } else {
                     layer = nil
                 }
             }
-            
+        case .stars:
+            layer = nil
         }
         if let layer = layer {
             layer.frame = focus(size)
@@ -282,7 +284,7 @@ private final class StoryReplyActionButton : View {
         case share
     }
     
-    private var current: ImageButton?
+    private var current: Control?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
     }
@@ -292,6 +294,9 @@ private final class StoryReplyActionButton : View {
     }
     private var state: State?
     private var story: StoryContentItem?
+    
+    private var starsSendActionView: StarsSendActionView?
+    
     func update(state: State, arguments: StoryArguments, story: StoryContentItem?, animated: Bool) {
         let previous = self.state
         self.story = story
@@ -300,28 +305,49 @@ private final class StoryReplyActionButton : View {
                 performSubviewRemoval(view, animated: animated, scale: true)
                 self.current = nil
             }
-            let current: ImageButton = ImageButton()
+
+            let sendPaidMessageStars = arguments.chatInteraction.presentation.sendPaidMessageStars
+
+            if let sendPaidMessageStars, state == .text {
+                let current: StarsSendActionView
+                current = StarsSendActionView(frame: .zero)
+                self.current = current
+                current.update(price: sendPaidMessageStars.value, context: arguments.context, animated: animated)
+                
+                addSubview(current)
+                current.centerY(x: 0)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                }
+                
+            } else {
+                
+                let current: ImageButton = ImageButton()
+                current.autohighlight = false
+                current.animates = false
+                switch state {
+                case .text:
+                    current.set(image: send_image, for: .Normal)
+                    current.set(image: send_image_active, for: .Highlight)
+                case let .empty(isVoice: isVoice):
+                    current.set(image: isVoice ? voice_image : video_message_image, for: .Normal)
+                    current.set(image: isVoice ? voice_image_active : video_message_image_active, for: .Highlight)
+                case .share:
+                    current.set(image: share_image, for: .Normal)
+                    current.set(image: share_image_active, for: .Highlight)
+                }
+                
+                self.current = current
+                current.frame = frame.size.bounds
+                addSubview(current)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                }
+            }
             
-            current.autohighlight = false
-            current.animates = false
-            switch state {
-            case .text:
-                current.set(image: send_image, for: .Normal)
-                current.set(image: send_image_active, for: .Highlight)
-            case let .empty(isVoice: isVoice):
-                current.set(image: isVoice ? voice_image : video_message_image, for: .Normal)
-                current.set(image: isVoice ? voice_image_active : video_message_image_active, for: .Highlight)
-            case .share:
-                current.set(image: share_image, for: .Normal)
-                current.set(image: share_image_active, for: .Highlight)
-            }
-            self.current = current
-            current.frame = frame.size.bounds
-            addSubview(current)
-            if animated {
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-            }
+            
         }
         
         self.state = state

@@ -358,7 +358,7 @@ final class StoryControlsView : Control {
             muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
         }
         muted.isHidden = !arguments.interaction.canBeMuted(story.storyItem)
-        more.isHidden = context.peerId == groupId
+        more.isHidden = context.peerId == groupId || peer.isBot
 
         
         let textWidth = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (privacy.isHidden ? 0 : 20) - (repostView != nil ? repostView!.frame.width + 3 : 0) - (authorView != nil ? authorView!.frame.width + 3 : 0)
@@ -368,6 +368,8 @@ final class StoryControlsView : Control {
         dateLayout.measure(width: textWidth)
 
                
+        dateContainer.isHidden = peer.isBot == true
+        
         dateContainer.userInteractionEnabled = self.repostView != nil || self.authorView != nil
         dateContainer.scaleOnClick = true
         dateView.userInteractionEnabled = false
@@ -415,7 +417,11 @@ final class StoryControlsView : Control {
         transition.updateFrame(view: avatarAndText, frame: avatarAndText.centerFrameY(x: 12))
         
         transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: 0))
-        transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY), size: textView.frame.size))
+        if dateContainer.isHidden {
+            transition.updateFrame(view: textView, frame: textView.centerFrameY(x: avatar.frame.maxX + 10))
+        } else {
+            transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY), size: textView.frame.size))
+        }
         
         
         

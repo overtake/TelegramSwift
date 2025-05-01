@@ -144,8 +144,8 @@ private final class WallpaperView : View {
                 self.addSubview(current, positioned: .below, relativeTo: overlay)
                 self.emojiView = current
             }
-            let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, hidePlayer: true, media: sticker.file)
-            current.update(with: sticker.file, size: NSMakeSize(30, 30), context: context, table: nil, parameters: params, animated: animated)
+            let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, hidePlayer: true, media: sticker.file._parse())
+            current.update(with: sticker.file._parse(), size: NSMakeSize(30, 30), context: context, table: nil, parameters: params, animated: animated)
             current.userInteractionEnabled = false
             current.overridePlayValue = false
         } else if let emojiView = self.emojiView {

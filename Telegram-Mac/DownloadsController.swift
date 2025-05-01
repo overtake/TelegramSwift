@@ -199,8 +199,35 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
+    
+    let recentItems = recentDownloadItems(postbox: context.account.postbox) |> map { items in
+        return items.compactMap { value in
+            
+            var media: Media = value.message.media.first!
+            var resourceId = value.resourceId
+            var size: Int64?
+            if let file = media as? TelegramMediaFile {
+                size = file.size
+                if value.resourceId != file.resource.id.stringRepresentation {
+                    for alternativeRepresentation in file.alternativeRepresentations {
+                        if let alternative = alternativeRepresentation as? TelegramMediaFile {
+                            if alternative.resource.id.stringRepresentation == value.resourceId {
+                                media = alternative
+                                resourceId = value.resourceId
+                                size = value.size
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return RenderedRecentDownloadItem(message: value.message.withUpdatedMedia([media]), timestamp: value.timestamp, isSeen: value.isSeen, resourceId: resourceId, size: size ?? 0)
+        }
+    }
+    
     let downloadItems: Signal<(inProgressItems: [DownloadItem], doneItems: [RenderedRecentDownloadItem]), NoError>
-    downloadItems = combineLatest(queue: .mainQueue(), (context.fetchManager as! FetchManagerImpl).entriesSummary, recentDownloadItems(postbox: context.account.postbox))
+    downloadItems = combineLatest(queue: .mainQueue(), (context.fetchManager as! FetchManagerImpl).entriesSummary, recentItems)
     |> mapToSignal { entries, recentDownloadItems -> Signal<(inProgressItems: [DownloadItem], doneItems: [RenderedRecentDownloadItem]), NoError> in
         var itemSignals: [Signal<DownloadItem?, NoError>] = []
         
@@ -209,7 +236,21 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
             case let .messageId(id):
                 itemSignals.append(context.account.postbox.transaction { transaction -> DownloadItem? in
                     if let message = transaction.getMessage(id) {
-                        return DownloadItem(resourceId: entry.resourceReference.resource.id, message: message, priority: entry.priority, isPaused: entry.isPaused)
+                        
+                        var media: Media = message.media.first!
+                        if let file = media as? TelegramMediaFile {
+                            if file.resource.id != entry.resourceReference.resource.id {
+                                for alternativeRepresentation in file.alternativeRepresentations {
+                                    if let alternative = alternativeRepresentation as? TelegramMediaFile {
+                                        if alternative.resource.id == entry.resourceReference.resource.id {
+                                            media = alternative
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return DownloadItem(resourceId: entry.resourceReference.resource.id, message: message.withUpdatedMedia([media]), priority: entry.priority, isPaused: entry.isPaused)
                     }
                     return nil
                 })
@@ -250,13 +291,15 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         actionsDisposable.dispose()
     }
     
+    controller.makeFirstResponder = false
+    
     
     controller.didLoad = { controller, _ in
         controller.tableView.getBackgroundColor = {
             return theme.colors.background
         }
-        controller.genericView.border = [.Right]
-        controller.tableView.border = [.Right]
+      //  controller.genericView.border = [.Right]
+      //  controller.tableView.border = [.Right]
         
         let supplyment = GallerySupplyment(tableView: controller.tableView)
         

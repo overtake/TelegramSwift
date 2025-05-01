@@ -110,10 +110,10 @@ final class ChatMediaPaidContentItem : ChatRowItem {
         if !isPreview {
             let text = NSMutableAttributedString()
             if messageMainPeer(.init(message))?._asPeer().isAdmin == true {
-                text.append(string: "\(clown) \(media.amount)", color: NSColor(0xffffff), font: .normal(.text))
+                text.append(string: "\(clown) \(media.amount)", color: NSColor(0xffffff), font: .normal(.small))
                 text.insertEmbedded(.embedded(name: XTR_ICON, color: NSColor(0xffffff), resize: false), for: clown)
             } else {
-                text.append(string: strings().paidMediaStatusPurchased, color: NSColor(0xffffff), font: .normal(.text))
+                text.append(string: strings().paidMediaStatusPurchased, color: NSColor(0xffffff), font: .normal(.small))
             }
             self.badgeLayout = .init(text)
             self.badgeLayout?.measure(width: .greatestFiniteMagnitude)
@@ -124,7 +124,7 @@ final class ChatMediaPaidContentItem : ChatRowItem {
         if isPreview {
             let attr = NSMutableAttributedString()
             attr.append(string: strings().paidMediaUnlockForCountable(Int(media.amount)), color: .white, font: .medium(.text))
-            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency.file), for: "#")
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: "#")
             
             let textLayout = TextViewLayout(attr)
             textLayout.measure(width: .greatestFiniteMagnitude)

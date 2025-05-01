@@ -252,19 +252,19 @@ private final class AvatarBadgeView: ImageView {
 private final class ChatListTagsView : View {
     
     class TagView : View {
-        private let textView = TextView()
+        private let textView = InteractiveTextView()
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             textView.userInteractionEnabled = false
-            textView.isSelectable = false
+            textView.textView.isSelectable = false
             addSubview(textView)
         }
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func set(item: ChatListTag, selected: Bool, animated: Bool) {
-            self.textView.update(selected ? item.selected : item.text)
+        func set(item: ChatListTag, context: AccountContext, selected: Bool, animated: Bool) {
+            self.textView.set(text: selected ? item.selected : item.text, context: context)
             self.backgroundColor = selected ? item.selectedColor : item.color
         }
         
@@ -300,7 +300,7 @@ private final class ChatListTagsView : View {
         for (i, tag) in items.enumerated() {
             let view = subviews[i] as! TagView
             view.frame = CGRect(origin: CGPoint(x: x, y: 0), size: tag.size)
-            view.set(item: tag, selected: item.isActiveSelected, animated: animated)
+            view.set(item: tag, context: item.context, selected: item.isActiveSelected, animated: animated)
             x += tag.size.width + 3
         }
     }
@@ -763,7 +763,7 @@ private final class ChatListMediaPreviewView: View {
 
             if let mediaDimensions = file.dimensions {
                 dimensions = mediaDimensions.size
-                signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
+                signal = mediaGridMessageVideo(account: self.context.account, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
             }
         }
         let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets())
@@ -939,6 +939,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var reactionsView: ImageView?
     
     private var selectionView: View?
+    
+    private var openMiniApp: TextView?
 
     
     private var activeImage: ImageView?
@@ -949,6 +951,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    
+    private var starBadgeView: ImageView?
     
     
     private var borderView: View?
@@ -972,6 +976,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var expandView: ChatListExpandView?
     
     private var statusControl: PremiumStatusControl?
+    
+    private var leftStatusControl: PremiumStatusControl?
+
     
     private var avatarTimerBadge: AvatarBadgeView?
     
@@ -1210,6 +1217,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     if let statusControl = statusControl {
                         addition += statusControl.frame.width + 1
                     }
+                    if let statusControl = leftStatusControl {
+                        addition += statusControl.frame.width + 2
+                    }
 
                     if item.isMuted {
                         let icon = theme.icons.dialogMuteImage
@@ -1395,14 +1405,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     
                     let rect = item.rect.insetBy(dx: 0, dy: 0)
                     
-                    let textColor = stickerItem.playPolicy == nil && self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                    let isSelected = stickerItem.playPolicy == nil && self.highlighed
+                    let textColor = isSelected ? theme.colors.underSelectedColor : theme.colors.grayText
                     
                     let view: InlineStickerItemLayer
                     if let current = self.inlineStickerItemViews[id] as? InlineStickerItemLayer, current.frame.size == rect.size, current.textColor == textColor {
                         view = current
                     } else {
                         self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor)
+                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: stickerItem.playPolicy ?? .loop, textColor: textColor, isSelected: isSelected)
                         self.inlineStickerItemViews[id] = view
                         view.superview = textView
                         textView.addEmbeddedLayer(view)
@@ -1511,7 +1522,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      self.displayNameView = current
                      contentView.addSubview(current)
                  }
-                 current.set(text: displayLayout, context: item.context)
+                 current.set(text: displayLayout, context: item.context, insetEmoji: 3)
              } else if let view = self.displayNameView {
                  performSubviewRemoval(view, animated: animated)
                  self.displayNameView = nil
@@ -1536,7 +1547,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if let peer = item.peer, peer.id != item.context.peerId, !item.isTopic {
                  let highlighted = self.highlighed
-                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
+                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: false, isSelected: highlighted, cached: self.statusControl, animated: animated)
                  if let control = control {
                      self.statusControl = control
                      self.contentView.addSubview(control)
@@ -1547,6 +1558,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              } else if let view = self.statusControl {
                  performSubviewRemoval(view, animated: animated)
                  self.statusControl = nil
+             }
+             
+             if let peer = item.peer, peer.id != item.context.peerId, !item.isTopic {
+                 let highlighted = self.highlighed
+                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, left: true, isSelected: highlighted, cached: self.leftStatusControl, animated: animated)
+                 if let control = control {
+                     self.leftStatusControl = control
+                     self.contentView.addSubview(control)
+                 } else if let view = self.leftStatusControl {
+                     performSubviewRemoval(view, animated: animated)
+                     self.leftStatusControl = nil
+                 }
+             } else if let view = self.leftStatusControl {
+                 performSubviewRemoval(view, animated: animated)
+                 self.leftStatusControl = nil
              }
              
              if item.isReplyToStory, !hiddenMessage {
@@ -1675,7 +1701,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          self.photoVideoView!.frame = self.photo.frame
 
                          
-                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [], alternativeRepresentations: [])
                          
                          
                          let reference: MediaResourceReference
@@ -1991,6 +2017,36 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  activeImage = nil
              }
              
+             if item.isPaidSubscriptionChannel, self.badgeShortView == nil {
+                 var animate: Bool = false
+                 let current: ImageView
+                 if let view = self.starBadgeView {
+                     current = view
+                 } else {
+                     current = ImageView()
+                     self.starBadgeView = current
+                     self.containerView.addSubview(current, positioned: .above, relativeTo: photoContainer)
+                     animate = true
+                 }
+                 current.image = item.isSelected && item.context.layout != .single ? theme.icons.avatar_star_badge_active : theme.icons.avatar_star_badge
+                 current.sizeToFit()
+
+                 let avatarFrame = self.photoContainer.frame
+                 let avatarBadgeSize = current.frame.size
+                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width + 4, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+
+                 
+                 current.frame = avatarBadgeFrame
+
+                 if animated && animate {
+                     current.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                 }
+             } else if let view = self.starBadgeView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.starBadgeView = nil
+             }
+             
              
              if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil, badgeShortView == nil, groupActivityView == nil {
                  let current: AvatarBadgeView
@@ -2008,7 +2064,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
                  let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
                  current.update(size: avatarBadgeSize, text: shortTimeIntervalString(value: autoremoveTimeout))
-                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width + 3, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
                  
                  
                  current.frame = avatarBadgeFrame
@@ -2157,6 +2213,33 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.archivedPhoto?.layer?.cornerRadius = photo.radius
                  self.photo.update(component: nil, availableSize: NSMakeSize(44, 44), transition: transition)
              }
+             
+             
+             if let openMiniApp = item.ctxOpenMiniApp {
+                 let current: TextView
+                 if let view = self.openMiniApp {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.isSelectable = false
+                     current.scaleOnClick = true
+                     self.openMiniApp = current
+                     contentView.addSubview(current)
+                 }
+                 current.update(openMiniApp)
+                 current.backgroundColor = item.isActiveSelected ? theme.colors.underSelectedColor : theme.colors.accent
+                 current.setFrameSize(openMiniApp.layoutSize.bounds.insetBy(dx: -8, dy: -4).size)
+                 current.layer?.cornerRadius = current.frame.height / 2
+                 
+                 current.setSingle(handler: { [weak item] _ in
+                     item?.openWebApp()
+                 }, for: .Click)
+                 
+             } else if let view = openMiniApp {
+                 performSubviewRemoval(view, animated: animated)
+                 self.openMiniApp = nil
+             }
+             
          }
         
         
@@ -2923,6 +3006,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             var addition:CGFloat = 0
+            
+            if let statusControl = leftStatusControl {
+                statusControl.setFrameOrigin(NSMakePoint(item.leftInset, displayNameView.frame.height - 8))
+                addition += statusControl.frame.width + 2
+            }
+            
             if item.isSecret {
                 addition += theme.icons.secretImage.backingSize.height
             }
@@ -2941,8 +3030,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 if item.isSecret {
                     addition += theme.icons.secretImage.backingSize.height
                 }
+                if let statusControl = leftStatusControl {
+                    addition += statusControl.frame.width + 2
+                }
                 statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
+                
+               
             }
+            
+ 
             
             var inset: CGFloat = item.leftInset
             if let view = self.storyReplyImageView {
@@ -3009,6 +3105,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         if let tagsView = tagsView {
             tagsView.setFrameOrigin(NSMakePoint(item.leftInset, contentView.frame.height - tagsView.frame.height - 7))
+        }
+        
+        if let openMiniApp = openMiniApp {
+            
+            var offset = item.margin + 1
+            if (item.isPinned || item.isLastPinned) {
+                offset += theme.icons.pinnedImage.systemSize.width + 5
+            }
+            
+            openMiniApp.setFrameOrigin(NSMakePoint(frame.width - openMiniApp.frame.width - offset, frame.height - openMiniApp.frame.height - (item.margin + 1)))
         }
         
         if let delta = internalDelta {

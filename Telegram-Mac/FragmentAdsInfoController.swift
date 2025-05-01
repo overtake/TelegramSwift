@@ -52,9 +52,13 @@ private final class RowItem : GeneralRowItem {
     
     let options: [Option]
     let dismiss:()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, dismiss:@escaping()->Void) {
+    let parent: Message?
+    let interactions: ChatInteraction?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, parent: Message?, interactions: ChatInteraction?, dismiss:@escaping()->Void) {
         self.context = context
         self.dismiss = dismiss
+        self.interactions = interactions
+        self.parent = parent
         
         let headerText = NSAttributedString.initialize(string: strings().fragmentAdsInfoTitle, color: theme.colors.text, font: .medium(.title)).mutableCopy() as! NSMutableAttributedString
         
@@ -157,6 +161,8 @@ private final class RowView: GeneralContainableRowView {
         }
     }
     
+    private let moreActions: ImageButton = ImageButton()
+    
     private let iconView = View(frame: NSMakeRect(0, 0, 80, 80))
     private let gradient = SimpleGradientLayer()
     private let stickerView = ImageView()
@@ -179,7 +185,6 @@ private final class RowView: GeneralContainableRowView {
         addSubview(infoBlock)
         iconView.addSubview(stickerView)
         
-        
        
         
         addSubview(optionsView)
@@ -190,6 +195,27 @@ private final class RowView: GeneralContainableRowView {
         infoView.textView.userInteractionEnabled = true
         infoView.userInteractionEnabled = false
         
+        moreActions.autohighlight = false
+        moreActions.scaleOnClick = true
+        moreActions.set(image: NSImage(resource: .iconChatActionsActive).precomposed(theme.colors.grayIcon), for: .Normal)
+        moreActions.sizeToFit()
+        
+        addSubview(moreActions)
+        
+        moreActions.set(handler: { [weak self] control  in
+            
+            if let item = self?.item as? RowItem, let parent = item.parent, let interactions = item.interactions {
+                let signal = chatMenuItems(for: parent, entry: nil, textLayout: nil, chatInteraction: interactions, fromAdPromo: true) |> deliverOnMainQueue
+                if let event = NSApp.currentEvent {
+                    _ = signal.startStandalone(next: { items in
+                        let menu = ContextMenu()
+                        menu.items = items
+                        AppMenu.show(menu: menu, event: event, for: control)
+                    })
+                }
+            }
+            
+        }, for: .Click)
 
     }
     
@@ -201,6 +227,8 @@ private final class RowView: GeneralContainableRowView {
         super.layout()
         iconView.centerX(y: 0)
         stickerView.center()
+        
+        moreActions.setFrameOrigin(NSMakePoint(containerView.frame.width - moreActions.frame.width, 0))
         
         
         headerView.centerX(y: stickerView.frame.maxY + 20)
@@ -279,7 +307,7 @@ private final class RowView: GeneralContainableRowView {
 
 private let _id_header = InputDataIdentifier("_id_header")
 
-private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, message: Message?, interactions: ChatInteraction?, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -289,7 +317,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, stableId: stableId, context: arguments.context, dismiss: arguments.dismiss)
+        return RowItem(initialSize, stableId: stableId, context: arguments.context, parent: message, interactions: interactions, dismiss: arguments.dismiss)
     }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -297,7 +325,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     return entries
 }
-func FragmentAdsInfoController(context: AccountContext) -> InputDataModalController {
+func FragmentAdsInfoController(context: AccountContext, message: Message?, interactions: ChatInteraction?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -316,7 +344,7 @@ func FragmentAdsInfoController(context: AccountContext) -> InputDataModalControl
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        return InputDataSignalValue(entries: entries(state, message: message, interactions: interactions, arguments: arguments))
     }
     
     let controller = InputDataController(dataSignal: signal, title: "")

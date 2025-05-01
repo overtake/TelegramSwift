@@ -10,4 +10,9 @@ core-xprojects/libopus/build
 core-xprojects/ffmpeg/build
 core-xprojects/webrtc/build
 core-xprojects/libvpx/build
-
+core-xprojects/OpenH264/build
+submodules/libwebp/SharedHeaders
+submodules/Mozjpeg/SharedHeaders
+submodules/OpenSSLEncryptionProvider/SharedHeaders
+core-xprojects/dav1d/build
+core-xprojects/tde2e/build

@@ -212,7 +212,7 @@ func GroupEmojiPackController(context: AccountContext, peerId: PeerId, selected:
             switch value {
             case let .result(info, items, _):
                 if let item = items.first {
-                    return (info, item)
+                    return (info._parse(), item)
                 } else {
                     return nil
                 }
@@ -419,7 +419,7 @@ func GroupEmojiPackController(context: AccountContext, peerId: PeerId, selected:
                         var current = current
                         current.loading = false
                         if let first = items.first {
-                            current.selected = .init(info: info, id: info.id, item: first, count: info.count)
+                            current.selected = .init(info: info._parse(), id: info.id, item: first, count: info.count)
                         } else {
                             current.selected = nil
                         }

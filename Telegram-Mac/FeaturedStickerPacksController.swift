@@ -123,7 +123,7 @@ private func featuredStickerPacksControllerEntries(state: FeaturedStickerPacksCo
                 if let value = unreadPacks[item.info.id] {
                     unread = value
                 }
-                entries.append(.pack(sectionId: sectionId, index, item.info, unread, item.topItems.first, item.info.count, installedPacks.contains(item.info.id), bestGeneralViewType(featured, for: item)))
+                entries.append(.pack(sectionId: sectionId, index, item.info._parse(), unread, item.topItems.first, item.info.count, installedPacks.contains(item.info.id), bestGeneralViewType(featured, for: item)))
                 index += 1
             }
         }

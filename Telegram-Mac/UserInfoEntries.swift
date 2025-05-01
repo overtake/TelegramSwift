@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import CurrencyFormat
 import SwiftSignalKit
 import Postbox
 import TGUIKit
@@ -144,8 +144,8 @@ class UserInfoArguments : PeerInfoArguments {
     private let updatePhotoDisposable = MetaDisposable()
 
     
-    func giftPremium(_ options: [CachedPremiumGiftOption]) {
-        showModal(with: PremiumGiftController(context: context, peerId: self.effectivePeerId, options: options), for: context.window)
+    func giftPremium(_ isBirthday: Bool) {
+        showModal(with: GiftingController(context: context, peerId: self.effectivePeerId, isBirthday: isBirthday, starGiftsContext: getStarGiftsContext?()), for: context.window)
     }
     
     func editBot(_ payload: String?, action: Bool = true) -> Void {
@@ -167,6 +167,11 @@ class UserInfoArguments : PeerInfoArguments {
         }
     }
     
+    func openApp() {
+        if let peer {
+            BrowserStateContext.get(context).open(tab: .mainapp(bot: .init(peer), source: .generic))
+        }
+    }
     func openBotfather() {
         self.editBot(nil, action: false)
     }
@@ -174,9 +179,134 @@ class UserInfoArguments : PeerInfoArguments {
         self.pullNavigation()?.push(EditBotUsernameController(context: context, peerId: peerId))
     }
     
+    func openAffiliate(starRefProgram: TelegramStarRefProgram?) {
+        if let starRefProgram, let peer, peer.botInfo?.flags.contains(.canEdit) == false {
+            showModal(with: Affiliate_ProgramPreview(context: context, peerId: context.peerId, program: AffiliateProgram.init(starRefProgram, peer: .init(peer)), joined: { _ in
+                
+            }), for: context.window)
+        } else {
+            self.pullNavigation()?.push(Affiliate_StartController(context: context, peerId: peerId, starRefProgram: starRefProgram))
+        }
+    }
+    
+    func openVerifyAccounts(_ verification: BotVerifierSettings) {
+        let context = self.context
+        let botId = self.peerId
+        
+        
+        selectModalPeers(window: context.window, context: context, title: strings().peerInfoVerifyAccounts, limit: 1, behavior: SelectChatsBehavior(settings: [.bots, .channels, .groups, .remote], excludePeerIds: [self.peerId], limit: 1), confirmation: { peerIds in
+            
+            return Signal { subscriber in
+                
+                if let peerId = peerIds.first {
+                    
+                    
+                    let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId), TelegramEngine.EngineData.Item.Peer.Verification(id: peerId)) |> deliverOnMainQueue
+                    
+                    _ = peer.startStandalone(next: { peer, currentVerification in
+                        if let peer {
+                            
+                            let limit = context.appConfiguration.getGeneralValue("bot_verification_description_length_limit", orElse: 70)
+                            
+                            var text: String = ""
+                            
+                            let title: String
+                            let info: String
+                            let ok: String
+                            let footer: ModalAlertData.Footer?
+                            if currentVerification?.botId == botId {
+                                title = strings().botVerificationRemoveTitle
+                                if peer._asPeer().isBot {
+                                    info = strings().botVerificationRemoveBotText
+                                } else if peer._asPeer().isChannel {
+                                    info = strings().botVerificationRemoveChannelText
+                                } else if peer._asPeer().isSupergroup {
+                                    info = strings().botVerificationRemoveGroupText
+                                } else {
+                                    info = strings().botVerificationRemoveUserText
+                                }
+                                ok = strings().botVerificationRemoveRemove
+                                footer = nil
+                            } else {
+                                if peer._asPeer().isBot {
+                                    title = strings().botVerificationVerifyBotTitle
+                                } else if peer._asPeer().isChannel {
+                                    title = strings().botVerificationVerifyChannelTitle
+                                } else if peer._asPeer().isSupergroup {
+                                    title = strings().botVerificationVerifyGroupTitle
+                                } else {
+                                    title = strings().botVerificationVerifyUserTitle
+                                }
+                                if peer._asPeer().isBot {
+                                    info = strings().botVerificationVerifyBotText
+                                } else if peer._asPeer().isChannel {
+                                    info = strings().botVerificationVerifyChannelText
+                                } else if peer._asPeer().isSupergroup {
+                                    info = strings().botVerificationVerifyGroupText
+                                } else {
+                                    info = strings().botVerificationVerifyUserText
+                                }
+                                ok = strings().botVerificationVerifyVerify
+                                footer = .init(value: { initialSize, stableId, presentation, updateData in
+                                    return InputDataRowItem(initialSize, stableId: 0, mode: .plain, error: nil, viewType: .singleItem, currentText: "", placeholder: nil, inputPlaceholder: strings().botVerificationVerifyPlaceholder, filter: { $0 }, updated: { updated in
+                                        text = updated
+                                        DispatchQueue.main.async(execute: updateData)
+                                    }, limit: limit)
+                                })
+                            }
+                                                        
+                            let data = ModalAlertData(title: title, info: info, description: nil, ok: ok, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: .init(value: { initialSize, stableId, presentation, _ in
+                                return Bot_VerifyAccountRowItem(initialSize, stableId: stableId, peer: peer, context: context, fileId: verification.iconFileId)
+                            }), footer1: footer)
+                            
+                            showModalAlert(for: context.window, data: data, completion: { result in
+                                
+                                let update: UpdateCustomVerificationValue
+                                if currentVerification?.botId == botId {
+                                    update = .disabled
+                                } else {
+                                    update = .enabled(description: text.isEmpty ? nil : text)
+                                }
+                                
+                                subscriber.putNext(true)
+                                subscriber.putCompletion()
+                                
+                                _ = showModalProgress(signal: context.engine.peers.updateCustomVerification(botId: botId, peerId: peerId, value: update), for: context.window).start(error: { error in
+                                    switch error {
+                                    case .generic:
+                                        showModalText(for: context.window, text: strings().unknownError)
+                                    }
+                                }, completed: {
+                                    if currentVerification?.botId == botId {
+                                        showModalText(for: context.window, text: strings().botVerificationRemoved(peer._asPeer().displayTitle))
+                                    } else {
+                                        showModalText(for: context.window, text: strings().botVerificationAdded(peer._asPeer().displayTitle))
+                                    }
+                                })
+                            }, onDeinit: {
+                                
+                            })
+                        }
+                    })
+                }
+                
+                return EmptyDisposable
+            }
+        }).start(next: { peerIds in
+            
+            
+        })
+    }
+    
     func openStarsBalance() {
         if let revenueContext = getStarsContext?() {
             self.pullNavigation()?.push(FragmentStarMonetizationController(context: context, peerId: peerId, revenueContext: revenueContext))
+        }
+    }
+    
+    func openTonBalance() {
+        if let revenueContext = getTonContext?() {
+            self.pullNavigation()?.push(FragmentMonetizationController(context: context, peerId: peerId, onlyTonContext: revenueContext))
         }
     }
     
@@ -191,6 +321,14 @@ class UserInfoArguments : PeerInfoArguments {
         }))
     }
     
+    func togglePermissionsStatus() {
+        _ = self.context.engine.peers.toggleBotEmojiStatusAccess(peerId: self.peerId, enabled: false).start()
+    }
+    func togglePermissionsGeo() {
+        let _ = updateWebAppPermissionsStateInteractively(context: context, peerId: peerId) { current in
+            return WebAppPermissionsState(location: WebAppPermissionsState.Location(isRequested: true, isAllowed: !(current?.location?.isAllowed ?? false)), emojiStatus: nil)
+        }.start()
+    }
     
     func shareMyInfo() {
         
@@ -447,6 +585,14 @@ class UserInfoArguments : PeerInfoArguments {
         pullNavigation()?.back()
     }
     
+    func reportBot() {
+        let peerId = self.peerId
+        let context = self.context
+        
+        reportComplicated(context: context, subject: .peer(peerId), title: strings().reportComplicatedPeerTitle(self.peer?.displayTitle ?? ""))
+        
+    }
+    
     func botPrivacy() {
         _ = Sender.enqueue(input: ChatTextInputState(inputText: "/privacy"), context: context, peerId: peerId, replyId: nil, threadId: nil).start()
         pullNavigation()?.back()
@@ -485,7 +631,7 @@ class UserInfoArguments : PeerInfoArguments {
                 showModalText(for: context.window, text: strings().loginFloodWait)
             case let .premiumRequired(peer):
                 showModalText(for: context.window, text: strings().chatSecretChatPremiumRequired(peer._asPeer().compactDisplayTitle), button: strings().alertLearnMore, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    prem(with: PremiumBoardingController(context: context), for: context.window)
                 })
             }
         }))
@@ -575,7 +721,7 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true), confirm: { url, f in
                     if isEditableBot {
                         f()
                     } else {
@@ -681,7 +827,7 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square, circle: true), confirm: { url, f in
                     showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                 })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
@@ -983,9 +1129,16 @@ enum UserInfoEntry: PeerInfoEntry {
     case personalChannel(sectionId:Int, item: UserInfoPersonalChannel, viewType: GeneralViewType)
     case setFirstName(sectionId:Int, text: String, viewType: GeneralViewType)
     case setLastName(sectionId:Int, text: String, placeholder: String, viewType: GeneralViewType)
-    case about(sectionId:Int, text: String, viewType: GeneralViewType)
+    case about(sectionId:Int, text: String, launchApp: Bool, viewType: GeneralViewType)
+    case aboutInfo(sectionId:Int, text: String, viewType: GeneralViewType)
     case botStarsBalance(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botTonBalance(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botPermissionsHeader(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botPermissionsStatus(sectionId:Int, value: Bool, viewType: GeneralViewType)
+    case botPermissionsGeo(sectionId:Int, value: Bool, viewType: GeneralViewType)
     case botEditUsername(sectionId:Int, text: String, viewType: GeneralViewType)
+    case botAffiliate(sectionId:Int, text: String, starRefProgram: TelegramStarRefProgram?, viewType: GeneralViewType)
+    case verifyAccounts(sectionId:Int, verification: BotVerifierSettings, viewType: GeneralViewType)
     case botEditIntro(sectionId:Int, viewType: GeneralViewType)
     case botEditCommands(sectionId:Int, viewType: GeneralViewType)
     case botEditSettings(sectionId:Int, viewType: GeneralViewType)
@@ -996,6 +1149,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
     case peerId(sectionId:Int, value: String, viewType: GeneralViewType)
     case userName(sectionId:Int, value: [UserInfoAddress], viewType: GeneralViewType)
+    case verifiedInfo(sectionId: Int, value: PeerVerification?, viewType: GeneralViewType)
     case businessLocation(sectionId:Int, peer: EnginePeer, businessLocation: TelegramBusinessLocation, viewType: GeneralViewType)
     case businessHours(sectionId:Int, peer: EnginePeer, businessHours: TelegramBusinessHours, revealed: Bool, displayMyZone: Bool, viewType: GeneralViewType)
     case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
@@ -1023,6 +1177,115 @@ enum UserInfoEntry: PeerInfoEntry {
     case media(sectionId: Int, controller: PeerMediaController, isVisible: Bool, viewType: GeneralViewType)
     case section(sectionId:Int)
     
+    var viewType: GeneralViewType {
+        switch self {
+        case .info(_, _, _, _, _, let viewType):
+            return viewType
+        case .personalChannelInfo(_, _, _, let viewType):
+            return viewType
+        case .personalChannel(_, _, let viewType):
+            return viewType
+        case .setFirstName(_, _, let viewType):
+            return viewType
+        case .setLastName(_, _, _, let viewType):
+            return viewType
+        case .about(_, _, _, let viewType):
+            return viewType
+        case .aboutInfo(_, _, let viewType):
+            return viewType
+        case .botStarsBalance(_, _, let viewType):
+            return viewType
+        case .botTonBalance(_, _, let viewType):
+            return viewType
+        case .botPermissionsHeader(_, _, let viewType):
+            return viewType
+        case .botPermissionsStatus(_, _, let viewType):
+            return viewType
+        case .botPermissionsGeo(_, _, let viewType):
+            return viewType
+        case .botEditUsername(_, _, let viewType):
+            return viewType
+        case .botAffiliate(_, _, _, let viewType):
+            return viewType
+        case .verifyAccounts(_, _, let viewType):
+            return viewType
+        case .botEditIntro(_, let viewType):
+            return viewType
+        case .botEditCommands(_, let viewType):
+            return viewType
+        case .botEditSettings(_, let viewType):
+            return viewType
+        case .botEditInfo(_, let viewType):
+            return viewType
+        case .bio(_, _, _, let viewType):
+            return viewType
+        case .birthday(_, _, _, let viewType):
+            return viewType
+        case .scam(_, _, _, let viewType):
+            return viewType
+        case .phoneNumber(_, _, _, _, let viewType):
+            return viewType
+        case .peerId(_, _, let viewType):
+            return viewType
+        case .userName(_, _, let viewType):
+            return viewType
+        case .verifiedInfo(_, _, let viewType):
+            return viewType
+        case .businessLocation(_, _, _, let viewType):
+            return viewType
+        case .businessHours(_, _, _, _, _, let viewType):
+            return viewType
+        case .reportReaction(_,_, let viewType):
+            return viewType
+        case .sendMessage(_, let viewType):
+            return viewType
+        case .shareContact(_, let viewType):
+            return viewType
+        case .shareMyInfo(_, let viewType):
+            return viewType
+        case .addContact(_, let viewType):
+            return viewType
+        case .botAddToGroup(_, let viewType):
+            return viewType
+        case .botAddToGroupInfo(_, let viewType):
+            return viewType
+        case .botShare(_, _, let viewType):
+            return viewType
+        case .botHelp(_, let viewType):
+            return viewType
+        case .botSettings(_, let viewType):
+            return viewType
+        case .botPrivacy(_, let viewType):
+            return viewType
+        case .startSecretChat(_, let viewType):
+            return viewType
+        case .sharedMedia(_, let viewType):
+            return viewType
+        case .notifications(_, _, let viewType):
+            return viewType
+        case .groupInCommon(_, _, _, let viewType):
+            return viewType
+        case .setPhoto(_, _, _, _, let viewType):
+            return viewType
+        case .resetPhoto(_, _, _, _, let viewType):
+            return viewType
+        case .setPhotoInfo(_, _, let viewType):
+            return viewType
+        case .block(_, _, _, _, let viewType):
+            return viewType
+        case .deleteChat(_, let viewType):
+            return viewType
+        case .deleteContact(_, let viewType):
+            return viewType
+        case .encryptionKey(_, let viewType):
+            return viewType
+        case .media(_, _, _, let viewType):
+            return viewType
+        case .section(_):
+            return .legacy
+        }
+    }
+    
     func withUpdatedViewType(_ viewType: GeneralViewType) -> UserInfoEntry {
         switch self {
         case let .info(sectionId, peerView, editable, updatingPhotoState, stories, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, stories: stories, viewType: viewType)
@@ -1031,17 +1294,25 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setFirstName(sectionId, text, _): return .setFirstName(sectionId: sectionId, text: text, viewType: viewType)
         case let .setLastName(sectionId, text, placeholder, _): return .setLastName(sectionId: sectionId, text: text, placeholder: placeholder, viewType: viewType)
         case let .botStarsBalance(sectionId, text, _): return .botStarsBalance(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botTonBalance(sectionId, text, _): return .botTonBalance(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botPermissionsHeader(sectionId, text, _): return .botPermissionsHeader(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botPermissionsStatus(sectionId, value, _): return .botPermissionsStatus(sectionId: sectionId, value: value, viewType: viewType)
+        case let .botPermissionsGeo(sectionId, value, _): return .botPermissionsGeo(sectionId: sectionId, value: value, viewType: viewType)
         case let .botEditUsername(sectionId, text, _): return .botEditUsername(sectionId: sectionId, text: text, viewType: viewType)
+        case let .botAffiliate(sectionId, text, starRefProgram, _): return .botAffiliate(sectionId: sectionId, text: text, starRefProgram: starRefProgram, viewType: viewType)
+        case let .verifyAccounts(sectionId, verification, _): return .verifyAccounts(sectionId: sectionId, verification: verification, viewType: viewType)
         case let .botEditIntro(sectionId, _): return .botEditIntro(sectionId: sectionId, viewType: viewType)
         case let .botEditCommands(sectionId, _): return .botEditCommands(sectionId: sectionId, viewType: viewType)
         case let .botEditSettings(sectionId, _): return .botEditSettings(sectionId: sectionId, viewType: viewType)
         case let .botEditInfo(sectionId, _): return .botEditInfo(sectionId: sectionId, viewType: viewType)
-        case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
+        case let .about(sectionId, text, launchApp, _): return .about(sectionId: sectionId, text: text, launchApp: launchApp, viewType: viewType)
+        case let .aboutInfo(sectionId, text, _): return .aboutInfo(sectionId: sectionId, text: text, viewType: viewType)
         case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .birthday(sectionId, text, peer, _): return .birthday(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
+        case let .verifiedInfo(sectionId, value, _): return .verifiedInfo(sectionId: sectionId, value: value, viewType: viewType)
         case let .peerId(sectionId, value, _): return .peerId(sectionId: sectionId, value: value, viewType: viewType)
         case let .businessLocation(sectionId, peer, location, _): return .businessLocation(sectionId: sectionId, peer: peer, businessLocation: location, viewType: viewType)
         case let .businessHours(sectionId, peer, businessHours, revealed, displayMyZone, _): return .businessHours(sectionId: sectionId, peer: peer, businessHours: businessHours, revealed: revealed, displayMyZone: displayMyZone, viewType: viewType)
@@ -1169,9 +1440,51 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .botTonBalance(sectionId, text, viewType):
+            switch entry {
+            case .botTonBalance(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botPermissionsHeader(sectionId, text, viewType):
+            switch entry {
+            case .botPermissionsHeader(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botPermissionsStatus(sectionId, value, viewType):
+            switch entry {
+            case .botPermissionsStatus(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botPermissionsGeo(sectionId, value, viewType):
+            switch entry {
+            case .botPermissionsGeo(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
         case let .botEditUsername(sectionId, text, viewType):
             switch entry {
             case .botEditUsername(sectionId, text, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botAffiliate(sectionId, text, starRefProgram, viewType):
+            switch entry {
+            case .botAffiliate(sectionId, text, starRefProgram, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .verifyAccounts(sectionId, text, viewType):
+            switch entry {
+            case .verifyAccounts(sectionId, text, viewType):
                 return true
             default:
                 return false
@@ -1204,9 +1517,16 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .about(sectionId, text, viewType):
+        case let .about(sectionId, text, launchLink, viewType):
             switch entry {
-            case .about(sectionId, text, viewType):
+            case .about(sectionId, text, launchLink, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .aboutInfo(sectionId, text, viewType):
+            switch entry {
+            case .aboutInfo(sectionId, text, viewType):
                 return true
             default:
                 return false
@@ -1242,6 +1562,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .userName(sectionId, value, viewType):
             switch entry {
             case .userName(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .verifiedInfo(sectionId, value, viewType):
+            switch entry {
+            case .verifiedInfo(sectionId, value, viewType):
                 return true
             default:
                 return false
@@ -1457,80 +1784,96 @@ enum UserInfoEntry: PeerInfoEntry {
             return 104
         case .botEditUsername:
             return 105
-        case .botStarsBalance:
+        case .botAffiliate:
             return 106
-        case .botEditIntro:
+        case .verifyAccounts:
             return 107
-        case .botEditCommands:
+        case .botStarsBalance:
             return 108
-        case .botEditSettings:
+        case .botTonBalance:
             return 109
-        case .botEditInfo:
+        case .botPermissionsHeader:
             return 110
-        case .scam:
+        case .botPermissionsStatus:
             return 111
-        case .about:
+        case .botPermissionsGeo:
             return 112
-        case .bio:
+        case .botEditIntro:
             return 113
-        case .phoneNumber:
+        case .botEditCommands:
             return 114
-        case .birthday:
+        case .botEditSettings:
             return 115
-        case .userName:
+        case .botEditInfo:
             return 116
-        case .peerId:
+        case .userName:
             return 117
-        case .businessHours:
+        case .scam:
             return 118
-        case .businessLocation:
+        case .about:
             return 119
-        case .sendMessage:
+        case .aboutInfo:
             return 120
-        case .botAddToGroup:
+        case .bio:
             return 121
-        case .botAddToGroupInfo:
+        case .phoneNumber:
             return 122
-        case .botShare:
+        case .birthday:
             return 123
-        case .botSettings:
+        case .peerId:
             return 124
-        case .botHelp:
+        case .businessHours:
             return 125
-        case .botPrivacy:
+        case .businessLocation:
             return 126
-        case .shareContact:
+        case .sendMessage:
             return 127
-        case .shareMyInfo:
+        case .botAddToGroup:
             return 128
-        case .addContact:
+        case .botAddToGroupInfo:
             return 129
-        case .startSecretChat:
+        case .botShare:
             return 130
-        case .sharedMedia:
+        case .botSettings:
             return 131
-        case .notifications:
+        case .botHelp:
             return 132
-        case .encryptionKey:
+        case .botPrivacy:
             return 133
-        case .groupInCommon:
+        case .shareContact:
             return 134
-        case let .setPhoto(_, _, type, _, _):
-            return 135 + type.rawValue
-        case .resetPhoto:
+        case .shareMyInfo:
+            return 135
+        case .addContact:
+            return 136
+        case .startSecretChat:
+            return 137
+        case .sharedMedia:
+            return 138
+        case .notifications:
             return 139
-        case .setPhotoInfo:
+        case .encryptionKey:
             return 140
-        case .block:
+        case .groupInCommon:
             return 141
+        case let .setPhoto(_, _, type, _, _):
+            return 142 + type.rawValue
+        case .resetPhoto:
+            return 146
+        case .setPhotoInfo:
+            return 147
+        case .block:
+            return 148
         case .reportReaction:
-            return 142
+            return 149
         case .deleteChat:
-            return 143
+            return 150
         case .deleteContact:
-            return 144
+            return 151
+        case .verifiedInfo:
+            return 152
         case .media:
-            return 145
+            return 153
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1550,7 +1893,19 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .botEditUsername(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
+        case let .botAffiliate(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .verifyAccounts(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
         case let .botStarsBalance(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botTonBalance(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botPermissionsHeader(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botPermissionsStatus(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botPermissionsGeo(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .botEditIntro(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -1560,7 +1915,9 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .botEditInfo(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .about(sectionId, _, _):
+        case let .about(sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .aboutInfo(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .bio(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1569,6 +1926,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .verifiedInfo(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .peerId(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -1651,10 +2010,10 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .info(_, peerView, editable, updatingPhotoState, stories, viewType):
             return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, stories: stories, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: { image, control in
                 arguments.updateContactPhoto(image, control: control, type: .set)
-            })
-        case let .personalChannelInfo(sectionId, left, right, viewType):
+            }, giftsContext: arguments.getStarGiftsContext?())
+        case let .personalChannelInfo(_, left, right, viewType):
             return GeneralTextRowItem(initialSize, text: left, viewType: viewType, rightItem: .init(isLoading: false, text: .initialize(string: right, color: theme.colors.listGrayText, font: .normal(.small))))
-        case let .personalChannel(sectionId, item, viewType):
+        case let .personalChannel(_, item, viewType):
             return PersonalChannelRowItem(initialSize, stableId: stableId.hashValue, context: arguments.context, item: item, viewType: viewType, action: {
                 arguments.openPersonalChannel(item)
             })
@@ -1668,8 +2027,32 @@ enum UserInfoEntry: PeerInfoEntry {
             }, limit: 255)
         case let .botEditUsername(_, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, icon: theme.icons.peerInfoBotUsername, type: .nextContext("@\(text)"), viewType: viewType, action: arguments.openEditBotUsername)
+        case let .botAffiliate(_, text, starRefProgram, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotAffiliate, icon: NSImage(resource: .iconBotAffiliate).precomposed(flipVertical: true), type: .nextContext(text), viewType: viewType, action: {
+                arguments.openAffiliate(starRefProgram: starRefProgram)
+            })
+        case let .verifyAccounts(_, verification, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoVerifyAccounts, icon: NSImage(resource: .iconPeerInfoVerifyAccounts).precomposed(theme.colors.accent, flipVertical: true), type: .nextContext(""), viewType: viewType, action: {
+                arguments.openVerifyAccounts(verification)
+            })
         case let .botStarsBalance(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalance, icon: theme.icons.peerInfoStarsBalance, type: .nextContext(text), viewType: viewType, action: arguments.openStarsBalance)
+            let icon = generateStarBalanceIcon(text)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditStarsBalanceNew, icon: theme.icons.peerInfoStarsBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openStarsBalance)
+        case let .botTonBalance(_, text, viewType):
+            let icon = generateTonBalanceIcon(text)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditTonBalance, icon: theme.icons.peerInfoTonBalance, type: .nextImage(icon), viewType: viewType, action: arguments.openTonBalance)
+        case let .botPermissionsHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .plain(text), viewType: viewType)
+        case let .botPermissionsStatus(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotPermissionsStatus, icon: NSImage(named: "Icon_PeerInfo_BotStatus")?.precomposed(flipVertical: true), type: .switchable(value), viewType: viewType, action: {
+                arguments.togglePermissionsStatus()
+                //arguments.editBot("intro")
+            })
+        case let .botPermissionsGeo(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotPermissionsGeo, icon: NSImage(named: "Icon_PeerInfo_BotLocation")?.precomposed(flipVertical: true), type: .switchable(value), viewType: viewType, action: {
+                arguments.togglePermissionsGeo()
+                //arguments.editBot("intro")
+            })
         case let .botEditIntro(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.editBot("intro")
@@ -1686,16 +2069,24 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .markdown(strings().peerInfoBotEditInfo, linkHandler: { _ in
                 arguments.openBotfather()
             }), viewType: viewType)
-        case let .about(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoAbout, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
-                if toChat {
-                    arguments.peerChat(peerId, postId: postId)
-                } else {
-                    arguments.peerInfo(peerId)
-                }
-            }, hashtag: { hashtag in
-                arguments.context.bindings.globalSearch(hashtag, arguments.peerId)
-            })
+        case let .about(_, text, launchApp, viewType):
+            if text.isEmpty {
+                return GeneralActionButtonRowItem.init(initialSize, stableId: stableId.hashValue, text: strings().botInfoOpenApp, viewType: viewType, action: arguments.openApp)
+            } else {
+                return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoAbout, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
+                    if toChat {
+                        arguments.peerChat(peerId, postId: postId)
+                    } else {
+                        arguments.peerInfo(peerId)
+                    }
+                }, hashtag: { hashtag in
+                    arguments.context.bindings.globalSearch(hashtag, arguments.peerId, nil)
+                }, launchApp: launchApp ? arguments.openApp : nil, canTranslate: true)
+            }
+        case let .aboutInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .markdown(text, linkHandler: { link in
+                execute(inapp: .external(link: link, false))
+            }), viewType: viewType)
         case let .bio(_, text, peer, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
@@ -1704,8 +2095,27 @@ enum UserInfoEntry: PeerInfoEntry {
                     arguments.peerInfo(peerId)
                 }
             }, hashtag: { value in
-                arguments.context.bindings.globalSearch(value, nil)
-            })
+                arguments.context.bindings.globalSearch(value, nil, nil)
+            }, canTranslate: true)
+        case let .verifiedInfo(_, value, viewType):
+            let attr = NSMutableAttributedString()
+            
+            let text: String
+            if let value {
+                text = "\(clown) \(value.description)"
+            } else {
+                text = "\(clown) This bot is verified as official by the representatives of Telegram."
+            }
+            
+            attr.append(string: text, color: theme.colors.listGrayText, font: .normal(.text))
+
+            if let value {
+                InlineStickerItem.apply(to: attr, associatedMedia: [:], entities: [.init(range: 0..<2, type: .CustomEmoji(stickerPack: nil, fileId: value.iconFileId))], isPremium: true)
+            } else {
+                attr.insertEmbedded(.embedded(name: "Icon_Verified_Telegram", color: theme.colors.grayIcon, resize: false), for: clown)
+            }
+            
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .attributed(attr), viewType: viewType, context: arguments.context)
         case let .birthday(_, text, canBirth, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBirthday, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, gift: canBirth ? arguments.giftBirthday : nil)
         case let .phoneNumber(_, _, value, canCopy, viewType):
@@ -1718,7 +2128,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     execute(inapp: .external(link: "https://fragment.com", false))
                 }, itemImage: MenuAnimation.menu_show_info.value, removeTail: false, overrideWidth: 200))
             }
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(context: arguments.context, number: value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
                 
                 if value.number.hasPrefix("888") {
                     arguments.openFragment(.phoneNumber(value.number))
@@ -1863,7 +2273,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?, webAppPermissionsState: WebAppPermissionsState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -1899,10 +2309,22 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
         var block = block.sorted { (p1, p2) -> Bool in
             return p1.isOrderedBefore(p2)
         }
-        for (i, item) in block.enumerated() {
-            block[i] = item.withUpdatedViewType(bestGeneralViewType(block, for: i))
+        
+        var filtered = block.filter({
+            return $0.viewType == .singleItem || $0.viewType == .firstItem || $0.viewType == .lastItem || $0.viewType == .innerItem
+        })
+        
+        let restItems = block.filter({
+            return $0.viewType != .singleItem && $0.viewType != .firstItem && $0.viewType != .lastItem && $0.viewType != .innerItem
+        })
+        
+        for (i, item) in filtered.enumerated() {
+            filtered[i] = item.withUpdatedViewType(bestGeneralViewType(filtered, for: i))
         }
-        entries.append(contentsOf: block)
+        if filtered.count != block.count {
+            filtered.append(contentsOf: restItems)
+        }
+        entries.append(contentsOf: filtered)
     }
     
     var headerBlock: [UserInfoEntry] = []
@@ -1938,21 +2360,41 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: strings().peerInfoFake, text: strings().peerInfoFakeWarning, viewType: .singleItem))
                 }
                 
-                if let cachedUserData = view.cachedData as? CachedUserData {
-                    if let about = cachedUserData.about, !about.isEmpty, !user.isScam && !user.isFake {
-                        if peer.isBot {
-                            infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
-                        } else {
-                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, PeerEquatable(peer), viewType: .singleItem))
-                        }
-                    }
-                }
-                
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: phoneNumber.hasPrefix("888") ? strings().peerInfoAnonymousPhone : strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
+                
+                if let cachedUserData = view.cachedData as? CachedUserData {
+                    
+                    if let about = cachedUserData.about, !about.isEmpty, !user.isScam && !user.isFake {
+                        if let botInfo = peer.botInfo {
+                            infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, launchApp: botInfo.flags.contains(.hasWebApp), viewType: .singleItem))
+                            if botInfo.flags.contains(.canEdit) {
+                                infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfo, viewType: .textBottomItem))
+                            } else {
+                                let privacyPolicyUrl = cachedUserData.botInfo?.privacyPolicyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                                infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfoUser(privacyPolicyUrl), viewType: .textBottomItem))
+                                
+                            }
+                        } else {
+                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, PeerEquatable(peer), viewType: .singleItem))
+                        }
+                    } else if cachedUserData.about == nil, let botInfo = peer.botInfo, botInfo.flags.contains(.hasWebApp) {
+                        infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: "", launchApp: botInfo.flags.contains(.hasWebApp), viewType: .singleItem))
+                        if botInfo.flags.contains(.canEdit) {
+                            infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfo, viewType: .textBottomItem))
+                        } else {
+                            let privacyPolicyUrl = cachedUserData.botInfo?.privacyPolicyUrl ?? strings().botInfoLaunchInfoPrivacyUrl
+                            infoBlock.append(UserInfoEntry.aboutInfo(sectionId: sectionId, text: strings().botInfoLaunchInfoUser(privacyPolicyUrl), viewType: .textBottomItem))
+                            
+                        }
+                    }
+                    
+                }
+                
+
                 
                 var usernames:[UserInfoAddress] = user.usernames.filter { $0.isActive }.map {
                     .init(username: $0.username, collectable: $0.flags.contains(.isEditable))
@@ -1964,9 +2406,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
-                if FastSettings.canViewPeerId {
-                    infoBlock.append(.peerId(sectionId: sectionId, value: "\(user.id.id._internalGetInt64Value())", viewType: .singleItem))
-                }
+          
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
                     if let birthday = cachedUserData.birthday {
@@ -2008,15 +2448,19 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             }
                         }
                     }
-                } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
-                    infoBlock.append(.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                 }
                
-                
+                if user.isVerified || (view.cachedData as? CachedUserData)?.verification != nil {
+                    infoBlock.append(UserInfoEntry.verifiedInfo(sectionId: sectionId, value: (view.cachedData as? CachedUserData)?.verification, viewType: .textBottomItem))
+                }
+
                 
                 applyBlock(infoBlock)
                 
                 if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    entries.append(UserInfoEntry.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                     entries.append(UserInfoEntry.botAddToGroupInfo(sectionId: sectionId, viewType: .textBottomItem))
                 }
                 
@@ -2026,22 +2470,39 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 if let _ = state.editingState {
                     
                     if peer.botInfo?.flags.contains(.canEdit) == true {
-                        
-                        if let stats = revenueState?.stats, stats.balances.overallRevenue > 0 {
-                            entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .firstItem))
-                            entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: stats.balances.availableBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(stats.balances.availableBalance)), viewType: .lastItem))
-                        } else {
-                            entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: .singleItem))
-                        }
+                        let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_program_allowed", orElse: false)
 
+                        entries.append(UserInfoEntry.botEditUsername(sectionId: sectionId, text: peer.addressName ?? "", viewType: affiliateEnabled ? .firstItem : .singleItem))
+                        let text: String
+                        if let program = cachedData.starRefProgram {
+                            let localizedDuration: String
+                            if let duration = program.durationMonths {
+                                localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : strings().timerYearsCountable(Int(duration / 12))
+                            } else {
+                                localizedDuration = strings().affiliateProgramDurationLifetime
+                            }
+                            text = "\(program.commissionPermille.decemial)%, \(localizedDuration)"
+                        } else {
+                            text = strings().affiliateProgramOff
+                        }
+                        if affiliateEnabled {
+                            entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: text, starRefProgram: cachedData.starRefProgram, viewType: .lastItem))
+                        }
                         entries.append(UserInfoEntry.section(sectionId: sectionId))
                         sectionId += 1
+                        
+                        if peer.isBot, let info = cachedData.botInfo, let settings = info.verifierSettings {
+                            entries.append(UserInfoEntry.verifyAccounts(sectionId: sectionId, verification: settings, viewType: .singleItem))
+                            entries.append(UserInfoEntry.section(sectionId: sectionId))
+                            sectionId += 1
+                        }
+
                         
                         destructBlock.append(.botEditIntro(sectionId: sectionId, viewType: .singleItem))
                         destructBlock.append(.botEditCommands(sectionId: sectionId, viewType: .singleItem))
                         destructBlock.append(.botEditSettings(sectionId: sectionId, viewType: .singleItem))
 
-                    } else if view.peerIsContact {
+                    } else if view.peerIsContact, peer.sendPaidMessageStars == nil {
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSuggestPhoto(user.compactDisplayTitle), type: .suggest, nextType: state.suggestingPhotoState != nil ? .loading : .none, viewType: .singleItem))
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSetPhoto(user.compactDisplayTitle), type: .set, nextType: .none, viewType: .singleItem))
 
@@ -2049,6 +2510,12 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             photoBlock.append(.resetPhoto(sectionId: sectionId, string: strings().userInfoResetPhoto, image: image, user: user, viewType: .lastItem))
                         }
                     }
+                    
+                    
+                   
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    
                     if !photoBlock.isEmpty {
                         entries.append(UserInfoEntry.setPhotoInfo(sectionId: sectionId, string: strings().userInfoSetPhotoBlockInfo(user.compactDisplayTitle), viewType: .textBottomItem))
                     }
@@ -2059,6 +2526,26 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
 
                     if peer is TelegramSecretChat || view.peerIsContact {
                         destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
+                    }
+                } else {
+                    if peer.botInfo?.flags.contains(.canEdit) == false, cachedData.starRefProgram != nil {
+                        let affiliateEnabled = arguments.context.appConfiguration.getBoolValue("starref_connect_allowed", orElse: false)
+
+                        let text: String
+                        if let program = cachedData.starRefProgram {
+                            let localizedDuration: String
+                            if let duration = program.durationMonths {
+                                localizedDuration = duration < 12 ? strings().timerMonthsCountable(Int(duration)) : strings().timerYearsCountable(Int(duration / 12))
+                            } else {
+                                localizedDuration = strings().affiliateProgramDurationLifetime
+                            }
+                            text = "\(program.commissionPermille.decemial)%, \(localizedDuration)"
+                        } else {
+                            text = strings().affiliateProgramOff
+                        }
+                        if affiliateEnabled {
+                            entries.append(UserInfoEntry.botAffiliate(sectionId: sectionId, text: text, starRefProgram: cachedData.starRefProgram, viewType: .firstItem))
+                        }
                     }
                 }
                
@@ -2072,6 +2559,62 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             
             if peer.botInfo?.flags.contains(.canEdit) == true, state.editingState != nil {
                 entries.append(UserInfoEntry.botEditInfo(sectionId: sectionId, viewType: .textBottomItem))
+            }
+            
+            
+            if let cachedData = (view.cachedData as? CachedUserData) {
+                
+               
+                
+                let starBalance = (revenueState?.stats?.balances.currentBalance.value ?? 0)
+                let tonBalance = (tonRevenueState?.stats?.balances.currentBalance ?? 0)
+
+                let hasStars = (revenueState?.stats?.balances.overallRevenue.value ?? 0) > 0
+                let hasTon = (tonRevenueState?.stats?.balances.overallRevenue ?? 0) > 0 
+
+                
+                if hasStars || hasTon {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    
+
+                    if hasStars {
+                        entries.append(UserInfoEntry.botStarsBalance(sectionId: sectionId, text: starBalance == 0 ? "" : strings().peerInfoBotEditStarsCountCountable(Int(starBalance)).replacingOccurrences(of: "\(starBalance)", with: starBalance.formattedWithSeparator), viewType: hasTon ? .firstItem : .singleItem))
+                    }
+                    
+                    if hasTon {
+                        let balance = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
+                        entries.append(UserInfoEntry.botTonBalance(sectionId: sectionId, text: "\(balance)", viewType: hasStars ? .lastItem : .singleItem))
+                    }
+                }
+                
+                var addHeader: Bool = true
+                
+                let addPermissionHeader:()->Void = {
+                    entries.append(UserInfoEntry.section(sectionId: sectionId))
+                    sectionId += 1
+                    
+                    entries.append(UserInfoEntry.botPermissionsHeader(sectionId: sectionId, text: strings().peerInfoBotPermissionsHeader, viewType: .textTopItem))
+                }
+                if cachedData.flags.contains(.botCanManageEmojiStatus) {
+                    addPermissionHeader()
+                    addHeader = false
+                    entries.append(UserInfoEntry.botPermissionsStatus(sectionId: sectionId, value: cachedData.flags.contains(.botCanManageEmojiStatus), viewType: webAppPermissionsState?.location == nil ? .singleItem : .firstItem))
+                }
+                
+                if let location = webAppPermissionsState?.location {
+                    if addHeader {
+                        addPermissionHeader()
+                    }
+                    entries.append(UserInfoEntry.botPermissionsGeo(sectionId: sectionId, value: location.isAllowed, viewType: addHeader ? .singleItem : .lastItem))
+                }
+                
+            }
+            
+            if FastSettings.canViewPeerId {
+                entries.append(UserInfoEntry.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(UserInfoEntry.peerId(sectionId: sectionId, value: "\(user.id.id._internalGetInt64Value())", viewType: .singleItem))
             }
             
             if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {

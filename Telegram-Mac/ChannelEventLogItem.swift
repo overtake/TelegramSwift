@@ -397,9 +397,9 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
             case let .participantToggleAdmin(prev, new):
                 switch prev.participant {
-                case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _, rank: prevRank):
+                case let .member(memberId, _, adminInfo: prevAdminInfo, banInfo: _, rank: prevRank, prevSubscriptionUntilDate):
                     switch new.participant {
-                    case let .member(_, _, adminInfo: newAdminInfo, banInfo: _, rank: newRank):
+                    case let .member(_, _, adminInfo: newAdminInfo, banInfo: _, rank: newRank, newSubscriptionUntilDate):
                         if let memberPeer = entry.peers[memberId] {
                             let message = NSMutableAttributedString()
                    
@@ -556,11 +556,16 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .editMessage(prev, new):
                 if new.anyMedia is TelegramMediaImage || new.anyMedia is TelegramMediaFile {
-                    if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
-                        serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                    if prev.media.isEmpty {
+                        serviceInfo = ServiceTextInfo(text: strings().eventLogServiceAddedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     } else {
-                        serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                        if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
+                            serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                        } else {
+                            serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                        }
                     }
+                   
                 } else if let media = new.anyMedia as? TelegramMediaAction {
                     switch media.action {
                     case let .groupPhoneCall(_, _, _, duration):
@@ -600,9 +605,9 @@ class ServiceEventLogItem: TableRowItem {
                 }
             case let .participantToggleBan(prev, new):
                 switch prev.participant {
-                case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo, rank: _):
+                case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo, rank: _, prevVubscriptionUntilDate):
                     switch new.participant {
-                    case let .member(_, _, adminInfo: _, banInfo: newBanInfo, rank: _):
+                    case let .member(_, _, adminInfo: _, banInfo: newBanInfo, rank: _, newSubscriptionUntilDate):
                         let message = NSMutableAttributedString()
                         if let memberPeer = entry.peers[memberId] {
                             

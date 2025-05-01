@@ -30,6 +30,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     var fetchStatus: MediaResourceStatus? 
     var dragDisposable:MetaDisposable = MetaDisposable()
     var positionFlags: LayoutPositionFlags?
+    
+    var invokeNextMouse: Bool = false 
+    
     override var backgroundColor: NSColor {
         get {
             return super.backgroundColor
@@ -269,7 +272,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             if let parent = parent, parent.id.peerId.namespace == Namespaces.Peer.SecretChat {
                 acceptDragging = false
             }
-            if hasHandlers {
+            if hasHandlers || invokeNextMouse {
                 super.mouseDown(with: event)
             }
         }
@@ -374,7 +377,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             return
         }
         
-        if userInteractionEnabled, hasHandlers {
+        if userInteractionEnabled, hasHandlers || invokeNextMouse {
             super.mouseUp(with: event)
         }
         if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 || canSpamClicks {

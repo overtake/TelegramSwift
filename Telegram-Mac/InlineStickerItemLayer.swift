@@ -264,8 +264,9 @@ final class InlineStickerView: Control {
         layer.superview = self
         userInteractionEnabled = false
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true, ignorePreview: Bool = false, synchronyous: Bool = false) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor, ignorePreview: ignorePreview, synchronyous: synchronyous)
+        layer.isPlayable = isPlayable
         self.isPlayable = isPlayable
         self.animateLayer = layer
         self.controlContent = controlContent
@@ -348,6 +349,8 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.ignorePreview = layer.ignorePreview
         self.synchronyous = layer.synchronyous
         self.color = nil
+        self.isSelected = layer.isSelected
+        self.uniqueStarAnimation = layer.uniqueStarAnimation
         super.init()
     }
     
@@ -407,18 +410,22 @@ final class InlineStickerItemLayer : SimpleLayer {
     let size: NSSize
     let synchronyous: Bool
     let color: NSColor?
+    let isSelected: Bool
+    let uniqueStarAnimation: NSColor?
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false, uniqueStarAnimation: NSColor? = nil) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
         self.textColor = textColor
+        self.uniqueStarAnimation = uniqueStarAnimation
         self.shimmerColor = shimmerColor
         self.fileId = emoji.fileId
         self.size = size
         self.color = emoji.color
         self.ignorePreview = ignorePreview
+        self.isSelected = isSelected
         self.synchronyous = synchronyous
         super.init()
         self.frame = size.bounds
@@ -444,7 +451,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false, isSelected: Bool = false, uniqueStarAnimation: NSColor? = nil) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -456,6 +463,8 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.ignorePreview = ignorePreview
         self.synchronyous = synchronyous
         self.color = nil
+        self.isSelected = isSelected
+        self.uniqueStarAnimation = uniqueStarAnimation
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -665,6 +674,12 @@ final class InlineStickerItemLayer : SimpleLayer {
                 mediaResource = reference.resourceReference(file.resource)
             }
             
+//            if file.isAnimatedSticker || file.isVideoSticker {
+//                fetchDisposable.set(freeMediaFileResourceInteractiveFetched(account: self.account, userLocation: .other, fileReference: reference, resource: reference.media.resource).start())
+//            } else {
+//                fetchDisposable.set(nil)
+//            }
+            
             let data: Signal<MediaResourceData, NoError>
             if let resource = file.resource as? LocalBundleResource {
                 data = Signal { subscriber in
@@ -677,7 +692,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             } else {
                 data = account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
-            if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
+            if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)), playPolicy != .framesCount(1) {
                 self.resourceDisposable.set((data |> map { resourceData -> Data? in
                     if resourceData.complete {
                         if file.isWebm {
@@ -692,7 +707,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                         let maximumFps: Int = 30
                         var cache: ASCachePurpose = .temporaryLZ4(.effect)
                         let colors = self?.getColors?(file) ?? []
-                        if file.isVideo && file.isCustomEmoji || !colors.isEmpty || size.width < 80 {
+                        if !colors.isEmpty {
                             cache = .none
                         }
                         let type: LottieAnimationType
@@ -723,7 +738,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
             
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
-                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon, scale: System.backingScale)
+                let image = NSImage(named: resource.name)?.precomposed(self.isSelected ? textColor : (resource.color ?? theme.colors.accentIcon), scale: System.backingScale)
                 self.contents = image
                 
                 if resource.resize {
@@ -856,7 +871,6 @@ final class InlineStickerItemLayer : SimpleLayer {
                 }
             }
             
-           
         }
     }
     

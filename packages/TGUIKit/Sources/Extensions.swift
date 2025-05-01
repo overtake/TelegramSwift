@@ -340,6 +340,7 @@ public struct ParsingType: OptionSet {
     public static let Mentions = ParsingType(rawValue: 2)
     public static let Commands = ParsingType(rawValue: 4)
     public static let Hashtags = ParsingType(rawValue: 8)
+    public static let Ton = ParsingType(rawValue: 16)
 }
 
 public extension NSAttributedString {
@@ -579,9 +580,14 @@ public extension CALayer {
     }
     
     
-    func animateBackground() ->Void {
-        let animation = CABasicAnimation(keyPath: "backgroundColor")
-        animation.duration = 0.2
+    func animateBackground(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) ->Void {
+        let animation: CABasicAnimation
+        if function == .spring {
+            animation = makeSpringAnimation("backgroundColor")
+        } else {
+            animation = CABasicAnimation(keyPath: "backgroundColor")
+            animation.timingFunction = .init(name: function)
+        }
         self.add(animation, forKey: "backgroundColor")
     }
     func animateTransform() ->Void {
@@ -591,9 +597,14 @@ public extension CALayer {
     }
     
     func animatePath(duration: Double = 0.2, function: CAMediaTimingFunctionName = .easeOut) {
-        let animation = makeSpringAnimation("path")
+        let animation: CABasicAnimation
+        if function == .spring {
+            animation = makeSpringAnimation("path")
+        } else {
+            animation = CABasicAnimation(keyPath: "path")
+            animation.timingFunction = .init(name: function)
+        }
         animation.duration = duration
-        animation.timingFunction = .init(name: function)
         self.add(animation, forKey: "path")
     }
     func animateShadow() {
@@ -622,6 +633,11 @@ public extension CALayer {
         let animation = CABasicAnimation(keyPath: "borderColor")
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
+    }
+    func animateGradientColors() ->Void {
+        let animation = CABasicAnimation(keyPath: "colors")
+        animation.duration = 0.2
+        self.add(animation, forKey: "colors")
     }
     func animateCornerRadius(duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut) ->Void {
         let animation: CABasicAnimation
@@ -721,6 +737,8 @@ public extension NSView {
                 } else if let view = view as? ImageView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
                 } else if let view = view as? LayerBackedView, view.isEventLess {
+                    return NSPointInRect(location, self.bounds)
+                } else if let view = view as? EventLessView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
@@ -923,6 +941,9 @@ public extension NSView {
     }
 
 
+    func rect(_ point:NSPoint) -> NSRect {
+        return NSMakeRect(point.x, point.y, frame.width, frame.height)
+    }
     
     func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
         
@@ -1363,6 +1384,23 @@ public extension CGRect {
         
         return NSMakeRect(x, y, size.width, size.height)
     }
+    
+    func focusX(_ size:NSSize, y: CGFloat) -> NSRect {
+        var x:CGFloat = 0
+        
+        x = CGFloat(round((self.width - size.width)/2.0))
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
+    
+    func focusY(_ size:NSSize, x: CGFloat) -> NSRect {
+        var y:CGFloat = 0
+        
+        y = CGFloat(round((self.height - size.height)/2.0))
+        
+        
+        return NSMakeRect(x, y, size.width, size.height)
+    }
 }
 
 public extension CGPoint {
@@ -1373,6 +1411,11 @@ public extension CGPoint {
         let xdst = self.x - p2.x
         let ydst = self.y - p2.y
         return sqrt((xdst * xdst) + (ydst * ydst))
+    }
+    
+    var toScreenPixel: CGPoint {
+        return CGPoint(x: floorToScreenPixels(x),
+                      y: floorToScreenPixels(y))
     }
 }
 
@@ -1890,7 +1933,17 @@ public extension Int32 {
     var isFuture: Bool {
         return self > Int32(Date().timeIntervalSince1970)
     }
+    var decemial: Double {
+        return Double(self) / 10
+    }
 }
+
+public extension Double {
+    var string: String {
+        return self.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", self) : String(self)
+    }
+}
+
 public extension Int64 {
     
     func prettyFormatter(_ n: Int64, iteration: Int, rounded: Bool = false) -> String {
@@ -2457,6 +2510,14 @@ public extension CGSize {
     func centered(around position: CGPoint) -> CGRect {
         return CGRect(origin: CGPoint(x: position.x - self.width / 2.0, y: position.y - self.height / 2.0), size: self)
     }
+    
+    func centered(in rect: CGRect) -> CGRect {
+        let origin = CGPoint(
+            x: rect.origin.x + (rect.width - self.width) / 2,
+            y: rect.origin.y + (rect.height - self.height) / 2
+        )
+        return CGRect(origin: origin, size: self)
+    }
 
 }
 
@@ -2933,4 +2994,149 @@ public extension NSAttributedString {
             return self
         }
     }
+}
+
+
+public extension CGPath {
+    
+    static func rounded(frame: NSRect, cornerRadius: CGFloat, rectCorner: NSRectCorner) -> CGPath {
+        
+        let path = CGMutablePath()
+        
+        let minx:CGFloat = frame.minX, midx = frame.maxX/2.0, maxx = frame.maxX
+        let miny:CGFloat = frame.maxY, midy = frame.maxY/2.0, maxy: CGFloat = 0
+        
+        path.move(to: NSMakePoint(minx, midy))
+        
+        var topLeftRadius: CGFloat = 0
+        var bottomLeftRadius: CGFloat = 0
+        var topRightRadius: CGFloat = 0
+        var bottomRightRadius: CGFloat = 0
+        
+        
+        if rectCorner.contains(.topLeft) {
+            topLeftRadius = cornerRadius
+        }
+        if rectCorner.contains(.topRight) {
+            topRightRadius = cornerRadius
+        }
+        if rectCorner.contains(.bottomLeft) {
+            bottomLeftRadius = cornerRadius
+        }
+        if rectCorner.contains(.bottomRight) {
+            bottomRightRadius = cornerRadius
+        }
+        
+        
+        path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+        path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+        path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+        path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+        
+        if rectCorner.contains(.topLeft) {
+             path.move(to: NSMakePoint(minx, cornerRadius))
+        } else {
+             path.move(to: NSMakePoint(minx, maxy))
+        }
+       
+        path.addLine(to: NSMakePoint(minx, midy))
+        
+        return path
+    }
+    
+}
+
+
+public func fontSizeThatFits(text: String, in rect: CGRect, initialFont: NSFont, minFontSize: CGFloat = 5.0) -> NSFont {
+    var fontSize = initialFont.pointSize
+    var currentFont = initialFont
+
+    // Create an attributed string to measure
+    let attributedText = NSMutableAttributedString(string: text, attributes: [.font: currentFont])
+
+    // Measure the text size with the current font
+    var textSize = attributedText.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: rect.height), options: .usesLineFragmentOrigin, context: nil)
+
+    // Reduce the font size until it fits within the rect's width or reaches the minimum size
+    while textSize.width > rect.width && fontSize > minFontSize {
+        fontSize -= 1
+        currentFont = NSFont(name: initialFont.fontName, size: fontSize) ?? initialFont
+        attributedText.addAttribute(.font, value: currentFont, range: NSRange(location: 0, length: attributedText.length))
+        textSize = attributedText.boundingRect(with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: rect.height), options: .usesLineFragmentOrigin, context: nil)
+    }
+
+    return currentFont
+}
+
+
+public func extractHashtagAndUsername(from query: String) -> (hashtag: String, username: String)? {
+    // Regular expression to match hashtag followed by username
+    let pattern = "^([#$])([a-zA-Z0-9_]+)@([a-zA-Z0-9_]+)$"
+       
+       // Create regular expression object
+       guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+       
+       // Search for matches
+       let matches = regex.matches(in: query, range: NSRange(query.startIndex..., in: query))
+       
+       // Ensure we have a match
+       guard let match = matches.first, match.numberOfRanges == 4 else { return nil }
+       
+       // Extract symbol (# or $), tag, and username from the match
+       if let symbolRange = Range(match.range(at: 1), in: query),
+          let tagRange = Range(match.range(at: 2), in: query),
+          let usernameRange = Range(match.range(at: 3), in: query) {
+           
+           let symbol = String(query[symbolRange])
+           let tag = String(query[tagRange])
+           let fullTag = symbol + tag
+           let username = String(query[usernameRange])
+           
+           return (fullTag, username)
+       }
+       
+       return nil
+}
+public func extractAnchor(from text: String, matching url: String) -> String? {
+    // Escape the URL to safely use it in a regex
+    let escapedURL = NSRegularExpression.escapedPattern(for: url)
+    
+    // Regular expression pattern to match the given URL with optional anchor (#)
+    let pattern = "\(escapedURL)(#[a-zA-Z0-9_-]+)?"
+    
+    // Create regular expression object
+    guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+    
+    // Search for matches in the text
+    let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
+    
+    // Ensure there is at least one match
+    guard let match = matches.first else { return nil }
+    
+    // Extract the anchor if it exists (the part after #)
+    if match.numberOfRanges > 1, let anchorRange = Range(match.range(at: 1), in: text) {
+        return String(text[anchorRange].dropFirst()) // Drop the # symbol
+    }
+    
+    // If no anchor is found, return nil
+    return nil
+}
+
+
+public func formatMonthYear(_ dateString: String, locale: Locale = .current) -> String? {
+    // Create date formatter for parsing input
+    let inputFormatter = DateFormatter()
+    inputFormatter.dateFormat = "MM.yyyy"
+    
+    // Try to parse the input string to date
+    guard let date = inputFormatter.date(from: dateString) else {
+        return nil
+    }
+    
+    // Create formatter for output
+    let outputFormatter = DateFormatter()
+    outputFormatter.locale = locale
+    outputFormatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
+    
+    return outputFormatter.string(from: date)
 }

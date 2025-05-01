@@ -643,7 +643,7 @@ private final class EditImageView : View {
 }
 
 enum EditControllerSettings {
-    case disableSizes(dimensions: SelectionRectDimensions)
+    case disableSizes(dimensions: SelectionRectDimensions, circle: Bool)
     case plain
 }
 
@@ -861,11 +861,11 @@ class EditImageModalController: ModalViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         switch settings {
-        case let .disableSizes(dimensions):
+        case let .disableSizes(dimensions, circle):
             let imageSize = self.genericView.imageView.frame.size
             let size = NSMakeSize(200, 200).aspectFitted(imageSize)
             let rect = NSMakeRect((imageSize.width - size.width) / 2, (imageSize.height - size.height) / 2, size.width, size.height)
-            genericView.selectionRectView.isCircleCap = true
+            genericView.selectionRectView.isCircleCap = circle
             updateValue { current in
                 var current = current
                 current.dimensions = dimensions

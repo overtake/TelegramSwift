@@ -33,6 +33,12 @@ let colorSets_fallback = [
         NSColor(0xF09536),
         NSColor(0xCE5081),
         NSColor(0xFC7C4C)
+    ],
+    [
+        NSColor(0x18222C),
+        NSColor(0x1D2935),
+        NSColor(0x22303E),
+        NSColor(0x263646)
     ]
 ]
 
@@ -189,7 +195,10 @@ final class PeerCallScreenView : Control {
     private let statusView = PeerCallStatusView(frame: NSMakeRect(0, 0, 300, 58))
     
     private let settingsView = ImageButton()
+    private let addPeerView = ImageButton()
     
+    private var participantsView: PeerCallParticipantsView?
+
     private var arguments: Arguments?
     private var state: PeerCallState?
     
@@ -264,10 +273,22 @@ final class PeerCallScreenView : Control {
         
         addSubview(settingsView)
         
+        
+        addPeerView.set(image: NSImage(resource: .icAddPeople).precomposed(.white), for: .Normal)
+        addPeerView.autohighlight = false
+        addPeerView.scaleOnClick = true
+        addPeerView.sizeToFit()
+        
+        addSubview(addPeerView)
+        
         actions.layer?.masksToBounds = false
         
         settingsView.set(handler: { [weak self] _ in
             self?.arguments?.openSettings()
+        }, for: .SingleClick)
+        
+        addPeerView.set(handler: { [weak self] _ in
+            self?.arguments?.addMembers()
         }, for: .SingleClick)
         
         updateLayout(size: self.frame.size, transition: .immediate)
@@ -382,8 +403,12 @@ final class PeerCallScreenView : Control {
         
         let hideOutside = (videoLink_large != nil) ? (!state.mouseInside && state.isActive) : false
         
-        transition.updateFrame(view: settingsView, frame: CGRect.init(origin: CGPoint(x: size.width - settingsView.frame.width - 5, y: 5), size: settingsView.frame.size))
+        transition.updateFrame(view: settingsView, frame: CGRect(origin: CGPoint(x: size.width - settingsView.frame.width - 5, y: 5), size: settingsView.frame.size))
         transition.updateAlpha(view: settingsView, alpha: hideOutside ? 0 : 1)
+        
+        transition.updateFrame(view: addPeerView, frame: CGRect(origin: CGPoint(x: settingsView.frame.minX - addPeerView.frame.width - 5, y: 8), size: addPeerView.frame.size))
+        transition.updateAlpha(view: addPeerView, alpha: hideOutside ? 0 : 1)
+
         
         backgroundLayer?.frame = size.bounds
         backgroundLayer?.blurredLayer.frame = size.bounds
@@ -455,7 +480,9 @@ final class PeerCallScreenView : Control {
         
         transition.updateFrame(view: actions, frame: NSMakeRect(0, size.height - 70 - 40, size.width, 70))
 
-        
+        if let view = participantsView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: statusView.frame.maxY + 10))
+        }
 
         
         let actions = self.actionsViews
@@ -512,12 +539,18 @@ final class PeerCallScreenView : Control {
     }
         
 
-    
+    private var firstUpdate: Bool = true
     
     func updateState(_ state: PeerCallState, videoViewState: PeerCallVideoViewState, arguments: Arguments, transition: ContainedViewLayoutTransition) {
         self.state = state
         self.arguments = arguments
         self.videoViewState = videoViewState
+        
+        if state.externalState.conferenceReference != nil, firstUpdate {
+            self.videoMagnify = .topRight
+        }
+        
+        firstUpdate = false
         
         self.statusView.updateState(state, arguments: arguments, transition: transition)
         
@@ -704,6 +737,21 @@ final class PeerCallScreenView : Control {
             self.statusTooltip = nil
         }
         
+        if !state.externalState.participants.isEmpty {
+            let current: PeerCallParticipantsView
+            if let view = self.participantsView {
+                current = view
+            } else {
+                current = PeerCallParticipantsView(frame: .zero)
+                addSubview(current)
+                self.participantsView = current
+            }
+            current.update(participants: state.externalState.participants, arguments: arguments, animated: transition.isAnimated)
+        } else if let view = participantsView {
+            performSubviewRemoval(view, animated: transition.isAnimated)
+            self.participantsView = nil
+        }
+        
 
         do {
             var tooltips:[PeerCallTooltipStatusView.TooltipType] = []
@@ -886,6 +934,17 @@ final class PeerCallScreenView : Control {
             self.secretView = nil
         }
         
+        addPeerView.isEnabled = state.isActive
+        settingsView.isEnabled = state.isActive
+
+        addPeerView.isHidden = state.externalState.conferenceReference != nil || !state.externalState.supportsConferenceCalls
+        settingsView.isHidden = state.externalState.conferenceReference != nil
+
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 
@@ -937,4 +996,5 @@ private extension PeerCallScreenView {
     func revealedKeyFrame(view: NSView, state: PeerCallState) -> NSRect {
         return view.centerFrame()
     }
+    
 }

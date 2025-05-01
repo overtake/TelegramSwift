@@ -1927,8 +1927,10 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
-    if(range.location != NSNotFound)
-    [_textView setSelectedRange:range];
+    if(range.location != NSNotFound) {
+        [_textView setSelectedRange:range];
+        [self selectionDidChanged:nil];
+    }
 }
     
 -(Class)_textViewClass {

@@ -62,20 +62,22 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         didSet {
             switch webPage.content {
             case .Loaded(let content):
-                self.instantPage = content.instantPage
+                self.instantPage = content.instantPage?._parse()
             default:
                 break
             }
         }
     }
     let message: String?
-    init(_ context: AccountContext, webPage: TelegramMediaWebpage, message: String?, messageId: MessageId? = nil, anchor: String? = nil, saveToRecent: Bool = true) {
+    let url: String
+    init(_ context: AccountContext, url: String, webPage: TelegramMediaWebpage, message: String?, anchor: String? = nil) {
         self.webPage = webPage
         self.message = message
+        self.url = url
         self.pendingAnchor = anchor
         switch webPage.content {
         case .Loaded(let content):
-            self.instantPage = content.instantPage
+            self.instantPage = content.instantPage?._parse()
         default:
             break
         }
@@ -143,7 +145,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
     
     private func updateLayout() {
-        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: max(500, frame.width), safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), webEmbedHeights: self.currentWebEmbedHeights)
+        let currentLayout = instantPageLayoutForWebPage(webPage, boundingWidth: frame.width, safeInset: 0, theme: instantPageThemeForType(theme.insantPageThemeType, settings: appearance), webEmbedHeights: self.currentWebEmbedHeights)
         
         updateInteractions()
         
@@ -221,10 +223,9 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         reloadData()
     }
     
-    private func reloadData() {
+    func reloadData() {
         updateLayout()
         self.containerLayoutUpdated(animated: false)
-        updateInteractions()
     }
     
     func isExpandedItem(_ item: InstantPageDetailsItem) -> Bool {
@@ -329,7 +330,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                     case let .result(webpage):
                         if let webpage = webpage {
                             self.loadProgress.set(1.0)
-                            showInstantPage(InstantPageViewController(self.context, webPage: webpage.webpage, message: nil, anchor: anchor))
+                            BrowserStateContext.get(context).open(tab: .instantView(url: externalUrl,webPage: webpage.webpage, anchor: anchor), uniqueId: .instantView(self.webPage.webpageId))
                         }
                         break
                     case let .progress(progress):
@@ -423,7 +424,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
     }
     
     
-    private func scrollToAnchor(_ anchor: String, animated: Bool = true) {
+    func scrollToAnchor(_ anchor: String, animated: Bool = true) {
         guard let items = self.currentLayout?.items else {
             return
         }

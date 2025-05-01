@@ -21,13 +21,13 @@ class ThemePreviewRowItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType) {
         self.theme = theme.withUpdatedBackgroundSize(WallpaperDimensions.aspectFilled(NSMakeSize(200, 200)))
         
-        let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context, disableSelectAbility: true)
+        let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context, isLogInteraction: true, disableSelectAbility: true)
         
       
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: context.myPeer?.displayTitle ?? "", lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: context.myPeer?.nameColor, backgroundEmojiId: context.myPeer?.backgroundEmojiId, profileColor: nil, profileBackgroundEmojiId: nil)
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: context.myPeer?.displayTitle ?? "", lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: context.myPeer?.nameColor, backgroundEmojiId: context.myPeer?.backgroundEmojiId, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
         
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil)
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
         
         
         

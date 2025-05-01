@@ -98,7 +98,7 @@ final class GroupCallControlsView : View {
     }
     
     private(set) var mode: Mode = .normal
-    private(set) var callMode: GroupCallUIState.Mode = .voice
+    var callMode: GroupCallUIState.Mode = .voice
     
     private(set) var hasVideo: Bool = false
     private(set) var hasScreencast: Bool = false
@@ -117,8 +117,9 @@ final class GroupCallControlsView : View {
     private var tooltipView: GroupCallControlsTooltipView?
     private var isStream: Bool = false
     
-    required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect, callMode: GroupCallUIState.Mode) {
 
+        self.callMode = callMode
 
         super.init(frame: frameRect)
 
@@ -175,16 +176,21 @@ final class GroupCallControlsView : View {
         }, for: .SingleClick)
 
         self.backgroundView.update(state: .connecting, animated: false)
+        
+        self.updateLayout(size: frameRect.size, transition: .immediate)
 
-        self.updateMode(self.mode, callMode: self.callMode, isStream: self.isStream, hasVideo: self.hasScreencast, hasScreencast: self.hasScreencast, animated: false, force: true)
+        self.updateMode(self.mode, callMode: self.callMode, isStream: self.isStream, hasVideo: self.hasVideo, hasScreencast: self.hasScreencast, animated: false, force: true)
     }
     
-    private func updateMode(_ mode: Mode, callMode: GroupCallUIState.Mode, isStream: Bool, hasVideo: Bool, hasScreencast: Bool, animated: Bool, force: Bool = false) {
+    private var first: Bool = true
+    
+    func updateMode(_ mode: Mode, callMode: GroupCallUIState.Mode, isStream: Bool, hasVideo: Bool, hasScreencast: Bool, animated: Bool, force: Bool = false) {
         let previous = self.mode
-        let previousCallMode = self.callMode
+        let previousCallMode = first ? nil : self.callMode
         self.isStream = isStream
+        self.first = false
         
-        if previous != mode || hasVideo != self.hasVideo  || hasScreencast != self.hasScreencast || self.callMode != callMode || force {
+        if (previous != mode) || hasVideo != self.hasVideo  || hasScreencast != self.hasScreencast || previousCallMode != callMode || force {
             self.speakText?.change(opacity: mode == .fullscreen || callMode == .video ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
             let leftButton1Text: String
@@ -279,10 +285,11 @@ final class GroupCallControlsView : View {
                 fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
                 
                 if animated {
-                    view.layer?.transform = CATransform3DIdentity
+                    view.layer?.sublayerTransform = CATransform3DIdentity
                     view.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
                         if completed {
-                            view?.layer?.transform = fr
+                           // view?.layer?.transform = fr
+                           // view?.layer?.sublayerTransform = fr
                             view?.layer?.removeAnimation(forKey: "transform")
                         } else {
                             var bp = 0
@@ -290,7 +297,8 @@ final class GroupCallControlsView : View {
                         }
                     })
                 } else {
-                    view.layer?.transform = fr
+                   // view.layer?.transform = fr
+                    view.layer?.sublayerTransform = fr
                     view.layer?.removeAnimation(forKey: "transform")
                 }
             }
@@ -644,5 +652,9 @@ final class GroupCallControlsView : View {
    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
 }

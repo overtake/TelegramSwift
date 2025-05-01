@@ -15,6 +15,7 @@ import ObjcUtils
 import InAppSettings
 import TGUIKit
 import WebKit
+import TelegramMedia
 
 func clearUserDefaultsObject(forKeyPrefix prefix: String) {
     let defaults = UserDefaults.standard
@@ -26,6 +27,35 @@ func clearUserDefaultsObject(forKeyPrefix prefix: String) {
         }
     }
 }
+
+
+// Extension to handle rawValue conversion
+extension UniversalVideoContentVideoQuality {
+    public typealias RawValue = Int
+    
+    public init?(rawValue: Int) {
+        switch rawValue {
+        case -1: // Use -1 to represent auto
+            self = .auto
+        case let quality where quality >= 0:
+            self = .quality(quality)
+        default:
+            return nil
+        }
+    }
+    
+    public var rawValue: Int {
+        switch self {
+        case .auto:
+            return -1 // Use -1 to represent auto
+        case .quality(let value):
+            return value
+        }
+    }
+}
+
+
+
 
 enum SendingType :String {
     case enter = "enter"
@@ -131,6 +161,7 @@ func getAppTooltip(for value: AppTooltip, callback: (String) -> Void) {
 }
 
 class FastSettings {
+    private static let kVideoQuality = "kVideoQuality"
 
     private static let kSendingType = "kSendingType"
     private static let kEntertainmentType = "kEntertainmentType"
@@ -175,10 +206,39 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
+    private static let kPhotoSize = "kPhotoSize"
+
+    
     private static let kStoryMuted = "kStoryMuted"
     private static let kStoryHD = "kStoryHD"
+    
+    private static let kHashtagChannel = "kHashtagChannel";
+    
+    
+    private static let kContactsSort = "kContactsSort";
+    
+    public static var contactsSort: PeerListState.ContactsSort {
+        get {
+            if let value = UserDefaults.standard.value(forKey: kContactsSort) as? Int32 {
+                return .init(rawValue: value) ?? .lastSeen
+            } else {
+                return .lastSeen
+            }
+        }
+        set {
+            UserDefaults.standard.setValue(newValue.rawValue, forKey: kContactsSort)
+        }
+    }
 
 
+    public static var hasHashtagChannelBadge: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: kHashtagChannel)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: kHashtagChannel)
+        }
+    }
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -186,6 +246,17 @@ class FastSettings {
             return SendingType(rawValue: type) ?? .enter
         }
         return .enter
+    }
+    
+    static var videoQuality: UniversalVideoContentVideoQuality {
+        get {
+            let rawValue = UserDefaults.standard.integer(forKey: kVideoQuality)
+            return UniversalVideoContentVideoQuality(rawValue: rawValue) ?? .auto
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: kVideoQuality)
+            UserDefaults.standard.synchronize()
+        }
     }
     
     static var entertainmentState:EntertainmentState {
@@ -212,6 +283,31 @@ class FastSettings {
     
     static func toggleChannelMessagesMuted(_ peerId: PeerId) -> Void {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
+    }
+    
+    static var photoDimension: CGFloat {
+        if let largePhotos = UserDefaults.standard.value(forKey: kPhotoSize) as? Bool {
+            return largePhotos ? 2560 : 1280
+        } else {
+            return 1280
+        }
+    }
+    
+    static var sendLargePhotos: Bool {
+        return UserDefaults.standard.bool(forKey: kPhotoSize)
+    }
+    
+    static func sendLargePhotos(_ value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: kPhotoSize)
+    }
+
+    
+    static func needConfirmPaid(_ peerId: PeerId, price: Int) -> Bool {
+        return UserDefaults.standard.bool(forKey: "\(peerId)_confirm_paid_\(price)_3")
+    }
+    
+    static func toggleCofirmPaid(_ peerId: PeerId, price: Int) -> Void {
+        UserDefaults.standard.set(!needConfirmPaid(peerId, price: price), forKey: "\(peerId)_confirm_paid_\(price)_3")
     }
     
     static func shouldConfirmWebApp(_ peerId: PeerId) -> Bool {
@@ -376,10 +472,16 @@ class FastSettings {
     }
     
     static var isNeedCollage: Bool {
-        if UserDefaults.standard.value(forKey: kNeedCollage) == nil {
-            return true
+        get {
+            if UserDefaults.standard.value(forKey: kNeedCollage) == nil {
+                return true
+            }
+            return UserDefaults.standard.bool(forKey: kNeedCollage)
         }
-        return UserDefaults.standard.bool(forKey: kNeedCollage)
+        set {
+            UserDefaults.standard.set(newValue, forKey: kNeedCollage)
+            UserDefaults.standard.synchronize()
+        }
     }
     
     static var enableRTF: Bool {

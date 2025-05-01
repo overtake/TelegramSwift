@@ -220,9 +220,9 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
             
             var file: TelegramMediaFile?
             if let thumbnail = item.info.thumbnail {
-                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: thumbnail.typeHint == .video ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)], alternativeRepresentations: [])
             } else if let item = item.topItem {
-                file = item.file
+                file = item.file._parse()
             }
             if let file = file {
                 self.contentView.update(with: file, size: NSMakeSize(35, 35), context: item.context, parent: nil, table: item.table, parameters: nil, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
