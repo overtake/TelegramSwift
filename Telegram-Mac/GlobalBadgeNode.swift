@@ -236,9 +236,7 @@ func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
     if let count = Int(NSApplication.shared.dockTile.badgeLabel ?? "0") {
         var color: NSColor = .black
         if #available(OSX 10.14, *) {
-            if systemAppearance.name != .aqua {
-                color = .white
-            }
+            color = .labelColor
         }
         if #available(OSX 11.0, *) {
             color = .white
