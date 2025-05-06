@@ -640,6 +640,8 @@ private struct State : Equatable {
     
     var disallowedGifts: TelegramDisallowedGifts
     
+    var count: Int32 = 1
+    
 }
 
 private let _id_preview = InputDataIdentifier("_id_preview")
@@ -1045,39 +1047,40 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         
         switch state.option {
         case let .starGift(option):
-            if starsState.balance.value < option.totalStars(state.includeUpgrade) {
+            if starsState.balance.value < option.totalStars(state.includeUpgrade, count: state.count) {
                 showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: option.totalStars(state.includeUpgrade))), for: window)
                 return .none
             }
             
             let source: BotPaymentInvoiceSource = .starGift(hideName: state.isAnonymous, includeUpgrade: state.includeUpgrade, peerId: state.peer.id, giftId: option.native.generic!.id, text: state.textState.string, entities: state.textState.textInputState().messageTextEntities())
             
-            let paymentForm = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil) |> mapToSignal {
-                return context.engine.payments.sendStarsPaymentForm(formId: $0.id, source: source) |> mapError { _ in
-                    return .generic
+            let make:()->Signal<SendBotPaymentResult, BotPaymentFormRequestError> = {
+                return  context.engine.payments.fetchBotPaymentForm(source: source, themeParams: nil) |> mapToSignal {
+                    return context.engine.payments.sendStarsPaymentForm(formId: $0.id, source: source) |> mapError { _ in
+                        return .generic
+                    }
                 }
             }
             
-            _ = showModalProgress(signal: paymentForm, for: context.window).start(next: { result in
-                switch result {
-                case let .done(receiptMessageId, _, _):
-                    PlayConfetti(for: window, stars: true)
-                    closeAllModals(window: window)
-                    
-                    starGiftsProfile.reload()
-                    
-                    if peer._asPeer().isChannel {
-                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id, mediaMode: .gifts, shake: false, starGiftsProfile: starGiftsProfile)
-                    } else {
+            var combined = make()
+            for _ in 1 ..< state.count {
+                combined = combined |> then(make())
+            }
+            
+            _ = showModalProgress(signal: combined |> take(Int(state.count)), for: context.window).start(completed: {
+                PlayConfetti(for: window, stars: true)
+                closeAllModals(window: window)
+                
+                starGiftsProfile.reload()
+                
+                if peer._asPeer().isChannel {
+                    PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id, mediaMode: .gifts, shake: false, starGiftsProfile: starGiftsProfile)
+                } else {
+                    let controller = context.bindings.rootNavigation().controller as? ChatController
+                    if controller?.chatLocation.peerId != peer.id {
                         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
                     }
-                default:
-                    break
-                    
                 }
-            }, error: { error in
-                var bp = 0
-                bp += 1
             })
         case let .premium(option, starGift):
             
@@ -1111,6 +1114,61 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+
+    
+    
+    let updateRightHeader:()->Void = { [weak modalController] in
+        switch option {
+        case let .starGift(option):
+            if let availability = option.native.generic?.availability {
+                let count = stateValue.with { $0.count }
+                controller.rightModalHeader = ModalHeaderData(image: generateTextIcon(.initialize(string: "\(count)x", color: theme.colors.accent, font: .medium(.title))), contextMenu: {
+                    let count = stateValue.with { $0.count }
+                    return [ContextMenuItem("1x", handler: {
+                        updateState { current in
+                            var current = current
+                            current.count = 1
+                            return current
+                        }
+                    }, state: count == 1 ? .on : nil), ContextMenuItem("2x", handler: {
+                        updateState { current in
+                            var current = current
+                            current.count = 2
+                            return current
+                        }
+                    }, state: count == 2 ? .on : nil), ContextMenuItem("3x", handler: {
+                        updateState { current in
+                            var current = current
+                            current.count = 3
+                            return current
+                        }
+                    }, state: count == 3 ? .on : nil), ContextMenuItem("4x", handler: {
+                        updateState { current in
+                            var current = current
+                            current.count = 4
+                            return current
+                        }
+                    }, state: count == 4 ? .on : nil), ContextMenuItem("5x", handler: {
+                        updateState { current in
+                            var current = current
+                            current.count = 5
+                            return current
+                        }
+                    }, state: count == 5 ? .on : nil), ContextMenuItem("10x", handler: {
+                        updateState { current in
+                            var current = current
+                            current.count = 10
+                            return current
+                        }
+                    }, state: count == 10 ? .on : nil)]
+                })
+            }
+            modalController?.updateLocalizationAndTheme(theme: theme)
+        default:
+            break
+        }
+    }
     
     controller.afterTransaction = { [weak modalInteractions] _ in
         let state = stateValue.with { $0 }
@@ -1118,9 +1176,17 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         switch option {
         case let .starGift(option):
             if state.peer.id == context.peerId {
-                okText = strings().starsGiftPreviewBuy(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
+                if state.count > 1 {
+                    okText = strings().starsGiftPreviewBuyMultiCountable(Int(state.count), strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade, count: state.count))))
+                } else {
+                    okText = strings().starsGiftPreviewBuy(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade, count: state.count))))
+                }
             } else {
-                okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade))))
+                if state.count > 1 {
+                    okText = strings().starsGiftPreviewSendMultiCountable(Int(state.count), strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade, count: state.count))))
+                } else {
+                    okText = strings().starsGiftPreviewSend(strings().starListItemCountCountable(Int(option.totalStars(state.includeUpgrade, count: state.count))))
+                }
             }
         case let .premium(option, starGift):
             if state.payWithStars, let starGift = starGift {
@@ -1133,14 +1199,16 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         modalInteractions?.updateDone { button in
             button.set(text: okText, for: .Normal)
         }
+        updateRightHeader()
     }
     
+    updateRightHeader()
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
     
     close = { [weak modalController] in
         modalController?.modal?.close()

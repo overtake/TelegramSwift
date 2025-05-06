@@ -55,18 +55,18 @@ struct PeerStarGift : Equatable {
     let limited: Bool
     let native: StarGift
     
-    func totalStars(_ includeUpgrade: Bool, sendMessage: StarsAmount? = nil) -> Int64 {
+    func totalStars(_ includeUpgrade: Bool, sendMessage: StarsAmount? = nil, count: Int32 = 1) -> Int64 {
         if includeUpgrade {
             switch native {
             case let .generic(gift):
                 if let upgradeStars = gift.upgradeStars {
-                    return stars + upgradeStars + (sendMessage?.value ?? 0)
+                    return (stars + upgradeStars + (sendMessage?.value ?? 0)) * Int64(count)
                 }
             default:
-                return stars + (sendMessage?.value ?? 0)
+                return (stars + (sendMessage?.value ?? 0)) * Int64(count)
             }
         }
-        return stars + (sendMessage?.value ?? 0)
+        return (stars + (sendMessage?.value ?? 0)) * Int64(count)
     }
 }
 
@@ -133,7 +133,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             
             var redColor: [NSColor] = []
             var blueColor: [NSColor] = []
-            var greenColor: [NSColor] = [NSColor(0x74b036), NSColor(0x87d151)]
+            let greenColor: [NSColor] = [NSColor(0x4bb121), NSColor(0x53d654)]
             if theme.colors.isDark {
                 redColor = [NSColor(0x522124), NSColor(0x653634)]
                 blueColor = [NSColor(0x142e42), NSColor(0x354f5b)]

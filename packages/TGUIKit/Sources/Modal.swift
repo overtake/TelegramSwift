@@ -630,6 +630,8 @@ public class Modal: NSObject {
         container.borderView.layer?.cornerRadius = controller.cornerRadius
         
         container.borderView.isHidden = noBorder
+        
+        controller._window = window
 
         if !controller.contentBelowBackground {
             container.addSubview(controller.view)

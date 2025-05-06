@@ -198,11 +198,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank, lhsSuccriptionDate):
+    case let .member(_, lhsInvitedAt, _, _, _, _):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank, rhsSuccriptionDate):
+        case let .member(_, rhsInvitedAt, _, _, _, _):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

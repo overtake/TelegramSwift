@@ -3746,6 +3746,15 @@ private func startGroupCall(context: AccountContext, peerId: PeerId?, joinAs: Pe
             subscribedToScheduled: initialInfo.subscribedToScheduled,
             isStream: false
         ), .id(id: initialInfo.id, accessHash: initialInfo.accessHash))
+    } else if let initialCall {
+        initial = (EngineGroupCallDescription(
+            id: initialCall.id,
+            accessHash: initialCall.accessHash,
+            title: initialCall.title,
+            scheduleTimestamp: initialCall.scheduleTimestamp,
+            subscribedToScheduled: initialCall.subscribedToScheduled,
+            isStream: false
+        ), .id(id: initialCall.id, accessHash: initialCall.accessHash))
     }
     
     

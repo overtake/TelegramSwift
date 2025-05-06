@@ -726,7 +726,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             
             if let gifts {
                 current.starGifts = gifts.compactMap { $0.generic }.map {
-                    .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: .generic($0))
+                    .init(media: $0.file, stars: $0.price, limited: $0.availability != nil && $0.availability?.minResaleStars == nil, native: .generic($0))
                 }
                 if birthday?.isEligble == true || isBirthday {
                     current.starGifts = current.starGifts.sorted { gift1, gift2 in
@@ -888,7 +888,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }
 
     let modalController = InputDataModalController(controller, size: NSMakeSize(380, 0))
-    
+    modalController.fullSizeList = true
     
     
     modalController.getModalTheme = {

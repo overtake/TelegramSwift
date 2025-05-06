@@ -536,7 +536,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 
         self.setCenterTitle(isArchived ? strings().storyMediaTitleArchive : peerId == context.peerId ? strings().storyMediaTitleMyStories : "")
         
-        let arguments = Arguments(context: context, standalone: standalone, isArchive: isArchived, isMy: peerId == context.peerId, openStory: { [weak self] initialId in
+        let arguments = Arguments(context: context, standalone: standalone, isArchive: isArchived, isMy: peerId == context.peerId || isArchived, openStory: { [weak self] initialId in
             if let list = self?.listContext {
                 StoryModalController.ShowListStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
             }

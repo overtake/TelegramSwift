@@ -237,6 +237,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var openSuggestMessages:()->Void = { }
     
+    var sendGift:()->Void = { }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())

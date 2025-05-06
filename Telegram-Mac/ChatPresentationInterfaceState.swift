@@ -574,6 +574,16 @@ class ChatPresentationInterfaceState: Equatable {
     
     var freezeAccount: Int32
     var freezeAccountAppealAddressName: String?
+    
+    var hasGift: Bool {
+        if let peer, peer.isUser {
+            if let cachedData = cachedData as? CachedUserData, cachedData.flags.contains(.displayGiftButton) {
+                return true
+            }
+            return peer.id == accountPeer?.id
+        }
+        return false
+    }
 
     var inputContext: ChatPresentationInputQuery {
         return inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
@@ -891,9 +901,12 @@ class ChatPresentationInterfaceState: Equatable {
                             chatInteraction.toggleNotifications(nil)
                         }, right: .init(icon: theme.icons.chat_input_channel_gift, action: { chatInteraction, _ in
                             showModal(with: GiftingController(context: chatInteraction.context, peerId: peer.id, isBirthday: false), for: chatInteraction.context.window)
-                        }), left: .init(icon: theme.icons.chat_input_suggest_message, action: { chatInteraction, _ in
-                            chatInteraction.openSuggestMessages()
-                        }))
+                        }), left: nil)
+                        /*
+                         .init(icon: theme.icons.chat_input_suggest_message, action: { chatInteraction, _ in
+                             chatInteraction.openSuggestMessages()
+                         })
+                         */
                     }
                    
                 }

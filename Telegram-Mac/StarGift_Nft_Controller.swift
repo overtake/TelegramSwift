@@ -1279,8 +1279,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
     }
-            
-    
     
     return entries
 }

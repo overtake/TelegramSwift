@@ -18175,6 +18175,34 @@ public final class L10n {
   public static func starsGiftPreviewBuy(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stars.GiftPreview.Buy", p1)
   }
+  /// %d %@
+  public static func starsGiftPreviewBuyMultiCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_countable", p1, p2)
+  }
+  /// Buy %d Gifts for %@
+  public static func starsGiftPreviewBuyMultiFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_few", p1, p2)
+  }
+  /// Buy %d Gifts for %@
+  public static func starsGiftPreviewBuyMultiMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_many", p1, p2)
+  }
+  /// Buy %d Gift for %@
+  public static func starsGiftPreviewBuyMultiOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_one", p1, p2)
+  }
+  /// Buy %d Gifts for %@
+  public static func starsGiftPreviewBuyMultiOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_other", p1, p2)
+  }
+  /// Buy %d Gifts for %@
+  public static func starsGiftPreviewBuyMultiTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_two", p1, p2)
+  }
+  /// Buy %d Gifts for %@
+  public static func starsGiftPreviewBuyMultiZero(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.BuyMulti_zero", p1, p2)
+  }
   /// CUSTOMIZE YOUR GIFT
   public static var starsGiftPreviewCustomize: String  { return L10n.tr("Localizable", "Stars.GiftPreview.Customize") }
   /// Display this gift on your page or convert it to %@
@@ -18188,6 +18216,34 @@ public final class L10n {
   /// Send a Gift for %@
   public static func starsGiftPreviewSend(_ p1: String) -> String {
     return L10n.tr("Localizable", "Stars.GiftPreview.Send", p1)
+  }
+  /// %d %@
+  public static func starsGiftPreviewSendMultiCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_countable", p1, p2)
+  }
+  /// Send %d Gifts for %@
+  public static func starsGiftPreviewSendMultiFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_few", p1, p2)
+  }
+  /// Send %d Gifts for %@
+  public static func starsGiftPreviewSendMultiMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_many", p1, p2)
+  }
+  /// Send %d Gift for %@
+  public static func starsGiftPreviewSendMultiOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_one", p1, p2)
+  }
+  /// Send %d Gifts for %@
+  public static func starsGiftPreviewSendMultiOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_other", p1, p2)
+  }
+  /// Send %d Gifts for %@
+  public static func starsGiftPreviewSendMultiTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_two", p1, p2)
+  }
+  /// Send %d Gifts for %@
+  public static func starsGiftPreviewSendMultiZero(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Stars.GiftPreview.SendMulti_zero", p1, p2)
   }
   /// Display this gift in channel's Gifts or convert it to %@
   public static func starsGiftPreviewChannelDisplay(_ p1: String) -> String {

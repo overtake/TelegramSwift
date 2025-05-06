@@ -972,6 +972,8 @@ func initialize() -> [String] {
     array.append("chat_input_suggest_message")
 
     
+    array.append("chat_input_send_gift")
+    
 
     return array
 }
