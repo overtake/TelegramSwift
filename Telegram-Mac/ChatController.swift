@@ -6021,6 +6021,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
         }
         
+        chatInteraction.sendGift = {
+            showModal(with: GiftingController(context: context, peerId: peerId, isBirthday: false), for: context.window)
+        }
+        
         chatInteraction.reportSpamAndClose = { [weak self] in
             let title: String
             if let peer = self?.chatInteraction.peer {

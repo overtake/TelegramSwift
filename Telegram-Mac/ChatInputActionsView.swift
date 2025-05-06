@@ -74,6 +74,7 @@ class ChatInputActionsView: View {
     private let slowModeTimeout:TextButton = TextButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
+    private let gift:ImageButton = ImageButton()
     private var scheduled:ImageButton?
     
     private var sendPaidMessages: StarsSendActionView?
@@ -89,13 +90,16 @@ class ChatInputActionsView: View {
         super.init(frame: frameRect)
         
         keyboard.autohighlight = false
-        
         addSubview(keyboard)
         addSubview(send)
         addSubview(voice)
         addSubview(inlineCancel)
         addSubview(muteChannelMessages)
         addSubview(slowModeTimeout)
+        
+        addSubview(gift)
+
+        
         inlineCancel.isHidden = true
         send.isHidden = true
         voice.isHidden = true
@@ -105,12 +109,13 @@ class ChatInputActionsView: View {
         voice.autohighlight = false
         muteChannelMessages.autohighlight = false
         send.autohighlight = false
-        
+        gift.autohighlight = false
+
         send.scaleOnClick = true
         muteChannelMessages.scaleOnClick = true
         slowModeTimeout.scaleOnClick = true
         inlineCancel.scaleOnClick = true
-        
+        gift.scaleOnClick = true
         
         voice.set(handler: { [weak self] _ in
             guard let `self` = self else { return }
@@ -143,6 +148,10 @@ class ChatInputActionsView: View {
 
         keyboard.set(handler: { [weak self] _ in
             self?.toggleKeyboard()
+        }, for: .Up)
+        
+        gift.set(handler: { [weak self] _ in
+            self?.chatInteraction.sendGift()
         }, for: .Up)
         
         inlineCancel.set(handler: { [weak self] _ in
@@ -183,6 +192,11 @@ class ChatInputActionsView: View {
         
         keyboard.set(image: theme.icons.chatActiveReplyMarkup, for: .Normal)
         _ = keyboard.sizeToFit()
+        
+        gift.set(image: theme.icons.chat_input_send_gift, for: .Normal)
+        _ = gift.sizeToFit()
+
+        
         inlineCancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
         _ = inlineCancel.sizeToFit()
         
@@ -307,7 +321,7 @@ class ChatInputActionsView: View {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect || value.sendPaidMessageStars != oldValue.sendPaidMessageStars {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect || value.sendPaidMessageStars != oldValue.sendPaidMessageStars || value.hasGift != oldValue.hasGift {
 
                 if chatInteraction.hasSetDestructiveTimer, value.interfaceState.messageEffect == nil {
                     if secretTimer == nil {
@@ -493,6 +507,8 @@ class ChatInputActionsView: View {
                 entertaiments.isSelected = value.isShowSidebar 
                 
                 keyboard.isHidden = !value.isKeyboardActive
+                gift.isHidden = !value.hasGift
+                
                 
                 if let keyboardMessage = value.keyboardButtonsMessage {
                     if let closedId = value.interfaceState.messageActionsState.closedButtonKeyboardMessageId, closedId == keyboardMessage.id {
@@ -561,6 +577,11 @@ class ChatInputActionsView: View {
         if chatInteraction.presentation.keyboardButtonsMessage != nil {
             size.width += keyboard.frame.width + iconsInset
         }
+        
+        if chatInteraction.presentation.hasGift {
+            size.width += gift.frame.width + iconsInset
+        }
+        
         if let peer = chatInteraction.presentation.peer {
             let hasMute = !(!peer.isChannel || !peer.canSendMessage(value.chatMode.isThreadMode) || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil)
             if hasMute {
@@ -589,6 +610,7 @@ class ChatInputActionsView: View {
         transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset + 5))
         transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: sendValue.frame.minX - entertaiments.frame.width - 0))
         transition.updateFrame(view: keyboard, frame: keyboard.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
+        transition.updateFrame(view: gift, frame: gift.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
         transition.updateFrame(view: muteChannelMessages, frame: muteChannelMessages.centerFrameY(x: entertaiments.frame.minX - muteChannelMessages.frame.width))
 
         
@@ -608,6 +630,7 @@ class ChatInputActionsView: View {
          slowModeTimeout,
          entertaiments,
          keyboard,
+         gift,
          muteChannelMessages,
          scheduled].filter { $0 != nil && !$0!.isHidden }.map { $0! }
         

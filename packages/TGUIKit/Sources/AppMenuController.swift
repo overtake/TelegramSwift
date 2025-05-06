@@ -958,9 +958,12 @@ final class AppMenuController : NSObject  {
 }
 
 
-public func contextMenuOnScreen()->Bool {
+public func contextMenuOnScreen(filterNames: [String] = [])->Bool {
     for window in NSApp.windows {
-        if let window = window as? Window, let _ = window.weakView {
+        if let window = window as? Window, let weakView = window.weakView {
+            if let name = weakView.controller?.menu.name, filterNames.contains(name) {
+                return false
+            }
             return true
         }
     }

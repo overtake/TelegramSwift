@@ -191,7 +191,8 @@ class FastSettings {
     private static let kReactionsMode = "kReactionsMode"
 
     private static let kVolumeRate = "kVolumeRate"
-    
+    private static let kStoryVolumeRate = "kStoryVolumeRate"
+
     private static let kArchiveAutohidden = "kArchiveAutohidden"
     private static let kAutohideArchiveFeature = "kAutohideArchiveFeature"
 
@@ -425,6 +426,18 @@ class FastSettings {
         } else {
             return 0.8
         }
+    }
+    
+    static var volumeStoryRate: Float {
+        if UserDefaults.standard.value(forKey: kStoryVolumeRate) != nil {
+            return min(max(UserDefaults.standard.float(forKey: kStoryVolumeRate), 0), 1)
+        } else {
+            return 0.8
+        }
+    }
+    
+    static func setStoryVolumeRate(_ rate: Float) {
+        UserDefaults.standard.set(rate, forKey: kStoryVolumeRate)
     }
     
     static func setVolumeRate(_ rate: Float) {

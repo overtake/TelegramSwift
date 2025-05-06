@@ -160,6 +160,8 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     public var topWindow: Window?
     public var closeOutside: Bool = true
     
+    public var name: String = ""
+    
     public var loadMore: (()->Void)? = nil
 
     @objc dynamic internal var _items:[NSMenuItem] = [] {

@@ -49,7 +49,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
     }
     
     override var textAdditionInset:CGFloat {
-        return (self.canRemoveFromRecent || self.canAddAsTag ? 5 : 0) + (highlightVerified ? 25 : 0)
+        return (self.canRemoveFromRecent || self.canAddAsTag ? 5 : 0) + (highlightVerified ? 25 : 0) + (adPeer != nil ? 30 : 0)
     }
 }
 

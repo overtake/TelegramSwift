@@ -900,7 +900,8 @@ func StarGift_MarketplaceController(context: AccountContext, peerId: PeerId, gif
 
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(368, 0))
-    
+    modalController.fullSizeList = true
+
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })

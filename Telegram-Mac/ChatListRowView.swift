@@ -1220,9 +1220,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     if let statusControl = statusControl {
                         addition += statusControl.frame.width + 1
                     }
-                    if let statusControl = leftStatusControl {
-                        addition += statusControl.frame.width + 2
-                    }
 
                     if item.isMuted {
                         let icon = theme.icons.dialogMuteImage

@@ -733,8 +733,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                     return
                 }
                 self.view.updateLeftSideView(self.leftSidebarController?.genericView, animated: animated)
-                if !self.window.isFullScreen {
-                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
+                if !self.window.isFullScreen, let screen = self.window.screen {
+                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, min(self.window.frame.width + enlarge, screen.frame.width), self.window.frame.height), display: true, animate: false)
                 }
                 self.updateMinMaxWindowSize(animated: animated)
             }))

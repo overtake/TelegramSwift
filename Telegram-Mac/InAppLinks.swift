@@ -2358,7 +2358,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break
                             }
                         }
-                        if action == nil && emptyVars.contains(keyURLVoiceChat) {
+                        if action == nil && emptyVars.contains(keyURLStartapp) {
+                            action = .makeWebview(appname: "", command: nil)
+                        } else if action == nil && emptyVars.contains(keyURLVoiceChat) {
                             action = .joinVoiceChat(nil)
                         } else if action == nil, vars[keyURLStartattach] != nil || vars[keyURLAttach] != nil {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }

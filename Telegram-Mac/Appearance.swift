@@ -3403,7 +3403,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) },
                               chatlist_apps: { NSImage(resource: .iconChatListApps).precomposed(palette.accent) },
                               chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) },
-                              chat_input_suggest_message: { NSImage(resource: .iconChatInputMessageSuggestion).precomposed(palette.accent) }
+                              chat_input_suggest_message: { NSImage(resource: .iconChatInputMessageSuggestion).precomposed(palette.accent) },
+                              chat_input_send_gift: { NSImage(resource: .iconChannelGift).precomposed(palette.grayIcon) }
     )
 }
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {

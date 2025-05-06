@@ -1273,6 +1273,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }        
         rows.append(.init(left: .init(.initialize(string: strings().starTransactionId, color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+        
+        
+        if let transactionUrl = state.transaction.transactionUrl {
+            let transactionId: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(transactionUrl.prefixWithDots(40))](\(transactionUrl))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .code(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })), alwaysStaticItems: true)
+            
+            transactionId.interactions.processURL = { inapplink in
+                if let inapplink = inapplink as? String {
+                    arguments.openLink(inapplink)
+                }
+            }
+            //TODOLANG
+            rows.append(.init(left: .init(.initialize(string: "Transaction URL", color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+        }
+        
     }
     
     if state.transaction.giveawayMessageId != nil {
