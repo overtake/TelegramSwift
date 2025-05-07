@@ -610,7 +610,6 @@ class ChatInputActionsView: View {
         transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset + 5))
         transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: sendValue.frame.minX - entertaiments.frame.width - 0))
         transition.updateFrame(view: keyboard, frame: keyboard.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
-        transition.updateFrame(view: gift, frame: gift.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
         transition.updateFrame(view: muteChannelMessages, frame: muteChannelMessages.centerFrameY(x: entertaiments.frame.minX - muteChannelMessages.frame.width))
 
         
@@ -621,6 +620,8 @@ class ChatInputActionsView: View {
                 transition.updateFrame(view: scheduled, frame: scheduled.centerFrameY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset))
             }
         }
+        
+        transition.updateFrame(view: gift, frame: gift.centerFrameY(x: (scheduled ?? entertaiments).frame.minX - gift.frame.width))
         
         let views = [inlineCancel,
          inlineProgress,

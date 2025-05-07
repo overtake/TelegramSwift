@@ -30,7 +30,7 @@ import TelegramMedia
 import RLottie
 import KeyboardKey
 
-#if !APP_STORE
+#if BETA || DEBUG
 import Firebase
 import FirebaseCrashlytics
 #endif
@@ -332,6 +332,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func updateGraphicContext() {
         ctxLayer?.display()
     }
+    
+    
 
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -339,6 +341,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
             return BrowserStateContext.checkKey(event)
         })
+        
+        UserDefaults.standard.set(true, forKey: "NSApplicationCrashOnExceptions")
         
         
        // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
@@ -459,6 +463,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #if BETA || DEBUG
         FirebaseApp.configure()
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+        Crashlytics.crashlytics().sendUnsentReports()
         #endif
         
         
