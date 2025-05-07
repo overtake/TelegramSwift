@@ -2080,7 +2080,7 @@ private class SearchContainer : Control {
                     } else {
                         title = tag.title
                     }
-                    items.append(.init(title: title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    items.append(.init(title: title, index: index, uniqueId: Int64(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                 }
             } else {
@@ -2092,7 +2092,7 @@ private class SearchContainer : Control {
                 
                 if state.hashtag != nil {
                     let tag = PeerListState.SelectedSearchTag.hashtagPublicPosts
-                    items.append(.init(title: tag.title, index: index, uniqueId: Int32(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    items.append(.init(title: tag.title, index: index, uniqueId: Int64(tag.rawValue), selected: state.selectedTag == tag, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                 }
                 
@@ -2117,7 +2117,7 @@ private class SearchContainer : Control {
                                                     (.file, strings().searchFilterFiles)]
                 
                 for tag in tags {
-                    items.append(.init(title: tag.1, index: index, uniqueId: Int32(tag.0.rawValue), selected: state.selectedTag.rawValue == tag.0.rawValue, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    items.append(.init(title: tag.1, index: index, uniqueId: Int64(tag.0.rawValue), selected: state.selectedTag.rawValue == tag.0.rawValue, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                 }
             }
@@ -2126,7 +2126,7 @@ private class SearchContainer : Control {
             current.theme = presentation
             
             current.didChangeSelectedItem = { [weak arguments] item in
-                if let tag = PeerListState.SelectedSearchTag(rawValue: item.uniqueId) {
+                if let tag = PeerListState.SelectedSearchTag(rawValue: Int32(item.uniqueId)) {
                     arguments?.selectSearchTag(tag)
                 }
             }

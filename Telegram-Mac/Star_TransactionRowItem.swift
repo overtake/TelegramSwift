@@ -82,8 +82,7 @@ final class Star_TransactionItem : GeneralRowItem {
         
         var descString: String? = nil
         if transaction.native.flags.contains(.isStarGiftResale)  {
-            //TODOLANG
-            descString = transaction.amount.value < 0 ? "Gift Purchase" : "Gift Sale"
+            descString = transaction.amount.value < 0 ? strings().starTransactionGiftPurchase : strings().starTransactionGiftSale
         } else if let count = transaction.native.paidMessageCount {
             descString = strings().starTransactionMessageFeeCountable(Int(count))
         } else if let premiumGiftMonths = transaction.native.premiumGiftMonths {

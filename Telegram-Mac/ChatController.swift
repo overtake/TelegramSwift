@@ -515,6 +515,10 @@ class ChatControllerView : View, ChatInputDelegate {
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
     
+    private var monoforum_VerticalView: MonoforumVerticalView?
+    private var monoforum_HorizontalView: MonoforumHorizontalView?
+
+    
     fileprivate var updateFloatingPhotos:((ScrollPosition, Bool)->Void)? = nil
     
     
@@ -801,17 +805,7 @@ class ChatControllerView : View, ChatInputDelegate {
         updateFrame(frame, transition: .immediate)
     }
     
-    func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
-        
-        
-        if let view = inputContextHelper.accessoryView {
-            transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
-        }
-        if let currentView = header.currentView {
-            header.measure(frame.width)
-            transition.updateFrame(view: currentView, frame: NSMakeRect(0, 0, frame.width, currentView.frame.height))
-        }
-        
+    var tableRect: NSRect {
         let inputHeight = inputView.height(for: frame.width)
         
         var tableHeight = frame.height - inputHeight - header.state.toleranceHeight
@@ -820,8 +814,31 @@ class ChatControllerView : View, ChatInputDelegate {
             tableHeight -= themeSelector.frame.height
             tableHeight += inputView.frame.height
         }
+        
+
                 
         let tableRect = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
+        
+        return tableRect
+    }
+    
+    func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        
+        
+        var headerInset: CGFloat = 0
+        if let monoforum_VerticalView {
+            headerInset += monoforum_VerticalView.frame.width
+        }
+        
+        if let view = inputContextHelper.accessoryView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
+        }
+        if let currentView = header.currentView {
+            header.measure(frame.width - headerInset)
+            transition.updateFrame(view: currentView, frame: NSMakeRect(headerInset, 0, frame.width - headerInset, currentView.frame.height))
+        }
+        
+        let inputHeight = inputView.height(for: frame.width)
         
         if tableRect != tableView.frame {
             transition.updateFrame(view: tableView, frame: tableRect)
@@ -881,6 +898,14 @@ class ChatControllerView : View, ChatInputDelegate {
         
         if let videoProccesing {
             transition.updateFrame(view: videoProccesing, frame: videoProccesing.centerFrameX(y: header.state.height + 10))
+        }
+        
+        if let monoforum_VerticalView {
+            transition.updateFrame(view: monoforum_VerticalView, frame: NSMakeRect(0, 0, monoforum_VerticalView.frame.width, tableRect.height))
+        }
+        
+        if let monoforum_HorizontalView {
+            transition.updateFrame(view: monoforum_HorizontalView, frame: NSMakeRect(0, 0, frame.width, monoforum_HorizontalView.frame.height))
         }
         
         self.textInputSuggestionsView?.updateRect(transition: transition)
@@ -1048,7 +1073,7 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             value = .none
         }
-        let translate: ChatPresentationInterfaceState.TranslateState?
+        var translate: ChatPresentationInterfaceState.TranslateState?
         if interfaceState.peer?.restrictionText(interfaceState.contentSettings) == nil, interfaceState.chatMode != .preview {
             if let translateState = interfaceState.translateState, translateState.canTranslate {
                 if case .search = value {
@@ -1065,7 +1090,11 @@ class ChatControllerView : View, ChatInputDelegate {
         
         let botAd: Message? = (interfaceState.historyCount ?? 0) >= 2 ? interfaceState.adMessage : nil
         
-       
+        if interfaceState.monoforumState != nil {
+            value = .none
+            voiceChat = nil
+            translate = nil
+        }
                 
         let state: ChatHeaderState = .init(main: value, voiceChat: voiceChat, translate: translate, botManager: interfaceState.chatMode == .preview ? nil : interfaceState.connectedBot, botAd: botAd.flatMap { .init(message: $0, chatInteraction: chatInteraction) })
 
@@ -1083,6 +1112,79 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             tableView.contentInsets = .init(top: 0)
         }
+    }
+    
+    func updateMonoforumState(state: MonoforumUIState?, animated: Bool) {
+        if let state {
+            switch state {
+            case .horizontal:
+                if let view = monoforum_VerticalView {
+                    performSubviewPosRemoval(view, pos: NSMakePoint(-view.frame.width, 0), animated: animated)
+                    self.monoforum_VerticalView = nil
+                }
+                
+                let current: MonoforumHorizontalView
+                if let view = self.monoforum_HorizontalView {
+                    current = view
+                } else {
+                    current = MonoforumHorizontalView(frame: NSMakeRect(0, 0, frame.width, 40))
+                    addSubview(current, positioned: .below, relativeTo: inputView)
+                    self.monoforum_HorizontalView = current
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0.5, to: 1, duration: 0.2)
+                        current.layer?.animatePosition(from: NSMakePoint(0, -current.frame.height), to: .zero)
+                    }
+                }
+                
+                var items: [MonoforumItem] = []
+                
+                for _ in 0 ..< Int32.random(in: 1...100) {
+                    items.append(.init(id: arc4random64(), file: LocalAnimatedSticker.duck_empty.file, title: "test"))
+                }
+                
+                current.set(items: items, selected: items[Int.random(in: 0..<min(items.count, 10))].id, context: chatInteraction.context, animated: animated)
+                
+            case .vertical:
+                if let view = monoforum_HorizontalView {
+                    performSubviewPosRemoval(view, pos: NSMakePoint(0, -view.frame.height), animated: animated)
+                    self.monoforum_HorizontalView = nil
+                }
+                
+                let current: MonoforumVerticalView
+                if let view = self.monoforum_VerticalView {
+                    current = view
+                } else {
+                    current = MonoforumVerticalView(frame: NSMakeRect(0, 0, 80, tableRect.height))
+                    addSubview(current, positioned: .below, relativeTo: inputView)
+                    self.monoforum_VerticalView = current
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0.5, to: 1, duration: 0.2)
+                        current.layer?.animatePosition(from: NSMakePoint(-current.frame.width, 0), to: .zero)
+                    }
+                }
+                
+                var items: [MonoforumItem] = []
+                
+                for _ in 0 ..< Int32.random(in: 1...100) {
+                    items.append(.init(id: arc4random64(), file: LocalAnimatedSticker.duck_empty.file, title: "test"))
+                }
+                
+                current.set(items: items, selected: items[Int.random(in: 0..<min(items.count, 10))].id, chatInteraction: chatInteraction, animated: animated)
+            }
+        } else {
+            if let view = monoforum_VerticalView {
+                performSubviewPosRemoval(view, pos: NSMakePoint(-view.frame.width, 0), animated: animated)
+                self.monoforum_VerticalView = nil
+            }
+            if let view = monoforum_HorizontalView {
+                performSubviewPosRemoval(view, pos: NSMakePoint(0, -view.frame.height), animated: animated)
+                self.monoforum_HorizontalView = nil
+            }
+        }
+        
+        updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     private var scrollerRect: NSRect {
@@ -2089,6 +2191,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var peerStatus: PeerStatusSettings? = nil
         
         var commonGroups: GroupsInCommonState?
+        
+        var monoforumState: MonoforumUIState?
     }
     private func updateState(_ f:(State)->State) -> Void {
         stateValue.set(uiState.modify(f))
@@ -3247,7 +3351,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects, factCheckRevealed: uiState.factCheck, quoteRevealed: uiState.quoteRevealed, peerStatus: uiState.peerStatus, commonGroups: uiState.commonGroups).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects, factCheckRevealed: uiState.factCheck, quoteRevealed: uiState.quoteRevealed, peerStatus: uiState.peerStatus, commonGroups: uiState.commonGroups, monoforumState: uiState.monoforumState).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -6711,6 +6815,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedShortcuts(shortcuts)
                         present = present.withUpdatedConnectedBot(connectedBot)
                         present = present.withUpdatedPlayedMessageEffects(playedMessageEffects ?? [])
+                        present = present.withUpdatedMonoforumState(uiState.monoforumState)
                         
                         if peer.isBot {
                             present = present.withUpdatedAdMessage(adMessages.fixed)
@@ -8863,6 +8968,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invoked
         }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
         
+        #if DEBUG
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.updateState { current in
+                var current = current
+                current.monoforumState = current.monoforumState == .vertical ? .horizontal : .vertical
+                return current
+            }
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        #endif
+        
+        
         
         self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window, self.chatInteraction.presentation.canReplyInRestrictedMode else {return .failed}
@@ -9436,9 +9553,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             
-            if value.searchMode != oldValue.searchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags || value.connectedBot != oldValue.connectedBot || value.adMessage != oldValue.adMessage || value.historyCount != oldValue.historyCount {
+            if value.searchMode != oldValue.searchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags || value.connectedBot != oldValue.connectedBot || value.adMessage != oldValue.adMessage || value.historyCount != oldValue.historyCount || value.monoforumState != oldValue.monoforumState {
                 genericView.updateHeader(value, animated, value.hidePinnedMessage != oldValue.hidePinnedMessage)
                 (centerBarView as? ChatTitleBarView)?.updateStatus(true, presentation: value)
+            }
+            
+            if value.monoforumState != oldValue.monoforumState {
+                genericView.updateMonoforumState(state: value.monoforumState, animated: animated)
             }
 
             if value.reportMode != oldValue.reportMode {

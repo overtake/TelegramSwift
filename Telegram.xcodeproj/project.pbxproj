@@ -57,6 +57,8 @@
 		2703762F2CA1FEE4003EC235 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
 		2703763F2CA43E04003EC235 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2703763E2CA43E04003EC235 /* Report.swift */; };
 		270376412CA59398003EC235 /* NativeMediaPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376402CA59398003EC235 /* NativeMediaPlayer.swift */; };
+		27049A532DC9F92E001B2E3E /* MonoforumVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27049A522DC9F926001B2E3E /* MonoforumVerticalView.swift */; };
+		27049A552DC9FC1C001B2E3E /* MonoforumHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27049A542DC9FC17001B2E3E /* MonoforumHorizontalView.swift */; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
 		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
@@ -1728,6 +1730,8 @@
 		2703762E2CA1FEC4003EC235 /* libiconv.2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.2.tbd; path = usr/lib/libiconv.2.tbd; sourceTree = SDKROOT; };
 		2703763E2CA43E04003EC235 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
 		270376402CA59398003EC235 /* NativeMediaPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMediaPlayer.swift; sourceTree = "<group>"; };
+		27049A522DC9F926001B2E3E /* MonoforumVerticalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonoforumVerticalView.swift; sourceTree = "<group>"; };
+		27049A542DC9FC17001B2E3E /* MonoforumHorizontalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonoforumHorizontalView.swift; sourceTree = "<group>"; };
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270595D72B6941C400E05493 /* ChatSearchHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchHeader.swift; sourceTree = "<group>"; };
 		270595E32B6BDCF500E05493 /* menu_boost.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost.tgs; sourceTree = "<group>"; };
@@ -3549,6 +3553,15 @@
 			name = hls;
 			sourceTree = "<group>";
 		};
+		27049A512DC9F920001B2E3E /* monoforum */ = {
+			isa = PBXGroup;
+			children = (
+				27049A542DC9FC17001B2E3E /* MonoforumHorizontalView.swift */,
+				27049A522DC9F926001B2E3E /* MonoforumVerticalView.swift */,
+			);
+			path = monoforum;
+			sourceTree = "<group>";
+		};
 		270595D62B69419000E05493 /* header */ = {
 			isa = PBXGroup;
 			children = (
@@ -4904,7 +4917,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
-				27B26A2E2D154A6800FBA142 /* StarGift_Nft_Controller.swift */,
+				27049A512DC9F920001B2E3E /* monoforum */,
 				27F9D2B32BEE1EB30044949A /* star-currency */,
 				2771FC502BC3C490009A5DDE /* panels */,
 				2738CAD42707047E00CDB1BF /* request-join */,
@@ -4926,6 +4939,7 @@
 				C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */,
 				C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */,
 				C295C65E1F75808600BA309D /* ChatAdditionController.swift */,
+				27B26A2E2D154A6800FBA142 /* StarGift_Nft_Controller.swift */,
 				9F153D1521F3662700B95D82 /* StoredMessageFromSearchPeer.swift */,
 				D0B6D72922AA65D3008E36FE /* NewContactController.swift */,
 				D00C73B52302C196004B1E2B /* ChatScheduleController.swift */,
@@ -8464,6 +8478,7 @@
 				C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */,
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
+				27049A532DC9F92E001B2E3E /* MonoforumVerticalView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
 				27A7FBDA2CF5B20900AE9432 /* PreciseSliderRowItem.swift in Sources */,
 				C24D9F911E1F8F85002CD3F3 /* MajorBackNavigationBar.swift in Sources */,
@@ -8521,6 +8536,7 @@
 				D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				270375E52C938CAE003EC235 /* WidgetAppIconController.swift in Sources */,
+				27049A552DC9FC1C001B2E3E /* MonoforumHorizontalView.swift in Sources */,
 				27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,
 				27D604312953164300588C21 /* StorageUsageHeaderItem.swift in Sources */,

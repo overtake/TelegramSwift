@@ -265,7 +265,17 @@ class ChatRowItem: TableRowItem {
             return chatInteraction.presentation.selectionState != nil ? 42.0 : 20.0
         }
     }
-    let leftInset:CGFloat = 20
+    var leftInset:CGFloat {
+        var inset: CGFloat = 20
+        if let monoforum = entry.additionalData.monoforumState {
+            if case .vertical = monoforum {
+                if isIncoming || !isBubbled {
+                    inset += 80
+                }
+            }
+        }
+        return inset
+    }
 
     
     var _defaultHeight:CGFloat {
@@ -323,6 +333,14 @@ class ChatRowItem: TableRowItem {
         
         if forwardType != nil {
             widthForContent -= leftContentInset
+        }
+        
+        if let monoforumState = entry.additionalData.monoforumState {
+            if case .vertical = monoforumState {
+                if !isIncoming, isBubbled {
+                    widthForContent -= 80
+                }
+            }
         }
         
         return widthForContent
@@ -654,6 +672,7 @@ class ChatRowItem: TableRowItem {
         } else {
             inset += 36 + 10
         }
+        
         
         return inset
     }

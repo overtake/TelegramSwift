@@ -1340,15 +1340,14 @@ class ChatServiceItem: ChatRowItem {
                             let peerName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? messagePeer.compactDisplayTitle
                             let peerIds: [(Int, EnginePeer.Id?)] = [(0, messagePeer.id)]
                             if let resaleStars {
-                                //TODOLANG
                                 if message.author?.id == context.account.peerId {
                                     if message.id.peerId == context.account.peerId {
-                                        text = "You bought **\(gift.title) #\(gift.number)** for **\(strings().starListItemCountCountable(Int(resaleStars)))**"
+                                        text = strings().chatServiceResaleYouSelf("\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)))
                                     } else {
-                                        text = "You bought **\(gift.title) #\(gift.number)** for **\(strings().starListItemCountCountable(Int(resaleStars)))** and gifted it to **\(peerName)**"
+                                        text = strings().chatServiceResaleYou("\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)), peerName)
                                     }
                                 } else {
-                                    text = "\(peerName) bought **\(gift.title) #\(gift.number)** for **\(strings().starListItemCountCountable(Int(resaleStars)))** and gifted it to you"
+                                    text = strings().chatServiceResale(peerName, "\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)))
                                 }
                             } else if isUpgrade {
                                 if message.author?.id == context.account.peerId {

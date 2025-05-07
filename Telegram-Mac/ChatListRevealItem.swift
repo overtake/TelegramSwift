@@ -249,7 +249,7 @@ final class ChatListRevealView : TableStickView {
             let title: String = tab.title
             let selected = item.selected == tab
            
-            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: selected, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount), customTextView: {
+            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: Int64(tab.id), selected: selected, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount), customTextView: {
                 
                 let attr = NSMutableAttributedString()
                 attr.append(string: title, color: selected ? segmentTheme.activeText : segmentTheme.inactiveText, font: segmentTheme.textFont)

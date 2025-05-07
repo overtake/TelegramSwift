@@ -133,7 +133,7 @@ final class FoldersRowView : TableStickView {
         var items:[ScrollableSegmentItem] = []
         for tab in item.tabs {
             let title: String = tab.title
-            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: UIEquatable(tab)))
+            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: Int64(tab.id), selected: item.selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: UIEquatable(tab)))
             index += 1
         }
         
