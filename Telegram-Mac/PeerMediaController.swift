@@ -1268,7 +1268,7 @@ protocol PeerMediaSearchable : AnyObject {
         let ready = data |> map { _ in return true }
         
         genericView.segmentPanelView.segmentControl.didChangeSelectedItem = { [weak self] item in
-            let newMode = PeerMediaCollectionMode(rawValue: item.uniqueId)!
+            let newMode = PeerMediaCollectionMode(rawValue: Int32(item.uniqueId))!
             
             if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
                 self?.currentMainTableView?(mainTable, true, true)
@@ -1445,10 +1445,10 @@ protocol PeerMediaSearchable : AnyObject {
         tabsDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] tabs, selected, hasLoaded in
             var items:[ScrollableSegmentItem] = []
             if hasLoaded, let `self` = self {
-                let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
+                let insets = NSEdgeInsets(left: 5, right: 5, bottom: 2)
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
-                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: Int64(tab.rawValue), selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
                 self.genericView.updateEmpty(items.isEmpty, animated: !firstTabAppear)

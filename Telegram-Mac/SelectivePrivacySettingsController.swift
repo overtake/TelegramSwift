@@ -244,13 +244,11 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
                 arguments.setupBirthday()
             }), textColor: theme.colors.listGrayText, linkColor: theme.colors.link, viewType: viewType, fontSize: 12)
         case let .showGiftButton(_, value, enabled, viewType):
-            //TODOLANG
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Show Gift Icon in Chats", type: .switchable(value), viewType: viewType, action: arguments.toggleShowGiftButton, enabled: enabled, disabledAction: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerGiftShowGiftIcon, type: .switchable(value), viewType: viewType, action: arguments.toggleShowGiftButton, enabled: enabled, disabledAction: {
                 arguments.openPremium(false)
             })
         case let .showGiftButtonInfo(_, viewType):
-            //TODOLANG
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain("Display the Gift Icon in the message input field for both participants in all chats."), textColor: theme.colors.listGrayText, linkColor: theme.colors.link, viewType: viewType, fontSize: 12)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(strings().privacySettingsControllerGiftShowGiftIconInfo), textColor: theme.colors.listGrayText, linkColor: theme.colors.link, viewType: viewType, fontSize: 12)
         case let .everybody(_, value, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.everybody)

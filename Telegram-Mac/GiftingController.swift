@@ -329,8 +329,7 @@ private final class StarGiftFilterRowItem : GeneralRowItem {
                 attr.append(string: "\(clown_space)\(int64)", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             case .resale:
-                //TODOLANG
-                attr.append(string: "Resale", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.append(string: strings().giftingStarGiftResale, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             default:
                 break

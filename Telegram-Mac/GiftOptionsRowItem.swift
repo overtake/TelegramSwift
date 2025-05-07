@@ -144,8 +144,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             
             if let availability = option.native.generic?.availability {
                 if availability.minResaleStars != nil && option.native.generic?.soldOut != nil {
-                    //TODOLANG
-                    badge = .init(text: "resale", colors: greenColor, textColor: .white)
+                    badge = .init(text: strings().giftResale, colors: greenColor, textColor: .white)
                 } else if availability.remains == 0 {
                     badge = .init(text: strings().giftSoldOut, colors: redColor, textColor: .white)
                 } else {
@@ -196,8 +195,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             
             let badge: Badge?
             if let resellStars = option.gift.unique?.resellStars {
-                //TODOLANG
-                badge = .init(text: "sale", colors: [NSColor(0x74b036), NSColor(0x87d151)], textColor: theme.colors.underSelectedColor)
+                badge = .init(text: strings().giftSale, colors: [NSColor(0x74b036), NSColor(0x87d151)], textColor: theme.colors.underSelectedColor)
                 
                 let attr = NSMutableAttributedString()
                 attr.append(.initialize(string: "\(clown_space)\(resellStars)", color: .white, font: .normal(.text)))

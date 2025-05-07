@@ -1024,8 +1024,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         
         if state.transaction.flags.contains(.isStarGiftResale) {
-            //TODOLANG
-            let reasonText = state.transaction.count.value > 0 ? "Gift Sale" : "Gift Purchase"
+            let reasonText = state.transaction.count.value > 0 ? strings().starTransactionGiftSale : strings().starTransactionGiftPurchase
             rows.append(.init(left: .init(.initialize(string: strings().starTransactionReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: reasonText, color: theme.colors.text, font: .normal(.text))))))
                         
         } else if let _ = state.transaction.starrefCommissionPermille, state.transaction.paidMessageCount == nil {

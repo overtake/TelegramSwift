@@ -5979,6 +5979,10 @@ public final class L10n {
   public static func chatServiceRefundedBackZero(_ p1: String, _ p2: String, _ p3: Int) -> String {
     return L10n.tr("Localizable", "Chat.Service.RefundedBack_zero", p1, p2, p3)
   }
+  /// %1$@ bought **%2$@** for **%3$@** and gifted it to you
+  public static func chatServiceResale(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Resale", p1, p2, p3)
+  }
   /// Search messages by %@
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
@@ -6276,6 +6280,14 @@ public final class L10n {
   /// %1$@ sent a gift to %2$@ for %3$@
   public static func chatServicePremiumGiftSentChannel(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.Sent.Channel", p1, p2, p3)
+  }
+  /// You bought **%1$@** for **%2$@** and gifted it to %3$@
+  public static func chatServiceResaleYou(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Resale.You", p1, p2, p3)
+  }
+  /// You bought **%1$@** for **%2$@**
+  public static func chatServiceResaleYouSelf(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Resale.You.Self", p1, p2)
   }
   /// %@ disabled the auto-delete timer
   public static func chatServiceSecretChatDisabledTimer1(_ p1: String) -> String {
@@ -9903,6 +9915,10 @@ public final class L10n {
   public static func giftNotAccepting(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.NotAccepting", p1)
   }
+  /// resale
+  public static var giftResale: String  { return L10n.tr("Localizable", "Gift.Resale") }
+  /// sale
+  public static var giftSale: String  { return L10n.tr("Localizable", "Gift.Sale") }
   /// sold out
   public static var giftSoldOut: String  { return L10n.tr("Localizable", "Gift.SoldOut") }
   /// Unavailable
@@ -9917,6 +9933,114 @@ public final class L10n {
   public static var giftContextTransfer: String  { return L10n.tr("Localizable", "Gift.Context.Transfer") }
   /// Wear
   public static var giftContextWear: String  { return L10n.tr("Localizable", "Gift.Context.Wear") }
+  /// No Matching Gifts
+  public static var giftMarketplaceEmptyFilters: String  { return L10n.tr("Localizable", "Gift.Marketplace.EmptyFilters") }
+  /// Select All
+  public static var giftMarketplaceSelectAll: String  { return L10n.tr("Localizable", "Gift.Marketplace.SelectAll") }
+  /// %d
+  public static func giftMarketplaceAttrBackdropCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_countable", p1)
+  }
+  /// %d Backdrops
+  public static func giftMarketplaceAttrBackdropFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_few", p1)
+  }
+  /// %d Backdrops
+  public static func giftMarketplaceAttrBackdropMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_many", p1)
+  }
+  /// %d Backdrop
+  public static func giftMarketplaceAttrBackdropOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_one", p1)
+  }
+  /// %d Backdrops
+  public static func giftMarketplaceAttrBackdropOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_other", p1)
+  }
+  /// %d Backdrops
+  public static func giftMarketplaceAttrBackdropTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_two", p1)
+  }
+  /// %d Backdrops
+  public static func giftMarketplaceAttrBackdropZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_zero", p1)
+  }
+  /// Backdrop
+  public static var giftMarketplaceAttrBackdropZeroValueHolder: String  { return L10n.tr("Localizable", "Gift.Marketplace.Attr.Backdrop_ZeroValueHolder") }
+  /// Date
+  public static var giftMarketplaceAttrDate: String  { return L10n.tr("Localizable", "Gift.Marketplace.Attr.Date") }
+  /// %d
+  public static func giftMarketplaceAttrModelCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_countable", p1)
+  }
+  /// %d Models
+  public static func giftMarketplaceAttrModelFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_few", p1)
+  }
+  /// %d Models
+  public static func giftMarketplaceAttrModelMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_many", p1)
+  }
+  /// %d Model
+  public static func giftMarketplaceAttrModelOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_one", p1)
+  }
+  /// %d Models
+  public static func giftMarketplaceAttrModelOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_other", p1)
+  }
+  /// %d Models
+  public static func giftMarketplaceAttrModelTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_two", p1)
+  }
+  /// %d Models
+  public static func giftMarketplaceAttrModelZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_zero", p1)
+  }
+  /// Model
+  public static var giftMarketplaceAttrModelZeroValueHolder: String  { return L10n.tr("Localizable", "Gift.Marketplace.Attr.Model_ZeroValueHolder") }
+  /// Number
+  public static var giftMarketplaceAttrNumber: String  { return L10n.tr("Localizable", "Gift.Marketplace.Attr.Number") }
+  /// Price
+  public static var giftMarketplaceAttrPrice: String  { return L10n.tr("Localizable", "Gift.Marketplace.Attr.Price") }
+  /// %d
+  public static func giftMarketplaceAttrSymbolCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_countable", p1)
+  }
+  /// %d Symbols
+  public static func giftMarketplaceAttrSymbolFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_few", p1)
+  }
+  /// %d Symbols
+  public static func giftMarketplaceAttrSymbolMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_many", p1)
+  }
+  /// %d Symbol
+  public static func giftMarketplaceAttrSymbolOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_one", p1)
+  }
+  /// %d Symbols
+  public static func giftMarketplaceAttrSymbolOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_other", p1)
+  }
+  /// %d Symbols
+  public static func giftMarketplaceAttrSymbolTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_two", p1)
+  }
+  /// %d Symbols
+  public static func giftMarketplaceAttrSymbolZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_zero", p1)
+  }
+  /// Symbol
+  public static var giftMarketplaceAttrSymbolZeroValueHolder: String  { return L10n.tr("Localizable", "Gift.Marketplace.Attr.Symbol_ZeroValueHolder") }
+  /// Clear Filters
+  public static var giftMarketplaceEmptyFiltersClear: String  { return L10n.tr("Localizable", "Gift.Marketplace.EmptyFilters.Clear") }
+  /// Sort by Date
+  public static var giftMarketplaceSortDate: String  { return L10n.tr("Localizable", "Gift.Marketplace.Sort.Date") }
+  /// Sort by Number
+  public static var giftMarketplaceSortNumber: String  { return L10n.tr("Localizable", "Gift.Marketplace.Sort.Number") }
+  /// Sort by Price
+  public static var giftMarketplaceSortPrice: String  { return L10n.tr("Localizable", "Gift.Marketplace.Sort.Price") }
   /// Buy yourself a gift to display on your page or reserve for later.\n\nLimited-edition gifts upgraded to collectibles can be gifted to others later.
   public static var giftOptionsGiftSelfText: String  { return L10n.tr("Localizable", "Gift.Options.GiftSelf.Text") }
   /// Buy a Gift
@@ -9943,6 +10067,22 @@ public final class L10n {
   public static func giftPremiumYourBalance(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Premium.YourBalance", p1)
   }
+  /// Price successfully updated.
+  public static var giftResalePriceUpdate: String  { return L10n.tr("Localizable", "Gift.Resale.PriceUpdate") }
+  /// Gift successfully set on sale.
+  public static var giftResaleSetSuccess: String  { return L10n.tr("Localizable", "Gift.Resale.SetSuccess") }
+  /// You will be able to resell this gift on %@.
+  public static func giftResaleUnavailableText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Resale.Unavailable.Text", p1)
+  }
+  /// Too Early
+  public static var giftResaleUnavailableTitle: String  { return L10n.tr("Localizable", "Gift.Resale.Unavailable.Title") }
+  /// Are you sure you want to sell **%1$@** for **%2$@**
+  public static func giftSellConfirmText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Gift.Sell.Confirm.Text", p1, p2)
+  }
+  /// Sell Gift
+  public static var giftSellConfirmTitle: String  { return L10n.tr("Localizable", "Gift.Sell.Confirm.Title") }
   /// Make Unique for %@
   public static func giftSendUpgrade(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Send.Upgrade", p1)
@@ -9983,6 +10123,12 @@ public final class L10n {
   public static var giftTransferConfirmationTransfer: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.Transfer") }
   /// Transfer
   public static var giftTransferConfirmationTransferFree: String  { return L10n.tr("Localizable", "Gift.Transfer.Confirmation.TransferFree") }
+  /// You will be able to transfer this gift on %@.
+  public static func giftTransferUnavailableText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Gift.Transfer.Unavailable.Text", p1)
+  }
+  /// Too Early
+  public static var giftTransferUnavailableTitle: String  { return L10n.tr("Localizable", "Gift.Transfer.Unavailable.Title") }
   /// In %@, you'll be able to send this collectible to any TON blockchain address outside Telegram for sale or auction.
   public static func giftTransferUnlockPendingText(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Transfer.UnlockPending.Text", p1)
@@ -10035,6 +10181,12 @@ public final class L10n {
   public static var giftUniqueTransfer: String  { return L10n.tr("Localizable", "Gift.Unique.Transfer") }
   /// Subscribe to [Telegram Premium](premium) to wear this collectible.
   public static var giftUniqueNeedsPremium: String  { return L10n.tr("Localizable", "Gift.Unique.Needs.Premium") }
+  /// Unlist
+  public static var giftUnlistConfirmOk: String  { return L10n.tr("Localizable", "Gift.Unlist.Confirm.Ok") }
+  /// It will no longer be for sale.
+  public static var giftUnlistConfirmText: String  { return L10n.tr("Localizable", "Gift.Unlist.Confirm.Text") }
+  /// Unlist this gift?
+  public static var giftUnlistConfirmTitle: String  { return L10n.tr("Localizable", "Gift.Unlist.Confirm.Title") }
   /// Add my name to the gift
   public static var giftUpgradeAddMyName: String  { return L10n.tr("Localizable", "Gift.Upgrade.AddMyName") }
   /// Add sender's name
@@ -10203,6 +10355,8 @@ public final class L10n {
   public static var giftingStarGiftInStock: String  { return L10n.tr("Localizable", "Gifting.StarGift.InStock") }
   /// Limited
   public static var giftingStarGiftLimited: String  { return L10n.tr("Localizable", "Gifting.StarGift.Limited") }
+  /// Resale
+  public static var giftingStarGiftResale: String  { return L10n.tr("Localizable", "Gifting.StarGift.Resale") }
   /// Gift Stars
   public static var giftingStarGiftTitle: String  { return L10n.tr("Localizable", "Gifting.StarGift.Title") }
   /// **%1$@** also included **%2$@** in the prizes. Admins of the channel are responsible for delivering these prizes.
@@ -15381,6 +15535,10 @@ public final class L10n {
   public static var privacySettingsControllerForwardsAlwaysAllowTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.AlwaysAllow.Title") }
   /// Never Allow
   public static var privacySettingsControllerForwardsNeverAllowTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.NeverAllow.Title") }
+  /// Show Gift Icon in Chats
+  public static var privacySettingsControllerGiftShowGiftIcon: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gift.ShowGiftIcon") }
+  /// Display the Gift Icon in the message input field for both participants in all chats.
+  public static var privacySettingsControllerGiftShowGiftIconInfo: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gift.ShowGiftIcon.Info") }
   /// Choose whether gifts from specific senders need your approval before they've visible to others on your profile.
   public static var privacySettingsControllerGiftsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Gifts.CustomHelp") }
   /// WHO CAN DISPLAY GIFTS ON MY PROFILE
@@ -17829,6 +17987,10 @@ public final class L10n {
   public static var starListTransactionsEmptyIncoming: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Incoming") }
   /// No Outgoing Transactions
   public static var starListTransactionsEmptyOutgoing: String  { return L10n.tr("Localizable", "Star.List.Transactions.Empty.Outgoing") }
+  /// Buy for %@
+  public static func starNftBuyFor(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.BuyFor", p1)
+  }
   /// sell
   public static var starNftSell: String  { return L10n.tr("Localizable", "Star.Nft.Sell") }
   /// Share
@@ -17841,6 +18003,48 @@ public final class L10n {
   public static var starNftUnlist: String  { return L10n.tr("Localizable", "Star.Nft.Unlist") }
   /// wear
   public static var starNftWear: String  { return L10n.tr("Localizable", "Star.Nft.Wear") }
+  /// Are you sure you want to buy **%1$@** for **%2$@** and gift it to **%3$@**
+  public static func starNftGiftBuyConfirm(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Gift.Buy.Confirm", p1, p2, p3)
+  }
+  /// You successfully bought **%1$@** for **%2$@** and gifted it to **%3$@**
+  public static func starNftGiftBuySuccess(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Gift.Buy.Success", p1, p2, p3)
+  }
+  /// Are you sure you want to buy **%1$@** for **%2$@**
+  public static func starNftGiftBuyConfirmSelf(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Gift.Buy.Confirm.Self", p1, p2)
+  }
+  /// You successfully bought **%1$@** for **%2$@**
+  public static func starNftGiftBuySuccessSelf(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Gift.Buy.Success.Self", p1, p2)
+  }
+  /// Buy for %@
+  public static func starNftGiftConfirmOk(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Gift.Confirm.Ok", p1)
+  }
+  /// Buy Gift
+  public static var starNftGiftConfirmTitle: String  { return L10n.tr("Localizable", "Star.Nft.Gift.Confirm.Title") }
+  /// edit
+  public static var starNftPriceEdit: String  { return L10n.tr("Localizable", "Star.Nft.Price.Edit") }
+  /// Sale
+  public static var starNftPriceSale: String  { return L10n.tr("Localizable", "Star.Nft.Price.Sale") }
+  /// The lowest price for gifts from this collection is currently **%@**
+  public static func starNftSellFloor(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Sell.Floor", p1)
+  }
+  /// PRICE IN STARS
+  public static var starNftSellHeader: String  { return L10n.tr("Localizable", "Star.Nft.Sell.Header") }
+  /// You will receive **%@**.
+  public static func starNftSellInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Nft.Sell.Info", p1)
+  }
+  /// Sell Gift
+  public static var starNftSellTitle: String  { return L10n.tr("Localizable", "Star.Nft.Sell.Title") }
+  /// Sell
+  public static var starNftSellButtonSell: String  { return L10n.tr("Localizable", "Star.Nft.Sell.Button.Sell") }
+  /// Update
+  public static var starNftSellButtonUpdate: String  { return L10n.tr("Localizable", "Star.Nft.Sell.Button.Update") }
   /// You worn %@
   public static func starNftTooltipWorn(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.Nft.Tooltip.Worn", p1)
@@ -18003,6 +18207,10 @@ public final class L10n {
   public static var starTransactionFrom: String  { return L10n.tr("Localizable", "Star.Transaction.From") }
   /// Gift
   public static var starTransactionGift: String  { return L10n.tr("Localizable", "Star.Transaction.Gift") }
+  /// Gift Purchase
+  public static var starTransactionGiftPurchase: String  { return L10n.tr("Localizable", "Star.Transaction.GiftPurchase") }
+  /// Gift Sale
+  public static var starTransactionGiftSale: String  { return L10n.tr("Localizable", "Star.Transaction.GiftSale") }
   /// Transaction ID
   public static var starTransactionId: String  { return L10n.tr("Localizable", "Star.Transaction.Id") }
   /// Last Sale

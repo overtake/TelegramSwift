@@ -304,7 +304,6 @@ class ChatHeaderController {
         (self.seconderyView as? ChatHeaderProtocol)?.measure(width)
         (self.thirdView as? ChatHeaderProtocol)?.measure(width)
         (self.fourthView as? ChatHeaderProtocol)?.measure(width)
-
     }
     
     func updateState(_ state:ChatHeaderState, animated:Bool, for view:View) -> Void {

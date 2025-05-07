@@ -12,11 +12,10 @@ private final class EmptyRowItem: GeneralRowItem {
     
     init(_ initialSize: NSSize, stableId: AnyHashable, arguments: Arguments) {
         self.arguments = arguments
-        //TODOLANG
-        self.titleLayout = .init(.initialize(string: "No Matching Gifts", color: theme.colors.text, font: .normal(.title)), alignment: .center)
+        self.titleLayout = .init(.initialize(string: strings().giftMarketplaceEmptyFilters, color: theme.colors.text, font: .normal(.title)), alignment: .center)
         self.titleLayout.measure(width: .greatestFiniteMagnitude)
         
-        self.clearLayout = .init(.initialize(string: "Clear Filters", color: theme.colors.accent, font: .normal(.text)), alignment: .center)
+        self.clearLayout = .init(.initialize(string: strings().giftMarketplaceEmptyFiltersClear, color: theme.colors.accent, font: .normal(.text)), alignment: .center)
         self.clearLayout.measure(width: .greatestFiniteMagnitude)
 
         super.init(initialSize, stableId: stableId)
@@ -516,18 +515,17 @@ private struct State : Equatable {
         }
         
         func string(_ state: ResaleGiftsContext.State?) -> String {
-            //TODOLANG
             switch self {
             case .sort:
                 switch state?.sorting {
                 case .date:
-                    return "Date"
+                    return strings().giftMarketplaceAttrDate
                 case .value:
-                    return "Price"
+                    return strings().giftMarketplaceAttrPrice
                 case .number:
-                    return "Number"
+                    return strings().giftMarketplaceAttrNumber
                 case .none:
-                    return "Date"
+                    return strings().giftMarketplaceAttrDate
                 }
             case .model:
                 let attrs = state?.filterAttributes.filter({
@@ -538,11 +536,8 @@ private struct State : Equatable {
                         return false
                     }
                 }).count ?? 0
-                if attrs > 0 {
-                    return "\(attrs) Models"
-                } else {
-                    return "Model"
-                }
+                return strings().giftMarketplaceAttrModelCountable(attrs)
+               
             case .backdrop:
                 let attrs = state?.filterAttributes.filter({
                     switch $0 {
@@ -552,11 +547,7 @@ private struct State : Equatable {
                         return false
                     }
                 }).count ?? 0
-                if attrs > 0 {
-                    return "\(attrs) Backdrops"
-                } else {
-                    return "Backdrop"
-                }
+                return strings().giftMarketplaceAttrBackdropCountable(attrs)
             case .symbol:
                 let attrs = state?.filterAttributes.filter({
                     switch $0 {
@@ -566,11 +557,7 @@ private struct State : Equatable {
                         return false
                     }
                 }).count ?? 0
-                if attrs > 0 {
-                    return "\(attrs) Symbols"
-                } else {
-                    return "Symbol"
-                }
+                return strings().giftMarketplaceAttrSymbolCountable(attrs)
             }
         }
         
@@ -771,16 +758,15 @@ func StarGift_MarketplaceController(context: AccountContext, peerId: PeerId, gif
         switch attribute {
         case .sort:
             
-            //TODOLANG
-            items.append(ContextMenuItem("Sort by Price", handler: {
+            items.append(ContextMenuItem(strings().giftMarketplaceSortPrice, handler: {
                 resaleContext?.updateSorting(.value)
             }, state: state.resaleState?.sorting == .value ? .on : nil, itemImage: MenuAnimation.menu_cash_up.value))
             
-            items.append(ContextMenuItem("Sort by Date", handler: {
+            items.append(ContextMenuItem(strings().giftMarketplaceSortDate, handler: {
                 resaleContext?.updateSorting(.date)
             }, state: state.resaleState?.sorting == .date ? .on : nil, itemImage: MenuAnimation.menu_calendar_up.value))
             
-            items.append(ContextMenuItem("Sort by Number", handler: {
+            items.append(ContextMenuItem(strings().giftMarketplaceSortNumber, handler: {
                 resaleContext?.updateSorting(.number)
             }, state: state.resaleState?.sorting == .number ? .on : nil, itemImage: MenuAnimation.menu_hashtag_up.value))
         default:
@@ -814,9 +800,9 @@ func StarGift_MarketplaceController(context: AccountContext, peerId: PeerId, gif
                 
                 let allSelected: Bool = filteredAttrs.isEmpty
     
-                //TODOLANG
+
                 if !allSelected {
-                    items.append(ContextMenuItem("Select All", handler: {
+                    items.append(ContextMenuItem(strings().giftMarketplaceSelectAll, handler: {
                         if let first = attrs.first?.resaleAttr {
                             arguments.selectAll(first)
                         }

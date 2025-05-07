@@ -1029,8 +1029,7 @@ private struct State : Equatable {
                 }
             }
             if let resellStars = gift.resellStars {
-                //TODOLANG
-                return "Buy For \(strings().starListItemCountCountable(Int(resellStars)))"
+                return strings().starNftBuyFor(strings().starListItemCountCountable(Int(resellStars)))
             }
             return strings().modalOK
         case .previewWear:
@@ -1198,9 +1197,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 let badge: InputDataTableBasedItem.Row.Right.Badge?
                 
-                //TODOLANG
                 if let owner = state.owner, owner.id == arguments.context.peerId || owner._asPeer().groupAccess.canManageGifts {
-                    badge = .init(text: "edit", callback: {
+                    badge = .init(text: strings().starNftPriceEdit, callback: {
                         arguments.sellNft(gift, true)
                     })
                 } else {
@@ -1209,8 +1207,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 
                 if let resellStars = gift.resellStars, badge != nil {
-                    //TODOLANG
-                    rows.append(.init(left: .init(.initialize(string: "Sale", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(resellStars)", color: theme.colors.text, font: .normal(.text))), leftView: { previous in
+                    rows.append(.init(left: .init(.initialize(string: strings().starNftPriceSale, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(resellStars)", color: theme.colors.text, font: .normal(.text))), leftView: { previous in
                         let control: ImageView
                         if let previous = previous as? ImageView {
                             control = previous
@@ -1472,13 +1469,12 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         
         let infoText: String
         if peer.id == context.peerId {
-            infoText = "Are you sure you want to buy **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))**"
+            infoText = strings().starNftGiftBuyConfirmSelf(gift.title, strings().starListItemCountCountable(Int(resellStars)))
         } else {
-            infoText = "Are you sure you want to buy **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))** and gift it to **\(peer._asPeer().displayTitle)**"
+            infoText = strings().starNftGiftBuyConfirm(gift.title, strings().starListItemCountCountable(Int(resellStars)), peer._asPeer().displayTitle)
         }
         
-        //TODOLANG
-        verifyAlert(for: window, header: "Buy Gift", information: infoText, ok: "Buy for \(strings().starListItemCountCountable(Int(resellStars)))", successHandler: { _ in
+        verifyAlert(for: window, header: strings().starNftGiftConfirmTitle, information: infoText, ok: strings().starNftGiftConfirmOk(strings().starListItemCountCountable(Int(resellStars))), successHandler: { _ in
             
             if resellStars > myBalance.value {
                 let sourceValue: Star_ListScreenSource
@@ -1498,9 +1494,9 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         
                         let successText: String
                         if peer.id == context.peerId {
-                            successText = "You successfully bought **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))**"
+                            successText = strings().starNftGiftBuySuccessSelf(gift.title, strings().starListItemCountCountable(Int(resellStars)))
                         } else {
-                            successText = "You successfully bought **\(gift.title)** for **\(strings().starListItemCountCountable(Int(resellStars)))** and gifted it to **\(peer._asPeer().displayTitle)**"
+                            successText = strings().starNftGiftBuySuccess(gift.title, strings().starListItemCountCountable(Int(resellStars)), peer._asPeer().displayTitle)
                         }
                         showModalText(for: window, text: successText)
                         
@@ -1571,8 +1567,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         }
         
         if let canTransferDate, canTransferDate > context.timestamp {
-            //TODOLANG
-            alert(for: window, header: "Too Early", info: "Sorry, you can't transfer this gift until \(stringForFullDate(timestamp: canTransferDate))")
+            alert(for: window, header: strings().giftTransferUnavailableTitle, info: strings().giftTransferUnavailableText(stringForFullDate(timestamp: canTransferDate)))
             return
         }
         
@@ -1669,36 +1664,33 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         
         if case let .starGift(_, _, _, _, _, _, _, _, _, _, _, reference, _, _, _, canResaleDate) = state.purpose {
             if let _ = gift.resellStars, !updatePrice, let reference {
-                //TODOLANG
-                verifyAlert(for: window, header: "Unlist this item?", information: "It will no longer be for sale.", ok: "Unlist", successHandler: { _ in
+                verifyAlert(for: window, header: strings().giftUnlistConfirmTitle, information: strings().giftUnlistConfirmText, ok: strings().giftUnlistConfirmOk, successHandler: { _ in
                     _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: nil, id: gift.id), for: window).startStandalone()
                 })
             } else if let reference {
                 
                 if let canResaleDate, canResaleDate > context.timestamp {
-                    //TODOLANG
-                    alert(for: window, header: "Too Early", info: "Sorry, you can't sell this gift until \(stringForFullDate(timestamp: canResaleDate))")
+                    alert(for: window, header: strings().giftResaleUnavailableTitle, info: strings().giftResaleUnavailableText(stringForFullDate(timestamp: canResaleDate)))
                     return
                 }
                 
-                showModal(with: sellNft(context: context, resellPrice: gift.resellStars, callback: { value in
+                showModal(with: sellNft(context: context, resellPrice: gift.resellStars, gift: gift, callback: { value in
                     if !updatePrice {
-                        verifyAlert(for: window, header: "Sell Gift", information: "Are you sure you want to sell **\(gift.title)** for **\(strings().starListItemCountCountable(Int(value)))**", successHandler: { _ in
+                        verifyAlert(for: window, header: strings().giftSellConfirmTitle, information: strings().giftSellConfirmText(gift.title, strings().starListItemCountCountable(Int(value))), successHandler: { _ in
                             _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: value, id: gift.id), for: window).startStandalone(error: { error in
                                 switch error {
                                 case let .starGiftResellTooEarly(value):
-                                    //TODOLANG
-                                    showModalText(for: window, text: "TOO EARLY: \(value)")
+                                    showModalText(for: window, text: strings().giftResaleUnavailableText(stringForFullDate(timestamp: value)))
                                 default:
                                     break
                                 }
                             }, completed: {
-                                showModalText(for: window, text: "Gift successfully set on sale")
+                                showModalText(for: window, text: strings().giftResaleSetSuccess)
                             })
                         })
                     } else {
                         _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: value, id: gift.id), for: window).startStandalone(completed: {
-                            showModalText(for: window, text: "Price successfully updated")
+                            showModalText(for: window, text: strings().giftResalePriceUpdate)
                         })
                     }
                 }), for: window)
@@ -2117,6 +2109,7 @@ private struct SellNftState : Equatable {
     
     var inputState: Updated_ChatTextInputState = .init()
     
+    var floorPrice: Int64?
     
     var value: Int64 {
         if let value = Int64(inputState.string) {
@@ -2137,20 +2130,24 @@ private func sellNftEntries(_ state: SellNftState, arguments: SellNftArguments) 
     var index: Int32 = 0
     
     
-    //TODOLANG
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PRICE IN STARS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starNftSellHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return SellNftInputItem(initialSize, stableId: stableId, inputState: state.inputState, arguments: arguments)
     }))
     
-    //TODOLANG
-    let text: String
+    let comission = arguments.context.appConfiguration.getGeneralValue("stars_stargift_resale_commission_permille", orElse: 800).decemial
+    
+    var text: String
     if state.value == 0 {
-        text = "You will receive **80%**."
+        text = strings().starNftSellInfo("\(comission)%")
     } else {
-        text = "You will receive **\((Double(state.value) * 0.8).toString(decimal: 2)) Stars"
+        text = strings().starNftSellInfo(strings().starListItemCountCountable(Int((Double(state.value) * comission))))
+    }
+    
+    if let floorPrice = state.floorPrice {
+        text += "\n\n" + strings().starNftSellFloor(strings().starListItemCountCountable(Int(floorPrice))) 
     }
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -2166,7 +2163,7 @@ private func sellNftEntries(_ state: SellNftState, arguments: SellNftArguments) 
 
 
 
-private func sellNft(context: AccountContext, resellPrice: Int64?, callback:@escaping(Int64)->Void) -> InputDataModalController {
+private func sellNft(context: AccountContext, resellPrice: Int64?, gift: StarGift.UniqueGift, callback:@escaping(Int64)->Void) -> InputDataModalController {
     let initialState = SellNftState(inputState: .init(inputText: .initialize(string: resellPrice != nil ? "\(resellPrice!)" : "")))
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -2174,6 +2171,8 @@ private func sellNft(context: AccountContext, resellPrice: Int64?, callback:@esc
     let updateState: ((SellNftState) -> SellNftState) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+
 
 
     let actionsDisposable = DisposableSet()
@@ -2183,7 +2182,13 @@ private func sellNft(context: AccountContext, resellPrice: Int64?, callback:@esc
         
     let interactions = TextView_Interactions(presentation: initialState.inputState)
     
-    
+    actionsDisposable.add(context.engine.payments.cachedStarGifts().start(next: { gifts in
+        updateState { current in
+            var current = current
+            current.floorPrice = gifts?.first(where: { $0.generic?.title == gift.title })?.generic?.availability?.minResaleStars
+            return current
+        }
+    }))
 
     let arguments = SellNftArguments(context: context, interactions: interactions, updateState: { [weak interactions] value in
         
@@ -2205,8 +2210,7 @@ private func sellNft(context: AccountContext, resellPrice: Int64?, callback:@esc
     let max_resale = context.appConfiguration.getGeneralValue("stars_stargift_resale_amount_max", orElse: 35000)
 
     
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Sell Gift")
+    let controller = InputDataController(dataSignal: signal, title: strings().starNftSellTitle)
     
     controller.validateData = { _ in
         let value = stateValue.with { $0.value }
@@ -2218,15 +2222,14 @@ private func sellNft(context: AccountContext, resellPrice: Int64?, callback:@esc
         close?()
         return .none
     }
-    
+        
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
     
    
     
-    //TODOLANG
-    let modalInteractions = ModalInteractions(acceptTitle: resellPrice != nil ? "Update" : "Sell", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: resellPrice != nil ? strings().starNftSellButtonUpdate : strings().starNftSellButtonSell, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
 

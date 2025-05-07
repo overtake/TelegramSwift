@@ -29,7 +29,7 @@ private final class TransactionTypesItem : GeneralRowItem {
         var items: [ScrollableSegmentItem] = []
         
         for mode in modes {
-            items.append(.init(title: mode.text, index: mode.rawValue, uniqueId: Int32(mode.rawValue), selected: transactionMode == mode, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(mode)))
+            items.append(.init(title: mode.text, index: mode.rawValue, uniqueId: Int64(mode.rawValue), selected: transactionMode == mode, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: theme, equatable: UIEquatable(mode)))
         }
         
         self.items = items

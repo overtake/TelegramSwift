@@ -405,7 +405,7 @@ class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMed
        self.ready.set(ready)
        
        genericView.segmentPanelView.segmentControl.didChangeSelectedItem = { [weak self] item in
-           let newMode = StorageUsageCollection(rawValue: item.uniqueId)!
+           let newMode = StorageUsageCollection(rawValue: Int32(item.uniqueId))!
            
            if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
                self?.currentMainTableView?(mainTable, true, true)
@@ -428,7 +428,7 @@ class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMed
            let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
            
            for (i, tab) in state.segments.enumerated() {
-               items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: state.effectiveCollection == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+               items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: Int64(tab.rawValue), selected: state.effectiveCollection == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
            }
            self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !first)
            
