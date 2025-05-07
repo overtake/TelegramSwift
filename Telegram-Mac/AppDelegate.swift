@@ -32,6 +32,7 @@ import KeyboardKey
 
 #if !APP_STORE
 import Firebase
+import FirebaseCrashlytics
 #endif
 
 
@@ -457,6 +458,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         #if BETA || DEBUG
         FirebaseApp.configure()
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
         #endif
         
         

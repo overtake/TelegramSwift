@@ -1429,7 +1429,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     
                     block.append(.color(section: .type, peer: PeerEquatable(peer: channel), viewType: .singleItem))
                     
+                    #if DEBUG
                     block.append(.postSuggestion(section: .type, amount: nil, viewType: .singleItem))
+                    #endif
                     block.append(.autotranslate(section: .type, peer: PeerEquatable(peer: channel), enabled: channel.flags.contains(.autoTranslateEnabled), viewType: .singleItem))
 
                     block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, reactionsCount: cachedData?.reactionSettings.knownValue?.maxReactionCount, starsAllowed: cachedData?.reactionSettings.knownValue?.starsAllowed, viewType: .singleItem))
