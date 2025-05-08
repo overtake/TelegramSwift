@@ -13507,6 +13507,8 @@ public final class L10n {
   public static var peerInfoAdminLabel: String  { return L10n.tr("Localizable", "PeerInfo.AdminLabel") }
   /// anonymous phone
   public static var peerInfoAnonymousPhone: String  { return L10n.tr("Localizable", "PeerInfo.AnonymousPhone") }
+  /// Auto-Translate Messages
+  public static var peerInfoAutoTranslateMessages: String  { return L10n.tr("Localizable", "PeerInfo.AutoTranslateMessages") }
   /// bio
   public static var peerInfoBio: String  { return L10n.tr("Localizable", "PeerInfo.bio") }
   /// birthday
