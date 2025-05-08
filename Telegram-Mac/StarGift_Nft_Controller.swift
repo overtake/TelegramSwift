@@ -2141,7 +2141,7 @@ private func sellNftEntries(_ state: SellNftState, arguments: SellNftArguments) 
     
     var text: String
     if state.value == 0 {
-        text = strings().starNftSellInfo("\(comission)%")
+        text = strings().starNftSellInfo("\(comission * 100.0)%")
     } else {
         text = strings().starNftSellInfo(strings().starListItemCountCountable(Int((Double(state.value) * comission))))
     }
