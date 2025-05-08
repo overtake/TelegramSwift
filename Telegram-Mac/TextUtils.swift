@@ -1017,7 +1017,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().notificationPaidMessageRefund(authorName, starsString)
             }
-        case .paidMessagesPriceEdited(let stars):
+        case .paidMessagesPriceEdited(let stars, _):
             let starsString = strings().starListItemCountCountable(Int(stars))
             
             if authorId == account.peerId {

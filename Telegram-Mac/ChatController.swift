@@ -117,9 +117,10 @@ enum ReplyThreadMode : Equatable {
     case topic(origin: MessageId)
     case savedMessages(origin: MessageId)
     case saved(origin: MessageId)
+    case monoforum(origin: MessageId)
     var originId: MessageId {
         switch self {
-        case let .replies(id), let .comments(id), let .topic(id), let .savedMessages(id), let .saved(id):
+        case let .replies(id), let .comments(id), let .topic(id), let .savedMessages(id), let .saved(id), let .monoforum(id):
             return id
         }
     }
@@ -6115,14 +6116,32 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }
         
-        chatInteraction.openSuggestMessages = { [weak self] in
+        chatInteraction.openMonoforum = { [weak self] peerId in
             guard let self else {
                 return
             }
-            self.chatInteraction.saveState(scrollState: self.immediateScrollState())
             
-            let messages = HashtagSearchGlobalChatContents(context: context, kind: .suggestMessages, query: "", onlyMy: false, initialState: nil)
-            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(context.peerId),mode: .customChatContents(contents: messages)))
+            let peer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> deliverOnMainQueue
+            
+            _ = peer.startStandalone(next: { [weak self] peer in
+                
+                guard let peer, let self else {
+                    return
+                }
+                self.chatInteraction.saveState(scrollState: self.immediateScrollState())
+                
+                if peer._asPeer().isAdmin {
+                    let location: ChatLocation = .makeSaved(peerId, peerId: context.peerId, isMonoforum: true)
+
+                    let mode: ChatMode = .thread(data: location.threadMessage!, mode: .monoforum(origin: .init(peerId: context.peerId, namespace: 0, id: 0)))
+                    
+                    self.navigationController?.push(ChatAdditionController(context: context, chatLocation: location, mode: mode))
+
+                } else {
+                    self.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), mode: .history))
+                }
+
+            })
         }
         
         chatInteraction.sendGift = {
@@ -8977,6 +8996,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            guard let peerId = self?.chatLocation.peerId else {
+                return .invoked
+            }
+            _ = self?.context.engine.peers.updateChannelPaidMessagesStars(peerId: peerId, stars: nil, broadcastMessagesAllowed: true).start()
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         

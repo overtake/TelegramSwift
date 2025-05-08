@@ -1251,6 +1251,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                     return false
                 case .saved:
                     return false
+                case .monoforum:
+                    return false
                 }
             case .pinned:
                 return false

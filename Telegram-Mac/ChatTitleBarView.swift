@@ -836,6 +836,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     if PeerId(data.threadId) == chatInteraction.context.peerId {
                         result = result.withUpdatedTitle(strings().peerMyNotes)
                     }
+                case .monoforum:
+                    //TODOLANG
+                    result = result.withUpdatedTitle("MONOFORUM").withUpdatedStatus("")
                 case .saved:
                     break
                 }

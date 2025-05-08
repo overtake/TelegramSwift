@@ -307,8 +307,8 @@ enum ChatLocation: Equatable {
 
 extension ChatLocation {
     
-    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId) -> ChatLocation {
-        return .thread(.init(peerId: accountPeerId, threadId: peerId.toInt64(), channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
+    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId, isMonoforum: Bool = false) -> ChatLocation {
+        return .thread(.init(peerId: accountPeerId, threadId: peerId.toInt64(), channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforum: isMonoforum, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
     }
     
     var unreadMessageCountsItem: UnreadMessageCountsItem {
@@ -1257,7 +1257,7 @@ final class AccountContext {
         case let .peer(peerId):
             return .peer(peerId: peerId, threadId: nil)
         case let .thread(data):
-            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel {
+            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel || data.isMonoforum {
                 return .peer(peerId: data.peerId, threadId: data.threadId)
             } else {
                 let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)

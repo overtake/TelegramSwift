@@ -235,7 +235,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var markAdAsSeen:(Data)->Void = { _ in }
     
-    var openSuggestMessages:()->Void = { }
+    var openMonoforum:(PeerId)->Void = { peerId in }
     
     var sendGift:()->Void = { }
     

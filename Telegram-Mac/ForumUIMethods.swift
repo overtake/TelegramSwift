@@ -179,7 +179,7 @@ struct ForumUI {
             return controller.ready.get()
         }
         
-        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
+        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforum: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
         let threadMessageId = makeThreadIdMessageId(peerId: context.peerId, threadId: threadId)
 
         

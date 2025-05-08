@@ -998,7 +998,7 @@ final class ChannelPermissionsController : TableViewController {
                 return current
             }
             let starsAmount = value.flatMap { StarsAmount(value: Int64($0), nanos: 0) }
-            updateChannelPaidMessageDisposable.set((context.engine.peers.updateChannelPaidMessagesStars(peerId: peerId, stars: starsAmount) |> delay(2.0, queue: .mainQueue())).start())
+            updateChannelPaidMessageDisposable.set((context.engine.peers.updateChannelPaidMessagesStars(peerId: peerId, stars: starsAmount, broadcastMessagesAllowed: false) |> delay(2.0, queue: .mainQueue())).start())
         })
         
         let previous = Atomic<[AppearanceWrapperEntry<InputDataEntry>]>(value: [])

@@ -893,6 +893,33 @@ class ChatPresentationInterfaceState: Equatable {
                 }
                 
                 
+                var monoforum: ChatState.AdditionAction? = nil
+                var gift: ChatState.AdditionAction? = nil
+                
+                if peer.participationStatus == .left || peer.participationStatus == .kicked {
+                    if peer.flags.contains(.isMonoforum) {
+                        return .normal
+                    }
+                }
+                
+                if peer.participationStatus == .member, let cachedData = cachedData as? CachedChannelData, let monoforumId = cachedData.linkedMonoforumPeerId.peerId {
+                    switch peer.info {
+                    case let .broadcast(info):
+                        if info.flags.contains(.hasMonoforum) {
+                            monoforum = .init(icon: theme.icons.chat_input_suggest_message, action: { chatInteraction, _ in
+                                chatInteraction.openMonoforum(monoforumId)
+                            })
+                        }
+                    default:
+                        break
+                    }
+                }
+                if let cachedData = cachedData as? CachedChannelData, cachedData.flags.contains(.starGiftsAvailable) {
+                    gift = .init(icon: theme.icons.chat_input_channel_gift, action: { chatInteraction, _ in
+                        showModal(with: GiftingController(context: chatInteraction.context, peerId: peer.id, isBirthday: false), for: chatInteraction.context.window)
+                    })
+                }
+               
                 
                 if peer.participationStatus == .left {
                     return .action(strings().chatInputJoin, { chatInteraction in
@@ -903,19 +930,9 @@ class ChatPresentationInterfaceState: Equatable {
                         chatInteraction.removeAndCloseChat()
                     }, right: nil, left: nil)
                 } else if !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings, peer.isChannel {
-                    if let cachedData = cachedData as? CachedChannelData, cachedData.flags.contains(.starGiftsAvailable)  {
-                        return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
-                            chatInteraction.toggleNotifications(nil)
-                        }, right: .init(icon: theme.icons.chat_input_channel_gift, action: { chatInteraction, _ in
-                            showModal(with: GiftingController(context: chatInteraction.context, peerId: peer.id, isBirthday: false), for: chatInteraction.context.window)
-                        }), left: nil)
-                        /*
-                         .init(icon: theme.icons.chat_input_suggest_message, action: { chatInteraction, _ in
-                             chatInteraction.openSuggestMessages()
-                         })
-                         */
-                    }
-                   
+                    return .action(notificationSettings.isMuted ? strings().chatInputUnmute : strings().chatInputMute, { chatInteraction in
+                        chatInteraction.toggleNotifications(nil)
+                    }, right: gift, left: monoforum)
                 }
             } else if let peer = peer as? TelegramGroup {
                 if  peer.membership == .Left {
