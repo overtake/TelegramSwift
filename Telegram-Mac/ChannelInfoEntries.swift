@@ -1305,12 +1305,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.openNameColor(peer: peer.peer)
             }, afterNameImage: level == 0 ? generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(1)) : nil)
         case let .postSuggestion(_, amount, viewType):
+            //TODOLANG
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Post Suggestions", icon: NSImage(resource: .iconPeerInfoPostSuggestion).precomposed(flipVertical: true), type: .nextContext("Off"), viewType: viewType, action: arguments.openPostSuggestions)
         case let .autotranslate(_, peer, enabled, viewType):
             
             let level = (peer.peer as? TelegramChannel)?.approximateBoostLevel ?? 0
             let targetLevel = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration).minChannelAutotranslationLevel
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Auto-Translate Messages", icon: NSImage(resource: .iconAutoTranslate).precomposed(flipVertical: true), type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAutoTranslateMessages, icon: NSImage(resource: .iconAutoTranslate).precomposed(flipVertical: true), type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleAutoTranslate(value: !enabled)
             }, enabled: level >= targetLevel, disabledAction: arguments.openBoostInfo, afterNameImage: generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(Int(targetLevel))))
         case let .stats(_, datacenterId, monetization, stars, viewType):
