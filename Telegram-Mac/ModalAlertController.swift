@@ -899,13 +899,13 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     if data.hasClose {
         controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: {
             close?()
-            cancel()
+           // cancel()
         })
     }
     
     
     modalController.closableImpl = {
-        cancel()
+       // cancel()
         return true
     }
     
