@@ -2137,7 +2137,7 @@ private func sellNftEntries(_ state: SellNftState, arguments: SellNftArguments) 
         return SellNftInputItem(initialSize, stableId: stableId, inputState: state.inputState, arguments: arguments)
     }))
     
-    let comission = arguments.context.appConfiguration.getGeneralValue("stars_stargift_resale_commission_permille", orElse: 800).decemial
+    let comission = arguments.context.appConfiguration.getGeneralValue("stars_stargift_resale_commission_permille", orElse: 800).decemial / 100.0
     
     var text: String
     if state.value == 0 {
