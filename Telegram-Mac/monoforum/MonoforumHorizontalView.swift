@@ -37,7 +37,7 @@ class MonoforumHorizontalView : View {
         
     }
     
-    func set(items: [MonoforumItem], selected: Int64, context: AccountContext, animated: Bool) {
+    func set(items: [MonoforumItem], selected: Int64?, context: AccountContext, animated: Bool) {
         
         let presentation = theme
         
@@ -48,9 +48,9 @@ class MonoforumHorizontalView : View {
         var _items:[ScrollableSegmentItem] = []
         for tab in items {
             let title: String = tab.title
-            let selected = selected == tab.id
+            let selected = selected.flatMap(EngineChatList.Item.Id.forum) == tab.id
            
-            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: selected, insets: insets, icon: nil, theme: segmentTheme, equatable: nil, customTextView: {
+            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: nil, theme: segmentTheme, equatable: nil, customTextView: {
                 
                 let attr = NSMutableAttributedString()
                 attr.append(string: "\(clown_space)" + title, color: selected ? segmentTheme.activeText : segmentTheme.inactiveText, font: segmentTheme.textFont)

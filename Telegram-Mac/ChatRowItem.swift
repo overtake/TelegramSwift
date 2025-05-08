@@ -337,12 +337,13 @@ class ChatRowItem: TableRowItem {
         
         if let monoforumState = entry.additionalData.monoforumState {
             if case .vertical = monoforumState {
-                if !isIncoming, isBubbled {
+                if self is ChatServiceItem {
+                    widthForContent -= 80
+                } else if !isIncoming, isBubbled {
                     widthForContent -= 80
                 }
             }
         }
-        
         return widthForContent
     }
     

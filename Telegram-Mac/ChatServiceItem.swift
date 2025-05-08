@@ -1658,7 +1658,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        text.measure(width: width - 40)
+        text.measure(width: blockWidth)
         
         if let reactions = reactionsLayout {
             reactions.measure(for: min(320, blockWidth))

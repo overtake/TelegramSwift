@@ -30,7 +30,9 @@ final class ReplyMarkupInteractions {
 
 final class ChatInteraction : InterfaceObserver  {
     
-    let chatLocation: ChatLocation
+    var chatLocation: ChatLocation {
+        return self.presentation.chatLocation
+    }
     let mode: ChatMode
     var peerId : PeerId {
         return chatLocation.peerId
@@ -62,7 +64,6 @@ final class ChatInteraction : InterfaceObserver  {
     
     
     init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false, isGlobalSearchMessage: Bool = false, isPeerSavedMessages: Bool = false) {
-        self.chatLocation = chatLocation
         self.context = context
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
@@ -238,6 +239,8 @@ final class ChatInteraction : InterfaceObserver  {
     var openMonoforum:(PeerId)->Void = { peerId in }
     
     var sendGift:()->Void = { }
+    
+    var updateChatLocationThread:(Int64?)->Void = { _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
