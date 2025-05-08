@@ -290,6 +290,8 @@ class ChatInputView: View, Notifable {
                 return strings().messagesPlaceholderSentMessage
             case .savedMessages, .saved: 
                 break
+            case .monoforum:
+                break
             }
         }
         if case let .customChatContents(contents) = chatInteraction.mode {

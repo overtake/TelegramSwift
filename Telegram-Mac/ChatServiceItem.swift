@@ -1460,7 +1460,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case .paidMessagesPriceEdited(let stars):
+                case .paidMessagesPriceEdited(let stars, _):
                     let starsString = strings().starListItemCountCountable(Int(stars))
                     let text: String
                     if authorId == context.peerId {
