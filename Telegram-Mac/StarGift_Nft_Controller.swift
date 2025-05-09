@@ -1724,8 +1724,6 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 return current
             }
         }
-        
-        
     }, togglePin: { [weak giftsContext] in
         let pinnedInfo = stateValue.with { $0.pinnedInfo }
         if let pinnedInfo {

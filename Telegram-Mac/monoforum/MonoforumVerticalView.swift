@@ -23,7 +23,7 @@ struct MonoforumItem : Equatable {
     
     var title: String {
         if let item {
-            return item.messages.first?.author?._asPeer().displayTitle ?? ""
+            return item.renderedPeer.chatMainPeer?._asPeer().displayTitle ?? ""
         } else {
             //TODOLANG
             return "All"
@@ -37,7 +37,7 @@ struct MonoforumItem : Equatable {
                     return .topic(icon)
                 }
             }
-            if let peer = item.messages.first?.author {
+            if let peer = item.renderedPeer.chatMainPeer {
                 return .avatar(peer)
             }
         } else {
@@ -54,10 +54,10 @@ struct MonoforumItem : Equatable {
     var uniqueId: Int64 {
         if let item {
             switch item.id {
-            case let .forum(id):
-                return id
-            default:
-                return 0
+            case let .chatList(peerId):
+                return peerId.toInt64()
+            case let .forum(threadId):
+                return threadId
             }
         } else {
             return 0
@@ -120,7 +120,7 @@ private enum MonoforumEntry : Comparable, Identifiable {
         case let .item(item, index, selected):
             return Monoforum_VerticalItem(initialSize, stableId: stableId, item: item, chatInteraction: chatInteraction, selected: selected)
         case .toggle:
-            return MonoforumToggleItem(initialSize, stableId: stableId)
+            return MonoforumToggleItem(initialSize, stableId: stableId, chatInteraction: chatInteraction)
         case let .size(_, stableId):
             return GeneralRowItem(initialSize, height: 15, stableId: stableId)
         }
@@ -128,8 +128,14 @@ private enum MonoforumEntry : Comparable, Identifiable {
 }
 
 private final class MonoforumToggleItem : TableRowItem {
-    override init(_ initialSize: NSSize, stableId: AnyHashable) {
+    private let chatInteraction:ChatInteraction
+    init(_ initialSize: NSSize, stableId: AnyHashable, chatInteraction: ChatInteraction) {
+        self.chatInteraction = chatInteraction
         super.init(initialSize, stableId: stableId)
+    }
+    
+    func action() {
+        chatInteraction.toggleMonoforumState()
     }
     
     override func viewClass() -> AnyClass {
@@ -143,9 +149,11 @@ private final class MonoforumToggleItem : TableRowItem {
 
 private final class MonoforumToggleView : TableRowView {
     private let imageView = ImageView()
+    private let overlay = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
+        addSubview(overlay)
     }
     
     required init?(coder: NSCoder) {
@@ -160,6 +168,10 @@ private final class MonoforumToggleView : TableRowView {
             return
         }
         
+        overlay.setSingle(handler: { [weak item] _ in
+            item?.action()
+        }, for: .Click)
+        
         imageView.image = NSImage(resource: .iconMonoforumToggle).precomposed(theme.colors.accent)
         imageView.sizeToFit()
     }
@@ -168,6 +180,7 @@ private final class MonoforumToggleView : TableRowView {
     override func layout() {
         super.layout()
         imageView.centerX(y: 0)
+        overlay.frame = bounds
     }
 }
 
@@ -403,7 +416,7 @@ class MonoforumVerticalView : View {
         index += 1
         
         for item in items {
-            entries.append(.item(item: item, index: index, selected: item.id == selected.flatMap(EngineChatList.Item.Id.forum)))
+            entries.append(.item(item: item, index: index, selected: item.uniqueId == selected))
             index += 1
         }
         

@@ -1955,7 +1955,7 @@ enum PeerListMode : Equatable {
     case folder(EngineChatList.Group)
     case filter(Int32)
     case forum(PeerId, Bool, Bool)
-    case savedMessagesChats
+    case savedMessagesChats(peerId: PeerId)
     
     var isForumLike: Bool {
         switch self {
@@ -2024,8 +2024,8 @@ enum PeerListMode : Equatable {
             return .forum(peerId: peerId)
         case let .filter(filterId):
             return .chatList(groupId: .group(filterId))
-        case .savedMessagesChats:
-            return .savedMessagesChats
+        case let .savedMessagesChats(peerId):
+            return .savedMessagesChats(peerId: peerId)
         }
     }
 }
@@ -2774,7 +2774,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 menu.addItem(ContextMenuItem(strings().newContactTitle, handler: {
                     showModal(with: AddContactModalController(context), for: context.window)
                 }, itemImage: MenuAnimation.menu_add_member.value))
-            } else if self?.state?.mode == .savedMessagesChats {
+            } else if case .savedMessagesChats = self?.state?.mode {
                 
                 let displayAsTopics = self?.state?.displaySavedAsTopics ?? false
                 
@@ -2996,8 +2996,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             let target: SearchController.Target
             if let peerId = self.state?.forumPeer?.peer.id, self.state?.appear == .short {
                 target = .forum(peerId)
-            } else if mode == .savedMessagesChats {
-                target = .savedMessages
+            } else if case let .savedMessagesChats(peerId) = mode {
+                target = .savedMessages(peerId)
             } else {
                 target = .common(.root)
             }
@@ -3008,7 +3008,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 let initialTags: SearchTags
                 if let _ = self.state?.forumPeer?.peer.id, self.state?.appear == .short {
                     initialTags = .init(messageTags: nil, peerTag: nil)
-                } else if mode == .savedMessagesChats {
+                } else if case .savedMessagesChats = mode {
                     initialTags = .init(messageTags: nil, peerTag: nil)
                 } else {
                     initialTags = .init(messageTags: nil, peerTag: nil)

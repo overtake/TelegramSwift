@@ -3897,6 +3897,15 @@ extension NSAttributedString {
         return attr
     }
     
+    static func embeddedAnimated(_ fileId: Int64, color: NSColor? = nil, playPolicy: LottiePlayPolicy? = nil) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: fileId, file: nil, emoji: emoji, color: color)), playPolicy: playPolicy), range: NSMakeRange(0, emoji.length))
+        return attr
+    }
+    
     static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true, link: Any? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         

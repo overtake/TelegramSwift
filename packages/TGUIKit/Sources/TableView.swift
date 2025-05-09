@@ -297,6 +297,7 @@ public enum TableScrollState :Equatable {
     case down(Bool);
     case up(Bool);
     case upOffset(Bool, CGFloat);
+    case animate
     
     public static var CenterEmpty: TableScrollState {
         return .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0)
@@ -393,6 +394,8 @@ public extension TableScrollState {
         switch self {
         case let .none(animation):
             return animation != nil
+        case .animate:
+            return true
         default:
             return false
         }
@@ -412,6 +415,8 @@ public extension TableScrollState {
             return animated
         case let .upOffset(animated, _):
             return animated
+        case .animate:
+            return true
         default:
             return false
         }
@@ -2907,6 +2912,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
         case let .saveVisible(side):
             saveVisible(side)
+        case .animate:
+            break
         }
               
         var nonAnimatedItems: [(Int, TableRowItem)] = []

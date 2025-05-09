@@ -1887,7 +1887,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     enum Target {
         case common(PeerGroupId)
         case forum(PeerId)
-        case savedMessages
+        case savedMessages(PeerId)
         var isCommon: Bool {
             switch self {
             case .common:

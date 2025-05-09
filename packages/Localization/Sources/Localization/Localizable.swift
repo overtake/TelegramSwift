@@ -5033,6 +5033,8 @@ public final class L10n {
   }
   /// You (sender's names hidden)
   public static var chatInputForwardHidden: String  { return L10n.tr("Localizable", "Chat.Input.Forward.Hidden") }
+  /// Reply to message to answer
+  public static var chatInputReplyToAnswerMonoforum: String  { return L10n.tr("Localizable", "Chat.Input.ReplyToAnswer.Monoforum") }
   /// Waiting for the %@ to get online...
   public static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
