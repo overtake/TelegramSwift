@@ -19,6 +19,8 @@ class MonoforumHorizontalView : View {
         addSubview(segmentView)
         
         layout()
+        
+       
     }
     
     required init?(coder: NSCoder) {
@@ -37,25 +39,46 @@ class MonoforumHorizontalView : View {
         
     }
     
-    func set(items: [MonoforumItem], selected: Int64?, context: AccountContext, animated: Bool) {
+    func set(items: [MonoforumItem], selected: Int64?, chatInteraction: ChatInteraction, animated: Bool) {
         
         let presentation = theme
+        let context = chatInteraction.context
         
         let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, top: 3, bottom: 5)
         var _items:[ScrollableSegmentItem] = []
+        
+        _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: segmentTheme, equatable: nil))
+        index += 1
+        
+        _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 15, right: 15), icon: NSImage(resource: .iconMonoforumToggle).precomposed(theme.colors.grayIcon), theme: segmentTheme, equatable: nil))
+        index += 1
+        
+        //TODOLANG
+        _items.append(.init(title: "All", index: index, uniqueId: 0, selected: selected == nil, insets: insets, icon: nil, theme: segmentTheme, equatable: .init(selected)))
+        index += 1
+        
         for tab in items {
             let title: String = tab.title
-            let selected = selected.flatMap(EngineChatList.Item.Id.forum) == tab.id
+            let selected = selected == tab.uniqueId
            
-            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: nil, theme: segmentTheme, equatable: nil, customTextView: {
+            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: nil, theme: segmentTheme, equatable: .init(selected), customTextView: {
                 
                 let attr = NSMutableAttributedString()
                 attr.append(string: "\(clown_space)" + title, color: selected ? segmentTheme.activeText : segmentTheme.inactiveText, font: segmentTheme.textFont)
                 
-                attr.insertEmbedded(.embeddedAnimated(tab.file), for: clown)
+                switch tab.mediaItem(selected: selected) {
+                case let .topic(fileId):
+                    attr.insertEmbedded(.embeddedAnimated(fileId), for: clown)
+                case let .avatar(peer):
+                    attr.insertEmbedded(.embeddedAvatar(peer), for: clown)
+                default:
+                    break
+                }
+                
+                
 
                 let layout = TextViewLayout(attr)
                 layout.measure(width: .greatestFiniteMagnitude)
@@ -71,6 +94,14 @@ class MonoforumHorizontalView : View {
         }
         
         segmentView.updateItems(_items, animated: animated)
+        
+        segmentView.didChangeSelectedItem = { [weak chatInteraction] item in
+            if item.uniqueId == 0 || item.uniqueId > 0 {
+                chatInteraction?.updateChatLocationThread(item.uniqueId == 0 ? nil : item.uniqueId)
+            } else if item.uniqueId == -1 {
+                chatInteraction?.toggleMonoforumState()
+            }
+        }
         
     }
     

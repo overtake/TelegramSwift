@@ -646,7 +646,7 @@ class ChatControllerView : View, ChatInputDelegate {
             let location: SearchMessagesLocation
             switch chatInteraction.chatLocation {
             case let .peer(peerId):
-                location = .peer(peerId: peerId, fromId: fromId, tags: chatInteraction.mode.tagMask, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.mode.threadId64, minDate: nil, maxDate: nil)
+                location = .peer(peerId: peerId, fromId: fromId, tags: chatInteraction.mode.tagMask, reactions: tags.map { $0.tag.reaction }, threadId: chatInteraction.chatLocation.threadId, minDate: nil, maxDate: nil)
             case let .thread(data):
                 location = .peer(peerId: data.peerId, fromId: fromId, tags: nil, reactions: tags.map { $0.tag.reaction }, threadId: data.threadId, minDate: nil, maxDate: nil)
             }
@@ -1048,7 +1048,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 }
                 
                 if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
-                    value = .pinned(pinnedMessageId, translation, doNotChangeTable: interfaceState.chatMode.threadId != nil)
+                    value = .pinned(pinnedMessageId, translation, doNotChangeTable: interfaceState.chatLocation.threadId != nil)
                 } else {
                     value = .none
                 }
@@ -1065,7 +1065,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     translation = nil
                 }
                 
-                value = .pinned(pinnedMessageId, translation, doNotChangeTable: interfaceState.chatMode.threadId != nil)
+                value = .pinned(pinnedMessageId, translation, doNotChangeTable: interfaceState.chatLocation.threadId != nil)
             } else {
                 value = .none
             }
@@ -1138,7 +1138,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     }
                 }
                                 
-                current.set(items: items, selected: threadId, context: chatInteraction.context, animated: animated)
+                current.set(items: items, selected: threadId, chatInteraction: chatInteraction, animated: animated)
                 
             case .vertical:
                 if let view = monoforum_HorizontalView {
@@ -1492,7 +1492,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 }
             case let .Initial(fadeIn):
                 if !fadeIn {
-                    scrollToItem = .none(animationInterface)
+                    scrollToItem = .animate
                 }
             }
         }  else {
@@ -2038,6 +2038,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let updateMediaDisposable = MetaDisposable()
     private let editCurrentMessagePhotoDisposable = MetaDisposable()
     private let failedMessageEventsDisposable = MetaDisposable()
+    private let monoforumTopicsDisposable = MetaDisposable()
     private let selectMessagePollOptionDisposables: DisposableDict<MessageId> = DisposableDict()
     private let codeSyntaxHighlightDisposables: DisposableDict<CodeSyntaxKey> = DisposableDict()
 
@@ -2090,6 +2091,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let _historyReady = Promise<Bool>()
     private var didSetHistoryReady = false
+
+    
+    private let _monoforumReady = Promise<Bool>()
 
     
     private var currentPeerView: PeerView? {
@@ -2311,7 +2315,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let offset = genericView.tableView.clipView.bounds.origin
         
         var floating: [ChatFloatingPhoto] = []
-        for (i, groupped) in grouppedFloatingPhotos.enumerated() {
+        for groupped in grouppedFloatingPhotos {
             let photoView = groupped.1
             
             let items = groupped.0
@@ -2548,8 +2552,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //        let chatLocation = self.chatLocation
         let mode = self.mode
         let peerId = self.chatInteraction.peerId
-        let threadId = chatInteraction.mode.threadId
-        let threadId64 = chatInteraction.mode.threadId64
+        let threadId64: ()->Int64? = { [weak self] in
+            return self?.chatLocation.threadId
+        }
         let isThread = chatInteraction.mode.isThreadMode
         let customChatContents = chatInteraction.mode.customChatContents
 
@@ -2559,7 +2564,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             let presentation = self.chatInteraction.presentation
             var reply = presentation.interfaceState.replyMessageId
-            if reply == nil, let threadId64 = threadId64 {
+            if reply == nil, let threadId64 = threadId64() {
                 reply = .init(messageId: MessageId(peerId: presentation.chatLocation.peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId64)), quote: nil)
             }
             return reply
@@ -3080,7 +3085,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let onlineMemberCount:Signal<Int32?, NoError>
 
             
-            if let threadId = threadId64 {
+            if let threadId = threadId64() {
                 switch mode {
                 case let .thread(data, _):
                     if mode.isSavedMessagesThread {
@@ -3664,7 +3669,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 switch strongSelf.mode {
                 case .history, .thread, .preview:
-                    let signal = context.engine.messages.searchMessageIdByTimestamp(peerId: peerId, threadId: strongSelf.mode.threadId64, timestamp: Int32(date.timeIntervalSince1970))
+                    let signal = context.engine.messages.searchMessageIdByTimestamp(peerId: peerId, threadId: threadId64(), timestamp: Int32(date.timeIntervalSince1970))
                     
                     self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
                         if let messageId = messageId {
@@ -3817,7 +3822,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             var messagesCount: Int = presentation.interfaceState.forwardMessageIds.count
                             if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                                 setNextToTransaction = true
-                                invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, linkBelowMessage: presentation.interfaceState.linkBelowMessage, largeMedia: presentation.interfaceState.largeMedia, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
+                                invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64(), disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, linkBelowMessage: presentation.interfaceState.linkBelowMessage, largeMedia: presentation.interfaceState.largeMedia, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
                                     _ = strongSelf?.nextTransaction.execute()
                                 }, customChatContents: customChatContents, messageEffect: messageEffect, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue |> ignoreValues
                                 messagesCount += 1
@@ -4225,7 +4230,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let chatInteraction = strongSelf.chatInteraction
                 let presentation = chatInteraction.presentation
-                let _ = (Sender.enqueue(input: ChatTextInputState(inputText: text), context: context, peerId: chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64, sendAsPeerId: presentation.currentSendAsPeerId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                let _ = (Sender.enqueue(input: ChatTextInputState(inputText: text), context: context, peerId: chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64(), sendAsPeerId: presentation.currentSendAsPeerId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
             }
         }
         
@@ -4596,7 +4601,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     func apply(_ controller: ChatController, atDate: Int32?) {
                         let chatInteraction = controller.chatInteraction
-                        let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64, botId: results.botId, result: result, replyToMessageId: takeReplyId(), sendPaidMessageStars: takePaidMessageStars())
+                        let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: threadId64(), botId: results.botId, result: result, replyToMessageId: takeReplyId(), sendPaidMessageStars: takePaidMessageStars())
                         if value {
                             controller.nextTransaction.set(handler: afterSentTransition)
                         }
@@ -5295,12 +5300,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .scheduled:
                     showModal(with: DateSelectorModalController(context: strongSelf.context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                         if let strongSelf = strongSelf {
-                            let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64, atDate: date, sendAsPeerId: currentSendAsPeerId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                            let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64(), atDate: date, sendAsPeerId: currentSendAsPeerId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             strongSelf.nextTransaction.set(handler: afterSentTransition)
                         }
                     }), for: strongSelf.context.window)
                 case .history, .thread, .customChatContents:
-                    let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64, sendAsPeerId: currentSendAsPeerId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64(), sendAsPeerId: currentSendAsPeerId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: afterSentTransition)
                 case .pinned:
                     break
@@ -5426,7 +5431,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let invoke:()->Void = {
                     let hasFwd = !strongSelf.chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty
                     func apply(_ controller: ChatController, atDate: Date?) {
-                        let _ = (Sender.enqueue(media: file, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64, silent: silent, atDate: atDate, query: query, collectionId: collectionId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                        let _ = (Sender.enqueue(media: file, context: context, peerId: peerId, replyId: takeReplyId(), threadId: threadId64(), silent: silent, atDate: atDate, query: query, collectionId: collectionId, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                         controller.nextTransaction.set(handler: {
                             if hasFwd {
                                 DispatchQueue.main.async {
@@ -5509,7 +5514,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     let invoke:()->Void = {
                         func apply(_ controller: ChatController, atDate: Date?) {
-                            let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64, isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, customChatContents: customChatContents, messageEffect: messageEffect, leadingText: leadingText, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                            let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, customChatContents: customChatContents, messageEffect: messageEffect, leadingText: leadingText, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             controller.nextTransaction.set(handler: afterSentTransition)
                         }
                         switch strongSelf.mode {
@@ -5549,7 +5554,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let media = TelegramMediaContact(firstName: myPeer.firstName ?? "", lastName: myPeer.lastName ?? "", phoneNumber: myPeer.phone ?? "", peerId: myPeer.id, vCardData: nil)
                     let canSend = peer.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                     if canSend {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId64, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId64(), replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
                         strongSelf.nextTransaction.set(handler: afterSentTransition)
                     }
                 }
@@ -5572,7 +5577,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if controller.chatInteraction.peerId.namespace != Namespaces.Peer.CloudUser {
                         commandText += "@" + (command.peer.username ?? "")
                     }
-                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: controller.chatLocation.peerId, replyId: takeReplyId(), threadId: threadId64, atDate: atDate, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()).start(completed: scrollAfterSend)
+                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: controller.chatLocation.peerId, replyId: takeReplyId(), threadId: threadId64(), atDate: atDate, customChatContents: customChatContents, sendPaidMessageStars: takePaidMessageStars()).start(completed: scrollAfterSend)
                     controller.chatInteraction.updateInput(with: "")
                     controller.nextTransaction.set(handler: afterSentTransition)
                 }
@@ -5910,7 +5915,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let media = TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)
                 let canSend = main.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                 if canSend {
-                    _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, media: media, replyId: takeReplyId(), threadId: threadId64, sendPaidMessageStars: takePaidMessageStars()).start(completed: scrollAfterSend)
+                    _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, media: media, replyId: takeReplyId(), threadId: threadId64(), sendPaidMessageStars: takePaidMessageStars()).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: afterSentTransition)
                 }
             }
@@ -6149,6 +6154,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.sendGift = {
             showModal(with: GiftingController(context: context, peerId: peerId, isBirthday: false), for: context.window)
+        }
+        
+        chatInteraction.toggleMonoforumState = { [weak self] in
+            self?.updateState { current in
+                var current = current
+                current.monoforumState = current.monoforumState == .vertical ? .horizontal : .vertical
+                return current
+            }
         }
         
         chatInteraction.updateChatLocationThread = { [weak self] threadId in
@@ -6672,7 +6685,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let tagsAndFiles: Signal<([SavedMessageTags.Tag], [Int64 : TelegramMediaFile]), NoError>
         if peerId == context.peerId {
             tagsAndFiles = combineLatest(context.engine.data.subscribe(
-                TelegramEngine.EngineData.Item.Messages.SavedMessageTagStats(peerId: context.account.peerId, threadId: threadId64)
+                TelegramEngine.EngineData.Item.Messages.SavedMessageTagStats(peerId: context.account.peerId, threadId: threadId64())
             )
             |> distinctUntilChanged
             |> mapToSignal { tags -> Signal<([MessageReaction.Reaction: Int], [Int64: TelegramMediaFile]), NoError> in
@@ -6763,28 +6776,34 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         
-        let monoforumTopics: Signal<[EngineChatList.Item], NoError> = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)) |> mapToSignal { peer in
-            switch peer {
-            case let .channel(channel):
+        let monoforumTopics: Promise<[EngineChatList.Item]?> = Promise()
+
+        monoforumTopics.set(self.peerView.get() |> mapToSignal { peerView in
+            if let peerView = peerView as? PeerView, let channel = peerViewMainPeer(peerView) as? TelegramChannel {
                 if channel.flags.contains(.isMonoforum), channel.isAdmin {
-                    return chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> map {
+                    return chatListViewForLocation(chatListLocation: .savedMessagesChats(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> map {
                         return $0.list.items
                     }
                 }
-            default:
-                break
             }
-            return .single([])
-        }
-
+            return .single(nil)
+        })
+        
+                
+        monoforumTopicsDisposable.set((monoforumTopics.get() |> deliverOnMainQueue).startStrict(next: { [weak self] list in
+            if let _ = list {
+                self?.updateState({ current in
+                    var current = current
+                    current.monoforumState = .vertical
+                    return current
+                })
+            }
+        }))
+        
+        self._monoforumReady.set(monoforumTopics.get() |> take(1) |> map { _ in return true })
         
 
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot, updaterPromise.get(), ApplicationSpecificNotice.playedMessageEffects(accountManager: context.sharedContext.accountManager), adMessages, context.starsContext.state, monoforumTopics).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot, _, playedMessageEffects, adMessages, starsState, monoforumTopics in
-            
-            if !monoforumTopics.isEmpty {
-                var bp = 0
-                bp += 1
-            }
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get(), tagsAndFiles, getPeerView(peerId: context.peerId, postbox: context.account.postbox), savedChatsAsTopics, shortcuts, connectedBot, updaterPromise.get(), ApplicationSpecificNotice.playedMessageEffects(accountManager: context.sharedContext.accountManager), adMessages, context.starsContext.state, monoforumTopics.get()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState, savedMessageTags, accountPeer, displaySavedChatsAsTopics, shortcuts, connectedBot, _, playedMessageEffects, adMessages, starsState, monoforumTopics in
             
             
             let animated = !isFirst.swap(false)
@@ -6874,7 +6893,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedConnectedBot(connectedBot)
                         present = present.withUpdatedPlayedMessageEffects(playedMessageEffects ?? [])
                         present = present.withUpdatedMonoforumState(uiState.monoforumState)
-                        present = present.withUpdatedMonoforumTopics(monoforumTopics.map(MonoforumItem.init))
+                        
+                        if let monoforumTopics {
+                            let topics = monoforumTopics.map(MonoforumItem.init)
+                            present = present.withUpdatedMonoforumTopics(topics)
+                        }
+                        
+                        
                         if peer.isBot {
                             present = present.withUpdatedAdMessage(adMessages.fixed)
                         }
@@ -7036,13 +7061,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             (self?.centerBarView as? ChatTitleBarView)?.connectionStatus = status
         }
         
-        let combine = combineLatest(queue: .mainQueue(), _historyReady.get(), appearanceReady.get(), peerView.get() |> take(1) |> map { _ in } |> then(initialData), genericView.inputView.ready.get())
+        let combine = combineLatest(queue: .mainQueue(), _historyReady.get(), appearanceReady.get(), peerView.get() |> take(1) |> map { _ in } |> then(initialData), genericView.inputView.ready.get(), _monoforumReady.get())
         
         
         //self.ready.set(.single(true))
         
-        self.ready.set(combine |> map { (hReady, appearanceReady, _, iReady) in
-            return hReady && iReady && appearanceReady
+        self.ready.set(combine |> map { (hReady, appearanceReady, _, iReady, monoforumReady) in
+            return hReady && iReady && appearanceReady && monoforumReady
         })
         
         
@@ -7523,8 +7548,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             |> map { view -> CachedChannelData? in
                 return (view as? PeerView)?.cachedData as? CachedChannelData
         } |> mapToSignal { value in
-            if let threadId = mode.threadId {
-                return context.account.viewTracker.polledChannel(peerId: threadId.peerId)
+            if let threadId = threadId64() {
+                return context.account.viewTracker.polledChannel(peerId: PeerId(threadId))
             } else if let peerDiscussionId = value?.linkedDiscussionPeerId {
                 switch peerDiscussionId {
                 case let .known(peerId):
@@ -7608,13 +7633,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.windowDidBecomeKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState: immediateScrollState())
-        self.genericView.tableView.notifyScrollHandlers()
+      //  self.genericView.tableView.notifyScrollHandlers()
     }
     override func windowDidResignKey() {
         super.windowDidResignKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState:immediateScrollState())
-        self.genericView.tableView.notifyScrollHandlers()
+     //  self.genericView.tableView.notifyScrollHandlers()
     }
     
     private func anchorMessageInCurrentHistoryView() -> Message? {
@@ -8373,7 +8398,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
                        self?.changeState()
                     }, itemImage: MenuAnimation.menu_edit.value))
-                    let threadId = chatInteraction.mode.threadId64
+                    let threadId = self.chatLocation.threadId
                     if let threadId = threadId, let threadData = chatInteraction.presentation.threadInfo, let peer = chatInteraction.peer {
                         if threadData.isOwnedByMe || peer.isAdmin {
                             if !mode.isSavedMessagesThread {
@@ -8672,6 +8697,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         updateMediaDisposable.dispose()
         editCurrentMessagePhotoDisposable.dispose()
         selectMessagePollOptionDisposables.dispose()
+        monoforumTopicsDisposable.dispose()
         chatInteraction.clean()
         discussionDataLoadDisposable.dispose()
         slowModeDisposable.dispose()
@@ -9344,8 +9370,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             context.account.viewTracker.updatedExtendedMediaForMessageIds(messageIds: messageIds)
         }
 
-        self.unsupportedMessageProcessingManager.process = { messageIds in
-            let msgIds = messageIds.filter { $0.namespace == Namespaces.Message.Cloud }.map { MessageAndThreadId(messageId: $0, threadId: mode.threadId64) }
+        self.unsupportedMessageProcessingManager.process = { [weak self] messageIds in
+            let msgIds = messageIds.filter { $0.namespace == Namespaces.Message.Cloud }.map { MessageAndThreadId(messageId: $0, threadId: self?.chatLocation.threadId) }
             context.account.viewTracker.updateUnsupportedMediaForMessageIds(messageIds: Set(msgIds) )
         }
         self.messageMentionProcessingManager.process = { messageIds in
@@ -9629,11 +9655,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 genericView.updateMonoforumState(state: value.monoforumState, items: value.monoforumTopics, threadId: value.chatLocation.threadId, animated: animated)
             }
             
+            
             if value.chatLocation != oldValue.chatLocation {
-                let chatLocationInput = context.chatLocationInput(for: value.chatLocation, contextHolder: self.chatLocationContextHolder)
-              //  self.setLocation(.init(content: chatLocationInput, tag: self.locationValue?.tag, id: self.takeNextHistoryLocationId() ?? 0))
+                self.chatLocationValue.set(value.chatLocation)
             }
-
+            
             if value.reportMode != oldValue.reportMode {
                 (self.centerBarView as? ChatTitleBarView)?.updateSearchButton(hidden: !isSearchAvailable(value), animated: animated)
             }

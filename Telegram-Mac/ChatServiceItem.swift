@@ -1468,6 +1468,9 @@ class ChatServiceItem: ChatRowItem {
                     } else {
                         text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
                     }
+                    
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {

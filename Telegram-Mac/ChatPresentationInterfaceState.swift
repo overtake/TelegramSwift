@@ -680,7 +680,7 @@ class ChatPresentationInterfaceState: Equatable {
     var canReplyInRestrictedMode: Bool {
         if state == .normal {
             return true
-        } else if case .restricted = state, let peer = self.peer, peer.isForum, case .history = self.chatMode {
+        } else if case .restricted = state, let peer = self.peer, peer.isForumOrMonoForum, case .history = self.chatMode {
             return true
         } else if let peer = peer, peer.isChannel {
             return peer.isChannel
@@ -887,6 +887,10 @@ class ChatPresentationInterfaceState: Equatable {
                             if interfaceState.replyMessage == nil {
                                 return .restricted(strings().chatInputReplyToAnswer)
                             }
+                        }
+                    } else if peer.isMonoForum, chatLocation.threadId == nil, peer.isAdmin {
+                        if interfaceState.replyMessage == nil {
+                            return .restricted(strings().chatInputReplyToAnswerMonoforum)
                         }
                     }
                 default:

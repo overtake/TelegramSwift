@@ -242,6 +242,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var updateChatLocationThread:(Int64?)->Void = { _ in }
     
+    var toggleMonoforumState:()->Void = { }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())

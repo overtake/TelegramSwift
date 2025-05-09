@@ -107,7 +107,7 @@ struct ForumUI {
                     parentIsArchive = controller.mode.groupId == .archive
                 }
                 
-                let mode: PeerListMode = peerId == context.peerId ? .savedMessagesChats : .forum(peerId, false, parentIsArchive)
+                let mode: PeerListMode = peerId == context.peerId ? .savedMessagesChats(peerId: peerId) : .forum(peerId, false, parentIsArchive)
                 navigation.push(ChatListController(context, modal: false, mode: mode))
                 if context.layout == .single {
                     context.bindings.rootNavigation().gotoEmpty()
