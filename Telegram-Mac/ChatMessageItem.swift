@@ -530,7 +530,7 @@ class ChatMessageItem: ChatRowItem {
                         }
                     }
                 }
-                showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
+                showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone, chatMode: chatInteraction.mode, chatLocation: chatInteraction.chatLocation)
             }
             
             openSpecificTimecodeFromReply = { [weak self] timecode in

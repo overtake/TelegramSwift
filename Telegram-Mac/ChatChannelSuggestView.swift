@@ -334,8 +334,24 @@ final class ChatChannelSuggestView : Control {
     
     override func layout() {
         super.layout()
-        titleView.setFrameOrigin(NSMakePoint(10, 10))
-        dismiss.setFrameOrigin(NSMakePoint(frame.width - dismiss.frame.width - 8, 5))
-        scrollView.frame = NSMakeRect(0, 40, frame.width, container.frame.height)
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let titleFrame = NSRect(x: 10, y: 10, width: titleView.frame.width, height: titleView.frame.height)
+        transition.updateFrame(view: titleView, frame: titleFrame)
+
+        let dismissFrame = NSRect(
+            x: size.width - dismiss.frame.width - 8,
+            y: 5,
+            width: dismiss.frame.width,
+            height: dismiss.frame.height
+        )
+        transition.updateFrame(view: dismiss, frame: dismissFrame)
+
+        // ScrollView just below, spanning full width and container's height
+        let scrollFrame = NSRect(x: 0, y: 40, width: size.width, height: container.frame.height)
+        transition.updateFrame(view: scrollView, frame: scrollFrame)
+    }
+
 }

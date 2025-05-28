@@ -135,7 +135,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     let chatMode = chatInteraction.presentation.chatMode
 
-                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId?.messageId ?? chatMode.threadId
+                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId?.messageId ?? chatInteraction.chatLocation.threadMsgId
                     
                     let threadId = chatInteraction.presentation.chatLocation.threadId
                     
@@ -243,7 +243,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     var canAttachPoll: Bool = false
                     var canAttachLocation: Bool = true
-                    if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
+                    if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup, !peer.isMonoForum {
                         canAttachPoll = true
                     }
                     if let peer = chatInteraction.presentation.mainPeer, peer.isBot {

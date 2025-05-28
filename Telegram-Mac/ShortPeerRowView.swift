@@ -29,6 +29,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var contextLabel:TextViewLabel?
     private var choiceControl:ImageView?
     private var photoOuter: View?
+    private var monoforumMessagesView: TextView?
      #if !SHARE
     private var activities: ChatActivitiesModel?
     private var statusControl: PremiumStatusControl?
@@ -338,6 +339,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - item.inset.left)
                 }
                 
+                
+                
                 var addOffset: CGFloat = 0
                 switch item.interactionType {
                 case .selectable(_, let side):
@@ -415,12 +418,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     badgeNode.setFrameSize(itemNode.size)
                     badgeNode.centerY(x: containerView.frame.width - badgeNode.frame.width - innerInsets.right)
                 }
-                
+               
                 separator.frame = NSMakeRect(container.frame.minX + item.textInset(false), containerView.frame.height - .borderSize, container.frame.width - item.textInset(false), .borderSize)
                 
                 container.needsDisplay = true
                 
             }
+            
+            var additional: CGFloat = 0
             
             #if !SHARE
             if let view = activities?.view {
@@ -435,7 +440,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 }
 
                 statusControl.setFrameOrigin(NSMakePoint(item.textInset(false) + title.0.size.width + 2, tY + 1))
-
+                additional += statusControl.frame.size.width + 2
             }
             
             if let statusControl = self.leftStatusControl, let title = item.title {
@@ -451,6 +456,17 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
             
             #endif
+            
+            
+            if let monoforumMessagesView, let title = item.ctxTitle {
+                var tY = NSMinY(focus(title.0.size))
+                if let status = item.ctxStatus {
+                    let t = title.0.size.height + status.0.size.height + 1.0
+                    tY = floorToScreenPixels(backingScaleFactor, (self.frame.height - t) / 2.0)
+                }
+                monoforumMessagesView.setFrameOrigin(NSMakePoint(item.textInset(false) + title.0.size.width + 2 + additional, tY))
+            }
+            
 
             if let photoOuter = photoOuter {
                 photoOuter.frame = self.image.frame.insetBy(dx: -3, dy: -3)
@@ -634,7 +650,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         #if !SHARE
         if item.highlightVerified, (!item.isLookSavedMessage || item.peerId != item.account.peerId) {
-            let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, left: false, isSelected: isRowSelected, cached: self.statusControl, animated: animated)
+            let control = PremiumStatusControl.control(item.monoforumPeer ?? item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, left: false, isSelected: isRowSelected, cached: self.statusControl, animated: animated)
             if let control = control {
                 self.statusControl = control
                 self.container.addSubview(control)
@@ -648,7 +664,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         }
         
         if item.highlightVerified, (!item.isLookSavedMessage || item.peerId != item.account.peerId) {
-            let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, left: true, isSelected: isRowSelected, cached: self.leftStatusControl, animated: animated)
+            let control = PremiumStatusControl.control(item.monoforumPeer ?? item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, left: true, isSelected: isRowSelected, cached: self.leftStatusControl, animated: animated)
             if let control = control {
                 self.leftStatusControl = control
                 self.container.addSubview(control)
@@ -766,7 +782,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         if let photo = item.photo {
             image.setSignal(photo)
         } else {
-            image.setPeer(account: item.account, peer: item.peer, size: item.photoSize, cornerRadius: item.makeAvatarRound ? 6 : nil)
+            if let monoforumPeer = item.monoforumPeer, item.peer.isMonoForum {
+                image.setState(account: item.account, state: .PeerAvatar(item.peer, monoforumPeer.displayLetters, monoforumPeer.smallProfileImage, monoforumPeer.nameColor, nil, item.photoSize, true, nil))
+            } else {
+                image.setPeer(account: item.account, peer: item.peer, size: item.photoSize, cornerRadius: item.makeAvatarRound ? 6 : nil)
+            }
         }
         
         
@@ -885,6 +905,29 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
         }
         
+        if let displayLayout = item.ctxMonoforumMessages {
+            let current: TextView
+            if let view = self.monoforumMessagesView {
+                current = view
+            } else {
+                current = TextView(frame: .zero)
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                
+                self.monoforumMessagesView = current
+                containerView.addSubview(current)
+            }
+            
+            current.update(displayLayout)
+            current.setFrameSize(NSMakeSize(displayLayout.layoutSize.width + 4, displayLayout.layoutSize.height + 4))
+            current.layer?.cornerRadius = .cornerRadius
+            current.background = item.isSelected ? theme.colors.underSelectedColor : theme.colors.grayText.withAlphaComponent(0.15)
+        } else if let view = self.monoforumMessagesView {
+            performSubviewRemoval(view, animated: animated)
+            self.monoforumMessagesView = nil
+        }
+
+        
         
         
         self.image._change(opacity: item.enabled ? 1 : 0.8, animated: animated)
@@ -904,7 +947,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             case .left:
                 if item.passLeftAction {
                     if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
-                        if !interaction.openForum(item.peerId) {
+                        if !interaction.openForum(item.peerId, item.peer.isMonoForum) {
                             interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
                         }
                     } else {
@@ -915,7 +958,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 }
             default:
                 if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
-                    if !interaction.openForum(item.peerId) {
+                    if !interaction.openForum(item.peerId, item.peer.isMonoForum) {
                         interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
                     }
                 } else {

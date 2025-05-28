@@ -48,8 +48,8 @@ class ChatSwitchInlineController: ChatController {
                                         switch self.fallbackMode {
                                         case .history, .pinned:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic))
-                                        case let .thread(data, mode):
-                                            controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
+                                        case let .thread(mode):
+                                            controller = ChatController(context: context, chatLocation: .peer(fallbackId), mode: .thread(mode: mode), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: .init(inputText: text), behavior: .automatic))
                                         case .customChatContents, .customLink, .preview:

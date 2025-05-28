@@ -614,14 +614,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 arguments.toggleExpand(permission.id)
             }, switchAction: {
                 arguments.toggleRight(permission.id)
-            }, afterNameImage: afterNameImage)))
+            }, afterNameImage: afterNameImage, autoswitch: false)))
             
             
             if permission.expanded == true, let subpermissions = permission.subpermissions, !subpermissions.isEmpty {
                 for subpermission in subpermissions {
                     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(subpermission.id), data: .init(name: subpermission.title, color: theme.colors.text, type: .selectableLeft(subpermission.value == true), viewType: .innerItem, enabled: subpermission.enabled, action: {
                         arguments.toggleRight(subpermission.id)
-                    })))
+                    }, autoswitch: false)))
                 }
             }
         }
@@ -658,21 +658,21 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
             ], expanded: previous.first(where: { $0.id == "message"})?.expanded ?? false),
 
             State.Permission(id: "profile", title: strings().businessChatBotManageProfile, subpermissions: [
-                State.Permission(id: "name", title: strings().businessChatBotManageProfileName, value: botRights?.contains(.editName) ?? true),
-                State.Permission(id: "bio", title: strings().businessChatBotManageProfileBio, value: botRights?.contains(.editBio) ?? true),
-                State.Permission(id: "avatar", title: strings().businessChatBotManageProfileAvatar, value: botRights?.contains(.editProfilePhoto) ?? true),
-                State.Permission(id: "username", title: strings().businessChatBotManageProfileUsername, value: botRights?.contains(.editUsername) ?? true)
+                State.Permission(id: "name", title: strings().businessChatBotManageProfileName, value: botRights?.contains(.editName) ?? false),
+                State.Permission(id: "bio", title: strings().businessChatBotManageProfileBio, value: botRights?.contains(.editBio) ?? false),
+                State.Permission(id: "avatar", title: strings().businessChatBotManageProfileAvatar, value: botRights?.contains(.editProfilePhoto) ?? false),
+                State.Permission(id: "username", title: strings().businessChatBotManageProfileUsername, value: botRights?.contains(.editUsername) ?? false)
             ], expanded: previous.first(where: { $0.id == "profile"})?.expanded ?? false),
 
             State.Permission(id: "gifts", title: strings().businessChatBotManageGifts, subpermissions: [
-                State.Permission(id: "view", title: strings().businessChatBotManageGiftsView, value: botRights?.contains(.viewGifts) ?? true),
-                State.Permission(id: "sell", title: strings().businessChatBotManageGiftsSell, value: botRights?.contains(.sellGifts) ?? true),
-                State.Permission(id: "settings", title: strings().businessChatBotManageGiftsSettings, value: botRights?.contains(.changeGiftSettings) ?? true),
-                State.Permission(id: "transfer", title: strings().businessChatBotManageGiftsTransfer, value: botRights?.contains(.transferAndUpgradeGifts) ?? true),
-                State.Permission(id: "transferStars", title: strings().businessChatBotManageGiftsTransferStars, value: botRights?.contains(.transferStars) ?? true)
+                State.Permission(id: "view", title: strings().businessChatBotManageGiftsView, value: botRights?.contains(.viewGifts) ?? false),
+                State.Permission(id: "sell", title: strings().businessChatBotManageGiftsSell, value: botRights?.contains(.sellGifts) ?? false),
+                State.Permission(id: "settings", title: strings().businessChatBotManageGiftsSettings, value: botRights?.contains(.changeGiftSettings) ?? false),
+                State.Permission(id: "transfer", title: strings().businessChatBotManageGiftsTransfer, value: botRights?.contains(.transferAndUpgradeGifts) ?? false),
+                State.Permission(id: "transferStars", title: strings().businessChatBotManageGiftsTransferStars, value: botRights?.contains(.transferStars) ?? false)
             ], expanded: previous.first(where: { $0.id == "gifts"})?.expanded ?? false),
 
-            State.Permission(id: "stories", title: strings().businessChatBotManageStories, value: botRights?.contains(.manageStories) ?? true)
+            State.Permission(id: "stories", title: strings().businessChatBotManageStories, value: botRights?.contains(.manageStories) ?? false)
         ]
     }
 
@@ -772,6 +772,40 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
         }
         
     }))
+    
+    
+    func presentStarGiftsWarningIfNeeded(_ key: TelegramBusinessBotRights, completion: @escaping (Bool) -> Void) -> Bool {
+        
+        guard let peer = stateValue.with ({ $0.bot }) else {
+            return false
+        }
+
+        if !key.contains(.transferAndUpgradeGifts) && !key.contains(.transferStars) && !key.contains(.editUsername) {
+            completion(true)
+            return false
+        } else {
+            let botUsername = "@\(peer.addressName ?? "")"
+            let text: String
+            if key.contains(.editUsername) {
+                text = strings().chatbotSetupGiftWarningUsernameText(botUsername)
+            } else if key == .transferAndUpgradeGifts {
+                text = strings().chatbotSetupGiftWarningGiftsText(botUsername)
+            } else if key == .transferStars {
+                text = strings().chatbotSetupGiftWarningStarsText(botUsername)
+            } else {
+                text = strings().chatbotSetupGiftWarningCombinedText(botUsername)
+            }
+            
+            verifyAlert(for: context.window, header: strings().chatbotSetupGiftWarningTitle, information: text, ok: strings().chatbotSetupGiftWarningProceed, successHandler: { _ in
+                completion(true)
+            }, onDeinit: {
+                completion(false)
+            })
+            
+            return true
+        }
+    }
+
 
     let arguments = Arguments(context: context, toggleAccess: { value in
         updateState { current in
@@ -832,28 +866,56 @@ func BusinessChatbotController(context: AccountContext) -> InputDataController {
             return current
         }
     }, toggleRight: { id in
-        updateState { current in
-            var current = current
-            guard let (root, sub) = current.permissions.search(id) else {
+        
+        
+        let state = stateValue.with { $0 }
+        guard let (root, sub) = state.permissions.search(id) else {
+            return
+        }
+        
+        let update:()->Void = {
+            updateState { current in
+                var current = current
+                guard let (root, sub) = current.permissions.search(id) else {
+                    return current
+                }
+                            
+                if let sub {
+                    let value = current.permissions[root].subpermissions?[sub].value ?? false
+                    current.permissions[root].subpermissions?[sub].value = !value
+                } else {
+                    if let sub = current.permissions[root].subpermissions {
+                        let selectedCount = sub.filter({ $0.value == true }).count
+                        let value = selectedCount == sub.count
+                        for (i, _) in sub.enumerated() {
+                            current.permissions[root].subpermissions?[i].value = !value
+                        }
+                    } else {
+                        let value = current.permissions[root].value ?? false
+                        current.permissions[root].value = !value
+                    }
+                }
                 return current
             }
-            if let sub {
-                let value = current.permissions[root].subpermissions?[sub].value ?? false
-                current.permissions[root].subpermissions?[sub].value = !value
-            } else {
-                if let sub = current.permissions[root].subpermissions {
-                    let selectedCount = sub.filter({ $0.value == true }).count
-                    let value = selectedCount == sub.count
-                    for (i, _) in sub.enumerated() {
-                        current.permissions[root].subpermissions?[i].value = !value
+        }
+        
+        if let subpermissions = state.permissions[root].subpermissions {
+            var combinedKey: TelegramBusinessBotRights = []
+            for subpermission in subpermissions {
+                if subpermission.enabled, let key = subpermission.rights {
+                    if subpermission.value == false, sub == nil || subpermission.id == id {
+                        combinedKey.insert(key)
                     }
-                } else {
-                    let value = current.permissions[root].value ?? false
-                    current.permissions[root].value = !value
                 }
             }
-            return current
+            
+            _ = presentStarGiftsWarningIfNeeded(combinedKey, completion: { result in
+                if result {
+                    update()
+                }
+            })
         }
+        
     }, removeSelected: { type, peerId in
         updateState { current in
             var current = current

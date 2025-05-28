@@ -172,6 +172,9 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         let initialSize = self.atomicSize
         let chatInteraction = self.chatInteraction
         
+        let chatMode = chatInteraction.mode
+        let chatLocation = chatInteraction.chatLocation
+        
         
         self.genericView.tableView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: .gif)
         
@@ -193,7 +196,7 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         
         var requestCount = perPageCount() + 20
         
-        let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount), ignoreRepeated: true)
+        let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount, scrollPosition: nil), ignoreRepeated: true)
         
         let initialState = PeerMediaGifsState(isLoading: false, messages: [])
         let state: ValuePromise<PeerMediaGifsState> = ValuePromise()
@@ -205,14 +208,14 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         let supplyment = PeerMediaGifsSupplyment(tableView: genericView.tableView)
         
         let arguments = PeerMediaGifsArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, openMessage: { message in
-            showChatGallery(context: context, message: message, supplyment, nil, type: .history, reversed: true)
+            showChatGallery(context: context, message: message, supplyment, nil, type: .history, reversed: true, chatMode: chatMode, chatLocation: chatLocation)
         }, menuItems: { message, view in
             return .single([])
         })
         
         
         let applyHole:() -> Void = {
-            location.set(.Initial(count: requestCount))
+            location.set(.Initial(count: requestCount, scrollPosition: nil))
         }
         
         let history = location.get() |> mapToSignal { location in
@@ -276,7 +279,7 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
             switch position.direction {
             case .bottom:
                 requestCount += perPageCount() * 10
-                location.set(.Initial(count: requestCount))
+                location.set(.Initial(count: requestCount, scrollPosition: nil))
             default:
                 break
             }

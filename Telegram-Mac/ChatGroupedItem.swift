@@ -174,7 +174,7 @@ class ChatGroupedItem: ChatRowItem {
                         type = .secret
                     }
                                 
-                    showChatGallery(context: context, message: message, self.table, parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                    showChatGallery(context: context, message: message, self.table, parameters, type: type, chatMode: self.chatInteraction.mode, chatLocation: self.chatInteraction.chatLocation, contextHolder: self.chatInteraction.contextHolder())
                 }
                 
                 self.parameters.append(parameters)
@@ -188,10 +188,10 @@ class ChatGroupedItem: ChatRowItem {
                     } else if message.containsSecretMedia {
                         type = .secret
                     }
-                    if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
+                    if self.chatInteraction.mode.isThreadMode, self.chatInteraction.chatLocation.threadMsgId?.peerId == message.id.peerId {
                         type = .messages(self.messages)
                     }
-                    showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                    showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode, chatLocation: self.chatInteraction.chatLocation, contextHolder: self.chatInteraction.contextHolder())
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .CenterEmpty)

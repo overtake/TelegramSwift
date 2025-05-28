@@ -145,6 +145,8 @@ enum LocalAnimatedSticker : String {
     case browser_more
     
     case improving_video
+    
+    case topics
 
     case menu_add_to_folder
     case menu_archive
@@ -528,6 +530,8 @@ enum LocalAnimatedSticker : String {
         case .affiliate_link:
             playPolicy = .onceEnd
         case .freeze_duck:
+            playPolicy = .onceEnd
+        case .topics:
             playPolicy = .onceEnd
         default:
             playPolicy = .loop

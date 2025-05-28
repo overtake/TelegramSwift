@@ -693,7 +693,7 @@ class PlayerListController: ModalViewController {
         if messages.isEmpty {
             historyViewTransition = historyViewUpdate |> deliverOnPrepareQueue |> map { update, scroll -> TableUpdateTransition in
                 let animated = animated.swap(true)
-                let scroll:TableScrollState = scroll ?? (animated ? .none(nil) : .saveVisible(.upper))
+                let scroll:TableScrollState = scroll ?? (animated ? .none(nil) : .saveVisible(.upper, false))
                 
                 let entries = playerAudioEntries(update, timeDifference: context.timeDifference)
                 _ = updateView.swap(update)

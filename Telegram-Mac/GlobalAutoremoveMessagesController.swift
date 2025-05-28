@@ -33,7 +33,7 @@ private class AutoremoveCallbackObject : ShareObject {
         return false
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars: [PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars: [PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         return callback(peerIds) |> castError(String.self)
     }
  

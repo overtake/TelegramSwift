@@ -486,7 +486,7 @@ class Sender: NSObject {
         return attrs
     }
     
-    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, sendPaidMessageStars: StarsAmount? = nil) -> Signal<[MessageId?], NoError> {
+    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, replyId: EngineMessageReplySubject?, threadId: Int64?, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, sendPaidMessageStars: StarsAmount? = nil) -> Signal<[MessageId?], NoError> {
         
         var fwdMessages:[EnqueueMessage] = []
         
@@ -510,13 +510,9 @@ class Sender: NSObject {
         if let sendAsPeerId = sendAsPeerId {
             attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
-        let threadId: Int64?
+        
+        var threadId: Int64? = threadId
 
-        if let replyId = replyId {
-            threadId = Int64(replyId.messageId.id)
-        } else {
-            threadId = nil
-        }
         for msgId in sorted {
             fwdMessages.append(EnqueueMessage.forward(source: msgId, threadId: threadId, grouping: messageIds.count > 1 ? .auto : .none, attributes: attributes, correlationId: nil))
         }

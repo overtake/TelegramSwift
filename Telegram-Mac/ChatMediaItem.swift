@@ -444,10 +444,10 @@ class ChatMediaItem: ChatRowItem {
                 } else if message.containsSecretMedia {
                     type = .secret
                 }
-                if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
+                if self.chatInteraction.mode.isThreadMode, self.chatInteraction.chatLocation.peerId == message.id.peerId {
                     type = .messages([message])
                 }
-                showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, chatLocation: self.chatInteraction.chatLocation, contextHolder: self.chatInteraction.contextHolder())
             }
         }, showMessage: { [weak self] message in
             self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .CenterEmpty)

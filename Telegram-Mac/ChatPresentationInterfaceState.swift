@@ -481,9 +481,9 @@ struct ChatBotManagerData : Equatable {
     let settings: PeerStatusSettings.ManagingBot
 }
 
-enum MonoforumUIState {
-    case horizontal
-    case vertical
+enum MonoforumUIState : Int {
+    case vertical = 0
+    case horizontal = 1
 }
 
 class ChatPresentationInterfaceState: Equatable {
@@ -701,6 +701,21 @@ class ChatPresentationInterfaceState: Equatable {
         }
     }
     
+    var isTopicMode: Bool {
+        if let peer = peer, peer.isForum, peer.displayForumAsTabs {
+            return chatLocation.threadId != nil
+        }
+        return chatMode.isTopicMode
+    }
+    
+    var isMonoforum: Bool {
+        if let peer, peer.isMonoForum {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     var state:ChatState {
         if self.selectionState == nil {
             if let initialAction = initialAction, case .start = initialAction  {
@@ -790,7 +805,7 @@ class ChatPresentationInterfaceState: Equatable {
                 }, right: nil, left: nil)
             }
 
-            if chatMode.isSavedMessagesThread, let threadId64 = chatMode.threadId64 {
+            if chatMode.isSavedMessagesThread, let threadId64 = chatLocation.threadId {
                 if PeerId(threadId64) != accountPeer?.id {
                     return .action(strings().chatInputOpenChat, { chatInteraction in
                         chatInteraction.openInfo(PeerId(threadId64), true, nil, nil)
@@ -799,7 +814,7 @@ class ChatPresentationInterfaceState: Equatable {
             }
             
             
-            if chatMode.isThreadMode, chatLocation.peerId == accountPeer?.id, let threadId64 = chatMode.threadId64 {
+            if chatMode.isThreadMode, chatLocation.peerId == accountPeer?.id, let threadId64 = chatLocation.threadId {
                 return .action(strings().chatInputOpenChat, { chatInteraction in
                     chatInteraction.openInfo(PeerId(threadId64), true, nil, nil)
                 }, right: nil, left: nil)
@@ -884,7 +899,7 @@ class ChatPresentationInterfaceState: Equatable {
                     if peer.isForum {
                         let viewForumAsMessages = (cachedData as? CachedChannelData)?.viewForumAsMessages.knownValue
                         if viewForumAsMessages == false || viewForumAsMessages == nil {
-                            if interfaceState.replyMessage == nil {
+                            if interfaceState.replyMessage == nil && chatLocation.threadId == nil {
                                 return .restricted(strings().chatInputReplyToAnswer)
                             }
                         }
@@ -907,7 +922,7 @@ class ChatPresentationInterfaceState: Equatable {
                     }
                 }
                 
-                if peer.participationStatus == .member, let cachedData = cachedData as? CachedChannelData, let monoforumId = cachedData.linkedMonoforumPeerId.peerId {
+                if peer.participationStatus == .member, let monoforumId = peer.linkedMonoforumId {
                     switch peer.info {
                     case let .broadcast(info):
                         if info.flags.contains(.hasMonoforum) {

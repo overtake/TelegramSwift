@@ -23,8 +23,11 @@ final class SearchTopicRowItem: GeneralRowItem {
         self.presentation = presentation
         
         let theme = presentation ?? theme
-        self.nameLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.nameSelectedLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1)
+        
+        let title = item.threadData?.info.title ?? item.renderedPeer.chatOrMonoforumMainPeer?._asPeer().displayTitle
+        
+        self.nameLayout = .init(.initialize(string: title, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.nameSelectedLayout = .init(.initialize(string: title, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: .legacy, action: action, border: [.Bottom])
         _ = makeSize(initialSize.width)
     }
@@ -33,8 +36,8 @@ final class SearchTopicRowItem: GeneralRowItem {
         switch item.id {
         case let .forum(threadId):
             return threadId
-        default:
-            return nil
+        case let .chatList(peerId):
+            return peerId.toInt64()
         }
     }
     
@@ -59,6 +62,7 @@ final class SearchTopicRowItem: GeneralRowItem {
 
 private class SearchTopicRowView : TableRowView {
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
+    private var avatarControl: AvatarControl?
     private let nameView = TextView()
     private let borderView = View()
     private let containerView = Control()
@@ -139,6 +143,12 @@ private class SearchTopicRowView : TableRowView {
         borderView.isHidden = isSelect
         
         if let info = item.item.threadData?.info {
+            
+            if let view = self.avatarControl {
+                performSubviewRemoval(view, animated: animated)
+                self.avatarControl = nil
+            }
+            
             let size = NSMakeSize(30, 30)
             let current: InlineStickerItemLayer
             if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == info.icon {
@@ -160,6 +170,23 @@ private class SearchTopicRowView : TableRowView {
                 
                 current.frame = CGRect(origin: CGPoint(x: 10, y: 10), size: size)
             }
+        } else {
+            if let inlineTopicPhotoLayer {
+                performSublayerRemoval(inlineTopicPhotoLayer, animated: animated)
+                self.inlineTopicPhotoLayer = nil
+            }
+            
+            let current: AvatarControl
+            if let view = self.avatarControl {
+                current = view
+            } else {
+                current = AvatarControl(font: .avatar(4))
+                current.setFrameSize(NSMakeSize(30, 30))
+                current.setFrameOrigin(NSMakePoint(10, 10))
+                self.avatarControl = current
+                addSubview(current)
+            }
+            current.setPeer(account: item.context.account, peer: item.item.renderedPeer.chatOrMonoforumMainPeer?._asPeer())
         }
         
     }

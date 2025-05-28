@@ -946,7 +946,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     } else {
                                         updatedMode = .replies(origin: fromId)
                                     }
-                                    pushController(chatLocation, .thread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
+                                    pushController(chatLocation, .thread(mode: updatedMode), fromId, result.contextHolder, currentInChat)
                                     
                                 }, error: { error in
                                     
