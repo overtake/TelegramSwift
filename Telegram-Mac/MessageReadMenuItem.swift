@@ -662,7 +662,7 @@ extension ContextMenuItem {
         
         if peer.id == account.peerId, selfAsSaved {
             let icon = theme.icons.searchSaved
-            signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
+            signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil), bubble: false) |> deliverOnMainQueue |> map { ($0, true) }
         } else {
             signal = peerAvatarImage(account: account, photo: source, displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
         }
@@ -733,7 +733,7 @@ final class ReactionPeerMenu : ContextMenuItem {
         
         super.init(title, handler: handler)
         
-        if peer.isForum, case let .forward(callback) = destination {
+        if peer.isForum || (peer.isAdmin && peer.isMonoForum), case let .forward(callback) = destination {
             let signal = chatListViewForLocation(chatListLocation: .forum(peerId: peer.id), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
                 !$0.list.isLoading
             } |> map {
@@ -756,7 +756,17 @@ final class ReactionPeerMenu : ContextMenuItem {
                                     callback(threadId)
                                 }
                             })
-                            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
+                            
+                            let threadMesssage = item.messages.first
+                            
+                            if let threadId, peer.isMonoForum, let peer = threadMesssage?.peers[PeerId(threadId)] {
+                                ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, threadMesssage?._asMessage(), nil))
+                                menuItem.title = peer.displayTitle
+                            } else {
+                                ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
+                                menuItem.title = threadData.info.title
+                            }
+                            
                             switch destination {
                             case .forward:
                                 ContextMenuItem.checkPremiumRequired(menuItem, context: context, peer: peer)

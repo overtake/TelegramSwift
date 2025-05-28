@@ -191,11 +191,11 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
         let id: ChatHistoryEntryId = .message(message)
         switch tag {
         case .media:
-            showChatGallery(context: context, message: message, gallery, nil, type: .alone)
+            showChatGallery(context: context, message: message, gallery, nil, type: .alone, chatMode: nil, chatLocation: nil)
         case .files:
             if let file = message.anyMedia as? TelegramMediaFile {
                 if file.isGraphicFile {
-                    showChatGallery(context: context, message: message, gallery, nil, type: .alone)
+                    showChatGallery(context: context, message: message, gallery, nil, type: .alone, chatMode: nil, chatLocation: nil)
                 } else {
                     QuickLookPreview.current.show(context: context, with: file, stableId: id, gallery)
                 }
@@ -203,7 +203,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
         case .music, .voice:
             if let file = message.anyMedia as? TelegramMediaFile {
                 if let controller = context.sharedContext.getAudioPlayer(), let song = controller.currentSong, song.entry.isEqual(to: message) {
-                    controller.playOrPause()
+                    _ = controller.playOrPause()
                 } else {
                     
                     let name: String
@@ -266,7 +266,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
         items.append(.init(strings().storageUsageMessageContextShowInChat, handler: {
             if let peer = message.peers[message.id.peerId] {
                 if peer.isForum, let threadId = message.threadId {
-                    ForumUI.open(message.id.peerId, context: context, threadId: threadId)
+                    ForumUI.open(message.id.peerId, addition: true, context: context, threadId: threadId)
                 } else {
                     context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(message.id.peerId), focusTarget: .init(messageId: message.id)))
                 }

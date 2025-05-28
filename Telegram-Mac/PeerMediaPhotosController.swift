@@ -235,7 +235,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEn
             case .Generic(let type):
                 switch type {
                 case .Initial, .FillHole, .UpdateVisible:
-                    scrollState = .saveVisible(side ?? .upper)
+                    scrollState = .saveVisible(side ?? .upper, false)
                 default:
                     break
                 }
@@ -390,7 +390,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
 
         let requestCount = perPageCount()
         
-        setLocation(.Initial(count: requestCount))
+        setLocation(.Initial(count: requestCount, scrollPosition: nil))
         
         
         let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings, scrollPosition: nil, updateType: nil, side: nil, perRowCount: self.perRowCount)
@@ -411,9 +411,11 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         let supplyment = PeerMediaSupplyment(tableView: genericView)
         
         let mode: ChatMode
+        let chatLocation = chatInteraction.chatLocation
+        
         let contextHolder: Atomic<ChatLocationContextHolder?>
         if let threadInfo = threadInfo {
-            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
+            mode = .thread(mode: .topic(origin: threadInfo.message.effectiveTopId))
             contextHolder = threadInfo.contextHolder
         } else {
             mode = .history
@@ -426,7 +428,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
             }, isWebpage: false, media: message.anyMedia!, automaticDownload: true)
             
-            showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, contextHolder: contextHolder)
+            showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, chatLocation: chatLocation, contextHolder: contextHolder)
         })
         
         /*

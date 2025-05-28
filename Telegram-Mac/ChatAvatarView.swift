@@ -213,4 +213,8 @@ final class ChatAvatarView : Control {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundView.backgroundColor = .clear
     }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
 }

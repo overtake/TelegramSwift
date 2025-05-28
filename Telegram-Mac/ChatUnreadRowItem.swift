@@ -22,21 +22,26 @@ class ChatUnreadRowItem: ChatRowItem {
         return false
     }
     
-    public var text:NSAttributedString;
+    public let text: TextViewLayout;
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
         let titleAttr:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleAttr.append(string: strings().messagesUnreadMark, color: theme.colors.grayText, font: .normal(.text))
-        text = titleAttr.copy() as! NSAttributedString
-
+        self.text = .init(titleAttr, maximumNumberOfLines: 1, alignment: .center)
         
         super.init(initialSize,chatInteraction,entry, theme: theme)
     }
     
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        text.measure(width: blockWidth)
+        return true
+    }
+    
     override var messageIndex:MessageIndex? {
         switch entry {
-        case .UnreadEntry(let index, _, _):
+        case .UnreadEntry(let index, _, _, _):
             return index
         default:
             break
@@ -56,11 +61,15 @@ class ChatUnreadRowItem: ChatRowItem {
 
 private class ChatUnreadRowView: TableRowView {
     
-    private var text:TextNode = TextNode()
+    private let text: TextView = TextView()
+    private let backgroundView = View()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+        addSubview(backgroundView)
+        addSubview(text)
+        text.isSelectable = false
+        text.userInteractionEnabled = false
 
     }
     
@@ -68,33 +77,48 @@ private class ChatUnreadRowView: TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func draw(_ dirtyRect: NSRect) {
-        
-        // Drawing code here.
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     override func updateColors() {
-        layer?.backgroundColor = .clear
-    }
-    
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        needsDisplay = true
-    }
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-        
-        ctx.setFillColor(theme.colors.grayBackground.cgColor)
-        ctx.fill(NSMakeRect(0, 6, frame.width, frame.height - 12))
-        
-        if let item = self.item as? ChatUnreadRowItem {
-            let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(NSWidth(self.frame), NSHeight(self.frame)), nil,false, .left)
-            apply.draw(NSMakeRect(round((NSWidth(layer.bounds) - layout.size.width)/2.0), round((NSHeight(layer.bounds) - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+        super.updateColors()
+        guard let item = item as? ChatUnreadRowItem else {
+            return
         }
-        
+        self.backgroundView.backgroundColor = item.presentation.colors.grayBackground
     }
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? ChatUnreadRowItem else {
+            return
+        }
+        text.update(item.text)
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        guard let item = item as? ChatRowItem else {
+            return
+        }
+        transition.updateFrame(view: backgroundView, frame: size.bounds.insetBy(dx: 0, dy: 6))
+        transition.updateFrame(view: text, frame: text.centerFrame().offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0))
+    }
+    
+
     
     deinit {
         var bp:Int = 0

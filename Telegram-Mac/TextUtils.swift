@@ -1102,7 +1102,19 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
 }
 
 func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false, ignoreActivity: Bool = false) -> PeerStatusStringResult {
-    if let peer = peerViewMainPeer(peerView) {
+    
+    
+    let mainPeer = peerViewMainPeer(peerView)
+    let monoforumPeer = peerViewMonoforumMainPeer(peerView)
+    
+    var effectivePeer: Peer? = mainPeer
+    
+    if let mainPeer = mainPeer as? TelegramChannel, mainPeer.isMonoForum {
+        effectivePeer = monoforumPeer
+
+    }
+    
+    if let peer = effectivePeer {
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {

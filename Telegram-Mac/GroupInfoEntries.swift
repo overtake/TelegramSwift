@@ -374,6 +374,8 @@ final class GroupInfoArguments : PeerInfoArguments {
         pushViewController(setup)
     }
     func toggleForum(_ enabled: Bool, _ convert: Bool, _ limit: TopicsLimitedReason?) {
+        
+        
         let context = self.context
         if let limit = limit {
             let text: String
@@ -388,9 +390,9 @@ final class GroupInfoArguments : PeerInfoArguments {
             if convert {
                 let upgrade = upgradeToSupergroup()
                 
-                _ = showModalProgress(signal: context.engine.peers.convertGroupToSupergroup(peerId: peerId), for: context.window).start(next: { peerId in
+                _ = showModalProgress(signal: context.engine.peers.convertGroupToSupergroup(peerId: peerId), for: context.window).start(next: { [weak self] peerId in
                     upgrade(peerId, {
-                        _ = showModalProgress(signal: context.engine.peers.setChannelForumMode(id: peerId, isForum: enabled), for: context.window).start()
+                        self?.pushViewController(ForumSettingsController(context: context, peerId: peerId))
                     })
                 }, error: { error in
                     switch error {
@@ -401,9 +403,8 @@ final class GroupInfoArguments : PeerInfoArguments {
                     }
                 })
                 
-                
             } else {
-                _ = showModalProgress(signal: context.engine.peers.setChannelForumMode(id: peerId, isForum: enabled), for: context.window).start()
+                pushViewController(ForumSettingsController(context: context, peerId: peerId))
             }
         }
     }
@@ -1883,7 +1884,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .preHistory(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoPreHistory, icon: theme.icons.profile_group_discussion, type: .context(enabled ? strings().peerInfoPreHistoryVisible : strings().peerInfoPreHistoryHidden), viewType: viewType, action: arguments.preHistorySetup)
         case let .toggleForum(_, enabled, convert, limit, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoForum, icon: theme.icons.profile_group_topics, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoForum, icon: theme.icons.profile_group_topics, type: .nextContext(""), viewType: viewType, action: {
                 arguments.toggleForum(!enabled, convert, limit)
             }, enabled: limit == nil, autoswitch: false, disabledAction: {
                 arguments.toggleForum(!enabled, convert, limit)

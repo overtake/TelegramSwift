@@ -75,7 +75,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
     struct Option {
         enum TypeValue {
             case price(String)
-            case stars(Int64, Bool)
+            case stars(Int64, Bool, Bool)
             case none
         }
         struct Badge {
@@ -155,7 +155,19 @@ final class GiftOptionsRowItem : GeneralRowItem {
             } else {
                 badge = nil
             }
-            return .init(file: option.media, text: nil, type: .stars(option.native.generic?.availability?.minResaleStars ?? option.stars, false), badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarGift: option)
+            
+            let price: Int64
+            let resale: Bool
+            let availability = option.native.generic?.availability
+            if let minResaleStars = availability?.minResaleStars, option.native.generic?.soldOut != nil {
+                price = minResaleStars
+                resale = true
+            } else {
+                price = option.stars
+                resale = false
+            }
+            
+            return .init(file: option.media, text: nil, type: .stars(price, false, resale), badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarGift: option)
         }
         
         static func initialize(_ option: StarGift.UniqueGift, resale: Bool = false, showNumber: Bool = false) -> Option {
@@ -177,7 +189,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 badge = nil
             }
             
-            return .init(file: option.file!, text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true) : .none, badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
+            return .init(file: option.file!, text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true, true) : .none, badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
         }
         
         
@@ -517,7 +529,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 current.backgroundColor = option.gift?.unique != nil ? NSColor.white.withAlphaComponent(0.2) : theme.colors.accent.withAlphaComponent(0.2)
                 current.update(text: priceLayout)
                 
-            case let .stars(int64, plain):
+            case let .stars(int64, plain, addPlus):
                 if let view = self.priceView {
                     performSubviewRemoval(view, animated: false)
                     self.priceView = nil
@@ -535,7 +547,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 current.effect.isHidden = plain
                 
                 let attr = NSMutableAttributedString()
-                attr.append(string: "\(clown_space)\(int64)", color: plain ? NSColor.white : GOLD, font: .medium(.text))
+                attr.append(string: "\(clown_space)\(int64)" + (addPlus ? "+" : ""), color: plain ? NSColor.white : GOLD, font: .medium(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, color: nil), for: clown)
                 let priceLayout = TextViewLayout(attr)
                 priceLayout.measure(width: .greatestFiniteMagnitude)

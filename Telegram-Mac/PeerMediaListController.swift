@@ -475,10 +475,12 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let _entries = self.entires
         
         
+        let chatLocation = chatInteraction.chatLocation
+        
         let mode: ChatMode
         let contextHolder: Atomic<ChatLocationContextHolder?>
         if let threadInfo = threadInfo {
-            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
+            mode = .thread(mode: .topic(origin: threadInfo.message.effectiveTopId))
             contextHolder = threadInfo.contextHolder
         } else {
             mode = .history
@@ -492,7 +494,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                 interactions.showMedia = { message in
                     self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
                 }
-                showChatGallery(context: context, message: message, self?.genericView, interactions, type: type, chatMode: mode, contextHolder: contextHolder)
+                showChatGallery(context: context, message: message, self?.genericView, interactions, type: type, chatMode: mode, chatLocation: chatLocation, contextHolder: contextHolder)
             }
         }, music: { message, type in
             
@@ -523,7 +525,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         
         let historyViewTransition = combineLatest(queue: prepareQueue,historyPromise.get(), appearanceSignal) |> map { update, appearance -> (transition: TableUpdateTransition, previousUpdate: PeerMediaUpdate?, currentUpdate: PeerMediaUpdate) in
             let animated = animated.swap(true)
-            var scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
+            var scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper, false)
             
             
             
@@ -569,7 +571,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         var requestCount: Int = perPageCount() + 5
         
         
-        location.set(.Initial(count: requestCount))
+        location.set(.Initial(count: requestCount, scrollPosition: nil))
      
         genericView.setScrollHandler { [weak self] scroll in
             switch scroll.direction {
@@ -577,7 +579,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                 if self?.isSearch == false {
                     _ = animated.swap(false)
                     requestCount += perPageCount() * 3
-                    location.set(.Initial(count: requestCount))
+                    location.set(.Initial(count: requestCount, scrollPosition: nil))
                 }
             default:
                 break

@@ -300,7 +300,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         if let rightItem = item.rightItem {
             switch rightItem {
             case .action:
-                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right - (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0), innerInsets.top - 7), size: rightActionView.frame.size))
+                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right - (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0), innerInsets.top - 5), size: rightActionView.frame.size))
                 emojiOffset += rightActionView.frame.width + 10 + (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0)
             case .loading:
                 if let loadingView = loadingView  {
@@ -313,7 +313,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         
         
         if let emoji {
-            transition.updateFrame(view: emoji, frame: CGRect(origin: NSMakePoint(containerView.frame.width - emoji.frame.width - innerInsets.right - emojiOffset, innerInsets.top - 1), size: emoji.frame.size))
+            transition.updateFrame(view: emoji, frame: CGRect(origin: NSMakePoint(containerView.frame.width - emoji.frame.width - innerInsets.right - emojiOffset, innerInsets.top - 3), size: emoji.frame.size))
         }
         
         self.textInputSuggestionsView?.updateRect(transition: transition)

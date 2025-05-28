@@ -43,6 +43,7 @@ class MonoforumHorizontalView : View {
         
         let presentation = theme
         let context = chatInteraction.context
+        let peerId = chatInteraction.peerId
         
         let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         
@@ -50,28 +51,148 @@ class MonoforumHorizontalView : View {
         let insets = NSEdgeInsets(left: 10, right: 10, top: 3, bottom: 5)
         var _items:[ScrollableSegmentItem] = []
         
+        let isMonoforum = items.first(where: { $0.item?.threadData != nil }) == nil
+
+        
         _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: segmentTheme, equatable: nil))
         index += 1
         
         _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 15, right: 15), icon: NSImage(resource: .iconMonoforumToggle).precomposed(theme.colors.grayIcon), theme: segmentTheme, equatable: nil))
         index += 1
         
-        //TODOLANG
-        _items.append(.init(title: "All", index: index, uniqueId: 0, selected: selected == nil, insets: insets, icon: nil, theme: segmentTheme, equatable: .init(selected)))
+        _items.append(.init(title: strings().chatMonoforumUIAllTab, index: index, uniqueId: 0, selected: selected == nil, insets: insets, icon: nil, theme: segmentTheme, equatable: .init(selected)))
         index += 1
+        
+        let generateIcon:(MonoforumItem)->CGImage? = { tab in
+            let icon: CGImage?
+            if let item = tab.item, let unreadCount = item.readCounters?.count, unreadCount > 0 {
+                
+                
+                let unreadCount = Int(unreadCount)
+                
+                let textColor: NSColor
+                textColor = .white
+
+                
+                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.prettyNumber)", color: textColor, font: .medium(.short))
+                let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
+                var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
+                size = NSMakeSize(max(size.height,size.width), size.height)
+                let badge = generateImage(size, rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    
+                    // Outer background
+                    ctx.setFillColor(theme.colors.background.cgColor)
+                    let outerPath = CGMutablePath()
+                    outerPath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
+                    outerPath.closeSubpath()
+                    ctx.addPath(outerPath)
+                    ctx.fillPath()
+                    
+                    // Inner fill
+                    let insetRect = rect.insetBy(dx: 1, dy: 1)
+                    ctx.setFillColor(item.isMuted ? theme.colors.grayIcon.cgColor : theme.colors.accentIcon.cgColor)
+                    let innerPath = CGMutablePath()
+                    innerPath.addRoundedRect(in: insetRect, cornerWidth: insetRect.height / 2, cornerHeight: insetRect.height / 2)
+                    innerPath.closeSubpath()
+                    ctx.addPath(innerPath)
+                    ctx.fillPath()
+
+                    // Text
+                    let focus = rect.focus(textLayout.0.size)
+                    textLayout.1.draw(
+                        focus.offsetBy(dx: 0, dy: -1),
+                        in: ctx,
+                        backingScaleFactor: System.backingScale,
+                        backgroundColor: .white
+                    )
+                })!
+
+                icon = badge
+            } else if tab.item?.chatListIndex.pinningIndex != nil || tab.item?.threadData?.isClosed == true {
+                let pinned = NSImage(resource: .iconMonoforumPin).precomposed(theme.colors.background, flipVertical: true)
+                let closed = NSImage(resource: .iconMonoforumLock).precomposed(theme.colors.background, flipVertical: true)
+                
+                var icons: [CGImage] = []
+                if tab.item?.chatListIndex.pinningIndex != nil {
+                    icons.append(pinned)
+                }
+                if tab.item?.threadData?.isClosed == true {
+                    icons.append(closed)
+                }
+                
+                let spacing: CGFloat = 1
+                let paddingHorizontal: CGFloat = 4
+                let paddingVertical: CGFloat = 2
+
+                let iconHeight = icons.map { $0.backingSize.height }.max() ?? 0
+                let iconWidths = icons.map { $0.backingSize.width }
+                let totalWidth = iconWidths.reduce(0, +) + CGFloat(max(0, icons.count - 1)) * spacing
+
+                let badgeSize = NSSize(width: totalWidth + paddingHorizontal * 2,
+                                       height: iconHeight + paddingVertical * 2 + 2)
+
+                let badge = generateImage(badgeSize, rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+
+                    // Outer background
+                    ctx.setFillColor(theme.colors.background.cgColor)
+                    let outerPath = CGMutablePath()
+                    outerPath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
+                    outerPath.closeSubpath()
+                    ctx.addPath(outerPath)
+                    ctx.fillPath()
+
+                    // Inner fill
+                    let insetRect = rect.insetBy(dx: 1, dy: 1)
+                    ctx.setFillColor(theme.colors.badgeMuted.cgColor)
+                    let innerPath = CGMutablePath()
+                    innerPath.addRoundedRect(in: insetRect, cornerWidth: insetRect.height / 2, cornerHeight: insetRect.height / 2)
+                    innerPath.closeSubpath()
+                    ctx.addPath(innerPath)
+                    ctx.fillPath()
+
+                    // Draw icons
+                    var x = paddingHorizontal
+                    for (index, icon) in icons.enumerated() {
+                        let y = (size.height - icon.backingSize.height) / 2
+                        ctx.draw(icon, in: NSRect(x: x, y: y, width: icon.backingSize.width, height: icon.backingSize.height))
+                        x += icon.backingSize.width
+                        if index < icons.count - 1 {
+                            x += spacing
+                        }
+                    }
+                })!
+
+                icon = badge
+            } else {
+                icon = nil
+            }
+            return icon
+        }
+
         
         for tab in items {
             let title: String = tab.title
             let selected = selected == tab.uniqueId
+            
+            let icon = generateIcon(tab)
            
-            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: nil, theme: segmentTheme, equatable: .init(selected), customTextView: {
+            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: icon, theme: segmentTheme, equatable: .init(selected), customTextView: {
                 
                 let attr = NSMutableAttributedString()
                 attr.append(string: "\(clown_space)" + title, color: selected ? segmentTheme.activeText : segmentTheme.inactiveText, font: segmentTheme.textFont)
                 
                 switch tab.mediaItem(selected: selected) {
                 case let .topic(fileId):
-                    attr.insertEmbedded(.embeddedAnimated(fileId), for: clown)
+                    if fileId == 0, let info = tab.item?.threadData?.info {
+                        let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: tab.uniqueId == 1)
+                        attr.insertEmbedded(.embeddedAnimated(file, playPolicy: .framesCount(1)), for: clown)
+                    } else {
+                        attr.insertEmbedded(.embeddedAnimated(fileId, playPolicy: .framesCount(1)), for: clown)
+                    }
                 case let .avatar(peer):
                     attr.insertEmbedded(.embeddedAvatar(peer), for: clown)
                 default:
@@ -93,7 +214,44 @@ class MonoforumHorizontalView : View {
             index += 1
         }
         
+        _items.append(.init(title: "", index: index, uniqueId: -3, selected: false, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: segmentTheme, equatable: nil))
+        index += 1
+        
         segmentView.updateItems(_items, animated: animated)
+        
+        segmentView.menuItems = { [weak chatInteraction] item in
+            guard let chatInteraction else {
+                return .single([])
+            }
+            
+            if item.uniqueId >= 1 {
+                return chatInteraction.monoforumMenuItems(items[item.index - 3])
+            } else {
+                return .single([])
+            }
+        }
+        
+        var sortRange: NSRange = NSMakeRange(NSNotFound, 1)
+        
+        var pinned: [Int64] = []
+        var offsetIndex = 3
+        
+        for (i, item) in items.enumerated() {
+            if let _ = item.pinnedIndex {
+                pinned.append(item.uniqueId)
+                if sortRange.location == NSNotFound {
+                    sortRange.location = i + offsetIndex
+                } else {
+                    sortRange.length += 1
+                }
+            }
+        }
+        
+        segmentView.resortRange = sortRange
+        segmentView.resortHandler = { fromIndex, toIndex in
+            pinned.move(at: fromIndex - offsetIndex, to: toIndex - offsetIndex)
+            _ = context.engine.peers.setForumChannelPinnedTopics(id: peerId, threadIds: pinned).start()
+        }
         
         segmentView.didChangeSelectedItem = { [weak chatInteraction] item in
             if item.uniqueId == 0 || item.uniqueId > 0 {
@@ -107,6 +265,10 @@ class MonoforumHorizontalView : View {
     
     override func layout() {
         super.layout()
-        segmentView.frame = bounds
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        segmentView.frame = size.bounds
     }
 }

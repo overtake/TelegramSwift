@@ -901,8 +901,8 @@ class InputContextHelper: NSObject {
         _ = self.entries.swap([])
     }
     
-    func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, selectIndex:Int? = nil, animated:Bool) {
-        controller._frameRect = NSMakeRect(0, 0, view.frame.width, view.frame.height)
+    func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, selectIndex:Int? = nil, animated:Bool, inset: CGFloat = 0) {
+        controller._frameRect = NSMakeRect(inset, 0, view.frame.width, view.frame.height)
         
         controller.updatedSize = self.updatedSize
         controller.getHeight = self.getHeight
@@ -977,7 +977,7 @@ class InputContextHelper: NSObject {
 
                 if let view = view {
                     if !controller.markAsNeedShown {
-                        controller.view.setFrameOrigin(0, relativeView.frame.minY)
+                        controller.view.setFrameOrigin(inset, relativeView.frame.minY)
                         controller.view.layer?.opacity = 0
                     }
                     controller.markAsNeedShown = true
@@ -988,7 +988,7 @@ class InputContextHelper: NSObject {
                     controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)
                     let y = position == .above ? relativeView.frame.minY - controller.frame.height : relativeView.frame.maxY
-                    controller.genericView._change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: .spring, forceAnimateIfHasAnimation: true)
+                    controller.genericView._change(pos: NSMakePoint(inset, y), animated: animated, duration: 0.4, timingFunction: .spring, forceAnimateIfHasAnimation: true)
 
                 }
                 
@@ -997,7 +997,7 @@ class InputContextHelper: NSObject {
                 controller?.viewWillDisappear(animated)
                 controller?.markAsNeedShown = false
                 if animated {
-                    controller?.genericView._change(pos: NSMakePoint(0, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, forceAnimateIfHasAnimation: true, completion: { completed in
+                    controller?.genericView._change(pos: NSMakePoint(inset, relativeView.frame.minY), animated: animated, removeOnCompletion: false, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, forceAnimateIfHasAnimation: true, completion: { completed in
                         if controller?.markAsNeedShown == false {
                             controller?.removeFromSuperview()
                             controller?.genericView.removeAll()

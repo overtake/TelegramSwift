@@ -833,8 +833,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             switch entry {
             case let .plain(peer, _):
                 return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction, side: .right), action: {
-                    if peer.isForum {
-                        _ = selectInteraction.openForum(peer.id)
+                    if peer.isForumOrMonoForum {
+                        _ = selectInteraction.openForum(peer.id, peer.isMonoForum)
                     } else {
                         selectInteraction.action(peer.id, nil)
                     }
@@ -928,10 +928,10 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable, Tabl
         return false
     }
     
-    private func openForum(_ peerId: PeerId, animated: Bool) {
+    private func openForum(_ peerId: PeerId, isMonoforum: Bool, animated: Bool) {
         let context = share.context
         let selectInteractions = self.selectInteractions
-        var filter = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
+        var filter = chatListViewForLocation(chatListLocation: isMonoforum ? .savedMessagesChats(peerId: peerId) : .forum(peerId: peerId), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
             !$0.list.isLoading
         } |> take(1)
         genericView.searchView.setString("")
@@ -999,8 +999,8 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable, Tabl
             
         }
         
-        selectInteraction.openForum = { [weak self] peerId in
-            self?.openForum(peerId, animated: true)
+        selectInteraction.openForum = { [weak self] peerId, isMonoforum in
+            self?.openForum(peerId, isMonoforum: isMonoforum, animated: true)
             return true
         }
         

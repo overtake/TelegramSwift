@@ -163,7 +163,7 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
         let messageId = makeThreadIdMessageId(peerId: context.peerId, threadId: threadId)
         let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
         
-        let controller = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: messageId)))
+        let controller = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(mode: .savedMessages(origin: messageId)))
         context.bindings.rootNavigation().push(controller)
     })
     

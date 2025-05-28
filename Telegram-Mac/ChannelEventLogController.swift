@@ -659,7 +659,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 scrollState = .down(false)
                 animated = false
             } else {
-                scrollState = .saveVisible(.upper)
+                scrollState = .saveVisible(.upper, false)
                 animated = false
             }
             

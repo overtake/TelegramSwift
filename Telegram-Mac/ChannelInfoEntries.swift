@@ -732,7 +732,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, starsAllowed: Bool?, viewType: GeneralViewType)
     case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
-    case postSuggestion(section: ChannelInfoSection, amount: StarsAmount?, viewType: GeneralViewType)
+    case postSuggestion(section: ChannelInfoSection, enabled: Bool, amount: StarsAmount?, viewType: GeneralViewType)
     case autotranslate(section: ChannelInfoSection, peer: PeerEquatable, enabled: Bool, viewType: GeneralViewType)
     case stats(section: ChannelInfoSection, datacenterId: Int32, monetization: Bool, stars: Bool, viewType: GeneralViewType)
     case balance(section: ChannelInfoSection, ton: String?, stars: String?, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
@@ -766,7 +766,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .reactions(section, text, allowedReactions, availableReactions, reactionsCount, starsAllowed, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount, starsAllowed: starsAllowed, viewType: viewType)
         case let .color(section, peer, _): return .color(section: section, peer: peer, viewType: viewType)
-        case let .postSuggestion(section, amount, _): return .postSuggestion(section: section, amount: amount, viewType: viewType)
+        case let .postSuggestion(section, enabled, amount, _): return .postSuggestion(section: section, enabled: enabled, amount: amount, viewType: viewType)
         case let .autotranslate(section, peer, enabled, _): return .autotranslate(section: section, peer: peer, enabled: enabled, viewType: viewType)
         case let .stats(section, datacenterId, monetization, stars, _): return .stats(section: section, datacenterId: datacenterId, monetization: monetization, stars: stars, viewType: viewType)
         case let .balance(section, ton, stars, canSeeTon, canSeeStars, _): return .balance(section: section, ton: ton, stars: stars, canSeeTon: canSeeTon, canSeeStars: canSeeStars, viewType: viewType)
@@ -934,8 +934,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .postSuggestion(sectionId, amount, viewType):
-            if case .postSuggestion(sectionId, amount, viewType) = entry {
+        case let .postSuggestion(sectionId, enabled, amount, viewType):
+            if case .postSuggestion(sectionId, enabled, amount, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1102,7 +1102,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .color(sectionId, _, _):
             return sectionId.rawValue
-        case let .postSuggestion(sectionId, _, _):
+        case let .postSuggestion(sectionId, _, _, _):
             return sectionId.rawValue
         case let .autotranslate(sectionId, _, _, _):
             return sectionId.rawValue
@@ -1163,7 +1163,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .color(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .postSuggestion(sectionId, _, _):
+        case let .postSuggestion(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .autotranslate(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1304,9 +1304,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelAppearance, icon: theme.icons.profile_channel_color, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: peer.peer, context: arguments.context), ""), viewType: viewType, action: {
                 arguments.openNameColor(peer: peer.peer)
             }, afterNameImage: level == 0 ? generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(1)) : nil)
-        case let .postSuggestion(_, amount, viewType):
-            //TODOLANG
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Post Suggestions", icon: NSImage(resource: .iconPeerInfoPostSuggestion).precomposed(flipVertical: true), type: .nextContext("Off"), viewType: viewType, action: arguments.openPostSuggestions)
+        case let .postSuggestion(_, enabled, amount, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDirectMessagesText, icon: NSImage(resource: .iconPeerInfoPostSuggestion).precomposed(flipVertical: true), type: .nextContext(enabled ? strings().peerInfoDirectMessagesOn : strings().peerInfoDirectMessagesOff), viewType: viewType, action: arguments.openPostSuggestions)
         case let .autotranslate(_, peer, enabled, viewType):
             
             let level = (peer.peer as? TelegramChannel)?.approximateBoostLevel ?? 0
@@ -1430,9 +1429,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     
                     block.append(.color(section: .type, peer: PeerEquatable(peer: channel), viewType: .singleItem))
                     
-                    #if DEBUG
-                    block.append(.postSuggestion(section: .type, amount: nil, viewType: .singleItem))
-                    #endif
+                    block.append(.postSuggestion(section: .type, enabled: channel.linkedMonoforumId != nil, amount: nil, viewType: .singleItem))
                     block.append(.autotranslate(section: .type, peer: PeerEquatable(peer: channel), enabled: channel.flags.contains(.autoTranslateEnabled), viewType: .singleItem))
 
                     block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, reactionsCount: cachedData?.reactionSettings.knownValue?.maxReactionCount, starsAllowed: cachedData?.reactionSettings.knownValue?.starsAllowed, viewType: .singleItem))

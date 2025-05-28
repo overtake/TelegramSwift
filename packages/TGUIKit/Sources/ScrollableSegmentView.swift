@@ -343,11 +343,11 @@ private final class SegmentItemView : Control {
         }
         if let imageView = imageView {
             if textView.frame.width > 0 {
-                imageView.centerY(x: textView.frame.maxX + 5)
+                imageView.setFrameOrigin(NSMakePoint(textView.frame.maxX + 5, textView.frame.minY - 2))
             } else {
                 imageView.center()
             }
-            imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - (item.insets.bottom + item.insets.top) + 1))
+         //   imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - (item.insets.bottom + item.insets.top) + 1))
         }
         
     }

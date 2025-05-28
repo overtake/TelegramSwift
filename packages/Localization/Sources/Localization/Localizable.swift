@@ -3309,6 +3309,24 @@ public final class L10n {
   public static var channelMembersGroupHideMembersInfo: String  { return L10n.tr("Localizable", "ChannelMembers.Group.HideMembers.Info") }
   /// Add Members
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
+  /// Allow users to send messages to your channel, with option to charge a fee for each message.
+  public static var channelMessagesHeader: String  { return L10n.tr("Localizable", "ChannelMessages.Header") }
+  /// Allow Channel Messages
+  public static var channelMessagesText: String  { return L10n.tr("Localizable", "ChannelMessages.Text") }
+  /// Channel Messages
+  public static var channelMessagesTitle: String  { return L10n.tr("Localizable", "ChannelMessages.Title") }
+  /// Free
+  public static var channelMessagesPaidFree: String  { return L10n.tr("Localizable", "ChannelMessages.Paid.Free") }
+  /// PRICE FOR EACH MESSAGE
+  public static var channelMessagesPaidHeader: String  { return L10n.tr("Localizable", "ChannelMessages.Paid.Header") }
+  /// You will receive %1$@ of the selected fee (~%2$@$) for each incoming message.
+  public static func channelMessagesPaidInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelMessages.Paid.Info", p1, p2)
+  }
+  /// You will receive %1$@ of the selected fee for each incoming message.
+  public static func channelMessagesPaidInfoZero(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelMessages.Paid.Info.Zero", p1)
+  }
   /// Do Not Restrict Boosters
   public static var channelPermissionRestrictBoosters: String  { return L10n.tr("Localizable", "ChannelPermission.RestrictBoosters") }
   /// Charge Stars for Messages
@@ -5395,6 +5413,8 @@ public final class L10n {
   public static var chatMessageActionRequestToJoin: String  { return L10n.tr("Localizable", "Chat.MessageAction.RequestToJoin") }
   /// SHOW MESSAGE
   public static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
+  /// All
+  public static var chatMonoforumUIAllTab: String  { return L10n.tr("Localizable", "Chat.MonoforumUI.AllTab") }
   /// Message doesn't exist
   public static var chatOpenMessageNotExist: String  { return L10n.tr("Localizable", "Chat.Open.MessageNotExist") }
   /// Don't ask again
@@ -6357,6 +6377,34 @@ public final class L10n {
   public static var chatStateHideOtherMessages: String  { return L10n.tr("Localizable", "Chat.State.HideOtherMessages") }
   /// Show Other Messages
   public static var chatStateShowOtherMessages: String  { return L10n.tr("Localizable", "Chat.State.ShowOtherMessages") }
+  /// %d
+  public static func chatTitleChatsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_countable", p1)
+  }
+  /// %d Chats
+  public static func chatTitleChatsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_few", p1)
+  }
+  /// %d Chats
+  public static func chatTitleChatsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_many", p1)
+  }
+  /// %d Chat
+  public static func chatTitleChatsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_one", p1)
+  }
+  /// %d Chats
+  public static func chatTitleChatsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_other", p1)
+  }
+  /// %d Chats
+  public static func chatTitleChatsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_two", p1)
+  }
+  /// %d Chats
+  public static func chatTitleChatsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Chats_zero", p1)
+  }
   /// %d
   public static func chatTitleCommentsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Comments_countable", p1)
@@ -7519,6 +7567,12 @@ public final class L10n {
   public static var chatListGracePeriodInfo: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Info") }
   /// ⚠️ Your Premium subscription is expiring!
   public static var chatListGracePeriodTitle: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Title") }
+  /// MESSAGES
+  public static var chatListMonoforumHolder: String  { return L10n.tr("Localizable", "ChatList.Monoforum.Holder") }
+  /// List
+  public static var chatListMonoforumTabBarList: String  { return L10n.tr("Localizable", "ChatList.Monoforum.TabBar.List") }
+  /// Tabs
+  public static var chatListMonoforumTabBarTabs: String  { return L10n.tr("Localizable", "ChatList.Monoforum.TabBar.Tabs") }
   /// For 1 Day
   public static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
   /// For 1 Hour
@@ -8029,6 +8083,26 @@ public final class L10n {
   public static var chatTitleBusinessGreetingMessages: String  { return L10n.tr("Localizable", "ChatTitle.Business.GreetingMessages") }
   /// Default
   public static var chatWallpaperEmpty: String  { return L10n.tr("Localizable", "ChatWallpaper.Empty") }
+  /// The bot **%@** will be able to **manage your gifts and stars**, including giving them away to other users.
+  public static func chatbotSetupGiftWarningCombinedText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatbotSetup.Gift.Warning.CombinedText", p1)
+  }
+  /// The bot **%@** will be able to **manage your gifts**, including giving them away to other users.
+  public static func chatbotSetupGiftWarningGiftsText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatbotSetup.Gift.Warning.GiftsText", p1)
+  }
+  /// Proceed
+  public static var chatbotSetupGiftWarningProceed: String  { return L10n.tr("Localizable", "ChatbotSetup.Gift.Warning.Proceed") }
+  /// The bot **%@** will be able to **transfer your stars**.
+  public static func chatbotSetupGiftWarningStarsText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatbotSetup.Gift.Warning.StarsText", p1)
+  }
+  /// Warning
+  public static var chatbotSetupGiftWarningTitle: String  { return L10n.tr("Localizable", "ChatbotSetup.Gift.Warning.Title") }
+  /// The bot **%@** will be able to **set and remove usernames** for your account, which may result in the loss of your current username.
+  public static func chatbotSetupGiftWarningUsernameText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatbotSetup.Gift.Warning.UsernameText", p1)
+  }
   /// E-Mail
   public static var checkoutEmail: String  { return L10n.tr("Localizable", "Checkout.Email") }
   /// Enter Password
@@ -9521,6 +9595,16 @@ public final class L10n {
   public static func fileSizeMB(_ p1: String) -> String {
     return L10n.tr("Localizable", "FileSize.MB", p1)
   }
+  /// DISPLAY AS
+  public static var forumSettingsDisplayAs: String  { return L10n.tr("Localizable", "ForumSettings.DisplayAs") }
+  /// Enable
+  public static var forumSettingsEnable: String  { return L10n.tr("Localizable", "ForumSettings.Enable") }
+  /// Topics
+  public static var forumSettingsTitle: String  { return L10n.tr("Localizable", "ForumSettings.Title") }
+  /// The group chat will be divided into topics created by admins or users.
+  public static var forumSettingsTopicInfo: String  { return L10n.tr("Localizable", "ForumSettings.TopicInfo") }
+  /// Choose how topics appear for all members.
+  public static var forumSettingsDisplayAsInfo: String  { return L10n.tr("Localizable", "ForumSettings.DisplayAs.Info") }
   /// Add Members
   public static var forumTopicContextAddMember: String  { return L10n.tr("Localizable", "ForumTopic.Context.AddMember") }
   /// Group Info
@@ -13987,6 +14071,12 @@ public final class L10n {
   public static var peerInfoContextOpenPhoto: String  { return L10n.tr("Localizable", "PeerInfo.Context.OpenPhoto") }
   /// About
   public static var peerInfoDescriptionPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.Description.Placeholder") }
+  /// Off
+  public static var peerInfoDirectMessagesOff: String  { return L10n.tr("Localizable", "PeerInfo.DirectMessages.Off") }
+  /// On
+  public static var peerInfoDirectMessagesOn: String  { return L10n.tr("Localizable", "PeerInfo.DirectMessages.On") }
+  /// Allow Channel Messages
+  public static var peerInfoDirectMessagesText: String  { return L10n.tr("Localizable", "PeerInfo.DirectMessages.Text") }
   /// Add
   public static var peerInfoDiscussionAdd: String  { return L10n.tr("Localizable", "PeerInfo.Discussion.Add") }
   /// Add group chat for comments.
@@ -18291,6 +18381,8 @@ public final class L10n {
   public static var starTransactionTo: String  { return L10n.tr("Localizable", "Star.Transaction.To") }
   /// Review the [Terms of Services](https://telegram.org) for Stars.
   public static var starTransactionTos: String  { return L10n.tr("Localizable", "Star.Transaction.Tos") }
+  /// Transaction URL
+  public static var starTransactionTransactionUrl: String  { return L10n.tr("Localizable", "Star.Transaction.TransactionUrl") }
   /// [Unknown User](https://fragment.com/stars)
   public static var starTransactionUnknwonUser: String  { return L10n.tr("Localizable", "Star.Transaction.UnknwonUser") }
   /// Value

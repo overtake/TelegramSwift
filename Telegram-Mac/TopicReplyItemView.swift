@@ -28,7 +28,6 @@ final class TopicReplyItemLayout {
         self.message = message
         self.threadData = threadData
         self.maxiumLines = maxiumLines
-        let colors = ForumUI.topicColor(threadData.iconColor)
         if isSideAccessory {
             self.bgColor = theme.colors.background
             self.textColor = theme.colors.text
@@ -66,8 +65,8 @@ final class TopicReplyItemLayout {
     func measure(_ width: CGFloat) {
         
         text.measure(width: width)
-        self.text.generateAutoBlock(backgroundColor: bgColor, minusHeight: 9)
-        self.size = text.layoutSize
+        self.text.generateAutoBlock(backgroundColor: bgColor, minusHeight: 0, yInset: 1)
+        self.size = NSMakeSize(text.layoutSize.width, text.layoutSize.height - 8)
         
     }
 }
@@ -105,7 +104,7 @@ final class TopicReplyItemView : Control {
                 
                 
                 var rect: NSRect
-                rect = item.rect.insetBy(dx: 1, dy: 1)
+                rect = item.rect.insetBy(dx: 2, dy: 2)
 
                 rect = rect.offsetBy(dx: 6, dy: 2)
 
@@ -156,6 +155,6 @@ final class TopicReplyItemView : Control {
 
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: textView, frame: textView.centerFrame())
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 0))
     }
 }

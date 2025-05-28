@@ -95,7 +95,7 @@ private final class TransferHeaderView : GeneralRowView {
         container.setFrameSize(NSMakeSize(transferContainer.frame.width + avatar.frame.width + 45, 70))
         
         if item.toPeer.id == item.context.peerId {
-            avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: (top: theme.colors.listBackground, bottom: theme.colors.listBackground), icon: NSImage(resource: .iconStarTransactionRowFragment).precomposed(), iconSize: avatar.frame.size, cornerRadius: nil)) |> map {($0, false)})
+            avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: (top: theme.colors.listBackground, bottom: theme.colors.listBackground), icon: NSImage(resource: .iconStarTransactionRowFragment).precomposed(), iconSize: avatar.frame.size, cornerRadius: nil), bubble: false) |> map {($0, false)})
         } else {
             avatar.setPeer(account: item.context.account, peer: item.toPeer._asPeer())
         }
@@ -952,7 +952,8 @@ private final class Arguments {
     let sellNft:(StarGift.UniqueGift, Bool)->Void
     let toggleWear:(StarGift.UniqueGift)->Void
     let togglePin:()->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, sellNft:@escaping(StarGift.UniqueGift, Bool)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void) {
+    let openPeer:(EnginePeer)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, sellNft:@escaping(StarGift.UniqueGift, Bool)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void, openPeer:@escaping(EnginePeer)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.toggleName = toggleName
@@ -962,6 +963,7 @@ private final class Arguments {
         self.sellNft = sellNft
         self.toggleWear = toggleWear
         self.togglePin = togglePin
+        self.openPeer = openPeer
     }
 }
 
@@ -972,7 +974,7 @@ private struct State : Equatable {
     var nameEnabled: Bool = true
     var converted: Bool = false
     
-    var formId: Int64?
+    var form: BotPaymentForm?
     
 
     
@@ -1129,7 +1131,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let ownerAttr: NSAttributedString
             
             if let peer = state.owner {
-                ownerAttr = parseMarkdownIntoAttributedString("[\(peer._asPeer().displayTitle)]()", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                ownerAttr = parseMarkdownIntoAttributedString("[\(peer._asPeer().displayTitle)](owner)", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else if let ownerName = state.ownerName {
@@ -1148,7 +1150,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             ownerText.interactions.processURL = { url in
                 if let url = url as? String, !url.isEmpty {
-                    execute(inapp: .external(link: explorerUrl + url, false))
+                    if url == "owner", let peer = state.owner {
+                        arguments.openPeer(peer)
+                    } else {
+                        execute(inapp: .external(link: explorerUrl + url, false))
+                    }
                 }
             }
             
@@ -1450,7 +1456,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { form in
                 updateState { current in
                     var current = current
-                    current.formId = form.id
+                    current.form = form
                     return current
                 }
                 
@@ -1465,7 +1471,8 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
     let buyResellGift:(StarGift.UniqueGift, EnginePeer)->Void = { [weak giftsContext, weak resaleContext] gift, peer in
         let state = stateValue.with { $0 }
         let myBalance = state.myBalance ?? .init(value: 0, nanos: 0)
-        let resellStars = gift.resellStars!
+                
+        let resellStars = state.form?.invoice.prices.first?.amount ?? gift.resellStars!
         
         let infoText: String
         if peer.id == context.peerId {
@@ -1480,10 +1487,8 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 let sourceValue: Star_ListScreenSource
                 sourceValue = .buy(suffix: nil, amount: resellStars)
                 showModal(with: Star_ListScreen(context: context, source: sourceValue), for: window)
-            } else if let formId = state.formId {
-                
-                
-                _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: formId, source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId)), for: window).startStandalone(next: { result in
+            } else if let form = state.form {
+                _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId)), for: window).startStandalone(next: { result in
                     switch result {
                     case let .done(receiptMessageId, subscriptionPeerId, _):
                         PlayConfetti(for: window, stars: true)
@@ -1523,6 +1528,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                     showModalText(for: window, text: text)
                 })
             }
+            
         })
         
     }
@@ -1735,6 +1741,9 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             }
             showModalText(for: window, text: !pinnedInfo.pinnedInfo ? strings().giftTooltipPinned : strings().giftTooltipUnpinned)
         }
+    }, openPeer: { peer in
+        close?()
+        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

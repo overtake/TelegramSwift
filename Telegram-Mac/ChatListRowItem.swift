@@ -203,7 +203,10 @@ class ChatListRowItem: TableRowItem {
     }
     
     var isForum: Bool {
-        return self.peer?.isForum ?? false
+        if let peer = peer, peer.isForum && !peer.displayForumAsTabs {
+            return true
+        }
+        return false
     }
     var isTopic: Bool {
         switch self.mode {
@@ -491,6 +494,8 @@ class ChatListRowItem: TableRowItem {
         self.isFake = false
         self.openMiniApp = nil
         self.openMiniAppSelected = nil
+        self.monoforumMessages = nil
+        self.monoforumMessagesSelected = nil
         self.filter = filter
         self.hasFailed = hasFailed
         self.isArchiveItem = true
@@ -694,11 +699,18 @@ class ChatListRowItem: TableRowItem {
     
     let openMiniApp: TextViewLayout?
     let openMiniAppSelected: TextViewLayout?
+    
+    let monoforumMessages: TextViewLayout?
+    let monoforumMessagesSelected: TextViewLayout?
+
 
     init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil, isContact: Bool = false, displayAsTopics: Bool = false, folders: FilterData? = nil, canPreviewChat: Bool = false) {
         
         
-        
+        if !forumTopicItems.isEmpty {
+            var bp = 0
+            bp += 1
+        }
         
         var draft = draft
         
@@ -776,6 +788,18 @@ class ChatListRowItem: TableRowItem {
         } else {
             self.openMiniApp = nil
             self.openMiniAppSelected = nil
+        }
+        
+        if let peer = peer, peer.isMonoForum {
+            self.monoforumMessages = .init(.initialize(string: strings().chatListMonoforumHolder, color: theme.colors.grayText, font: .normal(.small)), alignment: .center)
+            self.monoforumMessagesSelected = .init(.initialize(string: strings().chatListMonoforumHolder, color: theme.colors.accentSelect, font: .normal(.small)), alignment: .center)
+            
+            self.monoforumMessages?.measure(width: .greatestFiniteMagnitude)
+            self.monoforumMessagesSelected?.measure(width: .greatestFiniteMagnitude)
+
+        } else {
+            self.monoforumMessages = nil
+            self.monoforumMessagesSelected = nil
         }
         
         if let folders, folders.showTags, let peer, splitState != .minimisize, mode.threadData == nil {
@@ -859,7 +883,11 @@ class ChatListRowItem: TableRowItem {
             } else if peer?.id == context.peerId {
                 text = strings().peerSavedMessages
             } else {
-                text = peer?.displayTitle
+                if let peer = peer, peer.isMonoForum {
+                    text = renderedPeer.chatOrMonoforumMainPeer?._asPeer().displayTitle
+                } else {
+                    text = peer?.displayTitle
+                }
             }
             let _ = titleText.append(string: text, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
             isTopic = false
@@ -1062,7 +1090,11 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !peer.id.isAnonymousSavedMessages, !isEmpty {
-            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum, nil)
+            if peer.isMonoForum, let photoPeer = renderedPeer.chatOrMonoforumMainPeer?._asPeer() {
+                self.photo = .PeerAvatar(peer, peer.displayLetters, photoPeer.smallProfileImage, photoPeer.nameColor, nil, nil, peer.groupAccess.canPostMessages, nil)
+            } else {
+                self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForumOrMonoForum, nil)
+            }
         } else {
             self.photo = .Empty
         }
@@ -1236,6 +1268,9 @@ class ChatListRowItem: TableRowItem {
         if let dateLayout = dateLayout {
             dateSize = dateLayout.layoutSize.width
         }
+        
+        let peer = self.renderedPeer?.chatOrMonoforumMainPeer?._asPeer() ?? self.peer
+        
         var offset: CGFloat = 0
         if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false, left: false) {
             offset += controlSize.width + 4
@@ -1249,6 +1284,11 @@ class ChatListRowItem: TableRowItem {
         if isSecret {
             offset += 10
         }
+        
+        if let ctxMonoforumMessages {
+            offset += ctxMonoforumMessages.layoutSize.width + 10
+        }
+        
         offset += (leftInset - 20)
         
         if appearMode == .short {
@@ -2108,6 +2148,13 @@ class ChatListRowItem: TableRowItem {
             return openMiniAppSelected
         }
         return openMiniApp
+    }
+    
+    var ctxMonoforumMessages: TextViewLayout? {
+        if isActiveSelected {
+            return monoforumMessagesSelected
+        }
+        return monoforumMessages
     }
     
     var isActiveSelected: Bool {

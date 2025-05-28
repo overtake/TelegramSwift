@@ -878,7 +878,7 @@ protocol PeerMediaSearchable : AnyObject {
                         var canForward:Bool = !ids.isEmpty
                         if let interactions = self?.interactions {
                             for message in messages {
-                                if !canDeleteMessage(message, account: context.account, mode: .history) {
+                                if !canDeleteMessage(message, account: context.account, chatLocation: interactions.chatLocation, mode: .history) {
                                     canDelete = false
                                 }
                                 if !canForwardMessage(message, chatInteraction: interactions) {
@@ -979,7 +979,7 @@ protocol PeerMediaSearchable : AnyObject {
             if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
             } else if let _ = view.cachedData as? CachedChannelData {
-                if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup {
+                if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup, !peer.isMonoForum {
                     return (exist: true, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
@@ -1285,8 +1285,13 @@ protocol PeerMediaSearchable : AnyObject {
             let location: ChatLocation
             let mode: ChatMode
             if let threadInfo = threadInfo, peerId == id {
+            
                 location = .thread(threadInfo.message)
-                mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
+                if threadInfo.isMonoforumPost {
+                    mode = .history
+                } else {
+                    mode = .thread(mode: .topic(origin: threadInfo.message.effectiveTopId))
+                }
             } else {
                 location = .peer(id)
                 mode = .history
@@ -1339,7 +1344,7 @@ protocol PeerMediaSearchable : AnyObject {
                         var otherCounter:Int32 = 0
                         var _mustDeleteForEveryoneMessage: Bool = true
                         for message in messages {
-                            if !canDeleteMessage(message, account: context.account, mode: .history) {
+                            if !canDeleteMessage(message, account: context.account, chatLocation: strongSelf.interactions.chatLocation, mode: .history) {
                                 canDelete = false
                             }
                             if !mustDeleteForEveryoneMessage(message) {
@@ -1501,9 +1506,12 @@ protocol PeerMediaSearchable : AnyObject {
         summaries.append(.webPage)
         summaries.append(.voiceOrInstantVideo)
         summaries.append(.music)
+        
+        let mediaPeerId = threadInfo?.message.peerId ?? peerId
+        let threadId = threadInfo?.message.threadId
 
         let counters: Signal<(PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]), NoError> = combineLatest(self.modeValue.get(), context.engine.data.subscribe(EngineDataMap(
-            summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: peerId, threadId: nil, tag: $0) }
+            summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: mediaPeerId, threadId: threadId, tag: $0) }
         )), storiesCount, archiveStoriesCount, similarChannelsCount, similarBotsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount)
         |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, similarBotsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
             var result: [PeerMediaCollectionMode: Int32] = [:]
