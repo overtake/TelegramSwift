@@ -483,6 +483,8 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
 
     let initialState = State(channel: channel, messages: messages, allPeers: allPeers)
     
+    let messagesPeerId = channel.isMonoForum ? channel.linkedMonoforumId ?? channel.id : channel.id
+    
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
@@ -663,7 +665,7 @@ func DeleteGroupMessagesController(context: AccountContext, channel: TelegramCha
                 
                 
                 
-                signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: .init(flags: flags, untilDate: Int32.max)))
+                signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: messagesPeerId, memberId: memberId, bannedRights: .init(flags: flags, untilDate: Int32.max)))
             }
         }
         
