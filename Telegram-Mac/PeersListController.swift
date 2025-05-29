@@ -2883,7 +2883,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     break
                 }
                 return
-            } else if let peer = state.forumPeer?.peer, !peer.displayForumAsTabs, peer.isForum {
+            } else if let peer = state.forumPeer?.peer, peer.displayForumAsTabs, peer.isForum {
                 switch self.mode {
                 case .forum:
                     self.navigationController?.back()
