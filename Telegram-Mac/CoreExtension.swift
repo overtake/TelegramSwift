@@ -4125,3 +4125,13 @@ extension TelegramMediaImage {
 
     }
 }
+
+
+extension RenderedPeer {
+    convenience init(_ renderedPeer: EngineRenderedPeer) {
+        let dict = SimpleDictionary<PeerId, any Peer>(renderedPeer.peers.mapValues {
+            $0._asPeer()
+        })
+        self.init(peerId: renderedPeer.peerId, peers: dict, associatedMedia: renderedPeer.associatedMedia)
+    }
+}

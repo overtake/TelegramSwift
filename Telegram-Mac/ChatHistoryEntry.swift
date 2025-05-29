@@ -1177,11 +1177,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                             insertPendingProccessing(entry)
                             insertPaidMessage(entry)
                             insertTopicSeparator(entry, prev, next)
-                        } else {
-                            entries.append(groupedPhotos[0])
-                            insertPendingProccessing(groupedPhotos[0])
-                            insertPaidMessage(groupedPhotos[0])
-                            insertTopicSeparator(groupedPhotos[0], prev, next)
+                        } else if let single = groupedPhotos.first {
+                            entries.append(single)
+                            insertPendingProccessing(single)
+                            insertPaidMessage(single)
+                            insertTopicSeparator(single, prev, next)
                         }
                     }
                     groupedPhotos.removeAll()

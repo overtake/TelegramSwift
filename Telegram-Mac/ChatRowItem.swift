@@ -2477,7 +2477,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if attribute.messageId == attribute.threadMessageId || Int64(attribute.messageId.id) == threadId {
+                    if threadId == message.threadId && Int64(attribute.messageId.id) == threadId {
                         ignore = true
                     }
                     
