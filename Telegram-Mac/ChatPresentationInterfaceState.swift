@@ -905,7 +905,7 @@ class ChatPresentationInterfaceState: Equatable {
                         }
                     } else if peer.isMonoForum, chatLocation.threadId == nil, peer.isAdmin {
                         if interfaceState.replyMessage == nil {
-                            return .restricted(strings().chatInputReplyToAnswerMonoforum)
+                            return .restricted(strings().chatInputReplyToAnswerMonoforumNew)
                         }
                     }
                 default:

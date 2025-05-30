@@ -5051,8 +5051,8 @@ public final class L10n {
   }
   /// You (sender's names hidden)
   public static var chatInputForwardHidden: String  { return L10n.tr("Localizable", "Chat.Input.Forward.Hidden") }
-  /// Reply to message to answer
-  public static var chatInputReplyToAnswerMonoforum: String  { return L10n.tr("Localizable", "Chat.Input.ReplyToAnswer.Monoforum") }
+  /// Select "Reply" in context menu to answer
+  public static var chatInputReplyToAnswerMonoforumNew: String  { return L10n.tr("Localizable", "Chat.Input.ReplyToAnswer.Monoforum_New") }
   /// Waiting for the %@ to get online...
   public static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
@@ -7567,7 +7567,7 @@ public final class L10n {
   public static var chatListGracePeriodInfo: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Info") }
   /// ⚠️ Your Premium subscription is expiring!
   public static var chatListGracePeriodTitle: String  { return L10n.tr("Localizable", "ChatList.GracePeriod.Title") }
-  /// MESSAGES
+  /// DIRECT
   public static var chatListMonoforumHolder: String  { return L10n.tr("Localizable", "ChatList.Monoforum.Holder") }
   /// List
   public static var chatListMonoforumTabBarList: String  { return L10n.tr("Localizable", "ChatList.Monoforum.TabBar.List") }
