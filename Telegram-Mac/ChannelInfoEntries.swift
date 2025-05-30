@@ -1312,7 +1312,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             let targetLevel = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration).minChannelAutotranslationLevel
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAutoTranslateMessages, icon: NSImage(resource: .iconAutoTranslate).precomposed(flipVertical: true), type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleAutoTranslate(value: !enabled)
-            }, enabled: level >= targetLevel, disabledAction: arguments.openBoostInfo, afterNameImage: generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(Int(targetLevel))))
+            }, enabled: level >= targetLevel, disabledAction: arguments.openBoostInfo, afterNameImage: level >= targetLevel ? nil : generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(Int(targetLevel))))
         case let .stats(_, datacenterId, monetization, stars, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoStatAndBoosts, icon: theme.icons.profile_channel_stats, type: .next, viewType: viewType, action: {
                 arguments.stats(datacenterId, monetization: monetization, stars: stars)

@@ -20,7 +20,7 @@ class MonoforumHorizontalView : View {
         
         layout()
         
-       
+        updateLocalizationAndTheme(theme: theme)
     }
     
     required init?(coder: NSCoder) {
@@ -51,16 +51,14 @@ class MonoforumHorizontalView : View {
         let insets = NSEdgeInsets(left: 10, right: 10, top: 3, bottom: 5)
         var _items:[ScrollableSegmentItem] = []
         
-        let isMonoforum = items.first(where: { $0.item?.threadData != nil }) == nil
-
         
-        _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: segmentTheme, equatable: nil))
-        index += 1
+//        _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 10, right: 10), icon: nil, theme: segmentTheme, equatable: nil))
+//        index += 1
+//        
+//        _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 15, right: 15), icon: NSImage(resource: .iconMonoforumToggle).precomposed(theme.colors.grayIcon), theme: segmentTheme, equatable: nil))
+//        index += 1
         
-        _items.append(.init(title: "", index: index, uniqueId: -1, selected: false, insets: NSEdgeInsets(left: 15, right: 15), icon: NSImage(resource: .iconMonoforumToggle).precomposed(theme.colors.grayIcon), theme: segmentTheme, equatable: nil))
-        index += 1
-        
-        _items.append(.init(title: strings().chatMonoforumUIAllTab, index: index, uniqueId: 0, selected: selected == nil, insets: insets, icon: nil, theme: segmentTheme, equatable: .init(selected)))
+        _items.append(.init(title: strings().chatMonoforumUIAllTab, index: index, uniqueId: 0, selected: selected == nil, insets: NSEdgeInsets(top: insets.top, left: 0, bottom: insets.bottom, right: 10), icon: nil, theme: segmentTheme, equatable: .init(selected)))
         index += 1
         
         let generateIcon:(MonoforumItem)->CGImage? = { tab in
@@ -112,16 +110,11 @@ class MonoforumHorizontalView : View {
                 icon = badge
             } else if tab.item?.chatListIndex.pinningIndex != nil || tab.item?.threadData?.isClosed == true {
                 let pinned = NSImage(resource: .iconMonoforumPin).precomposed(theme.colors.background, flipVertical: true)
-                let closed = NSImage(resource: .iconMonoforumLock).precomposed(theme.colors.background, flipVertical: true)
                 
                 var icons: [CGImage] = []
                 if tab.item?.chatListIndex.pinningIndex != nil {
                     icons.append(pinned)
                 }
-                if tab.item?.threadData?.isClosed == true {
-                    icons.append(closed)
-                }
-                
                 let spacing: CGFloat = 1
                 let paddingHorizontal: CGFloat = 4
                 let paddingVertical: CGFloat = 2
@@ -173,14 +166,20 @@ class MonoforumHorizontalView : View {
             return icon
         }
 
+        struct Tuple : Equatable {
+            let item: MonoforumItem
+            let selected: Bool
+        }
         
         for tab in items {
             let title: String = tab.title
             let selected = selected == tab.uniqueId
             
+            let tuple = Tuple(item: tab, selected: selected)
+            
             let icon = generateIcon(tab)
            
-            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: icon, theme: segmentTheme, equatable: .init(selected), customTextView: {
+            _items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: selected, insets: insets, icon: icon, theme: segmentTheme, equatable: .init(tuple), customTextView: {
                 
                 let attr = NSMutableAttributedString()
                 attr.append(string: "\(clown_space)" + title, color: selected ? segmentTheme.activeText : segmentTheme.inactiveText, font: segmentTheme.textFont)
@@ -269,6 +268,6 @@ class MonoforumHorizontalView : View {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        segmentView.frame = size.bounds
+        segmentView.frame = NSMakeRect(80, 0, size.width - 80, size.height)
     }
 }

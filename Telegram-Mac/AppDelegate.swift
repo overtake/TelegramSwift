@@ -1158,7 +1158,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     applicationUpdateUrlPrefix = nil
                                 }
                                 setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
-                                #if STABLE
+                                #if STABLE || BETA || DEBUG
                                 updater_resetWithUpdaterSource(.internal(context: context.context))
                                 #else
                                 updater_resetWithUpdaterSource(.external(context: context.context))

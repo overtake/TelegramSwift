@@ -521,7 +521,7 @@ private final class TopicNameAndTextView : View {
             performSubviewRemoval(view, animated: animated)
             self.allView = nil
         }
-        
+        needsLayout = true
     }
     
     

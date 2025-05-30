@@ -600,7 +600,7 @@ class MonoforumVerticalView : View, TableViewDelegate {
         
         let rect = tableView.rectOf(item: item)
         
-        transition.updateFrame(view: self.selectionView, frame:  NSMakeRect(-4, rect.origin.y + 5 - scrollY, 8, rect.height - 5))
+        transition.updateFrame(view: self.selectionView, frame:  NSMakeRect(-4, tableView.frame.minY + rect.origin.y + 5 - scrollY, 8, rect.height - 5))
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -626,11 +626,11 @@ class MonoforumVerticalView : View, TableViewDelegate {
         
         var index: Int = 0
         
-        entries.append(.size(index: index, stableId: InputDataIdentifier("h1")))
-        index += 1
-        
-        entries.append(.toggle(index: index))
-        index += 1
+//        entries.append(.size(index: index, stableId: InputDataIdentifier("h1")))
+//        index += 1
+//        
+//        entries.append(.toggle(index: index))
+//        index += 1
 
         entries.append(.item(item: .init(item: nil), nil, index: 0, selected: selected == nil))
         index += 1
@@ -739,9 +739,10 @@ class MonoforumVerticalView : View, TableViewDelegate {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        self.tableView.frame = size.bounds
+        let rect = NSMakeRect(0, 40, size.width, size.height - 40)
+        self.tableView.frame = rect
         self.tableView.tile()
-        transition.updateFrame(view: self.separator, frame: NSMakeRect(size.width - .borderSize, 0, .borderSize, size.height))
+        transition.updateFrame(view: self.separator, frame: NSMakeRect(rect.width - .borderSize, 0, .borderSize, rect.height))
         self.updateSelectionRect(animated: transition.isAnimated)
 
     }
