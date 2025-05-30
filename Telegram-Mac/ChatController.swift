@@ -497,7 +497,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var monoforum_VerticalView: MonoforumVerticalView?
     private var monoforum_HorizontalView: MonoforumHorizontalView?
-
+    private var monoforumStaticView: ImageButton?
     
     fileprivate var updateFloatingPhotos:((ScrollPosition, Bool)->Void)? = nil
     
@@ -1150,6 +1150,23 @@ class ChatControllerView : View, ChatInputDelegate {
                 
                 current.set(items: items, selected: threadId, chatInteraction: chatInteraction, animated: animated)
             }
+            
+            let current: ImageButton
+            if let view = self.monoforumStaticView {
+                current = view
+            } else {
+                current = ImageButton()
+                addSubview(current)
+                self.monoforumStaticView = current
+                current.autohighlight = false
+                current.scaleOnClick = true
+            }
+            current.set(image: NSImage(resource: .iconMonoforumToggle).precomposed(state == .vertical ? theme.colors.accent : theme.colors.grayIcon), for: .Normal)
+            current.sizeToFit(.zero, NSMakeSize(80, 40), thatFit: true)
+            
+            current.setSingle(handler: { [weak chatInteraction] _ in
+                chatInteraction?.toggleMonoforumState()
+            }, for: .Click)
         } else {
             if let view = monoforum_VerticalView {
                 performSubviewPosRemoval(view, pos: NSMakePoint(-view.frame.width, 0), animated: animated)
@@ -1158,6 +1175,10 @@ class ChatControllerView : View, ChatInputDelegate {
             if let view = monoforum_HorizontalView {
                 performSubviewPosRemoval(view, pos: NSMakePoint(0, -view.frame.height), animated: animated)
                 self.monoforum_HorizontalView = nil
+            }
+            if let view = monoforumStaticView {
+                performSubviewRemoval(view, animated: animated)
+                self.monoforumStaticView = nil
             }
         }
         

@@ -189,7 +189,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 badge = nil
             }
             
-            return .init(file: option.file!, text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true, true) : .none, badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
+            return .init(file: option.file!, text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true, resale) : .none, badge: badge, peer: nil, invisible: false, pinned: false, priceBadge: nil, nativeStarUniqueGift: option)
         }
         
         

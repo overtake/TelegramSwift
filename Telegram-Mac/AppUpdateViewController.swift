@@ -261,8 +261,11 @@ func AppUpdateViewController() -> InputDataController {
     
 }
 
+#if STABLE
 private let updates_channel_xml = "macos_stable_updates_xml"
-
+#else
+private let updates_channel_xml = "macos_beta_updates_xml"
+#endif
 
 
 private final class InternalUpdaterDownloader : SPUDownloaderSession {
@@ -620,7 +623,7 @@ private func trySwitchUpdaterBetweenSources() {
     if let source = updaterSource {
         switch source {
         case let .external(context):
-            #if STABLE || DEBUG
+            #if STABLE || DEBUG || BETA
             if let context = context {
                 updater_resetWithUpdaterSource(.internal(context: context), force: true)
             }
