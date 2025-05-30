@@ -1572,8 +1572,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         animation.fillMode = CAMediaTimingFillMode.forwards
         
         animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
-            self?.animatedView?.removeFromSuperview()
-            self?.animatedView = nil
+            if completed {
+                self?.animatedView?.removeFromSuperview()
+                self?.animatedView = nil
+            }
         })
         animation.isAdditive = false
         
