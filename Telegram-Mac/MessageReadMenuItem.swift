@@ -1175,3 +1175,121 @@ private final class MessageContainsPacksItemView: AppMenuRowView {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+
+
+
+
+final class MessageAuthorMenuItem : ContextMenuItem {
+   
+    private let context: AccountContext
+    private let messageId: MessageId
+    
+    fileprivate var peerId: PeerId?
+    
+    init(handler:@escaping(PeerId)->Void, messageId: MessageId, context: AccountContext) {
+        self.messageId = messageId
+        self.context = context
+        var invoke:()->Void = { }
+        super.init("", handler: {
+            invoke()
+        }, removeTail: false)
+        
+        invoke = { [weak self] in
+            if let peerId = self?.peerId {
+                handler(peerId)
+            }
+        }
+        
+    }
+    
+    override var cuttail: Int? {
+        return nil
+    }
+    
+    override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return MessageAuthorMenuRowItem(item: self, messageId: messageId, interaction: interaction, presentation: presentation, context: context)
+    }
+    
+    required init(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
+final class MessageAuthorMenuRowItem : AppMenuRowItem {
+
+    let context: AccountContext
+    let messageId: MessageId
+    
+    enum State : Equatable {
+        case loading
+        case peer(EnginePeer)
+    }
+    
+    fileprivate var state: State = .loading {
+        didSet {
+            updateState(state)
+        }
+    }
+    
+    private let disposable = MetaDisposable()
+    
+    init(item: ContextMenuItem, messageId: MessageId, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext) {
+        self.messageId = messageId
+        self.context = context
+        super.init(.zero, item: item, interaction: interaction, presentation: presentation)
+        
+        let signal = context.engine.messages.requestMessageAuthor(id: messageId) |> deliverOnMainQueue
+        
+        disposable.set(signal.startStrict(next: { [weak self] peer in
+            if let peer {
+                self?.state = .peer(peer)
+            }
+        }))
+    }
+    
+    private func updateState(_ state: State) {
+        guard let menuItem = menuItem as? MessageAuthorMenuItem else {
+            return
+        }
+        switch state {
+        case .loading:
+            break
+        case let .peer(peer):
+//            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer._asPeer(), source: .peer(peer._asPeer(), peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil, nil))
+            menuItem.title = strings().monoforumSentBy(peer._asPeer().displayTitle)
+            menuItem.peerId = peer.id
+        }
+        
+        self.redraw(animated: false)
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    
+    override func viewClass() -> AnyClass {
+        return MessageAuthorMenuItemView.self
+    }
+
+}
+
+private final class MessageAuthorMenuItemView: AppMenuRowView {
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? MessageAuthorMenuRowItem else {
+            return
+        }
+    }
+}

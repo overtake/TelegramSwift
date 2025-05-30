@@ -12517,6 +12517,10 @@ public final class L10n {
   public static var monetizationWithdrawEnterPasswordTitle: String  { return L10n.tr("Localizable", "Monetization.Withdraw.EnterPassword.Title") }
   /// Withdrawal is only available if:\n\n• 2-Step Verification was enabled for your account more than 7 days ago.\n\n• You have logged in on this device more than 24 hours ago.\n\nPlease come back later.
   public static var monetizationWithdrawErrorText: String  { return L10n.tr("Localizable", "Monetization.Withdraw.Error.Text") }
+  /// Sent by [%@]()
+  public static func monoforumSentBy(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Monoforum.SentBy", p1)
+  }
   /// Add
   public static var navigationAdd: String  { return L10n.tr("Localizable", "Navigation.Add") }
   /// Back
