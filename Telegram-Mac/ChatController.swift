@@ -2017,7 +2017,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = .init(name: "messagesViewQueue", qos: .utility)
+    private let queue: Queue = .init(name: "messagesViewQueue", qos: .userInteractive)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
@@ -9339,6 +9339,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .nothing
         }, with: self.genericView.tableView, identifier: "chat-reply-swipe")
         
+        
+        #if DEBUG
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            guard let chatInteraction = self?.chatInteraction else {
+                return .invoked
+            }
+            showModal(with: NewTodoController(chatInteraction: chatInteraction), for: context.window)
+            
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        #endif
         
         let peerId = self.chatLocation.peerId
         

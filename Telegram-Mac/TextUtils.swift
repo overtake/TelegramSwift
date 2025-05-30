@@ -173,6 +173,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             messageText = invoice.title
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
+        case let poll as TelegramMediaTodo:
+            messageText = "📋 \(poll.text)"
         case let story as TelegramMediaStory:
             if message.isExpiredStory {
                 if story.isMention {
@@ -1031,7 +1033,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().notificationGroupCallIncoming
             }
-
+        case let .todoCompletions(completed, incompleted):
+            text = ""
         }
     }
     return (text, entities, media)

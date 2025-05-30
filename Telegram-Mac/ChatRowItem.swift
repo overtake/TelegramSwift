@@ -2726,6 +2726,8 @@ class ChatRowItem: TableRowItem {
                     return ChatMessageItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaPoll {
                     return ChatPollItem(initialSize, interaction, interaction.context, entry, theme: theme)
+                } else if message.anyMedia is TelegramMediaTodo {
+                    return ChatRowTodoItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaUnsupported {
                     return ChatMessageItem(initialSize, interaction, interaction.context,entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaDice {

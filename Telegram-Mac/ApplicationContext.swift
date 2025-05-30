@@ -529,7 +529,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
-            context.bindings.rootNavigation().push(ForumSettingsController(context: context, peerId: context.peerId))
             
            // context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
 

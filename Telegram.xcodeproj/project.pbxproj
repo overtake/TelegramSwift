@@ -645,6 +645,8 @@
 		27AAE00E28E2D89D004DA38D /* ForumTopicInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAE00D28E2D89D004DA38D /* ForumTopicInfoController.swift */; };
 		27AAE01128E2DBB1004DA38D /* ForumNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAE01028E2DBB1004DA38D /* ForumNameRowItem.swift */; };
 		27AAE01328E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAE01228E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift */; };
+		27ABAA8F2DE9D590001B4ACA /* NewTodoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABAA8E2DE9D585001B4ACA /* NewTodoController.swift */; };
+		27ABAA912DE9E695001B4ACA /* ChatTodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABAA902DE9E692001B4ACA /* ChatTodoItem.swift */; };
 		27ABFD172857B9F7006C3301 /* PremiumFeatureSlideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD162857B9F7006C3301 /* PremiumFeatureSlideView.swift */; };
 		27ABFD192858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD182858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift */; };
 		27ABFD1C2858B8AF006C3301 /* SwirlStarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27ABFD1B2858B8AF006C3301 /* SwirlStarsView.swift */; };
@@ -2299,6 +2301,8 @@
 		27AAE01028E2DBB1004DA38D /* ForumNameRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForumNameRowItem.swift; sourceTree = "<group>"; };
 		27AAE01228E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForumTopicEmojiSelectRowItem.swift; sourceTree = "<group>"; };
 		27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileView.swift; sourceTree = "<group>"; };
+		27ABAA8E2DE9D585001B4ACA /* NewTodoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewTodoController.swift; sourceTree = "<group>"; };
+		27ABAA902DE9E692001B4ACA /* ChatTodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTodoItem.swift; sourceTree = "<group>"; };
 		27ABFD162857B9F7006C3301 /* PremiumFeatureSlideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumFeatureSlideView.swift; sourceTree = "<group>"; };
 		27ABFD182858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumDemoLegacyPhoneView.swift; sourceTree = "<group>"; };
 		27ABFD1B2858B8AF006C3301 /* SwirlStarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwirlStarsView.swift; sourceTree = "<group>"; };
@@ -5075,6 +5079,7 @@
 				C2E0646A1ECF137300387BB8 /* ChatInvoiceItem.swift */,
 				C224675C1FA884E300F03E27 /* ChatGroupedItem.swift */,
 				9FDD78D021C8F0CC00F1B4EF /* ChatPollItem.swift */,
+				27ABAA902DE9E692001B4ACA /* ChatTodoItem.swift */,
 				D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */,
 				A7393D342407CAE100CE44CA /* ChatMediaDice.swift */,
 				D0C550C3251127DA00B64966 /* ChatCommentsHeaderItem.swift */,
@@ -6371,6 +6376,7 @@
 		C2FBC1E51DC631620063A23B /* overlay */ = {
 			isa = PBXGroup;
 			children = (
+				27ABAA8E2DE9D585001B4ACA /* NewTodoController.swift */,
 				27DEA2222CEF256B00C25800 /* affiliate */,
 				2761549C2C2081CA0090BFFC /* mini-apps */,
 				277DFE6427843F3600F78396 /* translate */,
@@ -7738,6 +7744,7 @@
 				27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */,
 				9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */,
 				275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */,
+				27ABAA912DE9E695001B4ACA /* ChatTodoItem.swift in Sources */,
 				2761547E2C12D5990090BFFC /* FragmentStarMonetizationController.swift in Sources */,
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
@@ -8493,6 +8500,7 @@
 				C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */,
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,
 				C2271DB71DAE132C001792B6 /* GeneralInteractedRowView.swift in Sources */,
+				27ABAA8F2DE9D590001B4ACA /* NewTodoController.swift in Sources */,
 				27049A532DC9F92E001B2E3E /* MonoforumVerticalView.swift in Sources */,
 				C218FF921F3CC8C700DD7D35 /* InstantPageWebEmbedItem.swift in Sources */,
 				27A7FBDA2CF5B20900AE9432 /* PreciseSliderRowItem.swift in Sources */,
