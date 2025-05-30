@@ -52,7 +52,8 @@ final class ChatMenuItemsData {
     let folders: [(ChatListFilter, [Peer])]
     let isMediaStory: Bool
     let isRead: Bool
-    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, chatLocation: ChatLocation, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?, savedStickersCount: Int, savedGifsCount: Int, groupped: [Message]?, folders: [(ChatListFilter, [Peer])], isMediaStory: Bool, isRead: Bool) {
+    let canViewAuthor: Bool
+    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, chatLocation: ChatLocation, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?, savedStickersCount: Int, savedGifsCount: Int, groupped: [Message]?, folders: [(ChatListFilter, [Peer])], isMediaStory: Bool, isRead: Bool, canViewAuthor: Bool) {
         self.chatInteraction = chatInteraction
         self.message = message
         self.accountPeer = accountPeer
@@ -86,6 +87,7 @@ final class ChatMenuItemsData {
         self.folders = folders
         self.isMediaStory = isMediaStory
         self.isRead = isRead
+        self.canViewAuthor = canViewAuthor
     }
 }
 func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
@@ -102,6 +104,18 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let peer = chatInteraction.peer
     let canPinMessage = chatInteraction.presentation.canPinMessage && peerId.namespace != Namespaces.Peer.SecretChat
     let additionalData = entry?.additionalData ?? MessageEntryAdditionalData()
+    
+    var canViewAuthor: Bool = false
+    if let channel = chatInteraction.presentation.peer as? TelegramChannel, channel.isMonoForum, channel.groupAccess.canPostMessages {
+        var isIncoming: Bool = message.effectivelyIncoming(context.account.peerId)
+        #if DEBUG
+        isIncoming = true
+        #endif
+        if isIncoming, message.author?.id == channel.linkedMonoforumId {
+            canViewAuthor = true
+        }
+    }
+
     
     let storyMedia = message.media.first as? TelegramMediaStory
     let isMediaStory = storyMedia?.storyId.peerId == context.peerId ? false : storyMedia != nil
@@ -228,7 +242,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     
     
     return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData, savedStickersCount, savedGifsCount, groupped, folders in
-        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, chatLocation: chatLocation, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData, savedStickersCount: savedStickersCount, savedGifsCount: savedGifsCount, groupped: groupped, folders: folders, isMediaStory: isMediaStory, isRead: isRead)
+        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, chatLocation: chatLocation, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData, savedStickersCount: savedStickersCount, savedGifsCount: savedGifsCount, groupped: groupped, folders: folders, isMediaStory: isMediaStory, isRead: isRead, canViewAuthor: canViewAuthor)
     }
 }
 
@@ -270,6 +284,12 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var sevenBlock:[ContextMenuItem] = []
 
        
+        
+        if data.canViewAuthor {
+            zeroBlock.append(MessageAuthorMenuItem(handler: { [weak chatInteraction] peerId in
+                chatInteraction?.openInfo(peerId, false, nil, nil)
+            }, messageId: data.message.id, context: context))
+        }
         
         if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, mode != .pinned, mode != .scheduled, !mode.isSavedMode, mode.customChatContents == nil, entry?.additionalData.translate == nil {
             firstBlock.append(ContextMenuItem(strings().chatMessageContextQuote, handler: {
