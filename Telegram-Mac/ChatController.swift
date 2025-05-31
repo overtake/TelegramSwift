@@ -7853,13 +7853,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.windowDidBecomeKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState: immediateScrollState())
-      //  self.genericView.tableView.notifyScrollHandlers()
+        self.genericView.tableView.notifyScrollHandlers()
     }
     override func windowDidResignKey() {
         super.windowDidResignKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState:immediateScrollState())
-     //  self.genericView.tableView.notifyScrollHandlers()
+       self.genericView.tableView.notifyScrollHandlers()
     }
     
     private func anchorMessageInCurrentHistoryView() -> Message? {
