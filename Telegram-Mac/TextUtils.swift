@@ -173,8 +173,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             messageText = invoice.title
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
-        case let poll as TelegramMediaTodo:
-            messageText = "📋 \(poll.text)"
+        case let todo as TelegramMediaTodo:
+            messageText = "☑️ \(todo.text)"
         case let story as TelegramMediaStory:
             if message.isExpiredStory {
                 if story.isMention {
@@ -1037,7 +1037,91 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 text = strings().notificationGroupCallIncoming
             }
         case let .todoCompletions(completed, incompleted):
-            text = "task completed: \(completed)"
+            
+            let todo: Message?
+            if let replyAttribute = message.replyAttribute {
+                todo = message.associatedMessages[replyAttribute.messageId]
+            } else {
+                todo = nil
+            }
+            
+            guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                break
+            }
+            
+            let marked = !completed.isEmpty ? todoMedia.items.filter({ completed.contains($0.id) }) : todoMedia.items.filter({ incompleted.contains($0.id) })
+            
+            let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                var resultString = ""
+                var entities: [MessageTextEntity] = []
+                var offset = 0
+
+                for (index, item) in items.enumerated() {
+                    resultString += "'"
+                    offset += 1
+
+                    for entity in item.entities {
+                        let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                        entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                    }
+
+                    resultString += item.text
+                    offset += item.text.count
+
+                    resultString += "'"
+                    offset += 1
+
+                    if index < items.count - 1 {
+                        resultString += ", "
+                        offset += 2
+                    }
+                }
+
+                return (resultString, entities)
+            }
+
+            var rawString: String
+
+                        
+            if !completed.isEmpty {
+                if authorId == account.peerId {
+                    rawString = strings().chatServiceTodoMarkedDoneYou
+                } else {
+                    rawString = strings().chatServiceTodoMarkedDone
+                }
+            } else if !incompleted.isEmpty {
+                if authorId == account.peerId {
+                    rawString = strings().chatServiceTodoMarkedUndoneYou
+                } else {
+                    rawString = strings().chatServiceTodoMarkedUndone
+                }
+            } else {
+                rawString = ""
+            }
+            
+            if !rawString.isEmpty {
+                
+                let values = makeValues(marked)
+                
+                let valuesRange = rawString.nsstring.range(of: "{values}")
+                if valuesRange.location != NSNotFound {
+                    rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+                }
+                let authorRange = rawString.nsstring.range(of: "{author}")
+                if authorRange.location != NSNotFound {
+                    rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+                }
+                
+                var offset = valuesRange.location
+                if authorRange.location != NSNotFound {
+                    offset += (authorName.length - authorRange.length)
+                }
+                
+                for entity in values.1 {
+                    entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+                }
+            }
+            text = rawString
         }
     }
     return (text, entities, media)
