@@ -1480,17 +1480,108 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                 case let .todoCompletions(completed, incompleted):
-                    let _ = attributedString.append(string: "task completed: \(completed)", color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     
-                    let mediaMessage: Message?
+                    let todo: Message?
                     if let replyAttribute = message.replyAttribute {
-                        mediaMessage = message.associatedMessages[replyAttribute.messageId]
+                        todo = message.associatedMessages[replyAttribute.messageId]
                     } else {
-                        mediaMessage = nil
+                        todo = nil
                     }
                     
+                    guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                        break
+                    }
                     
+                    let marked = !completed.isEmpty ? todoMedia.items.filter({ completed.contains($0.id) }) : todoMedia.items.filter({ incompleted.contains($0.id) })
+
                     
+                    let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                        var resultString = ""
+                        var entities: [MessageTextEntity] = []
+                        var offset = 0
+
+                        for (index, item) in items.enumerated() {
+                            resultString += "'"
+                            offset += 1
+
+                            for entity in item.entities {
+                                let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                                entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                            }
+
+                            resultString += item.text
+                            offset += item.text.count
+
+                            resultString += "'"
+                            offset += 1
+
+                            if index < items.count - 1 {
+                                resultString += ", "
+                                offset += 2
+                            }
+                        }
+
+                        return (resultString, entities)
+                    }
+
+                    var rawString: String
+
+                                
+                    if !completed.isEmpty {
+                        if authorId == context.peerId {
+                            rawString = strings().chatServiceTodoMarkedDoneYou
+                        } else {
+                            rawString = strings().chatServiceTodoMarkedDone
+                        }
+                    } else if !incompleted.isEmpty {
+                        if authorId == context.peerId {
+                            rawString = strings().chatServiceTodoMarkedUndoneYou
+                        } else {
+                            rawString = strings().chatServiceTodoMarkedUndone
+                        }
+                    } else {
+                        rawString = ""
+                    }
+                    
+                    if !rawString.isEmpty {
+                        
+                        let values = makeValues(marked)
+                        
+                        let valuesRange = rawString.nsstring.range(of: "{values}")
+                        if valuesRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+                        }
+                        let authorRange = rawString.nsstring.range(of: "{author}")
+                        if authorRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+                        }
+                        
+                        var offset = valuesRange.location
+                        if authorRange.location != NSNotFound {
+                            offset += (authorName.length - authorRange.length)
+                        }
+                        
+                        var entities: [MessageTextEntity] = []
+                        
+                        for entity in values.1 {
+                            entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+                        }
+                        
+                        let _ = attributedString.append(string: rawString, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        
+                        InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
+                        
+                        if valuesRange.location != NSNotFound {
+                            let range = NSMakeRange(offset, valuesRange.length)
+                            attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                                chatInteraction?.focusMessageId(nil, .init(messageId: todo.id, string: nil), .CenterEmpty)
+                            }), for: range, color: grayTextColor)
+                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+
+                    }
+                    
+
                     
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)

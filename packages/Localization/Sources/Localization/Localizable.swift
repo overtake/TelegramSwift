@@ -6359,6 +6359,14 @@ public final class L10n {
   public static func chatServiceSuggestPhotoInfoYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SuggestPhoto.Info.You", p1)
   }
+  /// {author} marked {values} as done.
+  public static var chatServiceTodoMarkedDone: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Marked.Done") }
+  /// {author} marked {values} as not done.
+  public static var chatServiceTodoMarkedUndone: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Marked.Undone") }
+  /// You marked {values} as done.
+  public static var chatServiceTodoMarkedDoneYou: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Marked.Done.You") }
+  /// You marked {values} as not done.
+  public static var chatServiceTodoMarkedUndoneYou: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Marked.Undone.You") }
   /// You changed chat theme to %@
   public static func chatServiceUpdateThemeYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)

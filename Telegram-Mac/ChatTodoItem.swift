@@ -245,7 +245,7 @@ class ChatRowTodoItem: ChatRowItem {
         }
         
         
-        _ = context.engine.messages.requestUpdateTodoMessageItems(messageId: message.id, completedIds: completed, incompletedIds: incompleted).start()
+        _ = context.engine.messages.requestUpdateTodoMessageItems(messageId: message.id, completedIds: !isCompleted ? [option.id] : [], incompletedIds: isCompleted ? [option.id] : []).start()
 //        if canInvokeVote, !self.options.contains(where: { $0.isSelected }) {
 //            guard let message = message else { return }
 //            var identifiers = self.entry.additionalData.pollStateData.identifiers
@@ -538,6 +538,7 @@ private final class TodoOptionView : Control {
             } else {
                 current = AvatarControl(font: .avatar(8))
                 current.setFrameSize(17, 17)
+                current.userInteractionEnabled = false
                 addSubview(current, positioned: .below, relativeTo: selectingView)
                 self.avatarView = current
                 isNew = true
