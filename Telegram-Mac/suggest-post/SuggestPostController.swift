@@ -68,9 +68,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let infoText: String
         if stars.value > 0 {
-            infoText = strings().channelMessagesPaidInfo("\(commission * 100)%", "\(commission * Double(stars.value))")
+            
+            let amount = "\(Double(stars.value) * 0.013 * (commission / 100))".prettyCurrencyNumberUsd
+
+            
+            infoText = strings().channelMessagesPaidInfo("\(commission.string)%", "\(amount)")
         } else {
-            infoText = strings().channelMessagesPaidInfoZero("\(commission * 100)%")
+            infoText = strings().channelMessagesPaidInfoZero("\(commission.string)%")
         }
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(infoText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -100,6 +104,17 @@ func SuggestPostController(context: AccountContext, peerId: PeerId) -> InputData
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    actionsDisposable.add(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)).startStandalone(next: { peer in
+        updateState { current in
+            var current = current
+            if let peer = peer?._asPeer() as? TelegramChannel {
+                current.enabled = peer.linkedMonoforumId != nil
+                current.stars = peer.sendPaidMessageStars ?? .init(value: 500, nanos: 0)
+            }
+            return current
+        }
+    }))
     
     var getController:(()->ViewController?)? = nil
     
