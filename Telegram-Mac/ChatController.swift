@@ -4749,6 +4749,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.chatInteraction.focusInputField()
             }
             
+            if let message, message.media.first is TelegramMediaTodo, let self {
+                showModal(with: NewTodoController(chatInteraction: self.chatInteraction, message: message), for: context.window)
+                return 
+            }
+            
             if let editState = self?.chatInteraction.presentation.interfaceState.editState, let window = self?.window, let _ = message  {
                 if editState.inputState.inputText != editState.message.text {
                     verifyAlert_button(for: window, information: strings().chatEditCancelText, ok: strings().alertDiscard, successHandler: { _ in
@@ -7853,13 +7858,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.windowDidBecomeKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState: immediateScrollState())
-      //  self.genericView.tableView.notifyScrollHandlers()
+        self.genericView.tableView.notifyScrollHandlers()
     }
     override func windowDidResignKey() {
         super.windowDidResignKey()
         updateInteractiveReading()
         chatInteraction.saveState(scrollState:immediateScrollState())
-     //  self.genericView.tableView.notifyScrollHandlers()
+       self.genericView.tableView.notifyScrollHandlers()
     }
     
     private func anchorMessageInCurrentHistoryView() -> Message? {

@@ -1479,24 +1479,27 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-//                case let .paidMessage(stars):
-//                    
-//                    let text: String
-//                    if authorId == context.peerId {
-//                        text = strings().chatServicePaidMessageYou(strings().starListItemCountCountable(Int(stars)))
-//                    } else {
-//                        text = strings().chatServicePaidMessage(authorName, strings().starListItemCountCountable(Int(stars)))
-//                    }
-//                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-//                    
-//                    if let authorId = authorId {
-//                        let range = attributedString.string.nsstring.range(of: authorName)
-//                        if range.location != NSNotFound {
-//                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
-//                            attributedString.add(link: link, for: range, color: nameColor(authorId))
-//                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-//                        }
-//                    }
+                case let .todoCompletions(completed, incompleted):
+                    let _ = attributedString.append(string: "task completed: \(completed)", color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    let mediaMessage: Message?
+                    if let replyAttribute = message.replyAttribute {
+                        mediaMessage = message.associatedMessages[replyAttribute.messageId]
+                    } else {
+                        mediaMessage = nil
+                    }
+                    
+                    
+                    
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
 
                 default:
                     break

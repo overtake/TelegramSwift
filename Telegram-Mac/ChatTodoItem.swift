@@ -31,6 +31,7 @@ private extension TelegramMediaTodo {
 
 private final class TodoItem : Equatable {
     let option: TelegramMediaTodo.Item
+    let peer: EnginePeer?
     let nameText: TextViewLayout
     let isSelected: Bool
     let isIncoming: Bool
@@ -40,7 +41,7 @@ private final class TodoItem : Equatable {
     let contentSize: NSSize
     let vote:(Control)-> Void
     let isTranslateLoading: Bool
-    init(option:TelegramMediaTodo.Item, nameText: TextViewLayout, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool) {
+    init(option:TelegramMediaTodo.Item, nameText: TextViewLayout, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool, peer: EnginePeer?) {
         self.option = option
         self.nameText = nameText
         self.isSelected = isSelected
@@ -51,20 +52,21 @@ private final class TodoItem : Equatable {
         self.vote = vote
         self.contentSize = contentSize
         self.isTranslateLoading = isTranslateLoading
+        self.peer = peer
     }
     
     func withUpdatedLoading(_ isLoading: Bool) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading)
+        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     func withUpdatedContentSize(_ contentSize: NSSize) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading)
+        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     func withUpdatedSelected(_ isSelected: Bool) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading)
+        return TodoItem(option: self.option, nameText: self.nameText, isSelected: isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     
     static func ==(lhs: TodoItem, rhs: TodoItem) -> Bool {
-        return lhs.option == rhs.option && lhs.isSelected == rhs.isSelected && lhs.isIncoming == rhs.isIncoming && lhs.isLoading == rhs.isLoading && lhs.contentSize == rhs.contentSize && lhs.isTranslateLoading == rhs.isTranslateLoading
+        return lhs.option == rhs.option && lhs.isSelected == rhs.isSelected && lhs.isIncoming == rhs.isIncoming && lhs.isLoading == rhs.isLoading && lhs.contentSize == rhs.contentSize && lhs.isTranslateLoading == rhs.isTranslateLoading && lhs.peer == rhs.peer
     }
     
     
@@ -152,6 +154,8 @@ class ChatRowTodoItem: ChatRowItem {
             let isSelected: Bool = todo.completions.contains(where: { $0.id == option.id })
             let nameFont: NSFont = .normal(.text)//voted && isSelected ? .bold(.text) : .normal(.text)
             
+            let peerId = todo.completions.first(where: { $0.id == option.id })?.completedBy
+            
             let optionText = NSMutableAttributedString()
             optionText.append(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont)
             InlineStickerItem.apply(to: optionText, associatedMedia: message?.associatedMedia ?? [:], entities: option.entities, isPremium: context.isPremium)
@@ -160,7 +164,7 @@ class ChatRowTodoItem: ChatRowItem {
                         
             let wrapper = TodoItem(option: option, nameText: nameLayout, isSelected: isSelected, isIncoming: isIncoming, isBubbled: renderType == .bubble, isLoading: false, presentation: self.presentation, vote: { [weak self] control in
                 self?.voteOption(option, for: control)
-            }, isTranslateLoading: isTranslateLoading)
+            }, isTranslateLoading: isTranslateLoading, peer: peerId.flatMap { message?.peers[$0] }.flatMap(EnginePeer.init))
             
             options.append(wrapper)
         }
@@ -223,6 +227,25 @@ class ChatRowTodoItem: ChatRowItem {
     }
     
     private func voteOption(_ option: TelegramMediaTodo.Item, for control: Control) {
+        guard let message = message else { return }
+
+        
+        var completed = self.todo.completions.map { $0.id }
+        var incompleted = self.todo.items.map { $0.id }.filter({ !completed.contains($0) })
+        
+        let isCompleted = completed.contains(option.id)
+        
+        
+        if !completed.contains(option.id) {
+            completed.append(option.id)
+            incompleted.removeAll(where: { $0 == option.id })
+        } else {
+            incompleted.append(option.id)
+            completed.removeAll(where: { $0 == option.id })
+        }
+        
+        
+        _ = context.engine.messages.requestUpdateTodoMessageItems(messageId: message.id, completedIds: completed, incompletedIds: incompleted).start()
 //        if canInvokeVote, !self.options.contains(where: { $0.isSelected }) {
 //            guard let message = message else { return }
 //            var identifiers = self.entry.additionalData.pollStateData.identifiers
@@ -261,16 +284,7 @@ class ChatRowTodoItem: ChatRowItem {
         
         return true
     }
-    
-    fileprivate func invokeAction(fromOption: Data? = nil) {
-        
-        guard let message = message else { return }
-        let hasSelected = self.options.contains(where: { $0.isSelected })
-        if canInvokeVote, !hasSelected {
-            let identifiers = self.entry.additionalData.pollStateData.identifiers
-            chatInteraction.vote(message.id, identifiers, true)
-        }
-    }
+   
     
     override func viewClass() -> AnyClass {
         return ChatTodoItemView.self
@@ -444,6 +458,7 @@ private final class TodoOptionView : Control {
     private let borderView: View = View(frame: NSZeroRect)
     
     private var selectedImageView: ImageView?
+    private var avatarView: AvatarControl?
     
     private var option: TodoItem?
     required init(frame frameRect: NSRect) {
@@ -494,31 +509,6 @@ private final class TodoOptionView : Control {
         
         let votedColor: NSColor
         
-        
-        if option.isSelected {
-            var justAdded = false
-            if self.selectedImageView == nil {
-                self.selectedImageView = ImageView()
-                addSubview(self.selectedImageView!)
-                justAdded = true
-            }
-            
-            guard let selectedImageView = self.selectedImageView else {
-                return
-            }
-            
-            selectedImageView.image = option.presentation.chat.pollSelected(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
-
-            selectedImageView.setFrameSize(NSMakeSize(12, 12))
-            
-            selectedImageView.setFrameOrigin(NSMakePoint(progressView.frame.minX - selectedImageView.frame.width - 4, floorToScreenPixels(backingScaleFactor, progressView.frame.midY - selectedImageView.frame.height / 2)))
-            
-            if justAdded && animated {
-                selectedImageView.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
-                selectedImageView.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
-            }
-        }
-        
         votedColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
         
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
@@ -533,11 +523,36 @@ private final class TodoOptionView : Control {
             }
         }
         selectingView?.animates = animated || (previousOption != nil && previousOption?.isSelected != option.isSelected)
+        
         if option.isSelected {
             selectingView?.image = option.presentation.chat.pollSelection(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
         } else {
             selectingView?.image = option.presentation.chat.pollOptionUnselectedImage(option.isIncoming, option.isBubbled)
         }
+        
+        if let peer = option.peer {
+            let current: AvatarControl
+            var isNew: Bool = false
+            if let view = self.avatarView {
+                current = view
+            } else {
+                current = AvatarControl(font: .avatar(8))
+                current.setFrameSize(17, 17)
+                addSubview(current, positioned: .below, relativeTo: selectingView)
+                self.avatarView = current
+                isNew = true
+            }
+            current.setPeer(account: context.account, peer: peer._asPeer())
+            current.setFrameOrigin(NSMakePoint(defaultInset + 10, 1))
+            if animated, isNew {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+            }
+        } else if let view = self.avatarView {
+            performSubviewRemoval(view, animated: animated, scale: true)
+            self.avatarView = nil
+        }
+        
         selectingView?.sizeToFit()
         selectingView?.setFrameOrigin(NSMakePoint(defaultInset, 0))
 
@@ -632,9 +647,7 @@ private final class TodoView : Control {
             actionButton.isEnabled = item.actionButtonIsEnabled
             
             actionButton.removeAllHandlers()
-            actionButton.set(handler: { [weak item] _ in
-                item?.invokeAction()
-            }, for: .SingleClick)
+            
             
             actionButton.set(font: .normal(.text), for: .Normal)
             actionButton.set(color: item.presentation.chat.activityColor(item.isIncoming, item.isBubbled), for: .Normal)

@@ -38,7 +38,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     //TODOLANG
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.bulb, text: .initialize(string: strings().channelMessagesHeader, color: theme.colors.grayText, font: .normal(.title)))
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.direct_messages, text: .initialize(string: strings().channelMessagesHeader, color: theme.colors.grayText, font: .normal(.title)))
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))

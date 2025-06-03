@@ -1993,6 +1993,7 @@ class ChatListRowItem: TableRowItem {
                     } else if isUnread {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
                             _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: false).start()
+                            _ = clearPeerUnseenPersonalMessagesInteractively(account: context.account, peerId: peerId, threadId: nil).start()
                         }, itemImage: MenuAnimation.menu_read.value))
                     }
                 }

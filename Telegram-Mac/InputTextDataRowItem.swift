@@ -56,7 +56,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let simpleTransform: Bool
     fileprivate let allowedLinkHosts: [String]
     fileprivate let playAnimation: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = [], playAnimation: Bool = true) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = [], playAnimation: Bool = true, enabled: Bool = true) {
         self.filter = filter
         self.limit = limit
         self.context = context
@@ -71,7 +71,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.state = state
         self.inputPlaceholder = .initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text))
         self.placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        super.init(initialSize, stableId: stableId, viewType: viewType, enabled: enabled)
     }
     
     var textFieldLeftInset: CGFloat {
@@ -518,8 +518,15 @@ class InputTextDataRowView : GeneralContainableRowView {
         textView.interactions.allowedLinkHosts = item.allowedLinkHosts
         textView.interactions.canTransform = item.canMakeTransformations
         textView.interactions.simpleTransform = item.simpleTransform
+        textView.interactions.inputIsEnabled = item.enabled
         
         
+        self.textView.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
+        self.rightActionView.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
+        self.placeholderAction?.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
+        self.textLimitation.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
+        self.emoji?.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
+
         let prevPolicy = textView.interactions.emojiPlayPolicy
             
         textView.interactions.emojiPlayPolicy = item.playAnimation ? .loop : .framesCount(1)

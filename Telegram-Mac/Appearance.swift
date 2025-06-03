@@ -719,14 +719,22 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
 }
 
 private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(19, 19), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
         ctx.setBlendMode(.copy)
         ctx.round(size, size.height / 2)
+        
+        
+        if backgound != NSColor(0xffffff) {
+            ctx.setFillColor(NSColor(0xffffff).cgColor)
+            ctx.fillEllipse(in: rect)
+        }
+        
         ctx.setFillColor(backgound.cgColor)
-        ctx.fill(rect)
+        ctx.fillEllipse(in: rect.insetBy(dx: 1, dy: 1))
+        
         
         ctx.setBlendMode(.normal)
         let image = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
@@ -734,6 +742,8 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
             ctx.clip(to: rect, mask: image)
             ctx.clear(rect)
         } else {
+            
+         
             ctx.draw(image, in: rect.focus(image.backingSize))
         }
     })!

@@ -510,6 +510,7 @@
 		27819CE42C737CE7005B3F13 /* countdown5s.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27819CE32C737CE7005B3F13 /* countdown5s.tgs */; };
 		27819CE62C738462005B3F13 /* ChatStarReactionUndo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27819CE52C738462005B3F13 /* ChatStarReactionUndo.swift */; };
 		2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27841869285A05840010E0F1 /* StickersCarouselView.swift */; };
+		27843A972DEEF7760084122B /* menu_list.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27843A962DEEF7760084122B /* menu_list.tgs */; };
 		2786367A27C66F5A00690B10 /* RTMPStartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2786367927C66F5A00690B10 /* RTMPStartController.swift */; };
 		2786367C27C7C5D600690B10 /* group_call_share.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367B27C7C5D600690B10 /* group_call_share.tgs */; };
 		2786367E27C7C5F800690B10 /* group_call_minmax.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367D27C7C5F800690B10 /* group_call_minmax.tgs */; };
@@ -699,6 +700,7 @@
 		27B8E7C627425279001B8DF7 /* TGModernGrowingTextView in Frameworks */ = {isa = PBXBuildFile; productRef = 27B8E7C527425279001B8DF7 /* TGModernGrowingTextView */; };
 		27BA045726E4F3E9008FC1A3 /* MessageReadMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BA045626E4F3E9008FC1A3 /* MessageReadMenuItem.swift */; };
 		27BA045B26E51F55008FC1A3 /* AvatarContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BA045A26E51F55008FC1A3 /* AvatarContentView.swift */; };
+		27BC34542DEB3C0100598C60 /* direct_messages.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27BC34532DEB3C0100598C60 /* direct_messages.tgs */; };
 		27BCE40F2A409FDD0015E5EE /* StoryContactHiddenItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */; };
 		27BCE4112A41C1090015E5EE /* menu_save_to_profile.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */; };
 		27BCE41D2A49D0F10015E5EE /* ChatListEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */; };
@@ -2194,6 +2196,7 @@
 		27819CE52C738462005B3F13 /* ChatStarReactionUndo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStarReactionUndo.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
 		27841869285A05840010E0F1 /* StickersCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickersCarouselView.swift; sourceTree = "<group>"; };
+		27843A962DEEF7760084122B /* menu_list.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_list.tgs; sourceTree = "<group>"; };
 		2785F7FE274F707F00FDF88F /* InAppSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppSettings; path = packages/InAppSettings; sourceTree = "<group>"; };
 		2785F801274F75D300FDF88F /* ThemeSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ThemeSettings; path = packages/ThemeSettings; sourceTree = "<group>"; };
 		2785F802274F764100FDF88F /* ColorPalette */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ColorPalette; path = packages/ColorPalette; sourceTree = "<group>"; };
@@ -2347,6 +2350,7 @@
 		27B8E7C42742523D001B8DF7 /* TGModernGrowingTextView */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGModernGrowingTextView; path = packages/TGModernGrowingTextView; sourceTree = "<group>"; };
 		27BA045626E4F3E9008FC1A3 /* MessageReadMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReadMenuItem.swift; sourceTree = "<group>"; };
 		27BA045A26E51F55008FC1A3 /* AvatarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarContentView.swift; sourceTree = "<group>"; };
+		27BC34532DEB3C0100598C60 /* direct_messages.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = direct_messages.tgs; sourceTree = "<group>"; };
 		27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryContactHiddenItem.swift; sourceTree = "<group>"; };
 		27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_save_to_profile.tgs; sourceTree = "<group>"; };
 		27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListEmptyItem.swift; sourceTree = "<group>"; };
@@ -4388,6 +4392,7 @@
 				27CE376327609609007E6F1B /* menu_unmuted.tgs */,
 				27CE37712760B13C007E6F1B /* menu_unpin.tgs */,
 				27CE375E27609605007E6F1B /* menu_unread.tgs */,
+				27843A962DEEF7760084122B /* menu_list.tgs */,
 			);
 			path = menu;
 			sourceTree = "<group>";
@@ -6490,6 +6495,7 @@
 				2729C3CB2D8023A200BD64CC /* freeze_duck.tgs */,
 				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				270375F02C9CDF20003EC235 /* duck_passcode.tgs */,
+				27BC34532DEB3C0100598C60 /* direct_messages.tgs */,
 				270376032CA1A760003EC235 /* duck_uploads.tgs */,
 				27E7BAF22DD7664A00B70368 /* topics.tgs */,
 				27ED23562D76DDF90093C11F /* menu_transfer.tgs */,
@@ -7296,6 +7302,7 @@
 				2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */,
 				27CB17522763284500DD25E0 /* menu_unblock.tgs in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014.txt in Resources */,
+				27843A972DEEF7760084122B /* menu_list.tgs in Resources */,
 				27336735276241820027441E /* menu_plus.tgs in Resources */,
 				279DF45D2B99A29200E644A7 /* fragment_username.tgs in Resources */,
 				27CB17582763738E00DD25E0 /* menu_share.tgs in Resources */,
@@ -7493,6 +7500,7 @@
 				27916F2F287D77660046DB44 /* animals.tgs in Resources */,
 				27803BF427A3E944007B0FA9 /* menu_folder_telegram.tgs in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
+				27BC34542DEB3C0100598C60 /* direct_messages.tgs in Resources */,
 				27B4A8F12C2DA0340000F3DF /* emoji144.txt in Resources */,
 				27CE376A2760960A007E6F1B /* menu_delete.tgs in Resources */,
 				274BB570264013B900620D03 /* cameraoff.tgs in Resources */,
