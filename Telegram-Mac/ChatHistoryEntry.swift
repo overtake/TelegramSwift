@@ -179,7 +179,8 @@ struct MessageEntryAdditionalData : Equatable {
     let factCheckRevealed: Bool
     let quoteRevealed: Set<Int>
     let monoforumState: MonoforumUIState?
-    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, replyTranslate: ChatLiveTranslateContext.State.Result? = nil, storyReadMaxId: Int32? = nil, authorStoryStats: PeerStoryStats? = nil, cachedData: CachedDataEquatable? = nil, recommendedChannels: RecommendedChannels? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, savedMessageTags: SavedMessageTags? = nil, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], messageEffect: AvailableMessageEffects.MessageEffect? = nil, factCheckRevealed: Bool = false, quoteRevealed: Set<Int> = Set(), monoforumState: MonoforumUIState? = nil) {
+    let canHighlightLinks: Bool
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, replyTranslate: ChatLiveTranslateContext.State.Result? = nil, storyReadMaxId: Int32? = nil, authorStoryStats: PeerStoryStats? = nil, cachedData: CachedDataEquatable? = nil, recommendedChannels: RecommendedChannels? = nil, automaticDownload: AutomaticMediaDownloadSettings = .defaultSettings, savedMessageTags: SavedMessageTags? = nil, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], messageEffect: AvailableMessageEffects.MessageEffect? = nil, factCheckRevealed: Bool = false, quoteRevealed: Set<Int> = Set(), monoforumState: MonoforumUIState? = nil, canHighlightLinks: Bool = true) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
         self.isThreadLoading = isThreadLoading
@@ -203,6 +204,7 @@ struct MessageEntryAdditionalData : Equatable {
         self.factCheckRevealed = factCheckRevealed
         self.quoteRevealed = quoteRevealed
         self.monoforumState = monoforumState
+        self.canHighlightLinks = canHighlightLinks
     }
 }
 
@@ -1118,7 +1120,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
         
         let quoteRevealed = Set(quoteRevealed.filter( { $0.messageId == message.id }).map { $0.index })
         
-        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: messageTranslate, replyTranslate: replyTranslate, storyReadMaxId: storyState?.maxReadId, authorStoryStats: message.author.flatMap { peerStoryStats[$0.id] }, cachedData: .init(cachedData), automaticDownload: automaticDownload, savedMessageTags: savedMessageTags, codeSyntaxData: codeSyntaxData.filter { $0.key.messageId == message.id }, messageEffect: messageEffect, factCheckRevealed: factCheckRevealed.contains(message.id), quoteRevealed: quoteRevealed, monoforumState: monoforumState)
+        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: messageTranslate, replyTranslate: replyTranslate, storyReadMaxId: storyState?.maxReadId, authorStoryStats: message.author.flatMap { peerStoryStats[$0.id] }, cachedData: .init(cachedData), automaticDownload: automaticDownload, savedMessageTags: savedMessageTags, codeSyntaxData: codeSyntaxData.filter { $0.key.messageId == message.id }, messageEffect: messageEffect, factCheckRevealed: factCheckRevealed.contains(message.id), quoteRevealed: quoteRevealed, monoforumState: monoforumState, canHighlightLinks: peerStatus?.contains(.canReport) == true ? false : true)
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         
        

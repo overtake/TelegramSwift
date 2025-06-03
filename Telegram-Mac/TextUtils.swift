@@ -360,6 +360,9 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             if let media = message.media.first as? TelegramMediaPoll, !notifications {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
             }
+            if let media = message.media.first as? TelegramMediaTodo, !notifications {
+                InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
+            }
             
 //            var replacements:[String: TelegramMediaFile] = [:]
 //            replacements["📊"] = LocalAnimatedSticker.chatlist_poll.file
@@ -1034,7 +1037,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 text = strings().notificationGroupCallIncoming
             }
         case let .todoCompletions(completed, incompleted):
-            text = ""
+            text = "task completed: \(completed)"
         }
     }
     return (text, entities, media)

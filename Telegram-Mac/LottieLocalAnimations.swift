@@ -224,6 +224,7 @@ enum LocalAnimatedSticker : String {
     case menu_lock
     case menu_unlock
     case menu_poll
+    case menu_list
     case menu_location
     case menu_camera
     case menu_translate
@@ -385,6 +386,7 @@ enum LocalAnimatedSticker : String {
     case premium_reaction_effect_5
     
     case freeze_duck
+    case direct_messages
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

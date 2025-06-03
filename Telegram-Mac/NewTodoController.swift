@@ -33,10 +33,12 @@ private struct TodoOption : Equatable {
     let identifier: InputDataIdentifier
     let textState: Updated_ChatTextInputState
     let selected: Bool
-    init(identifier: InputDataIdentifier, textState: Updated_ChatTextInputState, selected: Bool) {
+    let enabled: Bool
+    init(identifier: InputDataIdentifier, textState: Updated_ChatTextInputState, selected: Bool, enabled: Bool) {
         self.identifier = identifier
         self.textState = textState
         self.selected = selected
+        self.enabled = enabled
     }
     
     var text: String {
@@ -44,10 +46,10 @@ private struct TodoOption : Equatable {
     }
     
     func withUpdatedText(_ textState: Updated_ChatTextInputState) -> TodoOption {
-        return TodoOption(identifier: self.identifier, textState: textState, selected: self.selected)
+        return TodoOption(identifier: self.identifier, textState: textState, selected: self.selected, enabled: self.enabled)
     }
     func withUpdatedSelected(_ selected: Bool) -> TodoOption {
-        return TodoOption(identifier: self.identifier, textState: self.textState, selected: selected)
+        return TodoOption(identifier: self.identifier, textState: self.textState, selected: selected, enabled: self.enabled)
     }
 }
 
@@ -58,18 +60,20 @@ private struct State : Equatable {
     var othersCanAdd: Bool = false
     var othersCanComplete: Bool = false
     
+    var editing: Bool
+    
     
     func withUpdatedTitle(_ title: String) -> State {
-        return State(options: self.options, textState: self.textState)
+        return State(options: self.options, textState: self.textState, editing: self.editing)
     }
     func withDeleteOption(_ identifier: InputDataIdentifier) -> State {
         var options = self.options
         options.removeAll(where: {$0.identifier == identifier})
-        return State(options: options, textState: self.textState)
+        return State(options: options, textState: self.textState, editing: self.editing)
     }
     
     func withUnselectItems() -> State {
-        return State(options: self.options.map { $0.withUpdatedSelected(false) }, textState: self.textState)
+        return State(options: self.options.map { $0.withUpdatedSelected(false) }, textState: self.textState, editing: self.editing)
     }
     
     func withUpdatedOption(_ f:(TodoOption) -> TodoOption, forKey identifier: InputDataIdentifier) -> State {
@@ -77,18 +81,18 @@ private struct State : Equatable {
         if let index = options.firstIndex(where: {$0.identifier == identifier}) {
             options[index] = f(options[index])
         }
-        return State(options: options, textState: self.textState)
+        return State(options: options, textState: self.textState, editing: self.editing)
     }
     
     func withAddedOption(_ option: TodoOption) -> State {
         var options = self.options
         options.append(option)
-        return State(options: options, textState: self.textState)
+        return State(options: options, textState: self.textState, editing: self.editing)
     }
     func withUpdatedPos(_ previous: Int, _ current: Int) -> State {
         var options = self.options
         options.move(at: previous, to: current)
-        return State(options: options, textState: self.textState)
+        return State(options: options, textState: self.textState, editing: self.editing)
     }
     
     func indexOf(_ identifier: InputDataIdentifier) -> Int? {
@@ -96,7 +100,7 @@ private struct State : Equatable {
     }
     
     func withUpdatedState() -> State {
-         return State(options: self.options, textState: self.textState)
+         return State(options: self.options, textState: self.textState, editing: self.editing)
     }
     
     var title: String {
@@ -233,13 +237,32 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func NewTodoController(chatInteraction: ChatInteraction) -> InputDataModalController {
+func NewTodoController(chatInteraction: ChatInteraction, message: Message? = nil) -> InputDataModalController {
     
     let context = chatInteraction.context
 
     let actionsDisposable = DisposableSet()
+    
+    let initialTitle: Updated_ChatTextInputState
+    var initialOptions: [TodoOption] = []
+    let othersCanAdd: Bool
+    let othersCanComplete: Bool
+    if let media = message?.media.first as? TelegramMediaTodo {
+        initialTitle = ChatTextInputState(inputText: media.text, selectionRange: media.text.length..<media.text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: media.textEntities), associatedMedia: [:])).textInputState()
+        for option in media.items {
+            let text = ChatTextInputState(inputText: option.text, selectionRange: option.text.length..<option.text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: option.entities), associatedMedia: [:])).textInputState()
+            initialOptions.append(.init(identifier: _id_input_option(), textState: text, selected: false, enabled: false))
+        }
+        othersCanAdd = media.flags.contains(.othersCanAppend)
+        othersCanComplete = media.flags.contains(.othersCanComplete)
+    } else {
+        initialTitle = .init()
+        initialOptions = [TodoOption(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true), TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true)]
+        othersCanAdd = false
+        othersCanComplete = false
+    }
 
-    let initialState = State(options: [TodoOption(identifier: _id_input_option(), textState: .init(), selected: false), TodoOption(identifier: _id_input_option(), textState: .init(), selected: false)], textState: .init())
+    let initialState = State(options: initialOptions, textState: initialTitle, othersCanAdd: othersCanAdd, othersCanComplete: othersCanComplete, editing: message != nil)
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -302,7 +325,7 @@ func NewTodoController(chatInteraction: ChatInteraction) -> InputDataModalContro
     
     
     let addOption:(Bool)-> InputDataValidation = { byClick in
-        let option = TodoOption(identifier: _id_input_option(), textState: .init(), selected: false)
+        let option = TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true)
         updateState { state in
             if state.options.count < optionsLimit {
                 return state.withAddedOption(option)
@@ -319,8 +342,13 @@ func NewTodoController(chatInteraction: ChatInteraction) -> InputDataModalContro
         let state = stateValue.with { $0 }
     
         if state.isEnabled {
-            chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false, nil, false, nil, false)
-            close?()
+            if let message = message {
+                context.account.pendingUpdateMessageManager.add(messageId: message.id, text: "", media: .update(.message(message: MessageReference(message), media: state.media)), entities: nil, inlineStickers: [:])
+                close?()
+            } else {
+                chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false, nil, false, nil, false)
+                close?()
+            }
         }
     }
     
@@ -371,7 +399,7 @@ func NewTodoController(chatInteraction: ChatInteraction) -> InputDataModalContro
                 var state = state
                 if fails.isEmpty {
                     if state.options.count < 2 {
-                        state = state.withAddedOption(TodoOption(identifier: _id_input_option(), textState: .init(), selected: false))
+                        state = state.withAddedOption(TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true))
                         if addedOptions == nil {
                             addedOptions = state.options.count - 1
                         }
