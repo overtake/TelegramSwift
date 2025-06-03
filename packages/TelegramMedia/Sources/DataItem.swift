@@ -13,6 +13,7 @@ public final class DataItem : TGDataItem {
     let path: String
     public init(path: String) {
         self.path = path
+        super.init()
     }
     public override func appendData(_ data: Data!) {
          do {

@@ -105,7 +105,7 @@ class PeerMediaRowItem: GeneralRowItem {
                 interface.focusMessageId(nil, .init(messageId: messageId, string: nil), .center(id: 0, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
             }, itemImage: MenuAnimation.menu_show_message.value))
             
-            if canDeleteMessage(message, account: interface.context.account, mode: .history) || mode == .recentDownloaded {
+            if canDeleteMessage(message, account: interface.context.account, chatLocation: interface.chatLocation, mode: .history) || mode == .recentDownloaded {
                 thirdBlock.append(ContextMenuItem(strings().messageContextDelete, handler: {
                     interface.deleteMessages([messageId])
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))

@@ -280,7 +280,7 @@ class ChatInputView: View, Notifable {
             return strings().messagePlaceholderPaidMessage(strings().starListItemCountCountable(Int(amount.value)))
         }
         
-        if case let .thread(_, mode) = chatInteraction.mode {
+        if case let .thread(mode) = chatInteraction.mode {
             switch mode {
             case .comments:
                 return strings().messagesPlaceholderComment
@@ -300,9 +300,6 @@ class ChatInputView: View, Notifable {
                 return strings().chatInputBusinessGreeting
             case .quickReplyMessageInput:
                 return strings().chatInputBusinessQuickReply
-            case .suggestMessages:
-                //TODOLANG
-                return "Suggest a Message..."
             case .searchHashtag:
                 return ""
             }
@@ -904,7 +901,7 @@ class ChatInputView: View, Notifable {
             sendActivityDisposable.set((Signal<Bool, NoError>.single(!state.effectiveInput.inputText.isEmpty) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
                 if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
                     if self?.chatInteraction.peerIsAccountPeer == true {
-                        chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: isPresent)
+                        chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, category: chatInteraction.mode.activityCategory(chatInteraction.chatLocation.threadId)), activity: .typingText, isPresent: isPresent)
                     }
                 }
             }))

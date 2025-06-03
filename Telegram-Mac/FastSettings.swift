@@ -286,6 +286,16 @@ class FastSettings {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
     
+    static func monoforumState(_ peerId: PeerId) -> MonoforumUIState {
+        let int = UserDefaults.standard.integer(forKey: "\(peerId)_monoforum_state")
+        return MonoforumUIState(rawValue: int) ?? .vertical
+    }
+    
+    static func setMonoforumState(_ peerId: PeerId, state: MonoforumUIState) -> Void {
+        UserDefaults.standard.set(state.rawValue, forKey: "\(peerId)_monoforum_state")
+    }
+
+    
     static var photoDimension: CGFloat {
         if let largePhotos = UserDefaults.standard.value(forKey: kPhotoSize) as? Bool {
             return largePhotos ? 2560 : 1280

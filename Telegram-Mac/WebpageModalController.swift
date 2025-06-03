@@ -1626,7 +1626,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { peerId, threadId in
                             let action: ChatInitialAction = .inputText(text: .init(inputText: inputQuery), behavior: .automatic)
                             if let threadId = threadId {
-                                _ = ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
+                                _ = ForumUI.openTopic(threadId, peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
                             } else {
                                 context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: action))
                             }

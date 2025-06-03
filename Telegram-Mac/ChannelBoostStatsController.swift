@@ -230,7 +230,7 @@ private final class BoosterRowItemView : GeneralContainableRowView {
         self.nameView.update(item.name)
         self.statusView.update(item.status)
         if let empty = item.empty {
-            self.avatar.setSignal(generateEmptyPhoto(NSMakeSize(36, 36), type: empty) |> map { ($0, false) })
+            self.avatar.setSignal(generateEmptyPhoto(NSMakeSize(36, 36), type: empty, bubble: false) |> map { ($0, false) })
         } else {
             self.avatar.setPeer(account: item.context.account, peer: item.boost.peer?._asPeer())
         }

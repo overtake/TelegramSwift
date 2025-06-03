@@ -24,21 +24,23 @@ struct ChatHistoryLocationInput: Equatable {
     var content: ChatHistoryLocation
     var id: Int32
     var tag: HistoryViewInputTag?
-    init(content: ChatHistoryLocation, tag: HistoryViewInputTag?, id: Int32) {
+    var chatLocation: ChatLocation
+    init(content: ChatHistoryLocation, chatLocation: ChatLocation, tag: HistoryViewInputTag?, id: Int32) {
         self.content = content
+        self.chatLocation = chatLocation
         self.id = id
         self.tag = tag
     }
 }
 
 enum ChatHistoryLocation: Equatable {
-    case Initial(count: Int)
+    case Initial(count: Int, scrollPosition: TableScrollState?)
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)
     case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int, side: TableSavingSide)
     case Scroll(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, sourceIndex: MessageHistoryAnchorIndex, scrollPosition: TableScrollState, count: Int, animated: Bool)
     var count: Int {
         switch self {
-        case let .Initial(count):
+        case let .Initial(count, _):
             return count
         case let .InitialSearch(_, count):
             return count
@@ -63,6 +65,7 @@ enum ChatHistoryLocation: Equatable {
 
 enum ChatHistoryViewScrollPosition : Equatable {
     case unread(index: MessageIndex)
+    case scroll(TableScrollState)
     case positionRestoration(index: MessageIndex, relativeOffset: CGFloat)
     case index(index: MessageHistoryAnchorIndex, position: TableScrollState, directionHint: ListViewScrollToItemDirectionHint, animated: Bool)
 }
@@ -71,6 +74,12 @@ func ==(lhs: ChatHistoryViewScrollPosition, rhs: ChatHistoryViewScrollPosition) 
     switch lhs {
     case let .unread(index):
         if case .unread(index: index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .scroll(value):
+        if case .scroll(value) = rhs {
             return true
         } else {
             return false
@@ -145,7 +154,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
 
     
     switch location {
-    case let .Initial(count):
+    case let .Initial(count, scroll):
         var preloaded = false
         var fadeIn = false
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
@@ -251,8 +260,12 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                         fadeIn = true
                         return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
                     }
+                    
                 }
 
+                if let scrollState = scroll, updateType == .Initial, scrollPosition == nil {
+                    scrollPosition = .scroll(scrollState)
+                }
                 
                 preloaded = true
                 return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: scrollPosition, initialData: combinedInitialData)
@@ -498,6 +511,7 @@ func preloadedChatHistoryViewForLocation(_ location: ChatHistoryLocation, contex
 struct ThreadInfo {
     var message: ChatReplyThreadMessage
     var isChannelPost: Bool
+    var isMonoforumPost: Bool
     var isEmpty: Bool
     var scrollToLowerBoundMessage: MessageIndex?
     var contextHolder: Atomic<ChatLocationContextHolder?>
@@ -527,7 +541,7 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubj
             if let atMessageId = atMessageId {
                 input = .InitialSearch(location: .id(atMessageId, nil), count: 40)
             } else {
-                input = .Initial(count: 40)
+                input = .Initial(count: 40, scrollPosition: nil)
             }
         case let .lowerBoundMessage(index):
             input = .Navigation(index: .message(index), anchorIndex: .message(index), count: 40, side: .upper)
@@ -538,6 +552,7 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubj
             return .single(ThreadInfo(
                 message: replyThreadMessage,
                 isChannelPost: replyThreadMessage.isChannelPost,
+                isMonoforumPost: replyThreadMessage.isMonoforumPost,
                 isEmpty: false,
                 scrollToLowerBoundMessage: nil,
                 contextHolder: chatLocationContextHolder
@@ -574,6 +589,7 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubj
                 return ThreadInfo(
                     message: replyThreadMessage,
                     isChannelPost: replyThreadMessage.isChannelPost,
+                    isMonoforumPost: replyThreadMessage.isMonoforumPost,
                     isEmpty: isEmpty,
                     scrollToLowerBoundMessage: scrollToLowerBoundMessage,
                     contextHolder: chatLocationContextHolder
@@ -584,6 +600,7 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubj
             return .single(ThreadInfo(
                 message: replyThreadMessage,
                 isChannelPost: replyThreadMessage.isChannelPost,
+                isMonoforumPost: replyThreadMessage.isMonoforumPost,
                 isEmpty: false,
                 scrollToLowerBoundMessage: scrollToLowerBoundMessage,
                 contextHolder: chatLocationContextHolder

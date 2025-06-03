@@ -1284,8 +1284,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     arguments.openLink(inapplink)
                 }
             }
-            //TODOLANG
-            rows.append(.init(left: .init(.initialize(string: "Transaction URL", color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
+            rows.append(.init(left: .init(.initialize(string: strings().starTransactionTransactionUrl, color: theme.colors.text, font: .normal(.text))), right: .init(name: transactionId)))
         }
         
     }

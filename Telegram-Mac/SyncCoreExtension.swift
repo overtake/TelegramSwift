@@ -50,6 +50,10 @@ extension Peer {
         if self.isUser && !self.isBot {
             return true
         }
+        if self.isMonoForum {
+            return false
+        }
+        
         if let peer = self as? TelegramChannel {
             if let adminRights = peer.adminRights, adminRights.rights.contains(.canDeleteMessages) {
                 return true

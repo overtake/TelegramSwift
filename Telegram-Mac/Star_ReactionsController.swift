@@ -564,7 +564,7 @@ private final class SendersView: View {
                 let icon = theme.icons.chat_hidden_author
                 self.avatarView.setState(account: context.account, state: .Empty)
                 let size = self.avatarView.frame.size
-                self.avatarView.setSignal(generateEmptyPhoto(size, type: .icon(colors: (top: NSColor(0xb8b8b8), bottom: NSColor(0xb8b8b8).withAlphaComponent(0.6)), icon: icon, iconSize: icon.backingSize, cornerRadius: nil)) |> map {($0, false)})
+                self.avatarView.setSignal(generateEmptyPhoto(size, type: .icon(colors: (top: NSColor(0xb8b8b8), bottom: NSColor(0xb8b8b8).withAlphaComponent(0.6)), icon: icon, iconSize: icon.backingSize, cornerRadius: nil), bubble: false) |> map {($0, false)})
             }
             
             sender.titleLayout.measure(width: frame.width + 20)

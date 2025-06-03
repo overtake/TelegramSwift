@@ -229,8 +229,6 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
             initialShortcut = shortcut
         case .searchHashtag:
             fatalError()
-        case .suggestMessages:
-            fatalError()
         }
         
         let queue = Queue()

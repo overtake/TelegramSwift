@@ -1734,14 +1734,27 @@ func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor
     })!
 }
 
-func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1) -> CGImage {
+func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1, bubble: Bool = false) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-        if cornerRadius == -1 {
-            ctx.round(size, size.width/2)
+        if bubble {
+            let rect = CGRect(origin: CGPoint(), size: size)
+            ctx.translateBy(x: rect.midX, y: rect.midY)
+            ctx.scaleBy(x: 1.0, y: -1.0)
+            ctx.translateBy(x: -rect.midX, y: -rect.midY)
+            addAvatarBubblePath(context: ctx, rect: rect)
+            ctx.translateBy(x: rect.midX, y: rect.midY)
+            ctx.scaleBy(x: 1.0, y: -1.0)
+            ctx.translateBy(x: -rect.midX, y: -rect.midY)
+            ctx.clip()
         } else {
-            ctx.round(size, min(cornerRadius, size.width / 2))
+            if cornerRadius == -1 {
+                ctx.round(size, size.width/2)
+            } else {
+                ctx.round(size, min(cornerRadius, size.width / 2))
+            }
         }
+        
         ctx.setFillColor(foregroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
     })!

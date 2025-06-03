@@ -1043,7 +1043,7 @@ public extension ReplyMarkupMessageAttribute {
 
 fileprivate let edit_limit_time:Int32 = 48*60*60
 
-func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
+func canDeleteMessage(_ message:Message, account:Account, chatLocation: ChatLocation, mode: ChatMode) -> Bool {
     
     if case .searchHashtag = mode.customChatContents?.kind {
         return false
@@ -1052,7 +1052,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if mode.customChatContents != nil {
         return true
     }
-    if mode.threadId == message.id {
+    if chatLocation.threadMsgId == message.id {
         return false
     }
     if message.adAttribute != nil {
@@ -1217,7 +1217,7 @@ func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
     return false
 }
 
-func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadData: MessageHistoryThreadData? = nil) -> Bool {
+func canReplyMessage(_ message: Message, peerId: PeerId, chatLocation: ChatLocation, mode: ChatMode, threadData: MessageHistoryThreadData? = nil) -> Bool {
     if let peer = coreMessageMainPeer(message) {
         if message.isScheduledMessage {
             return false
@@ -1236,21 +1236,23 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 }
             case .scheduled:
                 return false
-            case let .thread(data, mode):
-                switch mode {
-                case .comments, .replies, .topic:
-                    if message.id.id == data.threadId {
+            case let .thread(mode):
+                if case let .thread(data) = chatLocation {
+                    switch mode {
+                    case .comments, .replies, .topic:
+                        if message.id.id == data.threadId {
+                            return false
+                        }
+                        if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
+                            return true
+                        } else {
+                            return peer.canSendMessage(false, threadData: threadData)
+                        }
+                    case .savedMessages:
+                        return false
+                    case .saved:
                         return false
                     }
-                    if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
-                        return true
-                    } else {
-                        return peer.canSendMessage(false, threadData: threadData)
-                    }
-                case .savedMessages:
-                    return false
-                case .saved:
-                    return false
                 }
             case .pinned:
                 return false
@@ -3895,6 +3897,15 @@ extension NSAttributedString {
         return attr
     }
     
+    static func embeddedAnimated(_ fileId: Int64, color: NSColor? = nil, playPolicy: LottiePlayPolicy? = nil) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: fileId, file: nil, emoji: emoji, color: color)), playPolicy: playPolicy), range: NSMakeRange(0, emoji.length))
+        return attr
+    }
+    
     static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true, link: Any? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         
@@ -4112,5 +4123,15 @@ extension TelegramMediaImage {
     convenience init(dimension: PixelDimensions, immediateThumbnailData: Data?) {
         self.init(imageId: .init(namespace: 0, id: 0), representations: [.init(dimensions: dimension, resource: LocalBundleResource(name: "", ext: ""), progressiveSizes: [], immediateThumbnailData: immediateThumbnailData)], immediateThumbnailData: immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
 
+    }
+}
+
+
+extension RenderedPeer {
+    convenience init(_ renderedPeer: EngineRenderedPeer) {
+        let dict = SimpleDictionary<PeerId, any Peer>(renderedPeer.peers.mapValues {
+            $0._asPeer()
+        })
+        self.init(peerId: renderedPeer.peerId, peers: dict, associatedMedia: renderedPeer.associatedMedia)
     }
 }

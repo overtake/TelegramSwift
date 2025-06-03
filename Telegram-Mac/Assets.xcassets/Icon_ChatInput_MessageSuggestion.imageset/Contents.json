@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "messageSuggestion_30.png",
+      "filename" : "Channel Inbox.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "messageSuggestion_30@2x.png",
+      "filename" : "Channel Inbox@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
