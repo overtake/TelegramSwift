@@ -667,14 +667,14 @@ private func prepareStickersTransition(from:[AppearanceWrapperEntry<StickerPackE
             if scrollToTop {
                 state = .up(animated)
             } else {
-                state = .saveVisible(.lower)
+                state = .saveVisible(.lower, false)
             }
         } else {
             state = .none(nil)
         }
         
     case let .scroll(animated):
-        state = .saveVisible(.upper)
+        state = .saveVisible(.upper, false)
         anim = animated
     case let .navigate(index, animated):
         state = .top(id: index.collectionId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0)

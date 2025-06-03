@@ -1557,7 +1557,7 @@ public final class TextViewLayout : Equatable {
             }
             for i in 0 ..< lines.count {
                 let line = lines[i]
-                lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y), range: line.range, lineRange: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)
+                lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y + yInset), range: line.range, lineRange: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)
             }
             layoutSize.height = rects.last!.maxY - minusHeight
         } else {
@@ -1695,7 +1695,7 @@ public final class TextViewLayout : Equatable {
     
     private func map(_ index: Int, byWord: Bool, forward: Bool) -> Int {
         if byWord {
-            let range = self.attributedString.doubleClick(at: index)
+            let range = self.attributedString.doubleClick(at: min(max(0, index), self.attributedString.string.length - 1))
             if forward {
                 return range.max
             } else {

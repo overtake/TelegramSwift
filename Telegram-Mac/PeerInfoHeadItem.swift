@@ -485,7 +485,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 height += maxActionSize.height + insets.top
             }
             if self.threadId != nil {
-                height += 40
+                height += 50
             }
         } else {
             height = photoDimension
@@ -599,8 +599,13 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate var nameLayout: TextViewLayout
     
     
+    var effectivePeer: Peer? {
+        return threadPeer?._asPeer() ?? peer
+    }
+    
     let context: AccountContext
     let peer:Peer?
+    let threadPeer: EnginePeer?
     let isVerified: Bool
     let isPremium: Bool
     let isScam: Bool
@@ -648,9 +653,10 @@ class PeerInfoHeadItem: GeneralRowItem {
     let giftsContext: ProfileGiftsContext?
     
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }, giftsContext: ProfileGiftsContext? = nil) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }, giftsContext: ProfileGiftsContext? = nil, threadPeer: EnginePeer? = nil) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
+        self.threadPeer = threadPeer
         self.threadData = threadData
         self.peerView = peerView
         self.context = context
@@ -717,10 +723,18 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
         var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), titleColor: PeerInfoHeadItem.textColor(peer, threadId: threadId, context: context), statusFont: threadId != nil ? .medium(.text) : .normal(.text), statusColor: PeerInfoHeadItem.grayTextColor(peer, threadId: threadId, context: context), highlightIfActivity: false), expanded: true)
         
+        
+        
         if let threadData = threadData {
-            result = result
-                .withUpdatedTitle(threadData.info.title)
-                .withUpdatedStatus(peer?.displayTitle ?? "")
+            if let peer = peerViewMonoforumMainPeer(peerView), let threadPeer {
+                result = result
+                    .withUpdatedTitle(peer.displayTitle)
+                    .withUpdatedStatus(threadPeer._asPeer().displayTitle)
+            } else {
+                result = result
+                    .withUpdatedTitle(threadData.info.title)
+                    .withUpdatedStatus(peer?.displayTitle ?? "")
+            }
         }
         if peerView.peerIsContact, let user = peer as? TelegramUser, user.photo.contains(where: { $0.isPersonal }) {
             result = result.withUpdatedStatus(result.status.string + " \(strings().bullet) " + strings().userInfoSetByYou)
@@ -862,7 +876,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     func openNavigationTopics() {
         if let peer = peer, isTopic {
-            ForumUI.open(peer.id, context: context)
+            ForumUI.open(peer.id, addition: true, context: context)
         }
     }
     
@@ -1957,7 +1971,12 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         item.table?.addScroll(listener: listener)
         
-        photoView.setPeer(account: item.context.account, peer: item.peer)
+        if let monoforum = peerViewMonoforumMainPeer(item.peerView), let peer = item.effectivePeer, item.threadPeer == nil {
+            photoView.setState(account: item.context.account, state: .PeerAvatar(peer, monoforum.displayLetters, monoforum.smallProfileImage, monoforum.nameColor, nil, nil, true, nil))
+        } else {
+            photoView.setPeer(account: item.context.account, peer: item.effectivePeer)
+        }
+        
 
         updatePhoto(item, animated: animated)
         
@@ -2189,7 +2208,7 @@ private final class PeerInfoHeadView : GeneralRowView {
     private func updatePhoto(_ item: PeerInfoHeadItem, animated: Bool) {
         let context = item.context
         
-        if let threadData = item.threadData {
+        if let threadData = item.threadData, item.isForum {
             let size = NSMakeSize(item.photoDimension, item.photoDimension)
             let topicView: Control
             if let view = self.topicPhotoView {

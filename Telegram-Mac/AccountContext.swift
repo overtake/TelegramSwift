@@ -307,8 +307,12 @@ enum ChatLocation: Equatable {
 
 extension ChatLocation {
     
-    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId) -> ChatLocation {
-        return .thread(.init(peerId: accountPeerId, threadId: peerId.toInt64(), channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
+    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId, isMonoforum: Bool = false) -> ChatLocation {
+        return .makeSaved(accountPeerId, threadId: peerId.toInt64(), isMonoforum: isMonoforum)
+    }
+    
+    static func makeSaved(_ accountPeerId: PeerId, threadId: Int64, isMonoforum: Bool = false) -> ChatLocation {
+        return .thread(.init(peerId: accountPeerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforumPost: isMonoforum, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
     }
     
     var unreadMessageCountsItem: UnreadMessageCountsItem {
@@ -1257,7 +1261,7 @@ final class AccountContext {
         case let .peer(peerId):
             return .peer(peerId: peerId, threadId: nil)
         case let .thread(data):
-            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel {
+            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel || data.isMonoforumPost {
                 return .peer(peerId: data.peerId, threadId: data.threadId)
             } else {
                 let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
@@ -1361,7 +1365,7 @@ final class AccountContext {
             } else {
                 updatedMode = .replies(origin: fromId)
             }
-            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: fromId), initialAction: nil, chatLocationContextHolder: result.contextHolder)
+            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(mode: updatedMode), focusTarget: .init(messageId: fromId), initialAction: nil, chatLocationContextHolder: result.contextHolder)
             
             context.bindings.rootNavigation().push(controller)
             
@@ -1647,7 +1651,7 @@ private func chatLocationContext(holder: Atomic<ChatLocationContextHolder?>, acc
         } else {
             return ChatLocationContextHolderImpl(account: account, data: data)
         }
-        } as! ChatLocationContextHolderImpl
+    } as! ChatLocationContextHolderImpl
     return holder.context
 }
 

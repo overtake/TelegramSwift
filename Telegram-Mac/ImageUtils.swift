@@ -15,6 +15,9 @@ import TGUIKit
 import FastBlur
 import ColorPalette
 
+
+
+
 private extension PeerNameColors.Colors {
     init?(colors: EngineAvailableColorOptions.MultiColorPack) {
         if colors.colors.isEmpty {
@@ -183,13 +186,19 @@ private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
 
 private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool, disableForum: Bool = false, cornerRadius: CGFloat? = nil) -> Signal<(CGImage?, Bool), NoError> {
     
-    let isForum: Bool = peer.isForum && !disableForum
+    let isForum: Bool = peer.isForumOrMonoForum && !disableForum
+    let isMonoforum: Bool = peer.isMonoForum
+    
+    if isMonoforum {
+        var bp = 0
+        bp += 1
+    }
     
     if let representation = representation {
-        return cachedPeerPhoto(peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedPeerPhoto(peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum, isMonoforum: isMonoforum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             return autoreleasepool {
                 if let cached = cached {
-                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum, isMonoforum: isMonoforum) |> map {
                         return (cached, false)
                     }
                 } else {
@@ -241,7 +250,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             return .single((image, false))
                         } else {
                             let size = NSMakeSize(max(15, displayDimensions.width), max(15, displayDimensions.height))
-                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? floor(size.height / 3) : (cornerRadius ?? -1))
+                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? floor(size.height / 3) : (cornerRadius ?? -1), bubble: isMonoforum)
                             _ = capHolder.modify { current in
                                 var current = current
                                 current[key] = image
@@ -257,7 +266,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             
                         var image:CGImage?
                         if let data = data {
-                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 : (cornerRadius ?? -1), scale: scale)
+                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 : (cornerRadius ?? -1), scale: scale, bubble: isMonoforum)
                         } else {
                             image = nil
                         }
@@ -286,7 +295,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             if tiny {
                                 return .single((image, animated))
                             }
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum, isMonoforum: isMonoforum) |> map {
                                 return (image, animated)
                             }
                         } else {
@@ -322,13 +331,13 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             return current + letter
         })
         
-        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum, isMonoforum: isMonoforum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font, cornerRadius: isForum ? floor(displayDimensions.height / 3) : nil)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font, cornerRadius: isForum ? floor(displayDimensions.height / 3) : nil), bubble: isMonoforum) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
                     if let image = image {
-                        return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                        return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum, isMonoforum: isMonoforum) |> map {
                             return (image, false)
                         }
                     } else {
@@ -414,7 +423,7 @@ enum EmptyAvatartType {
     case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize, cornerRadius: CGFloat?)
 }
 
-func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> Signal<CGImage?, NoError> {
+func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType, bubble: Bool) -> Signal<CGImage?, NoError> {
     return Signal { subscriber in
         
         let color:(top: NSColor, bottom: NSColor)
@@ -443,11 +452,24 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))
             
-            if let cornerRadius = cornerRadius {
-                ctx.round(size, cornerRadius)
+            if bubble {
+                let rect = CGRect(origin: CGPoint(), size: size)
+                ctx.translateBy(x: rect.midX, y: rect.midY)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -rect.midX, y: -rect.midY)
+                addAvatarBubblePath(context: ctx, rect: rect)
+                ctx.translateBy(x: rect.midX, y: rect.midY)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -rect.midX, y: -rect.midY)
+                ctx.clip()
             } else {
-                ctx.round(size, size.height / 2)
+                if let cornerRadius = cornerRadius {
+                    ctx.round(size, cornerRadius)
+                } else {
+                    ctx.round(size, size.height / 2)
+                }
             }
+            
             //ctx.addEllipse(in: CGRect(x: 0.0, y: 0.0, width: size.width, height:
              //   size.height))
            // ctx.clip()

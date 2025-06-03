@@ -946,7 +946,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     } else {
                                         updatedMode = .replies(origin: fromId)
                                     }
-                                    pushController(chatLocation, .thread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
+                                    pushController(chatLocation, .thread(mode: updatedMode), fromId, result.contextHolder, currentInChat)
                                     
                                 }, error: { error in
                                     
@@ -1158,7 +1158,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     applicationUpdateUrlPrefix = nil
                                 }
                                 setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
-                                #if STABLE
+                                #if STABLE || BETA || DEBUG
                                 updater_resetWithUpdaterSource(.internal(context: context.context))
                                 #else
                                 updater_resetWithUpdaterSource(.external(context: context.context))

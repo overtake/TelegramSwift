@@ -600,7 +600,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         })
         
         let animated = animated
-        let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
+        let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower, false))
         
       
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, grouping: !animated || scrollState != nil, animateVisibleOnly: false, groupInOne: false)
@@ -856,7 +856,7 @@ class ChatListController : PeersListController {
         }, switchOffForum: {
             switch mode {
             case let .forum(peerId, _, _):
-                _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false).start()
+                _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false, displayForumAsTabs: true).start()
             default:
                 break
             }
@@ -2051,7 +2051,7 @@ class ChatListController : PeersListController {
             
             if let modalAction = modalAction as? FWDNavigationAction {
                 if item.peerId == context.peerId {
-                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map { $0.id }, context: context, peerId: context.peerId, replyId: nil).start()
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map { $0.id }, context: context, peerId: context.peerId, replyId: nil, threadId: nil).start()
                     _ = showModalSuccess(for: item.context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false

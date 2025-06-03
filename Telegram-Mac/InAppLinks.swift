@@ -580,7 +580,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             let navigation = context.bindings.rootNavigation()
             let current = navigation.controller as? ChatController
             
-            if let current = current, current.chatInteraction.mode.threadId64 == result.message.threadId {
+            if let current = current, current.chatInteraction.chatLocation.threadId == result.message.threadId {
                 if let commentId = commentId {
                     let commentMessageId = MessageId(peerId: result.message.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                     current.chatInteraction.focusMessageId(nil, .init(messageId: commentMessageId, string: nil), .CenterEmpty)
@@ -599,7 +599,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     commentMessageId = MessageId(peerId: result.message.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
-                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), focusTarget: .init(messageId: commentMessageId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(mode: mode), focusTarget: .init(messageId: commentMessageId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }
         }, error: { error in
             switch error {
@@ -685,9 +685,9 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                             break
                         case let .result(messages):
                             if let threadId = messages.first?.threadId {
-                                _ = ForumUI.openTopic(threadId, peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
+                                _ = ForumUI.openTopic(threadId, peerId: peer.id, context: context, messageId: nil, animated: true, addition: true).start(next: { result in
                                     if !result {
-                                        ForumUI.open(peer.id, context: context)
+                                        ForumUI.open(peer.id, addition: true, context: context)
                                     }
                                 })
                             }
@@ -697,7 +697,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     
                     
                 } else {
-                    ForumUI.open(peer.id, context: context)
+                    ForumUI.open(peer.id, addition: true, context: context)
                 }
             } else {
                 let openChat: Bool
@@ -1053,7 +1053,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
     case let .joinchat(_, hash, context, interaction):
         
         let openForum:(PeerId)->Void = { peerId in
-            ForumUI.open(peerId, context: context)
+            ForumUI.open(peerId, addition: true, context: context)
         }
         
 //        #if DEBUG
@@ -1326,6 +1326,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 text = strings().unknownError
             case .disallowedStarGift:
                 text = strings().giftSendDisallowError
+            case .starGiftResellTooEarly:
+                text = strings().unknownError
             }
             showModalText(for: getWindow(context), text: text)
         })

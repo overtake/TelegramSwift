@@ -206,7 +206,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     func updateSelectingState(_ animated:Bool = false, selectingMode:Bool, item: ChatRowItem?, needUpdateColors: Bool) {
         
-        let selectingMode = selectingMode && item?.chatInteraction.mode.threadId != item?.message?.id
+        let selectingMode = selectingMode && item?.chatInteraction.chatLocation.threadMsgId != item?.message?.id
         if let item = item {
             if selectingMode {
                 if selectingView == nil {
@@ -488,7 +488,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var bubbleFrame = item.bubbleFrame
         bubbleFrame = NSMakeRect(item.isIncoming ? bubbleFrame.minX : frame.width - bubbleFrame.width - item.leftInset, bubbleFrame.minY, bubbleFrame.width, bubbleFrame.height)
         
-        if item.chatInteraction.mode.isThreadMode, item.chatInteraction.mode.threadId == item.message?.id {
+        if item.chatInteraction.mode.isThreadMode, item.chatInteraction.chatLocation.threadMsgId == item.message?.id {
             bubbleFrame.origin.x = focus(NSMakeSize(bubbleFrame.size.width + 8, bubbleFrame.size.height)).minX
         }
         
@@ -1783,7 +1783,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         return false
                     }
                 }
-                if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, mode: item.chatInteraction.mode) {
+                if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, chatLocation: item.chatInteraction.chatLocation, mode: item.chatInteraction.mode) {
                     return true
                 }
             }

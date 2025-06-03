@@ -277,7 +277,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
                 self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
             }, itemImage: MenuAnimation.menu_show_message.value))
             
-            if canDeleteMessage(message, account: context.account, mode: .history) {
+            if canDeleteMessage(message, account: context.account, chatLocation: self.chatInteraction.chatLocation, mode: .history) {
                 items.append(ContextSeparatorItem())
                 items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
                    self?.chatInteraction.deleteMessages([message.id])

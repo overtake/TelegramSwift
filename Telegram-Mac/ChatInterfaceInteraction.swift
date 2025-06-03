@@ -30,14 +30,36 @@ final class ReplyMarkupInteractions {
 
 final class ChatInteraction : InterfaceObserver  {
     
-    let chatLocation: ChatLocation
-    let mode: ChatMode
+    var chatLocation: ChatLocation {
+        return self.presentation.chatLocation
+    }
+    
+    var isMonoforum: Bool {
+        return presentation.isMonoforum
+        //return chatLocation.threadMessage?.isMonoforumPost == true
+    }
+    
+    func threadInfo(_ peerId: PeerId, holder: Atomic<ChatLocationContextHolder?>) -> ThreadInfo? {
+        if (self.presentation.isTopicMode && peerId == self.peerId) || mode.isSavedMessagesThread || isMonoforum {
+            switch chatLocation {
+            case let .thread(data):
+                return .init(message: data, isChannelPost: false, isMonoforumPost: chatLocation.threadMessage?.isMonoforumPost == true, isEmpty: false, contextHolder: holder)
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    
+    var mode: ChatMode {
+        return presentation.chatMode
+    }
     var peerId : PeerId {
         return chatLocation.peerId
     }
     
     var activitySpace: PeerActivitySpace {
-        return .init(peerId: peerId, category: mode.activityCategory)
+        return .init(peerId: peerId, category: mode.activityCategory(chatLocation.threadId))
     }
     
     var peer: Peer? {
@@ -62,14 +84,12 @@ final class ChatInteraction : InterfaceObserver  {
     
     
     init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false, isGlobalSearchMessage: Bool = false, isPeerSavedMessages: Bool = false) {
-        self.chatLocation = chatLocation
         self.context = context
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
         self.isGlobalSearchMessage = isGlobalSearchMessage
         self.isPeerSavedMessages = isPeerSavedMessages
         self.presentation = ChatPresentationInterfaceState(chatLocation: chatLocation, chatMode: mode)
-        self.mode = mode
         super.init()
         
         let signal = mediaPromise.get() |> deliverOnMainQueue |> mapToQueue { [weak self] (media) -> Signal<Void, NoError> in
@@ -235,12 +255,17 @@ final class ChatInteraction : InterfaceObserver  {
     
     var markAdAsSeen:(Data)->Void = { _ in }
     
-    var openSuggestMessages:()->Void = { }
-    
+    var openMonoforum:(PeerId)->Void = { peerId in }
+    var toggleMonoforumState:()->Void = { }
+    var monoforumMenuItems:(MonoforumItem) -> Signal<[ContextMenuItem], NoError> = { _ in return .single([]) }
+
     var sendGift:()->Void = { }
     
+    var updateChatLocationThread:(Int64?)->Void = { _ in }
+    
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
-        if mode.isThreadMode, mode.threadId == message.id {
+        if mode.isThreadMode, chatLocation.threadMsgId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
         } else {
             return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
@@ -254,6 +279,7 @@ final class ChatInteraction : InterfaceObserver  {
     var closeAfterPeek:(Int32)->Void = { _ in }
     
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
+    
     
     let loadingMessage: Promise<Bool> = Promise()
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
@@ -890,7 +916,7 @@ final class ChatInteraction : InterfaceObserver  {
         
         let updatedOpaqueData = try? EngineEncoder.encode(interfaceState)
 
-        var s:Signal<Never, NoError> = context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: mode.threadId64, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, mediaDraftState: nil, synchronizeableInputState: interfaceState.synchronizeableInputState))
+        var s:Signal<Never, NoError> = context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: chatLocation.threadId, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, mediaDraftState: nil, synchronizeableInputState: interfaceState.synchronizeableInputState))
 
         if !force && !interfaceState.inputState.inputText.isEmpty {
             s = s |> delay(10, queue: Queue.mainQueue())

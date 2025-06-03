@@ -23,6 +23,7 @@ struct GroupAccess {
     let canMakeVoiceChat: Bool
     let canEditMessages: Bool
     let canManageGifts: Bool
+    let canPostMessages: Bool
 }
 
 extension Peer {
@@ -36,6 +37,7 @@ extension Peer {
         var isCreator = false
         var canReport = true
         var canMakeVoiceChat = false
+        var canPostMessages = false
         var canEditMessages = false
         var canPin: Bool
         var canManageGifts = false
@@ -45,6 +47,7 @@ extension Peer {
                 canReport = false
                 canMakeVoiceChat = true
                 canEditMessages = true
+                canPostMessages = true
             }
             highlightAdmins = true
             switch group.role {
@@ -55,6 +58,7 @@ extension Peer {
                 canReport = false
                 canMakeVoiceChat = true
                 canEditMessages = true
+                canPostMessages = true
             case .member:
                 break
             }
@@ -69,6 +73,7 @@ extension Peer {
             isPublic = channel.username != nil
             isCreator = channel.flags.contains(.isCreator)
             canReport = !channel.flags.contains(.isCreator) && channel.adminRights == nil
+            canPostMessages = channel.flags.contains(.isCreator)
             if channel.hasPermission(.changeInfo) {
                 canEditGroupInfo = true
             }
@@ -96,11 +101,14 @@ extension Peer {
             if channel.hasPermission(.editAllMessages) {
                 canEditMessages = true
             }
+            if let adminRights = channel.adminRights {
+                canPostMessages = adminRights.rights.contains(.canPostMessages)
+            }
         }
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages)
     }
     
     var canInviteUsers:Bool {

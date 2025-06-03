@@ -25,6 +25,11 @@ private func generateThumb(_ basic: CGImage, active: CGImage?) -> CGImage {
 
 class ChatListFilterVisibilityItem: GeneralRowItem {
     
+    enum Source {
+        case folders
+        case forum
+    }
+    
     fileprivate let topViewLayout: TextViewLayout
     fileprivate let leftViewLayout: TextViewLayout
 
@@ -33,17 +38,29 @@ class ChatListFilterVisibilityItem: GeneralRowItem {
     
     fileprivate let sidebar: Bool
     fileprivate let toggle:(Bool)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, sidebar: Bool, viewType: GeneralViewType, toggle:@escaping(Bool)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, sidebar: Bool, viewType: GeneralViewType, source: Source = .folders, toggle:@escaping(Bool)->Void) {
         
         self.sidebar = sidebar
         self.toggle = toggle
-        topViewLayout = TextViewLayout.init(.initialize(string: strings().chatListFilterTabBarOnTheTop, color: sidebar ? theme.colors.grayText : theme.colors.accent, font: .normal(.text)))
         
-        leftViewLayout = TextViewLayout.init(.initialize(string: strings().chatListFilterTabBarOnTheLeft, color: sidebar ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
+        switch source {
+        case .folders:
+            topViewLayout = TextViewLayout.init(.initialize(string: strings().chatListFilterTabBarOnTheTop, color: sidebar ? theme.colors.grayText : theme.colors.accent, font: .normal(.text)))
+            leftViewLayout = TextViewLayout.init(.initialize(string: strings().chatListFilterTabBarOnTheLeft, color: sidebar ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
 
-        topThumb = generateThumb(NSImage(named: "tabsselect_top_gray")!.precomposed(theme.colors.grayIcon.withAlphaComponent(0.8)), active: NSImage(named: "tabsselect_top_systemcol")!.precomposed(theme.colors.accent))
+            topThumb = generateThumb(NSImage(named: "tabsselect_top_gray")!.precomposed(theme.colors.grayIcon.withAlphaComponent(0.8)), active: NSImage(named: "tabsselect_top_systemcol")!.precomposed(theme.colors.accent))
+            
+            leftThumb = generateThumb(NSImage(named: "tabsselect_left_gray")!.precomposed(theme.colors.grayIcon.withAlphaComponent(0.8)), active: NSImage(named: "tabsselect_left_systemcol")!.precomposed(theme.colors.accent))
+
+        case .forum:
+            topViewLayout = TextViewLayout.init(.initialize(string: strings().chatListMonoforumTabBarTabs, color: sidebar ? theme.colors.grayText : theme.colors.accent, font: .normal(.text)))
+            leftViewLayout = TextViewLayout.init(.initialize(string: strings().chatListMonoforumTabBarList, color: sidebar ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
+
+            topThumb = NSImage(resource: .iconForumTabs).precomposed(theme.colors.grayIcon.withAlphaComponent(0.8))
+            leftThumb = NSImage(resource: .iconForumList).precomposed(theme.colors.grayIcon.withAlphaComponent(0.8))
+
+        }
         
-        leftThumb = generateThumb(NSImage(named: "tabsselect_left_gray")!.precomposed(theme.colors.grayIcon.withAlphaComponent(0.8)), active: NSImage(named: "tabsselect_left_systemcol")!.precomposed(theme.colors.accent))
 
         
         
@@ -55,10 +72,10 @@ class ChatListFilterVisibilityItem: GeneralRowItem {
             
             
             
-            return viewType.innerInset.top + viewType.innerInset.bottom + viewType.innerInset.top + 120 * 2 + 20 + leftViewLayout.layoutSize.height + topViewLayout.layoutSize.height
+            return viewType.innerInset.top + viewType.innerInset.bottom + viewType.innerInset.top + (topThumb.backingSize.height) * 2 + 20 + leftViewLayout.layoutSize.height + topViewLayout.layoutSize.height
         }
         
-        return viewType.innerInset.top + viewType.innerInset.bottom + max(leftViewLayout.layoutSize.height, topViewLayout.layoutSize.height) + 10 + 120
+        return viewType.innerInset.top + viewType.innerInset.bottom + max(leftViewLayout.layoutSize.height, topViewLayout.layoutSize.height) + 10 + (topThumb.backingSize.height)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -136,8 +153,8 @@ private final class ChatlistFilterVisibilityView : GeneralContainableRowView {
             return
         }
         
-        leftItem.setFrameSize(NSMakeSize(150, 120 + 10 + item.leftViewLayout.layoutSize.height))
-        topItem.setFrameSize(NSMakeSize(150, 120 + 10 + item.topViewLayout.layoutSize.height))
+        leftItem.setFrameSize(NSMakeSize(150, item.topThumb.backingSize.height + 10 + item.leftViewLayout.layoutSize.height))
+        topItem.setFrameSize(NSMakeSize(150, item.topThumb.backingSize.height + 10 + item.topViewLayout.layoutSize.height))
 
         leftItem.update(item.leftViewLayout, image: item.leftThumb, selected: item.sidebar)
         topItem.update(item.topViewLayout, image: item.topThumb, selected: !item.sidebar)

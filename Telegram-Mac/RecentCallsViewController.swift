@@ -308,13 +308,13 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<RecentCallEntry>
                 }
             }
             if let stableId = stableId {
-                state = .saveVisible(.aroundIndex(stableId))
+                state = .saveVisible(.aroundIndex(stableId), false)
             } else {
                 switch position {
                 case .Bottom:
-                    state = .saveVisible(.lower)
+                    state = .saveVisible(.lower, false)
                 case .Top:
-                    state = .saveVisible(.upper)
+                    state = .saveVisible(.upper, false)
                 default:
                     state = .none(nil)
                 }

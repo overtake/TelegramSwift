@@ -306,7 +306,7 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         controller.tableView.supplyment = supplyment
         
         gallery = { message, type in
-            showChatGallery(context: context, message: message, supplyment, nil, type: type)
+            showChatGallery(context: context, message: message, supplyment, nil, type: type, chatMode: nil, chatLocation: nil)
         }
     }
 

@@ -1460,7 +1460,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case .paidMessagesPriceEdited(let stars):
+                case .paidMessagesPriceEdited(let stars, _):
                     let starsString = strings().starListItemCountCountable(Int(stars))
                     let text: String
                     if authorId == context.peerId {
@@ -1468,6 +1468,9 @@ class ChatServiceItem: ChatRowItem {
                     } else {
                         text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
                     }
+                    
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
@@ -1658,7 +1661,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        text.measure(width: width - 40)
+        text.measure(width: blockWidth)
         
         if let reactions = reactionsLayout {
             reactions.measure(for: min(320, blockWidth))
@@ -1856,29 +1859,51 @@ class UniqueAttributesView : View {
     
     override func layout() {
         super.layout()
-        headerView.centerX(y: 5)
-        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: headerView, frame: headerView.centerFrameX(y: 5))
+
+        // Calculate max widths
         let maxLeftWidth = leftAttrs.subviews.map { $0.frame.width }.max() ?? 0
         let maxRightWidth = rightAttrs.subviews.map { $0.frame.width }.max() ?? 0
+        let attrHeight = size.height - headerView.frame.height - 5
 
-        leftAttrs.setFrameSize(NSMakeSize(maxLeftWidth, frame.height - headerView.frame.height - 5))
-        rightAttrs.setFrameSize(NSMakeSize(maxRightWidth, frame.height - headerView.frame.height - 5))
+        let leftFrame = NSRect(x: 0, y: 0, width: maxLeftWidth, height: attrHeight)
+        let rightFrame = NSRect(x: maxLeftWidth + 6, y: 0, width: maxRightWidth, height: attrHeight)
 
-        
-        attrContainer.setFrameSize(NSMakeSize(leftAttrs.frame.width + 6 + rightAttrs.frame.width, leftAttrs.frame.height))
-        
-        leftAttrs.setFrameOrigin(0, 0)
-        rightAttrs.setFrameOrigin(leftAttrs.frame.maxX + 6, 0)
+        transition.updateFrame(view: leftAttrs, frame: leftFrame)
+        transition.updateFrame(view: rightAttrs, frame: rightFrame)
 
-        
-        attrContainer.centerX(y: headerView.frame.maxY + 5)
-        
+        let containerWidth = maxLeftWidth + 6 + maxRightWidth
+        let containerFrame = NSRect(x: (size.width - containerWidth) / 2,
+                                    y: headerView.frame.maxY + 5,
+                                    width: containerWidth,
+                                    height: attrHeight)
+        transition.updateFrame(view: attrContainer, frame: containerFrame)
+
         var y: CGFloat = 0
         for (i, left) in leftAttrs.subviews.enumerated() {
-            let right = self.rightAttrs.subviews[i]
-            left.setFrameOrigin(leftAttrs.frame.width - left.frame.width, y)
-            right.setFrameOrigin(0, y)
-            y += right.frame.height + 6
+            let right = rightAttrs.subviews[i]
+            
+            let leftFrame = NSRect(
+                x: maxLeftWidth - left.frame.width,
+                y: y,
+                width: left.frame.width,
+                height: left.frame.height
+            )
+            let rightFrame = NSRect(
+                x: 0,
+                y: y,
+                width: right.frame.width,
+                height: right.frame.height
+            )
+
+            transition.updateFrame(view: left, frame: leftFrame)
+            transition.updateFrame(view: right, frame: rightFrame)
+
+            y += max(left.frame.height, right.frame.height) + 6
         }
     }
 }
@@ -2144,29 +2169,50 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            stickerView.centerX(y: 10)
-            textView.centerX(y: stickerView.frame.maxY + 10)
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: stickerView, frame: stickerView.centerFrameX(y: 10))
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stickerView.frame.maxY + 10))
+
             if let infoView {
-                infoView.centerX(y: textView.frame.maxY + 4)
+                transition.updateFrame(view: infoView, frame: infoView.centerFrameX(y: textView.frame.maxY + 4))
             }
+
             if let badgeView {
-                badgeView.setFrameOrigin(frame.width - badgeView.frame.width, 0)
+                let badgeFrame = NSRect(
+                    x: size.width - badgeView.frame.width,
+                    y: 0,
+                    width: badgeView.frame.width,
+                    height: badgeView.frame.height
+                )
+                transition.updateFrame(view: badgeView, frame: badgeFrame)
             }
-            button.centerX(y: frame.height - 15 - button.frame.height)
-            visualEffect?.frame = bounds
-            
+
+            transition.updateFrame(view: button, frame: button.centerFrameX(y: size.height - 15 - button.frame.height))
+
+            if let visualEffect = visualEffect {
+                transition.updateFrame(view: visualEffect, frame: NSRect(origin: .zero, size: size))
+            }
+
             if let emoji {
-                emoji.frame = bounds.insetBy(dx: 4, dy: 4).offsetBy(dx: 15, dy: 0)
+                let emojiFrame = size.bounds.insetBy(dx: 4, dy: 4).offsetBy(dx: 15, dy: 0)
+                transition.updateFrame(view: emoji, frame: emojiFrame)
             }
+
             if let backgroundView {
                 backgroundView.layer?.cornerRadius = 10
-                backgroundView.frame = bounds.insetBy(dx: 4, dy: 4)
+                let bgFrame = size.bounds.insetBy(dx: 4, dy: 4)
+                transition.updateFrame(view: backgroundView, frame: bgFrame)
             }
-            
+
             if let attributesView {
-                attributesView.frame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5)
+                let attrFrame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5)
+                transition.updateFrame(view: attributesView, frame: attrFrame)
             }
         }
+
         
         deinit {
             disposable.dispose()
@@ -2342,12 +2388,26 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            visualEffect?.frame = bounds
-            photo?.centerX(y: 10)
-            photoVideoView?.centerX(y: 10)
-            textView.centerX(y: 110 + 10)
-            viewButton.centerX(y: textView.frame.maxY + 10)
+            self.updateLayout(size: self.frame.size, transition: .immediate)
         }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            if let visualEffect = visualEffect {
+                transition.updateFrame(view: visualEffect, frame: NSRect(origin: .zero, size: size))
+            }
+
+            if let photo = photo {
+                transition.updateFrame(view: photo, frame: photo.centerFrameX(y: 10))
+            }
+
+            if let photoVideoView = photoVideoView {
+                transition.updateFrame(view: photoVideoView, frame: photoVideoView.centerFrameX(y: 10))
+            }
+
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 120)) // 110 + 10
+            transition.updateFrame(view: viewButton, frame: viewButton.centerFrameX(y: textView.frame.maxY + 10))
+        }
+
         
         deinit {
             disposable.dispose()
@@ -2525,12 +2585,25 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            visualEffect?.frame = bounds
-            wallpaper.centerX(y: 10)
-            viewButton.centerX(y: wallpaper.frame.maxY + 10)
-            progressText?.centerX(y: wallpaper.frame.maxY + 10)
-            progressView?.center()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
         }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            if let visualEffect = visualEffect {
+                transition.updateFrame(view: visualEffect, frame: NSRect(origin: .zero, size: size))
+            }
+
+            transition.updateFrame(view: wallpaper, frame: wallpaper.centerFrameX(y: 10))
+            transition.updateFrame(view: viewButton, frame: viewButton.centerFrameX(y: wallpaper.frame.maxY + 10))
+
+            if let progressText = progressText {
+                transition.updateFrame(view: progressText, frame: progressText.centerFrameX(y: wallpaper.frame.maxY + 10))
+            }
+            if let progressView = progressView {
+                transition.updateFrame(view: progressView, frame: progressView.centerFrame())
+            }
+        }
+
         
         deinit {
             statusDisposable.dispose()
@@ -2645,11 +2718,18 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            statusView.centerX(y: 10)
-            mediaView.centerX(y: 13)
-            avatar.centerX(y: 13)
-            textView.centerX(y: statusView.frame.maxY + 10)
+            self.updateLayout(size: self.frame.size, transition: .immediate)
         }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: 10))
+
+            transition.updateFrame(view: mediaView, frame: mediaView.centerFrameX(y: 13))
+            transition.updateFrame(view: avatar, frame: avatar.centerFrameX(y: 13))
+
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: statusView.frame.maxY + 10))
+        }
+
         
         deinit {
             disposable.dispose()
@@ -2720,25 +2800,6 @@ class ChatServiceRowView: TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layout() {
-        super.layout()
-        
-        if let item = item as? ChatServiceItem {
-            textView.centerX(y:6)
-            if let imageArguments = item.imageArguments {
-                imageView?.setFrameSize(imageArguments.imageSize)
-                imageView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
-                self.imageView?.set(arguments: imageArguments)
-                self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-            
-            let activeView = [giftView, suggestView, wallpaperView, storyView, suggestChannelsView].compactMap { $0 }.first
-            
-            if let view = activeView {
-                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-        }
-    }
     
     
     override func doubleClick(in location: NSPoint) {
@@ -2915,7 +2976,7 @@ class ChatServiceRowView: TableRowView {
                 let open: (Control)->Void = { [weak self] _ in
                     if let item = self?.item as? ChatServiceItem, let message = item.message {
                         if !data.isIncoming {
-                            showChatGallery(context: item.context, message: message, item.table, type: .alone)
+                            showChatGallery(context: item.context, message: message, item.table, type: .alone, chatMode: item.chatInteraction.mode, chatLocation: item.chatInteraction.chatLocation)
                         } else {
                             item.openPhotoEditor(data.image)
                         }
@@ -3037,7 +3098,7 @@ class ChatServiceRowView: TableRowView {
         }
         let contentFrameY = frame.height - reactionsLayout.size.height
         
-        var frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY)
+        var frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY).offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0)
         
         return frame
     }
@@ -3052,6 +3113,49 @@ class ChatServiceRowView: TableRowView {
         if let reactionsView {
             transition.updateFrame(view: reactionsView, frame: reactionsRect(item))
         }
+        
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 6, addition: item.entry.additionalData.monoforumState == .vertical ? 40 : 0))
+
+        let baseY = textView.frame.maxY + (item.isBubbled ? 0 : 6)
+
+        if let imageArguments = item.imageArguments {
+            if let imageView = imageView {
+                let imageFrame = NSRect(
+                    x: (size.width - imageArguments.imageSize.width) / 2,
+                    y: baseY,
+                    width: imageArguments.imageSize.width,
+                    height: imageArguments.imageSize.height
+                )
+                transition.updateFrame(view: imageView, frame: imageFrame)
+                imageView.set(arguments: imageArguments)
+            }
+
+            if let photoVideoView = photoVideoView {
+                transition.updateFrame(view: photoVideoView, frame: photoVideoView.centerFrameX(y: baseY))
+            }
+        }
+        
+        if let view = giftView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = wallpaperView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = storyView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestChannelsView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+
     }
         
     
