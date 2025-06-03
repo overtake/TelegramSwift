@@ -142,21 +142,22 @@ func SuggestPostController(context: AccountContext, peerId: PeerId) -> InputData
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().channelMessagesTitle, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().channelMessagesTitle, hasDone: true)
     
-    controller.onDeinit = {
+    controller.validateData = { _ in
         let state = stateValue.with { $0 }
         _ = context.engine.peers.updateChannelPaidMessagesStars(peerId: peerId, stars: state.stars.value == 0 ? nil :  state.stars, broadcastMessagesAllowed: state.enabled).start()
-
+        return .success(.navigationBack)
+    }
+    
+    controller.onDeinit = {
+        actionsDisposable.dispose()
     }
     
     getController = { [weak controller] in
         return controller
     }
     
-    controller.onDeinit = {
-        actionsDisposable.dispose()
-    }
 
     return controller
     
