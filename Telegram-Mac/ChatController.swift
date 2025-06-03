@@ -1159,6 +1159,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 addSubview(current)
                 self.monoforumStaticView = current
                 current.autohighlight = false
+                current.animates = false
                 current.scaleOnClick = true
             }
             current.set(image: NSImage(resource: .iconMonoforumToggle).precomposed(state == .vertical ? theme.colors.accent : theme.colors.grayIcon), for: .Normal)

@@ -354,6 +354,7 @@ final class ChatListTopicNameAndTextLayout {
         
         self.mainText = nil
         self.allNames = nil
+        self.allSelectedNames = nil
         self.selectedMain = nil
         
         if let data = items.first {
@@ -405,8 +406,13 @@ final class ChatListTopicNameAndTextLayout {
             
             attr.append(text)
             attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+            
+            let isMonoforum = message.peers[message.id.peerId]?.displayForumAsTabs == true || data.threadPeer != nil
 
-            self.selectedMain = .init(attr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: theme.colors.grayText)
+            let selectedAttr = attr.mutableCopy() as! NSMutableAttributedString
+            selectedAttr.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedAttr.range)
+            
+            self.selectedMain = .init(selectedAttr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: isMonoforum ? theme.colors.underSelectedColor : theme.colors.grayText)
             self.mainText = .init(attr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: theme.colors.grayText)
             
             self.mainText?.measure(width: width - 20)
@@ -446,11 +452,16 @@ final class ChatListTopicNameAndTextLayout {
                     
                     _ = attr.append(string: " ")
                 }
+                
                 self.allNames = .init(attr, maximumNumberOfLines: 1)
                 
-   
+                let selectedAttr = attr.mutableCopy() as! NSMutableAttributedString
+                selectedAttr.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedAttr.range)
+                self.allSelectedNames = .init(selectedAttr, maximumNumberOfLines: 1)
+
                 
                 self.allNames?.measure(width: width - 15 - main)
+                self.allSelectedNames?.measure(width: width - 15 - main)
             }
         }
         
@@ -506,7 +517,7 @@ private final class TopicNameAndTextView : View {
         
         mainView.userInteractionEnabled = item.fastTrack
         
-        if let all = item.allNames {
+        if let all = highlighted ? item.allSelectedNames : item.allNames {
             let current: InteractiveTextView
             if let view = self.allView {
                 current = view
