@@ -1542,8 +1542,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             }
             
             return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .interactable(selectInteraction), action: {
-                if peer.isForumOrMonoForum && share.selectTopics, peer.groupAccess.canPostMessages {
-                    _ = selectInteraction.openForum(peer.id, peer.isForumOrMonoForum)
+                if share.selectTopics, peer.isForum || (peer.groupAccess.canPostMessages && peer.isMonoForum) {
+                    _ = selectInteraction.openForum(peer.id, peer.isMonoForum)
                 } else {
                     selectInteraction.action(peer.id, nil)
                 }
