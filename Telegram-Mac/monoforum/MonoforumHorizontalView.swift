@@ -224,7 +224,7 @@ class MonoforumHorizontalView : View {
             }
             
             if item.uniqueId >= 1 {
-                return chatInteraction.monoforumMenuItems(items[item.index - 3])
+                return chatInteraction.monoforumMenuItems(items[item.index - 1])
             } else {
                 return .single([])
             }

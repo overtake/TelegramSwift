@@ -1276,13 +1276,13 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             entries.append(groupedPhotos[0])
             insertPendingProccessing(groupedPhotos[0])
             insertPaidMessage(groupedPhotos[0])
-            insertTopicSeparator(groupedPhotos[0], messagesEntries[messagesEntries.count - 2], nil)
+            insertTopicSeparator(groupedPhotos[0], messagesEntries.count >= 2 ? messagesEntries[messagesEntries.count - 2] : nil, nil)
         } else {
             let entry: ChatHistoryEntry = .groupedPhotos(groupedPhotos, groupInfo: key)
             entries.append(entry)
             insertPendingProccessing(entry)
             insertPaidMessage(entry)
-            insertTopicSeparator(entry, messagesEntries[messagesEntries.count - 2], nil)
+            insertTopicSeparator(entry, messagesEntries.count >= 2 ? messagesEntries[messagesEntries.count - 2] : nil, nil)
         }
     }
     
