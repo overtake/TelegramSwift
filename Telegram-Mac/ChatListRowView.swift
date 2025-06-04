@@ -438,7 +438,7 @@ final class ChatListTopicNameAndTextLayout {
                     range = NSMakeRange(range.location, 2)
                     
                     if let threadPeer = item.threadPeer {
-                        attr.insertEmbedded(.embeddedAvatar(threadPeer), for: clown)
+                        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .avatar(threadPeer)), range: range)
                     } else {
                         let embedded: InlineStickerItem
                         if let fileId = item.iconFileId {
@@ -506,7 +506,7 @@ private final class TopicNameAndTextView : View {
     func update(context: AccountContext, item: ChatListTopicNameAndTextLayout, highlighted: Bool, animated: Bool) {
         self.isLite = context.isLite(.emoji)
         self.validLayout = item
-        mainView.set(text: highlighted ? item.selectedMain : item.mainText, context: context)
+        mainView.set(text: highlighted ? item.selectedMain : item.mainText, context: context, decreaseAvatar: 5)
         
         mainView.removeAllHandlers()
         mainView.set(handler: { _ in
@@ -527,7 +527,7 @@ private final class TopicNameAndTextView : View {
                 self.allView = current
                 addSubview(current)
             }
-            current.set(text: all, context: context)
+            current.set(text: all, context: context, decreaseAvatar: 5)
         } else if let view = self.allView {
             performSubviewRemoval(view, animated: animated)
             self.allView = nil
