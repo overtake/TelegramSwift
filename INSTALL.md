@@ -10,7 +10,7 @@
 	```
 3. Install tools: 
 	```
-	brew install cmake ninja openssl@1.1 zlib autoconf libtool automake yasm pkg-config
+	brew install cmake ninja openssl@1.1 zlib autoconf libtool automake yasm pkg-config nasm meson
  	```
 4. Update ./scripts/rebuild file 
 	```
