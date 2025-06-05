@@ -723,13 +723,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 
                 let context = chatInteraction.context
                 
-                if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
-                    statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: false)
+                if let peer = (peerViewMonoforumMainPeer(peerView) ?? peerViewMainPeer(peerView)) {
+                    if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                        statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: false)
+                    }
+                    
+                    if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                        leftStatusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: true, isSelected: false, cached: self.leftStatusControl, animated: false)
+                    }
                 }
                 
-                if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
-                    leftStatusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: true, isSelected: false, cached: self.leftStatusControl, animated: false)
-                }
                 
                 if peer.isGroup || peer.isSupergroup || peer.isChannel {
                     callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)

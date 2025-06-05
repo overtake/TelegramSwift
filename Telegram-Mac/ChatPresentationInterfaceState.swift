@@ -845,7 +845,7 @@ class ChatPresentationInterfaceState: Equatable {
                         if rule.platform == "ios" || rule.platform == "all" {
                             return .action(strings().chatInputClose, { chatInteraction in
                                 chatInteraction.back()
-                            }, nil)
+                            }, right: nil, left: nil)
                         }
                     }
                 }
