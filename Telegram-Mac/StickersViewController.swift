@@ -1533,7 +1533,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 
                 let emojiRelated: Signal<[FoundStickerItem], NoError> = combineLatest(context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false), input) |> mapToSignal { emojis, input in
                     
-                    return context.engine.stickers.searchStickers(query: searchText, emoticon: [], inputLanguageCode: input) |> map { $0.0 }
+                    return context.engine.stickers.searchStickers(query: searchText, emoticon: emojis, inputLanguageCode: input) |> map { $0.0 }
 //                    return combineLatest(signals) |> map {
 //                        $0.reduce([], { current, value in
 //                            return current + value.0
