@@ -41,10 +41,12 @@ private final class TodoItem : Equatable {
     let contentSize: NSSize
     let vote:(Control)-> Void
     let isTranslateLoading: Bool
-    init(option:TelegramMediaTodo.Item, nameText: TextViewLayout, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool, peer: EnginePeer?) {
+    let canFinish: Bool
+    init(option:TelegramMediaTodo.Item, nameText: TextViewLayout, isSelected: Bool, canFinish: Bool, isIncoming: Bool, isBubbled: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool, peer: EnginePeer?) {
         self.option = option
         self.nameText = nameText
         self.isSelected = isSelected
+        self.canFinish = canFinish
         self.presentation = presentation
         self.isIncoming = isIncoming
         self.isBubbled = isBubbled
@@ -56,17 +58,17 @@ private final class TodoItem : Equatable {
     }
     
     func withUpdatedLoading(_ isLoading: Bool) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
+        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     func withUpdatedContentSize(_ contentSize: NSSize) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
+        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     func withUpdatedSelected(_ isSelected: Bool) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
+        return TodoItem(option: self.option, nameText: self.nameText, isSelected: isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     
     static func ==(lhs: TodoItem, rhs: TodoItem) -> Bool {
-        return lhs.option == rhs.option && lhs.isSelected == rhs.isSelected && lhs.isIncoming == rhs.isIncoming && lhs.isLoading == rhs.isLoading && lhs.contentSize == rhs.contentSize && lhs.isTranslateLoading == rhs.isTranslateLoading && lhs.peer == rhs.peer
+        return lhs.option == rhs.option && lhs.isSelected == rhs.isSelected && lhs.canFinish == rhs.canFinish && lhs.isIncoming == rhs.isIncoming && lhs.isLoading == rhs.isLoading && lhs.contentSize == rhs.contentSize && lhs.isTranslateLoading == rhs.isTranslateLoading && lhs.peer == rhs.peer
     }
     
     
@@ -145,25 +147,27 @@ class ChatRowTodoItem: ChatRowItem {
         
         
         var options: [TodoItem] = []
-        
- 
+        let canFinish = todo.flags.contains(.othersCanComplete) || message?.author?.id == context.peerId
 
-                
         for (i, option) in todo.items.enumerated() {
             
             let isSelected: Bool = todo.completions.contains(where: { $0.id == option.id })
             let nameFont: NSFont = .normal(.text)//voted && isSelected ? .bold(.text) : .normal(.text)
-            
             let peerId = todo.completions.first(where: { $0.id == option.id })?.completedBy
             
             let optionText = NSMutableAttributedString()
             optionText.append(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont)
             InlineStickerItem.apply(to: optionText, associatedMedia: message?.associatedMedia ?? [:], entities: option.entities, isPremium: context.isPremium)
             
+            if !canFinish, isSelected {
+                optionText.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: optionText.range)
+                optionText.addAttribute(TextInputAttributes.strikethrough, value: true as NSNumber, range: optionText.range)
+            }
+            
             let nameLayout = TextViewLayout(optionText, alwaysStaticItems: true)
                         
-            let wrapper = TodoItem(option: option, nameText: nameLayout, isSelected: isSelected, isIncoming: isIncoming, isBubbled: renderType == .bubble, isLoading: false, presentation: self.presentation, vote: { [weak self] control in
-                self?.voteOption(option, for: control)
+            let wrapper = TodoItem(option: option, nameText: nameLayout, isSelected: isSelected, canFinish: canFinish, isIncoming: isIncoming, isBubbled: renderType == .bubble, isLoading: false, presentation: self.presentation, vote: { [weak self] control in
+                self?.markCompleted(option, canFinish: canFinish, for: control)
             }, isTranslateLoading: isTranslateLoading, peer: peerId.flatMap { message?.peers[$0] }.flatMap(EnginePeer.init))
             
             options.append(wrapper)
@@ -217,18 +221,21 @@ class ChatRowTodoItem: ChatRowItem {
         }
     }
     
-    private func unvote() {
+    
+    private func markCompleted(_ option: TelegramMediaTodo.Item, canFinish: Bool, for control: Control) {
+        guard let message = message else { return }
         
-        if canInvokeVote {
-            guard let message = message else { return }
-            self.chatInteraction.vote(message.id, [], true)
+        let context = self.context
+
+        if !canFinish, let author = message.author {
+            //TODOLANG
+            showModalText(for: context.window, text: "\(author.displayTitle) has restricted others from editing this to-do list.")
+        } else if !context.isPremium {
+            showModalText(for: context.window, text: strings().chatServiceTodoCompletePremium, callback: { _ in
+                prem(with: PremiumBoardingController(context: context, source: .todo_lists, openFeatures: true), for: context.window)
+            })
         }
         
-    }
-    
-    private func voteOption(_ option: TelegramMediaTodo.Item, for control: Control) {
-        guard let message = message else { return }
-
         
         var completed = self.todo.completions.map { $0.id }
         var incompleted = self.todo.items.map { $0.id }.filter({ !completed.contains($0) })
@@ -457,7 +464,6 @@ private final class TodoOptionView : Control {
     private var progressIndicator: ProgressIndicator?
     private let borderView: View = View(frame: NSZeroRect)
     
-    private var selectedImageView: ImageView?
     private var avatarView: AvatarControl?
     
     private var option: TodoItem?
@@ -471,6 +477,8 @@ private final class TodoOptionView : Control {
         borderView.userInteractionEnabled = false
         progressView.userInteractionEnabled = false
         progressView.roundCorners = true
+        
+        self.scaleOnClick = true 
         
         layer?.masksToBounds = false
         
@@ -512,9 +520,7 @@ private final class TodoOptionView : Control {
         votedColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
         
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
-        
-        
-        
+                
         if selectingView == nil {
             selectingView = ImageView(frame: NSMakeRect(0, 0, 22, 22))
             addSubview(selectingView!)
@@ -524,13 +530,21 @@ private final class TodoOptionView : Control {
         }
         selectingView?.animates = animated || (previousOption != nil && previousOption?.isSelected != option.isSelected)
         
-        if option.isSelected {
-            selectingView?.image = option.presentation.chat.pollSelection(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
+        if option.canFinish {
+            if option.isSelected {
+                selectingView?.image = option.presentation.chat.pollSelection(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
+            } else {
+                selectingView?.image = option.presentation.chat.pollOptionUnselectedImage(option.isIncoming, option.isBubbled)
+            }
         } else {
-            selectingView?.image = option.presentation.chat.pollOptionUnselectedImage(option.isIncoming, option.isBubbled)
+            if option.isSelected {
+                selectingView?.image = option.presentation.chat.todoSelected(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
+            } else {
+                selectingView?.image = option.presentation.chat.todoSelection(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
+            }
         }
         
-        if let peer = option.peer {
+        if let peer = option.peer, option.canFinish {
             let current: AvatarControl
             var isNew: Bool = false
             if let view = self.avatarView {

@@ -726,6 +726,14 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
         }
         
+        if let media = data.message.media.first as? TelegramMediaTodo {
+            if data.message.author?.id == context.peerId || media.flags.contains(.othersCanAppend) {
+                secondBlock.append(ContextMenuItem(strings().chatContextMenuAddTask, handler: {
+                    data.chatInteraction.appendTask(data.message)
+                }, itemImage: MenuAnimation.menu_list.value, locked: !context.isPremium))
+            }
+        }
+        
         if !data.message.isScheduledMessage, let peer = peer, !peer.isDeleted, isNotFailed, data.peerId == data.message.id.peerId, !isService, mode.customChatContents == nil {
             
             let needUnpin = data.pinnedMessage?.others.contains(data.message.id) == true

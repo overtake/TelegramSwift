@@ -718,6 +718,21 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
     })!
 }
 
+private func generateTodoSelection(color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(19, 19), rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: size.bounds.focus(NSMakeSize(6, 6)))
+    })!
+}
+private func generateTodoSelected(color: NSColor) -> CGImage {
+    let image = NSImage(resource: .iconTodoOtherCheck).precomposed(color)
+    return generateImage(NSMakeSize(19, 19), contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(image, in: size.bounds.focus(image.backingSize))
+    })!
+}
+
 private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
     return generateImage(NSMakeSize(19, 19), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -3427,9 +3442,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               chatlist_apps: { NSImage(resource: .iconChatListApps).precomposed(palette.accent) },
                               chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) },
                               chat_input_suggest_message: { NSImage(resource: .iconChatInputMessageSuggestion).precomposed(palette.accent) },
-                              chat_input_send_gift: { NSImage(resource: .iconChannelGift).precomposed(palette.grayIcon) }
+                              chat_input_send_gift: { NSImage(resource: .iconChannelGift).precomposed(palette.grayIcon) },
+                              todo_selection: { generateTodoSelection(color: palette.webPreviewActivity) },
+                              todo_selected: { generateTodoSelected(color: palette.webPreviewActivity) },
+                              todo_selection_other_incoming: { generateTodoSelection(color: palette.webPreviewActivityBubble_incoming) },
+                              todo_selection_other_outgoing: { generateTodoSelection(color: palette.webPreviewActivityBubble_outgoing) },
+                              todo_selected_other_incoming: { generateTodoSelected(color: palette.webPreviewActivityBubble_incoming) },
+                              todo_selected_other_outgoing: { generateTodoSelected(color: palette.webPreviewActivityBubble_outgoing) }
+                              
     )
 }
+
+
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,

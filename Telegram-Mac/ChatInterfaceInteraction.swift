@@ -263,6 +263,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var updateChatLocationThread:(Int64?)->Void = { _ in }
     
+    var appendTask:(Message)->Void = { _ in }
+    
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, chatLocation.threadMsgId == message.id {

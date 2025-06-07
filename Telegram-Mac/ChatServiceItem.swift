@@ -3192,7 +3192,7 @@ class ChatServiceRowView: TableRowView {
         }
         let contentFrameY = frame.height - reactionsLayout.size.height
         
-        var frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY).offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0)
+        let frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY).offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0)
         
         return frame
     }
@@ -3208,7 +3208,9 @@ class ChatServiceRowView: TableRowView {
             transition.updateFrame(view: reactionsView, frame: reactionsRect(item))
         }
         
-        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 6, addition: item.entry.additionalData.monoforumState == .vertical ? 40 : 0))
+        let offset: CGFloat = item.entry.additionalData.monoforumState == .vertical ? 40 : 0
+        
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 6, addition: offset))
 
         let baseY = textView.frame.maxY + (item.isBubbled ? 0 : 6)
 
@@ -3225,28 +3227,28 @@ class ChatServiceRowView: TableRowView {
             }
 
             if let photoVideoView = photoVideoView {
-                transition.updateFrame(view: photoVideoView, frame: photoVideoView.centerFrameX(y: baseY))
+                transition.updateFrame(view: photoVideoView, frame: photoVideoView.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             }
         }
         
         if let view = giftView {
-            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
         if let view = suggestView {
-            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
         if let view = wallpaperView {
-            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
         if let view = storyView {
-            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
         if let view = suggestChannelsView {
-            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY))
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             view.updateLayout(size: view.frame.size, transition: transition)
         }
 

@@ -1122,6 +1122,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             }
             text = rawString
+        case let .todoAppendTasks(tasks):
+            text = "added tasks"
         }
     }
     return (text, entities, media)

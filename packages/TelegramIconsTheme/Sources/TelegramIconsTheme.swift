@@ -10743,6 +10743,84 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var todo_selection: CGImage {
+      if let image = cached.with({ $0["todo_selection"] }) {
+          return image
+      } else {
+          let image = _todo_selection()
+          _ = cached.modify { current in 
+              var current = current
+              current["todo_selection"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var todo_selected: CGImage {
+      if let image = cached.with({ $0["todo_selected"] }) {
+          return image
+      } else {
+          let image = _todo_selected()
+          _ = cached.modify { current in 
+              var current = current
+              current["todo_selected"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var todo_selection_other_incoming: CGImage {
+      if let image = cached.with({ $0["todo_selection_other_incoming"] }) {
+          return image
+      } else {
+          let image = _todo_selection_other_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["todo_selection_other_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var todo_selection_other_outgoing: CGImage {
+      if let image = cached.with({ $0["todo_selection_other_outgoing"] }) {
+          return image
+      } else {
+          let image = _todo_selection_other_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["todo_selection_other_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var todo_selected_other_incoming: CGImage {
+      if let image = cached.with({ $0["todo_selected_other_incoming"] }) {
+          return image
+      } else {
+          let image = _todo_selected_other_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["todo_selected_other_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var todo_selected_other_outgoing: CGImage {
+      if let image = cached.with({ $0["todo_selected_other_outgoing"] }) {
+          return image
+      } else {
+          let image = _todo_selected_other_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["todo_selected_other_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -11570,6 +11648,12 @@ public final class TelegramIconsTheme {
   private let _chat_input_channel_gift: ()->CGImage
   private let _chat_input_suggest_message: ()->CGImage
   private let _chat_input_send_gift: ()->CGImage
+  private let _todo_selection: ()->CGImage
+  private let _todo_selected: ()->CGImage
+  private let _todo_selection_other_incoming: ()->CGImage
+  private let _todo_selection_other_outgoing: ()->CGImage
+  private let _todo_selected_other_incoming: ()->CGImage
+  private let _todo_selected_other_outgoing: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -12397,7 +12481,13 @@ public final class TelegramIconsTheme {
       chatlist_apps: @escaping()->CGImage,
       chat_input_channel_gift: @escaping()->CGImage,
       chat_input_suggest_message: @escaping()->CGImage,
-      chat_input_send_gift: @escaping()->CGImage
+      chat_input_send_gift: @escaping()->CGImage,
+      todo_selection: @escaping()->CGImage,
+      todo_selected: @escaping()->CGImage,
+      todo_selection_other_incoming: @escaping()->CGImage,
+      todo_selection_other_outgoing: @escaping()->CGImage,
+      todo_selected_other_incoming: @escaping()->CGImage,
+      todo_selected_other_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -13225,5 +13315,11 @@ public final class TelegramIconsTheme {
       self._chat_input_channel_gift = chat_input_channel_gift
       self._chat_input_suggest_message = chat_input_suggest_message
       self._chat_input_send_gift = chat_input_send_gift
+      self._todo_selection = todo_selection
+      self._todo_selected = todo_selected
+      self._todo_selection_other_incoming = todo_selection_other_incoming
+      self._todo_selection_other_outgoing = todo_selection_other_outgoing
+      self._todo_selected_other_incoming = todo_selected_other_incoming
+      self._todo_selected_other_outgoing = todo_selected_other_outgoing
   }
 }

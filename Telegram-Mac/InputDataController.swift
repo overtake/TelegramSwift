@@ -1038,7 +1038,7 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func viewDidAppear(_ animated: Bool) {
         if makeFirstResponder {
-            _ = self.window?.makeFirstResponder(nextResponder())
+            _ = self.window?.makeFirstResponder(firstResponder())
         }
         super.viewDidAppear(animated)
         
