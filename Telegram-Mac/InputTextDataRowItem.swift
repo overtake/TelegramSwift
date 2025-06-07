@@ -452,7 +452,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         }
         
         if item.hasTextLimitation {
-            textLimitation.isHidden = item.state.inputText.string.length < item.limit / 3 * 2 || item.state.inputText.string.length == item.limit
+            textLimitation.isHidden = item.state.inputText.string.length < item.limit / 3 * 2 || item.state.inputText.string.length == item.limit || !item.enabled
             let color: NSColor = item.state.inputText.string.length > item.limit ? theme.colors.redUI : theme.colors.grayText
             textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.state.inputText.string.length))", color: color, font: .normal(.small))
             textLimitation.sizeToFit()
@@ -521,11 +521,10 @@ class InputTextDataRowView : GeneralContainableRowView {
         textView.interactions.inputIsEnabled = item.enabled
         
         
-        self.textView.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
-        self.rightActionView.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
-        self.placeholderAction?.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
-        self.textLimitation.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
-        self.emoji?.change(opacity: item.enabled ? 1 : 0.8, animated: animated)
+        self.textView.change(opacity: item.enabled ? 1 : 0.5, animated: animated)
+        self.rightActionView.isHidden = !item.enabled
+        self.placeholderAction?.isHidden = !item.enabled
+        self.emoji?.isHidden = !item.enabled
 
         let prevPolicy = textView.interactions.emojiPlayPolicy
             

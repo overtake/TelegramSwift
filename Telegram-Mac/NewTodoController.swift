@@ -6,8 +6,6 @@ import TelegramCore
 import Postbox
 import InputView
 
-private let maxTextLength:Int32 = 255
-private let maxOptionLength: Int32 = 100
 
 
 private class Arguments {
@@ -60,20 +58,20 @@ private struct State : Equatable {
     var othersCanAdd: Bool = false
     var othersCanComplete: Bool = false
     
-    var editing: Bool
+    var source: NewTodoSourceType
     
     
     func withUpdatedTitle(_ title: String) -> State {
-        return State(options: self.options, textState: self.textState, editing: self.editing)
+        return State(options: self.options, textState: self.textState, source: self.source)
     }
     func withDeleteOption(_ identifier: InputDataIdentifier) -> State {
         var options = self.options
         options.removeAll(where: {$0.identifier == identifier})
-        return State(options: options, textState: self.textState, editing: self.editing)
+        return State(options: options, textState: self.textState, source: self.source)
     }
     
     func withUnselectItems() -> State {
-        return State(options: self.options.map { $0.withUpdatedSelected(false) }, textState: self.textState, editing: self.editing)
+        return State(options: self.options.map { $0.withUpdatedSelected(false) }, textState: self.textState, source: self.source)
     }
     
     func withUpdatedOption(_ f:(TodoOption) -> TodoOption, forKey identifier: InputDataIdentifier) -> State {
@@ -81,18 +79,18 @@ private struct State : Equatable {
         if let index = options.firstIndex(where: {$0.identifier == identifier}) {
             options[index] = f(options[index])
         }
-        return State(options: options, textState: self.textState, editing: self.editing)
+        return State(options: options, textState: self.textState, source: self.source)
     }
     
     func withAddedOption(_ option: TodoOption) -> State {
         var options = self.options
         options.append(option)
-        return State(options: options, textState: self.textState, editing: self.editing)
+        return State(options: options, textState: self.textState, source: self.source)
     }
     func withUpdatedPos(_ previous: Int, _ current: Int) -> State {
         var options = self.options
         options.move(at: previous, to: current)
-        return State(options: options, textState: self.textState, editing: self.editing)
+        return State(options: options, textState: self.textState, source: self.source)
     }
     
     func indexOf(_ identifier: InputDataIdentifier) -> Int? {
@@ -100,7 +98,7 @@ private struct State : Equatable {
     }
     
     func withUpdatedState() -> State {
-         return State(options: self.options, textState: self.textState, editing: self.editing)
+         return State(options: self.options, textState: self.textState, source: self.source)
     }
     
     var title: String {
@@ -108,8 +106,18 @@ private struct State : Equatable {
     }
     
     var isEnabled: Bool {
-        let isEnabled = !title.trimmed.isEmpty && options.filter({!$0.text.trimmed.isEmpty}).count >= 2
-        return isEnabled
+        
+        var fails: [InputDataIdentifier : InputDataValidationFailAction] = [:]
+        if self.textState.string.trimmed.isEmpty {
+            fails[_id_input_title] = .shake
+        }
+        for value in self.options {
+            if value.text.trimmed.isEmpty {
+                fails[value.identifier] = .shake
+            }
+        }
+        
+        return fails.isEmpty
     }
     
     var media: TelegramMediaTodo {
@@ -121,13 +129,23 @@ private struct State : Equatable {
         }
         
         var flags: TelegramMediaTodo.Flags = .init()
-        if othersCanAdd {
+        if othersCanAdd, othersCanComplete {
             flags.insert(.othersCanAppend)
         }
         if othersCanComplete {
             flags.insert(.othersCanComplete)
         }
         return .init(flags: flags, text: self.title, textEntities: self.textState.textInputState().messageTextEntities(), items: items, completions: [])
+    }
+    
+    var added: [TelegramMediaTodo.Item] {
+        var items: [TelegramMediaTodo.Item] = []
+        for (i, item) in options.enumerated() {
+            if item.enabled {
+                items.append(.init(text: item.text, entities: item.textState.textInputState().messageTextEntities(), id: Int32(i + 1)))
+            }
+        }
+        return items
     }
 }
 
@@ -151,6 +169,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    let maxTextLength:Int32 = arguments.context.appConfiguration.getGeneralValue("todo_title_length_max", orElse: 32)
+    let maxOptionLength: Int32 =  arguments.context.appConfiguration.getGeneralValue("todo_item_length_max", orElse: 64)
+
+    
     //TODOLANG
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input_title, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
@@ -166,11 +188,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             }
             return text
-        }, updateState: arguments.updateState, limit: maxTextLength, hasEmoji: arguments.context.isPremium)
+        }, updateState: arguments.updateState, limit: maxTextLength, hasEmoji: arguments.context.isPremium, enabled: state.source.editingEnabled)
     }))
     index += 1
     
-    let optionsLimit = Int(arguments.context.appConfiguration.getGeneralValue("poll_answers_max", orElse: 10))
+    let optionsLimit = Int(arguments.context.appConfiguration.getGeneralValue("todo_items_max", orElse: 30))
     
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -194,7 +216,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }
         let placeholder: InputDataInputPlaceholder = InputDataInputPlaceholder(hasLimitationText: true)
-        let rightItem = InputDataRightItem.action(theme.icons.recentDismiss, .custom({ _, _ in
+        let rightItem: InputDataRightItem? = InputDataRightItem.action(theme.icons.recentDismiss, .custom({ _, _ in
             arguments.deleteOption(option.identifier)
         }))
         
@@ -202,7 +224,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let option: TodoOption
             let placeholder: InputDataInputPlaceholder?
             let viewType: GeneralViewType
-            let rightItem: InputDataRightItem
+            let rightItem: InputDataRightItem?
         }
         let tuple = Tuple(option: option, placeholder: placeholder, viewType: viewType, rightItem: rightItem)
         
@@ -212,7 +234,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return text.trimmingCharacters(in: CharacterSet.newlines)
             }, updateState: { state in
                 arguments.updateOptionState(option.identifier, state)
-            }, limit: maxOptionLength, hasEmoji: arguments.context.isPremium)
+            }, limit: maxOptionLength, hasEmoji: arguments.context.isPremium, enabled: tuple.option.enabled)
         }))
     }
     if state.options.count < optionsLimit {
@@ -220,14 +242,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_complete, data: .init(name: "Others Can Complete", color: theme.colors.text, type: .switchable(state.othersCanComplete), viewType: .firstItem, action: arguments.toggleCanComplete)))
+    switch state.source {
+    case .create, .edit:
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_complete, data: .init(name: "Others Can Complete", color: theme.colors.text, type: .switchable(state.othersCanComplete), viewType: state.othersCanComplete ? .firstItem : .singleItem, action: arguments.toggleCanComplete)))
 
+        if state.othersCanComplete {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_add, data: .init(name: "Others Can Append", color: theme.colors.text, type: .switchable(state.othersCanAdd), viewType: .lastItem, action: arguments.toggleCanAdd)))
+        }
+    default:
+        break
+    }
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_add, data: .init(name: "Others Can Append", color: theme.colors.text, type: .switchable(state.othersCanAdd), viewType: .lastItem, action: arguments.toggleCanAdd)))
-
   
     // entries
     
@@ -237,7 +266,46 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func NewTodoController(chatInteraction: ChatInteraction, message: Message? = nil) -> InputDataModalController {
+enum NewTodoSourceType : Equatable {
+    case create
+    case edit(Message)
+    case addOption(Message)
+    
+    var editingEnabled: Bool {
+        switch self {
+        case .addOption:
+            return false
+        default:
+            return true
+        }
+    }
+    
+    var okText: String {
+        //TODOLANG
+        switch self {
+        case .create:
+            return "Send"
+        case .edit:
+            return "Edit"
+        case .addOption:
+            return "Add"
+        }
+    }
+    
+    var title: String {
+        //TODOLANG
+        switch self {
+        case .create:
+            return "New To-Do List"
+        case .edit:
+            return "Edit To-Do List"
+        case .addOption:
+            return "Add Task"
+        }
+    }
+}
+
+func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceType = .create) -> InputDataModalController {
     
     let context = chatInteraction.context
 
@@ -247,22 +315,29 @@ func NewTodoController(chatInteraction: ChatInteraction, message: Message? = nil
     var initialOptions: [TodoOption] = []
     let othersCanAdd: Bool
     let othersCanComplete: Bool
-    if let media = message?.media.first as? TelegramMediaTodo {
+    
+    switch source {
+    case let .edit(message), let .addOption(message):
+        let media = message.media.first as! TelegramMediaTodo
         initialTitle = ChatTextInputState(inputText: media.text, selectionRange: media.text.length..<media.text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: media.textEntities), associatedMedia: [:])).textInputState()
         for option in media.items {
             let text = ChatTextInputState(inputText: option.text, selectionRange: option.text.length..<option.text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: option.entities), associatedMedia: [:])).textInputState()
-            initialOptions.append(.init(identifier: _id_input_option(), textState: text, selected: false, enabled: false))
+            initialOptions.append(.init(identifier: _id_input_option(), textState: text, selected: false, enabled: source.editingEnabled))
         }
         othersCanAdd = media.flags.contains(.othersCanAppend)
         othersCanComplete = media.flags.contains(.othersCanComplete)
-    } else {
+        
+        if !source.editingEnabled {
+            initialOptions.append(.init(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true))
+        }
+    case .create:
         initialTitle = .init()
         initialOptions = [TodoOption(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true), TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true)]
         othersCanAdd = false
         othersCanComplete = false
     }
 
-    let initialState = State(options: initialOptions, textState: initialTitle, othersCanAdd: othersCanAdd, othersCanComplete: othersCanComplete, editing: message != nil)
+    let initialState = State(options: initialOptions, textState: initialTitle, othersCanAdd: othersCanAdd, othersCanComplete: othersCanComplete, source: source)
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -342,10 +417,14 @@ func NewTodoController(chatInteraction: ChatInteraction, message: Message? = nil
         let state = stateValue.with { $0 }
     
         if state.isEnabled {
-            if let message = message {
+            switch source {
+            case let .edit(message):
                 context.account.pendingUpdateMessageManager.add(messageId: message.id, text: "", media: .update(.message(message: MessageReference(message), media: state.media)), entities: nil, inlineStickers: [:])
                 close?()
-            } else {
+            case let .addOption(message):
+                _ = context.engine.messages.appendTodoMessageItems(messageId: message.id, items: state.added).start()
+                close?()
+            case .create:
                 chatInteraction.sendMedias([state.media], ChatTextInputState(), false, nil, false, nil, false, nil, false)
                 close?()
             }
@@ -357,21 +436,29 @@ func NewTodoController(chatInteraction: ChatInteraction, message: Message? = nil
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let interactions = ModalInteractions(acceptTitle: "Send", accept: {
+    let interactions = ModalInteractions(acceptTitle: source.okText, accept: {
         checkAndSend()
     }, singleButton: true)
+    
+    var firstRun = true
 
     
-    let controller = InputDataController(dataSignal: signal, title: "New To Do List", validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: signal, title: source.title, validateData: { data -> InputDataValidation in
+        
         
         if let _ = data[_id_input_add_option] {
             return addOption(true)
         }
         
+        let state = stateValue.with { $0 }
+        
         var fails: [InputDataIdentifier : InputDataValidationFailAction] = [:]
-        for (key, value) in data {
-            if let string = value.stringValue, string.trimmed.isEmpty {
-                fails[key] = .shake
+        if state.textState.string.trimmed.isEmpty {
+            fails[_id_input_title] = .shake
+        }
+        for value in state.options {
+            if value.text.trimmed.isEmpty {
+                fails[value.identifier] = .shake
             }
         }
         if !fails.isEmpty {
@@ -478,6 +565,13 @@ func NewTodoController(chatInteraction: ChatInteraction, message: Message? = nil
 
         interactions.updateDone { done in
             done.isEnabled = state.isEnabled
+        }
+        
+        if firstRun, case .addOption = source {
+            delay(0.1, closure: {
+                controller.makeFirstResponderIfPossible(for: state.options.last!.identifier)
+            })
+            firstRun = false
         }
         
     }, returnKeyInvocation: { identifier, event in

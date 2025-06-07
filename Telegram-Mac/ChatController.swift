@@ -1841,7 +1841,7 @@ private final class ChatAdData {
             guard let `self` = self else {
                 return
             }
-            let (interPostInterval, messages) = values.0
+            let (interPostInterval, messages, _, _) = values.0
             let height = values.1
             self.height = height
             
@@ -4751,8 +4751,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
             if let message, message.media.first is TelegramMediaTodo, let self {
-                showModal(with: NewTodoController(chatInteraction: self.chatInteraction, message: message), for: context.window)
-                return 
+                showModal(with: NewTodoController(chatInteraction: self.chatInteraction, source: .edit(message)), for: context.window)
+                return
             }
             
             if let editState = self?.chatInteraction.presentation.interfaceState.editState, let window = self?.window, let _ = message  {
@@ -4765,6 +4765,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             } else {
                 process()
+            }
+        }
+        
+        chatInteraction.appendTask = { message in
+            if !context.isPremium {
+                showModalText(for: context.window, text: strings().chatServiceTodoCompletePremium, callback: { _ in
+                    prem(with: PremiumBoardingController(context: context, source: .todo_lists, openFeatures: true), for: context.window)
+                })
+            } else {
+                showModal(with: NewTodoController(chatInteraction: self.chatInteraction, source: .addOption(message)), for: context.window)
             }
         }
         
