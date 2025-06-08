@@ -956,11 +956,11 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
     
     public override func menu(for event: NSEvent) -> NSMenu? {
-        let menu = super.menu(for: event)
+        let menu = super.menu(for: event) as? NSMenu
         var removeItems = [NSMenuItem]()
         var addedTransformations = false
 
-        menu?.appearance = self.appearance
+//        menu?.appearance = self.appearance
 
         menu?.items.enumerated().forEach { (idx, item) in
             if item.action == NSSelectorFromString("submenuAction:") {
