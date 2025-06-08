@@ -742,7 +742,7 @@ class MonoforumVerticalView : View, TableViewDelegate {
         let rect = NSMakeRect(0, 40, size.width, size.height - 40)
         self.tableView.frame = rect
         self.tableView.tile()
-        transition.updateFrame(view: self.separator, frame: NSMakeRect(rect.width - .borderSize, 0, .borderSize, rect.height))
+        transition.updateFrame(view: self.separator, frame: NSMakeRect(rect.width - .borderSize, 0, .borderSize, size.height))
         self.updateSelectionRect(animated: transition.isAnimated)
 
     }
