@@ -900,8 +900,10 @@ class ChatListRowItem: TableRowItem {
         self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: 1)
         
         let selected = titleText.mutableCopy() as! NSMutableAttributedString
-        if let color = selected.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+        if !selected.string.isEmpty, let color = selected.attribute(.selectedColor, at: 0, effectiveRange: nil) {
             selected.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selected.range)
+            self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: 1)
+        } else {
             self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: 1)
         }
                 

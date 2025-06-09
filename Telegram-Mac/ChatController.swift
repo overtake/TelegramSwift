@@ -6570,28 +6570,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
-        let getPinned:()-> Signal<ChatPinnedMessage?, NoError> = { [weak self] in
-            guard let `self` = self else {
-                return .single(nil)
-            }
-            
-            let replyHistoryFirst: Signal<(ChatHistoryViewUpdate, ChatLocation), NoError> = self.chatLocationValue |> mapToSignal { chatLocation in
+        let chatLocationValue = self.chatLocationValue
+        let topVisibleMessageRange = self.topVisibleMessageRange.get()
+        let dismissedPinnedIds = self.dismissedPinnedIds.get()
+        let ready = self.ready.get()
+        
+        let getPinned:()-> Signal<ChatPinnedMessage?, NoError> = {
+           
+            let replyHistoryFirst: Signal<(ChatHistoryViewUpdate, ChatLocation), NoError> = chatLocationValue |> mapToSignal { chatLocation in
                 return preloadedChatHistoryViewForLocation(.Initial(count: 6, scrollPosition: nil), context: context, chatLocation: chatLocation, chatLocationContextHolder: chatLocationContextHolder, tag: .tag(.pinned), additionalData: []) |> map { ($0, chatLocation) }
             }
 
-            let ready = self.ready.get() |> filter { $0 } |> take(1)
+            let ready = ready |> filter { $0 } |> take(1)
             
-            let replyHistory: Signal<(ChatHistoryViewUpdate, ChatLocation), NoError> = self.chatLocationValue |> mapToSignal { chatLocation in
+            let replyHistory: Signal<(ChatHistoryViewUpdate, ChatLocation), NoError> = chatLocationValue |> mapToSignal { chatLocation in
                 return preloadedChatHistoryViewForLocation(.Initial(count: 100, scrollPosition: nil), context: context, chatLocation: chatLocation, chatLocationContextHolder: chatLocationContextHolder, tag: .tag(.pinned), additionalData: []) |> map { ($0, chatLocation) }
             }
             
-            return combineLatest(queue: prepareQueue,
-                                          replyHistoryFirst
-                                  |> then(ready |> mapToSignal { _ in
+            return combineLatest(queue: prepareQueue, replyHistoryFirst |> then(ready |> mapToSignal { _ in
                 return  replyHistory
-            }),
-                self.topVisibleMessageRange.get(), self.dismissedPinnedIds.get()
-                )
+            }), topVisibleMessageRange, dismissedPinnedIds)
                 |> map { update, topVisibleMessageRange, dismissed -> ChatPinnedMessage? in
                     let chatLocation = update.1
                     var message: ChatPinnedMessage?
@@ -6618,7 +6616,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if i == view.entries.count - 1, message == nil {
                                 matches = true
                             }
-                            if matches, chatLocation.threadId == entry.message.threadId || chatLocation.threadId == nil && entry.message.threadId == 1 {
+                            if matches, chatLocation.threadId == entry.message.threadId || chatLocation.threadId == nil && entry.message.threadId == 1 || entry.message.threadId == context.peerId.toInt64() {
                                 message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, others: view.entries.map { $0.message.id }, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
                             }
                         }
