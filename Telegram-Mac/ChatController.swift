@@ -6601,7 +6601,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if i == view.entries.count - 1, message == nil {
                                 matches = true
                             }
-                            if matches, chatLocation.threadId == entry.message.threadId || chatLocation.threadId == nil && entry.message.threadId == 1 {
+                            if matches, chatLocation.threadId == entry.message.threadId || chatLocation.threadId == nil && entry.message.threadId == 1 || entry.message.threadId == context.peerId.toInt64() {
                                 message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, others: view.entries.map { $0.message.id }, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
                             }
                         }
