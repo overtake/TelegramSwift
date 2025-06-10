@@ -43,6 +43,10 @@ final class GalleryInteractions {
 }
 private(set) var viewer:GalleryViewer?
 
+func getGalleryViewer() -> GalleryViewer? {
+    return viewer
+}
+
 
 let galleryButtonStyle = ControlStyle(font:.medium(.huge), foregroundColor:.white, backgroundColor:.clear, highlightColor:.grayIcon)
 

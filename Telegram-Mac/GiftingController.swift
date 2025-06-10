@@ -696,12 +696,16 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     
     let birtday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: peerId))
     
-    let giftsContext = starGiftsContext ?? ProfileGiftsContext(account: context.account, peerId: context.peerId)
+    let giftsContext = ProfileGiftsContext(account: context.account, peerId: context.peerId)
     
     giftsContext.updateFilter(.unique)
     
-    let disallowedGifts = context.account.viewTracker.peerView(peerId, updateData: true) |> map {
-        ($0.cachedData as? CachedUserData)?.disallowedGifts
+    let disallowedGifts: Signal<TelegramDisallowedGifts?, NoError> = context.account.viewTracker.peerView(peerId, updateData: true) |> map { view in
+        if peerId == context.peerId {
+            return nil
+        } else {
+            return (view.cachedData as? CachedUserData)?.disallowedGifts
+        }
     }
     
     

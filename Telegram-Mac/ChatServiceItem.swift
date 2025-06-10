@@ -1548,6 +1548,7 @@ class ChatServiceItem: ChatRowItem {
                         let values = makeValues(marked)
                         
                         let valuesRange = rawString.nsstring.range(of: "{values}")
+                        let valuesLength = values.0.length
                         if valuesRange.location != NSNotFound {
                             rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
                         }
@@ -1572,7 +1573,7 @@ class ChatServiceItem: ChatRowItem {
                         InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
                         
                         if valuesRange.location != NSNotFound {
-                            let range = NSMakeRange(offset, valuesRange.length)
+                            let range = NSMakeRange(offset, valuesLength)
                             attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
                                 chatInteraction?.focusMessageId(nil, .init(messageId: todo.id, string: nil), .CenterEmpty)
                             }), for: range, color: grayTextColor)
@@ -1580,8 +1581,6 @@ class ChatServiceItem: ChatRowItem {
                         }
 
                     }
-                    
-
                     
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
@@ -1591,7 +1590,109 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
+                case let .todoAppendTasks(tasks):
+                    let todo: Message?
+                    if let replyAttribute = message.replyAttribute {
+                        todo = message.associatedMessages[replyAttribute.messageId]
+                    } else {
+                        todo = nil
+                    }
 
+                    guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                        break
+                    }
+
+                    let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                        var resultString = ""
+                        var entities: [MessageTextEntity] = []
+                        var offset = 0
+
+                        for (index, item) in items.enumerated() {
+                            resultString += "'"
+                            offset += 1
+
+                            for entity in item.entities {
+                                let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                                entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                            }
+
+                            resultString += item.text
+                            offset += item.text.count
+
+                            resultString += "'"
+                            offset += 1
+
+                            if index < items.count - 1 {
+                                resultString += ", "
+                                offset += 2
+                            }
+                        }
+
+                        return (resultString, entities)
+                    }
+
+                    let isMultiple = tasks.count > 1
+                    var rawString: String
+
+                    if authorId == context.peerId {
+                        rawString = isMultiple ? strings().chatServiceTodoAddedMultiYou : strings().chatServiceTodoAddedYou
+                    } else {
+                        rawString = isMultiple ? strings().chatServiceTodoAddedMulti : strings().chatServiceTodoAdded
+                    }
+
+                    if !rawString.isEmpty {
+                        let values = makeValues(tasks)
+                        let valuesRange = rawString.nsstring.range(of: "{values}")
+                        let valuesLength = values.0.length
+                        if valuesRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+                        }
+
+                        let authorRange = rawString.nsstring.range(of: "{author}")
+                        if authorRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+                        }
+
+                        let taskTitle = "'\(todoMedia.text)'"
+                        let taskRange = rawString.nsstring.range(of: "{task}")
+                        if taskRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: taskRange, with: taskTitle)
+                        }
+
+                        var offset = valuesRange.location
+                        if authorRange.location != NSNotFound {
+                            offset += (authorName.length - authorRange.length)
+                        }
+                        
+
+                        var entities: [MessageTextEntity] = []
+                        for entity in values.1 {
+                            entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+                        }
+
+                        let _ = attributedString.append(string: rawString, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+
+                        InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
+
+                        if valuesRange.location != NSNotFound {
+                            let range = NSMakeRange(offset, valuesLength)
+                            attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                                chatInteraction?.focusMessageId(nil, .init(messageId: todo.id, string: nil), .CenterEmpty)
+                            }), for: range, color: grayTextColor)
+                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+
+                    
                 default:
                     break
                 }

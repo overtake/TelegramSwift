@@ -117,6 +117,15 @@ private struct State : Equatable {
             }
         }
         
+        switch source {
+        case .addOption:
+            if self.options.filter(\.enabled).isEmpty {
+                return false
+            }
+        default:
+            break
+        }
+        
         return fails.isEmpty
     }
     
