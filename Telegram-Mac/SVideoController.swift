@@ -274,23 +274,23 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
         
-//        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
-//        
-//        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
-//
-//        let timestamp2: Int32 = 60 * 22 + 60 * 60 * 18
-//
-//        
-//        let message = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: strings().appearanceSettingsChatPreview3, attributes: [AdMessageAttribute(opaqueId: Data(), messageType: .sponsored, url: "https://t.me/durov", buttonText: "Please", sponsorInfo: "Durov Corp.", additionalInfo: "", canReport: true, hasContentMedia: false, minDisplayDuration: 10, maxDisplayDuration: 20)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
-//
-//      
-//        
-//        window.set(handler: { [weak self] _ in
-//            self?.genericView.set(adMessage: message, arguments: arguments, animated: true)
-//            
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
-//        
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
+        
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
+
+        let timestamp2: Int32 = 60 * 22 + 60 * 60 * 18
+
+        
+        let message = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: strings().appearanceSettingsChatPreview3, attributes: [AdMessageAttribute(opaqueId: Data(), messageType: .sponsored, url: "https://t.me/durov", buttonText: "Please", sponsorInfo: "Durov Corp.", additionalInfo: "", canReport: true, hasContentMedia: false, minDisplayDuration: 10, maxDisplayDuration: 20)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+
+      
+        
+        window.set(handler: { [weak self] _ in
+            self?.runAdMessages([message], 10, 15)
+            
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        
 //        self.updateControls = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
 //            self?.updateControlVisibility()
 //        }, queue: .mainQueue())
@@ -365,16 +365,40 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private func runAdMessages(_ messages: [Message], _ startDelay: Int32, _ betweenDelay: Int32) {
         
+        let context = self.context
+        
         var makeNext:((Message, Bool)->Void)? = nil
         
-        let arguments = SVideoAdsArguments(context: context, removeAd: { [weak self] current, all in
-            self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
-            makeNext?(current, false)
+        let arguments = SVideoAdsArguments(context: context, removeAd: { [weak self] current, all, intime in
+            guard let window = self?.window else {
+                return
+            }
+            if !intime {
+                makeNext?(current, true)
+            } else {
+                if context.isPremium {
+                    if all {
+                        _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+                        self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
+                    }
+                    showModalText(for: window, text: strings().chatDisableAdTooltip)
+                } else {
+                    prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: window)
+                }
+            }
         }, maybeNext: { current in
             makeNext?(current, true)
         }, markAsSeen: { [weak self] current in
             if let adAttribute = current.adAttribute {
                 self?.adContext?.markAsSeen(opaqueId: adAttribute.opaqueId)
+            }
+        }, invoke: { [weak self] current in
+            if let adAttribute = current.adAttribute {
+                self?.adContext?.markAction(opaqueId: adAttribute.opaqueId, media: true, fullscreen: true)
+                let link = inApp(for: adAttribute.url.nsstring, context: context, peerId: nil, openInfo: { peerId, toChat, messageId, initialAction in
+                    getGalleryViewer()?.openInfo(peerId, toChat, messageId, initialAction)
+                }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                execute(inapp: link)
             }
         })
         
@@ -427,7 +451,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             partDisposable.set(preload.start())
         }
         
-        if let message {
+        if let message, let peer = message.peers[message.id.peerId], peer.isChannel {
             let adContext = context.engine.messages.adMessages(peerId: message.id.peerId, messageId: message.id)
             self.adContext = adContext
             

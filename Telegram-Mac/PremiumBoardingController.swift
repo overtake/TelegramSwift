@@ -769,8 +769,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text))
             }))
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { _ in
-                
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { link in
+                execute(inapp: .external(link: "https://telegram.org/" + link == "terms" ? "tos" : link, false))
             }), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
 

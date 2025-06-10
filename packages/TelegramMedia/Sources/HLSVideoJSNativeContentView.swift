@@ -315,19 +315,46 @@ private final class HLSJSServerSource: SharedHLSServerSource {
     }
 }
 
+
 public final class HLSQualitySet {
     public let qualityFiles: [Int: FileMediaReference]
     public let playlistFiles: [Int: FileMediaReference]
+    public let thumbnails: [Int: (file: FileMediaReference, fileMap: FileMediaReference)]
     
     public init?(baseFile: FileMediaReference) {
+        
         
         func isNativeVideoCodecSupported(videoCodec: String) -> Bool {
             return videoCodec == "h264" || videoCodec == "h265" || videoCodec == "avc" || videoCodec == "hevc"
         }
         
         var qualityFiles: [Int: FileMediaReference] = [:]
+        var thumbnailFiles: [FileMediaReference] = []
+        var thumbnailFileMaps: [Int: (mapFile: FileMediaReference, thumbnailFileId: Int64)] = [:]
+        
         for alternativeRepresentation in baseFile.media.alternativeRepresentations {
-            if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
+            let alternativeFile = alternativeRepresentation
+            if alternativeFile.mimeType == "application/x-tgstoryboard" {
+                thumbnailFiles.append(baseFile.withMedia(alternativeFile))
+            } else if alternativeFile.mimeType == "application/x-tgstoryboardmap" {
+                var qualityId: Int?
+                for attribute in alternativeFile.attributes {
+                    switch attribute {
+                    case let .ImageSize(size):
+                        qualityId = Int(min(size.width, size.height))
+                    default:
+                        break
+                    }
+                }
+                
+                if let qualityId, let fileName = alternativeFile.fileName {
+                    if fileName.hasPrefix("mtproto:") {
+                        if let fileId = Int64(fileName[fileName.index(fileName.startIndex, offsetBy: "mtproto:".count)...]) {
+                            thumbnailFileMaps[qualityId] = (mapFile: baseFile.withMedia(alternativeFile), thumbnailFileId: fileId)
+                        }
+                    }
+                }
+            } else {
                 for attribute in alternativeFile.attributes {
                     if case let .Video(_, size, _, _, _, videoCodec) = attribute {
                         if let videoCodec, isNativeVideoCodecSupported(videoCodec: videoCodec) {
@@ -339,8 +366,7 @@ public final class HLSQualitySet {
                                         currentCodec = videoCodec
                                     }
                                 }
-                                if let currentCodec, currentCodec == "av1" {
-                                    // keep the existing AV1 in place
+                                if let currentCodec, (currentCodec == "av1" || currentCodec == "av01") {
                                 } else {
                                     qualityFiles[key] = baseFile.withMedia(alternativeFile)
                                 }
@@ -355,17 +381,16 @@ public final class HLSQualitySet {
         
         var playlistFiles: [Int: FileMediaReference] = [:]
         for alternativeRepresentation in baseFile.media.alternativeRepresentations {
-            if let alternativeFile = alternativeRepresentation as? TelegramMediaFile {
-                if alternativeFile.mimeType == "application/x-mpegurl" {
-                    if let fileName = alternativeFile.fileName {
-                        if fileName.hasPrefix("mtproto:") {
-                            let fileIdString = String(fileName[fileName.index(fileName.startIndex, offsetBy: "mtproto:".count)...])
-                            if let fileId = Int64(fileIdString) {
-                                for (quality, file) in qualityFiles {
-                                    if file.media.fileId.id == fileId {
-                                        playlistFiles[quality] = baseFile.withMedia(alternativeFile)
-                                        break
-                                    }
+            let alternativeFile = alternativeRepresentation
+            if alternativeFile.mimeType == "application/x-mpegurl" {
+                if let fileName = alternativeFile.fileName {
+                    if fileName.hasPrefix("mtproto:") {
+                        let fileIdString = String(fileName[fileName.index(fileName.startIndex, offsetBy: "mtproto:".count)...])
+                        if let fileId = Int64(fileIdString) {
+                            for (quality, file) in qualityFiles {
+                                if file.media.fileId.id == fileId {
+                                    playlistFiles[quality] = baseFile.withMedia(alternativeFile)
+                                    break
                                 }
                             }
                         }
@@ -376,11 +401,26 @@ public final class HLSQualitySet {
         if !playlistFiles.isEmpty && playlistFiles.keys == qualityFiles.keys {
             self.qualityFiles = qualityFiles
             self.playlistFiles = playlistFiles
+            
+            var thumbnails: [Int: (file: FileMediaReference, fileMap: FileMediaReference)] = [:]
+            for (quality, thubmailMap) in thumbnailFileMaps {
+                for file in thumbnailFiles {
+                    if file.media.fileId.id == thubmailMap.thumbnailFileId {
+                        thumbnails[quality] = (
+                            file: file,
+                            fileMap: thubmailMap.mapFile
+                        )
+                    }
+                }
+            }
+            self.thumbnails = thumbnails
         } else {
             return nil
         }
     }
 }
+
+
 
 /**
  Everything below is unchanged from your macOS version, except that

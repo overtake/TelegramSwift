@@ -18,14 +18,16 @@ import Postbox
 
 final class SVideoAdsArguments {
     let context: AccountContext
-    let removeAd: (Message, Bool)->Void
+    let removeAd: (Message, Bool, Bool)->Void
     let maybeNext:(Message)->Void
     let markAsSeen:(Message)->Void
-    init(context: AccountContext, removeAd: @escaping(Message, Bool)->Void, maybeNext:@escaping(Message)->Void, markAsSeen:@escaping(Message)->Void) {
+    let invoke:(Message)->Void
+    init(context: AccountContext, removeAd: @escaping(Message, Bool, Bool)->Void, maybeNext:@escaping(Message)->Void, markAsSeen:@escaping(Message)->Void, invoke:@escaping(Message)->Void) {
         self.context = context
         self.removeAd = removeAd
         self.maybeNext = maybeNext
         self.markAsSeen = markAsSeen
+        self.invoke = invoke
     }
 }
 
@@ -409,11 +411,21 @@ private class AdMessageView : Control {
     private let progress = FireTimerControl(frame: NSMakeRect(0, 0, 36, 36))
     private let close = ImageView()
     
+    private let backgroundView = NSVisualEffectView()
+    
+    private var counterView: DynamicCounterTextView?
+    
     private let adView = AdView(frame: .zero)
     
     private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
+        backgroundView.material = .dark
+        backgroundView.blendingMode = .withinWindow
+        backgroundView.wantsLayer = true
+
+        addSubview(backgroundView)
         addSubview(titleView)
         addSubview(infoView)
         addSubview(avatarControl)
@@ -422,6 +434,8 @@ private class AdMessageView : Control {
         addSubview(progressContainer)
         
         addSubview(adView)
+        
+        
         
         
         progress.userInteractionEnabled = false
@@ -449,28 +463,60 @@ private class AdMessageView : Control {
     
     func set(message: Message, arguments: SVideoAdsArguments, animated: Bool) {
         
+        setSingle(handler: { [weak arguments] _ in
+            arguments?.invoke(message)
+        }, for: .Click)
+        
         let context: AccountContext = arguments.context
         
         let titleLayout = TextViewLayout(.initialize(string: message.author?.displayTitle, color: .white, font: .medium(.text)))
         titleLayout.measure(width: frame.width - avatarControl.frame.maxX - 50)
         self.titleView.update(titleLayout)
         
-        let textViewLayout = TextViewLayout(.initialize(string: message.text, color: .white, font: .normal(.text)))
+        
+        let attr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: 13, openInfo: { _, _, _, _ in }, textColor: .white, linkColor: darkPalette.accent, monospacedPre: .white, monospacedCode: .white, isDark: false, bubbled: false).mutableCopy() as! NSMutableAttributedString
+        
+        InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: message.entities, isPremium: context.isPremium)
+        
+
+        let textViewLayout = TextViewLayout(attr)
         textViewLayout.measure(width: frame.width - avatarControl.frame.maxX - 50)
-        self.infoView.set(text: textViewLayout, context: nil)
+        self.infoView.set(text: textViewLayout, context: arguments.context)
 
         close.image = NSImage(resource: .iconStoryClose).precomposed(NSColor.white)
         close.sizeToFit()
         
         self.avatarControl.setPeer(account: context.account, peer: message.author)
         
+        let counterView = DynamicCounterTextView(frame: .zero)
+        progressContainer.addSubview(counterView)
+        self.counterView = counterView
+        
+
+        self.close.layer?.opacity = 0
+              
         let duration: Double = Double(message.adAttribute?.minDisplayDuration ?? 15)
         let deadline = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+        
+        progress.updateValue = { [weak counterView] current in
+            let value = Int(floor(duration * Double(current)))
+            let dynamicResult = DynamicCounterTextView.make(for: "\(value)", count: "\(value)", font: .normal(.text), textColor: .white, width: .greatestFiniteMagnitude)
+            if let counterView {
+                counterView.update(dynamicResult, animated: true)
+                counterView.change(size: dynamicResult.size, animated: animated)
+                counterView.change(pos: counterView.centerFrame().origin, animated: animated)
+            }
+        }
 
         progress.update(color: NSColor.white, timeout: duration, deadlineTimestamp: deadline + duration)
         
         progress.reachedTimeout = { [weak self] in
             self?.progress.change(opacity: 0, animated: true)
+            if let counterView = self?.counterView {
+                performSubviewRemoval(counterView, animated: animated)
+                self?.counterView = nil
+            }
+            self?.close.change(opacity: 1, animated: true)
         }
         
         if let adAttribute = message.adAttribute {
@@ -530,7 +576,7 @@ private class AdMessageView : Control {
                                         return .init(subject: .list(options.map { .init(string: $0.text, id: $0.option) }), title: report.string)
                                     case .reported:
                                         showModalText(for: window, text: strings().chatMessageSponsoredReportSuccess)
-                                        arguments.removeAd(message, false)
+                                        arguments.removeAd(message, false, false)
                                         return nil
                                     case .adsHidden:
                                         return nil
@@ -554,13 +600,7 @@ private class AdMessageView : Control {
                     menu.addItem(ContextSeparatorItem())
 
                     menu.addItem(ContextMenuItem(strings().searchAdRemoveAd, handler: {
-                        if context.isPremium {
-                            _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
-                            arguments.removeAd(message, true)
-                            showModalText(for: window, text: strings().chatDisableAdTooltip)
-                        } else {
-                            prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: window)
-                        }
+                        arguments.removeAd(message, false, false)
                     }, itemImage: MenuAnimation.menu_clear_history.value))
                 }
 
@@ -568,8 +608,8 @@ private class AdMessageView : Control {
             }
         }
         
-        self.progressContainer.setSingle(handler: { [weak arguments] _ in
-            arguments?.removeAd(message, true)
+        self.progressContainer.setSingle(handler: { [weak arguments, weak self] _ in
+            arguments?.removeAd(message, true, self?.counterView != nil)
         }, for: .Click)
         
         let maxDuration = Double(message.adAttribute?.maxDisplayDuration ?? 30)
@@ -588,6 +628,9 @@ private class AdMessageView : Control {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        transition.updateFrame(view: backgroundView, frame: size.bounds)
+        
         transition.updateFrame(view: avatarControl, frame: avatarControl.centerFrameY(x: 10))
         transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(avatarControl.frame.maxX + 10, 8), size: titleView.frame.size))
         transition.updateFrame(view: infoView, frame: CGRect(origin: NSMakePoint(avatarControl.frame.maxX + 10, size.height - infoView.frame.height - 8), size: infoView.frame.size))
@@ -596,6 +639,10 @@ private class AdMessageView : Control {
 
         transition.updateFrame(view: progress, frame: progress.centerFrame())
         transition.updateFrame(view: close, frame: close.centerFrame())
+        
+        if let counterView {
+            transition.updateFrame(view: counterView, frame: counterView.centerFrame())
+        }
 
         
         transition.updateFrame(view: adView, frame: NSMakeRect(titleView.frame.maxX + 2, titleView.frame.minY, adView.frame.width, adView.frame.height))
@@ -814,7 +861,7 @@ private final class SVideoControlsView : Control {
                 current = view
                 isNew = false
             } else {
-                current = AdMessageView(frame: NSMakeRect(10, 0, frame.width - 20, 50))
+                current = AdMessageView(frame: NSMakeRect(10, 0, frame.width, 50))
                 self.adMessageView = current
                 addSubview(current)
                 isNew = true
@@ -886,6 +933,8 @@ private final class SVideoControlsView : Control {
         
         backgroundView.material = .dark
         backgroundView.blendingMode = .withinWindow
+        backgroundView.wantsLayer = true
+        backgroundView.layer?.cornerRadius = 15
         
         playOrPause.autohighlight = false
         rewindForward.autohighlight = false
@@ -1017,16 +1066,26 @@ private final class SVideoControlsView : Control {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: backgroundView, frame: NSRect(origin: .zero, size: size))
         
         var offset: CGFloat = 0
         if let adMessageView {
-            offset = adMessageView.frame.height + 10
+            offset = adMessageView.frame.height + 20
         }
         let yOffset: CGFloat = 16 + offset
         
+        
+        let bgRect: NSRect
         if let adMessageView {
-            transition.updateFrame(view: adMessageView, frame: self.bounds.focusX(NSMakeSize(size.width - 20, adMessageView.frame.height), y: 10))
+            bgRect = NSMakeRect(0, adMessageView.frame.height + 20, size.width, size.height - (adMessageView.frame.height + 20))
+        } else {
+            bgRect = size.bounds
+        }
+        
+        transition.updateFrame(view: backgroundView, frame: bgRect)
+
+        
+        if let adMessageView {
+            transition.updateFrame(view: adMessageView, frame: self.bounds.focusX(NSMakeSize(size.width, adMessageView.frame.height), y: 10))
             adMessageView.updateLayout(size: adMessageView.frame.size, transition:transition)
         }
 
@@ -1283,7 +1342,7 @@ class SVideoView: NSView {
             .withUpdatedHideRewind(hideRewind: size.width < 400)
 
         let controlsWidth = self.controlsStyle.isCompact ? 220 : min(size.width - 10, 510)
-        let controlsHeight: CGFloat = self.isControlsLimited ? 46 : (self.adMessage != nil ? 150 : 94)
+        let controlsHeight: CGFloat = self.isControlsLimited ? 46 : (self.adMessage != nil ? 164 : 94)
         
         let controlsRect = CGRect(origin: NSMakePoint(floorToScreenPixels((size.width - controlsWidth) / 2), size.height - controlsHeight - 24), size: NSSize(width: controlsWidth, height: controlsHeight))
 
@@ -1310,7 +1369,11 @@ class SVideoView: NSView {
     
     func hideControls(_ hide: Bool, animated: Bool) {
         
-        let hide = hide && self.adMessage == nil
+        var hide = hide
+        
+        if hide, self.adMessage != nil, pipControls == nil {
+            hide = false
+        }
         
         if !hide {
             controls.isHidden = false
@@ -1467,7 +1530,7 @@ class SVideoView: NSView {
         bufferingIndicator.layer?.cornerRadius = 20
         
         backgroundView.isHidden = true
-
+        
         
         controls.playOrPause.set(handler: { [weak self] _ in
             self?.interactions?.playOrPause()

@@ -6361,6 +6361,14 @@ public final class L10n {
   public static func chatServiceSuggestPhotoInfoYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SuggestPhoto.Info.You", p1)
   }
+  /// {author} added a new task {values} to {task}.
+  public static var chatServiceTodoAdded: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Added") }
+  /// {author} added a new tasks {values} to {task}.
+  public static var chatServiceTodoAddedMulti: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Added.Multi") }
+  /// You added a new task {values} to {task}.
+  public static var chatServiceTodoAddedYou: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Added.You") }
+  /// You added a new tasks {values} to {task}.
+  public static var chatServiceTodoAddedMultiYou: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Added.Multi.You") }
   /// Subscribe to Telegram Premium to unlock To-Do Lists. [Read More]()
   public static var chatServiceTodoCompletePremium: String  { return L10n.tr("Localizable", "Chat.Service.Todo.Complete.Premium") }
   /// {author} marked {values} as done.

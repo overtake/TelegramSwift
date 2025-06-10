@@ -1722,22 +1722,21 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     
                     var mustBreak = false
                     for i in 0 ..< entries.count {
-                        messagesViewQueue.justDispatch {
-                            let item:TableRowItem
-                            if cancelled.with({ $0 }) || mustBreak {
-                                mustBreak = true
-                                return
-                            }
-                            if firstInsertedRange.indexIn(i) {
-                                //item = firstInsertion[i - initialIndex].1
-                                //updates.append((i, item))
-                            } else {
-                                item = makeItem(entries[i])
-                                insertions.append((i, item))
-                            }
-                            if i == entries.count - 1 {
-                                finish()
-                            }
+                        let item:TableRowItem
+                        if cancelled.with({ $0 }) || mustBreak {
+                            mustBreak = true
+                            subscriber.putCompletion()
+                            return
+                        }
+                        if firstInsertedRange.indexIn(i) {
+                            //item = firstInsertion[i - initialIndex].1
+                            //updates.append((i, item))
+                        } else {
+                            item = makeItem(entries[i])
+                            insertions.append((i, item))
+                        }
+                        if i == entries.count - 1 {
+                            finish()
                         }
                     }
                 }
@@ -1745,7 +1744,11 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             
         } else if let state = scrollToItem {
             let (removed,inserted,updated) = proccessEntries(fromView?.filteredEntries, right: toView.filteredEntries, { entry -> TableRowItem in
-               return makeItem(entry)
+                if !cancelled.with({ $0 }) {
+                    return makeItem(entry)
+                } else {
+                    return TableRowItem(initialSize)
+                }
             })
 
             let grouping: Bool = true
@@ -2018,7 +2021,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = .init(name: "messagesViewQueue", qos: .userInteractive)
+    private let queue: Queue = .init(name: "messagesViewQueue", qos: .utility)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
@@ -4768,7 +4771,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.appendTask = { message in
+        chatInteraction.appendTask = { [weak self] message in
+            guard let self else {
+                return
+            }
             if !context.isPremium {
                 showModalText(for: context.window, text: strings().chatServiceTodoCompletePremium, callback: { _ in
                     prem(with: PremiumBoardingController(context: context, source: .todo_lists, openFeatures: true), for: context.window)

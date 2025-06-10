@@ -742,6 +742,14 @@ class ChatMessageItem: ChatRowItem {
                     return true
                 }
             } else {
+                if let message, message.peers[message.id.peerId]?.isMonoForum == true {
+                    switch entity.type {
+                    case .BotCommand:
+                        return false
+                    default:
+                        return true
+                    }
+                }
                 return true
             }
         })
