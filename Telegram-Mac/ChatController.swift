@@ -1722,22 +1722,20 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     
                     var mustBreak = false
                     for i in 0 ..< entries.count {
-                        messagesViewQueue.justDispatch {
-                            let item:TableRowItem
-                            if cancelled.with({ $0 }) || mustBreak {
-                                mustBreak = true
-                                return
-                            }
-                            if firstInsertedRange.indexIn(i) {
-                                //item = firstInsertion[i - initialIndex].1
-                                //updates.append((i, item))
-                            } else {
-                                item = makeItem(entries[i])
-                                insertions.append((i, item))
-                            }
-                            if i == entries.count - 1 {
-                                finish()
-                            }
+                        let item:TableRowItem
+                        if cancelled.with({ $0 }) || mustBreak {
+                            mustBreak = true
+                            return
+                        }
+                        if firstInsertedRange.indexIn(i) {
+                            //item = firstInsertion[i - initialIndex].1
+                            //updates.append((i, item))
+                        } else {
+                            item = makeItem(entries[i])
+                            insertions.append((i, item))
+                        }
+                        if i == entries.count - 1 {
+                            finish()
                         }
                     }
                 }
@@ -2018,7 +2016,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = .init(name: "messagesViewQueue", qos: .userInteractive)
+    private let queue: Queue = .init(name: "messagesViewQueue", qos: .utility)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
