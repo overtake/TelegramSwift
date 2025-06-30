@@ -281,7 +281,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         let timestamp2: Int32 = 60 * 22 + 60 * 60 * 18
 
         
-        let message = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: strings().appearanceSettingsChatPreview3, attributes: [AdMessageAttribute(opaqueId: Data(), messageType: .sponsored, url: "https://t.me/durov", buttonText: "Please", sponsorInfo: "Durov Corp.", additionalInfo: "", canReport: true, hasContentMedia: false, minDisplayDuration: 10, maxDisplayDuration: 20)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+        let message = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: "10.3.0 - [FirebaseAnalytics][I-ACS002002] Measurement timer scheduled to fire in approx. (s): -0.0616508722305297910.3.0 - [FirebaseAnalytics][I-ACS002002] Measurement timer scheduled to fire in approx. (s): -0.06165087223052979", attributes: [AdMessageAttribute(opaqueId: Data(), messageType: .sponsored, url: "https://t.me/durov", buttonText: "Please", sponsorInfo: "Durov Corp.", additionalInfo: "", canReport: true, hasContentMedia: false, minDisplayDuration: 10, maxDisplayDuration: 20)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
 
       
         
@@ -363,7 +363,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         return false
     }
     
-    private func runAdMessages(_ messages: [Message], _ startDelay: Int32, _ betweenDelay: Int32) {
+    private func runAdMessages(_ messages: [Message], _ startDelay: Int32, _ betweenDelay: Int32?) {
         
         let context = self.context
         
@@ -412,10 +412,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
                     self?.updateControlVisibility()
                 }
-                
-                self?.nextAdDisposable.set(delaySignal(Double(betweenDelay)).start(completed: {
-                    self?.genericView.set(adMessage: messages[index + 1], arguments: arguments, animated: true)
-                }))
+                if let betweenDelay {
+                    self?.nextAdDisposable.set(delaySignal(Double(betweenDelay)).start(completed: {
+                        self?.genericView.set(adMessage: messages[index + 1], arguments: arguments, animated: true)
+                    }))
+                }
             } else {
                 self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
                 self?.nextAdDisposable.set(nil)
@@ -462,7 +463,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 let ( _, messages, startDelay, betweenDelay) = values.0
                 let status = values.1
                 
-                if !messages.isEmpty, let startDelay, let betweenDelay, !invoked {
+                if !messages.isEmpty, let startDelay, !invoked {
                     if Int32(status.timestamp) >= startDelay {
                         self?.runAdMessages(messages, startDelay, betweenDelay)
                         invoked = true

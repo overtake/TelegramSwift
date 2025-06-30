@@ -23,6 +23,7 @@ import Accelerate
 import TGModernGrowingTextView
 import InputView
 import TelegramMedia
+import CurrencyFormat
 
 func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
     if let messageId = messageId {
@@ -35,6 +36,38 @@ func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
 func makeThreadIdMessageId(peerId: PeerId, threadId: Int64) -> MessageId {
     let messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId))
     return messageId
+}
+
+extension SuggestedPostMessageAttribute {
+    
+    static let commandDecline = "_suggest_decline"
+    static let commandApprove = "_suggest_approve"
+    static let commandChanges = "_suggest_changes"
+
+    func replyMarkup(isIncoming: Bool) -> ReplyMarkupMessageAttribute {
+        
+        var rows: [ReplyMarkupRow] = []
+        
+        if let state {
+            
+        } else {
+            if isIncoming {
+                rows.append(.init(buttons: [
+                    .init(title: strings().chatMessageSuggestMarkupDecline, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandDecline)),
+                    .init(title: strings().chatMessageSuggestMarkupApprove, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandApprove))
+                ]))
+                rows.append(.init(buttons: [
+                    .init(title: strings().chatMessageSuggestMarkupSuggestChanges, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandChanges))
+                ]))
+            } else {
+                rows.append(.init(buttons: [
+                    .init(title: strings().chatMessageSuggestMarkupEdit, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandChanges))
+                ]))
+            }
+        }
+        
+        return ReplyMarkupMessageAttribute.init(rows: rows, flags: [], placeholder: nil)
+    }
 }
 
 
@@ -89,6 +122,10 @@ extension TelegramChatAdminRightsFlags {
             return strings().eventLogServicePromotePinMessages
         case TelegramChatAdminRightsFlags.canPostMessages:
             return strings().eventLogServicePromotePostMessages
+        case TelegramChatAdminRightsFlags.canPostMessages:
+            return strings().eventLogServicePromotePostMessages
+        case TelegramChatAdminRightsFlags.canManageDirect:
+            return strings().eventLogServicePromoteManageDirect
         case TelegramChatAdminRightsFlags.canBeAnonymous:
             return strings().eventLogServicePromoteRemainAnonymous
         case TelegramChatAdminRightsFlags.canManageCalls:
@@ -869,6 +906,25 @@ public extension Message {
         return nil
     }
     
+    var suggestPostAttribute: SuggestedPostMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? SuggestedPostMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    var publishedSuggestedPostMessageAttribute: PublishedSuggestedPostMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? PublishedSuggestedPostMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    
     var quoteAttribute: QuotedReplyMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? QuotedReplyMessageAttribute {
@@ -977,6 +1033,9 @@ public extension Message {
         if !peer.canSendMessage(false) {
             return false
         } else if let peer = peer as? TelegramChannel {
+            if peer.isChannel, media.first is TelegramMediaTodo {
+                return false
+            }
             if let media = media.first, !(media is TelegramMediaWebpage) {
                 if let media = media as? TelegramMediaFile {
                     if media.isStaticSticker {
@@ -1335,6 +1394,13 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     
     var timeInCondition = Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
     
+    if message.media.first is TelegramMediaTodo {
+        timeInCondition = true
+    }
+    if let attr = message.suggestPostAttribute, attr.state == nil {
+        timeInCondition = true
+    }
+    
     if let peer = coreMessageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
             if message.isScheduledMessage {
@@ -1370,7 +1436,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     }
     
     
-    if Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) < context.account.network.getApproximateRemoteTimestamp() {
+    if !timeInCondition {
         return false
     }
     
@@ -4133,5 +4199,55 @@ extension RenderedPeer {
             $0._asPeer()
         })
         self.init(peerId: renderedPeer.peerId, peers: dict, associatedMedia: renderedPeer.associatedMedia)
+    }
+}
+
+
+extension StarsAmount {
+    func string(_ currency: CurrencyAmount.Currency, abs _abs: Bool = false) -> String {
+        switch currency {
+        case .stars:
+            return self.stringValue
+        case .ton:
+            return formatCurrencyAmount(_abs ? abs(self.value) : self.value, currency: TON).prettyCurrencyNumberUsd
+        }
+    }
+}
+
+
+extension CurrencyAmount.Currency {
+    var stringValue: String {
+        switch self {
+        case .stars:
+            return XTR
+        case .ton:
+            return TON
+        }
+    }
+    init(_ stringValue: String) {
+        switch stringValue {
+        case TON:
+            self = .ton
+        case XTR:
+            self = .stars
+        default:
+            self = .stars
+        }
+    }
+}
+
+
+extension CurrencyAmount {
+    var fullyFormatted: String {
+        switch currency {
+        case .ton:
+            return self.amount.string(currency) + " " + TON
+        case .stars:
+            return strings().starListItemCountCountable(Int(self.amount.value))
+        }
+    }
+    
+    var formatted: String {
+        return self.amount.string(currency)
     }
 }

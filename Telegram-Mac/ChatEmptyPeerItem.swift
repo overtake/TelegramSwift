@@ -325,16 +325,21 @@ class ChatEmptyPeerView : TableRowView {
                 visualEffect = nil
             }
         }
+        
+        bgView?.addSubview(textView)
 
         // Image View
         if let media = item.image {
             let contentNode = ChatLayoutUtils.contentNode(for: media)
+            
+            let contentSize = ChatLayoutUtils.contentSize(for: media, with: 300)
+
             if imageView == nil || !imageView!.isKind(of: contentNode) {
                 imageView?.removeFromSuperview()
                 imageView = contentNode.init(frame: .zero)
                 bgView?.addSubview(imageView!)
             }
-            imageView?.update(with: media, size: .zero, context: item.chatInteraction.context, parent: nil, table: item.table)
+            imageView?.update(with: media, size: contentSize, context: item.chatInteraction.context, parent: nil, table: item.table)
             imageView?.fetch(userInitiated: true)
         } else if let view = imageView {
             performSubviewRemoval(view, animated: false)
@@ -472,14 +477,13 @@ class ChatEmptyPeerView : TableRowView {
         if stickerView != nil { totalHeight += 10 }
         if linkView != nil { totalHeight += 8 }
         
-        var xOffset: CGFloat = item.chatInteraction.presentation.monoforumState == .vertical ? 40 : 0
+        let xOffset: CGFloat = item.chatInteraction.presentation.monoforumState == .vertical ? 40 : 0
 
         totalHeight += textView.frame.height + 20
 
         bgView.setFrameSize(NSMakeSize(bgWidth, totalHeight))
         transition.updateFrame(view: bgView, frame: bgView.centerFrame().offsetBy(dx: xOffset, dy: 0))
 
-        transition.updateFrame(view: textView, frame: textView.frame) // adjusted below
 
         if let view = premRequiredImageView {
             transition.updateFrame(view: view, frame: view.centerFrameX(y: 10).offsetBy(dx: xOffset, dy: 0))

@@ -973,7 +973,8 @@ func initialize() -> [String] {
 
     
     array.append("chat_input_send_gift")
-    
+    array.append("chat_input_suggest_post")
+
     
     array.append("todo_selection")
     array.append("todo_selected")

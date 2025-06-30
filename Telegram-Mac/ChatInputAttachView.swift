@@ -245,7 +245,9 @@ class ChatInputAttachView: ImageButton, Notifable {
                     var canAttachLocation: Bool = true
                     var canAttachTodo: Bool = true
                     
-                    
+                    if let peer = chatInteraction.presentation.peer, peer.isChannel {
+                        canAttachTodo = false
+                    }
                     
                     if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup, !peer.isMonoForum {
                         canAttachPoll = true
@@ -276,16 +278,15 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, itemImage: MenuAnimation.menu_poll.value))
                     }
                     
-                    if canAttachTodo {
-                        //TODOLANG
-                        let item = ContextMenuItem("To-Do List", handler: { [weak self] in
+                    if canAttachTodo, context.isPremium {
+                        let item = ContextMenuItem(strings().inputAttachPopoverChecklist, handler: { [weak self] in
                             guard let `self` = self else {return}
                             if let permissionText = permissionText(from: peer, for: .banSendPolls) {
                                 showModalText(for: context.window, text: permissionText)
                                 return
                             }
                             if !context.isPremium {
-                                prem(with: PremiumBoardingController(context: context, source: .todo_lists, openFeatures: true), for: context.window)
+                                prem(with: PremiumBoardingController(context: context, source: .todo, openFeatures: true), for: context.window)
                             } else {
                                 showModal(with: NewTodoController(chatInteraction: self.chatInteraction), for: self.chatInteraction.context.window)
                             }

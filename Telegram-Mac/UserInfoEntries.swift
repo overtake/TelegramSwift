@@ -2276,7 +2276,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?, webAppPermissionsState: WebAppPermissionsState?) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: StarsRevenueStatsContextState?, webAppPermissionsState: WebAppPermissionsState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -2569,11 +2569,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 
                
                 
-                let starBalance = (revenueState?.stats?.balances.currentBalance.value ?? 0)
-                let tonBalance = (tonRevenueState?.stats?.balances.currentBalance ?? 0)
+                let starBalance = (revenueState?.stats?.balances.currentBalance.amount.value ?? 0)
+                let tonBalance = (tonRevenueState?.stats?.balances.currentBalance.amount.value ?? 0)
 
-                let hasStars = (revenueState?.stats?.balances.overallRevenue.value ?? 0) > 0
-                let hasTon = (tonRevenueState?.stats?.balances.overallRevenue ?? 0) > 0 
+                let hasStars = (revenueState?.stats?.balances.overallRevenue.amount.value ?? 0) > 0
+                let hasTon = (tonRevenueState?.stats?.balances.overallRevenue.amount.value ?? 0) > 0
 
                 
                 if hasStars || hasTon {

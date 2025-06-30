@@ -17,7 +17,7 @@ final class Fragment_BalanceRowItem : GeneralRowItem {
     struct Balance : Equatable {
         var amount: Double
         var usd: String
-        var currency: TelegramCurrency
+        var currency: LocalTelegramCurrency
         
         var apxSymbol: String {
             switch currency {

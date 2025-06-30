@@ -260,6 +260,7 @@ final class ChatInteraction : InterfaceObserver  {
     var monoforumMenuItems:(MonoforumItem) -> Signal<[ContextMenuItem], NoError> = { _ in return .single([]) }
 
     var sendGift:()->Void = { }
+    var editPostSuggestion:(ChatInterfaceState.ChannelSuggestPost)->Void = { _ in }
     
     var updateChatLocationThread:(Int64?)->Void = { _ in }
     
@@ -271,6 +272,17 @@ final class ChatInteraction : InterfaceObserver  {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
         } else {
             return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
+        }
+    }
+    
+    func suggestPost() {
+        self.update({
+            $0.updatedInterfaceState {
+                $0.withUpdatedSuggestPost(.init(amount: nil, date: nil, mode: .new))
+            }
+        })
+        if let data = self.presentation.interfaceState.suggestPost {
+            showModal(with: EditPostSuggestionController(chatInteraction: self, data: data), for: self.context.window)
         }
     }
     
@@ -287,29 +299,7 @@ final class ChatInteraction : InterfaceObserver  {
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     var hasSetDestructiveTimer: Bool {
-        
-        if mode != .history {
-            return false
-        }
-        
-        if !self.presentation.interfaceState.inputState.inputText.isEmpty {
-            return false
-        }
-        if self.peerId.namespace == Namespaces.Peer.SecretChat {
-            return true
-        }
-        if let value = self.presentation.messageSecretTimeout {
-            switch value {
-            case let .known(value):
-                if value != nil {
-                    return true
-                }
-            default:
-                return false
-            }
-        }
-        
-        return false
+        return presentation.hasSetDestructiveTimer
     }
     
     var peerIsAccountPeer: Bool {
@@ -790,7 +780,9 @@ final class ChatInteraction : InterfaceObserver  {
                 if let strongSelf = self {
                     switch button.action {
                     case let .url(url):
+                        
                         execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
+                       
                     case .text:
                         let replyId = strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId
                         _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
@@ -897,7 +889,104 @@ final class ChatInteraction : InterfaceObserver  {
                     }
                 }
             })
+        } else if let attribute = keyboardMessage.suggestPostAttribute, !isLogInteraction, let amount = attribute.amount {
+            
+            let context = self.context
+            
+            return ReplyMarkupInteractions(context: context, proccess: { [weak self] button, progress in
+                
+                switch button.action {
+                case let .url(url):
+                    switch url {
+                    case SuggestedPostMessageAttribute.commandApprove:
+                        
+                        let comission = context.appConfiguration.getGeneralValue("ton_suggested_post_commission_permille", orElse: 850)
+                        
+                        let totalAmount = amount.amount.totalValue * Double(comission.decemial / 100.0)
+
+                        let formatted: String
+                        switch amount.currency {
+                        case .ton:
+                            formatted = "\(totalAmount) \(TON)"
+                        case .stars:
+                            formatted = strings().starListItemCountCountable(Int(totalAmount))
+                        }
+
+                        if attribute.timestamp == nil {
+                            let infoText = TextViewLayout(
+                                .initialize(
+                                    string: strings().chatSuggestPostPublishInfo(formatted, comission.decemial.string),
+                                    color: theme.colors.text,
+                                    font: .normal(.text)
+                                ),
+                                alignment: .center
+                            )
+                            infoText.measure(width: 260)
+
+                            showModal(
+                                with: DateSelectorModalController(
+                                    context: context,
+                                    mode: .dateAction(
+                                        title: strings().chatSuggestPostPublishAcceptTitle,
+                                        done: { date in
+                                            strings().chatSuggestPostPublishDateConfirm(stringForDate(timestamp: Int32(date.timeIntervalSince1970)))
+                                        },
+                                        action: .init(
+                                            string: strings().chatSuggestPostPublishActionNow,
+                                            callback: {
+                                                _ = context.engine.messages.monoforumPerformSuggestedPostAction(
+                                                    id: keyboardMessage.id,
+                                                    action: .approve(timestamp: nil)
+                                                ).start()
+                                            }
+                                        )
+                                    ),
+                                    selectedAt: { date in
+                                        _ = context.engine.messages.monoforumPerformSuggestedPostAction(
+                                            id: keyboardMessage.id,
+                                            action: .approve(timestamp: Int32(date.timeIntervalSince1970))
+                                        ).start()
+                                    },
+                                    infoText: infoText
+                                ),
+                                for: context.window
+                            )
+                        } else {
+                            let author = keyboardMessage.author?.displayTitle ?? ""
+                            let info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, comission.decemial.string)
+                            verifyAlert(
+                                for: context.window,
+                                header: strings().chatSuggestPostPublishConfirmHeader,
+                                information: info,
+                                ok: strings().chatSuggestPostPublishConfirmButton,
+                                successHandler: { _ in
+                                    _ = context.engine.messages.monoforumPerformSuggestedPostAction(
+                                        id: keyboardMessage.id,
+                                        action: .approve(timestamp: nil)
+                                    ).start()
+                                }
+                            )
+                        }
+
+                        
+                        
+                    case SuggestedPostMessageAttribute.commandDecline:
+                        showModal(with: DeclineSuggestPostModalController(context: context, callback: { comment in
+                            _ = context.engine.messages.monoforumPerformSuggestedPostAction(id: keyboardMessage.id, action: .reject(comment: comment.isEmpty ? nil : comment)).start()
+                        }), for: context.window)
+                        
+                    case SuggestedPostMessageAttribute.commandChanges:
+                        self?.beginEditingMessage(keyboardMessage)
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+            })
+            
         }
+
         return ReplyMarkupInteractions(context: context, proccess: { [weak self] _,_ in
             self?.executeReplymarkup(keyboardMessage.id)
         })

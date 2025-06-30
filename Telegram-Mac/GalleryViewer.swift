@@ -393,6 +393,12 @@ class GalleryViewer: NSResponder {
             }
         }, with:self, for: .Space)
         
+        window.set(handler: { [weak self] event in
+            guard let `self` = self else {return .rejected}
+            self.pager.toggleFullScreen()
+            return .invoked
+        }, with:self, for: .F)
+        
         window.set(handler: interactions.dismiss, with:self, for: .Escape)
         
         window.closeInterceptor = { [weak self] in

@@ -529,6 +529,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
             
+           // showModal(with: AddTonBalanceController(context: context), for: window)
             
            // context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
 

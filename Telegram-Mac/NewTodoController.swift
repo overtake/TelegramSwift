@@ -32,11 +32,13 @@ private struct TodoOption : Equatable {
     let textState: Updated_ChatTextInputState
     let selected: Bool
     let enabled: Bool
-    init(identifier: InputDataIdentifier, textState: Updated_ChatTextInputState, selected: Bool, enabled: Bool) {
+    let taskId: Int32?
+    init(identifier: InputDataIdentifier, textState: Updated_ChatTextInputState, selected: Bool, enabled: Bool, taskId: Int32?) {
         self.identifier = identifier
         self.textState = textState
         self.selected = selected
         self.enabled = enabled
+        self.taskId = taskId
     }
     
     var text: String {
@@ -44,10 +46,10 @@ private struct TodoOption : Equatable {
     }
     
     func withUpdatedText(_ textState: Updated_ChatTextInputState) -> TodoOption {
-        return TodoOption(identifier: self.identifier, textState: textState, selected: self.selected, enabled: self.enabled)
+        return TodoOption(identifier: self.identifier, textState: textState, selected: self.selected, enabled: self.enabled, taskId: self.taskId)
     }
     func withUpdatedSelected(_ selected: Bool) -> TodoOption {
-        return TodoOption(identifier: self.identifier, textState: self.textState, selected: selected, enabled: self.enabled)
+        return TodoOption(identifier: self.identifier, textState: self.textState, selected: selected, enabled: self.enabled, taskId: self.taskId)
     }
 }
 
@@ -59,6 +61,10 @@ private struct State : Equatable {
     var othersCanComplete: Bool = false
     
     var source: NewTodoSourceType
+    
+    var maxTextLength:Int32 = 32
+    var maxOptionLength: Int32 = 64
+
     
     
     func withUpdatedTitle(_ title: String) -> State {
@@ -108,11 +114,11 @@ private struct State : Equatable {
     var isEnabled: Bool {
         
         var fails: [InputDataIdentifier : InputDataValidationFailAction] = [:]
-        if self.textState.string.trimmed.isEmpty {
+        if self.textState.string.trimmed.isEmpty || textState.string.trimmed.length > maxTextLength {
             fails[_id_input_title] = .shake
         }
         for value in self.options {
-            if value.text.trimmed.isEmpty {
+            if value.text.trimmed.isEmpty || value.text.trimmed.length > maxOptionLength {
                 fails[value.identifier] = .shake
             }
         }
@@ -181,11 +187,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let maxTextLength:Int32 = arguments.context.appConfiguration.getGeneralValue("todo_title_length_max", orElse: 32)
     let maxOptionLength: Int32 =  arguments.context.appConfiguration.getGeneralValue("todo_item_length_max", orElse: 64)
 
-    
-    //TODOLANG
-    
+        
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input_title, equatable: .init(state.textState), comparable: nil, item: { initialSize, stableId in
-        return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .singleItem, placeholder: nil, inputPlaceholder: "Title...", filter: { text in
+        return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: state.textState, viewType: .singleItem, placeholder: nil, inputPlaceholder: strings().newTodoInputTitlePlaceholder, filter: { text in
             var text = text
             while text.contains("\n\n\n") {
                 text = text.replacingOccurrences(of: "\n\n\n", with: "\n\n")
@@ -207,7 +211,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("TO DO LIST"), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newTodoSectionChecklist), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
     
     let sorted = state.options
@@ -239,7 +243,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: option.identifier, equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-            return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: tuple.option.textState, viewType: tuple.viewType, placeholder: tuple.placeholder, inputPlaceholder: "Task", rightItem: tuple.rightItem, filter: { text in
+            return InputTextDataRowItem(initialSize, stableId: stableId, context: arguments.context, state: tuple.option.textState, viewType: tuple.viewType, placeholder: tuple.placeholder, inputPlaceholder: strings().newTodoInputTaskPlaceholder, rightItem: tuple.rightItem, filter: { text in
                 return text.trimmingCharacters(in: CharacterSet.newlines)
             }, updateState: { state in
                 arguments.updateOptionState(option.identifier, state)
@@ -247,7 +251,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
     }
     if state.options.count < optionsLimit {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: "Add Task", color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, viewType: state.options.isEmpty ? .singleItem : .lastItem, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: strings().newTodoOptionAdd, color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, viewType: state.options.isEmpty ? .singleItem : .lastItem, action: nil)))
         index += 1
     }
     
@@ -257,10 +261,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
         
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_complete, data: .init(name: "Others Can Complete", color: theme.colors.text, type: .switchable(state.othersCanComplete), viewType: state.othersCanComplete ? .firstItem : .singleItem, action: arguments.toggleCanComplete)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_complete, data: .init(name: strings().newTodoToggleOthersCanComplete, color: theme.colors.text, type: .switchable(state.othersCanComplete), viewType: state.othersCanComplete ? .firstItem : .singleItem, action: arguments.toggleCanComplete)))
 
         if state.othersCanComplete {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_add, data: .init(name: "Others Can Append", color: theme.colors.text, type: .switchable(state.othersCanAdd), viewType: .lastItem, action: arguments.toggleCanAdd)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_other_can_add, data: .init(name: strings().newTodoToggleOthersCanAppend, color: theme.colors.text, type: .switchable(state.othersCanAdd), viewType: .lastItem, action: arguments.toggleCanAdd)))
         }
     default:
         break
@@ -277,7 +281,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 enum NewTodoSourceType : Equatable {
     case create
-    case edit(Message)
+    case edit(Message, taskId: Int32?)
     case addOption(Message)
     
     var editingEnabled: Bool {
@@ -290,28 +294,27 @@ enum NewTodoSourceType : Equatable {
     }
     
     var okText: String {
-        //TODOLANG
         switch self {
         case .create:
-            return "Send"
+            return strings().newTodoActionSend
         case .edit:
-            return "Edit"
+            return strings().newTodoActionEdit
         case .addOption:
-            return "Add"
+            return strings().newTodoActionAdd
         }
     }
     
     var title: String {
-        //TODOLANG
         switch self {
         case .create:
-            return "New To-Do List"
+            return strings().newTodoTitleCreate
         case .edit:
-            return "Edit To-Do List"
+            return strings().newTodoTitleEdit
         case .addOption:
-            return "Add Task"
+            return strings().newTodoTitleAddTask
         }
     }
+
 }
 
 func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceType = .create) -> InputDataModalController {
@@ -326,27 +329,39 @@ func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceTy
     let othersCanComplete: Bool
     
     switch source {
-    case let .edit(message), let .addOption(message):
+    case let .edit(message, _), let .addOption(message):
         let media = message.media.first as! TelegramMediaTodo
         initialTitle = ChatTextInputState(inputText: media.text, selectionRange: media.text.length..<media.text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: media.textEntities), associatedMedia: [:])).textInputState()
         for option in media.items {
             let text = ChatTextInputState(inputText: option.text, selectionRange: option.text.length..<option.text.length, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: option.entities), associatedMedia: [:])).textInputState()
-            initialOptions.append(.init(identifier: _id_input_option(), textState: text, selected: false, enabled: source.editingEnabled))
+            initialOptions.append(.init(identifier: _id_input_option(), textState: text, selected: false, enabled: source.editingEnabled, taskId: option.id))
         }
         othersCanAdd = media.flags.contains(.othersCanAppend)
         othersCanComplete = media.flags.contains(.othersCanComplete)
         
         if !source.editingEnabled {
-            initialOptions.append(.init(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true))
+            var disable: Bool = false
+            switch source {
+            case let .edit(_, taskId):
+                disable = taskId != nil
+            default:
+                break
+            }
+            if !disable {
+                initialOptions.append(.init(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true, taskId: nil))
+            }
         }
     case .create:
         initialTitle = .init()
-        initialOptions = [TodoOption(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true), TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true)]
-        othersCanAdd = false
-        othersCanComplete = false
+        initialOptions = [TodoOption(identifier: _id_input_option(), textState: .init(), selected: true, enabled: true, taskId: nil), TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true, taskId: nil)]
+        othersCanAdd = true
+        othersCanComplete = true
     }
+    
+    let maxTextLength:Int32 = context.appConfiguration.getGeneralValue("todo_title_length_max", orElse: 32)
+    let maxOptionLength: Int32 =  context.appConfiguration.getGeneralValue("todo_item_length_max", orElse: 64)
 
-    let initialState = State(options: initialOptions, textState: initialTitle, othersCanAdd: othersCanAdd, othersCanComplete: othersCanComplete, source: source)
+    let initialState = State(options: initialOptions, textState: initialTitle, othersCanAdd: othersCanAdd, othersCanComplete: othersCanComplete, source: source, maxTextLength: maxTextLength, maxOptionLength: maxOptionLength)
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -371,6 +386,19 @@ func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceTy
         }
     }
 
+    //        if let (identifier, checkEmptyCurrent, focusIdentifier, scrollIfNeeded) = shouldMakeNextResponderAfterTransition {
+
+    switch source {
+    case let .edit(_, taskId):
+        if let taskId {
+            let option = initialState.options.first(where: { $0.taskId == taskId })
+            if let option {
+                shouldMakeNextResponderAfterTransition = (option.identifier, false, option.identifier, true)
+            }
+        }
+    default:
+        break
+    }
     
     
     let arguments = Arguments(context: context, deleteOption: { identifier in
@@ -409,7 +437,7 @@ func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceTy
     
     
     let addOption:(Bool)-> InputDataValidation = { byClick in
-        let option = TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true)
+        let option = TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true, taskId: nil)
         updateState { state in
             if state.options.count < optionsLimit {
                 return state.withAddedOption(option)
@@ -427,7 +455,7 @@ func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceTy
     
         if state.isEnabled {
             switch source {
-            case let .edit(message):
+            case let .edit(message, _):
                 context.account.pendingUpdateMessageManager.add(messageId: message.id, text: "", media: .update(.message(message: MessageReference(message), media: state.media)), entities: nil, inlineStickers: [:])
                 close?()
             case let .addOption(message):
@@ -495,7 +523,7 @@ func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceTy
                 var state = state
                 if fails.isEmpty {
                     if state.options.count < 2 {
-                        state = state.withAddedOption(TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true))
+                        state = state.withAddedOption(TodoOption(identifier: _id_input_option(), textState: .init(), selected: false, enabled: true, taskId: nil))
                         if addedOptions == nil {
                             addedOptions = state.options.count - 1
                         }
@@ -532,7 +560,9 @@ func NewTodoController(chatInteraction: ChatInteraction, source: NewTodoSourceTy
                 }
             }
             if markResponder {
-                controller.makeFirstResponderIfPossible(for: identifier, focusIdentifier: focusIdentifier, scrollIfNeeded: scrollIfNeeded)
+                DispatchQueue.main.async {
+                    controller.makeFirstResponderIfPossible(for: identifier, focusIdentifier: focusIdentifier, scrollIfNeeded: scrollIfNeeded)
+                }
             }
             shouldMakeNextResponderAfterTransition = nil
         }

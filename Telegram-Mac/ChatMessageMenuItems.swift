@@ -90,7 +90,13 @@ final class ChatMenuItemsData {
         self.canViewAuthor = canViewAuthor
     }
 }
-func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
+
+enum ChatMenuItemSource {
+    case general
+    case todo(taskId: Int32)
+}
+
+func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction, source: ChatMenuItemSource = .general) -> Signal<ChatMenuItemsData, NoError> {
     
     let context = chatInteraction.context
     let account = context.account
@@ -106,11 +112,8 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let additionalData = entry?.additionalData ?? MessageEntryAdditionalData()
     
     var canViewAuthor: Bool = false
-    if let channel = chatInteraction.presentation.peer as? TelegramChannel, channel.isMonoForum, channel.groupAccess.canPostMessages {
+    if let channel = chatInteraction.presentation.peer as? TelegramChannel, channel.isMonoForum, channel.groupAccess.canManageDirect {
         var isIncoming: Bool = message.effectivelyIncoming(context.account.peerId)
-        #if DEBUG
-        isIncoming = true
-        #endif
         if isIncoming, message.author?.id == channel.linkedMonoforumId {
             canViewAuthor = true
         }
@@ -247,13 +250,13 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 }
 
 
-func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true, fromAdPromo: Bool = false) -> Signal<[ContextMenuItem], NoError> {
+func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true, fromAdPromo: Bool = false, source: ChatMenuItemSource = .general) -> Signal<[ContextMenuItem], NoError> {
     
     if chatInteraction.context.isFrozen {
         return .complete()
     }
 
-    return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
+    return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction, source: source) |> map { data in
         
         let peer = data.message.peers[data.message.id.peerId]
         let isNotFailed = !message.flags.contains(.Failed) && !message.flags.contains(.Unsent) && !data.message.flags.contains(.Sending)
@@ -265,6 +268,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let account = context.account
         let mode = chatInteraction.mode
         let isIncoming = data.message.isIncoming(context.account, false)
+        let translateConfig = AppConfigTranslateState(rawValue: context.appConfiguration.getStringValue("translations_manual_enabled", orElse: "enabled")) ?? .disabled
         var isService = data.message.extendedMedia is TelegramMediaAction || mode.isSavedMode || mode == .preview || chatInteraction.isLogInteraction
         
 
@@ -282,7 +286,91 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
         var sevenBlock:[ContextMenuItem] = []
+        
+        
 
+        switch source {
+        case let .todo(taskId):
+            if let todo = message.media.first as? TelegramMediaTodo {
+                
+                var items = todo.items
+
+                let taskText = todo.items.first(where: { $0.id == taskId })?.text
+                let item = ContextMenuItem(taskText ?? strings().chatContextTodoTaskFallback, handler: {}, itemImage: MenuAnimation.menu_more.value)
+
+                let submenu = ContextMenu()
+
+                var completed = todo.completions.map { $0.id }
+                let isCompleted = completed.contains(taskId)
+
+                if let completed = todo.completions.first(where: { $0.id == taskId }), todo.flags.contains(.othersCanComplete) {
+                    submenu.addItem(ContextMenuItem(stringForFullDate(timestamp: completed.date), handler: {}, itemImage: MenuAnimation.menu_check_selected.value))
+                    submenu.addItem(ContextSeparatorItem())
+                }
+
+                if todo.flags.contains(.othersCanComplete) || message.author?.id == context.peerId {
+                    submenu.addItem(ContextMenuItem(
+                        isCompleted ? strings().chatContextTodoUncheck : strings().chatContextTodoCheck,
+                        handler: {
+                            _ = context.engine.messages.requestUpdateTodoMessageItems(
+                                messageId: message.id,
+                                completedIds: !isCompleted ? [taskId] : [],
+                                incompletedIds: isCompleted ? [taskId] : []
+                            ).start()
+                        },
+                        itemImage: !isCompleted ? MenuAnimation.menu_check.value : MenuAnimation.menu_uncheck.value
+                    ))
+                }
+
+                submenu.addItem(ContextMenuItem(strings().contextCopy, handler: {
+                    copyToClipboard(taskText ?? "")
+                    showModalText(for: context.window, text: strings().shareLinkCopied)
+                }, itemImage: MenuAnimation.menu_copy.value))
+
+                if canEditMessage(message, chatInteraction: chatInteraction, context: context) {
+                    submenu.addItem(ContextMenuItem(strings().chatContextTodoEdit, handler: { [weak chatInteraction] in
+                        if let chatInteraction {
+                            showModal(with: NewTodoController(chatInteraction: chatInteraction, source: .edit(message, taskId: taskId)), for: context.window)
+                        }
+                    }, itemImage: MenuAnimation.menu_edit.value))
+                }
+
+                if canEditMessage(message, chatInteraction: chatInteraction, context: context) {
+                    submenu.addItem(ContextSeparatorItem())
+
+                    submenu.addItem(ContextMenuItem(strings().chatContextTodoDelete, handler: {
+                        items.removeAll(where: { $0.id == taskId })
+                        let mediaUpdated = todo.withUpdated(items: items)
+
+                        if items.isEmpty {
+                            data.chatInteraction.deleteMessages([data.message.id])
+                        } else {
+                            verifyAlert(
+                                for: context.window,
+                                information: strings().chatContextTodoDeleteConfirm,
+                                successHandler: { _ in
+                                    context.account.pendingUpdateMessageManager.add(
+                                        messageId: message.id,
+                                        text: "",
+                                        media: .update(.message(message: MessageReference(message), media: mediaUpdated)),
+                                        entities: nil,
+                                        inlineStickers: [:]
+                                    )
+                                }
+                            )
+                        }
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                }
+                
+                
+                item.submenu = submenu
+                
+                zeroBlock.append(item)
+            }
+            
+        default:
+            break
+        }
        
         
         if data.canViewAuthor {
@@ -480,7 +568,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 
             if data.message.pendingProcessingAttribute == nil {
                 firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
-                    showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
+                    showModal(with: DateSelectorModalController(context: context, defaultDate: message.timestamp == scheduleWhenOnlineTimestamp ? Date() : Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
                         _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, inlineStickers: data.message.associatedMedia, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
                    }), for: context.window)
                 }, itemImage: MenuAnimation.menu_schedule_message.value))
@@ -567,7 +655,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             let language = Translate.detectLanguage(for: text)
                         
             let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
-            if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
+            if language == nil || !toLang.contains(language!), !muteTranslate, !isService, translateConfig.canTranslate {
                 thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                     showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text, entities: entities, canBreak: false), for: context.window)
                     data.chatInteraction.enableTranslatePaywall()
@@ -584,7 +672,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let language = Translate.detectLanguage(for: text)
                 
                 let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
-                if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
+                if language == nil || !toLang.contains(language!), !muteTranslate, !isService, translateConfig.canTranslate {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                         showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text, entities: entities), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
@@ -645,7 +733,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
                         
                         
-                        if language == nil || !toLang.contains(language!), !muteTranslate, !isService {
+                        if language == nil || !toLang.contains(language!), !muteTranslate, !isService, translateConfig.canTranslate {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                                 showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text, entities: entities), for: context.window)
                                 data.chatInteraction.enableTranslatePaywall()
@@ -680,7 +768,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let text = state.text
                 let language = Translate.detectLanguage(for: text)
                 let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
-                if language == nil || !toLang.contains(language!), !isService {
+                if language == nil || !toLang.contains(language!), !isService, translateConfig.canTranslate {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                         showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
@@ -727,10 +815,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if let media = data.message.media.first as? TelegramMediaTodo {
-            if data.message.author?.id == context.peerId || media.flags.contains(.othersCanAppend) {
+            let optionsLimit = Int(context.appConfiguration.getGeneralValue("todo_items_max", orElse: 30))
+            if data.message.author?.id == context.peerId || media.flags.contains(.othersCanAppend), media.items.count < optionsLimit {
                 secondBlock.append(ContextMenuItem(strings().chatContextMenuAddTask, handler: {
                     data.chatInteraction.appendTask(data.message)
-                }, itemImage: MenuAnimation.menu_list.value, locked: !context.isPremium))
+                }, itemImage: MenuAnimation.menu_add.value, locked: !context.isPremium))
             }
         }
         

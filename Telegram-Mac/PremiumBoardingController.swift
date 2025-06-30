@@ -71,7 +71,7 @@ enum PremiumLogEventsSource : Equatable {
     case upload_limit
     case grace_period
     case emoji_status
-    case todo_lists
+    case todo
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -134,8 +134,8 @@ enum PremiumLogEventsSource : Equatable {
             return "grace_period"
         case .emoji_status:
             return "emoji_status"
-        case .todo_lists:
-            return "todo_lists"
+        case .todo:
+            return "todo"
         }
     }
     
@@ -197,8 +197,8 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .emoji_status:
             return .emoji_status
-        case .todo_lists:
-            return .todo_lists
+        case .todo:
+            return .todo
         }
     }
     
@@ -300,7 +300,7 @@ enum PremiumValue : String {
     case saved_tags
     case last_seen
     case message_privacy
-    case todo_lists
+    case todo
     
     case business
     
@@ -462,8 +462,8 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessLinks).precomposed(presentation.colors.accent)
         case .folder_tags:
             return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
-        case .todo_lists:
-            return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
+        case .todo:
+            return NSImage(resource: .iconPremiumBoardingTodo).precomposed(presentation.colors.accent)
         }
     }
     
@@ -527,9 +527,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessLinks
         case .folder_tags:
             return strings().premiumBoardingTagFolders
-        case .todo_lists:
-            //TODOLANG
-            return "To-Do Lists"
+        case .todo:
+            return strings().premiumBoardingTodo
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -592,9 +591,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessLinksInfo
         case .folder_tags:
             return strings().premiumBoardingTagFoldersInfo
-        case .todo_lists:
-            //TODOLANG
-            return "Plan, assign, and complete tasks - seamlessly and efficiently."
+        case .todo:
+            return strings().premiumBoardingTodoInfo
         }
     }
 }
@@ -602,7 +600,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags, .last_seen, .message_privacy, .todo_lists]
+    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags, .last_seen, .message_privacy, .todo]
     var businessValues: [PremiumValue] = []
     
     let source: PremiumLogEventsSource
@@ -734,14 +732,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if state.source != .business_standalone {
-        for (i, value) in state.values.uniqueElements.enumerated() {
-            let viewType = bestGeneralViewType(state.values, for: i)
+        let elements = state.values.uniqueElements
+        for (i, value) in elements.enumerated() {
+            let viewType = bestGeneralViewType(elements, for: i)
             
             struct Tuple : Equatable {
                 let value: PremiumValue
                 let isNew: Bool
+                let viewType: GeneralViewType
             }
-            let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
+            let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue), viewType: viewType)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in

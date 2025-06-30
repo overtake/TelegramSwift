@@ -34,6 +34,8 @@ class ChatInputAccessory: View {
     var dismissReply:(()->Void)!
     var dismissEdit:(()->Void)!
     var dismissUrlPreview:(()->Void)!
+    var dismissSuggestPost:(()->Void)!
+
     init(chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init(frame: .zero)
@@ -56,6 +58,11 @@ class ChatInputAccessory: View {
         dismissUrlPreview = { [weak self] in
             self?.chatInteraction.update({ state -> ChatPresentationInterfaceState in
                 return state.updatedInterfaceState({$0.withUpdatedComposeDisableUrlPreview(state.urlPreview?.0)})
+            })
+        }
+        dismissSuggestPost = { [weak self] in
+            self?.chatInteraction.update({ state -> ChatPresentationInterfaceState in
+                return state.updatedInterfaceState({$0.withUpdatedSuggestPost(nil).withoutEditMessage()})
             })
         }
 
@@ -92,7 +99,24 @@ class ChatInputAccessory: View {
         container.removeAllHandlers()
         container.removeAllStateHandlers()
 
-        if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
+        
+        if let data = state.interfaceState.suggestPost {
+            iconView.set(image: NSImage(resource: .iconInputSuggestPost).precomposed(theme.colors.accent), for: .Normal)
+            displayNode = SuggestPostPanelModel(data: data, context: context)
+            dismiss.set(handler: { [weak self ] _ in
+                self?.dismissSuggestPost()
+            }, for: .Click)
+            
+            container.set(handler: { [weak self] _ in
+                self?.chatInteraction.editPostSuggestion(data)
+             }, for: .Click)
+
+            container.contextMenu = {
+                return nil
+            }
+            
+
+        } else if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
             iconView.set(image: theme.icons.chat_action_url_preview, for: .Normal)
             displayNode = ChatUrlPreviewModel(context: context, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in

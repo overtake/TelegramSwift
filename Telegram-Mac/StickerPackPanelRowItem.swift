@@ -486,8 +486,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.inlineStickerItemViews[id] = view
                 contentView.addSubview(view)
                 if animated {
-                    view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
-                    view.layer?.animateScaleCenter(from: 0, to: 1, duration: 0.2)
+                    view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             index += 1

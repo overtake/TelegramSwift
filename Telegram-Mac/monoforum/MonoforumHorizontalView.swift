@@ -13,11 +13,11 @@ import SwiftSignalKit
 
 class MonoforumHorizontalView : View {
     private let segmentView: ScrollableSegmentView = ScrollableSegmentView(frame: NSZeroRect)
-    private let selectionView: View = View()
+    private let borderView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(segmentView)
-        
+        addSubview(borderView)
         layout()
         
         updateLocalizationAndTheme(theme: theme)
@@ -31,7 +31,7 @@ class MonoforumHorizontalView : View {
         super.updateLocalizationAndTheme(theme: theme)
         
         self.backgroundColor = theme.colors.background
-        self.selectionView.backgroundColor = theme.colors.accent
+        self.borderView.backgroundColor = theme.colors.border
     }
     
     
@@ -269,5 +269,6 @@ class MonoforumHorizontalView : View {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         segmentView.frame = NSMakeRect(80, 0, size.width - 80, size.height)
+        borderView.frame = NSMakeRect(0, size.height - .borderSize, 80, .borderSize)
     }
 }

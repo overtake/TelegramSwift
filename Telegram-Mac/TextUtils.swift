@@ -1205,6 +1205,57 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
 
             text = rawString
+        case let .suggestedPostApprovalStatus(status):
+            switch status {
+            case .approved:
+                text = strings().chatServiceSuggestPostStatusApproved
+            case .rejected:
+                text = strings().chatServiceSuggestPostStatusRejected
+            }
+        case let .giftTon(currency, amount, cryptoCurrency, cryptoAmount, transactionId):
+            let formatted: String
+            
+            if let cryptoCurrency, let cryptoAmount {
+                formatted = formatCurrencyAmount(cryptoAmount, currency: cryptoCurrency).prettyCurrencyNumberUsd + " " + cryptoCurrency
+            } else {
+                formatted = formatCurrencyAmount(amount, currency: currency)
+            }
+            
+            if authorId == account.peerId {
+                text = strings().chatServicePremiumGiftSentYou(formatted)
+            } else {
+                text = strings().chatServicePremiumGiftSent(authorName, formatted)
+            }
+        case let .suggestedPostSuccess(amount):
+            var isUser = true
+            var channelName: String = ""
+            if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                channelName = peer.title
+                if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                    isUser = false
+                }
+            }
+            let _ = isUser
+            
+            let amountString: String = amount.fullyFormatted
+            text = strings().chatServiceSuggestPostSuccessReceived(channelName, amountString)
+
+        case let .suggestedPostRefund(info):
+            var isUser = true
+            if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                    isUser = false
+                }
+            }
+            if info.isUserInitiated {
+                if isUser {
+                    text = strings().chatServiceSuggestPostRefundedUser
+                } else {
+                    text = strings().chatServiceSuggestPostRefundedOther
+                }
+            } else {
+                text = strings().chatServiceSuggestPostRefundedDeleted
+            }
         }
     }
     return (text, entities, media)

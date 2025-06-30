@@ -41,12 +41,12 @@ final class Fragment_OverviewRowItem : GeneralRowItem {
     let amount: TextViewLayout
     let info: TextViewLayout
     
-    let currency: TelegramCurrency
+    let currency: LocalTelegramCurrency
     
     let starsAmount: TextViewLayout?
     
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, overview: Overview, currency: TelegramCurrency, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, overview: Overview, currency: LocalTelegramCurrency, viewType: GeneralViewType) {
         self.context = context
         self.overview = overview
         self.currency = currency

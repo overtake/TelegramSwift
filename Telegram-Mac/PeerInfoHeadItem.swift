@@ -351,6 +351,18 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         
         
+        if let monoforum = peer.linkedMonoforumId, !peer.isMonoForum {
+            switch peer.participationStatus {
+            case .member:
+                items.append(ActionItem(text: strings().peerInfoActionMessage, color: item.accentColor, image: theme.icons.profile_message, animation: .menu_show_message, action: {
+                    arguments.open_chat(monoforum)
+                }))
+            default:
+                break
+            }
+            
+        }
+        
         if peer.participationStatus == .left {
             items.append(ActionItem(text: strings().peerInfoActionJoinChannel, color: item.accentColor, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
                 arguments.join_channel()
@@ -1427,8 +1439,8 @@ private final class SpawnGiftsView: View {
         
         for (_, iconLayer) in self.iconLayers {
             if iconLayer.frame.contains(location), let window = window as? Window {
-                if let context = self.context, let unique = iconLayer.gift.gift.unique, let reference = iconLayer.gift.reference {
-                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique), giftsContext: self.giftsContext, pinnedInfo: .init(pinnedInfo: iconLayer.gift.pinnedToTop, reference: reference)), for: window)
+                if let context = self.context, let unique = iconLayer.gift.gift.unique {
+                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique), giftsContext: self.giftsContext, pinnedInfo: iconLayer.gift.reference.flatMap { .init(pinnedInfo: iconLayer.gift.pinnedToTop, reference: $0) }), for: window)
                 }
             }
         }
@@ -1453,9 +1465,9 @@ private final class SpawnGiftsView: View {
 //
 //        excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 140), size: CGSize(width: frame.width, height: 140)))
 //
-//        for rect in excludeRects {
+//        for (_, iconLayer) in self.iconLayers {
 //            ctx.setFillColor(NSColor.random.cgColor)
-//            ctx.fill(rect)
+//            ctx.fill(iconLayer.frame)
 //        }
 //        
     }

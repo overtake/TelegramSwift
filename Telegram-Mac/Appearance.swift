@@ -3443,6 +3443,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) },
                               chat_input_suggest_message: { NSImage(resource: .iconChatInputMessageSuggestion).precomposed(palette.accent) },
                               chat_input_send_gift: { NSImage(resource: .iconChannelGift).precomposed(palette.grayIcon) },
+                              chat_input_suggest_post: { NSImage(resource: .iconInputSuggestPost).precomposed(palette.grayIcon) },
                               todo_selection: { generateTodoSelection(color: palette.webPreviewActivity) },
                               todo_selected: { generateTodoSelected(color: palette.webPreviewActivity) },
                               todo_selection_other_incoming: { generateTodoSelection(color: palette.webPreviewActivityBubble_incoming) },

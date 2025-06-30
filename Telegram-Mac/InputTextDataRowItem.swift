@@ -95,6 +95,9 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     var hasTextLimitation: Bool {
+        if self.height == 16 + (viewType.innerInset.top + viewType.innerInset.bottom) {
+            return false
+        }
         if let placeholder = placeholder {
             return placeholder.hasLimitationText
         } else {
@@ -123,10 +126,12 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     override var height: CGFloat {
         let attr = NSMutableAttributedString()
-        attr.append(self.state.inputText)
+        attr.append(string: self.state.inputText.string)
+                
         attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
-        let size = attr.sizeFittingWidth(textWidth)
-        return max(16, size.height) + (viewType.innerInset.top + viewType.innerInset.bottom)
+        let height = InputTextView.rawTextHeight(for: attr, width: textWidth)
+        
+        return max(16, height) + (viewType.innerInset.top + viewType.innerInset.bottom)
     }
     
     private(set) fileprivate var additionRightInset: CGFloat = 0
@@ -300,8 +305,8 @@ class InputTextDataRowView : GeneralContainableRowView {
         if let rightItem = item.rightItem {
             switch rightItem {
             case .action:
-                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right - (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0), innerInsets.top - 5), size: rightActionView.frame.size))
-                emojiOffset += rightActionView.frame.width + 10 + (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0)
+                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right, innerInsets.top - 5), size: rightActionView.frame.size))
+                emojiOffset += rightActionView.frame.width
             case .loading:
                 if let loadingView = loadingView  {
                     transition.updateFrame(view: loadingView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - loadingView.frame.width - innerInsets.right, innerInsets.top), size: loadingView.frame.size))

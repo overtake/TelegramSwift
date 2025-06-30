@@ -1758,6 +1758,7 @@ class ChatRowItem: TableRowItem {
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
         
+        
         var object = object
         var captionMessage: Message? = object.message
 
@@ -2555,6 +2556,13 @@ class ChatRowItem: TableRowItem {
                             }
                             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid, xtrAmount: xtrAmount)
                         }
+                    }
+                } else if let attribute = attribute as? SuggestedPostMessageAttribute {
+                    if attribute.state == nil, let peer = message.peers[message.id.peerId], isIncoming, peer.groupAccess.canPostMessages {
+                        //peer.groupAccess.canPostMessages
+                        
+                        let markupAttribute = attribute.replyMarkup(isIncoming: isIncoming)
+                        replyMarkupModel = ReplyMarkupNode(markupAttribute.rows, markupAttribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid, xtrAmount: nil, isPostSuggest: true)
                     }
                 }
             }

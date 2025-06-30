@@ -10743,6 +10743,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_input_suggest_post: CGImage {
+      if let image = cached.with({ $0["chat_input_suggest_post"] }) {
+          return image
+      } else {
+          let image = _chat_input_suggest_post()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_input_suggest_post"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var todo_selection: CGImage {
       if let image = cached.with({ $0["todo_selection"] }) {
           return image
@@ -11648,6 +11661,7 @@ public final class TelegramIconsTheme {
   private let _chat_input_channel_gift: ()->CGImage
   private let _chat_input_suggest_message: ()->CGImage
   private let _chat_input_send_gift: ()->CGImage
+  private let _chat_input_suggest_post: ()->CGImage
   private let _todo_selection: ()->CGImage
   private let _todo_selected: ()->CGImage
   private let _todo_selection_other_incoming: ()->CGImage
@@ -12482,6 +12496,7 @@ public final class TelegramIconsTheme {
       chat_input_channel_gift: @escaping()->CGImage,
       chat_input_suggest_message: @escaping()->CGImage,
       chat_input_send_gift: @escaping()->CGImage,
+      chat_input_suggest_post: @escaping()->CGImage,
       todo_selection: @escaping()->CGImage,
       todo_selected: @escaping()->CGImage,
       todo_selection_other_incoming: @escaping()->CGImage,
@@ -13315,6 +13330,7 @@ public final class TelegramIconsTheme {
       self._chat_input_channel_gift = chat_input_channel_gift
       self._chat_input_suggest_message = chat_input_suggest_message
       self._chat_input_send_gift = chat_input_send_gift
+      self._chat_input_suggest_post = chat_input_suggest_post
       self._todo_selection = todo_selection
       self._todo_selected = todo_selected
       self._todo_selection_other_incoming = todo_selection_other_incoming

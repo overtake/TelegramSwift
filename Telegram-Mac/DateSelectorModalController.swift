@@ -195,7 +195,7 @@ class DateSelectorModalController: ModalViewController {
         }
         case schedule(PeerId)
         case date(title: String, doneTitle: String)
-        case dateAction(title: String, done: String, action: Action)
+        case dateAction(title: String, done: (Date)->String, action: Action)
     }
     
     private let context: AccountContext
@@ -334,10 +334,27 @@ class DateSelectorModalController: ModalViewController {
             let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
             genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), formatted), for: .Normal)
         }
+        
+        switch mode {
+        case let .dateAction(_, done, _):
+            let date = self.currentDate
+            self.modal?.interactions?.updateDone { button in
+                button.set(text: done(date), for: .Normal)
+            }
+        default:
+            break
+        }
+        
+        
     }
     
     override var handleAllEvents: Bool {
         return true
+    }
+    
+    var currentDate:Date {
+        let day = self.genericView.dayPicker.selected.value
+        return day.startOfDay.addingTimeInterval(self.genericView.timePicker.selected.interval)
     }
     
     private func select() {
@@ -420,8 +437,12 @@ class DateSelectorModalController: ModalViewController {
         switch mode {
         case .schedule:
             return nil
-        case let .date(_, doneTitle), let .dateAction(_, doneTitle, _):
+        case let .date(_, doneTitle):
             return ModalInteractions(acceptTitle: doneTitle, accept: { [weak self] in
+                self?.select()
+            }, singleButton: true)
+        case let .dateAction(_, done, _):
+            return ModalInteractions(acceptTitle: done(currentDate), accept: { [weak self] in
                 self?.select()
             }, singleButton: true)
         }

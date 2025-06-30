@@ -164,7 +164,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue(input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, sendPaidMessageStars: StarsAmount? = nil) -> Signal<[MessageId?],NoError> {
+    public static func enqueue(input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, sendPaidMessageStars: StarsAmount? = nil, suggestPost: ChatInterfaceState.ChannelSuggestPost? = nil) -> Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         let dynamicEmojiOrder = context.stickerSettings.dynamicPackOrder
@@ -215,6 +215,9 @@ class Sender: NSObject {
             var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities(parsingUrlType))]
             if let date = atDate {
                 attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+            }
+            if let attr = suggestPost?.attribute {
+                attributes.append(attr)
             }
             if disablePreview {
                 attributes.append(OutgoingContentInfoMessageAttribute(flags: [.disableLinkPreviews]))
@@ -600,7 +603,7 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, threadId: threadId, replyStoryId: replyStoryId, silent: silent, atDate: atDate, query: query, collectionId: collectionId, customChatContents: customChatContents, sendPaidMessageStars: sendPaidMessageStars)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, leadingText: Bool = false, sendPaidMessageStars: StarsAmount? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, threadId: Int64?, replyStoryId: StoryId? = nil, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false, customChatContents: ChatCustomContentsProtocol? = nil, messageEffect: AvailableMessageEffects.MessageEffect? = nil, leadingText: Bool = false, sendPaidMessageStars: StarsAmount? = nil, suggestPost: ChatInterfaceState.ChannelSuggestPost? = nil) ->Signal<[MessageId?],NoError> {
         
         let dynamicEmojiOrder: Bool = context.stickerSettings.dynamicPackOrder
         
@@ -634,7 +637,9 @@ class Sender: NSObject {
         if let messageEffect {
             attributes.append(EffectMessageAttribute(id: messageEffect.id))
         }
-        
+        if let attr = suggestPost?.attribute {
+            attributes.append(attr)
+        }
         if leadingText {
             attributes.append(InvertMediaMessageAttribute())
         }

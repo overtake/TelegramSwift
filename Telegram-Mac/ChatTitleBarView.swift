@@ -706,7 +706,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else {
                     if peer.isMonoForum, let mainForumPeer = peerViewMonoforumMainPeer(peerView) {
-                        avatarControl.setState(account: chatInteraction.context.account, state: .PeerAvatar(peer, mainForumPeer.displayLetters, mainForumPeer.smallProfileImage, mainForumPeer.nameColor, nil, nil, peer.groupAccess.canPostMessages, nil))
+                        avatarControl.setState(account: chatInteraction.context.account, state: .PeerAvatar(peer, mainForumPeer.displayLetters, mainForumPeer.smallProfileImage, mainForumPeer.nameColor, nil, nil, peer.groupAccess.canManageDirect, nil))
                     } else {
                         avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
                     }
