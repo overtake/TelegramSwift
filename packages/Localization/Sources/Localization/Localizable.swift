@@ -15376,7 +15376,7 @@ public final class L10n {
   /// Add colorful labels to chats for faster access in chat list.
   public static var premiumBoardingTagFoldersInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.TagFolders.Info") }
   /// Plan, assign, and complete tasks - seamlessly and efficiently.
-  public static var premiumBoardingTodoюInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Todoю.Info") }
+  public static var premiumBoardingTodoInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Todo.Info") }
   /// Gift subscription for %@
   public static func premiumGiftButtonText(_ p1: String) -> String {
     return L10n.tr("Localizable", "PremiumGift.ButtonText", p1)
