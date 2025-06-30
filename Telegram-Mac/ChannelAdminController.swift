@@ -272,6 +272,8 @@ func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, defaultB
             return strings().channelEditAdminPermissionInviteSubscribers
         }
 
+    } else if right.contains(.canManageDirect) {
+        return strings().channelEditAdminPermissionManageDirect
     } else if right.contains(.canPinMessages) {
         return strings().channelEditAdminPermissionPinMessages
     } else if right.contains(.canAddAdmins) {
@@ -370,6 +372,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 .direct(.canChangeInfo),
                 .sub(.messages, messageRelatedFlags),
                 .sub(.stories, storiesRelatedFlags),
+                .direct(.canManageDirect),
                 .direct(.canInviteUsers),
                 .direct(.canManageCalls),
                 .direct(.canAddAdmins)

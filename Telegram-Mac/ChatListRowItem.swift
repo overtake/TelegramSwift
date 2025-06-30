@@ -1093,7 +1093,7 @@ class ChatListRowItem: TableRowItem {
         
         if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !peer.id.isAnonymousSavedMessages, !isEmpty {
             if peer.isMonoForum, let photoPeer = renderedPeer.chatOrMonoforumMainPeer?._asPeer() {
-                self.photo = .PeerAvatar(peer, peer.displayLetters, photoPeer.smallProfileImage, photoPeer.nameColor, nil, nil, peer.groupAccess.canPostMessages, nil)
+                self.photo = .PeerAvatar(peer, peer.displayLetters, photoPeer.smallProfileImage, photoPeer.nameColor, nil, nil, peer.groupAccess.canManageDirect, nil)
             } else {
                 self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForumOrMonoForum, nil)
             }

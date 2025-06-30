@@ -17,6 +17,22 @@ import SwiftSignalKit
 import ColorPalette
 
 
+private func optionRects(for items: [TodoItem], width: CGFloat, offset: CGFloat) -> [NSRect] {
+    var result: [NSRect] = []
+    var y: CGFloat = offset
+
+    for (i, option) in items.enumerated() {
+        if i > 0 {
+            y += TodoItem.spaceBetweenOptions
+        }
+        let rect = NSMakeRect(0, y, width, option.contentSize.height)
+        result.append(rect)
+        y += option.contentSize.height
+    }
+
+    return result
+}
+
 private extension TelegramMediaTodo {
     func translated(_ todo: TranslationMessageAttribute) -> TelegramMediaTodo {
         var options: [TelegramMediaTodo.Item] = self.items
@@ -33,6 +49,7 @@ private final class TodoItem : Equatable {
     let option: TelegramMediaTodo.Item
     let peer: EnginePeer?
     let nameText: TextViewLayout
+    let author: TextViewLayout?
     let isSelected: Bool
     let isIncoming: Bool
     let isBubbled: Bool
@@ -42,9 +59,10 @@ private final class TodoItem : Equatable {
     let vote:(Control)-> Void
     let isTranslateLoading: Bool
     let canFinish: Bool
-    init(option:TelegramMediaTodo.Item, nameText: TextViewLayout, isSelected: Bool, canFinish: Bool, isIncoming: Bool, isBubbled: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool, peer: EnginePeer?) {
+    init(option:TelegramMediaTodo.Item, nameText: TextViewLayout, author: TextViewLayout?, isSelected: Bool, canFinish: Bool, isIncoming: Bool, isBubbled: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool, peer: EnginePeer?) {
         self.option = option
         self.nameText = nameText
+        self.author = author
         self.isSelected = isSelected
         self.canFinish = canFinish
         self.presentation = presentation
@@ -57,14 +75,11 @@ private final class TodoItem : Equatable {
         self.peer = peer
     }
     
-    func withUpdatedLoading(_ isLoading: Bool) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
-    }
     func withUpdatedContentSize(_ contentSize: NSSize) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: self.isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
+        return TodoItem(option: self.option, nameText: self.nameText, author: self.author, isSelected: self.isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     func withUpdatedSelected(_ isSelected: Bool) -> TodoItem {
-        return TodoItem(option: self.option, nameText: self.nameText, isSelected: isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
+        return TodoItem(option: self.option, nameText: self.nameText, author: self.author, isSelected: isSelected, canFinish: self.canFinish, isIncoming: self.isIncoming, isBubbled: self.isBubbled, isLoading: self.isLoading, presentation: self.presentation, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading, peer: self.peer)
     }
     
     static func ==(lhs: TodoItem, rhs: TodoItem) -> Bool {
@@ -89,6 +104,8 @@ private final class TodoItem : Equatable {
     
     func measure(width: CGFloat) -> NSSize {
         nameText.measure(width: width - leftOptionInset)
+        author?.measure(width: width - leftOptionInset)
+        
         let contentSize = NSMakeSize(nameText.layoutSize.width + leftOptionInset, 10 + nameText.layoutSize.height + TodoItem.spaceBetweenOptions)
         if isTranslateLoading {
             nameText.maskBlockImage = nameText.generateBlock(backgroundColor: .blackTransparent)
@@ -152,8 +169,9 @@ class ChatRowTodoItem: ChatRowItem {
         for (i, option) in todo.items.enumerated() {
             
             let isSelected: Bool = todo.completions.contains(where: { $0.id == option.id })
-            let nameFont: NSFont = .normal(.text)//voted && isSelected ? .bold(.text) : .normal(.text)
-            let peerId = todo.completions.first(where: { $0.id == option.id })?.completedBy
+            let isGroup: Bool = todo.flags.contains(.othersCanComplete)
+            let nameFont: NSFont = .normal(.text)
+            let peerId = isGroup ? todo.completions.first(where: { $0.id == option.id })?.completedBy : nil
             
             let optionText = NSMutableAttributedString()
             optionText.append(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont)
@@ -165,8 +183,17 @@ class ChatRowTodoItem: ChatRowItem {
             }
             
             let nameLayout = TextViewLayout(optionText, alwaysStaticItems: true)
+            
+            let authorLayout: TextViewLayout?
+            if isSelected, let completedBy = todo.completions.first(where: { $0.id == option.id }), isGroup {
+                let peer = message?.peers[completedBy.completedBy]
+                let color = self.presentation.chat.grayText(isIncoming, renderType == .bubble)
+                authorLayout = .init(.initialize(string: peer?.displayTitle, color: color, font: .normal(.small)), maximumNumberOfLines: 1)
+            } else {
+                authorLayout = nil
+            }
                         
-            let wrapper = TodoItem(option: option, nameText: nameLayout, isSelected: isSelected, canFinish: canFinish, isIncoming: isIncoming, isBubbled: renderType == .bubble, isLoading: false, presentation: self.presentation, vote: { [weak self] control in
+            let wrapper = TodoItem(option: option, nameText: nameLayout, author: authorLayout, isSelected: isSelected, canFinish: canFinish, isIncoming: isIncoming, isBubbled: renderType == .bubble, isLoading: false, presentation: self.presentation, vote: { [weak self] control in
                 self?.markCompleted(option, canFinish: canFinish, for: control)
             }, isTranslateLoading: isTranslateLoading, peer: peerId.flatMap { message?.peers[$0] }.flatMap(EnginePeer.init))
             
@@ -175,9 +202,8 @@ class ChatRowTodoItem: ChatRowItem {
         self.options = options
         
         
-        //TODOLANG
-        var totalText = "\(todo.completions.count) of \(options.count) completed"
-        
+        let totalText = strings().chatMessageTodoTotal("\(todo.completions.count)", "\(options.count)")
+
         self.totalVotesText = TextViewLayout(.initialize(string: totalText, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
 
 
@@ -191,8 +217,14 @@ class ChatRowTodoItem: ChatRowItem {
         
         
         
-        //TODOLANG
-        self.titleTypeText = TextViewLayout(.initialize(string: "To Do List", color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        let title: String
+        if todo.flags.contains(.othersCanComplete) {
+            title = strings().chatMessageTodoTitleGroup
+        } else {
+            title = strings().chatMessageTodoTitleSingle
+        }
+
+        self.titleTypeText = TextViewLayout(.initialize(string: title, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
     override var isForceRightLine: Bool {
@@ -214,43 +246,53 @@ class ChatRowTodoItem: ChatRowItem {
         return super.isForceRightLine
     }
     
-        
-    private func stop() {
-        if let message = message {
-            chatInteraction.closePoll(message.id)
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        if let message = message, !context.isFrozen {
+            
+            var offset: CGFloat = 0
+            
+            offset += titleText.layoutSize.height + defaultContentInnerInset
+            offset += titleTypeText.layoutSize.height + defaultContentInnerInset
+            
+            let source: ChatMenuItemSource
+            let rects = optionRects(for: self.options, width: contentSize.width, offset: offset)
+            
+            if let index = rects.firstIndex(where: { NSPointInRect(location, $0) }) {
+                source = .todo(taskId: options[index].option.id)
+            } else {
+                source = .general
+            }
+            
+            return chatMenuItems(for: message, entry: entry, textLayout: nil, chatInteraction: chatInteraction, source: source)
         }
+        return super.menuItems(in: location)
     }
+
     
     
     private func markCompleted(_ option: TelegramMediaTodo.Item, canFinish: Bool, for control: Control) {
         guard let message = message else { return }
         
         let context = self.context
-
-        if !canFinish, let author = message.author {
-            //TODOLANG
-            showModalText(for: context.window, text: "\(author.displayTitle) has restricted others from editing this to-do list.")
+        
+        if message.forwardInfo != nil {
+            showModalText(for: context.window, text: strings().chatMessageTodoEditForwardedError)
+            return
+        } else if !canFinish, let author = message.author {
+            let title = strings().chatMessageTodoEditRestrictedError(author.displayTitle)
+            showModalText(for: context.window, text: title)
+            return
         } else if !context.isPremium {
-            showModalText(for: context.window, text: strings().chatServiceTodoCompletePremium, callback: { _ in
-                prem(with: PremiumBoardingController(context: context, source: .todo_lists, openFeatures: true), for: context.window)
+            showModalText(for: context.window, text: strings().chatMessageTodoCompletePremium, callback: { _ in
+                prem(with: PremiumBoardingController(context: context, source: .todo, openFeatures: true), for: context.window)
             })
+            return
         }
+
         
         
-        var completed = self.todo.completions.map { $0.id }
-        var incompleted = self.todo.items.map { $0.id }.filter({ !completed.contains($0) })
-        
+        let completed = self.todo.completions.map { $0.id }
         let isCompleted = completed.contains(option.id)
-        
-        
-        if !completed.contains(option.id) {
-            completed.append(option.id)
-            incompleted.removeAll(where: { $0 == option.id })
-        } else {
-            incompleted.append(option.id)
-            completed.removeAll(where: { $0 == option.id })
-        }
-        
         
         _ = context.engine.messages.requestUpdateTodoMessageItems(messageId: message.id, completedIds: !isCompleted ? [option.id] : [], incompletedIds: isCompleted ? [option.id] : []).start()
 //        if canInvokeVote, !self.options.contains(where: { $0.isSelected }) {
@@ -459,6 +501,7 @@ final class ChatTodoItemView : ChatRowView {
 
 private final class TodoOptionView : Control {
     private let nameView: InteractiveTextView = InteractiveTextView(frame: .zero)
+    private var authorView: TextView?
     private var selectingView:ImageView?
     private let progressView: LinearProgressControl = LinearProgressControl(progressHeight: 5)
     private var progressIndicator: ProgressIndicator?
@@ -499,19 +542,18 @@ private final class TodoOptionView : Control {
 
 
         self.option = option
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
 
         
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
         
         nameView.set(text: option.nameText, context: context)
-        nameView.setFrameOrigin(NSMakePoint(option.leftOptionInset, 0))
         
         nameView.textView.setIsShimmering(option.isTranslateLoading, animated: animated)
         
-        progressView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 5))
         borderView.backgroundColor = option.presentation.chat.pollOptionBorder(option.isIncoming, option.isBubbled)
-        borderView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5 - .borderSize + progressView.progressHeight, frame.width - nameView.frame.minX, .borderSize)
         borderView.change(opacity: 1, animated: animated, duration: duration, timingFunction: timingFunction)
         progressView.change(opacity: 1, animated: animated, duration: duration, timingFunction: timingFunction)
         
@@ -558,23 +600,88 @@ private final class TodoOptionView : Control {
                 isNew = true
             }
             current.setPeer(account: context.account, peer: peer._asPeer())
-            current.setFrameOrigin(NSMakePoint(defaultInset + 10, 1))
             if animated, isNew {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                current.centerY(x: defaultInset + 10)
             }
         } else if let view = self.avatarView {
             performSubviewRemoval(view, animated: animated, scale: true)
             self.avatarView = nil
         }
         
+        if let author = option.author {
+            let current: TextView
+            let isNew: Bool
+            if let view = self.authorView {
+                current = view
+                isNew = false
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.authorView = current
+                addSubview(current, positioned: .below, relativeTo: selectingView)
+                isNew = true
+            }
+            
+            current.update(author)
+            if isNew {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.setFrameOrigin(NSMakePoint(option.leftOptionInset, nameView.frame.maxY))
+            }
+            
+        } else if let view = self.authorView {
+            performSubviewRemoval(view, animated: animated)
+            self.authorView = nil
+        }
+        
         selectingView?.sizeToFit()
-        selectingView?.setFrameOrigin(NSMakePoint(defaultInset, 0))
-
+        
+        updateLayout(size: self.frame.size, transition: transition)
     }
     
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        // Update nameView position
+        
+        guard let option else {
+            return
+        }
+        
+        transition.updateFrame(view: nameView, frame: nameView.centerFrameY(x: option.leftOptionInset, addition: authorView != nil ? -8 : 0))
+        
+        // Calculate new progressView position
+        let progressViewOrigin = NSPoint(x: nameView.frame.minX, y: nameView.frame.maxY + 5)
+        transition.updateFrame(view: progressView, frame: NSRect(origin: progressViewOrigin, size: progressView.frame.size))
+        
+        let borderFrame = NSRect(
+            x: nameView.frame.minX,
+            y: size.height - .borderSize,
+            width: size.width - nameView.frame.minX,
+            height: .borderSize
+        )
+        transition.updateFrame(view: borderView, frame: borderFrame)
+        
+        if let selectingView = selectingView {
+            transition.updateFrame(view: selectingView, frame: selectingView.centerFrameY(x: defaultInset))
+        }
+        
+        if let avatarView {
+            transition.updateFrame(view: avatarView, frame: avatarView.centerFrameY(x: defaultInset + 10))
+        }
+        if let authorView {
+            var rect = authorView.frame
+            rect.origin = NSMakePoint(option.leftOptionInset, nameView.frame.maxY)
+            transition.updateFrame(view: authorView, frame: rect)
+        }
+    }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
 }
 

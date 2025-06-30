@@ -252,7 +252,7 @@ func SuggetMessageModalController(context: AccountContext) -> InputDataModalCont
         
         let mode: DateSelectorModalController.Mode
         if let date {
-            mode = .dateAction(title: "Time", done: "OK", action: .init(string: "Send Anytime", callback: {
+            mode = .dateAction(title: "Time", done: { _ in "OK" }, action: .init(string: "Send Anytime", callback: {
                 updateState { current in
                     var current = current
                     current.date = nil

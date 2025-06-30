@@ -12,6 +12,7 @@ import TelegramCore
 
 final class InteractiveTextView : Control {
     let textView = TextView()
+    private var context: AccountContext?
     
     var isLite: Bool = false
     private var decreaseAvatar: CGFloat = 0
@@ -54,6 +55,7 @@ final class InteractiveTextView : Control {
     func set(text: TextViewLayout?, context: AccountContext?, insetEmoji: CGFloat = 0, decreaseAvatar: CGFloat = 0) {
         self.decreaseAvatar = decreaseAvatar
         self.textView.update(text)
+        self.context = context
         if let text {
             self.setFrameSize(text.layoutSize)
         }
@@ -63,6 +65,11 @@ final class InteractiveTextView : Control {
         }
     }
     
+    func resize(_ width: CGFloat) {
+        self.textView.textLayout?.measure(width: width)
+        self.set(text: self.textView.textLayout, context: self.context)
+    }
+
     
     func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: SimpleLayer], insetEmoji: CGFloat) {
         var validIds: [InlineStickerItemLayer.Key] = []

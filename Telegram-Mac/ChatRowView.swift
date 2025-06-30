@@ -547,10 +547,20 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             rect.size = layout.size
             rect.origin.x += item.elementsContentInset
             
-            rect.origin.y = item.height - rect.size.height - item.defaultContentInnerInset - 4
-            if item.isBubbled {
-                rect.origin.y -= item.rightSize.height
+            rect.origin.y = contentFrame(item).maxY + item.defaultContentInnerInset
+            
+            if let captionLayout = item.captionLayouts.first?.layout, !item.invertMedia {
+                var ignore: Bool = false
+                if let item = item as? ChatGroupedItem, !item.isBubbled {
+                    if item.layoutType == .files {
+                        ignore = true
+                    }
+                }
+                if !ignore {
+                    rect.origin.y += captionLayout.size.height + item.defaultContentInnerInset
+                }
             }
+            
             return rect
         } else {
             return .zero

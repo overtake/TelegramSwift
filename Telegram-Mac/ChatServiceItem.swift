@@ -39,6 +39,7 @@ class ChatServiceItem: ChatRowItem {
             case premium(months: Int32)
             case starGift(amount: Int64, date: Int32, from: EnginePeer?, to: EnginePeer?, purpose: Star_TransactionPurpose)
             case stars(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
+            case ton(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
         }
         
         struct UniqueAttributes {
@@ -148,6 +149,169 @@ class ChatServiceItem: ChatRowItem {
         }
     }
     
+    struct SuggestpostHeader {
+        fileprivate let peer: Peer
+        fileprivate let attributes: ChatServiceItem.GiftData.UniqueAttributes
+        init(text: String, peer: Peer, isIncoming: Bool) {
+            
+            self.peer = peer
+            
+            let components = text.components(separatedBy: ":")
+            let amount = components[1]
+            let timestamp = components[2]
+            let currency = CurrencyAmount.Currency(components[3])
+
+            let color = theme.chatServiceItemTextColor
+            
+            let timeString: String
+            if let int = Int32(timestamp), int > 0 {
+                timeString = stringForDate(timestamp: int)
+            } else {
+                timeString = strings().chatServiceSuggestPostHeaderTimeAnytime
+            }
+
+            let amountString: String
+            if let int = Int(amount), int > 0 {
+                switch currency {
+                case .stars:
+                    amountString = strings().starListItemCountCountable(int)
+                case .ton:
+                    amountString = formatCurrencyAmount(Int64(int), currency: TON).prettyCurrencyNumberUsd + " " + TON
+                }
+            } else {
+                amountString = strings().chatServiceSuggestPostHeaderPriceFree
+            }
+
+            attributes = .init(
+                header: .init(
+                    .initialize(string: strings().chatServiceSuggestPostHeaderTitle, color: color, font: .medium(.text)),
+                    alignment: .center
+                ),
+                attributes: [
+                    .init(
+                        name: .init(.initialize(string: strings().chatServiceSuggestPostHeaderLabelPrice, color: color.withAlphaComponent(0.7), font: .normal(.text))),
+                        value: .init(.initialize(string: amountString, color: color, font: .medium(.text)))
+                    ),
+                    .init(
+                        name: .init(.initialize(string: strings().chatServiceSuggestPostHeaderLabelTime, color: color.withAlphaComponent(0.7), font: .normal(.text))),
+                        value: .init(.initialize(string: timeString, color: color, font: .medium(.text)))
+                    )
+                ]
+            )
+
+            attributes.makeSize(width: 140)
+        }
+        
+        var height: CGFloat {
+            return attributes.height
+        }
+    }
+    
+    struct SuggestPostData {
+        let status: TelegramMediaActionType.SuggestedPostApprovalStatus
+        let layout: TextViewLayout
+        let titleLayout: TextViewLayout
+        let messageId: MessageId?
+        
+        init(status: TelegramMediaActionType.SuggestedPostApprovalStatus, messageId: MessageId?, peer: Peer, isIncoming: Bool) {
+            self.status = status
+            self.messageId = messageId
+            var text: String = ""
+            
+            switch status {
+            case .approved(let timestamp, let amount):
+                self.titleLayout = .init(
+                    .initialize(string: strings().chatServiceSuggestPostStatusTitle, color: theme.chatServiceItemTextColor, font: .medium(.text)),
+                    alignment: .center
+                )
+
+                var text = ""
+
+                if let timestamp {
+                    let date = stringForDate(timestamp: timestamp)
+                    if !isIncoming {
+                        text += strings().chatServiceSuggestPostStatusPublishOutgoing(peer.displayTitle, date)
+                    } else {
+                        text += strings().chatServiceSuggestPostStatusPublishIncoming(peer.displayTitle, date)
+                    }
+                }
+
+                if let amount, amount.amount.value > 0 {
+                    text += "\n\n"
+                    let formatted = amount.fullyFormatted
+                    if !isIncoming {
+                        text += strings().chatServiceSuggestPostStatusChargeOutgoing(formatted)
+                    } else {
+                        text += strings().chatServiceSuggestPostStatusChargeIncoming(formatted)
+                    }
+                }
+
+                text += "\n\n"
+                if !isIncoming {
+                    text += strings().chatServiceSuggestPostStatusReleaseOutgoing(peer.displayTitle)
+                } else {
+                    text += strings().chatServiceSuggestPostStatusReleaseIncoming(peer.displayTitle)
+                }
+
+                text += "\n\n"
+                text += strings().chatServiceSuggestPostStatusRefundCondition(peer.displayTitle)
+
+            case .rejected(let reason, let comment):
+                let title: String
+                switch reason {
+                case .generic:
+                    title = strings().chatServiceSuggestPostStatusRejectedTitle
+                case .lowBalance:
+                    title = strings().chatServiceSuggestPostStatusRejectedLowBalanceTitle
+                }
+
+                self.titleLayout = .init(
+                    .initialize(string: title, color: theme.chatServiceItemTextColor, font: .medium(.text)),
+                    alignment: .center
+                )
+
+                switch reason {
+                case .generic:
+                    if !isIncoming {
+                        if let comment {
+                            text = strings().chatServiceSuggestPostStatusRejectedOutgoingWithComment(comment)
+                        } else {
+                            text = strings().chatServiceSuggestPostStatusRejectedOutgoingNoComment
+                        }
+                    } else {
+                        if let comment {
+                            text = strings().chatServiceSuggestPostStatusRejectedIncomingWithComment(peer.displayTitle, comment)
+                        } else {
+                            text = strings().chatServiceSuggestPostStatusRejectedIncomingNoComment(peer.displayTitle)
+                        }
+                    }
+
+                case .lowBalance:
+                    if !isIncoming {
+                        text = strings().chatServiceSuggestPostStatusRejectedOutgoingLowBalance(peer.displayTitle)
+                    } else {
+                        text = strings().chatServiceSuggestPostStatusRejectedIncomingLowBalance(peer.displayTitle)
+                    }
+                }
+            }
+            
+            let grayTextColor: NSColor = theme.chatServiceItemTextColor
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: text, color: grayTextColor, font: .normal(.text))
+            attr.detectBoldColorInString(with: .medium(.text))
+            self.layout = TextViewLayout(attr, alignment: .left)
+            
+            self.titleLayout.measure(width: 200)
+            self.layout.measure(width: 200)
+
+        }
+        
+        var height: CGFloat {
+            return 10 + titleLayout.layoutSize.height + 10 + layout.layoutSize.height + 10
+        }
+    }
+    
     struct WallpaperData {
         let wallpaper: Wallpaper
         let aesthetic: TelegramWallpaper
@@ -204,10 +368,13 @@ class ChatServiceItem: ChatRowItem {
             case let .premium(months):
                 prem(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(amount: .init(value: amount, nanos: 0), currency: .stars), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: .gift), for: context.window)
+            case let .ton(amount, date, transactionId, from):
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(amount: .init(value: amount, nanos: 0), currency: .ton), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
+                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: .tonGift), for: context.window)
             case let .starGift(amount, date, from, to, purpose):
-                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(amount: .init(value: amount, nanos: 0), currency: .stars), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                 
                 switch purpose {
                 case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
@@ -230,7 +397,8 @@ class ChatServiceItem: ChatRowItem {
     private(set) var wallpaperData: WallpaperData? = nil
     private(set) var storydata: StoryData? = nil
     private(set) var suggestChannelsData: ChannelSuggestData? = nil
-
+    private(set) var suggestPostStatus: SuggestPostData? = nil
+    private(set) var suggestPostHeader: SuggestpostHeader? = nil
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
                 
@@ -384,13 +552,22 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                 case let .customText(text, _, additionalAttributes):
-                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                    if let additionalAttributes = additionalAttributes {
-                        for (range, key, value) in additionalAttributes.attributes {
-                            attributedString.addAttribute(key, value: value, range: range)
+                    
+                    if text.contains("post_suggest") {
+                        
+                        var peer: Peer = peer
+                        if let monoforumId = (peer as? TelegramChannel)?.linkedMonoforumId {
+                            peer = message.peers[monoforumId] ?? peer
+                        }
+                        self.suggestPostHeader = SuggestpostHeader(text: text, peer: peer, isIncoming: isIncoming)
+                    } else {
+                        let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        if let additionalAttributes = additionalAttributes {
+                            for (range, key, value) in additionalAttributes.attributes {
+                                attributedString.addAttribute(key, value: value, range: range)
+                            }
                         }
                     }
-
                 case let .botDomainAccessGranted(domain):
                     let _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .botAppAccessGranted(appName, _):
@@ -574,7 +751,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: .init(value: -media.totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: .init(amount: .init(value: -media.totalAmount, nanos: 0), currency: .stars), date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                                         showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -1187,7 +1364,7 @@ class ChatServiceItem: ChatRowItem {
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: .init(value: totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: .init(amount: .init(value: totalAmount, nanos: 0), currency: .stars), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: .init(peer), transaction: transaction), for: context.window)
                         })
@@ -1691,8 +1868,100 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-
+                case let .suggestedPostApprovalStatus(status):
                     
+                    var peer: Peer = peer
+                    if let monoforumId = (peer as? TelegramChannel)?.linkedMonoforumId {
+                        peer = message.peers[monoforumId] ?? peer
+                    }
+                    
+                    let postId: MessageId?
+                    if let replyAttribute = message.replyAttribute {
+                        postId = replyAttribute.messageId
+                    } else {
+                        postId = nil
+                    }
+                    
+                    self.suggestPostStatus = SuggestPostData(status: status, messageId: postId, peer: peer, isIncoming: isIncoming)
+                case let .giftTon(currency, amount, cryptoCurrency, cryptoAmount, transactionId):
+                    
+                    let cryptoAmount = cryptoAmount ?? 0
+                    
+                    let info = NSMutableAttributedString()
+                    let header = NSMutableAttributedString()
+                    let formatted: String
+                    if let cryptoCurrency {
+                        formatted = formatCurrencyAmount(cryptoAmount, currency: cryptoCurrency).prettyCurrencyNumberUsd + " " + cryptoCurrency
+                    } else {
+                        formatted = formatCurrencyAmount(amount, currency: currency)
+                    }
+                    
+                    header.append(string: formatted, color: grayTextColor, font: .medium(theme.fontSize + 1))
+                    
+                    
+                    _ = info.append(
+                        string: strings().chatServiceTonGiftInfo,
+                        color: grayTextColor,
+                        font: .normal(theme.fontSize)
+                    )
+                    info.detectBoldColorInString(with: .medium(theme.fontSize))
+                    
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .ton(amount: isIncoming ? cryptoAmount : -cryptoAmount, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil)
+                    
+                    
+                    let text: String
+                    if authorId == context.peerId {
+                        text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+                    } else {
+                        if authorId == servicePeerId {
+                            text = strings().chatServicePremiumGiftSent(strings().chatServicePremiumUnknown, formatCurrencyAmount(amount, currency: currency))
+                        } else {
+                            text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+                        }
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+                case let .suggestedPostSuccess(amount):
+                    var isUser = true
+                    var channelName: String = ""
+                    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                        channelName = peer.title
+                        if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                            isUser = false
+                        }
+                    }
+                    let _ = isUser
+                    
+                    let amountString: String = amount.fullyFormatted
+                    
+                    attributedString.append(string: strings().chatServiceSuggestPostSuccessReceived(channelName, amountString), color: grayTextColor, font: .normal(.text))
+                case let .suggestedPostRefund(info):
+                    var isUser = true
+                    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                        if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                            isUser = false
+                        }
+                    }
+                    let text: String
+                    if info.isUserInitiated {
+                        if isUser {
+                            text = strings().chatServiceSuggestPostRefundedUser
+                        } else {
+                            text = strings().chatServiceSuggestPostRefundedOther
+                        }
+                    } else {
+                        text = strings().chatServiceSuggestPostRefundedDeleted
+                    }
+                    attributedString.append(string: text, color: grayTextColor, font: .normal(.text))
                 default:
                     break
                 }
@@ -1835,6 +2104,12 @@ class ChatServiceItem: ChatRowItem {
             height += data.height + (isBubbled ? 9 : 6)
         }
         if let data = self.suggestPhotoData {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.suggestPostStatus {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.suggestPostHeader {
             height += data.height + (isBubbled ? 9 : 6)
         }
         if let data = self.wallpaperData {
@@ -2226,6 +2501,8 @@ class ChatServiceRowView: TableRowView {
                 |> deliverOnMainQueue
             case let .stars(amount, _, _, _):
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
+            case let .ton(amount, _, _, _):
+                stickerFile = .single(LocalAnimatedSticker.bestForTonGift(abs(amount)).file)
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
                 case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
@@ -2613,6 +2890,134 @@ class ChatServiceRowView: TableRowView {
         }
     }
     
+    private class SuggestPostView : Control {
+        
+
+        private var visualEffect: VisualEffect?
+        
+        private let textView = InteractiveTextView()
+        private let titleView = InteractiveTextView()
+
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(textView)
+            addSubview(titleView)
+            textView.userInteractionEnabled = false
+            titleView.userInteractionEnabled = false
+            self.scaleOnClick = true
+            layer?.cornerRadius = 10
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.SuggestPostData, animated: Bool) {
+            
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+            
+            titleView.set(text: data.titleLayout, context: item.context)
+            textView.set(text: data.layout, context: item.context)
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: titleView, frame: titleView.centerFrameX(y: 10))
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: titleView.frame.maxY + 10))
+            if let visualEffect {
+                transition.updateFrame(view: visualEffect, frame: size.bounds)
+            }
+        }
+        
+        deinit {
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
+    
+    private class SuggestPostHeaderView : Control {
+        
+
+        private var visualEffect: VisualEffect?
+        
+        private let attributesView = UniqueAttributesView(frame: .zero)
+
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(attributesView)
+            self.scaleOnClick = false
+            layer?.cornerRadius = 10
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.SuggestpostHeader, animated: Bool) {
+            
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+            
+            attributesView.set(attributes: data.attributes, animated: animated)
+            attributesView.setFrameSize(NSMakeSize(frame.width, data.attributes.height))
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: attributesView, frame: attributesView.centerFrameX(y: 0))
+            if let visualEffect {
+                transition.updateFrame(view: visualEffect, frame: size.bounds)
+            }
+        }
+        
+        deinit {
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+
+
+    
     private class WallpaperView : Control {
         
         private let disposable = MetaDisposable()
@@ -2945,6 +3350,8 @@ class ChatServiceRowView: TableRowView {
     
     private var giftView: GiftView?
     private var storyView: _StoryView?
+    private var suggestPostView: SuggestPostView?
+    private var suggestPostHeaderView: SuggestPostHeaderView?
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
     private var suggestChannelsView: ChatChannelSuggestView?
@@ -3187,6 +3594,49 @@ class ChatServiceRowView: TableRowView {
             self.suggestView = nil
         }
         
+        if let data = item.suggestPostStatus {
+            let current: SuggestPostView
+            if let view = self.suggestPostView {
+                current = view
+            } else {
+                current = SuggestPostView(frame: NSMakeRect(0, 0, 240, data.height))
+                self.suggestPostView = current
+                addSubview(current)
+            }
+            
+            current.update(item: item, data: data, animated: animated)
+            current.setFrameSize(NSMakeSize(240, data.height))
+            
+            current.setSingle(handler: { [weak item] _ in
+                if let messageId = data.messageId {
+                    item?.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
+                }
+            }, for: .Click)
+        } else if let view = self.suggestPostView {
+            performSubviewRemoval(view, animated: animated)
+            self.suggestPostView = nil
+        }
+        
+        if let data = item.suggestPostHeader {
+            let current: SuggestPostHeaderView
+            if let view = self.suggestPostHeaderView {
+                current = view
+            } else {
+                current = SuggestPostHeaderView(frame: NSMakeRect(0, 0, 240, data.height))
+                self.suggestPostHeaderView = current
+                addSubview(current)
+            }
+            
+            current.update(item: item, data: data, animated: animated)
+            current.setFrameSize(NSMakeSize(160, data.height))
+            
+            
+        } else if let view = self.suggestPostHeaderView {
+            performSubviewRemoval(view, animated: animated)
+            self.suggestPostHeaderView = nil
+        }
+
+        
         if let data = item.wallpaperData {
             let current: WallpaperView
             if let view = self.wallpaperView {
@@ -3337,6 +3787,14 @@ class ChatServiceRowView: TableRowView {
             view.updateLayout(size: view.frame.size, transition: transition)
         }
         if let view = suggestView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestPostView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestPostHeaderView {
             transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
             view.updateLayout(size: view.frame.size, transition: transition)
         }

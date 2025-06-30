@@ -696,6 +696,13 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                     return true
                 }
             }
+        } else if let action = entry.message.media.first as? TelegramMediaAction, let replyAttribute = entry.message.replyAttribute {
+            switch action.action {
+            case .todoAppendTasks, .todoCompletions:
+                return entry.message.associatedMessages[replyAttribute.messageId] != nil
+            default:
+                break
+            }
         }
         return true
     }
@@ -772,6 +779,16 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                     }
                 }
             }
+        }
+    }
+    
+    let insertSuggestPostHeader:(ChatHistoryEntry)->Void = { entry in
+        if let message = entry.firstMessage, let attr = message.suggestPostAttribute {
+            
+            let action = TelegramMediaAction(action: .customText(text: "post_suggest:\(attr.amount?.amount.value ?? 0):\(attr.timestamp ?? 0):\(attr.amount?.currency.stringValue ?? XTR)", entities: [], additionalAttributes: nil))
+            let service = message.withUpdatedMedia([action]).withUpdatedStableId(message.stableId + UInt32(Int32.max)).withUpdatedTimestamp(message.timestamp - 1)
+            entries.append(.MessageEntry(service, MessageIndex(service), false, renderType, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, entry.additionalData, isFakeMessage: true)))
+
         }
     }
     
@@ -1179,11 +1196,13 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
                             insertPendingProccessing(entry)
                             insertPaidMessage(entry)
                             insertTopicSeparator(entry, prev, next)
+                            insertSuggestPostHeader(entry)
                         } else if let single = groupedPhotos.first {
                             entries.append(single)
                             insertPendingProccessing(single)
                             insertPaidMessage(single)
                             insertTopicSeparator(single, prev, next)
+                            insertSuggestPostHeader(single)
                         }
                     }
                     groupedPhotos.removeAll()
@@ -1196,6 +1215,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             entries.append(entry)
             insertPendingProccessing(entry)
             insertPaidMessage(entry)
+            insertSuggestPostHeader(entry)
             insertTopicSeparator(entry, prev, next)
         }
         
@@ -1276,12 +1296,14 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
             entries.append(groupedPhotos[0])
             insertPendingProccessing(groupedPhotos[0])
             insertPaidMessage(groupedPhotos[0])
+            insertSuggestPostHeader(groupedPhotos[0])
             insertTopicSeparator(groupedPhotos[0], messagesEntries.count >= 2 ? messagesEntries[messagesEntries.count - 2] : nil, nil)
         } else {
             let entry: ChatHistoryEntry = .groupedPhotos(groupedPhotos, groupInfo: key)
             entries.append(entry)
             insertPendingProccessing(entry)
             insertPaidMessage(entry)
+            insertSuggestPostHeader(entry)
             insertTopicSeparator(entry, messagesEntries.count >= 2 ? messagesEntries[messagesEntries.count - 2] : nil, nil)
         }
     }

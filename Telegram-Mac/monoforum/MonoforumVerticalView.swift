@@ -539,9 +539,15 @@ private final class Monoforum_VerticalView : TableRowView {
 }
 
 class MonoforumVerticalView : View, TableViewDelegate {
+    
+    
+    private var ignoreNextSelectAction: Bool = false
+    
     func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
         if let item = item as? Monoforum_VerticalItem {
-            item.select()
+            if !ignoreNextSelectAction {
+                item.select()
+            }
         }
     }
     
@@ -718,8 +724,10 @@ class MonoforumVerticalView : View, TableViewDelegate {
             tableView.resortController = nil
         }
         if let item = entries.first(where: { $0.selected }) {
-            if let item = tableView.item(stableId: item.stableId) {
+            if let item = tableView.item(stableId: item.stableId), !item.isSelected {
+                self.ignoreNextSelectAction = true
                 _ = tableView.select(item: item)
+                self.ignoreNextSelectAction = false
             }
         }
         

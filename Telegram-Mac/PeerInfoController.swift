@@ -45,7 +45,7 @@ class PeerInfoArguments {
     let mediaController: ()->PeerMediaController?
     
     let getStarsContext:(()->StarsRevenueStatsContext?)?
-    let getTonContext:(()->RevenueStatsContext?)?
+    let getTonContext:(()->StarsRevenueStatsContext?)?
     let getStarGiftsContext:(()->ProfileGiftsContext?)?
     
     
@@ -146,7 +146,7 @@ class PeerInfoArguments {
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->RevenueStatsContext?)? = nil, getStarGiftsContext: (()->ProfileGiftsContext?)? = nil) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->StarsRevenueStatsContext?)? = nil, getStarGiftsContext: (()->ProfileGiftsContext?)? = nil) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -401,7 +401,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     private let mediaController: PeerMediaController
     
     private let revenueContext: StarsRevenueStatsContext?
-    private let tonRevenueContext: RevenueStatsContext?
+    private let tonRevenueContext: StarsRevenueStatsContext?
     
     private let starGiftsProfile: ProfileGiftsContext
     
@@ -512,7 +512,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             var effectivePeer: Peer? = mainPeer
             
             if let mainPeer = mainPeer as? TelegramChannel, mainPeer.isMonoForum {
-                if !mainPeer.groupAccess.canPostMessages {
+                if !mainPeer.groupAccess.canManageDirect {
                     effectivePeer = monoforumPeer
                 }
             }
@@ -548,13 +548,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         #endif
         
         if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) || test {
-            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
-            self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: false)
+            self.tonRevenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: true)
         } else if peer.isChannel || peer.isSupergroup {
             if peer.isAdmin {
-                self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
+                self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: false)
                 if peer.isChannel {
-                    self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+                    self.tonRevenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: true)
                 } else {
                     self.tonRevenueContext = nil
                 }
@@ -919,7 +919,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             revenueState = .single(nil)
         }
         
-        let tonRevenueState: Signal<RevenueStatsContextState?, NoError>
+        let tonRevenueState: Signal<StarsRevenueStatsContextState?, NoError>
         if let tonRevenueContext {
             tonRevenueState = tonRevenueContext.state |> map(Optional.init)
         } else {

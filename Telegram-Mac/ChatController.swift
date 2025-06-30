@@ -968,6 +968,8 @@ class ChatControllerView : View, ChatInputDelegate {
         var value:ChatHeaderState.Value
         if let settings = interfaceState.peerStatus?.peerStatusSettings, let stars = settings.paidMessageStars, let peer = interfaceState.peer {
             value = .removePaidMessages(peer, stars)
+        } else if let removePaidMessageFeeData = interfaceState.removePaidMessageFeeData, let peer = interfaceState.peer {
+            value = .removePaidMessages(peer, removePaidMessageFeeData.amount)
         } else if interfaceState.peer?.restrictionText(interfaceState.contentSettings) != nil {
             value = .none
         } else if interfaceState.searchMode.inSearch {
@@ -2613,6 +2615,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             let presentation = self.chatInteraction.presentation
             var reply = presentation.interfaceState.replyMessageId
+            
+            if let suggest = presentation.interfaceState.suggestPost {
+                switch suggest.mode {
+                case let .edit(id):
+                    reply = .init(messageId: id, quote: nil)
+                default:
+                    break
+                }
+            }
+            
             if reply == nil, let threadId64 = threadId64(), !presentation.isMonoforum {
                 reply = .init(messageId: MessageId(peerId: chatLocation().peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId64)), quote: nil)
             }
@@ -3696,6 +3708,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         .withUpdatedForwardMessageIds([])
                         .withUpdatedComposeDisableUrlPreview(nil)
                         .withUpdatedMessageEffect(nil)
+                        .withUpdatedSuggestPost(nil)
+                        .withoutEditMessage()
                         
                 
                     if let message = presentation.keyboardButtonsMessage, let replyMarkup = message.replyMarkup {
@@ -3865,13 +3879,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let currentSendAsPeerId = presentation.currentSendAsPeerId
                 if presentation.abilityToSend {
                     func apply(_ controller: ChatController, atDate: Date?) {
-                        
-                        
-                        
                         var invokeSignal:Signal<Never, NoError> = .complete()
                         
+                        let suggest = presentation.interfaceState.suggestPost
+                        
+                        var isSuggestEditing: Bool = false
+                        if let suggest {
+                            switch suggest.mode {
+                            case .edit:
+                                isSuggestEditing = true
+                            default:
+                                break
+                            }
+                        }
+                        
                         var setNextToTransaction = false
-                        if let state = presentation.interfaceState.editState {
+                        if let state = presentation.interfaceState.editState, !isSuggestEditing {
                             editMessage(state, atDate)
                             return
                         } else {
@@ -3880,7 +3903,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 setNextToTransaction = true
                                 invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: makeThreadId64(true), disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, linkBelowMessage: presentation.interfaceState.linkBelowMessage, largeMedia: presentation.interfaceState.largeMedia, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
                                     _ = strongSelf?.nextTransaction.execute()
-                                }, customChatContents: customChatContents, messageEffect: messageEffect, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue |> ignoreValues
+                                }, customChatContents: customChatContents, messageEffect: messageEffect, sendPaidMessageStars: takePaidMessageStars(), suggestPost: presentation.interfaceState.suggestPost) |> deliverOnMainQueue |> ignoreValues
                                 messagesCount += 1
                             }
                             
@@ -3966,11 +3989,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else {
                                 invoke()
                             }
-                            
-                           
                         }
-                        
-                        
                     }
                     
                     switch strongSelf.mode {
@@ -4003,6 +4022,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     
                 } else {
+                    if let suggest = presentation.interfaceState.suggestPost, suggest.amount == nil {
+                        strongSelf.chatInteraction.editPostSuggestion(suggest)
+                        return
+                    }
                     if let editState = presentation.interfaceState.editState, editState.inputState.inputText.isEmpty {
                         if editState.message.media.isEmpty || editState.message.anyMedia is TelegramMediaWebpage {
                             strongSelf.chatInteraction.deleteMessages([editState.message.id])
@@ -4472,9 +4495,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     let info = strings().chatGiveawayDeleteConfirmationText(stringForFullDate(timestamp: giveaway.untilDate))
                                     verifyAlert(for: context.window, header: title, information: info, ok: strings().confirmDelete, cancel: strings().modalCancel, successHandler: successHandler)
                                 } else {
-                                    let thrid:String? = strongSelf.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
                                     
-                                    verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: successHandler)
+                                    if messages.count == 1, messages[0].timestamp > context.timestamp + .secondsInDay, let attr = messages[0].publishedSuggestedPostMessageAttribute {
+                                        let header: String
+                                        let info: String
+
+                                        switch attr.currency {
+                                        case .ton:
+                                            header = strings().chatDeleteMessageSuggestedPostHeaderTon
+                                            info = strings().chatDeleteMessageSuggestedPostInfoTon
+                                        case .stars:
+                                            header = strings().chatDeleteMessageSuggestedPostHeaderStars
+                                            info = strings().chatDeleteMessageSuggestedPostInfoStars
+                                        }
+
+                                        verifyAlert(for: context.window, header: header, information: info, ok: strings().chatDeleteMessageSuggestedPostActionDeleteAnyway, successHandler: successHandler)
+                                    } else {
+                                        let thrid:String? = strongSelf.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
+                                        
+                                        verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: successHandler)
+                                    }
+                                    
                                 }
                             }
                         }
@@ -4723,6 +4764,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     self?.chatInteraction.update({ state in
                         var state = state
                         state = state.withEditMessage(message)
+                        
+                        if let suggestAttr = message.suggestPostAttribute {
+                            state = state.updatedInterfaceState({
+                                return $0.withUpdatedSuggestPost(.init(amount: suggestAttr.amount, date: suggestAttr.timestamp, mode: message.effectivelyIncoming(context.peerId) ? .suggest(message.id) : .edit(message.id)))
+                            })
+                        }
+                        
                         if let attribute = message.webpagePreviewAttribute {
                             state = state.updatedInterfaceState { current in
                                 var current = current
@@ -4754,7 +4802,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
             if let message, message.media.first is TelegramMediaTodo, let self {
-                showModal(with: NewTodoController(chatInteraction: self.chatInteraction, source: .edit(message)), for: context.window)
+                showModal(with: NewTodoController(chatInteraction: self.chatInteraction, source: .edit(message, taskId: nil)), for: context.window)
                 return
             }
             
@@ -4777,7 +4825,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if !context.isPremium {
                 showModalText(for: context.window, text: strings().chatServiceTodoCompletePremium, callback: { _ in
-                    prem(with: PremiumBoardingController(context: context, source: .todo_lists, openFeatures: true), for: context.window)
+                    prem(with: PremiumBoardingController(context: context, source: .todo, openFeatures: true), for: context.window)
                 })
             } else {
                 showModal(with: NewTodoController(chatInteraction: self.chatInteraction, source: .addOption(message)), for: context.window)
@@ -5572,6 +5620,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler, messageEffect, leadingText in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer {
                 
+                let presentation = strongSelf.chatInteraction.presentation
+                
                 let canSend = medias.map {
                     return peer.canSendMessage(strongSelf.mode.isThreadMode, media: $0, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                 }.allSatisfy { $0 }
@@ -5580,7 +5630,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     let invoke:()->Void = {
                         func apply(_ controller: ChatController, atDate: Date?) {
-                            let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, customChatContents: customChatContents, messageEffect: messageEffect, leadingText: leadingText, sendPaidMessageStars: takePaidMessageStars()) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                            let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), threadId: threadId64(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler, customChatContents: customChatContents, messageEffect: messageEffect, leadingText: leadingText, sendPaidMessageStars: takePaidMessageStars(), suggestPost: presentation.interfaceState.suggestPost) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             controller.nextTransaction.set(handler: afterSentTransition)
                         }
                         switch strongSelf.mode {
@@ -6204,7 +6254,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 self.chatInteraction.saveState(scrollState: self.immediateScrollState())
                 
-                if peer._asPeer().groupAccess.canPostMessages {
+                if peer._asPeer().groupAccess.canManageDirect {
                     let location: ChatLocation = .makeSaved(peerId, peerId: context.peerId, isMonoforum: true)
                     
                     self.navigationController?.push(ChatAdditionController(context: context, chatLocation: location, mode: .history))
@@ -6219,6 +6269,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.sendGift = {
             showModal(with: GiftingController(context: context, peerId: peerId, isBirthday: false), for: context.window)
         }
+        
+        chatInteraction.editPostSuggestion = { [weak self] data in
+            if let chatInteraction = self?.chatInteraction {
+                showModal(with: EditPostSuggestionController(chatInteraction: chatInteraction, data: data), for: context.window)
+            }
+        }
+        
+        
         
         chatInteraction.toggleMonoforumState = { [weak self] in
             guard let self else {
@@ -6289,7 +6347,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).startStandalone()
                     }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
-            } else if let item = item.item, let _ = item.renderedPeer.chatOrMonoforumMainPeer {
+            } else if let item = item.item, let user = item.renderedPeer.chatOrMonoforumMainPeer {
                 if let readCounters = item.readCounters, readCounters.isUnread {
                     items.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
                         _ = context.engine.messages.togglePeerUnreadMarkInteractively(peerId: peerId, threadId: threadId, setToValue: true).startStandalone()
@@ -6298,6 +6356,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let isPinned = item.chatListIndex.pinningIndex != nil
                 let isMuted = item.isMuted
+                
+                if let _ = peer.sendPaidMessageStars, self?.chatInteraction.presentation.removePaidMessageFeeData == nil {
+                    items.append(ContextMenuItem(strings().chatContextReturnMessageFee, handler: {
+                        _ = context.engine.peers.reinstateNoPaidMessagesException(scopePeerId: peer.id, peerId: user.id).startStandalone()
+                    }, itemImage: MenuAnimation.menu_plus.value))
+                }
                 
                 items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
                     let signal = context.engine.peers.toggleForumChannelTopicPinned(id: peerId, threadId: threadId) |> deliverOnMainQueue
@@ -6311,6 +6375,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     })
                 }, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+                
+               
                 
                 items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: {
                     _ = context.engine.peers.togglePeerMuted(peerId: peerId, threadId: threadId).startStandalone()
@@ -6989,7 +7055,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         } |> distinctUntilChanged |> mapToQueue { channel in
             if let channel {
-                if channel.flags.contains(.isMonoforum), channel.groupAccess.canPostMessages {
+                if channel.flags.contains(.isMonoforum), channel.groupAccess.canManageDirect {
                     return chatListViewForLocation(chatListLocation: .savedMessagesChats(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> map {
                         return $0.list.items.reversed()
                     }
@@ -7114,6 +7180,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 .withUpdatedAllowedReactions(cachedData.reactionSettings.knownValue?.allowedReactions)
                         }
                         
+                        var removePaidMessageFeeData: ChatPresentationInterfaceState.RemovePaidMessageFeeData?
+                        
+                        
+                        
+                        if let peer = peerViewMainPeer(titlePeerView) {
+                            if let threadInfo, !threadInfo.isMessageFeeRemoved, let channel = peerView.peers[peerView.peerId] as? TelegramChannel, let sendPaidMessageStars = channel.sendPaidMessageStars, channel.isMonoForum {
+                                if let linkedMonoforumId = channel.linkedMonoforumId, let mainChannel = peerView.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.sendSomething) {
+                                    removePaidMessageFeeData = ChatPresentationInterfaceState.RemovePaidMessageFeeData(
+                                        peer: .init(peer),
+                                        amount: sendPaidMessageStars
+                                    )
+                                }
+                            }
+                        }
+                        
+                        
+
+                        
                         present = present.withUpdatedDiscussionGroupId(discussionGroupId)
                         present = present.withUpdatedPinnedMessageId(pinnedMsg)
                         present = present.withUpdatedAttachItems(attachItems)
@@ -7121,6 +7205,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedConnectedBot(connectedBot)
                         present = present.withUpdatedPlayedMessageEffects(playedMessageEffects ?? [])
                         present = present.withUpdatedMonoforumState(uiState.monoforumState)
+                        present = present.withUpdatedRemovePaidMessageFeeData(removePaidMessageFeeData)
 
                         if let monoforumTopics {
                             let topics = monoforumTopics.map(MonoforumItem.init)
@@ -9856,7 +9941,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 genericView.updateMonoforumState(state: value.monoforumState, items: value.monoforumTopics, threadId: value.chatLocation.threadId, animated: animated)
             }
             
-            if value.searchMode != oldValue.searchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags || value.connectedBot != oldValue.connectedBot || value.adMessage != oldValue.adMessage || value.historyCount != oldValue.historyCount || value.monoforumState != oldValue.monoforumState {
+            if value.searchMode != oldValue.searchMode || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers || value.threadInfo?.isClosed != oldValue.threadInfo?.isClosed || value.translateState != oldValue.translateState || value.savedMessageTags != oldValue.savedMessageTags || value.connectedBot != oldValue.connectedBot || value.adMessage != oldValue.adMessage || value.historyCount != oldValue.historyCount || value.monoforumState != oldValue.monoforumState || value.removePaidMessageFeeData != oldValue.removePaidMessageFeeData {
                 genericView.updateHeader(value, animated, value.hidePinnedMessage != oldValue.hidePinnedMessage)
                 (centerBarView as? ChatTitleBarView)?.updateStatus(true, presentation: value)
             }

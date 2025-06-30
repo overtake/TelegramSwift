@@ -12,6 +12,8 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 
+
+
 final class Star_TransactionItem : GeneralRowItem {
     fileprivate let context:AccountContext
     fileprivate let transaction: Star_Transaction
@@ -38,12 +40,26 @@ final class Star_TransactionItem : GeneralRowItem {
         }
        
         let amountAttr = NSMutableAttributedString()
-        if transaction.amount.value < 0 {
-            amountAttr.append(string: "\(transaction.amount) \(clown)", color: theme.colors.redUI, font: .medium(.text))
-        } else {
-            amountAttr.append(string: "+\(transaction.amount) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
+        switch transaction.currency {
+        case .stars:
+            if transaction.amount.value < 0 {
+                amountAttr.append(string: "\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.redUI, font: .medium(.text))
+            } else {
+                amountAttr.append(string: "+\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
+            }
+        case .ton:
+            if transaction.amount.value < 0 {
+                amountAttr.append(string: "\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.redUI, font: .medium(.text))
+            } else {
+                amountAttr.append(string: "+\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
+            }
         }
-        amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
+        switch transaction.currency {
+        case .stars:
+            amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
+        case .ton:
+            amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: transaction.amount.value < 0 ? theme.colors.redUI : theme.colors.greenUI, playPolicy: .onceEnd), for: clown)
+        }
         
         self.amountLayout = .init(amountAttr)
         
@@ -259,7 +275,7 @@ private final class TransactionView : GeneralContainableRowView {
             }
             current.layer?.cornerRadius = 10
                         
-            let reference = StarsTransactionReference(peerId: messageId.peerId, id: item.transaction.id, isRefund: item.transaction.native.flags.contains(.isRefund))
+            let reference = StarsTransactionReference(peerId: messageId.peerId, ton: item.transaction.currency == .ton, id: item.transaction.id, isRefund: item.transaction.native.flags.contains(.isRefund))
             
             var updateImageSignal: Signal<ImageDataTransformation, NoError>?
             

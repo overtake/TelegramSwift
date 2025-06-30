@@ -563,6 +563,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         self.selectedItem?.toggleFullScreen()
     }
     
+    func toggleFullScreen() {
+        self.selectedItem?.toggleFullScreen()
+    }
+    
     var itemView:NSView? {
         return (controller.selectedViewController?.view as? MagnifyView)?.contentView
     }

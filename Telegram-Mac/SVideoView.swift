@@ -461,7 +461,7 @@ private class AdMessageView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(message: Message, arguments: SVideoAdsArguments, animated: Bool) {
+    func set(message: Message, arguments: SVideoAdsArguments, width: CGFloat, animated: Bool) {
         
         setSingle(handler: { [weak arguments] _ in
             arguments?.invoke(message)
@@ -469,8 +469,8 @@ private class AdMessageView : Control {
         
         let context: AccountContext = arguments.context
         
-        let titleLayout = TextViewLayout(.initialize(string: message.author?.displayTitle, color: .white, font: .medium(.text)))
-        titleLayout.measure(width: frame.width - avatarControl.frame.maxX - 50)
+        let titleLayout = TextViewLayout(.initialize(string: message.author?.displayTitle, color: .white, font: .medium(.text)), maximumNumberOfLines: 1)
+        titleLayout.measure(width: width - avatarControl.frame.maxX - 60)
         self.titleView.update(titleLayout)
         
         
@@ -480,7 +480,7 @@ private class AdMessageView : Control {
         
 
         let textViewLayout = TextViewLayout(attr)
-        textViewLayout.measure(width: frame.width - avatarControl.frame.maxX - 50)
+        textViewLayout.measure(width: width - avatarControl.frame.maxX - 60)
         self.infoView.set(text: textViewLayout, context: arguments.context)
 
         close.image = NSImage(resource: .iconStoryClose).precomposed(NSColor.white)
@@ -527,10 +527,17 @@ private class AdMessageView : Control {
                     return ContextMenu()
                 }
                 
-                let menu = ContextMenu()
+                let menu = ContextMenu(presentation: .current(darkPalette))
                 
+                menu.onShow = { [weak self] _ in
+                    self?.progress.isPaused = true
+                }
+                menu.onClose = {
+                    self?.progress.isPaused = false
+                }
+
                 if let text = message.adAttribute?.sponsorInfo {
-                    let submenu = ContextMenu()
+                    let submenu = ContextMenu(presentation: .current(darkPalette))
                     
                     let item = ContextMenuItem(strings().searchAdSponsorInfo, itemImage: MenuAnimation.menu_show_info.value)
                     
@@ -620,6 +627,16 @@ private class AdMessageView : Control {
         
         self.timer?.start()
         
+        self.setFrameSize(NSMakeSize(width, height))
+    }
+    
+    func resize(width: CGFloat) {
+        infoView.resize(width - avatarControl.frame.maxX - 60)
+        titleView.resize(width - avatarControl.frame.maxX - 60)
+    }
+    
+    var height: CGFloat {
+        return 8 + titleView.frame.height + 2 + infoView.frame.height + 8
     }
     
     override func layout() {
@@ -629,9 +646,11 @@ private class AdMessageView : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        
+
         transition.updateFrame(view: backgroundView, frame: size.bounds)
         
-        transition.updateFrame(view: avatarControl, frame: avatarControl.centerFrameY(x: 10))
+        transition.updateFrame(view: avatarControl, frame: CGRect(origin: NSMakePoint(10, 7), size: avatarControl.frame.size))
         transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(avatarControl.frame.maxX + 10, 8), size: titleView.frame.size))
         transition.updateFrame(view: infoView, frame: CGRect(origin: NSMakePoint(avatarControl.frame.maxX + 10, size.height - infoView.frame.height - 8), size: infoView.frame.size))
         
@@ -851,32 +870,6 @@ private final class SVideoControlsView : Control {
     private var controlMovePosition: NSPoint? = nil
     
     
-    private var adMessageView: AdMessageView?
-    
-    func set(adMessage: Message?, arguments: SVideoAdsArguments?, animated: Bool) {
-        if let adMessage, let arguments {
-            let current: AdMessageView
-            let isNew: Bool
-            if let view = self.adMessageView {
-                current = view
-                isNew = false
-            } else {
-                current = AdMessageView(frame: NSMakeRect(10, 0, frame.width, 50))
-                self.adMessageView = current
-                addSubview(current)
-                isNew = true
-            }
-            current.set(message: adMessage, arguments: arguments, animated: animated)
-            
-            if isNew {
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
-        } else if let view = self.adMessageView {
-            performSubviewRemoval(view, animated: animated)
-            self.adMessageView = nil
-        }
-    }
-    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(backgroundView)
@@ -1068,26 +1061,22 @@ private final class SVideoControlsView : Control {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
         var offset: CGFloat = 0
-        if let adMessageView {
-            offset = adMessageView.frame.height + 20
-        }
+//        if let adMessageView {
+//            offset = adMessageView.frame.height + 20
+//        }
         let yOffset: CGFloat = 16 + offset
         
         
         let bgRect: NSRect
-        if let adMessageView {
-            bgRect = NSMakeRect(0, adMessageView.frame.height + 20, size.width, size.height - (adMessageView.frame.height + 20))
-        } else {
+//        if let adMessageView {
+//            bgRect = NSMakeRect(0, adMessageView.frame.height + 20, size.width, size.height - (adMessageView.frame.height + 20))
+//        } else {
             bgRect = size.bounds
-        }
+//        }
         
         transition.updateFrame(view: backgroundView, frame: bgRect)
 
         
-        if let adMessageView {
-            transition.updateFrame(view: adMessageView, frame: self.bounds.focusX(NSMakeSize(size.width, adMessageView.frame.height), y: 10))
-            adMessageView.updateLayout(size: adMessageView.frame.size, transition:transition)
-        }
 
         transition.updateFrame(view: playOrPause, frame: playOrPause.centerFrameX(y: yOffset))
 
@@ -1249,14 +1238,43 @@ class SVideoView: NSView {
     private var adMessage: Message?
     private var adsArguments: SVideoAdsArguments?
     
+    private var adMessageView: AdMessageView?
+    
+    
     func set(adMessage: Message?, arguments: SVideoAdsArguments?, animated: Bool) {
         self.adMessage = adMessage
         self.adsArguments = arguments
         
-        self.controls.set(adMessage: adMessage, arguments: arguments, animated: animated)
-        
-        if self.controls.isHidden, adMessage != nil {
-            self.hideControls(false, animated: animated)
+        if let adMessage, let arguments {
+            let current: AdMessageView
+            let isNew: Bool
+            if let view = self.adMessageView {
+                current = view
+                isNew = false
+            } else {
+                current = AdMessageView(frame: NSMakeRect(10, 0, controls.frame.width, 50))
+                self.adMessageView = current
+                addSubview(current, positioned: .below, relativeTo: controls)
+                isNew = true
+            }
+            
+            let width: CGFloat
+            if let _ = pipControls {
+                width = frame.width - 40
+            } else {
+                width = controls.frame.width
+            }
+            
+            current.set(message: adMessage, arguments: arguments, width: width, animated: animated)
+            
+            if isNew {
+                current.centerX(y: frame.height - current.frame.height - 10)
+
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        } else if let view = self.adMessageView {
+            performSubviewRemoval(view, animated: animated)
+            self.adMessageView = nil
         }
         
         if let adMessage {
@@ -1342,9 +1360,28 @@ class SVideoView: NSView {
             .withUpdatedHideRewind(hideRewind: size.width < 400)
 
         let controlsWidth = self.controlsStyle.isCompact ? 220 : min(size.width - 10, 510)
-        let controlsHeight: CGFloat = self.isControlsLimited ? 46 : (self.adMessage != nil ? 164 : 94)
+        let controlsHeight: CGFloat = self.isControlsLimited ? 46 : 94
         
-        let controlsRect = CGRect(origin: NSMakePoint(floorToScreenPixels((size.width - controlsWidth) / 2), size.height - controlsHeight - 24), size: NSSize(width: controlsWidth, height: controlsHeight))
+        var offset: CGFloat = 0
+        
+        if let adMessageView {
+            let adWidth: CGFloat
+            if let _ = pipControls {
+                adWidth = size.width - 40
+            } else {
+                adWidth = controlsWidth
+            }
+            adMessageView.resize(width: adWidth)
+            
+            let x = focus(NSMakeSize(adWidth, adMessageView.height)).minX
+            
+            transition.updateFrame(view: adMessageView, frame: CGRect(origin: CGPoint(x: x, y: size.height - adMessageView.height - 20), size: NSMakeSize(adWidth, adMessageView.height)))
+            adMessageView.updateLayout(size: adMessageView.frame.size, transition: transition)
+            
+            offset += adMessageView.frame.height
+        }
+        
+        var controlsRect = CGRect(origin: NSMakePoint(floorToScreenPixels((size.width - controlsWidth) / 2), size.height - controlsHeight - 24 - offset), size: NSSize(width: controlsWidth, height: controlsHeight))
 
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus // possibly triggers side effects?
@@ -1361,6 +1398,8 @@ class SVideoView: NSView {
         if let pipControls = pipControls {
             transition.updateFrame(view: pipControls, frame: NSRect(origin: .zero, size: size))
         }
+        
+
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -1371,9 +1410,6 @@ class SVideoView: NSView {
         
         var hide = hide
         
-        if hide, self.adMessage != nil, pipControls == nil {
-            hide = false
-        }
         
         if !hide {
             controls.isHidden = false
@@ -1487,6 +1523,9 @@ class SVideoView: NSView {
             if NSPointInRect(point, bounds) {
                 return !controls.isHidden
             }
+        }
+        if let adMessageView, NSPointInRect(point, adMessageView.frame) {
+            return true
         }
         return NSPointInRect(point, controls.frame) && !controls.isHidden
     }

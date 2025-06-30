@@ -1871,9 +1871,11 @@ class PreviewSenderController: ModalViewController, Notifable {
                 let effect = self.contextChatInteraction.presentation.messageEffect
                 
                 let invoke:()->Void = { [weak self] in
-                    guard let self else {
+                    guard let self, let window = self.window else {
                         return
                     }
+                    
+                    
                     self.chatInteraction.sendMessage(silent, atDate, effect)
                     if state.isCollage && medias.count > 1 {
                         let collages = medias.chunks(10)
