@@ -966,7 +966,7 @@ final class ChatInteraction : InterfaceObserver  {
                                 )
                             } else {
                                 let author = keyboardMessage.author?.displayTitle ?? ""
-                                let info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, comission.decemial.string)
+                                let info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, "\(comission.decemial.string)%")
                                 verifyAlert(
                                     for: context.window,
                                     header: strings().chatSuggestPostPublishConfirmHeader,
