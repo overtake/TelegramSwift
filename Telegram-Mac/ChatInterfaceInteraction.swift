@@ -889,10 +889,11 @@ final class ChatInteraction : InterfaceObserver  {
                     }
                 }
             })
-        } else if let attribute = keyboardMessage.suggestPostAttribute, !isLogInteraction, let amount = attribute.amount {
+        } else if let attribute = keyboardMessage.suggestPostAttribute, !isLogInteraction {
             
             let context = self.context
             let peer = presentation.peer
+            let amount = attribute.amount
             
             return ReplyMarkupInteractions(context: context, proccess: { [weak self] button, progress in
                 
@@ -909,15 +910,20 @@ final class ChatInteraction : InterfaceObserver  {
                         } else {
                             let comission = context.appConfiguration.getGeneralValue("ton_suggested_post_commission_permille", orElse: 850)
                             
-                            let totalAmount = "\(Double(formatCurrencyAmount(amount.amount.value, currency: TON))! * Double(comission.decemial / 100.0))".prettyCurrencyNumberUsd
-
                             let formatted: String
-                            switch amount.currency {
-                            case .ton:
-                                formatted = "\(totalAmount) \(TON)"
-                            case .stars:
-                                formatted = strings().starListItemCountCountable(Int(amount.amount.totalValue))
+                            if let amount {
+                                let totalAmount = "\(Double(formatCurrencyAmount(amount.amount.value, currency: TON))! * Double(comission.decemial / 100.0))".prettyCurrencyNumberUsd
+
+                                switch amount.currency {
+                                case .ton:
+                                    formatted = "\(totalAmount) \(TON)"
+                                case .stars:
+                                    formatted = strings().starListItemCountCountable(Int(amount.amount.totalValue))
+                                }
+                            } else {
+                                formatted = strings().chatServiceSuggestPostHeaderPriceFree
                             }
+                            
 
                             if attribute.timestamp == nil {
                                 let infoText = TextViewLayout(

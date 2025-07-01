@@ -339,7 +339,7 @@ private final class InputView : GeneralRowView {
             transition.updateFrame(view: inputView, frame: CGRect(origin: CGPoint(x: starView.frame.maxX + 10, y: 7), size: textSize))
             inputView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
             
-            transition.updateFrame(view: usdView, frame: usdView.centerFrameY(x: size.width - usdView.frame.width - 10))
+            ContainedViewLayoutTransition.immediate.updateFrame(view: usdView, frame: usdView.centerFrameY(x: size.width - usdView.frame.width - 10))
         }
         
         private func set(_ state: Updated_ChatTextInputState) {
@@ -415,7 +415,8 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var amount: Int64 = 0
+    var starAmount: Int64 = 0
+    var tonAmount: Int64 = 0
     var currency: CurrencyAmount.Currency
     var inputState: Updated_ChatTextInputState = .init()
     var date: Int32?
@@ -433,13 +434,31 @@ private struct State : Equatable {
         }
     }
     
+    var amount: Int64 {
+        get {
+            switch currency {
+            case .stars:
+                return starAmount
+            case .ton:
+                return tonAmount
+            }
+        }
+        set {
+            switch currency {
+            case .stars:
+                starAmount = newValue
+            case .ton:
+                tonAmount = newValue
+            }
+        }
+    }
     
     var starsAmount: StarsAmount {
         switch currency {
         case .stars:
-            return .init(value: amount, nanos: 0)
+            return .init(value: starAmount, nanos: 0)
         case .ton:
-            return .init(value: amount * 1_000_000_000, nanos: 0)
+            return .init(value: tonAmount * 1_000_000_000, nanos: 0)
         }
     }
     
@@ -456,9 +475,7 @@ private struct State : Equatable {
         case .edit, .suggest:
             return strings().editPostSuggestionActionUpdate
         case .new:
-            return amount == 0 ?
-                strings().editPostSuggestionActionFree :
-                strings().editPostSuggestionActionOffer(currencyAmount.fullyFormatted)
+            return strings().editPostSuggestionActionOffer(currencyAmount.fullyFormatted)
         }
     }
 }
@@ -553,12 +570,29 @@ func EditPostSuggestionController(chatInteraction: ChatInteraction, data: ChatIn
     let actionsDisposable = DisposableSet()
     
     let min_stars = context.appConfiguration.getGeneralValue64("stars_suggested_post_amount_min", orElse: 5)
-    let min_ton = context.appConfiguration.getGeneralValue64("ton_suggested_post_amount_min", orElse: 1_000_000_000) / 1_000_000_000
+    let min_ton = max(1, context.appConfiguration.getGeneralValue64("ton_suggested_post_amount_min", orElse: 1_000_000_000) / 1_000_000_000)
 
     
     let amount = data.amount ?? .init(amount: .init(value: min_stars, nanos: 0), currency: .stars)
 
-    let initialState = State(amount: Int64(amount.formatted) ?? 0, currency: amount.currency, inputState: .init(inputText: .initialize(string: "\(amount.formatted)")), date: data.date, mode: data.mode)
+    let starAmount: Int64
+    let tonAmount: Int64
+    
+    if let currency = data.amount {
+        switch currency.currency {
+        case .stars:
+            starAmount = Int64(currency.formatted) ?? 0
+            tonAmount = min_ton
+        case .ton:
+            tonAmount = Int64(currency.formatted) ?? 0
+            starAmount = min_stars
+        }
+    } else {
+        starAmount = min_stars
+        tonAmount = min_ton
+    }
+    
+    let initialState = State(starAmount: starAmount, tonAmount: tonAmount, currency: amount.currency, inputState: .init(inputText: .initialize(string: "\(amount.formatted)")), date: data.date, mode: data.mode)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -659,11 +693,19 @@ func EditPostSuggestionController(chatInteraction: ChatInteraction, data: ChatIn
                 return current
             }
         }), for: context.window)
-    }, currency: { value in
+    }, currency: { [weak interactions] value in
         updateState { current in
             var current = current
             current.currency = value
             return current
+        }
+        let amount = stateValue.with { $0.amount }
+        let value = Updated_ChatTextInputState(inputText: .initialize(string: "\(amount)"))
+
+        DispatchQueue.main.async {
+            interactions?.update { _ in
+                return value
+            }
         }
     })
     

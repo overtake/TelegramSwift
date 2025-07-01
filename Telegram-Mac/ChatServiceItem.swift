@@ -184,7 +184,7 @@ class ChatServiceItem: ChatRowItem {
 
             attributes = .init(
                 header: .init(
-                    .initialize(string: isIncoming ? strings().chatServiceSuggestPostHeaderTitle(peer.displayTitle) : strings().chatServiceSuggestPostHeaderTitleYou, color: color, font: .medium(.text)),
+                    .initialize(string: isIncoming ? strings().chatServiceSuggestPostHeaderTitle(peer.displayTitle) : strings().chatServiceSuggestPostHeaderTitleYou, color: color, font: .medium(.text)).detectBold(with: .medium(.text)),
                     alignment: .center
                 ),
                 attributes: [
@@ -221,7 +221,7 @@ class ChatServiceItem: ChatRowItem {
             switch status {
             case .approved(let timestamp, let amount):
                 self.titleLayout = .init(
-                    .initialize(string: strings().chatServiceSuggestPostStatusTitle, color: theme.chatServiceItemTextColor, font: .medium(.text)),
+                    .initialize(string: strings().chatServiceSuggestPostStatusTitle, color: theme.chatServiceItemTextColor, font: .medium(.text)).detectBold(with: .medium(.text)),
                     alignment: .center
                 )
 
@@ -308,7 +308,11 @@ class ChatServiceItem: ChatRowItem {
         }
         
         var height: CGFloat {
-            return 10 + titleLayout.layoutSize.height + 10 + layout.layoutSize.height + 10
+            var height: CGFloat = 10 + titleLayout.layoutSize.height + 10
+            if !layout.string.isEmpty {
+                height += layout.layoutSize.height + 10
+            }
+            return height
         }
     }
     
