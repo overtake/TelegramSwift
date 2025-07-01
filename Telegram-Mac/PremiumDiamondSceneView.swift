@@ -19,7 +19,11 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
     
     private let sceneView: SCNView
     private let diamondView = View()
+    #if arch(arm64)
     private let diamondLayer: DiamondLayer
+    #else
+    private let diamondFallbackView: MediaAnimatedStickerView
+    #endif
     private let appearanceDelay = MetaDisposable()
     
     private var didSetReady = false
@@ -42,7 +46,11 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
         self.sceneView.preferredFramesPerSecond = 60
         self.sceneView.isJitteringEnabled = true
         
+        #if arch(arm64)
         self.diamondLayer = DiamondLayer()
+        #else
+        self.diamondFallbackView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 120, 120))
+        #endif
         
         super.init(frame: frame)
         
@@ -52,7 +60,13 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
         self.addSubview(sceneView)
         self.addSubview(diamondView)
 //        self.layer?.addSublayer(testLayer)
+        
+#if arch(arm64)
         diamondView.layer?.addSublayer(diamondLayer)
+#else
+        diamondView.addSubview(diamondFallbackView)
+#endif
+        
         
         
         self.setup()
@@ -76,6 +90,12 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
         self.sceneView.delegate = self
     }
     
+    func initFallbackView(context: AccountContext) {
+        #if arch(x86_64)
+        diamondFallbackView.update(with: LocalAnimatedSticker.diamond.file, size: NSMakeSize(120, 120), context: context, table: nil, animated: false)
+        #endif
+    }
+    
     func renderer(_ renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
         if !didSetReady {
             didSetReady = true
@@ -96,8 +116,9 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
         animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         animation.autoreverses = true
         animation.repeatCount = .infinity
-        
+        #if arch(arm64)
         self.diamondLayer.add(animation, forKey: "scale")
+        #endif
     }
     
     private func playAppearanceAnimation(velocity: CGFloat? = nil, smallAngle: Bool = false, mirror: Bool = false, explode: Bool = false) {
@@ -168,7 +189,11 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
 //        self.diamondLayer.bounds = size.bounds
 //        self.diamondLayer.position = NSMakePoint(size.width / 2, 0)
         diamondView.frame = size.bounds
+        #if arch(arm64)
         diamondLayer.frame = size.bounds
+        #else
+        diamondFallbackView.frame = diamondView.focus(NSMakeSize(120, 120))
+        #endif
     }
     
     override func layout() {
@@ -182,7 +207,9 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
     }
     
     @objc private func handlePan(_ gesture: NSPanGestureRecognizer) {
+#if arch(arm64)
         self.diamondLayer.handlePan(gesture)
+#endif
     }
     
     @objc private func handleTap(_ gesture: NSClickGestureRecognizer) {
@@ -190,6 +217,8 @@ final class PremiumDiamondSceneView: View, SCNSceneRendererDelegate, PremiumScen
     }
     
     override func viewDidMoveToWindow() {
+#if arch(arm64)
         self.diamondLayer.isInHierarchy = window != nil
+#endif
     }
 }

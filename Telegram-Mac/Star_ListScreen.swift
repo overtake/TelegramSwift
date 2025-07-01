@@ -597,6 +597,7 @@ private final class HeaderView : GeneralContainableRowView {
                 addSubview(sceneView)
                 self.sceneView.sceneBackground = theme.colors.listBackground
             }
+            (sceneView as? PremiumDiamondSceneView)?.initFallbackView(context: item.context)
 
         case .stars:
             if sceneView == nil {
@@ -607,6 +608,7 @@ private final class HeaderView : GeneralContainableRowView {
 
         }
         
+
         
         switch item.source {
         case let .gift(peer):
