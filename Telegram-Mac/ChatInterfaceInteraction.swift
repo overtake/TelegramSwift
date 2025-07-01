@@ -14,7 +14,7 @@ import TGUIKit
 import SwiftSignalKit
 import MapKit
 import InputView
-
+import CurrencyFormat
 
 final class ReplyMarkupInteractions {
     let context: AccountContext
@@ -892,6 +892,7 @@ final class ChatInteraction : InterfaceObserver  {
         } else if let attribute = keyboardMessage.suggestPostAttribute, !isLogInteraction, let amount = attribute.amount {
             
             let context = self.context
+            let peer = presentation.peer
             
             return ReplyMarkupInteractions(context: context, proccess: { [weak self] button, progress in
                 
@@ -900,75 +901,80 @@ final class ChatInteraction : InterfaceObserver  {
                     switch url {
                     case SuggestedPostMessageAttribute.commandApprove:
                         
-                        let comission = context.appConfiguration.getGeneralValue("ton_suggested_post_commission_permille", orElse: 850)
-                        
-                        let totalAmount = amount.amount.totalValue * Double(comission.decemial / 100.0)
+                        if let peer, !peer.groupAccess.canPostMessages {
+                            _ = context.engine.messages.monoforumPerformSuggestedPostAction(
+                                id: keyboardMessage.id,
+                                action: .approve(timestamp: nil)
+                            ).start()
+                        } else {
+                            let comission = context.appConfiguration.getGeneralValue("ton_suggested_post_commission_permille", orElse: 850)
+                            
+                            let totalAmount = "\(Double(formatCurrencyAmount(amount.amount.value, currency: TON))! * Double(comission.decemial / 100.0))".prettyCurrencyNumberUsd
 
-                        let formatted: String
-                        switch amount.currency {
-                        case .ton:
-                            formatted = "\(totalAmount) \(TON)"
-                        case .stars:
-                            formatted = strings().starListItemCountCountable(Int(totalAmount))
-                        }
+                            let formatted: String
+                            switch amount.currency {
+                            case .ton:
+                                formatted = "\(totalAmount) \(TON)"
+                            case .stars:
+                                formatted = strings().starListItemCountCountable(Int(amount.amount.totalValue))
+                            }
 
-                        if attribute.timestamp == nil {
-                            let infoText = TextViewLayout(
-                                .initialize(
-                                    string: strings().chatSuggestPostPublishInfo(formatted, "\(comission.decemial.string)%"),
-                                    color: theme.colors.text,
-                                    font: .normal(.text)
-                                ),
-                                alignment: .center
-                            )
-                            infoText.measure(width: 260)
-
-                            showModal(
-                                with: DateSelectorModalController(
-                                    context: context,
-                                    mode: .dateAction(
-                                        title: strings().chatSuggestPostPublishAcceptTitle,
-                                        done: { date in
-                                            strings().chatSuggestPostPublishDateConfirm(stringForDate(timestamp: Int32(date.timeIntervalSince1970)))
-                                        },
-                                        action: .init(
-                                            string: strings().chatSuggestPostPublishActionNow,
-                                            callback: {
-                                                _ = context.engine.messages.monoforumPerformSuggestedPostAction(
-                                                    id: keyboardMessage.id,
-                                                    action: .approve(timestamp: nil)
-                                                ).start()
-                                            }
-                                        )
+                            if attribute.timestamp == nil {
+                                let infoText = TextViewLayout(
+                                    .initialize(
+                                        string: strings().chatSuggestPostPublishInfo(formatted, "\(comission.decemial.string)%"),
+                                        color: theme.colors.text,
+                                        font: .normal(.text)
                                     ),
-                                    selectedAt: { date in
+                                    alignment: .center
+                                )
+                                infoText.measure(width: 260)
+
+                                showModal(
+                                    with: DateSelectorModalController(
+                                        context: context,
+                                        mode: .dateAction(
+                                            title: strings().chatSuggestPostPublishAcceptTitle,
+                                            done: { date in
+                                                strings().chatSuggestPostPublishDateConfirm(stringForDate(timestamp: Int32(date.timeIntervalSince1970)))
+                                            },
+                                            action: .init(
+                                                string: strings().chatSuggestPostPublishActionNow,
+                                                callback: {
+                                                    _ = context.engine.messages.monoforumPerformSuggestedPostAction(
+                                                        id: keyboardMessage.id,
+                                                        action: .approve(timestamp: nil)
+                                                    ).start()
+                                                }
+                                            )
+                                        ),
+                                        selectedAt: { date in
+                                            _ = context.engine.messages.monoforumPerformSuggestedPostAction(
+                                                id: keyboardMessage.id,
+                                                action: .approve(timestamp: Int32(date.timeIntervalSince1970))
+                                            ).start()
+                                        },
+                                        infoText: infoText
+                                    ),
+                                    for: context.window
+                                )
+                            } else {
+                                let author = keyboardMessage.author?.displayTitle ?? ""
+                                let info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, comission.decemial.string)
+                                verifyAlert(
+                                    for: context.window,
+                                    header: strings().chatSuggestPostPublishConfirmHeader,
+                                    information: info,
+                                    ok: strings().chatSuggestPostPublishConfirmButton,
+                                    successHandler: { _ in
                                         _ = context.engine.messages.monoforumPerformSuggestedPostAction(
                                             id: keyboardMessage.id,
-                                            action: .approve(timestamp: Int32(date.timeIntervalSince1970))
+                                            action: .approve(timestamp: nil)
                                         ).start()
-                                    },
-                                    infoText: infoText
-                                ),
-                                for: context.window
-                            )
-                        } else {
-                            let author = keyboardMessage.author?.displayTitle ?? ""
-                            let info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, comission.decemial.string)
-                            verifyAlert(
-                                for: context.window,
-                                header: strings().chatSuggestPostPublishConfirmHeader,
-                                information: info,
-                                ok: strings().chatSuggestPostPublishConfirmButton,
-                                successHandler: { _ in
-                                    _ = context.engine.messages.monoforumPerformSuggestedPostAction(
-                                        id: keyboardMessage.id,
-                                        action: .approve(timestamp: nil)
-                                    ).start()
-                                }
-                            )
+                                    }
+                                )
+                            }
                         }
-
-                        
                         
                     case SuggestedPostMessageAttribute.commandDecline:
                         showModal(with: DeclineSuggestPostModalController(context: context, callback: { comment in

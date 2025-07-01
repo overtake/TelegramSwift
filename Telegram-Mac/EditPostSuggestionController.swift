@@ -209,7 +209,7 @@ private final class InputItem : GeneralRowItem {
             usd_rate = arguments.context.appConfiguration.getGeneralValueDouble("star_usd_rate", orElse: 0.013)
         }
         
-        self.usdLayout = .init(.initialize(string: "~\("\((Double(value) * usd_rate))".prettyCurrencyNumberUsd)", color: theme.colors.grayText, font: .normal(.text)))
+        self.usdLayout = .init(.initialize(string: "~\("\((Double(value) * usd_rate))".prettyCurrencyNumberUsd)", color: theme.colors.grayText, font: .normal(.short)))
         self.usdLayout.measure(width: .greatestFiniteMagnitude)
         super.init(initialSize, stableId: stableId)
     }
