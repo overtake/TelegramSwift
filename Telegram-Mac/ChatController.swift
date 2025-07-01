@@ -3886,7 +3886,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         var isSuggestEditing: Bool = false
                         if let suggest {
                             switch suggest.mode {
-                            case .edit:
+                            case .edit, .suggest:
                                 isSuggestEditing = true
                             default:
                                 break
