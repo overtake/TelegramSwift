@@ -915,7 +915,7 @@ final class ChatInteraction : InterfaceObserver  {
                         if attribute.timestamp == nil {
                             let infoText = TextViewLayout(
                                 .initialize(
-                                    string: strings().chatSuggestPostPublishInfo(formatted, comission.decemial.string),
+                                    string: strings().chatSuggestPostPublishInfo(formatted, "\(comission.decemial.string)%"),
                                     color: theme.colors.text,
                                     font: .normal(.text)
                                 ),

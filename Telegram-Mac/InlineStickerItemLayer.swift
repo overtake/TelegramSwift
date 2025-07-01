@@ -287,7 +287,7 @@ final class InlineStickerView: Control {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            animateLayer.isPlayable = isKeyWindow && isPlayable
+            animateLayer.isPlayable = isKeyWindow && isPlayable && self.visibleRect != .zero
         }
     }
     

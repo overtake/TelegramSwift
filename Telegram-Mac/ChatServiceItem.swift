@@ -152,7 +152,7 @@ class ChatServiceItem: ChatRowItem {
     struct SuggestpostHeader {
         fileprivate let peer: Peer
         fileprivate let attributes: ChatServiceItem.GiftData.UniqueAttributes
-        init(text: String, peer: Peer, isIncoming: Bool) {
+        init(text: String, peer: Peer, authorName: String, isIncoming: Bool) {
             
             self.peer = peer
             
@@ -184,7 +184,7 @@ class ChatServiceItem: ChatRowItem {
 
             attributes = .init(
                 header: .init(
-                    .initialize(string: strings().chatServiceSuggestPostHeaderTitle, color: color, font: .medium(.text)),
+                    .initialize(string: isIncoming ? strings().chatServiceSuggestPostHeaderTitle(peer.displayTitle) : strings().chatServiceSuggestPostHeaderTitleYou, color: color, font: .medium(.text)),
                     alignment: .center
                 ),
                 attributes: [
@@ -559,7 +559,7 @@ class ChatServiceItem: ChatRowItem {
                         if let monoforumId = (peer as? TelegramChannel)?.linkedMonoforumId {
                             peer = message.peers[monoforumId] ?? peer
                         }
-                        self.suggestPostHeader = SuggestpostHeader(text: text, peer: peer, isIncoming: isIncoming)
+                        self.suggestPostHeader = SuggestpostHeader(text: text, peer: peer, authorName: authorName, isIncoming: isIncoming)
                     } else {
                         let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         if let additionalAttributes = additionalAttributes {
