@@ -6551,9 +6551,13 @@ public final class L10n {
   public static var chatSuggestPostPublishConfirmButton: String  { return L10n.tr("Localizable", "Chat.SuggestPost.Publish.ConfirmButton") }
   /// Accept Terms
   public static var chatSuggestPostPublishConfirmHeader: String  { return L10n.tr("Localizable", "Chat.SuggestPost.Publish.ConfirmHeader") }
-  /// Do you really want to publish this post from %1$@? You will receive %2$@ (%3$@%%) for publishing this post. It must remain visible for at least 24 hours after publication.
+  /// Do you really want to publish this post from %1$@? You will receive %2$@ (%3$@) for publishing this post. It must remain visible for at least 24 hours after publication.
   public static func chatSuggestPostPublishConfirmInfo(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.SuggestPost.Publish.ConfirmInfo", p1, p2, p3)
+  }
+  /// Do you really want to publish this post from %1$@?
+  public static func chatSuggestPostPublishConfirmInfoFree(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.SuggestPost.Publish.ConfirmInfoFree", p1)
   }
   /// Post at %1$@
   public static func chatSuggestPostPublishDateConfirm(_ p1: String) -> String {
@@ -6563,6 +6567,8 @@ public final class L10n {
   public static func chatSuggestPostPublishInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.SuggestPost.Publish.Info", p1, p2)
   }
+  /// Select date and time to publish this post.
+  public static var chatSuggestPostPublishInfoFree: String  { return L10n.tr("Localizable", "Chat.SuggestPost.Publish.InfoFree") }
   /// %d
   public static func chatTitleChatsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Chats_countable", p1)

@@ -928,7 +928,7 @@ final class ChatInteraction : InterfaceObserver  {
                             if attribute.timestamp == nil {
                                 let infoText = TextViewLayout(
                                     .initialize(
-                                        string: strings().chatSuggestPostPublishInfo(formatted, "\(comission.decemial.string)%"),
+                                        string: amount != nil ? strings().chatSuggestPostPublishInfo(formatted, "\(comission.decemial.string)%") : strings().chatSuggestPostPublishInfoFree,
                                         color: theme.colors.text,
                                         font: .normal(.text)
                                     ),
@@ -966,7 +966,12 @@ final class ChatInteraction : InterfaceObserver  {
                                 )
                             } else {
                                 let author = keyboardMessage.author?.displayTitle ?? ""
-                                let info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, "\(comission.decemial.string)%")
+                                let info: String
+                                if let amount {
+                                    info = strings().chatSuggestPostPublishConfirmInfo(author, formatted, "\(comission.decemial.string)%")
+                                } else {
+                                    info = strings().chatSuggestPostPublishConfirmInfoFree(author)
+                                }
                                 verifyAlert(
                                     for: context.window,
                                     header: strings().chatSuggestPostPublishConfirmHeader,
