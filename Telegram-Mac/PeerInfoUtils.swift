@@ -24,6 +24,7 @@ struct GroupAccess {
     let canEditMessages: Bool
     let canManageGifts: Bool
     let canPostMessages: Bool
+    let canManageDirect: Bool
 }
 
 extension Peer {
@@ -38,6 +39,7 @@ extension Peer {
         var canReport = true
         var canMakeVoiceChat = false
         var canPostMessages = false
+        var canManageDirect = false
         var canEditMessages = false
         var canPin: Bool
         var canManageGifts = false
@@ -74,6 +76,7 @@ extension Peer {
             isCreator = channel.flags.contains(.isCreator)
             canReport = !channel.flags.contains(.isCreator) && channel.adminRights == nil
             canPostMessages = channel.flags.contains(.isCreator)
+            canManageDirect = channel.flags.contains(.isCreator)
             if channel.hasPermission(.changeInfo) {
                 canEditGroupInfo = true
             }
@@ -103,12 +106,13 @@ extension Peer {
             }
             if let adminRights = channel.adminRights {
                 canPostMessages = adminRights.rights.contains(.canPostMessages)
+                canManageDirect = adminRights.rights.contains(.canManageDirect)
             }
         }
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages, canManageDirect: canManageDirect)
     }
     
     var canInviteUsers:Bool {

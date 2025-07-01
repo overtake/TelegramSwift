@@ -586,12 +586,18 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
             return addOption(true)
         }
         
+        let state = stateValue.with { $0 }
+        
         var fails: [InputDataIdentifier : InputDataValidationFailAction] = [:]
-        for (key, value) in data {
-            if let string = value.stringValue, string.trimmed.isEmpty {
-                fails[key] = .shake
+        if state.textState.string.trimmed.isEmpty {
+            fails[_id_input_title] = .shake
+        }
+        for value in state.options {
+            if value.text.trimmed.isEmpty {
+                fails[value.identifier] = .shake
             }
         }
+        
         if !fails.isEmpty {
             
             let state = stateValue.with { $0 }

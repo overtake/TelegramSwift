@@ -93,9 +93,10 @@ open class ContextMenuItem : NSMenuItem {
     public let keyEquivalentValue: KeyEquiavalent
     let overrideWidth: CGFloat?
     let removeTail: Bool
+    let locked: Bool
     
     
-    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil, attributedTitle: NSAttributedString? = nil, customTextView: (()->NSView?)? = nil) {
+    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil, attributedTitle: NSAttributedString? = nil, customTextView: (()->NSView?)? = nil, locked: Bool = false) {
         self.handler = handler
         self.hover = hover
         self.dynamicTitle = dynamicTitle
@@ -105,6 +106,7 @@ open class ContextMenuItem : NSMenuItem {
         self.overrideWidth = overrideWidth
         self.keyEquivalentValue = keyEquivalent
         self.customTextView = customTextView
+        self.locked = locked
         super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title.prefixWithDots(removeTail ? cuttail ?? Int.max : Int.max)

@@ -43,6 +43,10 @@ final class GalleryInteractions {
 }
 private(set) var viewer:GalleryViewer?
 
+func getGalleryViewer() -> GalleryViewer? {
+    return viewer
+}
+
 
 let galleryButtonStyle = ControlStyle(font:.medium(.huge), foregroundColor:.white, backgroundColor:.clear, highlightColor:.grayIcon)
 
@@ -388,6 +392,12 @@ class GalleryViewer: NSResponder {
                 return self.interactions.dismiss(event)
             }
         }, with:self, for: .Space)
+        
+        window.set(handler: { [weak self] event in
+            guard let `self` = self else {return .rejected}
+            self.pager.toggleFullScreen()
+            return .invoked
+        }, with:self, for: .F)
         
         window.set(handler: interactions.dismiss, with:self, for: .Escape)
         

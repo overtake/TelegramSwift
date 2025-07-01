@@ -55,6 +55,7 @@ func rightsHelp(_ peer: Peer) -> (specific: TelegramChatAdminRightsFlags, order:
         rightsOrder = [
             .canChangeInfo,
             .canPostMessages,
+            .canManageDirect,
             .canEditMessages,
             .canDeleteMessages,
             .canAddAdmins,

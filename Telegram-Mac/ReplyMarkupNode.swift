@@ -25,10 +25,29 @@ class ReplyMarkupButtonLayout {
         self.presentation = theme
         let attr = NSMutableAttributedString()
         
+        
         let color = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text
         
         attr.append(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: color, font: .semibold(.short))
 
+        switch button.action {
+        case let .url(url):
+            switch url {
+            case SuggestedPostMessageAttribute.commandApprove:
+                attr.insert(.initialize(string: clown_space), at: 0)
+                attr.insertEmbedded(.embedded(name: "Icon_SuggestPost_Approve", color: theme.chatServiceItemTextColor, resize: false), for: clown)
+            case SuggestedPostMessageAttribute.commandDecline:
+                attr.insert(.initialize(string: clown_space), at: 0)
+                attr.insertEmbedded(.embedded(name: "Icon_SuggestPost_Decline", color: theme.chatServiceItemTextColor, resize: false), for: clown)
+            case SuggestedPostMessageAttribute.commandChanges:
+                attr.insert(.initialize(string: clown_space), at: 0)
+                attr.insertEmbedded(.embedded(name: "Icon_SuggestPost_Edit", color: theme.chatServiceItemTextColor, resize: false), for: clown)
+            default:
+                break
+            }
+        default:
+            break
+        }
         
         self.text = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }
@@ -61,9 +80,11 @@ class ReplyMarkupNode: Node {
     private let isInput: Bool
     private let theme: TelegramPresentationTheme
     private let xtr: Bool
-    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false, xtrAmount: Int64? = nil) {
+    private let isPostSuggest: Bool
+    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false, xtrAmount: Int64? = nil, isPostSuggest: Bool = false) {
         self.flags = flags
         self.isInput = isInput
+        self.isPostSuggest = isPostSuggest
         self.xtr = xtrAmount != nil
         self.interactions = interactions
         self.theme = theme
@@ -85,15 +106,15 @@ class ReplyMarkupNode: Node {
         view?.removeAllSubviews()
         for row in markup {
             for button in row {
-                
                 var urlView:ImageView?
                 switch button.button.action {
                 case let .url(url):
-                    if !url.isSingleEmoji {
+                    if !url.isSingleEmoji, !isPostSuggest {
                         urlView = ImageView()
                         urlView?.image = theme.chat.chatActionUrl(theme: theme)
                         urlView?.sizeToFit()
                     }
+                    
                 case .payment:
                     if !xtr {
                         urlView = ImageView()
@@ -186,7 +207,9 @@ class ReplyMarkupNode: Node {
                     transition.updateFrame(view: btnView, frame: rect)
                     btnView.textView.setNeedsDisplayLayer()
                     if !btnView.subviews.isEmpty, let urlView = btnView.subviews.first(where: { $0 is ImageView }) {
+                        
                         transition.updateFrame(view: urlView, frame: NSMakeRect(rect.width - urlView.frame.width - 5, 5, urlView.frame.width, urlView.frame.height))
+                        
                     }
                 }
                 

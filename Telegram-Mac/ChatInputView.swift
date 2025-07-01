@@ -422,7 +422,7 @@ class ChatInputView: View, Notifable {
             
             let peerIsNotEqual = value.peer.flatMap(EnginePeer.init) != oldValue.peer.flatMap(EnginePeer.init)
             
-            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia || peerIsNotEqual {
+            if !isEqualMessageList(lhs: value.interfaceState.forwardMessages, rhs: oldValue.interfaceState.forwardMessages) || value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds || value.interfaceState.replyMessageId != oldValue.interfaceState.replyMessageId || value.interfaceState.editState != oldValue.interfaceState.editState || urlPreviewChanged || value.interfaceState.hideSendersName != oldValue.interfaceState.hideSendersName || value.interfaceState.hideCaptions != oldValue.interfaceState.hideCaptions || value.interfaceState.linkBelowMessage != oldValue.interfaceState.linkBelowMessage || value.interfaceState.largeMedia != oldValue.interfaceState.largeMedia || peerIsNotEqual || value.interfaceState.suggestPost != oldValue.interfaceState.suggestPost {
                 updateAdditions(value,animated)
             }
             

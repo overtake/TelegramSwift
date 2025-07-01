@@ -586,6 +586,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             if peer.botInfo?.flags.contains(.hasWebApp) == true {
                 customAction = .init(title: strings().chatListOpenMiniApp, callback: {
                     BrowserStateContext.get(arguments.context).open(tab: .mainapp(bot: .init(peer), source: .generic))
+                    _ = arguments.context.engine.peers.addRecentlySearchedPeer(peerId: peer.id).start()
                 })
             } else {
                 customAction = nil
@@ -612,6 +613,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             if peer.botInfo?.flags.contains(.hasWebApp) == true {
                 customAction = .init(title: strings().chatListOpenMiniApp, callback: {
                     BrowserStateContext.get(arguments.context).open(tab: .mainapp(bot: .init(peer), source: .generic))
+                    _ = arguments.context.engine.peers.addRecentlySearchedPeer(peerId: peer.id).start()
                 })
             } else {
                 customAction = nil
@@ -2004,6 +2006,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     func request(with query:String?) -> Void {
         
+        let prev = self.query
         if query == self.query {
             return
         }
@@ -2011,7 +2014,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         setHighlightEvents()
         
         self.query = query
-        self.scrollupOnNextTransition = true
+        if prev == nil && query == "" {
+        } else {
+            self.scrollupOnNextTransition = true
+        }
         
         
         if let query = query, !query.isEmpty {

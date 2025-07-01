@@ -319,6 +319,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
     private var keyEquivalent: TextView? = nil
     private var drawable: AppMenuItemImageDrawable? = nil
     private var more: ImageView? = nil
+    private var lockView: ImageView? = nil
     
     public let contentView = View()
     
@@ -540,6 +541,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
         if let keyEquivalent = keyEquivalent {
             keyEquivalent.centerY(x: self.rightX - keyEquivalent.frame.width)
         }
+        
+        if let lockView = lockView {
+            lockView.setFrameOrigin(textX + item.text.layoutSize.width, textY)
+        }
     }
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -584,6 +589,25 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 current.isEventLess = true
             }
             current.update(item.text)
+        }
+        
+        let isEnabled = item.menuItem?.isEnabled == true
+        
+        
+        if item.menuItem?.locked == true {
+            let current: ImageView
+            if let view = self.lockView {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.lockView = current
+            }
+            current.image = NSImage(named: "Icon_EmojiLock")?.precomposed(isEnabled ? item.presentation.textColor : item.presentation.disabledTextColor)
+            current.sizeToFit()
+        } else if let view = self.lockView {
+            performSubviewRemoval(view, animated: animated)
+            self.lockView = nil
         }
         
         currentTextView?._change(opacity: item.item.title.isEmpty ? 0 : 1, animated: animated)

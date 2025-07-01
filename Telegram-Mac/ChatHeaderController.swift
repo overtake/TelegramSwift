@@ -964,12 +964,61 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
                 oldContainer.removeFromSuperview()
             }
             
-            if let message = pinnedMessage.message, let replyMarkup = pinnedMessage.message?.replyMarkup, replyMarkup.hasButtons, replyMarkup.rows.count == 1, replyMarkup.rows[0].buttons.count == 1 {
-                self.installReplyMarkup(replyMarkup.rows[0].buttons[0], message: message, animated: animated)
-            } else {
-                self.deinstallReplyMarkup(animated: animated)
+            var telegramCall: TelegramMediaWebpageLoadedContent? = nil
+            
+            if let media = pinnedMessage.message?.media.first as? TelegramMediaWebpage {
+                switch media.content {
+                case let .Loaded(content):
+                    if content.type == "telegram_call" {
+                        telegramCall = content
+                    }
+                default:
+                    break
+                }
             }
             
+            if let content = telegramCall {
+                
+                self.dismiss.isHidden = true
+                let current: TextButton
+                if let view = self.inlineButton {
+                    current = view
+                } else {
+                    current = TextButton()
+                    current.autohighlight = false
+                    current.scaleOnClick = true
+                    
+                    
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    self.inlineButton = current
+                }
+                current.setSingle(handler: { [weak self] _ in
+                    if let chatInteraction = self?.chatInteraction {
+                        let link = inApp(for: content.url.nsstring, context: chatInteraction.context, openInfo: chatInteraction.openInfo)
+                        execute(inapp: link)
+                    }
+                }, for: .Click)
+                
+                addSubview(current)
+
+                current.set(text: strings().chatJoinGroupCall, for: .Normal)
+                current.set(font: .medium(.text), for: .Normal)
+                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.set(background: theme.colors.accent, for: .Normal)
+                current.sizeToFit(NSMakeSize(6, 8), .zero, thatFit: false)
+                current.layer?.cornerRadius = current.frame.height / 2
+                
+            } else {
+                if let message = pinnedMessage.message, let replyMarkup = pinnedMessage.message?.replyMarkup, replyMarkup.hasButtons, replyMarkup.rows.count == 1, replyMarkup.rows[0].buttons.count == 1 {
+                    self.installReplyMarkup(replyMarkup.rows[0].buttons[0], message: message, animated: animated)
+                } else {
+                    self.deinstallReplyMarkup(animated: animated)
+                }
+            }
+                        
             self.container = newContainer
             self.node = newNode
         }
@@ -2056,13 +2105,16 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        textView.resize(frame.width - 60)
-        textView.center()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - 20 - dismiss.frame.width))
+
+        let textWidth = size.width - 60
+        textView.resize(textWidth)
+     
+        transition.updateFrame(view: textView, frame: textView.centerFrame())
     }
     
     
@@ -2225,8 +2277,10 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
             break
         }
         updateLocalizationAndTheme(theme: theme)
-        needsLayout = true
-
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        updateLayout(size: self.frame.size, transition: transition)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -2981,7 +3035,13 @@ private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
         switch state.main {
         case let .removePaidMessages(peer, amount):
             let attr = NSMutableAttributedString()
-            attr.append(string: strings().chatHeaderRemoveFeeText(peer.compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue), color: theme.colors.grayText, font: .normal(.text))
+            let text: String
+            if let removePaidMessageFeeData = chatInteraction.presentation.removePaidMessageFeeData {
+                text = strings().chatHeaderRemoveFeeMonoforumText(removePaidMessageFeeData.peer._asPeer().compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue)
+            } else {
+                text = strings().chatHeaderRemoveFeeText(peer.compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue)
+            }
+            attr.append(string: text, color: theme.colors.grayText, font: .normal(.text))
             attr.insertEmbedded(.embedded(name: "star_small", color: theme.colors.grayText, resize: false), for: clown)
             headerLayout = .init(attr, alignment: .center)
             
@@ -2990,19 +3050,39 @@ private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
                 if let chatInteraction = chatInteraction {
                     let engine = chatInteraction.context.engine
                     let window = chatInteraction.context.window
+                    let accountId = chatInteraction.context.peerId
                     
-                    _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(peerId: peer.id), for: window).startStandalone(next: { amount in
-                        
-                        let option: String?
-                        if let amount, amount.value > 0 {
-                            option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
-                        } else {
-                            option = nil
-                        }
-                        verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeConfirmInfo(peer.displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
-                            _ = engine.peers.addNoPaidMessagesException(peerId: peer.id, refundCharged: result == .thrid).start()
+                    let removePaidMessageFeeData = chatInteraction.presentation.removePaidMessageFeeData
+                                        
+                    if let removePaidMessageFeeData  {
+                        _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(scopePeerId: peer.id, peerId: removePaidMessageFeeData.peer.id), for: window).startStandalone(next: { amount in
+                            
+                            let option: String?
+                            if let amount, amount.value > 0 {
+                                option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
+                            } else {
+                                option = nil
+                            }
+                            verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeMonoforumConfirmInfo(removePaidMessageFeeData.peer._asPeer().displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
+                                _ = engine.peers.addNoPaidMessagesException(scopePeerId: peer.id, peerId: removePaidMessageFeeData.peer.id, refundCharged: result == .thrid).start()
+                            })
                         })
-                    })
+                    } else {
+                        _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(scopePeerId: accountId, peerId: peer.id), for: window).startStandalone(next: { amount in
+                            
+                            let option: String?
+                            if let amount, amount.value > 0 {
+                                option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
+                            } else {
+                                option = nil
+                            }
+                            verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeConfirmInfo(peer.displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
+                                _ = engine.peers.addNoPaidMessagesException(scopePeerId: accountId, peerId: peer.id, refundCharged: result == .thrid).start()
+                            })
+                        })
+                    }
+                    
+                    
                     
                     
                 }

@@ -27,8 +27,8 @@ struct ComplicatedReport : Equatable {
     var title: String
 }
 
-func showComplicatedReport(context: AccountContext, title: String, info: String?, header: String, data: ComplicatedReport, report: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>) {
-    showModal(with: ReportController(context: context, title: title, header: header, info: info, data: data, reportCallback: report), for: context.window)
+func showComplicatedReport(context: AccountContext, title: String, info: String?, header: String, data: ComplicatedReport, report: @escaping(ComplicatedReport.Report)->Signal<ComplicatedReport?, NoError>, window: Window? = nil) {
+    showModal(with: ReportController(context: context, title: title, header: header, info: info, data: data, reportCallback: report), for: window ?? context.window)
 }
 
 

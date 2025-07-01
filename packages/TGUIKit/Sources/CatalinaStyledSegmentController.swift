@@ -262,6 +262,14 @@ public class CatalinaStyledSegmentController: ViewController {
             self?.select(index, animated: animated)
         })
     }
+    
+    public func set(items: [CatalinaSegmentedItem]) -> Void {
+        self.items = items
+        genericView.update(items: items, selected: selected, animated: false, select: { [weak self] index, animated in
+            self?.select(index, animated: animated)
+        })
+    }
+    
     public func segment(at index:Int) -> CatalinaSegmentedItem {
         return items[index]
     }

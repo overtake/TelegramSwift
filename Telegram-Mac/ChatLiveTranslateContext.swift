@@ -13,6 +13,22 @@ import TelegramCore
 import Translate
 import InAppSettings
 
+enum AppConfigTranslateState : String {
+    case enabled
+    case disabled
+    case system
+    case alternative
+    
+    var canTranslate: Bool {
+        switch self {
+        case .enabled, .alternative:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
 
 struct ChatTranslationState: Codable {
     enum CodingKeys: String, CodingKey {
@@ -193,6 +209,7 @@ final class ChatLiveTranslateContext {
             } else {
                 isHidden = true
             }
+            
             if let peer = peer {
                 isHidden = !peer.isPremium || isHidden
             } else {
@@ -208,6 +225,12 @@ final class ChatLiveTranslateContext {
             
             if let state = translationState, state.paywall && peer?.isPremium == false {
                 isHidden = false
+            }
+            
+            let translateConfig = AppConfigTranslateState(rawValue: context.appConfiguration.getStringValue("translations_auto_enabled", orElse: "enabled")) ?? .disabled
+
+            if !isHidden, !translateConfig.canTranslate {
+                isHidden = true
             }
             
             if !isHidden && translationState?.fromLang != translationState?.toLang  {

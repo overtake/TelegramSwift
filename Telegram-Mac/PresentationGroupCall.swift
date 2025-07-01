@@ -1056,6 +1056,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         return self.statePromise.get()
     }
     
+    private var checkIndex = 0
+    
     private var stateVersionValue: Int = 0 {
         didSet {
             if self.stateVersionValue != oldValue {
@@ -1754,7 +1756,16 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 if let keyPair = strongSelf.keyPair {
                     if let mappedKeyPair = TdKeyPair(keyId: keyPair.id, publicKey: keyPair.publicKey.data) {
                         let userId = strongSelf.joinAsPeerId.id._internalGetInt64Value()
+                        var checkIndex = 0
                         generateE2EData = { block -> JoinGroupCallE2E? in
+                            
+                            checkIndex += 1
+                            
+                            if checkIndex > 1 {
+                                var bp = 0
+                                bp += 1
+                            }
+                            
                             if let block {
                                 guard let resultBlock = tdGenerateSelfAddBlock(mappedKeyPair, userId, block) else {
                                     return nil
@@ -1785,6 +1796,12 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
 
                 strongSelf.currentLocalSsrc = ssrc
+                strongSelf.checkIndex += 1
+                
+                if strongSelf.checkIndex > 1 {
+                    var bp = 0
+                    bp += 1
+                }
                 strongSelf.requestDisposable.set((strongSelf.accountContext.engine.calls.joinGroupCall(
                     peerId: strongSelf.peerId,
                     joinAs: strongSelf.joinAsPeerId,

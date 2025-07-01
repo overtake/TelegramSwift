@@ -366,6 +366,14 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(business_links)
         
+        let todo = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        todo.setup(context: context, type: .todo, decoration: .badgeStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.todo.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(todo)
+        
         switch value {
         case .stories:
             slideView.displaySlide(at: 0, animated: false)
@@ -425,6 +433,9 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 27, animated: false)
         case .business_links:
             slideView.displaySlide(at: 28, animated: false)
+        case .todo:
+            slideView.displaySlide(at: 29, animated: false)
+
         }
         
         needsLayout = true
