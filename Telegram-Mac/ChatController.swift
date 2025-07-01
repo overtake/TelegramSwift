@@ -2618,7 +2618,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             if let suggest = presentation.interfaceState.suggestPost {
                 switch suggest.mode {
-                case let .edit(id):
+                case let .edit(id), let .suggest(id):
                     reply = .init(messageId: id, quote: nil)
                 default:
                     break
