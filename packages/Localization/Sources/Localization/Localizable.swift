@@ -6421,8 +6421,10 @@ public final class L10n {
   public static func chatServiceSuggestPhotoInfoYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SuggestPhoto.Info.You", p1)
   }
-  /// You suggest to post this message.
-  public static var chatServiceSuggestPostHeaderTitle: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPost.Header.Title") }
+  /// %@ suggest to post this message.
+  public static func chatServiceSuggestPostHeaderTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SuggestPost.Header.Title", p1)
+  }
   /// Price
   public static var chatServiceSuggestPostHeaderLabelPrice: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPost.Header.Label.Price") }
   /// Time
@@ -6431,6 +6433,8 @@ public final class L10n {
   public static var chatServiceSuggestPostHeaderPriceFree: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPost.Header.Price.Free") }
   /// Anytime
   public static var chatServiceSuggestPostHeaderTimeAnytime: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPost.Header.Time.Anytime") }
+  /// You suggest to post this message.
+  public static var chatServiceSuggestPostHeaderTitleYou: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPost.Header.Title.You") }
   /// Suggested post was refunded because the message was deleted
   public static var chatServiceSuggestPostRefundedDeleted: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPost.Refunded.Deleted") }
   /// Suggested post was refunded because the user didn't have enough funds
@@ -6555,7 +6559,7 @@ public final class L10n {
   public static func chatSuggestPostPublishDateConfirm(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.SuggestPost.Publish.DateConfirm", p1)
   }
-  /// You will receive %1$@ (%2$@%%) for publishing this post.
+  /// You will receive %1$@ (%2$@) for publishing this post.
   public static func chatSuggestPostPublishInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.SuggestPost.Publish.Info", p1, p2)
   }
@@ -9111,6 +9115,12 @@ public final class L10n {
   }
   /// ENTER PRICE IN STARS
   public static var editPostSuggestionPriceLabel: String  { return L10n.tr("Localizable", "Edit.PostSuggestion.Price.Label") }
+  /// Choose how many TON you want to offer %1$@ to publish this message.
+  public static func editPostSuggestionPriceTonDescription(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Edit.PostSuggestion.Price.Ton.Description", p1)
+  }
+  /// ENTER PRICE IN TON
+  public static var editPostSuggestionPriceTonLabel: String  { return L10n.tr("Localizable", "Edit.PostSuggestion.Price.Ton.Label") }
   /// Anytime
   public static var editPostSuggestionTimeAnytime: String  { return L10n.tr("Localizable", "Edit.PostSuggestion.Time.Anytime") }
   /// Select the date and time you want the message to be published.
@@ -10227,6 +10237,10 @@ public final class L10n {
   public static var generalSettingsPreviewChatsInfo: String  { return L10n.tr("Localizable", "GeneralSettings.PreviewChats.Info") }
   /// Preview Chats
   public static var generalSettingsPreviewChatsText: String  { return L10n.tr("Localizable", "GeneralSettings.PreviewChats.Text") }
+  /// Photos will be sent in standart quality
+  public static var generalSettingsSendLargePhotosTooltipDisabled: String  { return L10n.tr("Localizable", "GeneralSettings.SendLargePhotos.Tooltip.Disabled") }
+  /// Photos will be sent in high quality
+  public static var generalSettingsSendLargePhotosTooltipEnabled: String  { return L10n.tr("Localizable", "GeneralSettings.SendLargePhotos.Tooltip.Enabled") }
   /// Show Peer IDs in Profile
   public static var generalSettingsShowProfileIdText: String  { return L10n.tr("Localizable", "GeneralSettings.ShowProfileId.Text") }
   /// Check Grammar With Spelling

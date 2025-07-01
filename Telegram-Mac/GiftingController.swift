@@ -787,6 +787,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }))
     
     
+    actionsDisposable.add(context.engine.payments.keepStarGiftsUpdated().startStrict())
     
 
     let arguments = Arguments(context: context, selectFilter: { filter in

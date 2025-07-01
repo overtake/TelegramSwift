@@ -190,7 +190,17 @@ private final class BalanceItem : GeneralRowItem {
         self.myBalanceLayout = .init(attr)
         self.myBalanceLayout.measure(width: .greatestFiniteMagnitude)
         
-        self.infoLayout = .init(.initialize(string: strings().starListYourBalance, color: theme.colors.grayText, font: .normal(.header)))
+        let infoString: String
+        switch currency {
+        case .stars:
+            infoString = strings().starListYourBalance
+        case .ton:
+            let usd_rate = context.appConfiguration.getGeneralValueDouble("ton_usd_rate", orElse: 3)
+            let value = Double(formatCurrencyAmount(myBalance.value, currency: TON)) ?? 0
+            infoString = "~\("\(value * usd_rate)".prettyCurrencyNumberUsd)$"
+        }
+        
+        self.infoLayout = .init(.initialize(string: infoString, color: theme.colors.grayText, font: .normal(.header)))
         self.infoLayout.measure(width: .greatestFiniteMagnitude)
         
         

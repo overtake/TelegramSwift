@@ -247,8 +247,8 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: strings().peerInfoBotAddToGroup, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botAddToGroup))
             }
            
-            if let cachedData = item.peerView.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
-                for command in botInfo.commands {
+            if let cachedData = item.peerView.cachedData as? CachedUserData, let cachedInfo = cachedData.botInfo {
+                for command in cachedInfo.commands {
                     if command.text == "settings" {
                         items.append(ActionItem(text: strings().peerInfoBotSettings, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botSettings))
                     }
@@ -259,15 +259,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                         items.append(ActionItem(text: strings().peerInfoBotPrivacy, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botPrivacy))
                     }
                 }
-                
-                if peer.id != verifyCodePeerId {
+                if peer.id != verifyCodePeerId, botInfo.flags.contains(.canEdit) {
                     items.append(ActionItem(text: strings().peerInfoReportBot, color: item.accentColor, image: theme.icons.profile_report, animation: .menu_report, action: arguments.reportBot))
                     
                     items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_restrict, destruct: true, action: {
                         arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
                     }))
                 }
-            
                 
                 
             }
@@ -1489,11 +1487,11 @@ private final class SpawnGiftsView: View {
         avatarCenter = NSMakeSize(140, 140).centered(in: bounds).offsetBy(dx: 70, dy: 0).origin
         avatarCenter.y = 70 + 60
         
-        let giftIds = self.gifts.map { gift in
-            if case let .unique(gift) = gift.gift {
+        let giftIds = self.gifts.compactMap { gift in
+            if case let .unique(gift) = gift.gift, peer?.profileColor != nil {
                 return gift.id
             } else {
-                return 0
+                return nil
             }
         }
         

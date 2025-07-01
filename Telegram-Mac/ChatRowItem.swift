@@ -2558,7 +2558,7 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                 } else if let attribute = attribute as? SuggestedPostMessageAttribute {
-                    if attribute.state == nil, let peer = message.peers[message.id.peerId], isIncoming, peer.groupAccess.canPostMessages {
+                    if attribute.state == nil, let peer = message.peers[message.id.peerId], isIncoming {
                         //peer.groupAccess.canPostMessages
                         
                         let markupAttribute = attribute.replyMarkup(isIncoming: isIncoming)

@@ -504,15 +504,26 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
+        
+        let inputHeader: String
+        let inputInfo: String
+        switch state.currency {
+        case .stars:
+            inputHeader = strings().editPostSuggestionPriceLabel
+            inputInfo = strings().editPostSuggestionPriceDescription(peer._asPeer().displayTitle)
+        case .ton:
+            inputHeader = strings().editPostSuggestionPriceTonLabel
+            inputInfo = strings().editPostSuggestionPriceTonDescription(peer._asPeer().displayTitle)
+        }
               
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editPostSuggestionPriceLabel), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(inputHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return InputItem(initialSize, stableId: stableId, value: state.amount, currency: state.currency, balance: starsState.balance, inputState: state.inputState, hasBalance: hasBalance, arguments: arguments)
         }))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editPostSuggestionPriceDescription(peer._asPeer().displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(inputInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
 
         index += 1
     }
