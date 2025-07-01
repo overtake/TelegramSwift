@@ -55,7 +55,8 @@ public struct ResolvedBotAdminRights: OptionSet {
     public static let postStories = ResolvedBotAdminRights(rawValue: 4096)
     public static let editStories = ResolvedBotAdminRights(rawValue: 8192)
     public static let deleteStories = ResolvedBotAdminRights(rawValue: 16384)
-
+    public static let canManageDirect = ResolvedBotAdminRights(rawValue: 32768)
+    
     
     public var chatAdminRights: TelegramChatAdminRightsFlags? {
         var flags = TelegramChatAdminRightsFlags()
@@ -65,6 +66,9 @@ public struct ResolvedBotAdminRights: OptionSet {
         }
         if self.contains(ResolvedBotAdminRights.postMessages) {
             flags.insert(.canPostMessages)
+        }
+        if self.contains(ResolvedBotAdminRights.canManageDirect) {
+            flags.insert(.canManageDirect)
         }
         if self.contains(ResolvedBotAdminRights.editMessages) {
             flags.insert(.canEditMessages)
@@ -149,6 +153,9 @@ extension ResolvedBotAdminRights {
         }
         if components.contains("anonymous") {
             rawValue |= ResolvedBotAdminRights.canBeAnonymous.rawValue
+        }
+        if components.contains("manage_direct_messages") {
+            rawValue |= ResolvedBotAdminRights.canManageDirect.rawValue
         }
                 
         if rawValue != 0 {

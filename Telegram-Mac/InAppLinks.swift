@@ -61,7 +61,7 @@ private func hTmeParseDuration(_ durationStr: String) -> Int {
 
 let itunesAppLink = "https://apps.apple.com/us/app/telegram/id747648890"
 
-let XTR: String = TelegramCurrency.xtr.rawValue
+let XTR: String = LocalTelegramCurrency.xtr.rawValue
 let XTRSTAR: String = "⭐️"
 let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
@@ -84,9 +84,9 @@ let star_sub_period: Int32 = 300
 let star_sub_period: Int32 = 2592000
 #endif
 
-let TON: String = TelegramCurrency.ton.rawValue
+let TON: String = LocalTelegramCurrency.ton.rawValue
 
-enum TelegramCurrency : String {
+enum LocalTelegramCurrency : String {
     case xtr = "XTR"
     case ton = "TON"
     
@@ -1761,6 +1761,7 @@ private let keyURLStartattach = "startattach";
 private let keyURLAttach = "attach";
 private let keyURLStartGroup = "startgroup";
 private let keyURLStartChannel = "startchannel";
+private let keyURLStartAdmin = "admin";
 private let keyURLSecret = "secret";
 private let keyURLproxy = "proxy";
 private let keyURLLivestream = "livestream";
@@ -2075,7 +2076,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 let username:String = userAndVariables[0]
                 var action:ChatInitialAction? = nil
                 if userAndVariables.count == 2 {
-                    let (vars, _) = urlVars(with: userAndVariables[1])
+                    let (vars, emptyValue) = urlVars(with: userAndVariables[1])
+                    
+                    
+                    if emptyValue.contains(keyURLStartChannel) || emptyValue.contains(keyURLStartGroup) {
+                        if let openInfo = openInfo, let context = context {
+                            let rights = vars[keyURLAdmin]
+                            return .inviteBotToGroup(link: urlString, username: username, context: context, action: nil, rights: rights, isChannel: emptyValue.contains(keyURLStartChannel), callback: openInfo)
+                        }
+                    }
+                    
                     loop: for (key,value) in vars {
                         switch key {
                         case keyURLStart:

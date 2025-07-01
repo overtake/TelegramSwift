@@ -304,18 +304,18 @@ class StickerPackPanelRowItem: TableRowItem {
 private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewProtocol {
     
     
-    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerView] = [:]
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         
-        if let file = itemUnderMouse?.1 {
+        if let (view, file) = itemUnderMouse {
             let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
             if file.isVideoSticker && !file.isWebm {
-                return (.file(reference, GifPreviewModalView.self), nil)
+                return (.file(reference, GifPreviewModalView.self), view)
             } else if file.isAnimatedSticker || file.isWebm {
-                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+                return (.file(reference, AnimatedStickerPreviewModalView.self), view)
             } else if file.isStaticSticker {
-                return (.file(reference, StickerPreviewModalView.self), nil)
+                return (.file(reference, StickerPreviewModalView.self), view)
             }
 
         }
@@ -362,22 +362,22 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }, for: .LongMouseDown)
     }
     
-    private var currentDownItem: (InlineStickerItemLayer, TelegramMediaFile, Bool)?
+    private var currentDownItem: (InlineStickerView, TelegramMediaFile, Bool)?
     private func updateDown() {
         if let item = itemUnderMouse {
             self.currentDownItem = (item.0, item.1, true)
         }
         if let itemUnderMouse = self.currentDownItem {
-            itemUnderMouse.0.animateScale(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
+            itemUnderMouse.0.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
         }
     }
     private func updateDragging() {
         if let current = self.currentDownItem {
             if self.itemUnderMouse?.1 != current.1, current.2  {
-                current.0.animateScale(from: 0.95, to: 1, duration: 0.2, removeOnCompletion: true)
+                current.0.layer?.animateScaleCenter(from: 0.95, to: 1, duration: 0.2, removeOnCompletion: true)
                 self.currentDownItem?.2 = false
             } else if !current.2, self.itemUnderMouse?.1 == current.1 {
-                current.0.animateScale(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
+                current.0.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
                 self.currentDownItem?.2 = true
             }
         }
@@ -385,7 +385,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     }
     private func updateUp() {
         if let itemUnderMouse = self.currentDownItem {
-            itemUnderMouse.0.animateScale(from: 0.95, to: 1, duration: 0.2, removeOnCompletion: true)
+            itemUnderMouse.0.layer?.animateScaleCenter(from: 0.95, to: 1, duration: 0.2, removeOnCompletion: true)
             if itemUnderMouse.1 == self.itemUnderMouse?.1 {
                 self.click()
             }
@@ -410,7 +410,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
 
     }
     
-    private var itemUnderMouse: (InlineStickerItemLayer, TelegramMediaFile)? {
+    private var itemUnderMouse: (InlineStickerView, TelegramMediaFile)? {
         guard let window = self.window, let item = self.item as? StickerPackPanelRowItem else {
             return nil
         }
@@ -432,15 +432,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     
 
     override func updateAnimatableContent() -> Void {
-        for (_, value) in self.inlineStickerItemViews {
-            if let superview = value.superview {
-                var playable: Bool =  NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
-                if isEmojiLite {
-                    playable = playable && itemUnderMouse?.0 === value
-                }
-                value.isPlayable = playable
-            }
-        }
+        
     }
     
     override var isEmojiLite: Bool {
@@ -481,22 +473,20 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             let id = InlineStickerItemLayer.Key(id: item.0.fileId.id, index: index)
             validIds.append(id)
 
-            let rect = CGRect.init(origin: item.1, size: NSMakeSize(60, 60))
+            let rect = CGRect(origin: item.1, size: NSMakeSize(60, 60))
 
-            let view: InlineStickerItemLayer
+            let view: InlineStickerView
             if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                 view = current
             } else {
                 if let layer = self.inlineStickerItemViews[id] {
-                    performSublayerRemoval(layer, animated: animated, scale: true)
+                    performSubviewRemoval(layer, animated: animated, scale: true)
                 }
-                view = InlineStickerItemLayer(account: context.account, file: item.0, size: rect.size)
+                view = InlineStickerView(account: context.account, file: item.0, size: rect.size)
                 self.inlineStickerItemViews[id] = view
-                view.superview = contentView
-                contentView.layer?.addSublayer(view)
+                contentView.addSubview(view)
                 if animated {
-                    view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
-                    view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             index += 1
@@ -508,7 +498,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                performSubviewRemoval(itemLayer, animated: animated, scale: true)
             }
         }
         for key in removeKeys {

@@ -696,12 +696,16 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     
     let birtday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: peerId))
     
-    let giftsContext = starGiftsContext ?? ProfileGiftsContext(account: context.account, peerId: context.peerId)
+    let giftsContext = ProfileGiftsContext(account: context.account, peerId: context.peerId)
     
     giftsContext.updateFilter(.unique)
     
-    let disallowedGifts = context.account.viewTracker.peerView(peerId, updateData: true) |> map {
-        ($0.cachedData as? CachedUserData)?.disallowedGifts
+    let disallowedGifts: Signal<TelegramDisallowedGifts?, NoError> = context.account.viewTracker.peerView(peerId, updateData: true) |> map { view in
+        if peerId == context.peerId {
+            return nil
+        } else {
+            return (view.cachedData as? CachedUserData)?.disallowedGifts
+        }
     }
     
     
@@ -783,6 +787,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }))
     
     
+    actionsDisposable.add(context.engine.payments.keepStarGiftsUpdated().startStrict())
     
 
     let arguments = Arguments(context: context, selectFilter: { filter in
@@ -802,7 +807,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             if let gift = option.native.generic, gift.availability?.minResaleStars != nil && gift.soldOut != nil {
                 showModal(with: StarGift_MarketplaceController(context: context, peerId: peer.id, gift: gift), for: window)
             } else if option.native.generic?.availability?.remains == 0 {
-                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil), purpose: .unavailableGift), for: context.window)
+                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(amount: .init(value: 0, nanos: 0), currency: .stars), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil), purpose: .unavailableGift), for: context.window)
             } else {
                 showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer, disallowedGifts: state.disallowedGifts, starGiftsProfile: starGiftsContext), for: window)
             }

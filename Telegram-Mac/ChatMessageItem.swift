@@ -335,7 +335,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
-                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu, ignoreLinks: !entry.additionalData.canHighlightLinks).mutableCopy() as! NSMutableAttributedString
+                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: isIncoming, bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu, ignoreLinks: !entry.additionalData.canHighlightLinks && isIncoming).mutableCopy() as! NSMutableAttributedString
                 
              }
              
@@ -437,8 +437,9 @@ class ChatMessageItem: ChatRowItem {
             
             super.init(initialSize, chatInteraction, context, entry, theme: theme)
             
+             let ignoreWebpage = !entry.additionalData.canHighlightLinks && isIncoming
             
-             if let webpage = media as? TelegramMediaWebpage {
+             if let webpage = media as? TelegramMediaWebpage, !ignoreWebpage {
                  switch webpage.content {
                  case let .Loaded(content):
                      var content = content
@@ -742,6 +743,14 @@ class ChatMessageItem: ChatRowItem {
                     return true
                 }
             } else {
+                if let message, message.peers[message.id.peerId]?.isMonoForum == true {
+                    switch entity.type {
+                    case .BotCommand:
+                        return false
+                    default:
+                        return true
+                    }
+                }
                 return true
             }
         })

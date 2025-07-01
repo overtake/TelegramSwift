@@ -156,7 +156,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
                 case let .prizeStars(amount, isUnclaimed, boostPeerId, transactionId, giveawayMessageId):
                     if let transactionId, let boostPeerId, let peer = message.peers[boostPeerId] {
                         
-                        let transaction = StarsContext.State.Transaction(flags: [.isGift], id: transactionId, count: .init(value: amount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: giveawayMessageId, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isGift], id: transactionId, count: .init(amount: .init(value: amount, nanos: 0), currency: .stars), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: giveawayMessageId, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                         
                         showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: .init(peer), transaction: transaction), for: context.window)
                     }

@@ -401,6 +401,16 @@ fileprivate class PreviewSenderView : Control {
                 }
             }
             
+            if state.state == .media {
+                menu.addItem(ContextSeparatorItem())
+                menu.addItem(ContextMenuItem(strings().generalSettingsSendLargePhotos, handler: { [weak self] in
+                    FastSettings.sendLargePhotos(!FastSettings.sendLargePhotos)
+                    if let window = self?.window as? Window {
+                        showModalText(for: window, text: FastSettings.sendLargePhotos ? strings().generalSettingsSendLargePhotosTooltipEnabled : strings().generalSettingsSendLargePhotosTooltipDisabled)
+                    }
+                }, state: FastSettings.sendLargePhotos ? .on : nil, itemImage: MenuAnimation.menu_hd.value))
+            }
+            
             
             return menu
         }
@@ -1871,9 +1881,11 @@ class PreviewSenderController: ModalViewController, Notifable {
                 let effect = self.contextChatInteraction.presentation.messageEffect
                 
                 let invoke:()->Void = { [weak self] in
-                    guard let self else {
+                    guard let self, let window = self.window else {
                         return
                     }
+                    
+                    
                     self.chatInteraction.sendMessage(silent, atDate, effect)
                     if state.isCollage && medias.count > 1 {
                         let collages = medias.chunks(10)

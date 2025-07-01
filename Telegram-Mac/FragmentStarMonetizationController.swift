@@ -425,7 +425,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
     }
     
     
-    let revenueContext = revenueContext ?? StarsRevenueStatsContext(account: context.account, peerId: peerId)
+    let revenueContext = revenueContext ?? StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: false)
     
     revenueContext.reload()
     
@@ -448,9 +448,9 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
     
     
     let contextObject = ContextObject(revenue: revenueContext,
-                                      allTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .all),
-                                      incomingTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .incoming),
-                                      outgoingTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId), mode: .outgoing))
+                                      allTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId: peerId, ton: false), mode: .all),
+                                      incomingTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId: peerId, ton: false), mode: .incoming),
+                                      outgoingTransactions: context.engine.payments.peerStarsTransactionsContext(subject: .peer(peerId: peerId, ton: false), mode: .outgoing))
     
     
     let adsUrl: Signal<String?, NoError> = .single(nil) |> then(context.engine.peers.requestStarsRevenueAdsAccountlUrl(peerId: peerId))
@@ -460,10 +460,10 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
             updateState { current in
                 var current = current
                 current.peer = peer
-                current.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
-                current.overview.balance = .init(stars: revenue.balances.availableBalance, usdRate: revenue.usdRate)
-                current.overview.all = .init(stars: revenue.balances.overallRevenue, usdRate: revenue.usdRate)
-                current.overview.current = .init(stars: revenue.balances.currentBalance, usdRate: revenue.usdRate)
+                current.balance = .init(stars: revenue.balances.availableBalance.amount, usdRate: revenue.usdRate)
+                current.overview.balance = .init(stars: revenue.balances.availableBalance.amount, usdRate: revenue.usdRate)
+                current.overview.all = .init(stars: revenue.balances.overallRevenue.amount, usdRate: revenue.usdRate)
+                current.overview.current = .init(stars: revenue.balances.currentBalance.amount, usdRate: revenue.usdRate)
                 current.config_withdraw = revenue.balances.withdrawEnabled
                 current.nextWithdrawalTimestamp = revenue.balances.nextWithdrawalTimestamp
                 current.allTransactionsState = allTransactions
@@ -475,7 +475,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                 let map:(StarsContext.State.Transaction)->Star_Transaction = { value in
                     let type: Star_TransactionType
                     var botPeer: EnginePeer?
-                    let incoming: Bool = value.count.value > 0
+                    let incoming: Bool = value.count.amount.value > 0
                     let source: Star_TransactionType.Source
                     switch value.peer {
                     case let .peer(peer):
@@ -502,7 +502,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                         type = .outgoing(source)
                     }
                     
-                    return Star_Transaction(id: value.id, amount: value.count, date: value.date, name: "", peer: botPeer, type: type, native: value)
+                    return Star_Transaction(id: value.id, currency: value.count.currency, amount: value.count.amount, date: value.date, name: "", peer: botPeer, type: type, native: value)
                 }
                 
                 current.revenueGraph = revenue.revenueGraph
@@ -523,7 +523,7 @@ func FragmentStarMonetizationController(context: AccountContext, peerId: PeerId,
                 alert(for: context.window, info: strings().monetizationWithdrawErrorText)
             case .requestPassword:
                 showModal(with: InputPasswordController(context: context, title: strings().monetizationWithdrawEnterPasswordTitle, desc: strings().monetizationWithdrawEnterPasswordText, checker: { value in
-                    return context.engine.peers.requestStarsRevenueWithdrawalUrl(peerId: peerId, amount: amount, password: value)
+                    return context.engine.peers.requestStarsRevenueWithdrawalUrl(peerId: peerId, ton: false, amount: amount, password: value)
                     |> deliverOnMainQueue
                     |> afterNext { url in
                         execute(inapp: .external(link: url, false))
@@ -748,12 +748,19 @@ private final class WithdrawInputView : GeneralRowView {
 
         }
         
-        func update(_ item: WithdrawInputItem, animated: Bool) {
+        func update(_ item: WithdrawInputItem, value: Int64, animated: Bool) {
             let attr = NSMutableAttributedString()
                         
             let min_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_min", orElse: 1000)
+            let max_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_max", orElse: 10_000_000)
             
-            attr.append(string: strings().fragmentStarsMinWithdraw(Int(min_withdraw)), color: theme.colors.text, font: .medium(.text))
+            
+
+            if value < min_withdraw {
+                attr.append(string: strings().fragmentStarsMinWithdraw(Int(min_withdraw)), color: theme.colors.text, font: .medium(.text))
+            } else {
+                attr.append(string: strings().fragmentStarsMaxWithdraw(Int(max_withdraw)), color: theme.colors.text, font: .medium(.text))
+            }
             let layout = TextViewLayout(attr)
             layout.measure(width: frame.width - 70)
             
@@ -832,9 +839,10 @@ private final class WithdrawInputView : GeneralRowView {
             let value = Int64(item.inputState.string) ?? 0
             
             let min_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_min", orElse: 1000)
+            let max_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_max", orElse: 10_000_000)
 
             
-            inputView.inputTheme = inputView.inputTheme.withUpdatedTextColor(value < min_withdraw ? theme.colors.redUI : theme.colors.text)
+            inputView.inputTheme = inputView.inputTheme.withUpdatedTextColor(value < min_withdraw || value > max_withdraw ? theme.colors.redUI : theme.colors.text)
             
             
             item.interactions.filterEvent = { event in
@@ -919,9 +927,9 @@ private final class WithdrawInputView : GeneralRowView {
         self.inputView.update(item: item, animated: animated)
         
         let min_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_min", orElse: 1000)
-
+        let max_withdraw = item.arguments.context.appConfiguration.getGeneralValue("stars_revenue_withdrawal_max", orElse: 10_000_000)
         let value = Int64(item.inputState.string) ?? 0
-        if value < min_withdraw {
+        if value < min_withdraw || value > max_withdraw {
             if let acceptView {
                 performSubviewRemoval(acceptView, animated: animated)
                 self.acceptView = nil
@@ -939,7 +947,8 @@ private final class WithdrawInputView : GeneralRowView {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            current.update(item, animated: animated)
+            let value = Int64(item.inputState.string) ?? 0
+            current.update(item, value: value, animated: animated)
         } else {
             if let limitView {
                 performSubviewRemoval(limitView, animated: animated)
@@ -1130,7 +1139,7 @@ func withdrawStarBalance(context: AccountContext, stars: StarsContext, state: St
 
 
 func withdrawStarBalance(context: AccountContext, balance: StarsRevenueStats, callback:@escaping(Int64)->Void) -> InputDataModalController {
-    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("bot_revenue_withdrawal_enabled", orElse: true), balance: .init(stars: balance.balances.availableBalance, usdRate: balance.usdRate))
+    let initialState = State(config_withdraw: context.appConfiguration.getBoolValue("bot_revenue_withdrawal_enabled", orElse: true), balance: .init(stars: balance.balances.availableBalance.amount, usdRate: balance.usdRate))
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

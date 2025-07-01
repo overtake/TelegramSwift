@@ -620,6 +620,8 @@ class InputDataController: GenericViewController<InputDataView> {
     
     let isFlipped: Bool
     
+    private var ignoreOnAppear: Bool = false
+    
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }, isFlipped: Bool = true) {
         self.title = title
         self.validateData = validateData
@@ -718,6 +720,8 @@ class InputDataController: GenericViewController<InputDataView> {
     func makeFirstResponderIfPossible(for identifier: InputDataIdentifier, focusIdentifier: InputDataIdentifier? = nil, scrollDown: Bool = false, scrollIfNeeded: Bool = true) {
         if let item = findItem(for: identifier) {
             _ = window?.makeFirstResponder(findItem(for: identifier)?.view?.firstResponder)
+            
+            ignoreOnAppear = true
             
             if let focusIdentifier = focusIdentifier {
                 if let item = findItem(for: focusIdentifier) {
@@ -1037,8 +1041,8 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        if makeFirstResponder {
-            _ = self.window?.makeFirstResponder(nextResponder())
+        if makeFirstResponder, ignoreOnAppear {
+            _ = self.window?.makeFirstResponder(firstResponder())
         }
         super.viewDidAppear(animated)
         

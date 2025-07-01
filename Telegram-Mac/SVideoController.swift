@@ -50,6 +50,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private let hideOnIdleDisposable = MetaDisposable()
     private let hideControlsDisposable = MetaDisposable()
     private let account: Account
+    private let context: AccountContext
     private var pictureInPicture: Bool = false
     private var hideControls: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
     private var controlsIsHidden: Bool = false
@@ -99,12 +100,17 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private var endPlaybackId: Int?
     
-    init(account: Account, reference: FileMediaReference, message: Message?, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
+    private var adContext: AdMessagesHistoryContext?
+    private let adStateDisposable = MetaDisposable()
+    private let nextAdDisposable = MetaDisposable()
+
+    init(context: AccountContext, reference: FileMediaReference, message: Message?, fetchAutomatically: Bool = false, isProtected: Bool = false, isControlsLimited: Bool = false) {
         self.reference = reference
-        self.account = account
+        self.account = context.account
         self.isProtected = isProtected
         self.isControlsLimited = isControlsLimited
         self.message = message
+        self.context = context
         super.init()
         bar = .init(height: 0)
     }
@@ -154,22 +160,20 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         return !self.isPaused
     }
     
+    
     private func updateIdleTimer() {
         NSCursor.unhide()
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
-            let hide = !self.genericView.isInMenu && !self.genericView.insideControls
+            let hide = !self.genericView.isInMenu && !self.genericView.insideControls && !contextMenuOnScreen()
             self.hideControls.set(hide)
-            if !self.pictureInPicture, !self.isPaused, hide {
-                if !contextMenuOnScreen() {
-                    NSCursor.hide()
-                }
+            if !self.pictureInPicture, hide {
+                NSCursor.hide()
             }
         }))
     }
     
     private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
-        updateIdleTimer()
         
         
         if let rootView = genericView.superview?.superview {
@@ -204,6 +208,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         
         updateIdleTimer()
         
+        let account = self.account
+        
         let mouseInsidePlayer = genericView.mediaPlayer._mouseInside()
         
         hideControls.set(!mouseInsidePlayer || forceHiddenControls)
@@ -215,6 +221,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     self?.updateControlVisibility()
                 }
             }
+            self?.updateIdleTimer()
             return .rejected
         }, with: self, for: .mouseMoved, priority: .modal)
         
@@ -225,6 +232,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     self?.updateControlVisibility()
                 }
             }
+            self?.updateIdleTimer()
             return .rejected
         }, with: self, for: .mouseExited, priority: .modal)
         
@@ -241,6 +249,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     self?.updateControlVisibility()
                 }
             }
+            self?.updateIdleTimer()
             return .rejected
         }, with: self, for: .mouseEntered, priority: .modal)
         
@@ -248,6 +257,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             if self?.genericView.mediaPlayer._mouseInside() == true {
                 self?.updateControlVisibility(true)
             }
+            self?.updateIdleTimer()
             return .rejected
         }, with: self, for: .leftMouseDown, priority: .modal)
         
@@ -259,9 +269,27 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     self.updateControlVisibility(true)
                 }
             }
+            self.updateIdleTimer()
             self.genericView.subviews.last?.mouseUp(with: event)
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
+        
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
+        
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil, nameColor: nil, backgroundEmojiId: nil, profileColor: nil, profileBackgroundEmojiId: nil, subscriberCount: nil, verificationIconFileId: nil)
+
+        let timestamp2: Int32 = 60 * 22 + 60 * 60 * 18
+
+        
+        let message = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [], tags: [], globalTags: [], localTags: [], customTags: [], forwardInfo: nil, author: fromUser1, text: "10.3.0 - [FirebaseAnalytics][I-ACS002002] Measurement timer scheduled to fire in approx. (s): -0.0616508722305297910.3.0 - [FirebaseAnalytics][I-ACS002002] Measurement timer scheduled to fire in approx. (s): -0.06165087223052979", attributes: [AdMessageAttribute(opaqueId: Data(), messageType: .sponsored, url: "https://t.me/durov", buttonText: "Please", sponsorInfo: "Durov Corp.", additionalInfo: "", canReport: true, hasContentMedia: false, minDisplayDuration: 10, maxDisplayDuration: 20)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+
+      
+        
+        window.set(handler: { [weak self] _ in
+            self?.runAdMessages([message], 10, 15)
+            
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
 //        self.updateControls = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
 //            self?.updateControlVisibility()
@@ -335,6 +363,72 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         return false
     }
     
+    private func runAdMessages(_ messages: [Message], _ startDelay: Int32, _ betweenDelay: Int32?) {
+        
+        let context = self.context
+        
+        var makeNext:((Message, Bool)->Void)? = nil
+        
+        let arguments = SVideoAdsArguments(context: context, removeAd: { [weak self] current, all, intime in
+            guard let window = self?.window else {
+                return
+            }
+            if !intime {
+                makeNext?(current, true)
+            } else {
+                if context.isPremium {
+                    if all {
+                        _ = context.engine.accountData.updateAdMessagesEnabled(enabled: false).startStandalone()
+                        self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
+                    }
+                    showModalText(for: window, text: strings().chatDisableAdTooltip)
+                } else {
+                    prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: window)
+                }
+            }
+        }, maybeNext: { current in
+            makeNext?(current, true)
+        }, markAsSeen: { [weak self] current in
+            if let adAttribute = current.adAttribute {
+                self?.adContext?.markAsSeen(opaqueId: adAttribute.opaqueId)
+            }
+        }, invoke: { [weak self] current in
+            if let adAttribute = current.adAttribute {
+                self?.adContext?.markAction(opaqueId: adAttribute.opaqueId, media: true, fullscreen: true)
+                let link = inApp(for: adAttribute.url.nsstring, context: context, peerId: nil, openInfo: { peerId, toChat, messageId, initialAction in
+                    getGalleryViewer()?.openInfo(peerId, toChat, messageId, initialAction)
+                }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                execute(inapp: link)
+            }
+        })
+        
+        makeNext = { [weak self, weak arguments] current, remove in
+            guard let arguments else {
+                return
+            }
+            let index = messages.firstIndex(where: { $0 == current })
+            if let index, index < messages.count - 1 {
+                if remove {
+                    self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
+                    self?.updateControlVisibility()
+                }
+                if let betweenDelay {
+                    self?.nextAdDisposable.set(delaySignal(Double(betweenDelay)).start(completed: {
+                        self?.genericView.set(adMessage: messages[index + 1], arguments: arguments, animated: true)
+                    }))
+                }
+            } else {
+                self?.genericView.set(adMessage: nil, arguments: nil, animated: true)
+                self?.nextAdDisposable.set(nil)
+            }
+        }
+        
+        
+        if let first = messages.first {
+            self.genericView.set(adMessage: first, arguments: arguments, animated: true)
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -357,6 +451,27 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             let preload = preloadVideoResource(postbox: account.postbox, userLocation: .other, userContentType: .init(file: reference.media), resourceReference: reference.resourceReference(reference.media.resource), duration: 3.0)
             partDisposable.set(preload.start())
         }
+        
+        if let message, let peer = message.peers[message.id.peerId], peer.isChannel {
+            let adContext = context.engine.messages.adMessages(peerId: message.id.peerId, messageId: message.id)
+            self.adContext = adContext
+            
+            var invoked: Bool = false
+            
+            adStateDisposable.set(combineLatest(queue:.mainQueue(), adContext.state, status).startStrict(next: { [weak self] values in
+               
+                let ( _, messages, startDelay, betweenDelay) = values.0
+                let status = values.1
+                
+                if !messages.isEmpty, let startDelay, !invoked {
+                    if Int32(status.timestamp) >= startDelay {
+                        self?.runAdMessages(messages, startDelay, betweenDelay)
+                        invoked = true
+                    }
+                }
+            }))
+        }
+
 
         
         genericView.layerContentsRedrawPolicy = .duringViewResize
@@ -371,6 +486,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             self?.controlsIsHidden = hide
         }))
         
+        
+       
         
         let statusValue:Atomic<MediaPlayerStatus?> = Atomic(value: nil)
         let updateTemporaryStatus:(_ f: (MediaPlayerStatus?)->MediaPlayerStatus?) -> Void = { [weak self] f in
@@ -605,13 +722,14 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         hideOnIdleDisposable.dispose()
         hideControlsDisposable.dispose()
         mediaPlaybackStateDisposable.dispose()
+        adStateDisposable.dispose()
+        nextAdDisposable.dispose()
         partDisposable.dispose()
         if let endPlaybackId {
             mediaPlayer.removePlaybackCompleted(endPlaybackId)
         }
         updateControls?.invalidate()
         _ = IOPMAssertionRelease(assertionID)
-        NSCursor.unhide()
     }
     
 }

@@ -2319,7 +2319,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
             
             if let cachedData = (view.cachedData as? CachedChannelData), cachedData.flags.contains(.canViewStarsRevenue) {
-                if let stars = revenueState?.stats?.balances.availableBalance.stringValue {
+                if let stars = revenueState?.stats?.balances.availableBalance.fullyFormatted {
                     entries.append(.balance(section: GroupInfoSection.action.rawValue, stars: stars, canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .singleItem))
                 }
             }

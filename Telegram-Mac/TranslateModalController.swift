@@ -138,18 +138,38 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
 
-func translateBlocks(context: AccountContext, from: String?, to: String, blocks: [(String, [MessageTextEntity])]) -> Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> {
+func translateBlocks(context: AccountContext, from: String?, to: String, blocks: [(String, [MessageTextEntity])], configState: AppConfigTranslateState) -> Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> {
     var signals:[Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error>] = []
     for block in blocks {
-        signals.append(context.engine.messages.translate(text: block.0, toLang: to, entities: block.1) |> `catch` { _ in return .fail(.generic)} |> mapToSignal { value in
-            if let value = value {
-                return .single((detect: nil, result: value.0, entities: value.1))
-            } else {
-                return Translate.translateText(text: block.0, from: from, to: to) |> map {
-                    (detect: $0.detect, result: $0.result, entities: [])
+        switch configState {
+        case .enabled:
+            signals.append(context.engine.messages.translate(text: block.0, toLang: to, entities: block.1) |> `catch` { error in
+                switch error {
+                case .tryAlternative:
+                    return .single(nil)
+                default:
+                    #if DEBUG
+                    return .single(nil)
+                    #endif
+                    return .fail(.generic)
                 }
-            }
-        })
+            } |> mapToSignal { value in
+                if let value = value {
+                    return .single((detect: nil, result: value.0, entities: value.1))
+                } else {
+                    return Translate.translateText(text: block.0, from: from, to: to) |> map {
+                        (detect: $0.detect, result: $0.result, entities: [])
+                    }
+                }
+            })
+        case .alternative:
+            signals.append(Translate.translateText(text: block.0, from: from, to: to) |> map {
+                (detect: $0.detect, result: $0.result, entities: [])
+            })
+        case .disabled, .system:
+            continue
+        }
+        
     }
     var signal: Signal<(detect: String?, result: String, entities: [MessageTextEntity]), Translate.Error> = .single((detect: nil, result: "", entities: []))
     for current in signals {
@@ -168,7 +188,7 @@ func translateBlocks(context: AccountContext, from: String?, to: String, blocks:
     
     return signal
 }
-func TranslateModalController(context: AccountContext, from: String?, toLang: String, text: String, entities: [MessageTextEntity] = [], canBreak: Bool = true) -> InputDataModalController {
+func TranslateModalController(context: AccountContext, from: String?, toLang: String, text: String, entities: [MessageTextEntity] = [], canBreak: Bool = true, configState: AppConfigTranslateState = .enabled) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let disposable = MetaDisposable()
@@ -197,7 +217,7 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
 
     
     let request:()->Void = {
-        disposable.set(translateBlocks(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
+        disposable.set(translateBlocks(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks, configState: configState).start(next: { result in
             updateState { current in
                 var current = current
                 current.translated = result.result
@@ -208,7 +228,11 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
                 return current
             }
         }, error: { error in
-            
+            updateState { current in
+                var current = current
+                current.translated = strings().unknownError
+                return current
+            }
         }))
     }
     

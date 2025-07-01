@@ -230,6 +230,20 @@ extension AppConfiguration {
             return defaultValue
         }
     }
+    func getGeneralValue64(_ key: String, orElse defaultValue: Int64) -> Int64 {
+        if let value = self.data?[key] as? Double {
+            return Int64(value)
+        } else {
+            return defaultValue
+        }
+    }
+    func getGeneralValueDouble(_ key: String, orElse defaultValue: Double) -> Double {
+        if let value = self.data?[key] as? Double {
+            return Double(value)
+        } else {
+            return defaultValue
+        }
+    }
     func getStringValue(_ key: String, orElse defaultValue: String) -> String {
         if let value = self.data?[key] as? String {
             return value
@@ -440,12 +454,22 @@ final class AccountContext {
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
     let starsContext: StarsContext
+    let tonContext: StarsContext
     let starsSubscriptionsContext: StarsSubscriptionsContext
     let currentCountriesConfiguration: Atomic<CountriesConfiguration> = Atomic(value: CountriesConfiguration(countries: loadCountryCodes()))
     private(set) var contentConfig: ContentSettingsConfiguration = .default
     private let _countriesConfiguration = Promise<CountriesConfiguration>()
     var countriesConfiguration: Signal<CountriesConfiguration, NoError> {
         return self._countriesConfiguration.get()
+    }
+    
+    func currencyContext(_ currency: CurrencyAmount.Currency) -> StarsContext {
+        switch currency {
+        case .stars:
+            return starsContext
+        case .ton:
+            return tonContext
+        }
     }
 
     #endif
@@ -692,6 +716,7 @@ final class AccountContext {
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         self.starsContext = engine.payments.peerStarsContext()
+        self.tonContext = engine.payments.peerTonContext()
         self.starsSubscriptionsContext = engine.payments.peerStarsSubscriptionsContext(starsContext: self.starsContext)
         
         _ = self.engine.payments.keepStarGiftsUpdated().start()

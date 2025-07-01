@@ -1813,6 +1813,8 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                             }
                             
                         })
+                    } else {
+                        close?()
                     }
                 default:
                     close?()

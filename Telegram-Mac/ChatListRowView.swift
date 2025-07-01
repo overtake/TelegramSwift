@@ -506,7 +506,7 @@ private final class TopicNameAndTextView : View {
     func update(context: AccountContext, item: ChatListTopicNameAndTextLayout, highlighted: Bool, animated: Bool) {
         self.isLite = context.isLite(.emoji)
         self.validLayout = item
-        mainView.set(text: highlighted ? item.selectedMain : item.mainText, context: context, decreaseAvatar: 5)
+        mainView.set(text: highlighted ? item.selectedMain : item.mainText, context: context, decreaseAvatar: 0)
         
         mainView.removeAllHandlers()
         mainView.set(handler: { _ in

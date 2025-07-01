@@ -688,6 +688,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
     }
     
+    func open_chat(_ peerId: PeerId) {
+        pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
+    }
+    
     func updateEditingDescriptionText(_ text:String) -> Void {
         updateState { state in
             if let editingState = state.editingState {
@@ -1350,7 +1354,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, stories: PeerExpiringStoryListContext.State?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, stories: PeerExpiringStoryListContext.State?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: StarsRevenueStatsContextState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {
@@ -1511,13 +1515,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 entries.append(.stats(section: .manage, datacenterId: cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue), stars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))
                 
                 
-                let stars: String? = revenueState?.stats?.balances.availableBalance.stringValue
-                let ton: String?
-                if let tonBalance = tonRevenueState?.stats?.balances.availableBalance {
-                    ton = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
-                } else {
-                    ton = nil
-                }
+                let stars: String? = revenueState?.stats?.balances.availableBalance.fullyFormatted
+                let ton: String? = tonRevenueState?.stats?.balances.availableBalance.fullyFormatted
+                
                 
                 if cachedData.flags.contains(.canViewRevenue) || cachedData.flags.contains(.canViewStarsRevenue), stars != nil || ton != nil {
                     entries.append(.balance(section: .manage, ton: ton, stars: stars, canSeeTon: cachedData.flags.contains(.canViewRevenue), canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))

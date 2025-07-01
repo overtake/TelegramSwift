@@ -47,6 +47,8 @@ enum LocalAnimatedSticker : String {
     case ton_logo
     case bulb
     
+    case diamond
+    
     case affiliate_link
     
     case voice_chat_raise_hand_1
@@ -134,6 +136,10 @@ enum LocalAnimatedSticker : String {
     case premium_gift_6
     case premium_gift_3
     
+    case ton_gift_green
+    case ton_gift_blue
+    case ton_gift_red
+
     case single_voice_fire
     
     case show_status_profile
@@ -224,6 +230,7 @@ enum LocalAnimatedSticker : String {
     case menu_lock
     case menu_unlock
     case menu_poll
+    case menu_list
     case menu_location
     case menu_camera
     case menu_translate
@@ -317,6 +324,8 @@ enum LocalAnimatedSticker : String {
     case menu_calendar_up
     case menu_cash_up
     case menu_hashtag_up
+    case menu_check
+    case menu_uncheck
     
     case emoji_category_activities
     case emoji_category_angry
@@ -425,6 +434,16 @@ enum LocalAnimatedSticker : String {
             return LocalAnimatedSticker.premium_gift_6
         } else {
             return LocalAnimatedSticker.premium_gift_12
+        }
+    }
+    
+    static func bestForTonGift(_ amount: Int64) -> LocalAnimatedSticker {
+        if amount <= 10 * 1_000_000_000 {
+            return LocalAnimatedSticker.ton_gift_green
+        } else if amount <= 50 * 1_000_000_000 {
+            return LocalAnimatedSticker.ton_gift_blue
+        } else {
+            return LocalAnimatedSticker.ton_gift_red
         }
     }
     
