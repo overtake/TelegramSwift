@@ -109,7 +109,10 @@ private final class HeaderItem : GeneralRowItem {
     fileprivate let isGift: Bool
     fileprivate let uniqueGift: StarGift.UniqueGift?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, currency: CurrencyAmount.Currency, peer: EnginePeer?, purpose: Star_TransactionPurpose, arguments: Arguments) {
+    fileprivate private(set) var authorLayout: TextViewLayout?
+    fileprivate private(set) var authorPeer: Peer?
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, transaction: StarsContext.State.Transaction, currency: CurrencyAmount.Currency, peer: EnginePeer?, purpose: Star_TransactionPurpose, arguments: Arguments, author: Peer?) {
         self.context = context
         self.transaction = transaction
         self.currency = currency
@@ -154,6 +157,15 @@ private final class HeaderItem : GeneralRowItem {
                 amount = abs(transaction.count.amount.totalValue)
             }
         } else if isGift {
+            
+            if let author {
+                //TODOLANG
+                self.authorLayout = .init(.initialize(string: "released by @\(author.addressName ?? "")", color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+            } else {
+                self.authorLayout = nil
+            }
+            self.authorPeer = author
+            
             if purpose == .unavailableGift {
                 header = strings().giftUnavailable
             } else if transaction.giveawayMessageId != nil {
@@ -417,6 +429,9 @@ private final class HeaderItem : GeneralRowItem {
         self.headerLayout.measure(width: width - 40)
         self.infoLayout.measure(width: width - 40)
         self.descLayout?.measure(width: width - 40)
+        
+        self.authorLayout?.measure(width: width - 40)
+        
         return true
     }
     
@@ -438,6 +453,12 @@ private final class HeaderItem : GeneralRowItem {
         if let uniqueGift {
             height += 10
         }
+        
+        if let authorLayout {
+            height += authorLayout.layoutSize.height
+            height += 5
+        }
+        
         return height
     }
     
@@ -482,6 +503,7 @@ private final class HeaderView : GeneralContainableRowView {
     private var outgoingView: ImageView?
     private var descView: TextView?
     private var starBadgeView: ImageView?
+    private var authorView: TextView?
     
     private var giftView: InlineStickerView?
     
@@ -790,6 +812,89 @@ private final class HeaderView : GeneralContainableRowView {
             }
         }
         
+        
+        if let authorLayout = item.authorLayout, let author = item.authorPeer {
+            let current: TextView
+            if let view = self.authorView {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = true
+                current.scaleOnClick = true
+                current.isSelectable = false
+                self.authorView = current
+                self.addSubview(current)
+            }
+            current.update(authorLayout)
+            
+            let context = item.context
+            
+            current.setSingle(handler: { [weak item] view in
+                if let event = NSApp.currentEvent {
+                    let data = context.engine.data.subscribe(
+                        TelegramEngine.EngineData.Item.Peer.Peer(id: author.id),
+                        TelegramEngine.EngineData.Item.Peer.AboutText(id: author.id)
+                    ) |> take(1) |> deliverOnMainQueue
+                    
+                    _ = data.start(next: { [weak view, weak item] data in
+                        
+                        guard let peer = data.0, let view = view else {
+                            return
+                        }
+                        
+                        var firstBlock:[ContextMenuItem] = []
+                        var secondBlock:[ContextMenuItem] = []
+                        let thirdBlock: [ContextMenuItem] = []
+                        
+                        firstBlock.append(GroupCallAvatarMenuItem(peer._asPeer(), context: context))
+                        
+                        firstBlock.append(ContextMenuItem(peer._asPeer().displayTitle, handler: {
+                            item?.arguments.openPeer(peer.id)
+                        }, itemImage: MenuAnimation.menu_open_profile.value))
+                        
+                        if let username = peer.addressName {
+                            firstBlock.append(ContextMenuItem("\(username)", handler: {
+                                item?.arguments.openPeer(peer.id)
+                            }, itemImage: MenuAnimation.menu_atsign.value))
+                        }
+                        
+                        switch data.1 {
+                        case let .known(about):
+                            if let about = about, !about.isEmpty {
+                                firstBlock.append(ContextMenuItem(about, handler: {
+                                    item?.arguments.openPeer(peer.id)
+                                }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                            }
+                        default:
+                            break
+                        }
+                        
+                        let blocks:[[ContextMenuItem]] = [firstBlock,
+                                                          secondBlock,
+                                                          thirdBlock].filter { !$0.isEmpty }
+                        var items: [ContextMenuItem] = []
+
+                        for (i, block) in blocks.enumerated() {
+                            if i != 0 {
+                                items.append(ContextSeparatorItem())
+                            }
+                            items.append(contentsOf: block)
+                        }
+                        
+                        let menu = ContextMenu()
+                        
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        AppMenu.show(menu: menu, event: event, for: view)
+                    })
+                }
+            }, for: .Click)
+        } else if let view = self.authorView {
+            performSubviewRemoval(view, animated: animated)
+            self.authorView = nil
+        }
+        
         self.headerView.update(item.headerLayout)
         self.infoView.set(text: item.infoLayout, context: item.context)
         
@@ -886,13 +991,21 @@ private final class HeaderView : GeneralContainableRowView {
         outgoingView?.center()
         dismiss.setFrameOrigin(NSMakePoint(10, floorToScreenPixels((50 - dismiss.frame.height) / 2)))
         
+        
         if let actions {
             actions.setFrameOrigin(NSMakePoint(frame.width - actions.frame.width - 10, floorToScreenPixels((50 - actions.frame.height) / 2)))
         }
         
         headerView.centerX(y: (giftView != nil ? 130 : 90) + 20)
         
-        infoContainer.centerX(y: headerView.frame.maxY + 5)
+        var offset: CGFloat = 0
+        if let authorView {
+            authorView.centerX(y: headerView.frame.maxY + 5)
+            offset += authorView.frame.height + 5
+        }
+
+        
+        infoContainer.centerX(y: headerView.frame.maxY + 5 + offset)
         infoView.centerY(x: 0)
         refundView?.centerY(x: infoView.frame.maxX + 4, addition: -1)
 
@@ -963,6 +1076,7 @@ private struct State : Equatable {
     var starrefPeer: EnginePeer?
     var ownerPeer: EnginePeer?
     var starsState: StarsContext.State?
+    var author: EnginePeer?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -979,7 +1093,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
    // sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, transaction: state.transaction, currency: state.currency, peer: state.peer, purpose: state.purpose, arguments: arguments)
+        return HeaderItem(initialSize, stableId: stableId, context: arguments.context, transaction: state.transaction, currency: state.currency, peer: state.peer, purpose: state.purpose, arguments: arguments, author: state.author?._asPeer())
     }))
     
     entries.append(.sectionId(sectionId, type: .customModern(10)))
@@ -1607,10 +1721,18 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
         }))
     }
     
-    actionsDisposable.add(context.starsContext.state.startStrict(next: { state in
+    let authorPeer: Signal<EnginePeer?, NoError>
+    if let authorId = transaction.starGift?.releasedBy {
+        authorPeer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: authorId))
+    } else {
+        authorPeer = .single(nil)
+    }
+    
+    actionsDisposable.add(combineLatest(context.starsContext.state, authorPeer).startStrict(next: { state, authorPeer in
         updateState { current in
             var current = current
             current.starsState = state
+            current.author = authorPeer
             return current
         }
     }))
@@ -1626,7 +1748,7 @@ func Star_TransactionScreen(context: AccountContext, fromPeerId: PeerId, peer: E
     }
 
     let arguments = Arguments(context: context, openPeer: { peerId in
-        context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
         close?()
     }, copyTransaction: { string in
         copyToClipboard(string)

@@ -241,6 +241,8 @@ class ReplyModel: ChatAccessoryModel {
 
         if let message = message {
             
+            
+            
            
             
             var title: String? = message.effectiveAuthor?.displayTitle
@@ -304,7 +306,7 @@ class ReplyModel: ChatAccessoryModel {
                     }
                     
                 } else {
-                    text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+                    text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true, todoItemId: parent?.replyAttribute?.todoItemId)
                 }
             }
             

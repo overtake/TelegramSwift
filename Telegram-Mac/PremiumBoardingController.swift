@@ -72,6 +72,7 @@ enum PremiumLogEventsSource : Equatable {
     case grace_period
     case emoji_status
     case todo
+    case limitedGift(StarGift.Gift)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -136,6 +137,8 @@ enum PremiumLogEventsSource : Equatable {
             return "emoji_status"
         case .todo:
             return "todo"
+        case .limitedGift:
+            return "limited_gift"
         }
     }
     
@@ -199,6 +202,8 @@ enum PremiumLogEventsSource : Equatable {
             return .emoji_status
         case .todo:
             return .todo
+        case .limitedGift:
+            return nil
         }
     }
     
@@ -657,7 +662,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     let scene: PremiumBoardingHeaderItem.SceneType
-    if state.source == .business_standalone || state.source == .business {
+    if case let .limitedGift(gift) = state.source {
+        scene = .gift(gift)
+    } else if state.source == .business_standalone || state.source == .business {
         scene = .coin
     } else if state.source == .grace_period {
         scene = .grace
@@ -666,7 +673,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
+        
+        let status: NSAttributedString
+        status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
+
         return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy, sceneType: scene)
     }))
     index += 1

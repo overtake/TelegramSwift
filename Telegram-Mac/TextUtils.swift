@@ -24,7 +24,7 @@ enum MessageTextMediaViewType {
 
 
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false, todoItemId: Int32? = nil) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
     
     if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
@@ -174,7 +174,16 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
         case let todo as TelegramMediaTodo:
-            messageText = "☑️ \(todo.text)"
+            if let todoItemId, let item = todo.items.first(where: { $0.id == todoItemId }) {
+                let completed = todo.completions.contains(where: { $0.id == todoItemId })
+                if completed {
+                    messageText = "✅ \(item.text)"
+                } else {
+                    messageText = "☑️ \(item.text)"
+                }
+            } else {
+                messageText = "☑️ \(todo.text)"
+            }
         case let story as TelegramMediaStory:
             if message.isExpiredStory {
                 if story.isMention {
@@ -244,7 +253,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false, todoItemId: Int32? = nil) -> NSAttributedString {
     
     
     if let draft = draft, !draft.text.isEmpty {
@@ -326,7 +335,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications)
+        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications, todoItemId: todoItemId)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         

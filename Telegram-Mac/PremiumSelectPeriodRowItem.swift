@@ -17,6 +17,7 @@ struct PremiumPeriod : Equatable {
         case month = 1
         case sixMonth = 6
         case year = 12
+        case twoYears = 24
     }
     var period: Period
     var options: [PremiumPromoConfiguration.PremiumProductOption]
@@ -36,6 +37,8 @@ struct PremiumPeriod : Equatable {
             return strings().premiumPeriodAnnual
         case .sixMonth:
             return strings().premiumPeriodSixMonth
+        case .twoYears:
+            return strings().premiumPeriodTwoYears
         }
     }
     var priceString: String {
@@ -46,6 +49,8 @@ struct PremiumPeriod : Equatable {
             return strings().premiumPeriodPrice(amountString)
         case .year:
             return strings().premiumPeriodPriceYear(fullAmount)
+        case .twoYears:
+            return strings().premiumPeriodPriceTwoYear(fullAmount)
         }
     }
     var buyString: String {
@@ -56,6 +61,8 @@ struct PremiumPeriod : Equatable {
             return strings().premiumBoardingSubscribeSixMonth(fullAmount)
         case .year:
             return strings().premiumBoardingSubscribeYear(fullAmount)
+        case .twoYears:
+            return strings().premiumBoardingSubscribeTwoYears(fullAmount)
         }
     }
     var renewString: String {
@@ -66,6 +73,8 @@ struct PremiumPeriod : Equatable {
             return strings().premiumBoardingRenewSixMonth(fullAmount)
         case .year:
             return strings().premiumBoardingRenewYear(fullAmount)
+        case .twoYears:
+            return strings().premiumBoardingRenewTwoYears(fullAmount)
         }
     }
     

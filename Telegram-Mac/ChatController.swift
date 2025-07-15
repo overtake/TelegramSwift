@@ -2619,14 +2619,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let suggest = presentation.interfaceState.suggestPost {
                 switch suggest.mode {
                 case let .edit(id), let .suggest(id):
-                    reply = .init(messageId: id, quote: nil)
+                    reply = .init(messageId: id, quote: nil, todoItemId: nil)
                 default:
                     break
                 }
             }
             
             if reply == nil, let threadId64 = threadId64(), !presentation.isMonoforum {
-                reply = .init(messageId: MessageId(peerId: chatLocation().peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId64)), quote: nil)
+                reply = .init(messageId: MessageId(peerId: chatLocation().peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId64)), quote: nil, todoItemId: nil)
             }
             return reply
         }
@@ -5171,6 +5171,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     
                     var fromIndex: MessageIndex?
+                    let innerId: Int32?
                     
                     if let fromId = fromId, let message = strongSelf.messageInCurrentHistoryView(fromId) {
                         fromIndex = MessageIndex(message)
@@ -5178,6 +5179,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let message = strongSelf.anchorMessageInCurrentHistoryView() {
                             fromIndex = MessageIndex(message)
                         }
+                    }
+                    if let fromId = fromId, let message = strongSelf.messageInCurrentHistoryView(fromId) {
+                        innerId = message.replyAttribute?.todoItemId
+                    } else {
+                        innerId = nil
                     }
                     if let fromIndex = fromIndex {
                         let historyView = preloadedChatHistoryViewForLocation(.InitialSearch(location: .id(focusTarget.messageId, focusTarget.string), count: strongSelf.requestCount), context: context, chatLocation: strongSelf.chatLocation, chatLocationContextHolder: strongSelf.chatLocationContextHolder, tag: strongSelf.locationValue?.tag, additionalData: [])
@@ -5212,7 +5218,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let toIndex = MessageIndex(message)
                                 let requestCount = strongSelf.requestCount
                                 let scroll = state
-                                    .swap(to: ChatHistoryEntryId.message(message)).text(string: focusTarget.string)
+                                    .swap(to: ChatHistoryEntryId.message(message)).text(string: focusTarget.string, innerId: innerId)
                                     .focus(action: { [weak strongSelf] view in
                                         if let strongSelf {
                                             let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: .none(nil), count: requestCount, animated: state.animated)
@@ -5670,7 +5676,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let media = TelegramMediaContact(firstName: myPeer.firstName ?? "", lastName: myPeer.lastName ?? "", phoneNumber: myPeer.phone ?? "", peerId: myPeer.id, vCardData: nil)
                     let canSend = peer.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo, cachedData: strongSelf.chatInteraction.presentation.cachedData)
                     if canSend {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId64(), replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId64(), replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil, todoItemId: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
                         strongSelf.nextTransaction.set(handler: afterSentTransition)
                     }
                 }
@@ -8276,7 +8282,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if message.requestsSetupReply {
                     if message.id != current.interfaceState.dismissedForceReplyId {
                         current = current.updatedInterfaceState({
-                            $0.withUpdatedReplyMessageId(.init(messageId: message.id, quote: nil))
+                            $0.withUpdatedReplyMessageId(.init(messageId: message.id, quote: nil, todoItemId: nil))
                         })
                     }
                 }
@@ -9211,7 +9217,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
                 let subject: EngineMessageReplySubject?
                 if let currentReplyId = currentReplyId {
-                    subject = .init(messageId: currentReplyId.id, quote: nil)
+                    subject = .init(messageId: currentReplyId.id, quote: nil, todoItemId: nil)
                 } else {
                     subject = nil
                 }
@@ -9239,7 +9245,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
                 let subject: EngineMessageReplySubject?
                 if let currentReplyId = currentReplyId {
-                    subject = .init(messageId: currentReplyId.id, quote: nil)
+                    subject = .init(messageId: currentReplyId.id, quote: nil, todoItemId: nil)
                 } else {
                     subject = nil
                 }
