@@ -203,8 +203,8 @@ private final class ConferenceCallE2EContextStateImpl: ConferenceCallE2EContextS
         return self.call.participants().map { $0.userId }
     }
 
-    func applyBlock(block: Data) {
-        self.call.applyBlock(block)
+    func applyBlock(block: Data) -> Bool {
+        return self.call.applyBlock(block)
     }
 
     func applyBroadcastBlock(block: Data) {

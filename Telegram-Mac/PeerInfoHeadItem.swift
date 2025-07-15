@@ -519,7 +519,11 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let emojiStatus = peer?.emojiStatus {
             switch emojiStatus.content {
             case let .starGift(_, _, _, _, _, _, _, patternColor, _):
-                return .init(UInt32(patternColor))
+                if backgroundGradient[0].lightness >= 0.5 {
+                    return .init(UInt32(patternColor)).withAlphaComponent(0.5)
+                } else {
+                    return .init(UInt32(patternColor))
+                }
             default:
                 break
             }
@@ -622,6 +626,9 @@ class PeerInfoHeadItem: GeneralRowItem {
     let isFake: Bool
     let isMuted: Bool
     let peerView:PeerView
+    
+    let rating: TelegramStarRating?
+    
     var result:PeerStatusStringResult {
         didSet {
             nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
@@ -682,6 +689,8 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.isMuted = peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
+        
+        self.rating = (peerView.cachedData as? CachedUserData)?.starRating
         
         if let storyState = stories, !storyState.items.isEmpty {
             
@@ -1502,7 +1511,7 @@ private final class SpawnGiftsView: View {
             var excludeRects: [CGRect] = []
                                          
             excludeRects.append(CGRect(origin: NSMakePoint(avatarCenter.x - 90, 50), size: NSMakeSize(170, 170)))
-            excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 100), size: CGSize(width: frame.width, height: 100)))
+            excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 120), size: CGSize(width: frame.width, height: 120)))
 
             
             let positionGenerator = PositionGenerator(
@@ -1637,10 +1646,21 @@ private final class PeerInfoHeadView : GeneralRowView {
     private let photoView: AvatarStoryControl = AvatarStoryControl(font: .avatar(30), size: NSMakeSize(120, 120))
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    
+    private var ratingView: PeerRatingView?
+    private var ratingState: PeerRatingView.State = .short {
+        didSet {
+            if let item {
+                self.set(item: item, animated: true)
+            }
+        }
+    }
+    
 
     private let backgroundView = PeerInfoBackgroundView(frame: .zero)
     
     private var emojiSpawn: PeerInfoSpawnEmojiView?
+    private let bottomHolder = View()
     private let spawnGiftsView: SpawnGiftsView = .init(frame: .zero)
     
     private let nameView = NameContainer(frame: .zero)
@@ -1686,6 +1706,7 @@ private final class PeerInfoHeadView : GeneralRowView {
 
         //addBasicSubview(backgroundView, positioned: .below)
         
+        
         addSubview(backgroundView)
         
         photoContainer.addSubview(photoView)
@@ -1701,7 +1722,10 @@ private final class PeerInfoHeadView : GeneralRowView {
         statusContainer.addSubview(statusView)
         addSubview(statusContainer)
         
+        statusContainer.layer?.masksToBounds = false
         
+        addSubview(bottomHolder)
+
         
         listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateSpawnerFraction()
@@ -1881,45 +1905,85 @@ private final class PeerInfoHeadView : GeneralRowView {
     }
     
     
-    
-    override func layout() {
-        super.layout()
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         
         
-        backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
-        spawnGiftsView.frame = NSMakeRect(0, -70, frame.width, frame.height + 70)
+        let statusContainerSize: NSSize
+        if let ratingView {
+            switch ratingState {
+            case .short:
+                statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
+            case .full:
+                statusContainerSize = NSMakeSize(ratingView.frame.width, statusContainer.subviewsWidthSize.height)
+            }
+        } else {
+            statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
+        }
+        
 
-        
+        transition.updateFrame(view: backgroundView, frame: NSRect(x: 0, y: -110, width: size.width, height: size.height + 110))
+        transition.updateFrame(view: spawnGiftsView, frame: NSRect(x: 0, y: -70, width: size.width, height: size.height + 70))
+
         guard let item = item as? PeerInfoHeadItem else {
             return
         }
-        
-        photoContainer.centerX(y: 0)
-        
-        photoView.center()
-        photoEditableView?.center()
-        
-        emojiSpawn?.centerX(y: 0)
-                
+
+        transition.updateFrame(view: photoContainer, frame: photoContainer.centerFrameX(y: 0))
+        transition.updateFrame(view: photoView, frame: photoView.centerFrame())
+        if let editable = photoEditableView {
+            transition.updateFrame(view: editable, frame: editable.centerFrame())
+        }
+
+        if let emoji = emojiSpawn {
+            transition.updateFrame(view: emoji, frame: emoji.centerFrameX(y: 0))
+        }
+
         if item.isTopic {
-            nameView.centerX(y: photoContainer.frame.maxY - 12)
-            statusContainer.centerX(y: nameView.frame.maxY + 8)
+            let statusContainerFrame = CGRect(
+                       x: floor((size.width - statusContainerSize.width) / 2),
+                       y: nameView.frame.maxY + 8,
+                       width: statusContainerSize.width,
+                       height: statusContainerSize.height
+                   )
+            transition.updateFrame(view: nameView, frame: nameView.centerFrameX(y: photoContainer.frame.maxY - 12))
+            transition.updateFrame(view: statusContainer, frame: statusContainerFrame)
         } else {
-            nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
-            statusContainer.centerX(y: nameView.frame.maxY + 4)
+            let statusContainerFrame = CGRect(
+                        x: floor((size.width - statusContainerSize.width) / 2),
+                        y: nameView.frame.maxY + 4,
+                        width: statusContainerSize.width,
+                        height: statusContainerSize.height
+                    )
+            transition.updateFrame(view: nameView, frame: nameView.centerFrameX(y: photoContainer.frame.maxY + item.viewType.innerInset.top))
+            transition.updateFrame(view: statusContainer, frame: statusContainerFrame)
         }
-        actionsView.centerX(y: self.frame.height - actionsView.frame.height - (item.nameColor != nil ? 20 : 0))
-        
-        if let photo = self.topicPhotoView {
-            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
+        let actionsY = size.height - actionsView.frame.height - (item.nameColor != nil ? 20 : 0)
+        transition.updateFrame(view: actionsView, frame: actionsView.centerFrameX(y: actionsY))
+
+        if let photo = topicPhotoView {
+            let photoX = floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2
+            let photoY = floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2
+            let frame = NSRect(x: photoX, y: photoY, width: item.photoDimension, height: item.photoDimension)
+            transition.updateFrame(view: photo, frame: frame)
         }
 
-        if let showStatusView {
-            showStatusView.centerY(x: statusView.frame.maxX + 4)
+        if let showStatus = showStatusView {
+            transition.updateFrame(view: showStatus, frame: showStatus.centerFrameY(x: statusView.frame.maxX + 4))
         }
-        
+
+        var statusOffset: CGFloat = 0
+        if let rating = ratingView {
+            transition.updateFrame(view: rating, frame: rating.centerFrameY(x: 0))
+            statusOffset = 19 + 4
+        }
+
+        transition.updateFrame(view: statusView, frame: statusView.centerFrameY(x: statusOffset))
+
+        transition.updateFrame(view: bottomHolder, frame: NSRect(x: 0, y: size.height, width: size.width, height: 20))
     }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -1991,7 +2055,8 @@ private final class PeerInfoHeadView : GeneralRowView {
         updatePhoto(item, animated: animated)
         
         photoView.isHidden = item.isTopic
-        
+        bottomHolder.backgroundColor = theme.colors.listBackground
+
         if !item.photos.isEmpty {
             
             if let first = item.photos.first, let video = first.image.videoRepresentations.last, item.updatingPhotoState == nil {
@@ -2075,10 +2140,36 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.emojiSpawn = current
                 addSubview(current, positioned: .above, relativeTo: backgroundView)
             }
-            current.set(fileId: emoji, color: item.profileEmojiColor.withAlphaComponent(0.3), context: item.context, animated: animated)
+            
+            current.set(fileId: emoji, color: item.profileEmojiColor, context: item.context, animated: animated)
         } else if let view = self.emojiSpawn {
             performSubviewRemoval(view, animated: animated)
             self.emojiSpawn = nil
+        }
+        
+        if let rating = item.rating, !item.editing {
+            let current: PeerRatingView
+            if let view = self.ratingView {
+                current = view
+            } else {
+                current = PeerRatingView(frame: .zero)
+                self.ratingView = current
+                statusContainer.addSubview(current)
+            }
+            let size = current.set(data: rating, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, state: self.ratingState, animated: animated)
+            
+            current.change(size: size, animated: animated)
+            current.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            
+            current.setSingle(handler: { [weak self] _ in
+                if let self {
+                    self.ratingState = self.ratingState.toggle()
+                }
+            }, for: .Click)
+            
+        } else if let view = self.ratingView {
+            performSubviewRemoval(view, animated: animated)
+            self.ratingView = nil
         }
         
         self.updateSpawnerFraction()
@@ -2195,11 +2286,15 @@ private final class PeerInfoHeadView : GeneralRowView {
             self.showStatusView = nil
         }
         
-        statusContainer.setFrameSize(NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height))
+        
+        statusView.change(opacity: ratingState == .full ? 0 : 1, animated: animated)
+        showStatusView?.change(opacity: ratingState == .full ? 0 : 1, animated: animated)
 
         
-        needsLayout = true
+        self.updateLayout(size: self.frame.size, transition: transition)
+        
         updateListeners()
+        
     }
     
     

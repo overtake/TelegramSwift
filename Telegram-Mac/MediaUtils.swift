@@ -3582,14 +3582,26 @@ func mapResourceToAvatarSizes(postbox: Postbox, resource: MediaResource, represe
 }
 
 
-public func generateScaledImage(image: CGImage?, size: CGSize, scale: CGFloat? = nil) -> CGImage? {
+public func generateScaledImage(image: CGImage?, size: CGSize, scale: CGFloat? = nil, opaque: Bool = true, color: NSColor? = nil) -> CGImage? {
     guard let image = image else {
         return nil
     }
-    
+
     return generateImage(size, contextGenerator: { size, context in
-        context.draw(image, in: CGRect(origin: CGPoint(), size: size))
-    }, opaque: true)
+        context.clear(size.bounds)
+        
+        // Draw base image
+        context.draw(image, in: CGRect(origin: .zero, size: size))
+        
+        // Apply tint color if provided
+        if let color = color {
+            context.saveGState()
+            context.setFillColor(color.cgColor)
+            context.setBlendMode(.sourceAtop) // or .multiply, .overlay, depending on effect desired
+            context.fill(CGRect(origin: .zero, size: size))
+            context.restoreGState()
+        }
+    }, opaque: opaque, scale: scale ?? System.backingScale)
 }
 
 

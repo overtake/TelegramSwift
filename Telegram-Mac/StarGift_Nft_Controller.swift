@@ -549,6 +549,8 @@ private final class HeaderItem : GeneralRowItem {
         
         self.title = .init(.initialize(string: state.headerTitle, color: .white, font: .medium(18)))
         self.info = .init(.initialize(string: state.headerInfo, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), alignment: .center)
+        
+       
 
         for model in models {
             switch model {
@@ -625,6 +627,10 @@ private final class HeaderItem : GeneralRowItem {
         self.title.measure(width: width - 40)
         self.info.measure(width: width - 40)
         
+        if state.author != nil {
+            self.info.generateAutoBlock(backgroundColor: patternColor.withAlphaComponent(0.4))
+        }
+        
         for action in actions {
             action.measure(width: 120)
         }
@@ -643,7 +649,7 @@ private final class HeaderItem : GeneralRowItem {
         
         height += title.layoutSize.height
         height += 5
-        height += info.layoutSize.height
+        height += 20//info.layoutSize.height
         height += 10
         
         if !actions.isEmpty {
@@ -725,6 +731,8 @@ private final class HeaderView : GeneralRowView {
         addSubview(textView)
         addSubview(infoView)
         addSubview(dismiss)
+        
+        infoView.isSelectable = false
         
         giftView.scaleOnClick = true
         giftView.tooltipOnclick = true
@@ -883,6 +891,74 @@ private final class HeaderView : GeneralRowView {
         textView.update(item.title)
         infoView.update(item.info)
         
+        
+        if let author = item.state.author {
+            let context = item.context
+            
+            infoView.setSingle(handler: { [weak item] view in
+                if let event = NSApp.currentEvent {
+                    let data = context.engine.data.subscribe(
+                        TelegramEngine.EngineData.Item.Peer.Peer(id: author.id),
+                        TelegramEngine.EngineData.Item.Peer.AboutText(id: author.id)
+                    ) |> take(1) |> deliverOnMainQueue
+                    
+                    _ = data.start(next: { [weak view, weak item] data in
+                        
+                        guard let peer = data.0, let view = view else {
+                            return
+                        }
+                        
+                        var firstBlock:[ContextMenuItem] = []
+                        var secondBlock:[ContextMenuItem] = []
+                        let thirdBlock: [ContextMenuItem] = []
+                        
+                        firstBlock.append(GroupCallAvatarMenuItem(peer._asPeer(), context: context))
+                        
+                        firstBlock.append(ContextMenuItem(peer._asPeer().displayTitle, handler: {
+                            item?.arguments.openPeer(peer, true)
+                        }, itemImage: MenuAnimation.menu_open_profile.value))
+                        
+                        if let username = peer.addressName {
+                            firstBlock.append(ContextMenuItem("\(username)", handler: {
+                                item?.arguments.openPeer(peer, true)
+                            }, itemImage: MenuAnimation.menu_atsign.value))
+                        }
+                        
+                        switch data.1 {
+                        case let .known(about):
+                            if let about = about, !about.isEmpty {
+                                firstBlock.append(ContextMenuItem(about, handler: {
+                                    item?.arguments.openPeer(peer, true)
+                                }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                            }
+                        default:
+                            break
+                        }
+                        
+                        let blocks:[[ContextMenuItem]] = [firstBlock,
+                                                          secondBlock,
+                                                          thirdBlock].filter { !$0.isEmpty }
+                        var items: [ContextMenuItem] = []
+
+                        for (i, block) in blocks.enumerated() {
+                            if i != 0 {
+                                items.append(ContextSeparatorItem())
+                            }
+                            items.append(contentsOf: block)
+                        }
+                        
+                        let menu = ContextMenu()
+                        
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        AppMenu.show(menu: menu, event: event, for: view)
+                    })
+                }
+            }, for: .Click)
+        } else {
+            infoView.removeAllHandlers()
+        }
         backgroundView.backgroundColor = .blackTransparent
 
         //let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
@@ -899,7 +975,7 @@ private final class HeaderView : GeneralRowView {
             ownerActions.setFrameSize(NSMakeSize(size.width, 60))
             ownerActions.centerX(y: size.height - ownerActions.frame.height - 10)
             
-            infoView.centerX(y: ownerActions.frame.minY - infoView.frame.height - 10)
+            infoView.centerX(y: ownerActions.frame.minY - 20 - 10)
 
                         
             let itemSize = (frame.width - (CGFloat(ownerActions.subviews.count + 1) * 10)) / CGFloat(ownerActions.subviews.count)
@@ -909,12 +985,12 @@ private final class HeaderView : GeneralRowView {
                 x += subview.frame.width + 10
             }
         } else {
-            infoView.centerX(y: size.height - infoView.frame.height - 15)
+            infoView.centerX(y: size.height - 20 - 15)
         }
         
         backgroundView.offset = 30
         
-        transition.updateFrame(view: backgroundView, frame: NSMakeSize(340, 274).bounds)
+        transition.updateFrame(view: backgroundView, frame: NSMakeSize(340, 278).bounds)
         backgroundView.updateLayout(size: backgroundView.frame.size, transition: transition)
         
         dismiss.setFrameOrigin(NSMakePoint(10, 10))
@@ -952,8 +1028,8 @@ private final class Arguments {
     let sellNft:(StarGift.UniqueGift, Bool)->Void
     let toggleWear:(StarGift.UniqueGift)->Void
     let togglePin:()->Void
-    let openPeer:(EnginePeer)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, sellNft:@escaping(StarGift.UniqueGift, Bool)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void, openPeer:@escaping(EnginePeer)->Void) {
+    let openPeer:(EnginePeer, Bool)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, sellNft:@escaping(StarGift.UniqueGift, Bool)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void, openPeer:@escaping(EnginePeer, Bool)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.toggleName = toggleName
@@ -977,6 +1053,7 @@ private struct State : Equatable {
     var form: BotPaymentForm?
     
 
+    var author: EnginePeer?
     
     var purpose: Star_TransactionPurpose?
     
@@ -1073,7 +1150,12 @@ private struct State : Equatable {
             return strings().peerStatusOnline
         default:
             if let unique = gift.unique {
-                return strings().starTransactionGiftCollectible("#\(unique.number)")
+                if let author {
+                    //TODOLANG
+                    return strings().starTransactionGiftCollectible("#\(unique.number)") + " by @\(author.addressName ?? "")"
+                } else {
+                    return strings().starTransactionGiftCollectible("#\(unique.number)")
+                }
             } else {
                 return strings().giftUpgradeDescription
             }
@@ -1151,7 +1233,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             ownerText.interactions.processURL = { url in
                 if let url = url as? String, !url.isEmpty {
                     if url == "owner", let peer = state.owner {
-                        arguments.openPeer(peer)
+                        arguments.openPeer(peer, false)
                     } else {
                         execute(inapp: .external(link: explorerUrl + url, false))
                     }
@@ -1351,6 +1433,12 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
     
     let actionsDisposable = DisposableSet()
     
+    let authorPeer: Signal<EnginePeer?, NoError>
+    if let authorId = gift.releasedBy {
+        authorPeer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: authorId))
+    } else {
+        authorPeer = .single(nil)
+    }
     let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, purpose: purpose, attributes: source.attributes, accountPeerId: context.peerId, pinnedInfo: pinnedInfo)
     
     var close:(()->Void)? = nil
@@ -1362,11 +1450,12 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         statePromise.set(stateValue.modify (f))
     }
     
-    actionsDisposable.add(context.starsContext.state.startStrict(next: { state in
+    actionsDisposable.add(combineLatest(context.starsContext.state, authorPeer).startStrict(next: { state, authorPeer in
         updateState { current in
             var current = current
             current.starsState = state
             current.myBalance = state?.balance
+            current.author = authorPeer
             return current
         }
     }))
@@ -1741,9 +1830,13 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             }
             showModalText(for: window, text: !pinnedInfo.pinnedInfo ? strings().giftTooltipPinned : strings().giftTooltipUnpinned)
         }
-    }, openPeer: { peer in
+    }, openPeer: { peer, toChat in
         close?()
-        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id)
+        if toChat {
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
+        } else {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id)
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

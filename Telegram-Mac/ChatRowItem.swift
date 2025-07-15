@@ -3351,7 +3351,7 @@ class ChatRowItem: TableRowItem {
     
     func replyAction() -> Bool {
         if chatInteraction.presentation.canReplyInRestrictedMode, chatInteraction.chatLocation.threadMsgId != effectiveCommentMessage?.id, let message = message {
-            chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil))
+            chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil, todoItemId: nil))
             return true
         }
         return false

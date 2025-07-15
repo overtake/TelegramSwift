@@ -666,11 +666,35 @@ extension ContextMenuItem {
         } else {
             signal = peerAvatarImage(account: account, photo: source, displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
         }
-        _ = signal.start(next: { [weak item] image, _ in
+        item.contextObject = signal.start(next: { [weak item] image, _ in
             if let image = image {
                 item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
             }
         })
+    }
+    
+    static func makeEmoji(_ item: ContextMenuItem, context: AccountContext, file: TelegramMediaFile) {
+     
+        let size = NSMakeSize(18, 18)
+        
+        let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+        
+        let signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+
+        let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: aspectSize, intrinsicInsets: .init(), emptyColor: nil)
+        
+        let result = signal |> map { data -> TransformImageResult in
+            let context = data.execute(arguments, data.data)
+            let image = context?.generateImage()
+            return TransformImageResult(image, context?.isHighQuality ?? false)
+        } |> deliverOnMainQueue
+                
+        item.contextObject = result.start(next: { [weak item] result in
+            item?.image = result.image.flatMap({
+                NSImage(cgImage: $0, size: size)
+            })
+        })
+        
     }
 }
 

@@ -172,7 +172,7 @@ private final class HeaderRowView : TableRowView {
         }
         
         self.scene.hideStar()
-       // self.scene.sceneBackground = theme.colors.listBackground
+        self.scene.sceneBackground = theme.colors.listBackground
         
         self.avatars.change(opacity: 1, animated: animated)
 
@@ -802,6 +802,19 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }, executeLink: { link in
         
     }, openGift: { option in
+        
+        if let gift = option.native.generic, gift.flags.contains(.requiresPremium) {
+            if !context.isPremium {
+                prem(with: PremiumBoardingController(context: context, source: .limitedGift(gift)), for: context.window)
+                return
+            } else if let limit = gift.perUserLimit {
+                if limit.remains == 0 {
+                    //TODOLANG
+                    showModalText(for: window, text: "You've already sent \(limit.total) of these gifts, and it's the limit.")
+                }
+            }
+        }
+        
         let state = stateValue.with { $0 }
         if let peer = state.peer {
             if let gift = option.native.generic, gift.availability?.minResaleStars != nil && gift.soldOut != nil {

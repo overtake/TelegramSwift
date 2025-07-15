@@ -295,28 +295,7 @@ class ChatRowTodoItem: ChatRowItem {
         let isCompleted = completed.contains(option.id)
         
         _ = context.engine.messages.requestUpdateTodoMessageItems(messageId: message.id, completedIds: !isCompleted ? [option.id] : [], incompletedIds: isCompleted ? [option.id] : []).start()
-//        if canInvokeVote, !self.options.contains(where: { $0.isSelected }) {
-//            guard let message = message else { return }
-//            var identifiers = self.entry.additionalData.pollStateData.identifiers
-//            if let index = identifiers.firstIndex(of: option.opaqueIdentifier) {
-//                identifiers.remove(at: index)
-//            } else {
-//                identifiers.append(option.opaqueIdentifier)
-//            }
-//           // chatInteraction.vote(message.id, identifiers, !self.poll.isMultiple)
-//        } else {
-//            if self.options.contains(where: { $0.isSelected }) || self.isClosed, self.poll.publicity == .public {
-//                guard let message = message else {
-//                    return
-//                }
-//                if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) || self.options.contains(where: { $0.isLoading }) {
-//                    return
-//                }
-//                self.invokeAction(fromOption: option.opaqueIdentifier)
-//            }  else if let option = self.options.first(where: { $0.option.opaqueIdentifier == option.opaqueIdentifier }) {
-//                tooltip(for: control, text: option.tooltip)
-//            }
-//        }
+
     }
 
     
@@ -394,6 +373,10 @@ class ChatRowTodoItem: ChatRowItem {
 
 
 final class ChatTodoItemView : ChatRowView {
+    
+    private var forceClearContentBackground: Bool = false
+
+    
     private var contentNode:TodoView = TodoView(frame: NSZeroRect)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -495,6 +478,96 @@ final class ChatTodoItemView : ChatRowView {
          contentNode.backgroundColor = .clear//contentColor
     }
     
+    
+    private func highlightFrameAndColor(_ item: ChatRowTodoItem, option: TodoItem) -> (color: NSColor, frame: NSRect, flags: LayoutPositionFlags, superview: NSView) {
+        
+        let optionId = option.option.id
+        
+        var frame = contentNode.options.first(where: { $0.option?.option.id == optionId})?.frame ?? .zero
+        let contentFrame = self.contentFrame(item)
+        let bubbleFrame = self.bubbleFrame(item)
+        
+        frame.origin.y += contentFrame.minY - 2
+        
+        
+        if item.hasBubble {
+            
+            frame.origin.x = 0
+            frame.size.width = bubbleFrame.width
+//                        
+//           // frame.size.height += 8
+
+            
+            frame.origin.y = bubbleFrame.height - frame.maxY
+            
+            return (item.isIncoming ? item.presentation.colors.bubbleBackground_incoming.darker().withAlphaComponent(0.5) : item.presentation.colors.blendedOutgoingColors.darker().withAlphaComponent(0.5)
+                , frame: frame, flags: [], superview: self.bubbleView)
+        } else {
+            
+            frame.origin.x = 0
+            frame.size.width = self.frame.width
+//            frame.size.height += 8
+            
+            
+//            if index == 0 {
+//                frame.size.height += contentFrame.minY
+//            } else if index == item.options.count - 1 {
+//                frame.origin.y += contentFrame.minY
+//                frame.size.height += contentFrame.minY
+//            } else {
+//                frame.origin.y += contentFrame.minY
+//            }
+//                        
+//            frame.origin.y -= 4
+            
+            return (color: item.presentation.colors.accentIcon.withAlphaComponent(0.15), frame: frame, flags: [], superview: self.rowView)
+        }
+
+    }
+    
+    
+    override func focusAnimation(_ innerId: AnyHashable?, text: String?) {
+        
+        if let innerId = innerId?.base as? Int32 {
+            
+            guard let item = item as? ChatRowTodoItem, let option = item.options.first(where: { $0.option.id == innerId }) else {return}
+            
+            let data = highlightFrameAndColor(item, option: option)
+            
+            let selectionBackground = CornerView()
+            selectionBackground.isDynamicColorUpdateLocked = true
+            selectionBackground.didChangeSuperview = { [weak selectionBackground, weak self] in
+                self?.forceClearContentBackground = selectionBackground?.superview != nil
+                self?.updateColors()
+            }
+            
+            selectionBackground.frame = data.frame
+            selectionBackground.backgroundColor = data.color
+            
+            var positionFlags: LayoutPositionFlags = data.flags
+            
+          
+            selectionBackground.positionFlags = positionFlags
+            data.superview.addSubview(selectionBackground)
+                                
+            let animation: CABasicAnimation = makeSpringAnimation("opacity")
+            
+            animation.fromValue = 0
+            animation.toValue = 1
+            animation.duration = 0.5
+            animation.isRemovedOnCompletion = false
+            animation.delegate = CALayerAnimationDelegate(completion: { [weak selectionBackground] completed in
+                if let selectionBackground = selectionBackground {
+                    performSubviewRemoval(selectionBackground, animated: true, duration: 0.35, timingFunction: .spring)
+                }
+            })
+            
+            selectionBackground.layer?.add(animation, forKey: "opacity")
+        } else {
+            super.focusAnimation(innerId, text: text)
+        }
+    }
+    
 
 }
 
@@ -509,7 +582,7 @@ private final class TodoOptionView : Control {
     
     private var avatarView: AvatarControl?
     
-    private var option: TodoItem?
+    private(set) var option: TodoItem?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         nameView.userInteractionEnabled = false
@@ -693,7 +766,7 @@ private final class TodoView : Control {
     
     
 
-    private var options:[TodoOptionView] = []
+    private(set) var options:[TodoOptionView] = []
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         typeView.isSelectable = false

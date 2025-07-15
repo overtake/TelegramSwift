@@ -15009,6 +15009,10 @@ public final class L10n {
   public static func premiumBoardingRenewSixMonth(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Renew.SixMonth", p1)
   }
+  /// Renew for %@ / 2-years
+  public static func premiumBoardingRenewTwoYears(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Renew.TwoYears", p1)
+  }
   /// Renew for %@ / year
   public static func premiumBoardingRenewYear(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Renew.Year", p1)
@@ -15036,6 +15040,10 @@ public final class L10n {
   /// Subscribe for %@ / six month
   public static func premiumBoardingSubscribeSixMonth(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Subscribe.SixMonth", p1)
+  }
+  /// Subscribe for %@ / 2-years
+  public static func premiumBoardingSubscribeTwoYears(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Subscribe.TwoYears", p1)
   }
   /// Subscribe for %@ / year
   public static func premiumBoardingSubscribeYear(_ p1: String) -> String {
@@ -15235,6 +15243,12 @@ public final class L10n {
   }
   /// Six Month
   public static var premiumPeriodSixMonth: String  { return L10n.tr("Localizable", "Premium.Period.SixMonth") }
+  /// 2-Years
+  public static var premiumPeriodTwoYears: String  { return L10n.tr("Localizable", "Premium.Period.TwoYears") }
+  /// %@/2-years
+  public static func premiumPeriodPriceTwoYear(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Period.Price.TwoYear", p1)
+  }
   /// %@/year
   public static func premiumPeriodPriceYear(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Period.Price.Year", p1)

@@ -65,6 +65,7 @@
 		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
 		270595EC2B6CD7B600E05493 /* menu_boost_plus.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
+		270B02E42E2119220065DED7 /* PeerRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B02E32E21191E0065DED7 /* PeerRatingView.swift */; };
 		270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CB929F66649009C994C /* StoryModalController.swift */; };
 		270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBD29F7BCCA009C994C /* StoryListView.swift */; };
 		270B7CC029F7BFF0009C994C /* StoryInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBF29F7BFF0009C994C /* StoryInputView.swift */; };
@@ -994,6 +995,7 @@
 		27F9D2B82BEE5A7F0044949A /* Star_PurchaseInApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F9D2B72BEE5A7F0044949A /* Star_PurchaseInApp.swift */; };
 		27F9D2BE2BF326D30044949A /* Star_ListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F9D2BD2BF326D20044949A /* Star_ListScreen.swift */; };
 		27F9D2C02BF34F110044949A /* Star_GoldenStar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F9D2BF2BF34F110044949A /* Star_GoldenStar.swift */; };
+		27FD85E82E1D522C0000E29E /* SelectGiftsModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FD85E72E1D52290000E29E /* SelectGiftsModalController.swift */; };
 		27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */; };
 		27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */; };
 		27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */; };
@@ -1764,6 +1766,7 @@
 		270595E32B6BDCF500E05493 /* menu_boost.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost.tgs; sourceTree = "<group>"; };
 		270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_boost_plus.tgs; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
+		270B02E32E21191E0065DED7 /* PeerRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRatingView.swift; sourceTree = "<group>"; };
 		270B7CB929F66649009C994C /* StoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModalController.swift; sourceTree = "<group>"; };
 		270B7CBD29F7BCCA009C994C /* StoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListView.swift; sourceTree = "<group>"; };
 		270B7CBF29F7BFF0009C994C /* StoryInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryInputView.swift; sourceTree = "<group>"; };
@@ -2654,6 +2657,7 @@
 		27F9D2B72BEE5A7F0044949A /* Star_PurchaseInApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_PurchaseInApp.swift; sourceTree = "<group>"; };
 		27F9D2BD2BF326D20044949A /* Star_ListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_ListScreen.swift; sourceTree = "<group>"; };
 		27F9D2BF2BF34F110044949A /* Star_GoldenStar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Star_GoldenStar.swift; sourceTree = "<group>"; };
+		27FD85E72E1D52290000E29E /* SelectGiftsModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectGiftsModalController.swift; sourceTree = "<group>"; };
 		27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeSelectorController.swift; sourceTree = "<group>"; };
 		27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemePreviewRowItem.swift; sourceTree = "<group>"; };
 		27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAppearance.swift; sourceTree = "<group>"; };
@@ -5214,6 +5218,7 @@
 		C22674431DC20384000BA9ED /* list */ = {
 			isa = PBXGroup;
 			children = (
+				27FD85E72E1D52290000E29E /* SelectGiftsModalController.swift */,
 				C2167E541DC220F900F98E03 /* content */,
 				C22674441DC20664000BA9ED /* PeerMediaListController.swift */,
 				D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */,
@@ -5293,6 +5298,7 @@
 		C2271DC21DAE5E32001792B6 /* table */ = {
 			isa = PBXGroup;
 			children = (
+				270B02E32E21191E0065DED7 /* PeerRatingView.swift */,
 				D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */,
 				27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */,
 				27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */,
@@ -8071,6 +8077,7 @@
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				27E7E4A5270F0F9A00CF3A24 /* NetworkStatusManager.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
+				27FD85E82E1D522C0000E29E /* SelectGiftsModalController.swift in Sources */,
 				276154832C12E2E60090BFFC /* Fragment_BalanceRowItem.swift in Sources */,
 				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,
 				2719D8122A166BC100081079 /* StoryMyEmptyRowItem.swift in Sources */,
@@ -8402,6 +8409,7 @@
 				27ABFD1C2858B8AF006C3301 /* SwirlStarsView.swift in Sources */,
 				A7029EF8240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift in Sources */,
 				C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */,
+				270B02E42E2119220065DED7 /* PeerRatingView.swift in Sources */,
 				D06C7BB9247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift in Sources */,
 				C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */,
 				27CEA34D27B2A31B00472CB1 /* SupportAccountContext.swift in Sources */,

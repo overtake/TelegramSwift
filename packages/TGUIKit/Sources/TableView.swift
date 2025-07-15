@@ -278,11 +278,13 @@ public struct TableScrollFocus : Equatable {
     }
     let focus:Bool
     let string: String?
+    let innerId: Int32?
     let action:((NSView)->Void)?
-    public init(focus: Bool, string: String? = nil, action: ((NSView)->Void)? = nil) {
+    public init(focus: Bool, string: String? = nil, innerId: Int32? = nil, action: ((NSView)->Void)? = nil) {
         self.focus = focus
         self.action = action
         self.string = string
+        self.innerId = innerId
     }
     
     
@@ -328,11 +330,11 @@ public extension TableScrollState {
     func focus(action: @escaping(NSView)->Void) -> TableScrollState {
         switch self {
         case let .top(id, innerId, animated, focus, inset):
-            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, innerId: focus.innerId, action: action), inset: inset)
         case let .bottom(id, innerId, animated, focus, inset):
-            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, innerId: focus.innerId, action: action), inset: inset)
         case let .center(id, innerId, animated, focus, inset):
-            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, innerId: focus.innerId, action: action), inset: inset)
         default:
             return self
         }
@@ -364,14 +366,14 @@ public extension TableScrollState {
         }
     }
     
-    func text(string: String?) -> TableScrollState {
+    func text(string: String?, innerId _innerId: Int32?) -> TableScrollState {
         switch self {
         case let .top(stableId, innerId, animated, focus, inset):
-            return .top(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+            return .top(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, innerId: _innerId, action: focus.action), inset: inset)
         case let .bottom(stableId, innerId, animated, focus, inset):
-            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, innerId: _innerId, action: focus.action), inset: inset)
         case let .center(stableId, innerId, animated, focus, inset):
-            return .center(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+            return .center(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, innerId: _innerId, action: focus.action), inset: inset)
         default:
             return self
         }
@@ -3612,6 +3614,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         default:
             fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
         }
+        
+        innerId = innerId ?? focus.innerId.flatMap(AnyHashable.init)
         
         let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
         let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height

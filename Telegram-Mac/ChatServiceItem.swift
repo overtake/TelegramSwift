@@ -79,9 +79,12 @@ class ChatServiceItem: ChatRowItem {
         let source: Source
         let ribbon: Ribbon?
         
+        let authorLayout: TextViewLayout?
+        let author: EnginePeer?
+        
         let uniqueAttributes: UniqueAttributes?
         
-        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?, uniqueAttributes: UniqueAttributes?) {
+        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?, uniqueAttributes: UniqueAttributes?, authorLayout: TextViewLayout?, author: EnginePeer?) {
             self.from = from
             self.to = to
             self.text = text
@@ -92,6 +95,10 @@ class ChatServiceItem: ChatRowItem {
             self.text.measure(width: 200)
             self.info?.measure(width: 200)
             self.uniqueAttributes?.makeSize(width: 200)
+            authorLayout?.measure(width: 200)
+            authorLayout?.generateAutoBlock(backgroundColor: NSColor.black.withAlphaComponent(0.15))
+            self.authorLayout = authorLayout
+            self.author = author
         }
         
         var height: CGFloat {
@@ -101,6 +108,9 @@ class ChatServiceItem: ChatRowItem {
             }
             if let uniqueAttributes {
                 height += uniqueAttributes.height
+            }
+            if let authorLayout {
+                height += authorLayout.layoutSize.height
             }
             return height + 40
         }
@@ -1024,7 +1034,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil, uniqueAttributes: nil, authorLayout: nil, author: nil)
                     
                     let text: String
                     let formattedCurrency: String
@@ -1387,7 +1397,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil, authorLayout: nil, author: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1413,9 +1423,28 @@ class ChatServiceItem: ChatRowItem {
                     let info = NSMutableAttributedString()
                     let header = NSMutableAttributedString()
                     
+                    
+                    let authorPeer: EnginePeer?
+                    if let authorId = gift.releasedBy {
+                        authorPeer = message.peers[authorId].flatMap(EnginePeer.init)
+                    } else {
+                        authorPeer = nil
+                    }
+                    
+                    let authorLayout: TextViewLayout?
+                    if let authorPeer, let addressName = authorPeer.addressName {
+                        //TODOLANG
+                        authorLayout = TextViewLayout(.initialize(string: "released by @\(addressName)", color: grayTextColor, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
+                    } else {
+                        authorLayout = nil
+                    }
+                    
+                    
                     guard let gift = gift.generic else {
                         break
                     }
+                    
+                   
                     
                     
                     if message.id.peerId == context.peerId {
@@ -1487,7 +1516,7 @@ class ChatServiceItem: ChatRowItem {
                         toPeer = message.peers[message.id.peerId].flatMap( { .init($0) })
                     }
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil, authorLayout: authorLayout, author: authorPeer)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1515,6 +1544,28 @@ class ChatServiceItem: ChatRowItem {
                     }
 
                 case let .starGiftUnique(gift, isUpgrade, isTransferred, savedToProfile, canExportDate, transferStars, refunded, peerId, senderId, saverId, resaleStars, canTransferDate, canResaleDate):
+                    
+                    
+                    let authorPeer: EnginePeer?
+                    if let authorId = gift.releasedBy {
+                        authorPeer = message.peers[authorId].flatMap(EnginePeer.init)
+                    } else {
+                        #if DEBUG
+                        authorPeer = context.myPeer.flatMap(EnginePeer.init)
+                        #else
+                        authorPeer = nil
+                        #endif
+                    }
+                    
+                    let authorLayout: TextViewLayout?
+                    if let authorPeer, let addressName = authorPeer.addressName {
+                        //TODOLANG
+                        authorLayout = TextViewLayout(.initialize(string: "released by @\(addressName)", color: grayTextColor, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
+                    } else {
+                        authorLayout = nil
+                    }
+                    
+                    
                     if case let .unique(gift) = gift {
                         var text: String = ""
                         if let messagePeer = message.peers[message.id.peerId] {
@@ -1619,7 +1670,7 @@ class ChatServiceItem: ChatRowItem {
                             info.append(string: strings().giftUpgradeRefunded, color: grayTextColor, font: .normal(theme.fontSize))
                         }
                         
-                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
+                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes, authorLayout: authorLayout, author: authorPeer)
                         
                     }
                 case let .paidMessagesRefunded(_, stars):
@@ -1911,7 +1962,7 @@ class ChatServiceItem: ChatRowItem {
                     info.detectBoldColorInString(with: .medium(theme.fontSize))
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .ton(amount: isIncoming ? cryptoAmount : -cryptoAmount, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .ton(amount: isIncoming ? cryptoAmount : -cryptoAmount, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil, authorLayout: nil, author: nil)
                     
                     
                     let text: String
@@ -2400,6 +2451,8 @@ class ChatServiceRowView: TableRowView {
         
         private var badgeView: ImageView?
         
+        private var authorView: TextView?
+        
         private var emoji: PeerInfoSpawnEmojiView?
         private var backgroundView: PeerInfoBackgroundView?
         private var attributesView: UniqueAttributesView?
@@ -2633,6 +2686,28 @@ class ChatServiceRowView: TableRowView {
                 }
             }
             
+            if let authorLayout = data.authorLayout, let author = data.author {
+                let current: TextView
+                if let view = self.authorView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.userInteractionEnabled = true
+                    current.scaleOnClick = true
+                    current.isSelectable = false
+                    self.authorView = current
+                    self.addSubview(current)
+                }
+                current.update(authorLayout)
+                                
+                current.setSingle(handler: { [weak item] view in
+                    item?.chatInteraction.openInfo(author.id, false, nil, nil)
+                }, for: .Click)
+            } else if let view = self.authorView {
+                performSubviewRemoval(view, animated: animated)
+                self.authorView = nil
+            }
+            
             
             needsLayout = true
         }
@@ -2652,8 +2727,14 @@ class ChatServiceRowView: TableRowView {
             transition.updateFrame(view: stickerView, frame: stickerView.centerFrameX(y: 10))
             transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stickerView.frame.maxY + 10))
 
+            var offset: CGFloat = 0
+            if let authorView {
+                transition.updateFrame(view: authorView, frame: authorView.centerFrameX(y: textView.frame.maxY + 7))
+                offset += authorView.frame.height
+            }
+            
             if let infoView {
-                transition.updateFrame(view: infoView, frame: infoView.centerFrameX(y: textView.frame.maxY + 4))
+                transition.updateFrame(view: infoView, frame: infoView.centerFrameX(y: textView.frame.maxY + 4 + offset))
             }
 
             if let badgeView {
@@ -2684,7 +2765,7 @@ class ChatServiceRowView: TableRowView {
             }
 
             if let attributesView {
-                let attrFrame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5)
+                let attrFrame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5 + offset)
                 transition.updateFrame(view: attributesView, frame: attrFrame)
             }
         }
@@ -3411,7 +3492,7 @@ class ChatServiceRowView: TableRowView {
     override func doubleClick(in location: NSPoint) {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
             if self.hitTest(location) == nil || self.hitTest(location) == self, let message = item.message {
-                item.chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil) )
+                item.chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil, todoItemId: nil) )
             }
         }
     }

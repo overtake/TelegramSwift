@@ -282,12 +282,16 @@ private final class PreviewRowItem : GeneralRowItem {
     let titleLayout: TextViewLayout
     let infoLayout: TextViewLayout
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType, includeUpgrade: Bool, payWithStars: Bool) {
+    let authorLayout: TextViewLayout?
+    let authorPeer: Peer?
+    let openPeerInfo:(PeerId)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: EnginePeer, myPeer: EnginePeer, source: PreviewGiftSource, message: Updated_ChatTextInputState, context: AccountContext, viewType: GeneralViewType, includeUpgrade: Bool, payWithStars: Bool, openPeerInfo:@escaping(PeerId)->Void, author: Peer?) {
         self.context = context
         self.peer = peer
         self.source = source
         self.includeUpgrade = includeUpgrade
         self.presentation = theme.withUpdatedChatMode(true)
+        self.openPeerInfo = openPeerInfo
         
         let titleAttr = NSMutableAttributedString()
         
@@ -358,6 +362,21 @@ private final class PreviewRowItem : GeneralRowItem {
             headerLayout = .init(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .normal(.text)), alignment: .center)
         }
         
+        switch source {
+        case .starGift:
+            //TODOLANG
+            
+            if let author {
+                self.authorLayout = .init(.initialize(string: "released by @\(author.addressName ?? "")", color: presentation.chatServiceItemTextColor, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+            } else {
+                self.authorLayout = nil
+            }
+            self.authorPeer = author
+        case .premium:
+            self.authorLayout = nil
+            self.authorPeer = nil
+        }
+        
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
     
@@ -376,11 +395,13 @@ private final class PreviewRowItem : GeneralRowItem {
         titleLayout.measure(width: 200 - 20)
         infoLayout.measure(width: 200 - 20)
         
-//        if shouldBlurService {
-//            headerLayout.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
-//        } else {
-//            headerLayout.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
-//        }
+        authorLayout?.measure(width: 200 - 40)
+        
+        if shouldBlurService {
+            authorLayout?.generateAutoBlock(backgroundColor: NSColor.black.withAlphaComponent(0.15))
+        } else {
+            authorLayout?.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
+        }
 //
         return true
     }
@@ -407,6 +428,12 @@ private final class PreviewRowItem : GeneralRowItem {
         height += infoLayout.layoutSize.height
         height += 10
         height += 40
+        
+        if let authorLayout {
+            height += authorLayout.layoutSize.height
+            height += 5
+        }
+        
         return height
     }
     
@@ -422,6 +449,7 @@ private final class PreviewRowView : GeneralContainableRowView {
 
     private final class BlockView : View {
         private let sticker = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 100, 100))
+        private var authorView: TextView?
         private let headerView = InteractiveTextView()
         private let textView = InteractiveTextView()
         private var visualEffect: VisualEffect?
@@ -473,6 +501,88 @@ private final class PreviewRowView : GeneralContainableRowView {
                 }
                 let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .onceEnd, media: media)
                 sticker.update(with: media, size: sticker.frame.size, context: item.context, table: nil, parameters: parameters, animated: animated)
+            }
+            
+            if let authorLayout = item.authorLayout, let author = item.authorPeer {
+                let current: TextView
+                if let view = self.authorView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.userInteractionEnabled = true
+                    current.scaleOnClick = true
+                    current.isSelectable = false
+                    self.authorView = current
+                    self.addSubview(current)
+                }
+                current.update(authorLayout)
+                
+                let context = item.context
+                
+                current.setSingle(handler: { [weak item] view in
+                    if let event = NSApp.currentEvent {
+                        let data = context.engine.data.subscribe(
+                            TelegramEngine.EngineData.Item.Peer.Peer(id: author.id),
+                            TelegramEngine.EngineData.Item.Peer.AboutText(id: author.id)
+                        ) |> take(1) |> deliverOnMainQueue
+                        
+                        _ = data.start(next: { [weak view, weak item] data in
+                            
+                            guard let peer = data.0, let view = view else {
+                                return
+                            }
+                            
+                            var firstBlock:[ContextMenuItem] = []
+                            var secondBlock:[ContextMenuItem] = []
+                            let thirdBlock: [ContextMenuItem] = []
+                            
+                            firstBlock.append(GroupCallAvatarMenuItem(peer._asPeer(), context: context))
+                            
+                            firstBlock.append(ContextMenuItem(peer._asPeer().displayTitle, handler: {
+                                item?.openPeerInfo(peer.id)
+                            }, itemImage: MenuAnimation.menu_open_profile.value))
+                            
+                            if let username = peer.addressName {
+                                firstBlock.append(ContextMenuItem("\(username)", handler: {
+                                    item?.openPeerInfo(peer.id)
+                                }, itemImage: MenuAnimation.menu_atsign.value))
+                            }
+                            
+                            switch data.1 {
+                            case let .known(about):
+                                if let about = about, !about.isEmpty {
+                                    firstBlock.append(ContextMenuItem(about, handler: {
+                                        item?.openPeerInfo(peer.id)
+                                    }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                                }
+                            default:
+                                break
+                            }
+                            
+                            let blocks:[[ContextMenuItem]] = [firstBlock,
+                                                              secondBlock,
+                                                              thirdBlock].filter { !$0.isEmpty }
+                            var items: [ContextMenuItem] = []
+
+                            for (i, block) in blocks.enumerated() {
+                                if i != 0 {
+                                    items.append(ContextSeparatorItem())
+                                }
+                                items.append(contentsOf: block)
+                            }
+                            
+                            let menu = ContextMenu()
+                            
+                            for item in items {
+                                menu.addItem(item)
+                            }
+                            AppMenu.show(menu: menu, event: event, for: view)
+                        })
+                    }
+                }, for: .Click)
+            } else if let view = self.authorView {
+                performSubviewRemoval(view, animated: animated)
+                self.authorView = nil
             }
             
             if item.shouldBlurService {
@@ -540,8 +650,15 @@ private final class PreviewRowView : GeneralContainableRowView {
             }
 
             headerView.centerX(y: sticker.frame.maxY + 10)
-            textView.centerX(y: headerView.frame.maxY + 2)
+            var offset: CGFloat = 0
+            if let authorView {
+                authorView.centerX(y: headerView.frame.maxY + 5)
+                offset += authorView.frame.height + 2
+            }
+            
+            textView.centerX(y: headerView.frame.maxY + 2 + offset)
             button.centerX(y: textView.frame.maxY + 10)
+            
         }
     }
     
@@ -612,7 +729,8 @@ private final class Arguments {
     let buyStars:()->Void
     let togglePayWithStars:()->Void
     let openMarketplace:()->Void
-    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void, buyStars:@escaping()->Void, togglePayWithStars:@escaping()->Void, openMarketplace:@escaping()->Void) {
+    let openPeerInfo:(PeerId)->Void
+    init(context: AccountContext, toggleAnonymous: @escaping()->Void, updateState:@escaping(Updated_ChatTextInputState)->Void, toggleUpgrade: @escaping()->Void, previewUpgrade:@escaping(PeerStarGift)->Void, buyStars:@escaping()->Void, togglePayWithStars:@escaping()->Void, openMarketplace:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void) {
         self.context = context
         self.toggleAnonymous = toggleAnonymous
         self.updateState = updateState
@@ -621,6 +739,7 @@ private final class Arguments {
         self.buyStars = buyStars
         self.togglePayWithStars = togglePayWithStars
         self.openMarketplace = openMarketplace
+        self.openPeerInfo = openPeerInfo
     }
 }
 
@@ -641,6 +760,8 @@ private struct State : Equatable {
     var disallowedGifts: TelegramDisallowedGifts
     
     var count: Int32 = 1
+    
+    var authorPeer: EnginePeer?
     
 }
 
@@ -697,7 +818,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: canComment ? .firstItem : .singleItem, includeUpgrade: state.includeUpgrade, payWithStars: state.payWithStars)
+        return PreviewRowItem(initialSize, stableId: stableId, peer: state.peer, myPeer: state.myPeer, source: state.option, message: state.textState, context: arguments.context, viewType: canComment ? .firstItem : .singleItem, includeUpgrade: state.includeUpgrade, payWithStars: state.payWithStars, openPeerInfo: arguments.openPeerInfo, author: state.authorPeer?._asPeer())
     }))
     
     
@@ -732,7 +853,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
    
    
-    
+    switch state.option {
+    case let .starGift(option):
+        if let gift = option.native.generic, let limit = gift.perUserLimit {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("This gift is limited and available only for **Telegram Premium** Users. You can send it **\(limit.remains)** more times."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            index += 1
+        }
+    default:
+        break
+    }
     
   
     switch state.option {
@@ -834,13 +963,26 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         }
     }
     
+    let authorPeer: Signal<EnginePeer?, NoError>
+    switch option {
+    case .starGift(let option):
+        if let authorId = option.native.releasedBy {
+            authorPeer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: authorId))
+        } else {
+            authorPeer = .single(nil)
+        }
+    case .premium:
+        authorPeer = .single(nil)
+    }
+    
     let sendMessaagePaid = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.SendPaidMessageStars(id: peer.id))
 
-    actionsDisposable.add(combineLatest(context.starsContext.state, sendMessaagePaid).startStrict(next: { state, sendMessaagePaid in
+    actionsDisposable.add(combineLatest(context.starsContext.state, sendMessaagePaid, authorPeer).startStrict(next: { state, sendMessaagePaid, authorPeer in
         updateState { current in
             var current = current
             current.starsState = state
             current.sendMessaagePaid = sendMessaagePaid
+            current.authorPeer = authorPeer
             return current
         }
     }))
@@ -889,6 +1031,9 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
         case .premium:
             break
         }
+    }, openPeerInfo: { peerId in
+        closeAllModals(window: window)
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -1121,7 +1266,7 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
     let updateRightHeader:()->Void = { [weak modalController] in
         switch option {
         case let .starGift(option):
-            if let availability = option.native.generic?.availability {
+            if let gift = option.native.generic, let availability = gift.availability, !gift.flags.contains(.requiresPremium)  {
                 let count = stateValue.with { $0.count }
                 controller.rightModalHeader = ModalHeaderData(image: generateTextIcon(.initialize(string: "\(count)x", color: theme.colors.accent, font: .medium(.title))), contextMenu: {
                     let count = stateValue.with { $0.count }

@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import SwiftSignalKit
 
 public class ContextSeparatorItem : ContextMenuItem {
     public init() {
@@ -138,6 +138,12 @@ open class ContextMenuItem : NSMenuItem {
     
     @objc func click() -> Void {
         handler?()
+    }
+    
+    deinit {
+        if let disposable = (contextObject as? Disposable) {
+            disposable.dispose()
+        }
     }
     
 }

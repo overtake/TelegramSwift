@@ -390,7 +390,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let entities = messageTextEntitiesInRange(entities: ChatTextInputState(attributedText: attributed, selectionRange: 0..<0).messageTextEntities(), range: attributed.range, onlyQuoteable: true)
                     
                     let quote = EngineMessageReplyQuote(text: attributed.string, offset: nil, entities: entities, media: message.media.first)
-                    chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: quote))
+                    chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: quote, todoItemId: nil))
 
                 }
                 
@@ -577,8 +577,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         
         if canReplyMessage(data.message, peerId: data.peerId, chatLocation: data.chatLocation, mode: data.chatMode, threadData: chatInteraction.presentation.threadInfo) && !data.isLogInteraction {
+            
+            let todoItemId: Int32?
+            switch source {
+            case let .todo(taskId):
+                todoItemId = taskId
+            default:
+                todoItemId = nil
+            }
+            
             firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: {
-                data.chatInteraction.setupReplyMessage(data.message, .init(messageId: data.message.id, quote: nil))
+                data.chatInteraction.setupReplyMessage(data.message, .init(messageId: data.message.id, quote: nil, todoItemId: todoItemId))
             }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
         }
         
