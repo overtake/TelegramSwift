@@ -357,7 +357,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     }
                     let effective = size
                     
-                    self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: effective, fitzModifier: fitzModifier, mirror: mirror), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox, metalSupport: false)
+                    self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: effective, fitzModifier: fitzModifier, colors: parameters?.colors ?? [], mirror: mirror), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox, metalSupport: false)
                     
                     self.fetchStatus = .Local
                 } else {

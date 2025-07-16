@@ -29,26 +29,27 @@ public extension String {
     }
 
     func prefixWithDots(_ length: Int, mode: TruncationMode = .tail) -> String {
+        guard length >= 4 else {
+            return String(self.prefix(length))
+        }
+
         guard self.count > length else { return self }
 
         switch mode {
         case .head:
             let suffix = self.suffix(length - 3)
             return "...\(suffix)"
-
         case .middle:
             let prefixLength = (length - 3) / 2
             let suffixLength = (length - 3) - prefixLength
             let start = self.prefix(prefixLength)
             let end = self.suffix(suffixLength)
             return "\(start)...\(end)"
-
         case .tail:
             let prefix = self.prefix(length - 3)
             return "\(prefix)..."
         }
     }
-
 
     
     var transformKeyboard:[String] {

@@ -1524,6 +1524,11 @@ final class PremiumBoardingController : ModalViewController {
                     current.stickers = stickers
                     current.periods = promoConfiguration.premiumProductOptions.compactMap { period in
                         if let value = PremiumPeriod.Period(rawValue: period.months) {
+                            #if APP_STORE
+                            if products.first(where: { $0.id == period.storeProductId }) == nil {
+                                return nil
+                            }
+                            #endif
                             return .init(period: value, options: promoConfiguration.premiumProductOptions, storeProducts: products, storeProduct: products.first(where: { $0.id == period.storeProductId }), option: period)
                         }
                         return nil
@@ -1725,7 +1730,7 @@ final class PremiumBoardingController : ModalViewController {
             } else {
                 addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
                 
-                #if APP_STORE || DEBUG
+                #if APP_STORE
                 buyAppStore()
                 #else
                 buyNonStore()

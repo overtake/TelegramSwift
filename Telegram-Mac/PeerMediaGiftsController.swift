@@ -112,7 +112,7 @@ private final class FilterRowView : HorizontalRowView {
 }
 
 
-private final class CollectionRowItem : GeneralRowItem {
+private final class CollectionRowItem : TableStickItem {
     
     struct Item : Comparable, Identifiable {
         let value: State.Collection
@@ -137,18 +137,25 @@ private final class CollectionRowItem : GeneralRowItem {
             case .all:
                 attr.append(string: "All Gifts", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
             case let .collection(value):
-                attr.append(string: value.title, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                if let file = value.icon {
+                    attr.append(string: "\(clown_space)\(value.title)", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                    attr.insertEmbedded(.embeddedAnimated(file, playPolicy: .framesCount(1)), for: clown)
+                } else {
+                    attr.append(string: value.title, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                }
             case .add:
-                attr.append(string: "+ Add Collection", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.append(string: "\(clown_space)Add Collection", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.menu_add.file, color: theme.colors.listGrayText, playPolicy: .framesCount(1)), for: clown)
             }
             return attr
         }
     }
     
     fileprivate let items: [Item]
-    fileprivate let selected: Int32
-    fileprivate let context: AccountContext
-    fileprivate let arguments: Arguments
+    fileprivate let selected: Int32?
+    fileprivate let context: AccountContext?
+    fileprivate let arguments: Arguments?
+    fileprivate let _stableId: AnyHashable
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, filters: [State.Collection], selected: Int32, arguments: Arguments) {
         var items: [Item] = []
         for (i, filter) in filters.enumerated() {
@@ -158,7 +165,22 @@ private final class CollectionRowItem : GeneralRowItem {
         self.context = context
         self.selected = selected
         self.arguments = arguments
-        super.init(initialSize, stableId: stableId)
+        self._stableId = stableId
+        super.init(initialSize)
+    }
+    
+    override var stableId: AnyHashable {
+        return _stableId
+    }
+    
+    required init(_ initialSize: NSSize) {
+        self.arguments = nil
+        self.context = nil
+        self.items = []
+        self._stableId = AnyHashable(InputDataEntryId.custom(_id_collections))
+        self.selected = nil
+        super.init(initialSize)
+        
     }
     
     override var height: CGFloat {
@@ -170,7 +192,7 @@ private final class CollectionRowItem : GeneralRowItem {
     }
 }
 
-private final class CollectionFilterRowView : GeneralRowView {
+private final class CollectionFilterRowView : TableStickView {
     private let tableView = HorizontalTableView(frame: .zero)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -181,7 +203,7 @@ private final class CollectionFilterRowView : GeneralRowView {
     }
     
     override var backdorColor: NSColor {
-        return .clear
+        return theme.colors.listBackground
     }
     
     required init?(coder: NSCoder) {
@@ -199,6 +221,10 @@ private final class CollectionFilterRowView : GeneralRowView {
         let context = item.context
         let items = item.items
         let arguments = item.arguments
+        
+        guard let arguments else {
+            return
+        }
         
         tableView.beginTableUpdates()
         
@@ -243,10 +269,10 @@ private final class Arguments {
     let transfer:(ProfileGiftsContext.State.StarGift)->Void
     let toggleVisibility:(ProfileGiftsContext.State.StarGift)->Void
     let copy:(ProfileGiftsContext.State.StarGift)->Void
-    let collection:(State.Collection, StarGift?)->Void
-    let addToCollection:(State.Collection, StarGift?)->Void
+    let collection:(State.Collection, ProfileGiftsContext.State.StarGift?)->Void
+    let addToCollection:(State.Collection, ProfileGiftsContext.State.StarGift?)->Void
     let collectionContextMenu:(State.Collection)->[ContextMenuItem]
-    init(context: AccountContext, open:@escaping(ProfileGiftsContext.State.StarGift)->Void, togglePin:@escaping(ProfileGiftsContext.State.StarGift)->Void, toggleWear:@escaping(ProfileGiftsContext.State.StarGift)->Void, transfer:@escaping(ProfileGiftsContext.State.StarGift)->Void, toggleVisibility:@escaping(ProfileGiftsContext.State.StarGift)->Void, copy:@escaping(ProfileGiftsContext.State.StarGift)->Void, collection:@escaping(State.Collection, StarGift?)->Void, addToCollection: @escaping(State.Collection, StarGift?)->Void, collectionContextMenu:@escaping(State.Collection)->[ContextMenuItem]) {
+    init(context: AccountContext, open:@escaping(ProfileGiftsContext.State.StarGift)->Void, togglePin:@escaping(ProfileGiftsContext.State.StarGift)->Void, toggleWear:@escaping(ProfileGiftsContext.State.StarGift)->Void, transfer:@escaping(ProfileGiftsContext.State.StarGift)->Void, toggleVisibility:@escaping(ProfileGiftsContext.State.StarGift)->Void, copy:@escaping(ProfileGiftsContext.State.StarGift)->Void, collection:@escaping(State.Collection, ProfileGiftsContext.State.StarGift?)->Void, addToCollection: @escaping(State.Collection, ProfileGiftsContext.State.StarGift?)->Void, collectionContextMenu:@escaping(State.Collection)->[ContextMenuItem]) {
         self.context = context
         self.open = open
         self.togglePin = togglePin
@@ -280,12 +306,35 @@ private struct State : Equatable {
         }
     }
     
-    var gifts: [ProfileGiftsContext.State.StarGift] = []
+    var gifts: [ProfileGiftsContext.State.StarGift] {
+        let collection = collections.first(where: { $0.stableId == selectedCollection }) ?? .all
+
+        switch collection {
+        case .all:
+            return collectionsState[Collection.all.stableId]?.filteredGifts ?? []
+        case let .collection(value):
+            return collectionsState[value.id]?.filteredGifts ?? []
+        default:
+            return []
+        }
+    }
+    
+    var state: ProfileGiftsContext.State? {
+        return collectionsState[Collection.all.stableId]
+    }
+    
+    mutating func notificationsEnabled(_ value: Bool) {
+        collectionsState[Collection.all.stableId]?.notificationsEnabled = value
+    }
+    
+    func contains(collectionId: Int32, gift: ProfileGiftsContext.State.StarGift) -> Bool {
+        return collectionsState[collectionId]?.gifts.contains(where: { $0.reference == gift.reference }) == true
+    }
+    
     var perRowCount: Int = 3
     var peer: EnginePeer?
-    var state: ProfileGiftsContext.State?
     var starsState: StarsContext.State?
-    var collectionsState:StarGiftCollectionsContext.State?
+    var collectionsState:[Int32: ProfileGiftsContext.State] = [:]
 
     var collections:[Collection] = []
     var selectedCollection: Int32 = Collection.all.stableId
@@ -319,18 +368,34 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .customModern(10)))
         sectionId += 1
     }
+    
+    let collectionGiftsLimit = arguments.context.appConfiguration.getGeneralValue("stargifts_collection_gifts_limit", orElse: 500)
   
-    let chunks: [[ProfileGiftsContext.State.StarGift]]
+    let chunks: [[GiftOptionsRowItem.Option]]
     let collection = state.collections.first(where: { $0.stableId == state.selectedCollection }) ?? .all
-    chunks = state.gifts.chunks(state.perRowCount)
+    var list = state.gifts.map { GiftOptionsRowItem.Option.initialize($0) }
+    switch collection {
+    case .collection:
+        if let peer = state.peer?._asPeer(), peer.id == arguments.context.peerId || peer.groupAccess.isCreator, !list.isEmpty {
+            //TODOLANG
+            if list.count < collectionGiftsLimit {
+                list.append(.initialize(NSImage(resource: .iconCollectionAddGifts).precomposed(theme.colors.grayText), text: .initialize(string: "Add Gifts", color: theme.colors.grayText, font: .normal(.text))))
+            }
+        }
+    default:
+        break
+    }
+    chunks = list.chunks(state.perRowCount)
 
     
     if !chunks.isEmpty {
         for (i, chunk) in chunks.enumerated() {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0) }, perRowCount: state.perRowCount, fitToSize: false, insets: NSEdgeInsets(), callback: { option in
+                return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk, perRowCount: state.perRowCount, fitToSize: false, insets: NSEdgeInsets(), callback: { option in
                     if let value = option.nativeProfileGift {
                         arguments.open(value)
+                    } else {
+                        arguments.addToCollection(collection, nil)
                     }
                 }, contextMenu: { option in
                     if let profile = option.nativeProfileGift, let _ = profile.reference {
@@ -338,21 +403,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         
                         //TODOLANG
                         let addItem = ContextMenuItem("Add to Collection", handler: {
-                        }, itemImage: MenuAnimation.menu_plus.value)
+                        }, itemImage: MenuAnimation.menu_add_to_folder.value)
                         
                         let addMenu = ContextMenu()
                         addMenu.addItem(ContextMenuItem("New Collection", handler: {
-                            arguments.collection(.add, profile.gift)
-                        }, itemImage: MenuAnimation.menu_plus.value))
+                            arguments.collection(.add, profile)
+                        }, itemImage: MenuAnimation.menu_folder_add.value))
                         
                         addMenu.addItem(ContextSeparatorItem())
                         
                         for collection in state.collections {
                             switch collection {
                             case let .collection(value):
+                                
+                                let contains = state.contains(collectionId: value.id, gift: profile)
+                                
                                 let item = ContextMenuItem(value.title, handler: {
-                                    arguments.addToCollection(collection, profile.gift)
-                                })
+                                    arguments.addToCollection(collection, profile)
+                                }, state: contains ? .on : nil)
+                                
                                 if let file = value.icon {
                                     ContextMenuItem.makeEmoji(item, context: arguments.context, file: file)
                                 }
@@ -426,6 +495,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
+private struct GiftReferenceEntry : Comparable, Identifiable {
+    var index: Int
+    var reference: StarGiftReference
+    
+    var stableId: AnyHashable {
+        return reference
+    }
+    static func <(lhs: GiftReferenceEntry, rhs: GiftReferenceEntry) -> Bool {
+        return lhs.index < rhs.index
+    }
+}
+
 func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
@@ -447,33 +528,112 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         }
     }
     
+    var collectionsContexts:[Int32: ProfileGiftsContext] = [:]
+
     let giftsContext = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peerId)
     
     let collectionsContext = StarGiftCollectionsContext(account: context.account, peerId: peerId)
         
     let peer = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
     
-    actionsDisposable.add(combineLatest(giftsContext.state, peer, context.starsContext.state, collectionsContext.state).startStrict(next: { gifts, peer, starsState, collectionsState in
+    let collectionsLimit = context.appConfiguration.getGeneralValue("stargifts_collections_limit", orElse: 10)
+    
+    actionsDisposable.add(combineLatest(queue: .mainQueue(), giftsContext.state, peer, context.starsContext.state, collectionsContext.state).startStrict(next: { [weak actionsDisposable] gifts, peer, starsState, collectionsState in
         updateState { current in
             var current = current
-            current.gifts = gifts.filteredGifts
-            current.state = gifts
+            current.collectionsState[State.Collection.all.stableId] = gifts
             current.peer = peer
             current.starsState = starsState
-            current.collectionsState = collectionsState
             
             if !collectionsState.collections.isEmpty {
-                current.collections = []
+                current.collections = [.all] + collectionsState.collections.map { .collection(value: $0) }
             }
+            let access = peer?.id == context.peerId || peer?._asPeer().groupAccess.isCreator == true
             
+            if access, !collectionsState.collections.isEmpty, collectionsLimit > collectionsState.collections.count {
+                current.collections += [.add]
+            }
+            if !current.collections.contains(where: { $0.stableId == current.selectedCollection }) {
+                current.selectedCollection = State.Collection.all.stableId
+            }
             return current
+        }
+        
+        for collection in collectionsState.collections {
+            if collectionsContexts[collection.id] == nil {
+                let value = ProfileGiftsContext(account: context.account, peerId: peerId, collectionId: collection.id)
+                collectionsContexts[collection.id] = value
+                actionsDisposable?.add(value.state.start(next: { state in
+                    updateState { current in
+                        var current = current
+                        current.collectionsState[collection.id] = state
+                        return current
+                    }
+                }))
+            }
         }
     }))
     
-    let addToCollection:(State.Collection, StarGift?)->Void = { [weak collectionsContext] collection, giftId in
+    let renameCollection:(State.Collection)->Void = { [weak collectionsContext] collection in
+        guard let collectionsContext else {
+            return
+        }
+        
         switch collection {
         case let .collection(value):
-            if let giftId {
+            
+            var text: String = ""
+            //TODOLANG
+            
+            var footer: ModalAlertData.Footer = .init(value: { initialSize, stableId, presentation, updateData in
+                return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: .singleItem, currentText: value.title, placeholder: nil, inputPlaceholder: "Title...", filter: { $0 }, updated: { updated in
+                    text = updated
+                    DispatchQueue.main.async(execute: updateData)
+                }, limit: 16)
+            })
+            
+            footer.validateData = { _ in
+                if text.isEmpty {
+                    return .fail(.fields([InputDataIdentifier("footer") : .shake]))
+                } else {
+                    return .none
+                }
+            }
+            
+            let data = ModalAlertData(title: "Update Name", info: "Update a name for your collection.", description: nil, ok: "Update", options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: footer)
+            
+            showModalAlert(for: window, data: data, completion: { result in
+                actionsDisposable.add(collectionsContext.renameCollection(id: value.id, title: text).start())
+            })
+        default:
+            break
+        }
+        
+    }
+    
+    let addToCollection:(State.Collection, ProfileGiftsContext.State.StarGift?)->Void = { [weak collectionsContext] collection, gift in
+        
+        guard let collectionsContext else {
+            return
+        }
+        
+        switch collection {
+        case let .collection(value):
+            if let gift, let reference = gift.reference {
+                
+                let state = stateValue.with { $0 }
+                let contains = state.contains(collectionId: value.id, gift: gift)
+                //TODOLANG
+                if contains {
+                    actionsDisposable.add(collectionsContext.removeGifts(id: value.id, gifts: [reference]).start())
+                    showModalText(for: window, text: "Gift removed from **\(value.title)**")
+                } else {
+                    actionsDisposable.add(collectionsContext.addGifts(id: value.id, gifts: [reference]).start())
+                    showModalText(for: window, text: "Gift added to **\(value.title)**")
+                    
+                }
+                
+                
 //                updateState { current in
 //                    var current = current
 //                    if let index = current.collections.firstIndex(where: { $0.stableId == id }) {
@@ -481,11 +641,37 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
 //                    }
 //                    return current
 //                }
-//                showModalText(for: window, text: "Gift successfully added to \(name)")
             } else {
                 
-                showModal(with: SelectGiftsModalController(context: context, peerId: peerId, selected: [], callback: { result in
+                let collectionGifts = stateValue.with { $0.collectionsState[value.id]?.gifts ?? [] }.compactMap(\.reference)
+                
+                
+                var previous: [GiftReferenceEntry] = []
+                for i in 0 ..< collectionGifts.count {
+                    previous.append(.init(index: i, reference: collectionGifts[i]))
+                }
+                
+                showModal(with: SelectGiftsModalController(context: context, peerId: peerId, selected: collectionGifts, callback: { result in
                     
+                    var current: [GiftReferenceEntry] = []
+                    for i in 0 ..< result.count {
+                        current.append(.init(index: i, reference: result[i]))
+                    }
+                    
+                    let (deleteIndices, indicesAndItems) = mergeListsStable(leftList: previous, rightList: current)
+                    
+                    var actions: [StarGiftCollectionsContext.UpdateAction] = []
+                    
+                    if !indicesAndItems.isEmpty {
+                        actions.append(.addGifts(indicesAndItems.map(\.1.reference)))
+                    }
+                    if !deleteIndices.isEmpty {
+                        let removeValue = deleteIndices.map { previous[$0] }
+                        actions.append(.removeGifts(removeValue.map(\.reference)))
+                    }
+                    
+                    actionsDisposable.add(collectionsContext.updateCollection(id: value.id, actions: actions).start())
+
 //                    if temporary, !result.isEmpty, let collectionsContext {
 //                       
 //                    }
@@ -652,24 +838,16 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
             let data = ModalAlertData(title: "Create a New Collection", info: "Choose a name for your collection and start adding your gifts there.", description: nil, ok: "Create", options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: footer)
             
             showModalAlert(for: window, data: data, completion: { result in
-                
-                actionsDisposable.add(collectionsContext.createCollection(title: text, starGifts: []).start())
-                
-//                updateState { current in
-//                    var current = current
-//                    let stableId = Int32.random(in: 0 ..< .max)
-//                    if current.collections.isEmpty {
-//                        current.collections = [.all, .add]
-//                    }
-//                    var icon: TelegramMediaFile?
-//                    
-//                    if let gift {
-//                        icon = gift.unique?.file
-//                    }
-//                    current.collections.insert(.collection(value: StarGiftCollection(id: stableId, title: text, icon: icon, count: gift != nil ? 1 : 0, hash: 0), temporary: true), at: current.collections.count - 1)
-//                    current.selectedCollection = stableId
-//                    return current
-//                }
+                actionsDisposable.add(collectionsContext.createCollection(title: text, starGifts: gift?.reference.flatMap({ [$0] }) ?? []).start(next: { collection in
+                    
+                    updateState { current in
+                        var current = current
+                        if let id = collection?.id {
+                            current.selectedCollection = id
+                        }
+                        return current
+                    }
+                }))
             })
         } else {
             updateState { current in
@@ -682,7 +860,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
 //        let state = stateValue.with { $0 }
 //        let collection = state.collections.first(where: { $0.stableId == state.selectedCollection }) ?? .all
         addToCollection(collection, gift)
-    }, collectionContextMenu: { collection in
+    }, collectionContextMenu: { [weak collectionsContext] collection in
         switch collection {
         case .add:
            return []
@@ -696,21 +874,21 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
                 addToCollection(collection, nil)
             }, itemImage: MenuAnimation.menu_add.value))
             
+            items.append(ContextMenuItem("Rename", handler: {
+                renameCollection(collection)
+            }, itemImage: MenuAnimation.menu_edit.value))
+            
             items.append(ContextSeparatorItem())
             
             //TODOLANG
-            items.append(ContextMenuItem("Delete Collection", handler: {
+            items.append(ContextMenuItem("Delete", handler: {
                 verifyAlert(for: window, information: "Are you sure you want to delete **\(value.title)**?", successHandler: { _ in
-                    updateState { current in
-                        var current = current
-                        if let firstIndex = current.collections.firstIndex(where: { $0.stableId == collection.stableId }) {
-                            current.selectedCollection = current.collections[firstIndex - 1].stableId
-                            current.collections.remove(at: firstIndex)
-                        }
-                        return current
+                    if let collectionsContext {
+                        actionsDisposable.add(collectionsContext.deleteCollection(id: collection.stableId).start())
                     }
                 })
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            
             return items
         }
     })
@@ -741,7 +919,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
                 _ = context.engine.payments.toggleStarGiftsNotifications(peerId: peer.id, enabled: !notificationsEnabled).start()
                 updateState { current in
                     var current = current
-                    current.state?.notificationsEnabled = !notificationsEnabled
+                    current.notificationsEnabled(!notificationsEnabled)
                     return current
                 }
                 showModalText(for: context.window, text: !notificationsEnabled ? strings().peerInfoGiftsChannelNotifyTooltip : strings().peerInfoGiftsChannelNotifyDisabledTooltip)
@@ -815,6 +993,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+        collectionsContexts = [:]
     }
     
     controller.didResize = { controller in
@@ -838,6 +1017,11 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
     }
     
     controller.didLoad = { [weak giftsContext] controller, _ in
+        
+        controller.tableView.set(stickClass: CollectionRowItem.self, handler: { _ in
+            
+        })
+        
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
@@ -848,7 +1032,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         }
     }
     
-    controller.contextObject = (giftsContext, collectionsContext)
+    controller.contextObject = (giftsContext, collectionsContext, collectionsContexts)
 
     return controller
     

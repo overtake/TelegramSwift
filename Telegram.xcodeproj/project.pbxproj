@@ -126,6 +126,7 @@
 		271FB88828943A70001C25DC /* GifKeyboardTabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */; };
 		271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
+		272448AE2E2680BF00C9E013 /* menu_folder_add.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272448AD2E2680BF00C9E013 /* menu_folder_add.tgs */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		27264B972CEC5176003E5BAD /* WebAppPermissionsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */; };
 		2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDCE2863258E0044D260 /* ChatAvatarView.swift */; };
@@ -1832,6 +1833,7 @@
 		271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifKeyboardTabRowItem.swift; sourceTree = "<group>"; };
 		271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSwapSuggestionsPanel.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
+		272448AD2E2680BF00C9E013 /* menu_folder_add.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_folder_add.tgs; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppPermissionsState.swift; sourceTree = "<group>"; };
 		2726BDCE2863258E0044D260 /* ChatAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAvatarView.swift; sourceTree = "<group>"; };
@@ -4307,6 +4309,7 @@
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				27B29E462CB51432007FDA6B /* menu_edited.tgs */,
+				272448AD2E2680BF00C9E013 /* menu_folder_add.tgs */,
 				270595EB2B6CD7B600E05493 /* menu_boost_plus.tgs */,
 				275A4E8D2BCE3CBC00903838 /* menu_eye.tgs */,
 				27D8B5C32E04538E0033136D /* menu_check.tgs */,
@@ -7561,6 +7564,7 @@
 				27CE155C297966D8001F8CE8 /* emoji_category_busy.tgs in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
 				27916F2D287D77660046DB44 /* objects.tgs in Resources */,
+				272448AE2E2680BF00C9E013 /* menu_folder_add.tgs in Resources */,
 				2733672927620C5A0027441E /* menu_save_as.tgs in Resources */,
 				27ABFD242858C221006C3301 /* random.jpg in Resources */,
 				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
