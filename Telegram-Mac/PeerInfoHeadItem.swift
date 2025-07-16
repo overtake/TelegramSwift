@@ -519,7 +519,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let emojiStatus = peer?.emojiStatus {
             switch emojiStatus.content {
             case let .starGift(_, _, _, _, _, _, _, patternColor, _):
-                if backgroundGradient[0].lightness >= 0.5 {
+                if backgroundGradient[0].lightness >= 0.2 {
                     return .init(UInt32(patternColor)).withAlphaComponent(0.5)
                 } else {
                     return .init(UInt32(patternColor))

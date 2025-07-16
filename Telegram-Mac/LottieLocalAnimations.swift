@@ -217,6 +217,7 @@ enum LocalAnimatedSticker : String {
     case menu_expand
     case menu_replace
     case menu_folder
+    case menu_folder_add
     case menu_calendar
     case menu_reactions
     case menu_music
