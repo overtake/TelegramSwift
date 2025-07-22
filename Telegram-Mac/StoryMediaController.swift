@@ -986,12 +986,15 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         }, itemImage: MenuAnimation.menu_edit.value))
         
         //TODOLANG
+        #if DEBUG
         if state.access(context.peerId), !self.isArchived {
             items.append(ContextSeparatorItem())
             items.append(ContextMenuItem("Add Folder", handler: { [weak self] in
                self?.addCollection()
            }, itemImage: MenuAnimation.menu_add.value))
         }
+        #endif
+        
         
         
        
