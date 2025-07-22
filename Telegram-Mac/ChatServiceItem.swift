@@ -1433,8 +1433,15 @@ class ChatServiceItem: ChatRowItem {
                     
                     let authorLayout: TextViewLayout?
                     if let authorPeer, let addressName = authorPeer.addressName {
-                        //TODOLANG
-                        authorLayout = TextViewLayout(.initialize(string: "released by @\(addressName)", color: grayTextColor, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
+                        authorLayout = TextViewLayout(
+                            .initialize(
+                                string: strings().starTransactionReleasedBy(addressName),
+                                color: grayTextColor,
+                                font: .normal(.short)
+                            ),
+                            maximumNumberOfLines: 1,
+                            truncationType: .middle
+                        )
                     } else {
                         authorLayout = nil
                     }
@@ -1559,8 +1566,15 @@ class ChatServiceItem: ChatRowItem {
                     
                     let authorLayout: TextViewLayout?
                     if let authorPeer, let addressName = authorPeer.addressName {
-                        //TODOLANG
-                        authorLayout = TextViewLayout(.initialize(string: "released by @\(addressName)", color: grayTextColor, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
+                        authorLayout = TextViewLayout(
+                            .initialize(
+                                string: strings().starTransactionReleasedBy(addressName),
+                                color: grayTextColor,
+                                font: .normal(.short)
+                            ),
+                            maximumNumberOfLines: 1,
+                            truncationType: .middle
+                        )
                     } else {
                         authorLayout = nil
                     }

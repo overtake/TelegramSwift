@@ -159,8 +159,15 @@ private final class HeaderItem : GeneralRowItem {
         } else if isGift {
             
             if let author {
-                //TODOLANG
-                self.authorLayout = .init(.initialize(string: "released by @\(author.addressName ?? "")", color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+                self.authorLayout = .init(
+                    .initialize(
+                        string: strings().starTransactionReleasedBy(author.addressName ?? ""),
+                        color: theme.colors.grayText,
+                        font: .normal(.text)
+                    ),
+                    maximumNumberOfLines: 1,
+                    truncationType: .middle
+                )
             } else {
                 self.authorLayout = nil
             }

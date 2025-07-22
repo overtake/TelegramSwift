@@ -626,11 +626,11 @@ protocol PeerMediaSearchable : AnyObject {
          if isBot {
              self.storyListContext = BotPreviewStoryListContext(account: context.account, engine: context.engine, peerId: peerId, language: nil, assumeEmpty: false)
          } else {
-             self.storyListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false)
+             self.storyListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false, folderId: nil)
          }
          
         if peerId == context.peerId, threadInfo == nil, isProfileIntended {
-            let archiveStoryListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true)
+            let archiveStoryListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true, folderId: nil)
             self.archiveStoryListContext = archiveStoryListContext
             self.archiveStories = StoryMediaController(context: context, peerId: peerId, listContext: archiveStoryListContext, isArchived: true)
         } else {
@@ -680,6 +680,9 @@ protocol PeerMediaSearchable : AnyObject {
                 self?.setCenterTitle(title)
             }
         }
+         
+        stories.parentController = self
+        archiveStories?.parentController = self
     }
 
     var unableToHide: Bool {

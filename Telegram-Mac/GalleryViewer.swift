@@ -749,7 +749,7 @@ class GalleryViewer: NSResponder {
                     
                 case .history:
                     return signal |> mapToSignal { view, _, _ -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
-                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false, translate: translate).filter { entry -> Bool in
+                        let entries:[ChatHistoryEntry] = messageEntries(view.entries, includeHoles : false, translate: translate, contentConfig: context.contentConfig).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
                                 var firstCheck = message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
@@ -798,7 +798,7 @@ class GalleryViewer: NSResponder {
                         }.map {
                             MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
                         }
-                        let entries:[ChatHistoryEntry] = messageEntries(messages, includeHoles : false).filter { entry -> Bool in
+                        let entries:[ChatHistoryEntry] = messageEntries(messages, includeHoles : false, contentConfig: context.contentConfig).filter { entry -> Bool in
                             switch entry {
                             case let .MessageEntry(message, _, _, _, _, _, _):
                                 return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
@@ -829,7 +829,7 @@ class GalleryViewer: NSResponder {
                     let messages = messages.map {
                         MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
                     }
-                    let entries:[ChatHistoryEntry] = messageEntries(messages, includeHoles : false).filter { entry -> Bool in
+                    let entries:[ChatHistoryEntry] = messageEntries(messages, includeHoles : false, contentConfig: context.contentConfig).filter { entry -> Bool in
                         switch entry {
                         case let .MessageEntry(message, _, _, _, _, _, _):
                             return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil

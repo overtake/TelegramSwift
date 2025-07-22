@@ -694,6 +694,10 @@ class SharedAccountContext {
     var hasActiveCall:Bool {
         return crossCallSession.with( { $0 }) != nil || crossGroupCall.with( { $0 }) != nil
     }
+    
+    var p2pCall: PCallSession? {
+        return crossCallSession.with( { $0 })
+    }
 
     func dropCrossCall() {
         _ = crossGroupCall.swap(nil)

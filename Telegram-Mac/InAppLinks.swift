@@ -1328,6 +1328,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 text = strings().giftSendDisallowError
             case .starGiftResellTooEarly:
                 text = strings().unknownError
+            case .starGiftUserLimit:
+                text = strings().giftOptionsGiftBuyLimitReached
             }
             showModalText(for: getWindow(context), text: text)
         })

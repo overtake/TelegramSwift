@@ -42,10 +42,13 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         
         switch sceneType {
         case let .gift(gift):
-            //TODOLANG
             let limit = gift.perUserLimit?.total ?? 0
-            title = .initialize(string: "Premium Gift", color: presentation.colors.text, font: .medium(.header))
-            info.append(string: "Subscribe to **Telegram Premium** to send up to **\(limit)** of these gifts and unlock access to multiple additional features.", color: theme.colors.text, font: .normal(.text))
+            title = .initialize(string: strings().premiumStarGiftTitle, color: presentation.colors.text, font: .medium(.header))
+            info.append(
+                string: strings().premiumStarGiftInfo(Int(limit)),
+                color: theme.colors.text,
+                font: .normal(.text)
+            )
             info.detectBoldColorInString(with: .medium(.text))
 
         case .coin:

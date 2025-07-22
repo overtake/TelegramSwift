@@ -443,7 +443,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
                 effectiveEntries = view.entries
             }
             
-            let messages: [ChatHistoryEntry] = messageEntries(effectiveEntries, renderType: theme.bubbled ? .bubble : .list, pollAnswersLoading: state.pollAnswers, groupingPhotos: true, searchState: state.searchMessages?.resultState, chatTheme: state.appearance.presentation, mediaRevealed: state.mediaRevealed, automaticDownload: initialData.autodownloadSettings).reversed()
+            let messages: [ChatHistoryEntry] = messageEntries(effectiveEntries, renderType: theme.bubbled ? .bubble : .list, pollAnswersLoading: state.pollAnswers, groupingPhotos: true, searchState: state.searchMessages?.resultState, chatTheme: state.appearance.presentation, mediaRevealed: state.mediaRevealed, automaticDownload: initialData.autodownloadSettings, contentConfig: context.contentConfig).reversed()
             
             
             let entries = messages.map {

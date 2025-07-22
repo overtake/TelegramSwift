@@ -588,6 +588,8 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                         text = strings().giftSoldOutError
                     case .disallowedStarGift:
                         text = strings().giftSendDisallowError
+                    case .starGiftUserLimit:
+                        text = strings().giftOptionsGiftBuyLimitReached
                     }
                     alert(for: window(), info: text)
                     invokeCompletion(.failed)

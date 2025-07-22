@@ -2397,7 +2397,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     openforce()
                 }
             } else {
-                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true)
+                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false, folderId: nil), standalone: true)
                 self?.close()
             }
         }

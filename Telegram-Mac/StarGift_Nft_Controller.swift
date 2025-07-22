@@ -1151,7 +1151,6 @@ private struct State : Equatable {
         default:
             if let unique = gift.unique {
                 if let author {
-                    //TODOLANG
                     return strings().starTransactionGiftCollectible("#\(unique.number)") + " by @\(author.addressName ?? "")"
                 } else {
                     return strings().starTransactionGiftCollectible("#\(unique.number)")
@@ -1613,6 +1612,8 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         text = strings().giftSoldOutError
                     case .disallowedStarGift:
                         text = strings().giftSendDisallowError
+                    case .starGiftUserLimit:
+                        text = strings().giftOptionsGiftBuyLimitReached
                     }
                     showModalText(for: window, text: text)
                 })

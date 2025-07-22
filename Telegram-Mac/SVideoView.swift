@@ -1316,12 +1316,24 @@ class SVideoView: NSView {
         didSet {
             if let ranges = bufferingStatus {
                 var bufRanges: [Range<CGFloat>] = []
+                guard ranges.1 != 0 else {
+                    print("Warning: Division by zero avoided")
+                    return
+                }
+
                 for range in ranges.0.ranges {
                     let low = CGFloat(range.lowerBound) / CGFloat(ranges.1)
                     let high = CGFloat(range.upperBound) / CGFloat(ranges.1)
-                    let br: Range<CGFloat> = Range<CGFloat>(uncheckedBounds: (lower: low, upper: high))
-                    bufRanges.append(br)
+                    
+                    // Ensure lowerBound <= upperBound
+                    let lower = min(low, high)
+                    let upper = max(low, high)
+                    
+                    if lower < upper {
+                        bufRanges.append(lower..<upper)
+                    }
                 }
+
                 controls.bufferingRanges = bufRanges
                 pipControls?.bufferingRanges = bufRanges
             } else {

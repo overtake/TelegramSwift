@@ -480,7 +480,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId) -> Vi
     
     let storiesPromise = Promise<PeerStoryListContext.State?>()
 
-    let storyList = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false)
+    let storyList = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false, folderId: nil)
     storyList.loadMore()
     storiesPromise.set(
         .single(nil)

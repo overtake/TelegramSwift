@@ -854,11 +854,11 @@ private final class StoryListEntryRowItem : TableRowItem {
             }
         } else {
             items.append(.init(strings().storyListContextSavedStories, handler: {
-                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true, isArchived: false)
+                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false, folderId: nil), standalone: true, isArchived: false)
             }, itemImage: MenuAnimation.menu_stories.value))
             
             items.append(.init(strings().storyListContextArchivedStories, handler: {
-                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true)
+                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true, folderId: nil), standalone: true, isArchived: true)
             }, itemImage: MenuAnimation.menu_archive.value))
             
             addStealthMode()

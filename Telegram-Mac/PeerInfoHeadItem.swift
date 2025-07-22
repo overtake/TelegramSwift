@@ -519,7 +519,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let emojiStatus = peer?.emojiStatus {
             switch emojiStatus.content {
             case let .starGift(_, _, _, _, _, _, _, patternColor, _):
-                if backgroundGradient[0].lightness >= 0.2 {
+                if backgroundGradient.last!.lightness >= 0.2 {
                     return .init(UInt32(patternColor)).withAlphaComponent(0.5)
                 } else {
                     return .init(UInt32(patternColor))
@@ -529,10 +529,17 @@ class PeerInfoHeadItem: GeneralRowItem {
             }
         }
         
+        let color: NSColor
+        
         if let nameColor = nameColor, threadId == nil, !editing {
-            return context.peerNameColors.getProfile(nameColor).main
+            color = context.peerNameColors.getProfile(nameColor).main
         } else {
-            return theme.colors.text
+            color = theme.colors.text
+        }
+        if color.lightness >= 0.2 {
+            return color.withAlphaComponent(0.5)
+        } else {
+            return color
         }
     }
     var backgroundGradient: [NSColor] {
@@ -548,7 +555,7 @@ class PeerInfoHeadItem: GeneralRowItem {
             let colors = context.peerNameColors.getProfile(nameColor)
             return [colors.main, colors.secondary ?? colors.main].compactMap { $0 }
         } else {
-            return [NSColor(0xffffff, 0)]
+            return [NSColor(0xffffff, 0), NSColor(0xffffff, 0)]
         }
     }
     
@@ -1976,7 +1983,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         var statusOffset: CGFloat = 0
         if let rating = ratingView {
             transition.updateFrame(view: rating, frame: rating.centerFrameY(x: 0))
-            statusOffset = 19 + 4
+            statusOffset = rating.smallSize.width + 3
         }
 
         transition.updateFrame(view: statusView, frame: statusView.centerFrameY(x: statusOffset))
@@ -2156,7 +2163,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.ratingView = current
                 statusContainer.addSubview(current)
             }
-            let size = current.set(data: rating, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, state: self.ratingState, animated: animated)
+            let size = current.set(data: rating, context: item.context, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, state: self.ratingState, animated: animated)
             
             current.change(size: size, animated: animated)
             current.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)

@@ -254,7 +254,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func archiveStories() {
-        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true), standalone: true, isArchived: true))
+        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true, folderId: nil), standalone: true, isArchived: true))
     }
     
     func boosts(_ access: GroupAccess) {

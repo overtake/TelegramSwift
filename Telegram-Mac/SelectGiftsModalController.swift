@@ -23,10 +23,26 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
+    
+    var collectionId: Int32
+    
     var gifts: [ProfileGiftsContext.State.StarGift] = []
     var perRowCount: Int = 3
-    var selected: [StarGiftReference] = []
+    var selected: [ProfileGiftsContext.State.StarGift] = []
+    var unselected: [ProfileGiftsContext.State.StarGift] = []
     var state: ProfileGiftsContext.State?
+    
+    func selected(_ gift: ProfileGiftsContext.State.StarGift) -> Bool {
+        if let collectionIds = gift.collectionIds, collectionIds.contains(collectionId) {
+            return !unselected.contains {
+                $0.reference == gift.reference
+            }
+        } else {
+            return selected.contains(where: {
+                $0.reference == gift.reference
+            })
+        }
+    }
 }
 
 private func _id_stars_gifts(_ index: Int) -> InputDataIdentifier {
@@ -45,13 +61,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     struct Tuple : Equatable {
         var chunk: [ProfileGiftsContext.State.StarGift]
-        var selected: [StarGiftReference]
+        var selected: [ProfileGiftsContext.State.StarGift]
     }
     
+
+    
     for (i, chunk) in chunks.enumerated() {
-        let tuple = Tuple(chunk: chunk, selected: state.selected.filter { chunk.compactMap(\.reference).contains($0) })
+        let tuple = Tuple(chunk: chunk, selected: chunk.filter { state.selected($0) })
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-            return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0, selected: state.selected.contains($0.reference ?? .slug(slug: ""))) }, perRowCount: state.perRowCount, fitToSize: false, insets: NSEdgeInsets(left: 10, right: 10), callback: { option in
+            return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0, selected: tuple.selected.map(\.reference!).contains($0.reference!)) }, perRowCount: state.perRowCount, fitToSize: false, insets: NSEdgeInsets(left: 10, right: 10), callback: { option in
                 if let gift = option.nativeProfileGift {
                     arguments.toggle(gift)
                 }
@@ -72,11 +90,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func SelectGiftsModalController(context: AccountContext, peerId: PeerId, selected: [StarGiftReference], callback: @escaping([StarGiftReference])->Void) -> InputDataModalController {
+func SelectGiftsModalController(context: AccountContext, collectionId: Int32, peerId: PeerId, callback: @escaping([ProfileGiftsContext.State.StarGift], [ProfileGiftsContext.State.StarGift])->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(selected: selected)
+    let initialState = State(collectionId: collectionId)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -108,40 +126,49 @@ func SelectGiftsModalController(context: AccountContext, peerId: PeerId, selecte
 
 
     let arguments = Arguments(context: context, toggle: { gift in
-        if let reference = gift.reference {
-            var failedToAdd: Bool = false
-            updateState { current in
-                var current = current
-                if let index = current.selected.firstIndex(of: reference) {
+        var failedToAdd: Bool = false
+        updateState { current in
+            var current = current
+            
+            if let collectionIds = gift.collectionIds, collectionIds.contains(collectionId) {
+                if let index = current.unselected.map(\.reference!).firstIndex(of: gift.reference!) {
+                    current.unselected.remove(at: index)
+                } else {
+                    current.unselected.append(gift)
+                }
+            } else {
+                if let index = current.selected.map(\.reference!).firstIndex(of: gift.reference!) {
                     current.selected.remove(at: index)
                 } else {
                     if current.selected.count < collectionGiftsLimit {
-                        current.selected.append(reference)
+                        current.selected.append(gift)
                     } else {
                         failedToAdd = true
                     }
                 }
-                return current
             }
-            if failedToAdd {
-                //TODOLANG
-                showModalText(for: window, text: "Limit Reached")
-            }
+            
+            return current
+        }
+        if failedToAdd {
+            showModalText(for: window, text: strings().selectGiftsLimitReached)
         }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Add Gifts")
-    
+    let controller = InputDataController(
+        dataSignal: signal,
+        title: strings().selectGiftsTitle
+    )
+
     getController = { [weak controller] in
         return controller
     }
     
     controller.validateData = { _ in
-        callback(stateValue.with { $0.selected })
+        callback(stateValue.with { $0.selected }, stateValue.with { $0.unselected })
         close?()
         return .none
     }
@@ -149,10 +176,14 @@ func SelectGiftsModalController(context: AccountContext, peerId: PeerId, selecte
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
-    //TODOLANG
-    let modalInteractions = ModalInteractions(acceptTitle: "Add Gifts", accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
-    }, inset: 10, singleButton: true)
+    let modalInteractions = ModalInteractions(
+        acceptTitle: strings().selectGiftsAccept,
+        accept: { [weak controller] in
+            _ = controller?.returnKeyAction()
+        },
+        inset: 10,
+        singleButton: true
+    )
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(380, 0))
     
