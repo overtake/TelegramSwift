@@ -791,6 +791,8 @@ func Star_PurschaseInApp(context: AccountContext, invoice: TelegramMediaInvoice?
                             text = strings().giftSoldOutError
                         case .disallowedStarGift:
                             text = strings().giftSendDisallowError
+                        case .starGiftUserLimit:
+                            text = strings().giftOptionsGiftBuyLimitReached
                         }
                         showModalText(for: window, text: text)
                         completion(.failed)

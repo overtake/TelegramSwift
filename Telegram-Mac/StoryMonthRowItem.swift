@@ -152,18 +152,6 @@ final class StoryMonthRowItem : GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         
-        if !items.isEmpty {
-            var t: time_t = time_t(TimeInterval(items[0].storyItem.timestamp))
-            var timeinfo: tm = tm()
-            localtime_r(&t, &timeinfo)
-            
-            if timeinfo.tm_mon == 2 {
-                var bp:Int = 0
-                bp += 1
-            }
-            
-        }
-        
         let (rowCount, perWidth) = StoryMonthRowItem.rowCount(blockWidth: self.blockWidth, rowCount: rowCountValue, viewType: self.viewType)
         
         assert(rowCount >= 1)

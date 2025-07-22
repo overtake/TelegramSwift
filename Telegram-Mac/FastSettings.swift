@@ -218,6 +218,8 @@ class FastSettings {
     
     private static let kContactsSort = "kContactsSort";
     
+    private static let kAgeVerification = "kAgeVerification2";
+    
     public static var contactsSort: PeerListState.ContactsSort {
         get {
             if let value = UserDefaults.standard.value(forKey: kContactsSort) as? Int32 {
@@ -568,6 +570,15 @@ class FastSettings {
     
     static func markChannelIntroHasSeen() {
         UserDefaults.standard.set(true, forKey: kNeedShowChannelIntro)
+    }
+    
+    static var lastAgeVerification: TimeInterval? {
+        get {
+            return UserDefaults.standard.value(forKey: kAgeVerification) as? TimeInterval
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kAgeVerification)
+        }
     }
     
     static var forceTouchAction: ForceTouchAction {

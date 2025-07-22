@@ -13,6 +13,7 @@ import TelegramCore
 import KeyboardKey
 import TelegramMedia
 import Postbox
+import WebKit
 
 protocol BrowserPage {
     func contextMenu() -> ContextMenu
@@ -1912,6 +1913,7 @@ final class WebappBrowserController : ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler:{ })
         
         self.genericView.tabsView = tabs.genericView
         self.genericView.header.addSubview(tabs.view)

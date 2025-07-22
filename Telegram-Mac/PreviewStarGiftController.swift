@@ -364,10 +364,17 @@ private final class PreviewRowItem : GeneralRowItem {
         
         switch source {
         case .starGift:
-            //TODOLANG
             
             if let author {
-                self.authorLayout = .init(.initialize(string: "released by @\(author.addressName ?? "")", color: presentation.chatServiceItemTextColor, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+                self.authorLayout = .init(
+                    .initialize(
+                        string: strings().starTransactionReleasedBy(author.addressName ?? ""),
+                        color: presentation.chatServiceItemTextColor,
+                        font: .normal(.text)
+                    ),
+                    maximumNumberOfLines: 1,
+                    truncationType: .middle
+                )
             } else {
                 self.authorLayout = nil
             }
@@ -856,7 +863,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     switch state.option {
     case let .starGift(option):
         if let gift = option.native.generic, let limit = gift.perUserLimit {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("This gift is limited and available only for **Telegram Premium** Users. You can send it **\(limit.remains)** more times."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            entries.append(.desc(
+                sectionId: sectionId,
+                index: index,
+                text: .plain(strings().starsGiftPreviewLimitedText(Int(limit.remains))),
+                data: .init(
+                    color: theme.colors.listGrayText,
+                    detectBold: true,
+                    viewType: .textBottomItem
+                )
+            ))
             index += 1
         }
     default:
@@ -1111,6 +1127,8 @@ func PreviewStarGiftController(context: AccountContext, option: PreviewGiftSourc
                     text = strings().giftSoldOutError
                 case .disallowedStarGift:
                     text = strings().giftSendDisallowError
+                case .starGiftUserLimit:
+                    text = strings().giftOptionsGiftBuyLimitReached
                 }
                 showModalText(for: window, text: text)
             })

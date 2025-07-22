@@ -945,7 +945,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }
         
         
-        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), presentController: { [weak self] controller, main in
+        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false, folderId: nil), presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.layout else {return}
             if main {

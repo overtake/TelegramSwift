@@ -809,8 +809,10 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                 return
             } else if let limit = gift.perUserLimit {
                 if limit.remains == 0 {
-                    //TODOLANG
-                    showModalText(for: window, text: "You've already sent \(limit.total) of these gifts, and it's the limit.")
+                    showModalText(
+                        for: window,
+                        text: strings().giftSendErrorLimitReached(Int(limit.total))
+                    )
                 }
             }
         }

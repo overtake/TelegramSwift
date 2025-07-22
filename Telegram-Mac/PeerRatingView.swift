@@ -25,7 +25,7 @@ final class PeerRatingView : Control {
     }
     
     
-    private var state: State = .short
+    private(set) var state: State = .short
     private var data: TelegramStarRating = .init(level: 0, currentLevelStars: 0, stars: 0, nextLevelStars: 0)
     
     
@@ -54,9 +54,13 @@ final class PeerRatingView : Control {
 //        self.updateLayout(size: size, transition: .animated(duration: 0.2, curve: .easeOut))
 //
 //    }
-//    
+//
     
-    func set(data: TelegramStarRating, textColor: NSColor, state: State, animated: Bool) -> NSSize {
+    var smallSize: NSSize {
+        return NSMakeSize(max(20, levelView.frame.width + 6), 20)
+    }
+    
+    func set(data: TelegramStarRating, context: AccountContext, textColor: NSColor, state: State, animated: Bool) -> NSSize {
         
         
         
@@ -69,10 +73,16 @@ final class PeerRatingView : Control {
                 } else {
                     self.appTooltip = nil
                 }
-                //TODOLANG
-                showModalText(for: window, text: "Profile level reflects the user's payment reliability.", button: "Learn More", callback: { _ in
-                    
-                })
+                showModalText(
+                    for: window,
+                    text: strings().peerInfoRatingText,
+                    button: strings().peerInfoRatingButton,
+                    callback: { _ in
+                        let url = context.appConfiguration.getStringValue("stars_rating_learnmore_url", orElse: "telegram.org")
+                        execute(inapp: .external(link: url, false))
+                    }
+                )
+
             }
             
         }
@@ -80,14 +90,7 @@ final class PeerRatingView : Control {
         
         self.state = state
         
-        let size: NSSize
-        
-        switch state {
-        case .short:
-            size = NSMakeSize(20, 20)
-        case .full:
-            size = NSMakeSize(200, 20)
-        }
+       
         
         backgroundView.backgroundColor = .white
         self.backgroundColor = NSColor.white.withAlphaComponent(0.35)
@@ -96,6 +99,15 @@ final class PeerRatingView : Control {
         levelLayout.measure(width: .greatestFiniteMagnitude)
         
         self.levelView.update(levelLayout)
+        
+        let size: NSSize
+        
+        switch state {
+        case .short:
+            size = NSMakeSize(max(20, levelLayout.layoutSize.width + 6), 20)
+        case .full:
+            size = NSMakeSize(200, 20)
+        }
         
         
         if case .full = state {
@@ -114,8 +126,13 @@ final class PeerRatingView : Control {
                     isNew = true
                     
                 }
-                //TODOLANG
-                let capLayout = TextViewLayout(.initialize(string: "Level", color: textColor, font: .normal(.short)))
+                let capLayout = TextViewLayout(
+                    .initialize(
+                        string: strings().peerInfoRatingLevel,
+                        color: textColor,
+                        font: .normal(.short)
+                    )
+                )
                 capLayout.measure(width: .greatestFiniteMagnitude)
                 current.update(capLayout)
                 
@@ -142,7 +159,6 @@ final class PeerRatingView : Control {
                         isNew = true
                         
                     }
-                    //TODOLANG
                     let layout = TextViewLayout(.initialize(string: "\(data.level + 1)", color: textColor, font: .normal(.short)))
                     layout.measure(width: .greatestFiniteMagnitude)
                     current.update(layout)

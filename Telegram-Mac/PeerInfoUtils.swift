@@ -25,6 +25,7 @@ struct GroupAccess {
     let canManageGifts: Bool
     let canPostMessages: Bool
     let canManageDirect: Bool
+    let canManageStories: Bool
 }
 
 extension Peer {
@@ -43,6 +44,7 @@ extension Peer {
         var canEditMessages = false
         var canPin: Bool
         var canManageGifts = false
+        var canManageStories = false
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true
@@ -75,6 +77,7 @@ extension Peer {
             isPublic = channel.username != nil
             isCreator = channel.flags.contains(.isCreator)
             canReport = !channel.flags.contains(.isCreator) && channel.adminRights == nil
+            canManageStories = channel.flags.contains(.isCreator)
             canPostMessages = channel.flags.contains(.isCreator)
             canManageDirect = channel.flags.contains(.isCreator)
             if channel.hasPermission(.changeInfo) {
@@ -101,6 +104,9 @@ extension Peer {
             if channel.hasPermission(.manageCalls) {
                 canMakeVoiceChat = true
             }
+            if channel.hasPermission(.editStories) {
+                canManageStories = true
+            }
             if channel.hasPermission(.editAllMessages) {
                 canEditMessages = true
             }
@@ -112,7 +118,7 @@ extension Peer {
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages, canManageDirect: canManageDirect)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages, canManageDirect: canManageDirect, canManageStories: canManageStories)
     }
     
     var canInviteUsers:Bool {

@@ -401,6 +401,14 @@ public final class L10n {
   public static var affiliateSetupToastTerminatedText: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastTerminated.Text") }
   /// Affiliate Program Ended
   public static var affiliateSetupToastTerminatedTitle: String  { return L10n.tr("Localizable", "AffiliateSetup.ToastTerminated.Title") }
+  /// To access this content, you must confirm you are at least **18** years old.\n\nThis is a one-time process using your phone's camera. Your selfie will not be stored by Telegram.
+  public static var ageVerificationText: String  { return L10n.tr("Localizable", "AgeVerification.Text") }
+  /// Age Verification
+  public static var ageVerificationTitle: String  { return L10n.tr("Localizable", "AgeVerification.Title") }
+  /// Verify My Age
+  public static var ageVerificationVerify: String  { return L10n.tr("Localizable", "AgeVerification.Verify") }
+  /// To access this content, you must confirm you are at least **18** years old as required by UK law.\n\nThis is a one-time process using your phone's camera. Your selfie will not be stored by Telegram.
+  public static var ageVerificationTextGB: String  { return L10n.tr("Localizable", "AgeVerification.Text.GB") }
   /// Cancel
   public static var alertCancel: String  { return L10n.tr("Localizable", "Alert.Cancel") }
   /// Discard
@@ -8939,6 +8947,10 @@ public final class L10n {
   public static var dataAndStorageSensitiveContentConfirmOk: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Ok") }
   /// Confirm that you are over 18 years old and update your settings to see potentially explicit and sensitive content.
   public static var dataAndStorageSensitiveContentConfirmText: String  { return L10n.tr("Localizable", "DataAndStorage.SensitiveContent.Confirm.Text") }
+  /// You will able to verify yourself again %@
+  public static func dataAndStorageVerifyAgainError(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DataAndStorage.VerifyAgain.Error", p1)
+  }
   /// Today
   public static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
   /// You can leave an optional comment
@@ -10393,6 +10405,8 @@ public final class L10n {
   public static var giftMarketplaceSortNumber: String  { return L10n.tr("Localizable", "Gift.Marketplace.Sort.Number") }
   /// Sort by Price
   public static var giftMarketplaceSortPrice: String  { return L10n.tr("Localizable", "Gift.Marketplace.Sort.Price") }
+  /// You've already reached limit to send this gift.
+  public static var giftOptionsGiftBuyLimitReached: String  { return L10n.tr("Localizable", "Gift.Options.Gift.BuyLimitReached") }
   /// Buy yourself a gift to display on your page or reserve for later.\n\nLimited-edition gifts upgraded to collectibles can be gifted to others later.
   public static var giftOptionsGiftSelfText: String  { return L10n.tr("Localizable", "Gift.Options.GiftSelf.Text") }
   /// Buy a Gift
@@ -10441,6 +10455,10 @@ public final class L10n {
   }
   /// User is not accepting gifts
   public static var giftSendDisallowError: String  { return L10n.tr("Localizable", "Gift.Send.Disallow.Error") }
+  /// You've already sent %d of these gifts, and it's the limit.
+  public static func giftSendErrorLimitReached(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached", p1)
+  }
   /// Enable this to let %1$@ turn your gift into a unique collectible. [Learn More >]()
   public static func giftSendUpgradeInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Gift.Send.Upgrade.Info", p1)
@@ -14435,6 +14453,12 @@ public final class L10n {
   public static var peerInfoPreHistoryVisible: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Visible") }
   /// Premium Account. [Read More](premium)
   public static var peerInfoPremiumTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Premium.Tooltip") }
+  /// Learn More
+  public static var peerInfoRatingButton: String  { return L10n.tr("Localizable", "PeerInfo.Rating.Button") }
+  /// Level
+  public static var peerInfoRatingLevel: String  { return L10n.tr("Localizable", "PeerInfo.Rating.Level") }
+  /// Profile level reflects the user's payment reliability.
+  public static var peerInfoRatingText: String  { return L10n.tr("Localizable", "PeerInfo.Rating.Text") }
   /// All
   public static var peerInfoReactionsAll: String  { return L10n.tr("Localizable", "PeerInfo.Reactions.All") }
   /// Disabled
@@ -14519,6 +14543,58 @@ public final class L10n {
   public static var peerMediaStories: String  { return L10n.tr("Localizable", "PeerMedia.Stories") }
   /// Voicemessages
   public static var peerMediaVoice: String  { return L10n.tr("Localizable", "PeerMedia.Voice") }
+  /// Add Collection
+  public static var peerMediaGiftsCollectionAdd: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Add") }
+  /// All Gifts
+  public static var peerMediaGiftsCollectionAll: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.All") }
+  /// Gift added to **%@**
+  public static func peerMediaGiftsCollectionAlertAdded(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Alert.Added", p1)
+  }
+  /// Gift removed from **%@**
+  public static func peerMediaGiftsCollectionAlertRemoved(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Alert.Removed", p1)
+  }
+  /// Add Collection
+  public static var peerMediaGiftsCollectionContextAddCollection: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.AddCollection") }
+  /// Add Gifts
+  public static var peerMediaGiftsCollectionContextAddGifts: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.AddGifts") }
+  /// Add to Collection
+  public static var peerMediaGiftsCollectionContextAddToCollection: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.AddToCollection") }
+  /// Delete
+  public static var peerMediaGiftsCollectionContextDelete: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.Delete") }
+  /// New Collection
+  public static var peerMediaGiftsCollectionContextNewCollection: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.NewCollection") }
+  /// Rename
+  public static var peerMediaGiftsCollectionContextRename: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.Rename") }
+  /// Are you sure you want to delete **%@**?
+  public static func peerMediaGiftsCollectionContextDeleteConfirm(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Context.Delete.Confirm", p1)
+  }
+  /// Add to Collection
+  public static var peerMediaGiftsCollectionEmptyAction: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Empty.Action") }
+  /// Organize Your Gifts
+  public static var peerMediaGiftsCollectionEmptyHeader: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Empty.Header") }
+  /// Add some gifts to this collection.
+  public static var peerMediaGiftsCollectionEmptyText: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Empty.Text") }
+  /// Choose a name for your collection and start adding your gifts there.
+  public static var peerMediaGiftsCollectionNewInfo: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.New.Info") }
+  /// Create
+  public static var peerMediaGiftsCollectionNewOk: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.New.Ok") }
+  /// Title...
+  public static var peerMediaGiftsCollectionNewPlaceholder: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.New.Placeholder") }
+  /// Create a New Collection
+  public static var peerMediaGiftsCollectionNewTitle: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.New.Title") }
+  /// Add Gifts
+  public static var peerMediaGiftsCollectionPanelAddGifts: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Panel.AddGifts") }
+  /// Update a name for your collection.
+  public static var peerMediaGiftsCollectionUpdateInfo: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Update.Info") }
+  /// Update
+  public static var peerMediaGiftsCollectionUpdateOk: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Update.Ok") }
+  /// Title...
+  public static var peerMediaGiftsCollectionUpdatePlaceholder: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Update.Placeholder") }
+  /// Update Name
+  public static var peerMediaGiftsCollectionUpdateTitle: String  { return L10n.tr("Localizable", "PeerMedia.Gifts.Collection.Update.Title") }
   /// Shared Audio
   public static var peerMediaPopoverSharedAudio: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedAudio") }
   /// Shared Files
@@ -15299,6 +15375,12 @@ public final class L10n {
   public static func premiumShowStatusUpgradeToPremiumReadInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.ShowStatus.UpgradeToPremium.Read.Info", p1)
   }
+  /// Subscribe to **Telegram Premium** to send up to **%d** of these gifts and unlock access to multiple additional features.
+  public static func premiumStarGiftInfo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info", p1)
+  }
+  /// Premium Gift
+  public static var premiumStarGiftTitle: String  { return L10n.tr("Localizable", "Premium.StarGift.Title") }
   /// Activate For Free
   public static var premiumBoardingActivateForFree: String  { return L10n.tr("Localizable", "PremiumBoarding.ActivateForFree") }
   /// %d
@@ -16909,6 +16991,12 @@ public final class L10n {
   public static var secureIdWarningDataLost: String  { return L10n.tr("Localizable", "SecureId.Warning.DataLost") }
   /// Since you didn't provide a recovery email when setting up your password, your remaining options are either to remember your password or to reset your account.
   public static var secureIdForgotPasswordNoEmail: String  { return L10n.tr("Localizable", "SecureId.forgotPassword.NoEmail") }
+  /// Add Gifts
+  public static var selectGiftsAccept: String  { return L10n.tr("Localizable", "Select.Gifts.Accept") }
+  /// Limit Reached
+  public static var selectGiftsLimitReached: String  { return L10n.tr("Localizable", "Select.Gifts.LimitReached") }
+  /// Add Gifts
+  public static var selectGiftsTitle: String  { return L10n.tr("Localizable", "Select.Gifts.Title") }
   /// None
   public static var selectAreaControlDimensionNone: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.None") }
   /// Original
@@ -18743,6 +18831,10 @@ public final class L10n {
   }
   /// Giveaway
   public static var starTransactionReasonGiveaway: String  { return L10n.tr("Localizable", "Star.Transaction.Reason.Giveaway") }
+  /// released by @%@
+  public static func starTransactionReleasedBy(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Star.Transaction.Released.By", p1)
+  }
   /// Only you can see the sender's name and message.
   public static var starTransactionStarGiftAnonymous: String  { return L10n.tr("Localizable", "Star.Transaction.StarGift.Anonymous") }
   /// [Convert to %@](convert)
@@ -19184,6 +19276,10 @@ public final class L10n {
   /// %d videos
   public static func starsTransferVideosZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stars.Transfer.Videos_zero", p1)
+  }
+  /// This gift is limited and available only for **Telegram Premium** Users. You can send it **%d** more times.
+  public static func starsGiftPreviewLimitedText(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StarsGift.Preview.Limited.Text", p1)
   }
   /// Boosts
   public static var statsBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts") }
@@ -21775,6 +21871,14 @@ public final class L10n {
   public static var usernameSettingsInputPlaceholder: String  { return L10n.tr("Localizable", "UsernameSettings.InputPlaceholder") }
   /// Hide Others
   public static var vdrFpXzOTitle: String  { return L10n.tr("Localizable", "Vdr-fp-XzO.title") }
+  /// Age check failed
+  public static var verifyAgeAlertFailedHeader: String  { return L10n.tr("Localizable", "VerifyAge.Alert.Failed.Header") }
+  /// Sorry, you can't view sensitive content.
+  public static var verifyAgeAlertFailedInfo: String  { return L10n.tr("Localizable", "VerifyAge.Alert.Failed.Info") }
+  /// Age check passed!
+  public static var verifyAgeAlertPassedHeader: String  { return L10n.tr("Localizable", "VerifyAge.Alert.Passed.Header") }
+  /// You can now view sensitive content.
+  public static var verifyAgeAlertPassedInfo: String  { return L10n.tr("Localizable", "VerifyAge.Alert.Passed.Info") }
   /// Auto
   public static var videoQualityAuto: String  { return L10n.tr("Localizable", "Video.Quality.Auto") }
   /// Cancel

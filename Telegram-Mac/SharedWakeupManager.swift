@@ -147,7 +147,9 @@ class SharedWakeupManager {
                     let initialData = data.2
                     
                     if self.sharedContext.hasActiveCall {
-                        account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
+                        if self.sharedContext.p2pCall?.internalId != state.id {
+                            account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
+                        }
                     } else {
                         
                         var otherParticipants: [EnginePeer] = state.otherParticipants

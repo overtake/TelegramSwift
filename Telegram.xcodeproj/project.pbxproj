@@ -127,6 +127,8 @@
 		271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		272448AE2E2680BF00C9E013 /* menu_folder_add.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272448AD2E2680BF00C9E013 /* menu_folder_add.tgs */; };
+		272448B02E28193C00C9E013 /* VerifyAgeAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272448AF2E28193600C9E013 /* VerifyAgeAlertController.swift */; };
+		272448B22E2A2BC100C9E013 /* SelectStoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272448B12E2A2BBB00C9E013 /* SelectStoryModalController.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		27264B972CEC5176003E5BAD /* WebAppPermissionsState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */; };
 		2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDCE2863258E0044D260 /* ChatAvatarView.swift */; };
@@ -1834,6 +1836,8 @@
 		271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSwapSuggestionsPanel.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		272448AD2E2680BF00C9E013 /* menu_folder_add.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_folder_add.tgs; sourceTree = "<group>"; };
+		272448AF2E28193600C9E013 /* VerifyAgeAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyAgeAlertController.swift; sourceTree = "<group>"; };
+		272448B12E2A2BBB00C9E013 /* SelectStoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectStoryModalController.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		27264B962CEC5176003E5BAD /* WebAppPermissionsState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAppPermissionsState.swift; sourceTree = "<group>"; };
 		2726BDCE2863258E0044D260 /* ChatAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAvatarView.swift; sourceTree = "<group>"; };
@@ -3699,6 +3703,7 @@
 		2719D80E2A16047100081079 /* media-list */ = {
 			isa = PBXGroup;
 			children = (
+				272448B12E2A2BBB00C9E013 /* SelectStoryModalController.swift */,
 				2719D80C2A16013F00081079 /* StoryMediaController.swift */,
 				2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */,
 				2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */,
@@ -5171,6 +5176,7 @@
 		C221ED521EA6849D00471C65 /* data-and-storage */ = {
 			isa = PBXGroup;
 			children = (
+				272448AF2E28193600C9E013 /* VerifyAgeAlertController.swift */,
 				27D604362953BF1500588C21 /* usage */,
 				C221ED531EA684BE00471C65 /* DataAndStorageViewController.swift */,
 				9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */,
@@ -7923,6 +7929,7 @@
 				27EF749529C3161E009FA57B /* SharedFolderClosureController.swift in Sources */,
 				C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */,
 				D048EDDE24FFEC5600977606 /* ChannelCommentsControls.swift in Sources */,
+				272448B02E28193C00C9E013 /* VerifyAgeAlertController.swift in Sources */,
 				271A196A2D0C65B000FAE5FB /* Bot_VerifyAccountRowItem.swift in Sources */,
 				9FC4DAA821DE0626003E2A62 /* ChannelPermissionsController.swift in Sources */,
 				27C2B1A827C3D54F004BC87B /* StoreDownloadedMedia.swift in Sources */,
@@ -8435,6 +8442,7 @@
 				27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */,
 				274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
+				272448B22E2A2BC100C9E013 /* SelectStoryModalController.swift in Sources */,
 				27034078282CF7BE00D0156C /* PremiumStarSceneView.swift in Sources */,
 				9F4EEF8621D4FA68002C3B33 /* InstantPageArticleItem.swift in Sources */,
 				9F18DD94206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift in Sources */,

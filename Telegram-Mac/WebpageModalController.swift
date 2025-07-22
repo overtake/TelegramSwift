@@ -2387,6 +2387,30 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     self?.sendEvent(name: "secure_storage_cleared", data: data.string)
                 })
             }
+        case "web_app_verify_age":
+            let verify_age_bot = context.appConfiguration.getStringValue("verify_age_bot_username", orElse: "")
+            if let json, let passed = json["passed"] as? Bool, let age = json["age"] as? Int32, bot?.addressName == verify_age_bot {
+                
+                let passed = passed && context.appConfiguration.getGeneralValue("verify_age_min", orElse: 18) <= age
+                
+                let header: String
+                let info: String
+                if passed {
+                    header = strings().verifyAgeAlertPassedHeader
+                    info = strings().verifyAgeAlertPassedInfo
+                } else {
+                    header = strings().verifyAgeAlertFailedHeader
+                    info = strings().verifyAgeAlertFailedInfo
+                }
+
+                showModalText(for: context.window, text: info, title: header)
+                _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                
+                NotificationCenter.default.post(name: NSNotification.Name("external_age_verify"), object: nil)
+                
+                FastSettings.lastAgeVerification = Date().timeIntervalSince1970
+                
+            }
         default:
             break
         }
@@ -2880,37 +2904,43 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     func contextMenu() -> ContextMenu {
         var items:[ContextMenuItem] = []
         
-        let inFullscreen = window?.isFullScreen == true
-
-        items.append(.init(!inFullscreen ? strings().webAppFullscreen : strings().webAppExitFullscreen, handler: { [weak self] in
-            self?.window?.toggleFullScreen(nil)
-        }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
+        let verify_age_bot = context.appConfiguration.getStringValue("verify_age_bot_username", orElse: "")
 
         
-        items.append(.init(strings().webAppReload, handler: { [weak self] in
-            self?.reloadPage()
-        }, itemImage: MenuAnimation.menu_reload.value))
+        if self.bot?.addressName != verify_age_bot {
+            let inFullscreen = window?.isFullScreen == true
 
-        if self.hasSettings == true {
-            items.append(.init(strings().webAppSettings, handler: { [weak self] in
-                self?.settingsPressed()
-            }, itemImage: MenuAnimation.menu_gear.value))
-        }
-        
-        if let data = self.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
-            if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                if installedBots.contains(where: { $0 == bot.id }) {
-                    items.append(ContextSeparatorItem())
-                    items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
-                        self?.removeBotFromAttachMenu(bot: bot)
-                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                } else {
-                    items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
-                        self?.addBotToAttachMenu(bot: bot)
-                    }, itemImage: MenuAnimation.menu_plus.value))
+            items.append(.init(!inFullscreen ? strings().webAppFullscreen : strings().webAppExitFullscreen, handler: { [weak self] in
+                self?.window?.toggleFullScreen(nil)
+            }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
+
+            
+            items.append(.init(strings().webAppReload, handler: { [weak self] in
+                self?.reloadPage()
+            }, itemImage: MenuAnimation.menu_reload.value))
+
+            if self.hasSettings == true {
+                items.append(.init(strings().webAppSettings, handler: { [weak self] in
+                    self?.settingsPressed()
+                }, itemImage: MenuAnimation.menu_gear.value))
+            }
+            
+            if let data = self.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
+                if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+                    if installedBots.contains(where: { $0 == bot.id }) {
+                        items.append(ContextSeparatorItem())
+                        items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
+                            self?.removeBotFromAttachMenu(bot: bot)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    } else {
+                        items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
+                            self?.addBotToAttachMenu(bot: bot)
+                        }, itemImage: MenuAnimation.menu_plus.value))
+                    }
                 }
             }
         }
+        
         
         if self.isBackButton == true, browser == nil {
             items.append(.init(strings().webAppClose, handler: { [weak self] in

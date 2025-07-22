@@ -616,6 +616,9 @@ class InputDataController: GenericViewController<InputDataView> {
     
     var autoInputAction: Bool = false
     
+    var willDisappear:((InputDataController)->Void)? = nil
+    var willAppear:((InputDataController)->Void)? = nil
+
     var makeFirstFast: Bool = true
     
     let isFlipped: Bool
@@ -1150,6 +1153,12 @@ class InputDataController: GenericViewController<InputDataView> {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeAllHandlers(for: self)
+        willDisappear?(self)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        willAppear?(self)
     }
     
     

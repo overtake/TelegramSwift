@@ -3428,7 +3428,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         includeJoin = false
                     }
                     
-                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects, factCheckRevealed: uiState.factCheck, quoteRevealed: uiState.quoteRevealed, peerStatus: uiState.peerStatus, commonGroups: uiState.commonGroups, monoforumState: uiState.monoforumState, accountPeerId: context.peerId).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
+                    let entries = messageEntries(msgEntries, location: chatLocation, maxReadIndex: maxReadIndex, dayGrouping: customChatContents == nil, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats, cachedData: peerView?.cachedData, peer: peer, holeLater: view.holeLater, holeEarlier: view.holeEarlier, recommendedChannels: recommendedChannels, includeJoin: includeJoin, earlierId: view.earlierId, laterId: view.laterId, automaticDownload: initialData.autodownloadSettings, savedMessageTags: savedMessageTags, contentSettings: context.contentSettings, codeSyntaxData: uiState.codeSyntaxes, messageEffects: messageEffects, factCheckRevealed: uiState.factCheck, quoteRevealed: uiState.quoteRevealed, peerStatus: uiState.peerStatus, commonGroups: uiState.commonGroups, monoforumState: uiState.monoforumState, accountPeerId: context.peerId, contentConfig: context.contentConfig).map { ChatWrappedEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), tag: view.tag) }
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -5339,24 +5339,41 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.revealMedia = { [weak self] message in
             
             if message.isSensitiveContent(platform: "ios") {
-                verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: context.contentConfig.canAdjustSensitiveContent ? strings().chatSensitiveContentConfirmThird : nil, optionIsSelected: false, successHandler: { result in
+                
+                if !context.contentConfig.sensitiveContentEnabled, context.contentConfig.canAdjustSensitiveContent {
+                    let need_verification = context.appConfiguration.getBoolValue("need_age_video_verification", orElse: false)
+                    
+                    if need_verification {
+                        showModal(with: VerifyAgeAlertController(context: context), for: context.window)
+                        return
+                    }
+                }
+                if context.contentConfig.sensitiveContentEnabled {
                     self?.updateState { current in
                         var current = current
                         current.mediaRevealed.insert(message.id)
                         return current
                     }
-                    if result == .thrid {
-                        let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
-                        let messages = self?.historyView?.originalView?.entries.compactMap { $0.message } ?? []
+                } else {
+                    verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: context.contentConfig.canAdjustSensitiveContent ? strings().chatSensitiveContentConfirmThird : nil, optionIsSelected: false, successHandler: { result in
                         self?.updateState { current in
                             var current = current
-                            for message in messages {
-                                current.mediaRevealed.insert(message.id)
-                            }
+                            current.mediaRevealed.insert(message.id)
                             return current
                         }
-                    }
-                })
+                        if result == .thrid {
+                            let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                            let messages = self?.historyView?.originalView?.entries.compactMap { $0.message } ?? []
+                            self?.updateState { current in
+                                var current = current
+                                for message in messages {
+                                    current.mediaRevealed.insert(message.id)
+                                }
+                                return current
+                            }
+                        }
+                    })
+                }
             } else {
                 self?.updateState { current in
                     var current = current

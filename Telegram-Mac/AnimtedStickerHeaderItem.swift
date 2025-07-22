@@ -13,13 +13,15 @@ import TelegramMedia
 class AnimatedStickerHeaderItem: GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let textLayout: TextViewLayout
-    fileprivate let sticker: LocalAnimatedSticker
+    fileprivate let sticker: LocalAnimatedSticker?
     let stickerSize: NSSize
     let bgColor: NSColor?
     let modify:[String]?
     let isFullView: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(120, 120), bgColor: NSColor? = nil, modify:[String]? = nil, isFullView: Bool = false) {
+    let image: CGImage?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker?, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(120, 120), bgColor: NSColor? = nil, modify:[String]? = nil, isFullView: Bool = false, image: CGImage? = nil) {
         self.context = context
+        self.image = image
         self.sticker = sticker
         self.stickerSize = stickerSize
         self.bgColor = bgColor
@@ -63,12 +65,12 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
 
 
 private final class AnimtedStickerHeaderView : TableRowView {
-    private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: .zero)
+    private var animationView: MediaAnimatedStickerView?
+    private var imageView: ImageView?
     private let textView: TextView = TextView()
     private var bgView: View?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(imageView)
         addSubview(textView)
         
         textView.isSelectable = false
@@ -90,15 +92,62 @@ private final class AnimtedStickerHeaderView : TableRowView {
         
         guard let item = item as? AnimatedStickerHeaderItem else { return }
         
-        let params = item.sticker.parameters
-        
-        if let modify = item.modify, let color = item.bgColor {
-            params.colors = modify.map {
-                .init(keyPath: $0, color: color)
+        if let sticker = item.sticker {
+            
+            if let view = self.imageView {
+                performSubviewRemoval(view, animated: animated)
+                self.imageView = nil
+            }
+            
+            let current: MediaAnimatedStickerView
+            if let view = self.animationView {
+                current = view
+            } else {
+                current = MediaAnimatedStickerView(frame: item.stickerSize.bounds)
+                self.animationView = current
+                addSubview(current)
+            }
+            let params = sticker.parameters
+            
+            if let modify = item.modify, let color = item.bgColor {
+                params.colors = modify.map {
+                    .init(keyPath: $0, color: color)
+                }
+            }
+            
+            current.update(with: sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        } else {
+            if let view = self.animationView {
+                performSubviewRemoval(view, animated: animated)
+                self.animationView = nil
             }
         }
         
-        imageView.update(with: item.sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        if let image = item.image {
+            
+            if let view = self.animationView {
+                performSubviewRemoval(view, animated: animated)
+                self.animationView = nil
+            }
+            
+            let current: ImageView
+            if let view = self.imageView {
+                current = view
+            } else {
+                current = ImageView(frame: item.stickerSize.bounds)
+                self.imageView = current
+                addSubview(current)
+            }
+            current.image = image
+            current.sizeToFit()
+        } else {
+            if let view = self.imageView {
+                performSubviewRemoval(view, animated: animated)
+                self.imageView = nil
+            }
+        }
+        
+        
         
 //        self.imageView.image = item.icon
 //        self.imageView.sizeToFit()
@@ -122,15 +171,21 @@ private final class AnimtedStickerHeaderView : TableRowView {
         super.layout()
         guard let item = item as? AnimatedStickerHeaderItem else { return }
 
-        if item.isFullView {
-            self.imageView.center()
-            self.imageView.setFrameOrigin(NSMakePoint(self.imageView.frame.minX, self.imageView.frame.minY - 40))
-        } else {
-            self.imageView.centerX(y: item.inset.top)
-        }
-        self.textView.centerX(y: self.imageView.frame.maxY + item.inset.bottom)
+        let imageView = self.imageView ?? self.animationView
         
-        self.bgView?.frame = self.imageView.frame
+        guard let imageView else {
+            return
+        }
+        
+        if item.isFullView {
+            imageView.center()
+            imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - 40))
+        } else {
+            imageView.centerX(y: item.inset.top)
+        }
+        self.textView.centerX(y: imageView.frame.maxY + item.inset.bottom)
+        
+        self.bgView?.frame = imageView.frame
     }
     
     required init?(coder: NSCoder) {
