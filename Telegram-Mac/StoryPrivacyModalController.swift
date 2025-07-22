@@ -950,7 +950,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 
                 switch availability {
                 case .available:
-                    _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo).start()
+                    _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo, folders: []).start()
                     showModalText(for: window, text: strings().storyPrivacySaveRepost)
                     close?()
                 default:
@@ -979,7 +979,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 actionsDisposable.add((context.engine.messages.checkStoriesUploadAvailability(target: target) |> deliverOnMainQueue).start(next: { availability in
                     switch availability {
                     case .available:
-                        _ = context.engine.messages.uploadStory(target: target, media: inputMedia, mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: nil).start()
+                        _ = context.engine.messages.uploadStory(target: target, media: inputMedia, mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: nil, folders: []).start()
                         showModalText(for: window, text: strings().storyPrivacySaveRepost)
                         close?()
                     default:
