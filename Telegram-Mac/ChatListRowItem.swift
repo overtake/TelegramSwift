@@ -2267,8 +2267,9 @@ class ChatListRowItem: TableRowItem {
         guard let peerId = peerId else {
             return
         }
-        ChatListRowItem.previewChat(peerId: peerId, context: context)
-
+        if let peer = self.peer, !peer.hasSensitiveContent(platform: "ios") {
+            ChatListRowItem.previewChat(peerId: peerId, context: context)
+        }
     }
     
     static func previewChat(peerId: PeerId, context: AccountContext) {

@@ -197,7 +197,7 @@ private final class CollectionRowItem : TableStickItem {
     }
     
     override var height: CGFloat {
-        return 40
+        return 50
     }
     
     override func viewClass() -> AnyClass {
@@ -300,9 +300,9 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
     override func layout() {
         super.layout()
         if tableView.listHeight < bounds.width {
-            tableView.frame = focus(NSMakeSize(tableView.listHeight, bounds.height))
+            tableView.frame = focus(NSMakeSize(tableView.listHeight, 40))
         } else {
-            tableView.frame = bounds
+            tableView.frame = focus(NSMakeSize(bounds.width, 40))
         }
     }
 }
@@ -423,7 +423,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
     } else {
         
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        entries.append(.sectionId(sectionId, type: .customModern(0)))
         sectionId += 1
         
         
@@ -443,7 +443,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return CollectionRowItem(initialSize, stableId: stableId, context: arguments.context, filters: collections, selected: state.selectedCollection, arguments: arguments)
         }))
         
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        entries.append(.sectionId(sectionId, type: .customModern(0)))
         sectionId += 1
     }
     
@@ -451,7 +451,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     let chunks: [[GiftOptionsRowItem.Option]]
     let collection = state.collections.first(where: { $0.stableId == state.selectedCollection }) ?? .all
-    var list = state.gifts.map { GiftOptionsRowItem.Option.initialize($0) }
+    let list = state.gifts.map { GiftOptionsRowItem.Option.initialize($0) }
     chunks = list.chunks(state.perRowCount)
 
     
@@ -513,9 +513,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         items.append(ContextSeparatorItem())
                         
                         if let unique = profile.gift.unique {
-                            items.append(ContextMenuItem(!profile.pinnedToTop ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
-                                arguments.togglePin(profile)
-                            }, itemImage: !profile.pinnedToTop ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+                            if state.selectedCollection == State.Collection.all.stableId {
+                                items.append(ContextMenuItem(!profile.pinnedToTop ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
+                                    arguments.togglePin(profile)
+                                }, itemImage: !profile.pinnedToTop ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+                            }
                             
                             let weared = unique.file?.fileId.id == state.peer?.emojiStatus?.fileId
                             
@@ -1244,17 +1246,10 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         
     }
     
-    controller.willAppear = { controller in
+    controller.willMove = { window in
         updateState { current in
             var current = current
-            current.onStage = true
-            return current
-        }
-    }
-    controller.willDisappear = { controller in
-        updateState { current in
-            var current = current
-            current.onStage = false
+            current.onStage = window != nil
             return current
         }
     }
@@ -1287,14 +1282,16 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
             return
         }
         
-        guard let parent = controller.genericView.superview?.superview?.superview else {
-            return
-        }
         
         let access = state.peer?.id == arguments.context.peerId || state.peer?._asPeer().groupAccess.isCreator == true
 
         
         if state.onStage, access, state.selectedCollection != State.Collection.all.stableId, !state.gifts.isEmpty, state.count < collectionGiftsLimit {
+            
+            guard let parent = controller.genericView.superview?.superview?.superview else {
+                return
+            }
+            
             let current: CollectionPanel
             if let view = panelView {
                 current = view

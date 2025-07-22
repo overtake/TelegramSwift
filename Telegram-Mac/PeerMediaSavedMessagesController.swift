@@ -242,7 +242,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     chatInteraction.openInfo = { peerId, toChat, postId, action in
         let navigation = context.bindings.rootNavigation()
         if toChat {
-            navigation.push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+            navigateToChat(navigation: navigation, context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action)
         } else {
             PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
         }

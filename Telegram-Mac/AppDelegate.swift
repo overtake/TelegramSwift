@@ -1611,7 +1611,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             if context.account.id == identifier.recordId {
                 switch identifier.source {
                 case let .peerId(peerId):
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                    navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                 }
             } else {
                 switch identifier.source {

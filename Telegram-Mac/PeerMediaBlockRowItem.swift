@@ -172,13 +172,13 @@ private final class PeerMediaBlockRowView : TableRowView {
                     
                     let currentY = item.controller.view.frame.minY
                     if previousY != currentY {
-//                        if currentY == 0, previousY != 0 {
-//                            item.controller.viewWillAppear(false)
-//                            item.controller.viewDidAppear(false)
-//                        } else if previousY == 0 {
-//                            item.controller.viewWillDisappear(false)
-//                            item.controller.viewDidDisappear(false)
-//                        }
+                        if currentY == 0, previousY != 0 {
+                            item.controller.viewWillAppear(false)
+                            item.controller.viewDidAppear(false)
+                        } else if previousY == 0 {
+                            item.controller.viewWillDisappear(false)
+                            item.controller.viewDidDisappear(false)
+                        }
                     }
                 }
             }

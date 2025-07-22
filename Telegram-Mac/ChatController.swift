@@ -4547,9 +4547,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     } else {
                         if mode.isSavedMessagesThread {
-                            strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+                            navigateToChat(navigation: strongSelf.navigationController, context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action)
                         } else {
-                            strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+                            navigateToChat(navigation: strongSelf.navigationController, context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action, additional: true)
                         }
                     }
                 } else {
@@ -8529,7 +8529,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                         items.append(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: { [weak self] in
                             context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
-                            self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(context.peerId)))
+                            navigateToChat(navigation: self?.navigationController, context: context, chatLocation: .peer(context.peerId))
                         }, itemImage: !displaySavedChatsAsTopics ? MenuAnimation.menu_check_selected.value : nil))
                         
                         items.append(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: { [weak self] in
@@ -8804,7 +8804,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         startSecretChatDisposable.set(signal.start(next: { [weak self] peerId in
             if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+                navigateToChat(navigation: strongSelf.navigationController, context: strongSelf.context, chatLocation: .peer(peerId))
             }
         }))
     }

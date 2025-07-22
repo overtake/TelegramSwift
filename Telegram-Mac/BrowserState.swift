@@ -422,7 +422,7 @@ final class BrowserStateContext {
                                                 
                         let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
                             return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
-                                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                                 closeAllModals(window: context.window)
                             })
                         }))
