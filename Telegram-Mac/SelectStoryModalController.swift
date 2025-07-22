@@ -23,11 +23,25 @@ private final class Arguments {
 
 
 private struct State : Equatable {
+    var folderId: Int64
     var listState: PeerStoryListContext.State?
     var folderState: PeerStoryListContext.State?
     var perRowCount: Int = 3
-    var selected: Set<StoryId> = []
+    var selected: [EngineStoryItem] = []
+    var unselected: [EngineStoryItem] = []
     
+    
+    func selected(_ story: EngineStoryItem) -> Bool {
+        if let folderIds = story.folderIds, folderIds.contains(folderId) {
+            return !unselected.contains {
+                $0.id == story.id
+            }
+        } else {
+            return selected.contains(where: {
+                $0.id == story.id
+            })
+        }
+    }
 }
 
 private func _id_row(_ i: Int) -> InputDataIdentifier {
@@ -57,7 +71,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         for (i, chunk) in chunks.enumerated() {
             let viewType: GeneralViewType = .modern(position: bestGeneralViewType(chunks, for: i).position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
 
-            tuples.append(.init(chunk: chunk, viewType: viewType, perRowCount: state.perRowCount, selected: state.selected.filter({ chunk.map(\.id).contains($0) })))
+            tuples.append(.init(chunk: chunk, viewType: viewType, perRowCount: state.perRowCount, selected: Set(chunk.compactMap { value in
+                if state.selected(value.storyItem) {
+                    return value.id
+                } else {
+                    return nil
+                }
+            })))
         }
         for (i, tuple) in tuples.enumerated() {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_row(i), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
@@ -79,11 +99,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
    
 }
 
-func SelectStoryModalController(context: AccountContext, peerId: PeerId, listContext: PeerStoryListContext?, folderContext: PeerStoryListContext, callback: @escaping([EngineStoryItem])->Void) -> InputDataModalController {
+func SelectStoryModalController(context: AccountContext, folderId: Int64, peerId: PeerId, listContext: PeerStoryListContext?, callback: @escaping([EngineStoryItem], [EngineStoryItem])->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let initialState = State(folderId: folderId)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -102,31 +122,46 @@ func SelectStoryModalController(context: AccountContext, peerId: PeerId, listCon
         }
     }
     
-    actionsDisposable.add(combineLatest(listContext.state, folderContext.state).startStrict(next: { listState, folderState in
+    actionsDisposable.add(listContext.state.startStrict(next: { listState in
         updateState { current in
             var current = current
             current.listState = listState
-            current.folderState = folderState
-            
-            if current.selected.isEmpty {
-                current.selected = Set(folderState.items.map(\.id))
-            }
             return current
         }
     }))
     
-    let collectionGiftsLimit = context.appConfiguration.getGeneralValue("collection_stories_limit", orElse: 1000)
+    let limit = context.appConfiguration.getGeneralValue("stories_album_stories_limit", orElse: 1000)
 
 
-    let arguments = Arguments(context: context, toggleSelected: { id in
+    let arguments = Arguments(context: context, toggleSelected: { storyId in
+        let state = stateValue.with { $0 }
+        
+        guard let story = state.listState?.items.first(where: { $0.id == storyId })?.storyItem else {
+            return
+        }
+        
         var failedToAdd: Bool = false
         updateState { current in
             var current = current
-            if !current.selected.contains(id) {
-                current.selected.insert(id)
+            
+            if let folderIds = story.folderIds, folderIds.contains(folderId) {
+                if let index = current.unselected.map(\.id).firstIndex(of: story.id) {
+                    current.unselected.remove(at: index)
+                } else {
+                    current.unselected.append(story)
+                }
             } else {
-                current.selected.remove(id)
+                if current.selected.map(\.id).contains(story.id) {
+                    current.selected.removeAll(where: { $0.id == story.id })
+                } else {
+                    if limit > current.selected.count {
+                        failedToAdd = true
+                    } else {
+                        current.selected.append(story)
+                    }
+                }
             }
+            
             return current
         }
         if failedToAdd {
@@ -148,13 +183,8 @@ func SelectStoryModalController(context: AccountContext, peerId: PeerId, listCon
     controller.validateData = { _ in
         
         let state = stateValue.with { $0 }
-        let selected = state.selected
-        
-        let stories = state.listState?.items.filter({ value in
-            return selected.contains(value.id)
-        }).map(\.storyItem) ?? []
-        
-        callback(stories)
+                
+        callback(state.selected, state.unselected)
         close?()
         return .none
     }
@@ -173,15 +203,14 @@ func SelectStoryModalController(context: AccountContext, peerId: PeerId, listCon
         modalController?.close()
     })
     
-    controller.contextObject = (listContext, folderContext)
+    controller.contextObject = listContext
     
     
-    controller.didLoad = { [weak listContext, weak folderContext] controller, _ in
+    controller.didLoad = { [weak listContext] controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
                 listContext?.loadMore()
-                folderContext?.loadMore()
             default:
                 break
             }

@@ -381,7 +381,13 @@ private struct State : Equatable {
     }
     
     func contains(collectionId: Int32, gift: ProfileGiftsContext.State.StarGift) -> Bool {
-        return gift.collectionIds?.contains(collectionId) == true
+        
+        let contains = collectionsState[collectionId]?.gifts.contains(where: { $0.reference == gift.reference }) == true
+        if contains {
+            return true
+        } else {
+            return gift.collectionIds?.contains(collectionId) == true
+        }
     }
     
     var perRowCount: Int = 3
@@ -394,6 +400,17 @@ private struct State : Equatable {
     }
 
     var collections:[Collection] = []
+    
+    var collectionsCount: Int {
+        return self.collections.reduce(0, { current, value in
+            switch value {
+            case .collection:
+                return current + 1
+            default:
+                return current
+            }
+        })
+    }
     
     var collection: Collection {
         return self.collections.first(where: { $0.stableId == selectedCollection}) ?? .all
@@ -423,7 +440,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
     } else {
         
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        entries.append(.sectionId(sectionId, type: .customModern(5)))
         sectionId += 1
         
         
@@ -443,7 +460,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return CollectionRowItem(initialSize, stableId: stableId, context: arguments.context, filters: collections, selected: state.selectedCollection, arguments: arguments)
         }))
         
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        entries.append(.sectionId(sectionId, type: .customModern(5)))
         sectionId += 1
     }
     
@@ -468,6 +485,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     if let profile = option.nativeProfileGift, let _ = profile.reference {
                         var items: [ContextMenuItem] = []
                         
+                        let collectionsLimit = arguments.context.appConfiguration.getGeneralValue("stargifts_collections_limit", orElse: 10)
+
+                        
                         let addItem = ContextMenuItem(
                             strings().peerMediaGiftsCollectionContextAddToCollection,
                             handler: {},
@@ -475,17 +495,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         )
 
                         let addMenu = ContextMenu()
-                        addMenu.addItem(
-                            ContextMenuItem(
-                                strings().peerMediaGiftsCollectionContextNewCollection,
-                                handler: {
-                                    arguments.collection(.add, profile)
-                                },
-                                itemImage: MenuAnimation.menu_folder_add.value
+                        if state.collectionsCount < collectionsLimit {
+                            addMenu.addItem(
+                                ContextMenuItem(
+                                    strings().peerMediaGiftsCollectionContextNewCollection,
+                                    handler: {
+                                        arguments.collection(.add, profile)
+                                    },
+                                    itemImage: MenuAnimation.menu_folder_add.value
+                                )
                             )
-                        )
+                            
+                            addMenu.addItem(ContextSeparatorItem())
+                        }
                         
-                        addMenu.addItem(ContextSeparatorItem())
                         
                         for collection in state.collections {
                             switch collection {
@@ -507,10 +530,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                             }
                         }
                         
-                        addItem.submenu = addMenu
+                        if !addMenu.items.isEmpty {
+                            addItem.submenu = addMenu
+                            
+                            items.append(addItem)
+                            items.append(ContextSeparatorItem())
+                        }
                         
-                        items.append(addItem)
-                        items.append(ContextSeparatorItem())
                         
                         if let unique = profile.gift.unique {
                             items.append(ContextMenuItem(!profile.pinnedToTop ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
@@ -784,10 +810,14 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
                 footer: footer
             )
 
-            showModalAlert(for: window, data: data, completion: { result in
+            showModalAlert(for: window, data: data, completion: { [weak window] result in
                 actionsDisposable.add(
                     collectionsContext.renameCollection(id: value.id, title: text).start()
                 )
+                if let window {
+                    //TODOLANG
+                    showModalText(for: window, text: "Name Successfully Updated")
+                }
             })
 
         default:
@@ -1123,7 +1153,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         
         let state = stateValue.with { $0 }
         
-        if let peer = state.peer?._asPeer(), peer.id == context.peerId || peer.groupAccess.isCreator {
+        if let peer = state.peer?._asPeer(), peer.id == context.peerId || peer.groupAccess.isCreator, state.collectionsCount < collectionsLimit {
             items.append(ContextMenuItem(strings().peerMediaGiftsCollectionContextAddCollection, handler: {
                 arguments.collection(.add, nil)
             }, itemImage: MenuAnimation.menu_add.value))

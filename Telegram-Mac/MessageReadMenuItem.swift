@@ -696,6 +696,45 @@ extension ContextMenuItem {
         })
         
     }
+    
+    static func makeFolderPreview(_ item: ContextMenuItem, context: AccountContext, peerReference: PeerReference, story: EngineStoryItem) {
+     
+        var signal: Signal<ImageDataTransformation, NoError>?
+        
+        
+        let size = NSMakeSize(18, 18)
+        var dimensions: NSSize = size
+                
+        if let image = story.media._asMedia() as? TelegramMediaImage {
+            dimensions = image.representations.first?.dimensions.size ?? dimensions
+        } else if let file = story.media._asMedia() as? TelegramMediaFile {
+            dimensions = file.dimensions?.size ?? dimensions
+        }
+        
+        let arguments = TransformImageArguments(corners: ImageCorners(radius: 4), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
+
+        if let image = story.media._asMedia() as? TelegramMediaImage  {
+            let reference = ImageMediaReference.story(peer: peerReference, id: story.id, media: image)
+            signal = chatMessagePhoto(account: context.account, imageReference: reference, toRepresentationSize: NSMakeSize(10000, 10000), scale: System.backingScale, synchronousLoad: false, autoFetchFullSize: true)
+        } else if let file = story.media._asMedia() as? TelegramMediaFile {
+            let fileReference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
+            signal = chatMessageVideo(account: context.account, fileReference: fileReference, scale: System.backingScale)
+        }
+
+        if let signal {
+            let result = signal |> map { data -> TransformImageResult in
+                let context = data.execute(arguments, data.data)
+                let image = context?.generateImage()
+                return TransformImageResult(image, context?.isHighQuality ?? false)
+            } |> deliverOnMainQueue
+                    
+            item.contextObject = result.start(next: { [weak item] result in
+                item?.image = result.image.flatMap({
+                    NSImage(cgImage: $0, size: size)
+                })
+            })
+        }
+    }
 }
 
 
