@@ -1299,7 +1299,8 @@ protocol PeerMediaSearchable : AnyObject {
                 location = .peer(id)
                 mode = .history
             }
-            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder))
+            navigateToChat(navigation: self?.navigationController, context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder)
+
         }
         
         interactions.focusMessageId = { _, focusMessageId, _ in

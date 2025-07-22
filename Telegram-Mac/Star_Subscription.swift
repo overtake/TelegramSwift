@@ -340,7 +340,7 @@ func Star_SubscriptionScreen(context: AccountContext, subscription: Star_Subscri
     }
 
     let arguments = Arguments(context: context, openPeer: { peerId in
-        context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+        navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
         close?()
     }, cancel: {
         context.starsSubscriptionsContext.updateSubscription(id: subscription.id, cancel: true)

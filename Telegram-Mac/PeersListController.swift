@@ -2781,7 +2781,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 menu.addItem(ContextMenuItem(strings().chatSavedMessagesViewAsMessages, handler: {
                     context.engine.peers.updateSavedMessagesViewAsTopics(value: false)
                     self?.navigationController?.back()
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(context.peerId)))
+                    navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(context.peerId))
                 }, itemImage: !displayAsTopics ? MenuAnimation.menu_check_selected.value : nil))
                 
                 menu.addItem(ContextMenuItem(strings().chatSavedMessagesViewAsChats, handler: {
@@ -3253,15 +3253,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                                 let chatLocation: ChatLocation = .peer(peerId)
                                 let mode: ChatMode
                                 
-                                let chat: ChatController
-                                if addition {
-                                    chat = ChatAdditionController(context: context, chatLocation: chatLocation, focusTarget: .init(messageId: messageId))
-                                } else {
-                                    
-                                    chat = ChatController(context: self.context, chatLocation: chatLocation, focusTarget: .init(messageId: messageId), initialAction: initialAction)
-                                }
+                                
                                 let animated = context.layout == .single || forceAnimated
-                                navigation.push(chat, context.layout == .single || forceAnimated, style: animated ? .push : ViewControllerStyle.none)
+
+                                navigateToChat(navigation: navigation, context: self.context, chatLocation: chatLocation, focusTarget: .init(messageId: messageId), initialAction: initialAction, additional: addition, animated: animated, navigationStyle: animated ? .push : ViewControllerStyle.none)
+                                
                             }
                         }
                     }

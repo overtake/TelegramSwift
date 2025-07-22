@@ -540,7 +540,7 @@ func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequ
         }
         context.bindings.rootNavigation().push(CreateChannelController(context: context, requires: requires, onComplete: { peerId, completed in
             if completed {
-                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                 invoke([peerId])
             }
         }))

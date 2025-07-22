@@ -446,6 +446,8 @@ final class InputDataView : BackgroundView {
     
     fileprivate var topView: NSView?
     
+    fileprivate var willMove: ((NSWindow?)->Void)? = nil
+    
     init(frame frameRect: NSRect, isFlipped: Bool) {
         tableView = TableView(frame: frameRect.size.bounds, isFlipped: isFlipped)
         super.init(frame: frameRect)
@@ -454,25 +456,6 @@ final class InputDataView : BackgroundView {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
-    }
-    
-    override var frame: NSRect {
-        didSet {
-            var bp = 0
-            bp == 1
-        }
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-    }
-    
-    override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
-        if newOrigin.y == 0 {
-            var bp = 0
-            bp += 1
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -514,6 +497,12 @@ final class InputDataView : BackgroundView {
         transition.updateFrame(view: tableView, frame: tableRect)
 //        transition.updateFrame(view: tableView.documentView!, frame: tableView.documentSize.bounds)
         
+    }
+    
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        super.viewWillMove(toWindow: newWindow)
+        
+        self.willMove?(newWindow)
     }
 }
 
@@ -618,6 +607,9 @@ class InputDataController: GenericViewController<InputDataView> {
     
     var willDisappear:((InputDataController)->Void)? = nil
     var willAppear:((InputDataController)->Void)? = nil
+    
+    var willMove: ((NSWindow?)->Void)? = nil
+
 
     var makeFirstFast: Bool = true
     
@@ -671,6 +663,7 @@ class InputDataController: GenericViewController<InputDataView> {
     override var defaultBarStatus: String? {
         return getStatus?()
     }
+    
     
     override func getRightBarViewOnce() -> BarView {
         return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: doneString(), style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
@@ -827,6 +820,11 @@ class InputDataController: GenericViewController<InputDataView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.afterViewDidLoad?()
+        
+        self.genericView.willMove = { [weak self] window in
+            self?.willMove?(window)
+        }
+        
         genericView.tableView.getBackgroundColor = self.getBackgroundColor
         
         let makeFirstFast = self.makeFirstFast
