@@ -180,7 +180,7 @@ private final class CollectionRowItem : TableStickItem {
     }
     
     override var height: CGFloat {
-        return 40
+        return 50
     }
     
     override func viewClass() -> AnyClass {
@@ -274,7 +274,7 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
         if tableView.listHeight < bounds.width {
             tableView.frame = focus(NSMakeSize(tableView.listHeight, 40))
         } else {
-            tableView.frame = focus(NSMakeSize(frame.width, 40))
+            tableView.frame = focus(NSMakeSize(bounds.width, 40))
         }
     }
 }
@@ -496,11 +496,11 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     
     if !arguments.standalone, !state.collections.isEmpty {
                 
-        entries.append(.section(index: index, height: 10))
+        entries.append(.section(index: index, height: 0))
         index = index.peerLocalSuccessor()
         entries.append(.collections(index: index, state.collections, state.selectedCollection))
-        index = index.peerLocalSuccessor()
-        entries.append(.section(index: index, height: 10))
+//        index = index.peerLocalSuccessor()
+//        entries.append(.section(index: index, height: 0))
 
         hasFolders = true
     }
@@ -528,8 +528,8 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             index = index.peerLocalPredecessor()
         } else {
 //            if !hasFolders {
-            entries.append(.section(index: index, height: 20))
-                index = index.peerLocalSuccessor()
+//            entries.append(.section(index: index, height: 20))
+//                index = index.peerLocalSuccessor()
 //            }
         }
 
@@ -596,7 +596,13 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<Entry>], right: 
 
 final class StoryMediaView : View {
     
-    
+    fileprivate var willMove: ((NSWindow?)->Void)? = nil
+
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        super.viewWillMove(toWindow: newWindow)
+        
+        self.willMove?(newWindow)
+    }
     
     private class Panel : View {
         private var pin = TextButton()
@@ -1072,6 +1078,14 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             
         })
         
+        genericView.willMove = { [weak self] window in
+            self?.updateState { current in
+                var current = current
+                current.onStage = window != nil
+                return current
+            }
+        }
+        
         let context = self.context
         let peerId = self.peerId
         let initialSize = self.atomicSize
@@ -1494,23 +1508,11 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        self.updateState { current in
-            var current = current
-            current.onStage = false
-            return current
-        }
+        super.viewWillDisappear(animated)        
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        self.updateState { current in
-            var current = current
-            current.onStage = true
-            return current
-        }
     }
     
     deinit {
