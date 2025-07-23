@@ -457,7 +457,7 @@ final class AccountContext {
     let tonContext: StarsContext
     let starsSubscriptionsContext: StarsSubscriptionsContext
     let currentCountriesConfiguration: Atomic<CountriesConfiguration> = Atomic(value: CountriesConfiguration(countries: loadCountryCodes()))
-    private(set) var contentConfig: ContentSettingsConfiguration = .default
+    var contentConfig: ContentSettingsConfiguration = .default
     private let _countriesConfiguration = Promise<CountriesConfiguration>()
     var countriesConfiguration: Signal<CountriesConfiguration, NoError> {
         return self._countriesConfiguration.get()

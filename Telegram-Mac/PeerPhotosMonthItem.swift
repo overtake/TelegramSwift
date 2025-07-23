@@ -70,7 +70,7 @@ struct MediaCellLayoutItem : Equatable, MediaCellLayoutable {
     }
     
     var isSensitive: Bool {
-        return self.message.isSensitiveContent(platform: "ios")
+        return self.message.isSensitiveContent(platform: "ios") && !context.contentConfig.sensitiveContentEnabled
     }
     
     var id: MessageId {
