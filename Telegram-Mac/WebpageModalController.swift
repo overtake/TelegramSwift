@@ -2406,6 +2406,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 showModalText(for: context.window, text: info, title: header)
                 _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
                 
+                context.contentConfig.sensitiveContentEnabled = true
+                
                 NotificationCenter.default.post(name: NSNotification.Name("external_age_verify"), object: nil)
                 
                 FastSettings.lastAgeVerification = Date().timeIntervalSince1970
