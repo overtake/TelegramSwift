@@ -167,10 +167,10 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
             if current.chatInteraction.peerId == focusTarget.messageId.peerId {
                 current.chatInteraction.focusMessageId(nil, focusTarget, .center(id: AnyHashable(0), innerId: nil, animated: true, focus: .init(focus: true, action: nil), inset: 0))
             } else {
-                navigation.push(ChatController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
+                navigateToChat(navigation: navigation, context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget)
             }
         } else {
-            navigation.push(ChatController(context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget))
+            navigateToChat(navigation: navigation, context: context, chatLocation: .peer(focusTarget.messageId.peerId), focusTarget: focusTarget)
         }
         
     }

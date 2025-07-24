@@ -299,12 +299,8 @@ func topicInfoEntries(view: PeerView, threadData: MessageHistoryThreadData, thre
         var items:[TopicInfoEntry] = []
         var sectionId:Int = 0
         for entry in entries {
-            if entry.sectionId == TopicInfoSection.media.rawValue {
-                sectionId = entry.sectionId
-            } else if entry.sectionId != sectionId {
-                items.append(.section(sectionId))
-                sectionId = entry.sectionId
-            }
+            items.append(.section(sectionId))
+            sectionId = entry.sectionId
             items.append(entry)
         }
         sectionId += 1

@@ -826,7 +826,7 @@ private final class StoryListEntryRowItem : TableRowItem {
                 let title = isChannel ? strings().storyListContextOpenChannel : strings().storyListContextSendMessage
                 
                 items.append(.init(title, handler: {
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                    navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                 }, itemImage: isChannel ? MenuAnimation.menu_channel.value : MenuAnimation.menu_read.value))
                 
                 if !isChannel {

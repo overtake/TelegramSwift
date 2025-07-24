@@ -116,7 +116,7 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
         })
     }, openStickerBot: {
         let link = inApp(for: "@stickers", context: context, openInfo: { peerId, _, _, _ in
-            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+            navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
         })
         execute(inapp: link)
     }, toggleSuggest: {

@@ -574,6 +574,9 @@ class DataAndStorageViewController: TableViewController {
                 }
             })
             updateSensitiveContentDisposable.set(updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start())
+            
+            context.contentConfig.sensitiveContentEnabled = true
+
         }
         
         enableSensitiveContent = {

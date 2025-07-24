@@ -285,7 +285,7 @@ final class PeerInfoView : View {
     let tableView: TableView
     let navigationBarView = NavigationBarView(frame: .zero)
     private let navBgView = View()
-    private let borderView = View()
+    let borderView = View()
     required init(frame frameRect: NSRect) {
         tableView = .init(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
@@ -485,6 +485,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         } else {
             self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
         }
+        self.genericView.borderView.change(opacity: leftView == leftBarView && self.scrollState == .pageIn ? 1 : 0)
     }
     
     static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil, shake: Bool = true, starGiftsProfile: ProfileGiftsContext? = nil) {

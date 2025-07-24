@@ -43,7 +43,7 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
     
     _ = signal.start(next: { result, complete in
         if let result = result, complete {
-            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(result.peerId)))
+            navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(result.peerId))
         }
     }, error: { error in
         let text: String
@@ -132,7 +132,7 @@ func createGroupDirectly(with context: AccountContext, selectedPeers: [PeerId] =
     chooseName.restart(with: ComposeState(selectedPeers))
     _ = signal.start(next: { result, complete in
         if let result = result, complete {
-            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(result.peerId)))
+            navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(result.peerId))
             onCreate(result.peerId)
             
         }
@@ -222,7 +222,7 @@ func createChannel(with context: AccountContext) {
     
     _ = create.start(next: { peerId in
         if let peerId = peerId {
-            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+            navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
         } else {
             context.bindings.rootNavigation().close()
         }

@@ -139,13 +139,13 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
             let nextDateId = mediaDateId(for: nextMessage.timestamp - timeDifference)
             if dateId != nextDateId {
                 let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: 0), timestamp: Int32(dateId))
-                var viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
+                var viewType: GeneralViewType = .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 if !entries.isEmpty {
                     entries.append(.section(index: index.peerLocalSuccessor()))
                     entries.append(.date(index: index))
                 } else {
                     if !isExternalSearch {
-                        viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))
+                        viewType = .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                     }
                 }
                 entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
@@ -162,7 +162,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                     if prevDateId != dateId {
                         entries.append(.section(index: index.peerLocalSuccessor()))
                         entries.append(.date(index: index))
-                        entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
+                        entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                     } else {
                         entries[entries.count - 1] = .line(index: prevIndex, stableId: stableId, items: items + temp, galleryType: galleryType, viewType: viewType)
                     }
@@ -171,17 +171,17 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 }
             } else {
                 if isExternalSearch {
-                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                 } else {
-                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                 }
             }
             
         }
     }
-    if !state.messages.isEmpty {
-        entries.append(.section(index: MessageIndex.absoluteLowerBound()))
-    }
+//    if !state.messages.isEmpty {
+//        entries.append(.section(index: MessageIndex.absoluteLowerBound()))
+//    }
     
     var updated:[PeerMediaMonthEntry] = []
     
@@ -200,6 +200,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 if i == 0 && j == 0 {
                     viewType = chunks.count > 1 ? .innerItem : .lastItem
                 }
+                viewType = .innerItem
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 updated.append(.line(index: index, stableId: stableId, items: chunk, galleryType: galleryType, viewType: updatedViewType))
             }
@@ -424,11 +425,39 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         
         let arguments = PeerMediaPhotosArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, gallery: { [weak self] message, type in
             
-            let parameters = ChatMediaGalleryParameters(showMedia: { _ in }, showMessage: { message in
-                self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
-            }, isWebpage: false, media: message.anyMedia!, automaticDownload: true)
+            let accept:()->Void = {
+                let parameters = ChatMediaGalleryParameters(showMedia: { _ in }, showMessage: { message in
+                    self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .none(nil))
+                }, isWebpage: false, media: message.anyMedia!, automaticDownload: true)
+                
+                showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, chatLocation: chatLocation, contextHolder: contextHolder)
+            }
             
-            showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, chatLocation: chatLocation, contextHolder: contextHolder)
+            if message.isSensitiveContent(platform: "ios") {
+                
+                if !context.contentConfig.sensitiveContentEnabled, context.contentConfig.canAdjustSensitiveContent {
+                    let need_verification = context.appConfiguration.getBoolValue("need_age_video_verification", orElse: false)
+                    
+                    if need_verification {
+                        showModal(with: VerifyAgeAlertController(context: context), for: context.window)
+                        return
+                    }
+                }
+                if context.contentConfig.sensitiveContentEnabled {
+                    accept()
+                } else {
+                    verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: context.contentConfig.canAdjustSensitiveContent ? strings().chatSensitiveContentConfirmThird : nil, optionIsSelected: false, successHandler: { result in
+                        
+                        if result == .thrid {
+                            let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                        }
+                        accept()
+                    })
+                }
+            } else {
+                accept()
+            }
+            
         })
         
         /*

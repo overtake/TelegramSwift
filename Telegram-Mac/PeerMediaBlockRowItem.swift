@@ -23,7 +23,7 @@ class PeerMediaBlockRowItem: GeneralRowItem {
         self.controller = controller
         self.isMediaVisible = isVisible
         self.listener = TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { _ in })
-        super.init(initialSize, height: initialSize.height, stableId: stableId, viewType: viewType)
+        super.init(initialSize, height: initialSize.height, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
     deinit {

@@ -87,7 +87,7 @@ protocol PeerMediaSearchable : AnyObject {
     case leftToRight
     case rightToLeft
  }
- private let sectionOffset: CGFloat = 20
+ private let sectionOffset: CGFloat = 0
  
  final class PeerMediaContainerView : View {
     
@@ -369,19 +369,23 @@ protocol PeerMediaSearchable : AnyObject {
             return segmentPanelView
         }
     }
+     
+     override func setFrameSize(_ newSize: NSSize) {
+         super.setFrameSize(newSize)
+     }
     
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        topPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
+        topPanelView.frame = NSMakeRect(0, 0, frame.width, 40)
         topPanelView.setCorners(self.corners)
         topPanelSeparatorView.frame = NSMakeRect(0, topPanelView.frame.height - .borderSize, topPanelView.frame.width, .borderSize)
         
         if let searchPanelView = self.searchPanelView {
-            searchPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
-            segmentPanelView.frame = NSMakeRect(0, topPanelView.frame.height, frame.width, 50)
+            searchPanelView.frame = NSMakeRect(0, 0, frame.width, 40)
+            segmentPanelView.frame = NSMakeRect(0, topPanelView.frame.height, frame.width, 40)
         } else {
-            segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 50)
+            segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 40)
         }
         mainView?.frame = NSMakeRect(0, topPanelView.isHidden ? 0 : topPanelView.frame.height, frame.width, frame.height - inset - (topPanelView.isHidden ? 0 : topPanelView.frame.height))
         
@@ -666,6 +670,8 @@ protocol PeerMediaSearchable : AnyObject {
 
          
         super.init(context)
+         
+//         self.bar = .init(height: super.bar.height, enableBorder: false, custom: false)
          
          self.stories.parentToggleSelection = { [weak self] in
              self?.changeState()
@@ -1299,7 +1305,8 @@ protocol PeerMediaSearchable : AnyObject {
                 location = .peer(id)
                 mode = .history
             }
-            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder))
+            navigateToChat(navigation: self?.navigationController, context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder)
+
         }
         
         interactions.focusMessageId = { _, focusMessageId, _ in
@@ -1672,7 +1679,7 @@ protocol PeerMediaSearchable : AnyObject {
             } else {
                 corners = filter.isEmpty ? .all : [.topLeft, .topRight]
             }
-            self?.genericView.updateCorners(corners, animated: !firstUpdate)
+            self?.genericView.updateCorners([], animated: !firstUpdate)
             firstUpdate = false
         }
         self.currentMainTableView?(genericView.mainTable, animated, previous != controller && genericView.segmentPanelView.segmentControl.contains(oldMode?.rawValue ?? -3))

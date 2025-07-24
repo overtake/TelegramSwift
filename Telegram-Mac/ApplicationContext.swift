@@ -13,6 +13,48 @@ import Dock
 import PrivateCallScreen
 import DetectSpeech
 
+
+func navigateToChat(navigation: NavigationViewController?, context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, focusTarget:ChatFocusTarget? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil, additional: Bool = false, animated: Bool = true, navigationStyle: ViewControllerStyle? = nil) {
+    
+    let open:()->Void = { [weak navigation] in
+        if additional {
+            navigation?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+        } else {
+            navigation?.push(ChatController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+        }
+    }
+    
+    let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: chatLocation.peerId)) |> deliverOnMainQueue
+    
+    _ = signal.start(next: { peer in
+        if let peer = peer?._asPeer() {
+            if peer.hasSensitiveContent(platform: "ios") {
+                if !context.contentConfig.sensitiveContentEnabled, context.contentConfig.canAdjustSensitiveContent {
+                    let need_verification = context.appConfiguration.getBoolValue("need_age_video_verification", orElse: false)
+                    
+                    if need_verification {
+                        showModal(with: VerifyAgeAlertController(context: context), for: context.window)
+                        return
+                    }
+                }
+                if context.contentConfig.sensitiveContentEnabled {
+                    open()
+                } else {
+                    verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: context.contentConfig.canAdjustSensitiveContent ? strings().chatSensitiveContentConfirmThird : nil, optionIsSelected: false, successHandler: { result in
+                        
+                        if result == .thrid {
+                            let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                        }
+                        open()
+                    })
+                }
+            } else {
+                open()
+            }
+        }
+    })
+}
+
 private final class AuthModalController : ModalController {
     override var background: NSColor {
         return theme.colors.background

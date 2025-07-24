@@ -1356,8 +1356,7 @@ final class PremiumBoardingController : ModalViewController {
             default:
                 break
             }
-            let controller = ChatController(context: context, chatLocation: .peer(peerId), initialAction: updated)
-            context.bindings.rootNavigation().push(controller)
+            navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId), initialAction: updated)
             
             close()
         }, openFeature: { [weak self] value, animated in

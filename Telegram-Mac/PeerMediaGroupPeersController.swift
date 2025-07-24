@@ -423,8 +423,8 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
     
     applyBlock(usersBlock)
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
 //
     return entries
 }

@@ -1542,12 +1542,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
     })
     for entry in sorted {
         if entry.sectionId != sectionId {
-            if entry.sectionId == ChannelInfoSection.media.rawValue {
-                sectionId = entry.sectionId
-            } else {
-                items.append(.section(sectionId))
-                sectionId = entry.sectionId
-            }
+            items.append(.section(sectionId))
+            sectionId = entry.sectionId
         }
         items.append(entry)
     }

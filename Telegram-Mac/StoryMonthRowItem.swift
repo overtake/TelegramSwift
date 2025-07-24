@@ -30,6 +30,10 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
         return false
     }
     
+    var isSensitive: Bool {
+        return false
+    }
+    
     var isSpoiler: Bool {
         return false
     }
