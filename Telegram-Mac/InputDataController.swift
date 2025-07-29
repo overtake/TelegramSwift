@@ -242,19 +242,28 @@ public class InputDataModalController : ModalViewController {
     
     var height: CGFloat {
         let topHeight = current.genericView.topView?.frame.height ?? 0
-        let wh = view.window?.frame.height ?? 0
+        let wh = window?.frame.height ?? 0
         return min(min(wh - 100, 700), current.tableView.listHeight + topHeight)
+    }
+    
+    var fullSizeList: Bool = false
+    var listHeight: CGFloat {
+        if fullSizeList {
+            return window?.frame.height ?? current.tableView.listHeight
+        } else {
+            return current.tableView.listHeight
+        }
     }
     
     override open func measure(size: NSSize) {
         let topHeight = current.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 330))), min(min(size.height - 140, 700), current.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(size.width, 330))), min(min(size.height - 140, 700), listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = current.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 330))), min(min(contentSize.height - 140, 700), current.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.current._frameRect.width, max(contentSize.width, 330))), min(min(contentSize.height - 140, 700), listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -437,6 +446,8 @@ final class InputDataView : BackgroundView {
     
     fileprivate var topView: NSView?
     
+    fileprivate var willMove: ((NSWindow?)->Void)? = nil
+    
     init(frame frameRect: NSRect, isFlipped: Bool) {
         tableView = TableView(frame: frameRect.size.bounds, isFlipped: isFlipped)
         super.init(frame: frameRect)
@@ -445,25 +456,6 @@ final class InputDataView : BackgroundView {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
-    }
-    
-    override var frame: NSRect {
-        didSet {
-            var bp = 0
-            bp == 1
-        }
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-    }
-    
-    override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
-        if newOrigin.y == 0 {
-            var bp = 0
-            bp += 1
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -505,6 +497,12 @@ final class InputDataView : BackgroundView {
         transition.updateFrame(view: tableView, frame: tableRect)
 //        transition.updateFrame(view: tableView.documentView!, frame: tableView.documentSize.bounds)
         
+    }
+    
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        super.viewWillMove(toWindow: newWindow)
+        
+        self.willMove?(newWindow)
     }
 }
 
@@ -607,9 +605,17 @@ class InputDataController: GenericViewController<InputDataView> {
     
     var autoInputAction: Bool = false
     
+    var willDisappear:((InputDataController)->Void)? = nil
+    var willAppear:((InputDataController)->Void)? = nil
+    
+    var willMove: ((NSWindow?)->Void)? = nil
+
+
     var makeFirstFast: Bool = true
     
     let isFlipped: Bool
+    
+    private var ignoreOnAppear: Bool = false
     
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoad: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }, isFlipped: Bool = true) {
         self.title = title
@@ -657,6 +663,7 @@ class InputDataController: GenericViewController<InputDataView> {
     override var defaultBarStatus: String? {
         return getStatus?()
     }
+    
     
     override func getRightBarViewOnce() -> BarView {
         return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: doneString(), style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
@@ -709,6 +716,8 @@ class InputDataController: GenericViewController<InputDataView> {
     func makeFirstResponderIfPossible(for identifier: InputDataIdentifier, focusIdentifier: InputDataIdentifier? = nil, scrollDown: Bool = false, scrollIfNeeded: Bool = true) {
         if let item = findItem(for: identifier) {
             _ = window?.makeFirstResponder(findItem(for: identifier)?.view?.firstResponder)
+            
+            ignoreOnAppear = true
             
             if let focusIdentifier = focusIdentifier {
                 if let item = findItem(for: focusIdentifier) {
@@ -811,6 +820,11 @@ class InputDataController: GenericViewController<InputDataView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.afterViewDidLoad?()
+        
+        self.genericView.willMove = { [weak self] window in
+            self?.willMove?(window)
+        }
+        
         genericView.tableView.getBackgroundColor = self.getBackgroundColor
         
         let makeFirstFast = self.makeFirstFast
@@ -1028,8 +1042,8 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        if makeFirstResponder {
-            _ = self.window?.makeFirstResponder(nextResponder())
+        if makeFirstResponder, ignoreOnAppear {
+            _ = self.window?.makeFirstResponder(firstResponder())
         }
         super.viewDidAppear(animated)
         
@@ -1137,6 +1151,12 @@ class InputDataController: GenericViewController<InputDataView> {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeAllHandlers(for: self)
+        willDisappear?(self)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        willAppear?(self)
     }
     
     

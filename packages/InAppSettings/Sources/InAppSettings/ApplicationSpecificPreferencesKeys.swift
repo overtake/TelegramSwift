@@ -66,10 +66,10 @@ public struct ApplicationSharedPreferencesKeys {
 private enum ApplicationSpecificItemCacheCollectionIdValues: Int8 {
     case instantPageStoredState = 0
     case cachedInstantPages = 1
-    case translationState = 2
     case pendingInAppPurchaseState = 3
     case storyPostState = 5
     case webAppPermissionsState = 6
+    case translationState = 8
 
 }
 

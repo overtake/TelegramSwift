@@ -64,7 +64,7 @@ final class RenderAtomic<T> {
 
 
 public let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 4, threadPriority: 1.0)
-public let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .utility)
+public let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .default)
 
 
 
@@ -95,12 +95,14 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
     let backingScale: Int
     let key: LottieAnimationEntryKey
     private let webpData: WebPImageFrame
+    let _image: CGImage?
     init(key: LottieAnimationEntryKey, frame: Int32, size: NSSize, webpData: WebPImageFrame, backingScale: Int) {
         self.key = key
         self.backingScale = backingScale
         self.size = size
         self.frame = frame
         self.webpData = webpData
+        _image = webpData.image?._cgImage
     }
     
     var bytesPerRow: Int {
@@ -109,7 +111,7 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
     }
     
     var image: CGImage? {
-        return webpData.image?._cgImage
+        return _image
     }
     var duration: TimeInterval {
         return webpData.duration
@@ -266,6 +268,7 @@ private final class RenderFpsLoop {
 
 final class RenderedWebmFrame : RenderedFrame, Equatable {
     
+    let _image: CGImage?
     let frame: Int32
     let size: NSSize
     let backingScale: Int
@@ -279,6 +282,24 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
         self.frame = frame
         self._data = data
         self.fps = fps
+        
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+        let bufferSize = s.h * bytesPerRow
+        
+        _image = data.withUnsafeBytes { pointer in
+            let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+
+            let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+            var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                       
+            if key.mirror {
+                vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+            }
+            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
+                memcpy(pixelData, mutableBytes, bufferSize)
+            })
+        }
     }
     
     var bytesPerRow: Int {
@@ -287,26 +308,7 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
     }
     
     var image: CGImage? {
-        
-        if let data = data {
-            let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
-            
-            return data.withUnsafeBytes { pointer in
-                let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
-
-                let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
-                var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
-                           
-                if self.key.mirror {
-                    vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
-                }
-                return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
-                    memcpy(pixelData, mutableBytes, bufferSize)
-                })
-            }
-            
-        }
-        return nil
+        return _image
     }
     var duration: TimeInterval {
         return 1.0 / Double(self.fps)
@@ -341,6 +343,8 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     let key: LottieAnimationEntryKey
     let fps: Int
     let initedOnMain: Bool
+    
+    let _image: CGImage?
     init(key: LottieAnimationEntryKey, fps: Int, frame: Int32, size: NSSize, data: Data, backingScale: Int) {
         self.key = key
         self.frame = frame
@@ -349,6 +353,25 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
         self.backingScale = backingScale
         self.fps = fps
         self.initedOnMain = Thread.isMainThread
+        
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+        let bufferSize = s.h * bytesPerRow
+        
+        _image = data.withUnsafeBytes({ pointer in
+            let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
+                
+                let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+                var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                           
+                if key.mirror {
+                    vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+                }
+                
+                memcpy(pixelData, mutableBytes, bufferSize)
+            })
+        })
     }
     static func ==(lhs: RenderedLottieFrame, rhs: RenderedLottieFrame) -> Bool {
         return lhs.frame == rhs.frame
@@ -370,25 +393,7 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
         return 1.0 / Double(self.fps)
     }
     var image: CGImage? {
-        if let data = data {
-            return data.withUnsafeBytes({ pointer in
-                let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
-                return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
-                    
-                    let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
-                    let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
-                    var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
-                               
-                    if self.key.mirror {
-                        vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
-                    }
-                    
-                    memcpy(pixelData, mutableBytes, bufferSize)
-                })
-            })
-            
-        }
-        return nil
+        return _image
     }
     
     

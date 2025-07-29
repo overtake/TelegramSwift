@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import SwiftSignalKit
 
 public class ContextSeparatorItem : ContextMenuItem {
     public init() {
@@ -93,9 +93,10 @@ open class ContextMenuItem : NSMenuItem {
     public let keyEquivalentValue: KeyEquiavalent
     let overrideWidth: CGFloat?
     let removeTail: Bool
+    let locked: Bool
     
     
-    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil, attributedTitle: NSAttributedString? = nil, customTextView: (()->NSView?)? = nil) {
+    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil, attributedTitle: NSAttributedString? = nil, customTextView: (()->NSView?)? = nil, locked: Bool = false) {
         self.handler = handler
         self.hover = hover
         self.dynamicTitle = dynamicTitle
@@ -105,6 +106,7 @@ open class ContextMenuItem : NSMenuItem {
         self.overrideWidth = overrideWidth
         self.keyEquivalentValue = keyEquivalent
         self.customTextView = customTextView
+        self.locked = locked
         super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title.prefixWithDots(removeTail ? cuttail ?? Int.max : Int.max)
@@ -138,6 +140,12 @@ open class ContextMenuItem : NSMenuItem {
         handler?()
     }
     
+    deinit {
+        if let disposable = (contextObject as? Disposable) {
+            disposable.dispose()
+        }
+    }
+    
 }
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
@@ -159,6 +167,8 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     
     public var topWindow: Window?
     public var closeOutside: Bool = true
+    
+    public var name: String = ""
     
     public var loadMore: (()->Void)? = nil
 

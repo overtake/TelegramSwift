@@ -155,6 +155,8 @@ final class StoryInteraction : InterfaceObserver {
         var entryId: PeerId? = nil
         var closed: Bool = false
         
+        var volume: Float = FastSettings.volumeStoryRate
+        
         var isSeeking = false
         
         var wideInput: Bool {
@@ -248,9 +250,22 @@ final class StoryInteraction : InterfaceObserver {
         self.update { current in
             var current = current
             current.isMuted = !current.isMuted
+            current.volume = current.isMuted ? 0 : 1
             return current
         }
         FastSettings.storyIsMuted = self.presentation.isMuted
+        FastSettings.setStoryVolumeRate(self.presentation.volume)
+    }
+    
+    func setVolume(_ volume: Float) {
+        self.update { current in
+            var current = current
+            current.volume = volume
+            current.isMuted = current.volume == 0
+            return current
+        }
+        FastSettings.storyIsMuted = self.presentation.isMuted
+        FastSettings.setStoryVolumeRate(self.presentation.volume)
     }
     
     
@@ -2382,7 +2397,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     openforce()
                 }
             } else {
-                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true)
+                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false, folderId: nil), standalone: true)
                 self?.close()
             }
         }
@@ -3319,7 +3334,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.interactions.update { current in
                     var current = current
                                         
-                    current.hasMenu = contextMenuOnScreen() || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
+                    current.hasMenu = contextMenuOnScreen(filterNames: ["volume"]) || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
                     current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil
                     || findModal(InputDataModalController.self, isAboveTo: self) != nil
                     || findModal(ShareModalController.self, isAboveTo: self) != nil

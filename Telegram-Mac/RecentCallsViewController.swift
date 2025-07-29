@@ -158,7 +158,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
     func item(_ arguments: RecentCallsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .newCallLink:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().recentCallsNewCall, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, viewType: .legacy, action: arguments.newCallLink, inset: NSEdgeInsets(left: 10, right: 0), disableBorder: true)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().recentCallsNewCall, icon: NSImage.init(resource: .iconCreatePhoneCall).precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: .legacy, action: arguments.newCallLink, inset: NSEdgeInsets(left: 10, right: 0), disableBorder: true)
         case .recentCalls:
             return SeparatorRowItem(initialSize, stableId, string: strings().recentCallsRecentCalls)
         case let .calls(message, messages, editing, failed):
@@ -308,13 +308,13 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<RecentCallEntry>
                 }
             }
             if let stableId = stableId {
-                state = .saveVisible(.aroundIndex(stableId))
+                state = .saveVisible(.aroundIndex(stableId), false)
             } else {
                 switch position {
                 case .Bottom:
-                    state = .saveVisible(.lower)
+                    state = .saveVisible(.lower, false)
                 case .Top:
-                    state = .saveVisible(.upper)
+                    state = .saveVisible(.upper, false)
                 default:
                     state = .none(nil)
                 }

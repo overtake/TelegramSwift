@@ -494,13 +494,17 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     switch chatInteraction.chatLocation {
                     case let .peer(peerId):
                         chatInteraction.openInfo(peerId, false, nil, nil)
-                    case .thread:
-                        break
+                    case let .thread(data):
+                        if data.isMonoforumPost {
+                            chatInteraction.openInfo(PeerId(data.threadId), false, nil, nil)
+                        } else {
+                            chatInteraction.openInfo(data.peerId, false, nil, nil)
+                        }
                     }
                 }
-            } else if chatInteraction.mode.isTopicMode {
+            } else if chatInteraction.presentation.isTopicMode {
                 chatInteraction.openInfo(chatInteraction.peerId, false, nil, nil)
-            } else if chatInteraction.mode.isSavedMessagesThread, let threadId = chatInteraction.mode.threadId64 {
+            } else if chatInteraction.mode.isSavedMessagesThread, let threadId = chatInteraction.chatLocation.threadId {
                 chatInteraction.openInfo(PeerId(threadId), false, nil, nil)
             }
         }
@@ -652,12 +656,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             let mode = chatInteraction.mode
             
 
-            self.hasPhoto = (!mode.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled) && mode.customChatContents == nil && mode.customChatLink == nil
+            self.hasPhoto = (!presentation.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled) && mode.customChatContents == nil && mode.customChatLink == nil
             
             self.photoContainer.isHidden = !hasPhoto
 
             
-            self.textInset = !hasPhoto && !mode.isTopicMode ? 24 : hasBackButton ? 66 : 46
+            self.textInset = !hasPhoto && !presentation.isTopicMode ? 24 : hasBackButton ? 66 : 46
             
             
             switch chatInteraction.mode {
@@ -674,7 +678,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                             callButton.isHidden = true
                         }
                     } else {
-                        callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId || presentation.reportMode != nil
+                        callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId || presentation.reportMode != nil || chatInteraction.isMonoforum
                     }
                     
                     
@@ -690,18 +694,22 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             if let peer = peerViewMainPeer(peerView) {
                 if peer.id == repliesPeerId {
                     let icon = theme.icons.chat_replies_avatar
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 17, avatarControl.frame.size.height - 17)), cornerRadius: nil)) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 17, avatarControl.frame.size.height - 17)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else if peer.id.isAnonymousSavedMessages {
                     let icon = theme.icons.chat_hidden_author
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil)) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else if peer.id == chatInteraction.context.peerId, chatInteraction.mode.isSavedMessagesThread {
                     let icon = theme.icons.chat_my_notes
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil)) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else if peer.id == chatInteraction.context.peerId {
                     let icon = theme.icons.searchSaved
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil)) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else {
-                    avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
+                    if peer.isMonoForum, let mainForumPeer = peerViewMonoforumMainPeer(peerView) {
+                        avatarControl.setState(account: chatInteraction.context.account, state: .PeerAvatar(peer, mainForumPeer.displayLetters, mainForumPeer.smallProfileImage, mainForumPeer.nameColor, nil, nil, peer.groupAccess.canManageDirect, nil))
+                    } else {
+                        avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
+                    }
                 }
             }
             var statusControl: PremiumStatusControl? = nil
@@ -715,13 +723,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 
                 let context = chatInteraction.context
                 
-                if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
-                    statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: false)
+                if let peer = (peerViewMonoforumMainPeer(peerView) ?? peerViewMainPeer(peerView)) {
+                    if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                        statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: false)
+                    }
+                    
+                    if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                        leftStatusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: true, isSelected: false, cached: self.leftStatusControl, animated: false)
+                    }
                 }
                 
-                if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
-                    leftStatusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: true, isSelected: false, cached: self.leftStatusControl, animated: false)
-                }
                 
                 if peer.isGroup || peer.isSupergroup || peer.isChannel {
                     callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)
@@ -756,9 +767,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             callButton.sizeToFit()
 
         }
-        updateTitle(force, presentation: chatInteraction.presentation)
-
-        self.updatePhoto(chatInteraction.presentation, animated: false)
+        self.updateTitle(force, presentation: presentation)
+        self.updatePhoto(presentation, animated: false)
 
         needsLayout = true
     }
@@ -766,7 +776,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private func updatePhoto(_ presentation: ChatPresentationInterfaceState, animated: Bool) {
         let context = chatInteraction.context
-        if let threadInfo = presentation.threadInfo, chatInteraction.mode.isTopicMode {
+        if let threadInfo = presentation.threadInfo, presentation.isTopicMode {
             let size = NSMakeSize(30, 30)
             let current: InlineStickerItemLayer
             if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == threadInfo.info.icon {
@@ -780,7 +790,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 if let fileId = info.icon {
                     current = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
                 } else {
-                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: chatInteraction.mode.threadId64 == 1)
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: presentation.chatLocation.threadId == 1)
                     current = .init(account: context.account, file: file, size: size, playPolicy: .playCount(2))
                 }
                 current.superview = containerView
@@ -798,9 +808,17 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private func updateTitle(_ force: Bool = false, presentation: ChatPresentationInterfaceState) {
         if let peerView = self.peerView, let peer = peerViewMainPeer(peerView) {
-            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: chatInteraction.mode.isSavedMessagesThread || chatInteraction.mode.customChatLink != nil)
+            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: presentation.chatMode.isSavedMessagesThread || presentation.chatMode.customChatLink != nil || presentation.isMonoforum)
             
-            if let customLinkContents = chatInteraction.mode.customChatLink {
+            if presentation.isMonoforum {
+                if !presentation.monoforumTopics.isEmpty, presentation.chatLocation.threadId == nil {
+                    result = result
+                        .withUpdatedStatus(strings().chatTitleChatsCountable(presentation.monoforumTopics.count))
+                } else {
+                    result = result
+                        .withUpdatedStatus(strings().chatTitleTopicCountable(Int(self.counters.replies ?? 0)))
+                }
+            } else if let customLinkContents = chatInteraction.mode.customChatLink {
                 result = result.withUpdatedTitle(customLinkContents.name.isEmpty ? customLinkContents.link : customLinkContents.name).withUpdatedStatus(customLinkContents.name.isEmpty ? "" : customLinkContents.link)
             } else if let customChatContents = chatInteraction.mode.customChatContents {
                 result = result.withUpdatedTitle(customChatContents.kind.text).withUpdatedStatus("")
@@ -808,7 +826,17 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0)).withUpdatedStatus("")
             } else if chatInteraction.mode == .scheduled {
                 result = result.withUpdatedTitle(strings().chatTitleScheduledMessages).withUpdatedStatus("")
-            } else if case let .thread(data, mode) = chatInteraction.mode {
+            } else if let threadInfo = presentation.threadInfo, presentation.isTopicMode {
+                if let count = self.counters.replies, count > 0 {
+                    result = result
+                        .withUpdatedTitle(threadInfo.info.title)
+                        .withUpdatedStatus(strings().chatTitleTopicCountable(Int(count)))
+                } else {
+                    result = result
+                        .withUpdatedTitle(threadInfo.info.title)
+                        .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                }
+            } else if case let .thread(mode) = chatInteraction.mode, case let .thread(data) = chatInteraction.chatLocation {
                 switch mode {
                 case .comments:
                     result = result.withUpdatedTitle(strings().chatTitleDiscussion).withUpdatedStatus(strings().chatTitleCommentsCountable(Int(self.counters.replies ?? 0)))

@@ -71,6 +71,8 @@ enum PremiumLogEventsSource : Equatable {
     case upload_limit
     case grace_period
     case emoji_status
+    case todo
+    case limitedGift(StarGift.Gift)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -133,6 +135,10 @@ enum PremiumLogEventsSource : Equatable {
             return "grace_period"
         case .emoji_status:
             return "emoji_status"
+        case .todo:
+            return "todo"
+        case .limitedGift:
+            return "limited_gift"
         }
     }
     
@@ -194,6 +200,10 @@ enum PremiumLogEventsSource : Equatable {
             return nil
         case .emoji_status:
             return .emoji_status
+        case .todo:
+            return .todo
+        case .limitedGift:
+            return nil
         }
     }
     
@@ -295,6 +305,7 @@ enum PremiumValue : String {
     case saved_tags
     case last_seen
     case message_privacy
+    case todo
     
     case business
     
@@ -456,6 +467,8 @@ enum PremiumValue : String {
             return NSImage(resource: .iconPremiumBusinessLinks).precomposed(presentation.colors.accent)
         case .folder_tags:
             return NSImage(resource: .iconPremiumBoardingTag).precomposed(presentation.colors.accent)
+        case .todo:
+            return NSImage(resource: .iconPremiumBoardingTodo).precomposed(presentation.colors.accent)
         }
     }
     
@@ -519,6 +532,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessLinks
         case .folder_tags:
             return strings().premiumBoardingTagFolders
+        case .todo:
+            return strings().premiumBoardingTodo
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -581,7 +596,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBusinessLinksInfo
         case .folder_tags:
             return strings().premiumBoardingTagFoldersInfo
-            
+        case .todo:
+            return strings().premiumBoardingTodoInfo
         }
     }
 }
@@ -589,7 +605,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags, .last_seen, .message_privacy]
+    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations, .saved_tags, .last_seen, .message_privacy, .todo]
     var businessValues: [PremiumValue] = []
     
     let source: PremiumLogEventsSource
@@ -646,7 +662,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     let scene: PremiumBoardingHeaderItem.SceneType
-    if state.source == .business_standalone || state.source == .business {
+    if case let .limitedGift(gift) = state.source {
+        scene = .gift(gift)
+    } else if state.source == .business_standalone || state.source == .business {
         scene = .coin
     } else if state.source == .grace_period {
         scene = .grace
@@ -655,7 +673,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
+        
+        let status: NSAttributedString
+        status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark, bubbled: theme.bubbled)
+
         return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy, sceneType: scene)
     }))
     index += 1
@@ -721,14 +742,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if state.source != .business_standalone {
-        for (i, value) in state.values.uniqueElements.enumerated() {
-            let viewType = bestGeneralViewType(state.values, for: i)
+        let elements = state.values.uniqueElements
+        for (i, value) in elements.enumerated() {
+            let viewType = bestGeneralViewType(elements, for: i)
             
             struct Tuple : Equatable {
                 let value: PremiumValue
                 let isNew: Bool
+                let viewType: GeneralViewType
             }
-            let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue))
+            let tuple = Tuple(value: value, isNew: state.newPerks.contains(value.rawValue), viewType: viewType)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, isNew: tuple.isNew, callback: { value in
@@ -756,8 +779,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text))
             }))
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { _ in
-                
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { link in
+                execute(inapp: .external(link: "https://telegram.org/" + link == "terms" ? "tos" : link, false))
             }), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
 
@@ -1333,8 +1356,7 @@ final class PremiumBoardingController : ModalViewController {
             default:
                 break
             }
-            let controller = ChatController(context: context, chatLocation: .peer(peerId), initialAction: updated)
-            context.bindings.rootNavigation().push(controller)
+            navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId), initialAction: updated)
             
             close()
         }, openFeature: { [weak self] value, animated in
@@ -1501,6 +1523,11 @@ final class PremiumBoardingController : ModalViewController {
                     current.stickers = stickers
                     current.periods = promoConfiguration.premiumProductOptions.compactMap { period in
                         if let value = PremiumPeriod.Period(rawValue: period.months) {
+                            #if APP_STORE
+                            if products.first(where: { $0.id == period.storeProductId }) == nil {
+                                return nil
+                            }
+                            #endif
                             return .init(period: value, options: promoConfiguration.premiumProductOptions, storeProducts: products, storeProduct: products.first(where: { $0.id == period.storeProductId }), option: period)
                         }
                         return nil
@@ -1702,7 +1729,7 @@ final class PremiumBoardingController : ModalViewController {
             } else {
                 addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
                 
-                #if APP_STORE || DEBUG
+                #if APP_STORE
                 buyAppStore()
                 #else
                 buyNonStore()

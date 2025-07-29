@@ -23,6 +23,7 @@ import Accelerate
 import TGModernGrowingTextView
 import InputView
 import TelegramMedia
+import CurrencyFormat
 
 func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
     if let messageId = messageId {
@@ -35,6 +36,38 @@ func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
 func makeThreadIdMessageId(peerId: PeerId, threadId: Int64) -> MessageId {
     let messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: Int32(clamping: threadId))
     return messageId
+}
+
+extension SuggestedPostMessageAttribute {
+    
+    static let commandDecline = "_suggest_decline"
+    static let commandApprove = "_suggest_approve"
+    static let commandChanges = "_suggest_changes"
+
+    func replyMarkup(isIncoming: Bool) -> ReplyMarkupMessageAttribute {
+        
+        var rows: [ReplyMarkupRow] = []
+        
+        if let state {
+            
+        } else {
+            if isIncoming {
+                rows.append(.init(buttons: [
+                    .init(title: strings().chatMessageSuggestMarkupDecline, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandDecline)),
+                    .init(title: strings().chatMessageSuggestMarkupApprove, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandApprove))
+                ]))
+                rows.append(.init(buttons: [
+                    .init(title: strings().chatMessageSuggestMarkupSuggestChanges, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandChanges))
+                ]))
+            } else {
+                rows.append(.init(buttons: [
+                    .init(title: strings().chatMessageSuggestMarkupEdit, titleWhenForwarded: nil, action: .url(SuggestedPostMessageAttribute.commandChanges))
+                ]))
+            }
+        }
+        
+        return ReplyMarkupMessageAttribute.init(rows: rows, flags: [], placeholder: nil)
+    }
 }
 
 
@@ -89,6 +122,10 @@ extension TelegramChatAdminRightsFlags {
             return strings().eventLogServicePromotePinMessages
         case TelegramChatAdminRightsFlags.canPostMessages:
             return strings().eventLogServicePromotePostMessages
+        case TelegramChatAdminRightsFlags.canPostMessages:
+            return strings().eventLogServicePromotePostMessages
+        case TelegramChatAdminRightsFlags.canManageDirect:
+            return strings().eventLogServicePromoteManageDirect
         case TelegramChatAdminRightsFlags.canBeAnonymous:
             return strings().eventLogServicePromoteRemainAnonymous
         case TelegramChatAdminRightsFlags.canManageCalls:
@@ -592,20 +629,20 @@ public extension Message {
        
         return false
     }
-    func restrictedText(_ contentSettings: ContentSettings) -> String? {
-        #if APP_STORE || DEBUG
+    func restrictedText(_ contentSettings: ContentSettings?, contentConfig: ContentSettingsConfiguration = .default) -> String? {
         for attr in attributes {
-            if let attr = attr as? RestrictedContentMessageAttribute {
+            if let attr = attr as? RestrictedContentMessageAttribute, let contentSettings {
                 for rule in attr.rules {
                     if rule.platform == "ios" || rule.platform == "all" || contentSettings.addContentRestrictionReasons.contains(rule.platform) {
                         if !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
-                            return rule.text
+                            if rule.reason != "sensitive" && !contentConfig.canAdjustSensitiveContent {
+                                return rule.text
+                            }
                         }
                     }
                 }
             }
         }
-        #endif
         return nil
     }
     
@@ -869,6 +906,25 @@ public extension Message {
         return nil
     }
     
+    var suggestPostAttribute: SuggestedPostMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? SuggestedPostMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    var publishedSuggestedPostMessageAttribute: PublishedSuggestedPostMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? PublishedSuggestedPostMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    
     var quoteAttribute: QuotedReplyMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? QuotedReplyMessageAttribute {
@@ -977,6 +1033,9 @@ public extension Message {
         if !peer.canSendMessage(false) {
             return false
         } else if let peer = peer as? TelegramChannel {
+            if peer.isChannel, media.first is TelegramMediaTodo {
+                return false
+            }
             if let media = media.first, !(media is TelegramMediaWebpage) {
                 if let media = media as? TelegramMediaFile {
                     if media.isStaticSticker {
@@ -1043,7 +1102,7 @@ public extension ReplyMarkupMessageAttribute {
 
 fileprivate let edit_limit_time:Int32 = 48*60*60
 
-func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
+func canDeleteMessage(_ message:Message, account:Account, chatLocation: ChatLocation, mode: ChatMode) -> Bool {
     
     if case .searchHashtag = mode.customChatContents?.kind {
         return false
@@ -1052,7 +1111,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if mode.customChatContents != nil {
         return true
     }
-    if mode.threadId == message.id {
+    if chatLocation.threadMsgId == message.id {
         return false
     }
     if message.adAttribute != nil {
@@ -1217,7 +1276,7 @@ func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
     return false
 }
 
-func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadData: MessageHistoryThreadData? = nil) -> Bool {
+func canReplyMessage(_ message: Message, peerId: PeerId, chatLocation: ChatLocation, mode: ChatMode, threadData: MessageHistoryThreadData? = nil) -> Bool {
     if let peer = coreMessageMainPeer(message) {
         if message.isScheduledMessage {
             return false
@@ -1236,21 +1295,23 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadD
                 }
             case .scheduled:
                 return false
-            case let .thread(data, mode):
-                switch mode {
-                case .comments, .replies, .topic:
-                    if message.id.id == data.threadId {
+            case let .thread(mode):
+                if case let .thread(data) = chatLocation {
+                    switch mode {
+                    case .comments, .replies, .topic:
+                        if message.id.id == data.threadId {
+                            return false
+                        }
+                        if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
+                            return true
+                        } else {
+                            return peer.canSendMessage(false, threadData: threadData)
+                        }
+                    case .savedMessages:
+                        return false
+                    case .saved:
                         return false
                     }
-                    if let channel = peer as? TelegramChannel, channel.hasPermission(.sendSomething) {
-                        return true
-                    } else {
-                        return peer.canSendMessage(false, threadData: threadData)
-                    }
-                case .savedMessages:
-                    return false
-                case .saved:
-                    return false
                 }
             case .pinned:
                 return false
@@ -1333,6 +1394,13 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     
     var timeInCondition = Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
     
+    if message.media.first is TelegramMediaTodo {
+        timeInCondition = true
+    }
+    if let attr = message.suggestPostAttribute, attr.state == nil {
+        timeInCondition = true
+    }
+    
     if let peer = coreMessageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
             if message.isScheduledMessage {
@@ -1368,7 +1436,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     }
     
     
-    if Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) < context.account.network.getApproximateRemoteTimestamp() {
+    if !timeInCondition {
         return false
     }
     
@@ -3402,7 +3470,7 @@ func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) ->
             return false
         }
     }
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji && entities.count == message.entities.count
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && text.containsOnlyEmoji && entities.count == message.entities.count && message.adAttribute == nil
 }
 
 
@@ -3895,6 +3963,15 @@ extension NSAttributedString {
         return attr
     }
     
+    static func embeddedAnimated(_ fileId: Int64, color: NSColor? = nil, playPolicy: LottiePlayPolicy? = nil) -> NSAttributedString {
+        let attr = NSMutableAttributedString()
+        
+        let emoji: String = clown
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: fileId, file: nil, emoji: emoji, color: color)), playPolicy: playPolicy), range: NSMakeRange(0, emoji.length))
+        return attr
+    }
+    
     static func embeddedAvatar(_ peer: EnginePeer, space: Bool = true, link: Any? = nil) -> NSAttributedString {
         let attr = NSMutableAttributedString()
         
@@ -4112,5 +4189,65 @@ extension TelegramMediaImage {
     convenience init(dimension: PixelDimensions, immediateThumbnailData: Data?) {
         self.init(imageId: .init(namespace: 0, id: 0), representations: [.init(dimensions: dimension, resource: LocalBundleResource(name: "", ext: ""), progressiveSizes: [], immediateThumbnailData: immediateThumbnailData)], immediateThumbnailData: immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
 
+    }
+}
+
+
+extension RenderedPeer {
+    convenience init(_ renderedPeer: EngineRenderedPeer) {
+        let dict = SimpleDictionary<PeerId, any Peer>(renderedPeer.peers.mapValues {
+            $0._asPeer()
+        })
+        self.init(peerId: renderedPeer.peerId, peers: dict, associatedMedia: renderedPeer.associatedMedia)
+    }
+}
+
+
+extension StarsAmount {
+    func string(_ currency: CurrencyAmount.Currency, abs _abs: Bool = false) -> String {
+        switch currency {
+        case .stars:
+            return self.stringValue
+        case .ton:
+            return formatCurrencyAmount(_abs ? abs(self.value) : self.value, currency: TON).prettyCurrencyNumberUsd
+        }
+    }
+}
+
+
+extension CurrencyAmount.Currency {
+    var stringValue: String {
+        switch self {
+        case .stars:
+            return XTR
+        case .ton:
+            return TON
+        }
+    }
+    init(_ stringValue: String) {
+        switch stringValue {
+        case TON:
+            self = .ton
+        case XTR:
+            self = .stars
+        default:
+            self = .stars
+        }
+    }
+}
+
+
+extension CurrencyAmount {
+    var fullyFormatted: String {
+        switch currency {
+        case .ton:
+            return self.amount.string(currency) + " " + TON
+        case .stars:
+            return strings().starListItemCountCountable(Int(self.amount.value))
+        }
+    }
+    
+    var formatted: String {
+        return self.amount.string(currency)
     }
 }

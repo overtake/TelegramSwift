@@ -304,7 +304,40 @@ func stringForFullDate(timestamp: Int32) -> String {
     }
 }
 
-
+func stringForDate(timestamp: Int32) -> String {
+    var t: time_t = Int(timestamp)
+    var timeinfo = tm()
+    localtime_r(&t, &timeinfo);
+    
+    switch timeinfo.tm_mon + 1 {
+    case 1:
+        return strings().timePreciseDateM1("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 2:
+        return strings().timePreciseDateM2("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 3:
+        return strings().timePreciseDateM3("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 4:
+        return strings().timePreciseDateM4("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 5:
+        return strings().timePreciseDateM5("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 6:
+        return strings().timePreciseDateM6("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 7:
+        return strings().timePreciseDateM7("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 8:
+        return strings().timePreciseDateM8("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 9:
+        return strings().timePreciseDateM9("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 10:
+        return strings().timePreciseDateM10("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 11:
+        return strings().timePreciseDateM11("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 12:
+        return strings().timePreciseDateM12("\(timeinfo.tm_mday)", "", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    default:
+        return ""
+    }
+}
 
 extension Date {
     

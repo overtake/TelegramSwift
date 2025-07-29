@@ -346,7 +346,7 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
                 }
                 if let userAdminRights = group.userAdminRights {
                     
-                    let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canEditMessages, .canDeleteMessages, .canPostStories, .canEditStories, .canDeleteStories, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
+                    let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canManageDirect, .canEditMessages, .canDeleteMessages, .canPostStories, .canEditStories, .canDeleteStories, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
                     
                     var texts: [String] = []
                     for right in all {
@@ -379,7 +379,7 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
                 }
                 if let botRights = channel.botAdminRights {
                     
-                   let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canEditMessages, .canDeleteMessages, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
+                    let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canManageDirect, .canEditMessages, .canDeleteMessages, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
                     
                     var texts: [String] = []
                     for right in all {
@@ -540,7 +540,7 @@ func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequ
         }
         context.bindings.rootNavigation().push(CreateChannelController(context: context, requires: requires, onComplete: { peerId, completed in
             if completed {
-                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                 invoke([peerId])
             }
         }))

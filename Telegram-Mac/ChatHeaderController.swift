@@ -23,6 +23,7 @@ protocol ChatHeaderProtocol {
     func remove(animated: Bool)
     
     func measure(_ width: CGFloat)
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition)
 }
 
 struct EmojiTag : Equatable {
@@ -35,7 +36,7 @@ struct EmojiTag : Equatable {
 struct ChatHeaderState : Identifiable, Equatable {
     enum Value : Equatable {
         case none
-        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag]?, EmojiTag?)
+        case search(ChatSearchInteractions, Peer?, String?, [EmojiTag]?, EmojiTag?, ChatLocation)
         case addContact(block: Bool, autoArchived: Bool)
         case requestChat(String, String)
         case shareInfo
@@ -60,8 +61,8 @@ struct ChatHeaderState : Identifiable, Equatable {
                 } else {
                     return false
                 }
-            case let .search(_, _, _, tags, selected):
-                if case .search(_, _, _, tags, selected) = rhs {
+            case let .search(_, _, _, tags, selected, chatLocation):
+                if case .search(_, _, _, tags, selected, chatLocation) = rhs {
                     return true
                 } else {
                     return false
@@ -211,7 +212,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         switch main {
         case .none:
             height += 0
-        case let .search(_, _, _, emojiTags, _):
+        case let .search(_, _, _, emojiTags, _, _):
             height += 44
             if emojiTags != nil {
                 height += 35
@@ -234,7 +235,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         case .requestChat:
             height += 44
         case .restartTopic:
-            height += 44
+            height += 40
         case .removePaidMessages:
             height += 50
         }
@@ -290,10 +291,40 @@ class ChatHeaderController {
     
     private(set) var currentView:View?
 
-    private var primaryView: View?
-    private var seconderyView : View?
-    private var thirdView : View?
-    private var fourthView : View?
+    
+    private var primaryInited = false
+    private var seconderyInited = false
+    private var thirdInited = false
+    private var fourthInited = false
+
+    private var primaryView: View? {
+        didSet {
+            if oldValue == nil, primaryView != nil {
+                primaryInited = false
+            }
+        }
+    }
+    private var seconderyView : View? {
+        didSet {
+            if oldValue == nil, seconderyView != nil {
+                seconderyInited = false
+            }
+        }
+    }
+    private var thirdView : View? {
+        didSet {
+            if oldValue == nil, thirdView != nil {
+                thirdInited = false
+            }
+        }
+    }
+    private var fourthView : View? {
+        didSet {
+            if oldValue == nil, fourthView != nil {
+                fourthInited = false
+            }
+        }
+    }
 
     var state:ChatHeaderState {
         return _headerState
@@ -304,19 +335,47 @@ class ChatHeaderController {
         (self.seconderyView as? ChatHeaderProtocol)?.measure(width)
         (self.thirdView as? ChatHeaderProtocol)?.measure(width)
         (self.fourthView as? ChatHeaderProtocol)?.measure(width)
-
     }
     
-    func updateState(_ state:ChatHeaderState, animated:Bool, for view:View) -> Void {
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        if let view = self.primaryView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, view.frame.minY, size.width, view.frame.height))
+            
+            let layoutTransition = primaryInited ? transition : .immediate
+            primaryInited = true
+            (view as? ChatHeaderProtocol)?.updateLayout(size: view.frame.size, transition: layoutTransition)
+        }
+        if let view = self.seconderyView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, view.frame.minY, size.width, view.frame.height))
+            let layoutTransition = seconderyInited ? transition : .immediate
+            seconderyInited = true
+            (view as? ChatHeaderProtocol)?.updateLayout(size: view.frame.size, transition: layoutTransition)
+        }
+        if let view = self.thirdView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, view.frame.minY, size.width, view.frame.height))
+            let layoutTransition = thirdInited ? transition : .immediate
+            thirdInited = true
+            (view as? ChatHeaderProtocol)?.updateLayout(size: view.frame.size, transition: layoutTransition)
+        }
+        if let view = self.fourthView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, view.frame.minY, size.width, view.frame.height))
+            let layoutTransition = fourthInited ? transition : .immediate
+            fourthInited = true
+            (view as? ChatHeaderProtocol)?.updateLayout(size: view.frame.size, transition: layoutTransition)
+        }
+    }
+    
+    func updateState(_ state:ChatHeaderState, animated:Bool, for view:View, inset: CGFloat, relativeView: NSView?) -> Void {
         if _headerState != state {
             _headerState = state
             
 
             let (primary, secondary, third, fourth) = viewIfNecessary(
-                primarySize: NSMakeSize(view.frame.width, state.primaryHeight),
-                secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight),
-                thirdSize: NSMakeSize(view.frame.width, state.thirdHeight),
-                fourthSize: NSMakeSize(view.frame.width, state.fourthHeight),
+                primarySize: NSMakeSize(view.frame.width - inset, state.primaryHeight),
+                secondarySize: NSMakeSize(view.frame.width - inset, state.secondaryHeight),
+                thirdSize: NSMakeSize(view.frame.width - inset, state.thirdHeight),
+                fourthSize: NSMakeSize(view.frame.width - inset, state.fourthHeight),
                 animated: animated,
                 p_v: self.primaryView,
                 s_v: self.seconderyView,
@@ -399,14 +458,16 @@ class ChatHeaderController {
 
             if !added.isEmpty || primary != nil || secondary != nil || third != nil || fourth != nil {
                 let current: View
-                if let view = currentView {
-                    current = view
-                    current.change(size: NSMakeSize(view.frame.width, state.height), animated: animated)
+                if let v = currentView {
+                    current = v
+                    current.change(size: NSMakeSize(view.frame.width - inset, state.height), animated: animated)
                 } else {
-                    current = View(frame: NSMakeRect(0, 0, view.frame.width, state.height))
-                    current.autoresizingMask = [.width]
-                    current.autoresizesSubviews = true
-                    view.addSubview(current)
+                    current = View(frame: NSMakeRect(inset, 0, view.frame.width - inset, state.height))
+                    if let relativeView {
+                        view.addSubview(current, positioned: .below, relativeTo: relativeView)
+                    } else {
+                        view.addSubview(current)
+                    }
                     self.currentView = current
                 }
 
@@ -517,7 +578,6 @@ class ChatHeaderController {
             case .none:
                 primary = nil
             }
-            primary?.autoresizingMask = [.width]
         } else {
             primary = p_v
             (primary as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -526,7 +586,6 @@ class ChatHeaderController {
         if let _ = self._headerState.voiceChat {
             if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass) {
                 secondary = ChatGroupCallView(chatInteraction.joinGroupCall, context: chatInteraction.context, state: _headerState, frame: secondaryRect)
-                secondary?.autoresizingMask = [.width]
             } else {
                 secondary = s_v
                 (secondary as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -538,7 +597,6 @@ class ChatHeaderController {
         if let _ = self._headerState.translate {
             if t_v == nil || t_v?.className != NSStringFromClass(_headerState.thirdClass) {
                 third = ChatTranslateHeader(chatInteraction, state: _headerState, frame: thirdRect)
-                third?.autoresizingMask = [.width]
             } else {
                 third = t_v
                 (third as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -550,7 +608,6 @@ class ChatHeaderController {
         if let _ = self._headerState.botManager {
             if f_v == nil || f_v?.className != NSStringFromClass(_headerState.fourthClass) {
                 fourth = ChatBotManager(chatInteraction, state: _headerState, frame: thirdRect)
-                fourth?.autoresizingMask = [.width]
             } else {
                 fourth = f_v
                 (fourth as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -562,7 +619,6 @@ class ChatHeaderController {
         if let _ = self._headerState.botAd {
             if f_v == nil || f_v?.className != NSStringFromClass(_headerState.fifthClass) {
                 fourth = ChatAdHeaderView(chatInteraction, state: _headerState, frame: thirdRect)
-                fourth?.autoresizingMask = [.width]
             } else {
                 fourth = f_v
                 (fourth as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -642,6 +698,8 @@ private extension EngineChatList.AdditionalItem.PromoInfo.Content {
 
 
 private final class ChatSponsoredView : Control, ChatHeaderProtocol {
+   
+    
     
     
     private let chatInteraction:ChatInteraction
@@ -738,14 +796,24 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
     }
     
     override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         if let node = node {
-            node.measureSize(frame.width - 70)
-            container.setFrameSize(frame.width - 70, node.size.height)
+            node.measureSize(size.width - 70)
+            container.setFrameSize(NSSize(width: size.width - 70, height: node.size.height))
         }
-        container.centerY(x: 20)
-        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
+
+        transition.updateFrame(view: container, frame: container.centerFrameY(x: 20))
+
+        let dismissX = size.width - 20 - dismiss.frame.width
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: dismissX))
+
         node?.setNeedDisplay()
     }
+
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(theme.colors.border.cgColor)
@@ -796,7 +864,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             guard let `self` = self, let pinnedMessage = self.pinnedMessage else {
                 return
             }
-            if self.chatInteraction.mode.threadId == pinnedMessage.messageId {
+            if self.chatInteraction.chatLocation.threadMsgId == pinnedMessage.messageId {
                 self.chatInteraction.scrollToTheFirst()
             } else {
                 self.chatInteraction.focusPinnedMessageId(pinnedMessage.messageId)
@@ -863,7 +931,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
                         
-            let newNode = ReplyModel(message: nil, replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: translate)
+            let newNode = ReplyModel(message: nil, replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.chatLocation.threadMsgId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: translate)
             
             newNode.view = newContainer
             
@@ -896,12 +964,61 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
                 oldContainer.removeFromSuperview()
             }
             
-            if let message = pinnedMessage.message, let replyMarkup = pinnedMessage.message?.replyMarkup, replyMarkup.hasButtons, replyMarkup.rows.count == 1, replyMarkup.rows[0].buttons.count == 1 {
-                self.installReplyMarkup(replyMarkup.rows[0].buttons[0], message: message, animated: animated)
-            } else {
-                self.deinstallReplyMarkup(animated: animated)
+            var telegramCall: TelegramMediaWebpageLoadedContent? = nil
+            
+            if let media = pinnedMessage.message?.media.first as? TelegramMediaWebpage {
+                switch media.content {
+                case let .Loaded(content):
+                    if content.type == "telegram_call" {
+                        telegramCall = content
+                    }
+                default:
+                    break
+                }
             }
             
+            if let content = telegramCall {
+                
+                self.dismiss.isHidden = true
+                let current: TextButton
+                if let view = self.inlineButton {
+                    current = view
+                } else {
+                    current = TextButton()
+                    current.autohighlight = false
+                    current.scaleOnClick = true
+                    
+                    
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    self.inlineButton = current
+                }
+                current.setSingle(handler: { [weak self] _ in
+                    if let chatInteraction = self?.chatInteraction {
+                        let link = inApp(for: content.url.nsstring, context: chatInteraction.context, openInfo: chatInteraction.openInfo)
+                        execute(inapp: link)
+                    }
+                }, for: .Click)
+                
+                addSubview(current)
+
+                current.set(text: strings().chatJoinGroupCall, for: .Normal)
+                current.set(font: .medium(.text), for: .Normal)
+                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.set(background: theme.colors.accent, for: .Normal)
+                current.sizeToFit(NSMakeSize(6, 8), .zero, thatFit: false)
+                current.layer?.cornerRadius = current.frame.height / 2
+                
+            } else {
+                if let message = pinnedMessage.message, let replyMarkup = pinnedMessage.message?.replyMarkup, replyMarkup.hasButtons, replyMarkup.rows.count == 1, replyMarkup.rows[0].buttons.count == 1 {
+                    self.installReplyMarkup(replyMarkup.rows[0].buttons[0], message: message, animated: animated)
+                } else {
+                    self.deinstallReplyMarkup(animated: animated)
+                }
+            }
+                        
             self.container = newContainer
             self.node = newNode
         }
@@ -978,22 +1095,37 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     
  
     override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        var availableWidth: CGFloat
+
+        if let inlineButton = inlineButton {
+            availableWidth = size.width - (40 + inlineButton.frame.width)
+        } else {
+            availableWidth = size.width - (40 + (dismiss.isHidden ? 0 : 30))
+        }
+
         if let node = node {
-            if let view = inlineButton {
-                node.measureSize(frame.width - (40 + view.frame.width))
-            } else {
-                node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
-            }
-            container.setFrameSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)), node.size.height)
+            node.measureSize(availableWidth)
+            container.setFrameSize(NSSize(width: availableWidth, height: node.size.height))
         }
-        container.centerY(x: 24)
-        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        
-        if let view = inlineButton {
-            view.centerY(x: frame.width - 20 - view.frame.width)
+
+        transition.updateFrame(view: container, frame: container.centerFrameY(x: 24))
+
+        let dismissX = size.width - 20 - dismiss.frame.width
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: dismissX))
+
+        if let inlineButton = inlineButton {
+            let buttonX = size.width - 20 - inlineButton.frame.width
+            transition.updateFrame(view: inlineButton, frame: inlineButton.centerFrameY(x: buttonX))
         }
+
         node?.setNeedDisplay()
     }
+
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.setFillColor(theme.colors.border.cgColor)
@@ -1160,30 +1292,41 @@ class ChatReportView : Control, ChatHeaderProtocol {
     }
     
     override func layout() {
-        report.center()
-        dismiss.frame = NSMakeRect(frame.width - dismiss.frame.width - 20, floorToScreenPixels(backingScaleFactor, (44 - dismiss.frame.height) / 2), dismiss.frame.width, dismiss.frame.height)
-        
-        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, 44 - .borderSize)
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
 
-        var buttons:[Control] = []
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: report, frame: report.centerFrame())
+
+        let dismissX = size.width - dismiss.frame.width - 20
+        let dismissY = floorToScreenPixels(backingScaleFactor, (44 - dismiss.frame.height) / 2)
+        let dismissFrame = NSRect(x: dismissX, y: dismissY, width: dismiss.frame.width, height: dismiss.frame.height)
+        transition.updateFrame(view: dismiss, frame: dismissFrame)
+
+        let buttonsContainerFrame = NSRect(x: 0, y: 0, width: size.width, height: 44 - .borderSize)
+        transition.updateFrame(view: buttonsContainer, frame: buttonsContainerFrame)
+
+        var buttons: [Control] = []
         if report.superview != nil {
             buttons.append(report)
         }
         if unarchiveButton.superview != nil {
             buttons.append(unarchiveButton)
         }
-        
-        let buttonWidth: CGFloat = floor(buttonsContainer.frame.width / CGFloat(buttons.count))
-        var x: CGFloat = 0
-        for button in buttons {
-            button.frame = NSMakeRect(x, 0, buttonWidth, buttonsContainer.frame.height)
-            x += buttonWidth
+
+        let buttonWidth: CGFloat = floor(buttonsContainerFrame.width / CGFloat(max(buttons.count, 1)))
+        for (index, button) in buttons.enumerated() {
+            let buttonFrame = NSRect(x: CGFloat(index) * buttonWidth, y: 0, width: buttonWidth, height: buttonsContainerFrame.height)
+            transition.updateFrame(view: button, frame: buttonFrame)
         }
-        
+
         if let textView = textView {
-            textView.centerX(y: frame.height - textView.frame.height - 5)
+            let textViewFrame = textView.centerFrameX(y: size.height - textView.frame.height - 5)
+            transition.updateFrame(view: textView, frame: textViewFrame)
         }
     }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -1260,6 +1403,10 @@ class ShareInfoView : Control, ChatHeaderProtocol {
         super.layout()
         dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
         share.center()
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
     }
     
     required init?(coder: NSCoder) {
@@ -1370,12 +1517,11 @@ class AddContactView : Control, ChatHeaderProtocol {
         ctx.fill(NSMakeRect(0, layer.frame.height - .borderSize, layer.frame.width, .borderSize))
     }
     
-    override func layout() {
-        dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
-        
-        var buttons:[Control] = []
-        
-        
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let dismissX = size.width - dismiss.frame.width - 20
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: dismissX))
+
+        var buttons: [Control] = []
         if add.superview != nil {
             buttons.append(add)
         }
@@ -1385,17 +1531,22 @@ class AddContactView : Control, ChatHeaderProtocol {
         if unarchiveButton.superview != nil {
             buttons.append(unarchiveButton)
         }
-        
-        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
 
-        
-        let buttonWidth: CGFloat = floor(buttonsContainer.frame.width / CGFloat(buttons.count))
-        var x: CGFloat = 0
-        for button in buttons {
-            button.frame = NSMakeRect(x, 0, buttonWidth, buttonsContainer.frame.height)
-            x += buttonWidth
+        let buttonsContainerFrame = NSRect(x: 0, y: 0, width: size.width, height: size.height - .borderSize)
+        transition.updateFrame(view: buttonsContainer, frame: buttonsContainerFrame)
+
+        let buttonWidth: CGFloat = floor(buttonsContainerFrame.width / CGFloat(max(buttons.count, 1)))
+        for (index, button) in buttons.enumerated() {
+            let buttonFrame = NSRect(x: CGFloat(index) * buttonWidth, y: 0, width: buttonWidth, height: buttonsContainerFrame.height)
+            transition.updateFrame(view: button, frame: buttonFrame)
         }
     }
+
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -1822,32 +1973,42 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        
-        avatarsContainer.isHidden = frame.width < 300
-        
-        if let scheduleButton = scheduleButton {
-            scheduleButton.centerY(x: frame.width - scheduleButton.frame.width - 23)
-        }
-        joinButton.centerY(x: frame.width - joinButton.frame.width - 23)
-        
-        let subviewsCount = max(avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }.count, 1)
-        
-        if subviewsCount == 3 || subviewsCount == 0 {
-            self.avatarsContainer.center()
-        } else {
-            let count = CGFloat(subviewsCount)
-            let avatarSize: CGFloat = (count * 30) - ((count - 1) * 3)
-            self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
-        }
-        
-        headerView.resize(frame.width - 100)
-
-        
-        headerView.setFrameOrigin(.init(x: 22, y: bounds.midY - headerView.frame.height))
-        membersCountView.setFrameOrigin(.init(x: 22, y: bounds.midY))
-                
-        button.frame = bounds
+        updateLayout(size: frame.size, transition: .immediate)
     }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        avatarsContainer.isHidden = size.width < 300
+
+        if let scheduleButton = scheduleButton {
+            let scheduleX = size.width - scheduleButton.frame.width - 23
+            transition.updateFrame(view: scheduleButton, frame: scheduleButton.centerFrameY(x: scheduleX))
+        }
+
+        let joinX = size.width - joinButton.frame.width - 23
+        transition.updateFrame(view: joinButton, frame: joinButton.centerFrameY(x: joinX))
+
+        let visibleSubviewsCount = max(avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }.count, 1)
+
+        if visibleSubviewsCount == 3 || visibleSubviewsCount == 0 {
+            transition.updateFrame(view: avatarsContainer, frame: avatarsContainer.centerFrame())
+        } else {
+            let count = CGFloat(visibleSubviewsCount)
+            let avatarSize: CGFloat = (count * 30) - ((count - 1) * 3)
+            let x = floorToScreenPixels(backingScaleFactor, (size.width - avatarSize) / 2)
+            transition.updateFrame(view: avatarsContainer, frame: avatarsContainer.centerFrameY(x: x))
+        }
+
+        headerView.resize(size.width - 100)
+
+        let headerOrigin = NSPoint(x: 22, y: size.height / 2 - headerView.frame.height)
+        transition.updateFrame(view: headerView, frame: NSRect(origin: headerOrigin, size: headerView.frame.size))
+
+        let membersOrigin = NSPoint(x: 22, y: size.height / 2)
+        transition.updateFrame(view: membersCountView, frame: NSRect(origin: membersOrigin, size: membersCountView.frame.size))
+
+        transition.updateFrame(view: button, frame: NSRect(origin: .zero, size: size))
+    }
+
     
     
     required init?(coder: NSCoder) {
@@ -1944,9 +2105,16 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        textView.resize(frame.width - 60)
-        textView.center()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - 20 - dismiss.frame.width))
+
+        let textWidth = size.width - 60
+        textView.resize(textWidth)
+     
+        transition.updateFrame(view: textView, frame: textView.centerFrame())
     }
     
     
@@ -2109,8 +2277,10 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
             break
         }
         updateLocalizationAndTheme(theme: theme)
-        needsLayout = true
-
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        updateLayout(size: self.frame.size, transition: transition)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -2122,16 +2292,24 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        textView.resize(frame.width - 60 - avatarsContainer.frame.width)
-        textView.center()
-        self.avatarsContainer.centerY(x: 22)
-        
-        let minX = 30 + CGFloat(self.avatars.count) * 15
-        let x = max(textView.frame.minX, minX)
-        textView.setFrameOrigin(NSMakePoint(x, textView.frame.minY))
-
+        updateLayout(size: frame.size, transition: .immediate)
     }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let dismissX = size.width - 20 - dismiss.frame.width
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: dismissX))
+
+        textView.resize(size.width - 60 - avatarsContainer.frame.width)
+        transition.updateFrame(view: textView, frame: textView.centerFrame())
+
+        transition.updateFrame(view: avatarsContainer, frame: avatarsContainer.centerFrameY(x: 22))
+
+        let minX = 30 + CGFloat(avatars.count) * 15
+        let adjustedTextX = max(textView.frame.minX, minX)
+        let adjustedTextOrigin = NSPoint(x: adjustedTextX, y: textView.frame.minY)
+        transition.updateFrame(view: textView, frame: NSRect(origin: adjustedTextOrigin, size: textView.frame.size))
+    }
+
     
     
     required init?(coder: NSCoder) {
@@ -2213,6 +2391,10 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
         super.layout()
         textView.resize(frame.width - 40)
         textView.center()
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
     }
     
     
@@ -2399,7 +2581,12 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
             let language = Translate.find(translate.to)
             if let language = language {
                 if translate.translate {
-                    textView.set(text: strings().chatTranslateShowOriginal, for: .Normal)
+                    if let from = translate.from.flatMap(Translate.find) {
+                        textView.set(text: strings().chatTranslateShowOriginal + " (\(from.language))", for: .Normal)
+                    } else {
+                        textView.set(text: strings().chatTranslateShowOriginal, for: .Normal)
+
+                    }
                 } else {
                     let toString = _NSLocalizedString("Translate.Language.\(language.language)")
                     textView.set(text: strings().chatTranslateTo(toString), for: .Normal)
@@ -2420,10 +2607,13 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        container.frame = bounds
-//        textView.resize(frame.width - 40)
-        textView.center()
-        action.centerY(x: frame.width - action.frame.width - 17)
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: container, frame: size.bounds)
+        transition.updateFrame(view: textView, frame: textView.centerFrame())
+        transition.updateFrame(view: action, frame: action.centerFrameY(x: size.width - action.frame.width - 17))
     }
     
     
@@ -2570,20 +2760,34 @@ private final class ChatBotManager : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        avatar.centerY(x: 25)
-        setup.centerY(x: frame.width - 23 - setup.frame.width)
-        
-        stop.centerY(x: setup.frame.minX - 10 - stop.frame.width)
-
-        let text_w = frame.width - avatar.frame.maxX - 20 - setup.frame.width - 10 - stop.frame.width - 10
-        textView.resize(text_w)
-        infoView.resize(text_w)
-
-        textView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, 6))
-        infoView.setFrameOrigin(NSMakePoint(avatar.frame.maxX + 11, frame.height - infoView.frame.height - 6))
-
-        
+        updateLayout(size: frame.size, transition: .immediate)
     }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: 25))
+        
+        let setupX = size.width - 23 - setup.frame.width
+        transition.updateFrame(view: setup, frame: setup.centerFrameY(x: setupX))
+        
+        let stopX = setupX - 10 - stop.frame.width
+        transition.updateFrame(view: stop, frame: stop.centerFrameY(x: stopX))
+        
+        let textWidth = size.width - avatar.frame.maxX - 20 - setup.frame.width - 10 - stop.frame.width - 10
+        textView.resize(textWidth)
+        infoView.resize(textWidth)
+        
+        transition.updateFrame(view: textView, frame: CGRect(
+            origin: NSPoint(x: avatar.frame.maxX + 11, y: 6),
+            size: textView.frame.size
+        ))
+        
+        transition.updateFrame(view: infoView, frame: CGRect(
+            origin: NSPoint(x: avatar.frame.maxX + 11, y: size.height - infoView.frame.height - 6),
+            size: infoView.frame.size
+        ))
+    }
+
+
     
     
     required init?(coder: NSCoder) {
@@ -2760,13 +2964,33 @@ private final class ChatAdHeaderView : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        self.adHeaderView.setFrameOrigin(NSMakePoint(20, 10))
-        self.header.setFrameOrigin(NSMakePoint(20, adHeaderView.frame.maxY + 4))
-        self.whatsThis.setFrameOrigin(NSMakePoint(self.adHeaderView.frame.maxX + 5, self.adHeaderView.frame.minY))
-        self.text.setFrameOrigin(NSMakePoint(20, self.header.frame.maxY + 4))
-        self.imageView?.centerY(x: frame.width - 50 - 10)
-        dismiss?.centerY(x: frame.width - 30 - 20)
+        updateLayout(size: frame.size, transition: .immediate)
     }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let adHeaderOrigin = NSPoint(x: 20, y: 10)
+        transition.updateFrame(view: adHeaderView, frame: NSRect(origin: adHeaderOrigin, size: adHeaderView.frame.size))
+
+        let headerOrigin = NSPoint(x: 20, y: adHeaderView.frame.maxY + 4)
+        transition.updateFrame(view: header, frame: NSRect(origin: headerOrigin, size: header.frame.size))
+
+        let whatsThisOrigin = NSPoint(x: adHeaderView.frame.maxX + 5, y: adHeaderView.frame.minY)
+        transition.updateFrame(view: whatsThis, frame: NSRect(origin: whatsThisOrigin, size: whatsThis.frame.size))
+
+        let textOrigin = NSPoint(x: 20, y: header.frame.maxY + 4)
+        transition.updateFrame(view: text, frame: NSRect(origin: textOrigin, size: text.frame.size))
+
+        if let imageView = imageView {
+            let imageX = size.width - 50 - 10
+            transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: imageX))
+        }
+
+        if let dismiss = dismiss {
+            let dismissX = size.width - 30 - 20
+            transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: dismissX))
+        }
+    }
+
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
@@ -2811,7 +3035,13 @@ private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
         switch state.main {
         case let .removePaidMessages(peer, amount):
             let attr = NSMutableAttributedString()
-            attr.append(string: strings().chatHeaderRemoveFeeText(peer.compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue), color: theme.colors.grayText, font: .normal(.text))
+            let text: String
+            if let removePaidMessageFeeData = chatInteraction.presentation.removePaidMessageFeeData {
+                text = strings().chatHeaderRemoveFeeMonoforumText(removePaidMessageFeeData.peer._asPeer().compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue)
+            } else {
+                text = strings().chatHeaderRemoveFeeText(peer.compactDisplayTitle.prefixWithDots(30), clown_space + amount.stringValue)
+            }
+            attr.append(string: text, color: theme.colors.grayText, font: .normal(.text))
             attr.insertEmbedded(.embedded(name: "star_small", color: theme.colors.grayText, resize: false), for: clown)
             headerLayout = .init(attr, alignment: .center)
             
@@ -2820,19 +3050,39 @@ private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
                 if let chatInteraction = chatInteraction {
                     let engine = chatInteraction.context.engine
                     let window = chatInteraction.context.window
+                    let accountId = chatInteraction.context.peerId
                     
-                    _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(peerId: peer.id), for: window).startStandalone(next: { amount in
-                        
-                        let option: String?
-                        if let amount, amount.value > 0 {
-                            option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
-                        } else {
-                            option = nil
-                        }
-                        verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeConfirmInfo(peer.displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
-                            _ = engine.peers.addNoPaidMessagesException(peerId: peer.id, refundCharged: result == .thrid).start()
+                    let removePaidMessageFeeData = chatInteraction.presentation.removePaidMessageFeeData
+                                        
+                    if let removePaidMessageFeeData  {
+                        _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(scopePeerId: peer.id, peerId: removePaidMessageFeeData.peer.id), for: window).startStandalone(next: { amount in
+                            
+                            let option: String?
+                            if let amount, amount.value > 0 {
+                                option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
+                            } else {
+                                option = nil
+                            }
+                            verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeMonoforumConfirmInfo(removePaidMessageFeeData.peer._asPeer().displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
+                                _ = engine.peers.addNoPaidMessagesException(scopePeerId: peer.id, peerId: removePaidMessageFeeData.peer.id, refundCharged: result == .thrid).start()
+                            })
                         })
-                    })
+                    } else {
+                        _ = showModalProgress(signal: engine.peers.getPaidMessagesRevenue(scopePeerId: accountId, peerId: peer.id), for: window).startStandalone(next: { amount in
+                            
+                            let option: String?
+                            if let amount, amount.value > 0 {
+                                option = strings().chatHeaderRemoveFeeConfirmOption(strings().starListItemCountCountable(Int(amount.value)))
+                            } else {
+                                option = nil
+                            }
+                            verifyAlert(for: window, header: strings().chatHeaderRemoveFeeConfirmHeader, information: strings().chatHeaderRemoveFeeConfirmInfo(peer.displayTitle), ok: strings().chatHeaderRemoveFeeConfirmOK, option: option, optionIsSelected: false, successHandler: { result in
+                                _ = engine.peers.addNoPaidMessagesException(scopePeerId: accountId, peerId: peer.id, refundCharged: result == .thrid).start()
+                            })
+                        })
+                    }
+                    
+                    
                     
                     
                 }
@@ -2883,8 +3133,14 @@ private final class ChatRemovePaidMessage : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        header.centerX(y: 6)
-        removeFee.centerX(y: frame.height - removeFee.frame.height - 7)
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: header, frame: header.centerFrameX(y: 6))
+
+        let removeFeeY = size.height - removeFee.frame.height - 7
+        transition.updateFrame(view: removeFee, frame: removeFee.centerFrameX(y: removeFeeY))
     }
     
     override func setFrameSize(_ newSize: NSSize) {

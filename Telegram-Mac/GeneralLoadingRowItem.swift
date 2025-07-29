@@ -12,9 +12,11 @@ import TGUIKit
 
 class GeneralLoadingRowItem: GeneralRowItem {
     let color: NSColor?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, color: NSColor? = nil) {
+    let bgColor: NSColor?
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, color: NSColor? = nil, height: CGFloat = 42, backgroundColor: NSColor? = nil) {
         self.color = color
-        super.init(initialSize, height: 42, stableId: stableId, viewType: viewType)
+        self.bgColor = backgroundColor
+        super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
     }
     
     override func viewClass() -> AnyClass {
@@ -37,6 +39,9 @@ private final class GeneralLoadingRowView: GeneralContainableRowView {
     
     override var backdorColor: NSColor {
         if let item = item as? GeneralLoadingRowItem {
+            if let color = item.bgColor {
+                return color
+            }
             if item.viewType == .legacy {
                 return .clear
             }

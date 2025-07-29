@@ -39,6 +39,7 @@ class ChatServiceItem: ChatRowItem {
             case premium(months: Int32)
             case starGift(amount: Int64, date: Int32, from: EnginePeer?, to: EnginePeer?, purpose: Star_TransactionPurpose)
             case stars(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
+            case ton(amount: Int64, date: Int32, transactionId: String?, peer: EnginePeer?)
         }
         
         struct UniqueAttributes {
@@ -78,9 +79,12 @@ class ChatServiceItem: ChatRowItem {
         let source: Source
         let ribbon: Ribbon?
         
+        let authorLayout: TextViewLayout?
+        let author: EnginePeer?
+        
         let uniqueAttributes: UniqueAttributes?
         
-        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?, uniqueAttributes: UniqueAttributes?) {
+        init(from: PeerId, to: PeerId, text: TextViewLayout, info: TextViewLayout?, source: Source, ribbon: Ribbon?, uniqueAttributes: UniqueAttributes?, authorLayout: TextViewLayout?, author: EnginePeer?) {
             self.from = from
             self.to = to
             self.text = text
@@ -91,6 +95,10 @@ class ChatServiceItem: ChatRowItem {
             self.text.measure(width: 200)
             self.info?.measure(width: 200)
             self.uniqueAttributes?.makeSize(width: 200)
+            authorLayout?.measure(width: 200)
+            authorLayout?.generateAutoBlock(backgroundColor: NSColor.black.withAlphaComponent(0.15))
+            self.authorLayout = authorLayout
+            self.author = author
         }
         
         var height: CGFloat {
@@ -100,6 +108,9 @@ class ChatServiceItem: ChatRowItem {
             }
             if let uniqueAttributes {
                 height += uniqueAttributes.height
+            }
+            if let authorLayout {
+                height += authorLayout.layoutSize.height
             }
             return height + 40
         }
@@ -145,6 +156,173 @@ class ChatServiceItem: ChatRowItem {
         
         var height: CGFloat {
             return 10 + 100 + 10 + text.layoutSize.height + 10 + 30 + 10
+        }
+    }
+    
+    struct SuggestpostHeader {
+        fileprivate let peer: Peer
+        fileprivate let attributes: ChatServiceItem.GiftData.UniqueAttributes
+        init(text: String, peer: Peer, authorName: String, isIncoming: Bool) {
+            
+            self.peer = peer
+            
+            let components = text.components(separatedBy: ":")
+            let amount = components[1]
+            let timestamp = components[2]
+            let currency = CurrencyAmount.Currency(components[3])
+
+            let color = theme.chatServiceItemTextColor
+            
+            let timeString: String
+            if let int = Int32(timestamp), int > 0 {
+                timeString = stringForDate(timestamp: int)
+            } else {
+                timeString = strings().chatServiceSuggestPostHeaderTimeAnytime
+            }
+
+            let amountString: String
+            if let int = Int(amount), int > 0 {
+                switch currency {
+                case .stars:
+                    amountString = strings().starListItemCountCountable(int)
+                case .ton:
+                    amountString = formatCurrencyAmount(Int64(int), currency: TON).prettyCurrencyNumberUsd + " " + TON
+                }
+            } else {
+                amountString = strings().chatServiceSuggestPostHeaderPriceFree
+            }
+
+            attributes = .init(
+                header: .init(
+                    .initialize(string: isIncoming ? strings().chatServiceSuggestPostHeaderTitle(peer.displayTitle) : strings().chatServiceSuggestPostHeaderTitleYou, color: color, font: .medium(.text)).detectBold(with: .medium(.text)),
+                    alignment: .center
+                ),
+                attributes: [
+                    .init(
+                        name: .init(.initialize(string: strings().chatServiceSuggestPostHeaderLabelPrice, color: color.withAlphaComponent(0.7), font: .normal(.text))),
+                        value: .init(.initialize(string: amountString, color: color, font: .medium(.text)))
+                    ),
+                    .init(
+                        name: .init(.initialize(string: strings().chatServiceSuggestPostHeaderLabelTime, color: color.withAlphaComponent(0.7), font: .normal(.text))),
+                        value: .init(.initialize(string: timeString, color: color, font: .medium(.text)))
+                    )
+                ]
+            )
+
+            attributes.makeSize(width: 140)
+        }
+        
+        var height: CGFloat {
+            return attributes.height
+        }
+    }
+    
+    struct SuggestPostData {
+        let status: TelegramMediaActionType.SuggestedPostApprovalStatus
+        let layout: TextViewLayout
+        let titleLayout: TextViewLayout
+        let messageId: MessageId?
+        
+        init(status: TelegramMediaActionType.SuggestedPostApprovalStatus, messageId: MessageId?, peer: Peer, isIncoming: Bool) {
+            self.status = status
+            self.messageId = messageId
+            var text: String = ""
+            
+            switch status {
+            case .approved(let timestamp, let amount):
+                self.titleLayout = .init(
+                    .initialize(string: strings().chatServiceSuggestPostStatusTitle, color: theme.chatServiceItemTextColor, font: .medium(.text)).detectBold(with: .medium(.text)),
+                    alignment: .center
+                )
+
+                var text = ""
+
+                if let timestamp {
+                    let date = stringForDate(timestamp: timestamp)
+                    if !isIncoming {
+                        text += strings().chatServiceSuggestPostStatusPublishOutgoing(peer.displayTitle, date)
+                    } else {
+                        text += strings().chatServiceSuggestPostStatusPublishIncoming(peer.displayTitle, date)
+                    }
+                }
+
+                if let amount, amount.amount.value > 0 {
+                    text += "\n\n"
+                    let formatted = amount.fullyFormatted
+                    if !isIncoming {
+                        text += strings().chatServiceSuggestPostStatusChargeOutgoing(formatted)
+                    } else {
+                        text += strings().chatServiceSuggestPostStatusChargeIncoming(formatted)
+                    }
+                }
+
+                text += "\n\n"
+                if !isIncoming {
+                    text += strings().chatServiceSuggestPostStatusReleaseOutgoing(peer.displayTitle)
+                } else {
+                    text += strings().chatServiceSuggestPostStatusReleaseIncoming(peer.displayTitle)
+                }
+
+                text += "\n\n"
+                text += strings().chatServiceSuggestPostStatusRefundCondition(peer.displayTitle)
+
+            case .rejected(let reason, let comment):
+                let title: String
+                switch reason {
+                case .generic:
+                    title = strings().chatServiceSuggestPostStatusRejectedTitle
+                case .lowBalance:
+                    title = strings().chatServiceSuggestPostStatusRejectedLowBalanceTitle
+                }
+
+                self.titleLayout = .init(
+                    .initialize(string: title, color: theme.chatServiceItemTextColor, font: .medium(.text)),
+                    alignment: .center
+                )
+
+                switch reason {
+                case .generic:
+                    if !isIncoming {
+                        if let comment {
+                            text = strings().chatServiceSuggestPostStatusRejectedOutgoingWithComment(comment)
+                        } else {
+                            text = strings().chatServiceSuggestPostStatusRejectedOutgoingNoComment
+                        }
+                    } else {
+                        if let comment {
+                            text = strings().chatServiceSuggestPostStatusRejectedIncomingWithComment(peer.displayTitle, comment)
+                        } else {
+                            text = strings().chatServiceSuggestPostStatusRejectedIncomingNoComment(peer.displayTitle)
+                        }
+                    }
+
+                case .lowBalance:
+                    if !isIncoming {
+                        text = strings().chatServiceSuggestPostStatusRejectedOutgoingLowBalance(peer.displayTitle)
+                    } else {
+                        text = strings().chatServiceSuggestPostStatusRejectedIncomingLowBalance(peer.displayTitle)
+                    }
+                }
+            }
+            
+            let grayTextColor: NSColor = theme.chatServiceItemTextColor
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: text, color: grayTextColor, font: .normal(.text))
+            attr.detectBoldColorInString(with: .medium(.text))
+            self.layout = TextViewLayout(attr, alignment: .left)
+            
+            self.titleLayout.measure(width: 200)
+            self.layout.measure(width: 200)
+
+        }
+        
+        var height: CGFloat {
+            var height: CGFloat = 10 + titleLayout.layoutSize.height + 10
+            if !layout.string.isEmpty {
+                height += layout.layoutSize.height + 10
+            }
+            return height
         }
     }
     
@@ -204,13 +382,16 @@ class ChatServiceItem: ChatRowItem {
             case let .premium(months):
                 prem(with: PremiumBoardingController(context: context, source: .gift(from: giftData.from, to: giftData.to, months: months, slug: nil, unclaimed: false)), for: context.window)
             case let .stars(amount, date, _, from):
-                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(amount: .init(value: amount, nanos: 0), currency: .stars), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                 showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: .gift), for: context.window)
+            case let .ton(amount, date, transactionId, from):
+                let transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(amount: .init(value: amount, nanos: 0), currency: .ton), date: date, peer: .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
+                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: from, transaction: transaction, purpose: .tonGift), for: context.window)
             case let .starGift(amount, date, from, to, purpose):
-                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(value: amount, nanos: 0), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                let transaction: StarsContext.State.Transaction = StarsContext.State.Transaction(flags: [], id: "", count: .init(amount: .init(value: amount, nanos: 0), currency: .stars), date: date, peer: to.flatMap { .peer($0) } ?? .unsupported, title: "", description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: purpose.gift, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                 
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     if let unique = gift.unique {
                         showModal(with: StarGift_Nft_Controller(context: context, gift: gift, source: .quickLook(nil, unique), transaction: transaction, purpose: purpose), for: context.window)
                         return
@@ -230,7 +411,8 @@ class ChatServiceItem: ChatRowItem {
     private(set) var wallpaperData: WallpaperData? = nil
     private(set) var storydata: StoryData? = nil
     private(set) var suggestChannelsData: ChannelSuggestData? = nil
-
+    private(set) var suggestPostStatus: SuggestPostData? = nil
+    private(set) var suggestPostHeader: SuggestpostHeader? = nil
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
                 
@@ -384,13 +566,22 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                 case let .customText(text, _, additionalAttributes):
-                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                    if let additionalAttributes = additionalAttributes {
-                        for (range, key, value) in additionalAttributes.attributes {
-                            attributedString.addAttribute(key, value: value, range: range)
+                    
+                    if text.contains("post_suggest") {
+                        
+                        var peer: Peer = peer
+                        if let monoforumId = (peer as? TelegramChannel)?.linkedMonoforumId {
+                            peer = message.peers[monoforumId] ?? peer
+                        }
+                        self.suggestPostHeader = SuggestpostHeader(text: text, peer: peer, authorName: authorName, isIncoming: isIncoming)
+                    } else {
+                        let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        if let additionalAttributes = additionalAttributes {
+                            for (range, key, value) in additionalAttributes.attributes {
+                                attributedString.addAttribute(key, value: value, range: range)
+                            }
                         }
                     }
-
                 case let .botDomainAccessGranted(domain):
                     let _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .botAppAccessGranted(appName, _):
@@ -574,7 +765,7 @@ class ChatServiceItem: ChatRowItem {
                             if currency == XTR {
                                 _ = showModalProgress(signal: context.engine.payments.requestBotPaymentReceipt(messageId: message.id), for: context.window).startStandalone(next: { receipt in
                                     if let transactionId = receipt.transactionId {
-                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: .init(value: -media.totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                                        let transaction = StarsContext.State.Transaction(flags: .isLocal, id: transactionId, count: .init(amount: .init(value: -media.totalAmount, nanos: 0), currency: .stars), date: message.timestamp, peer: .peer(.init(peer)), title: media.title, description: media.description, photo: media.photo, transactionDate: message.timestamp, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                                         showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: messageMainPeer(.init(message)), transaction: transaction), for: context.window)
                                     }
                                 })
@@ -843,7 +1034,7 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .premium(months: months), ribbon: nil, uniqueAttributes: nil, authorLayout: nil, author: nil)
                     
                     let text: String
                     let formattedCurrency: String
@@ -1187,7 +1378,7 @@ class ChatServiceItem: ChatRowItem {
                     attributedString.insertEmbedded(.embedded(name: XTR_ICON, color: grayTextColor, resize: false), for: clown)
                     
                     if let peer = message.author {
-                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: .init(value: totalAmount, nanos: 0), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil)
+                        let transaction = StarsContext.State.Transaction(flags: [.isRefund], id: transactionId, count: .init(amount: .init(value: totalAmount, nanos: 0), currency: .stars), date: message.timestamp, peer: .peer(.init(peer)), title: nil, description: nil, photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: nil, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil)
                         let link = inAppLink.callback("", { _ in
                             showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: .init(peer), transaction: transaction), for: context.window)
                         })
@@ -1206,7 +1397,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .stars(amount: isIncoming ? count : -count, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil, authorLayout: nil, author: nil)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1232,9 +1423,35 @@ class ChatServiceItem: ChatRowItem {
                     let info = NSMutableAttributedString()
                     let header = NSMutableAttributedString()
                     
+                    
+                    let authorPeer: EnginePeer?
+                    if let authorId = gift.releasedBy {
+                        authorPeer = message.peers[authorId].flatMap(EnginePeer.init)
+                    } else {
+                        authorPeer = nil
+                    }
+                    
+                    let authorLayout: TextViewLayout?
+                    if let authorPeer, let addressName = authorPeer.addressName {
+                        authorLayout = TextViewLayout(
+                            .initialize(
+                                string: strings().starTransactionReleasedBy(addressName),
+                                color: grayTextColor,
+                                font: .normal(.short)
+                            ),
+                            maximumNumberOfLines: 1,
+                            truncationType: .middle
+                        )
+                    } else {
+                        authorLayout = nil
+                    }
+                    
+                    
                     guard let gift = gift.generic else {
                         break
                     }
+                    
+                   
                     
                     
                     if message.id.peerId == context.peerId {
@@ -1289,7 +1506,7 @@ class ChatServiceItem: ChatRowItem {
                         info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                     }
                     
-                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
+                    let purpose: Star_TransactionPurpose = .starGift(gift: .generic(gift), convertStars: convertStars, text: text, entities: entities, nameHidden: nameHidden, savedToProfile: savedToProfile, converted: convertedToStars, fromProfile: false, upgraded: upgraded, transferStars: nil, canExportDate: nil, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId, canTransferDate: nil, canResaleDate: nil)
                     
                     let ribbon: ChatServiceItem.GiftData.Ribbon?
                     if let availability = gift.availability {
@@ -1306,7 +1523,7 @@ class ChatServiceItem: ChatRowItem {
                         toPeer = message.peers[message.id.peerId].flatMap( { .init($0) })
                     }
                     
-                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil)
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: isIncoming ? gift.price : -gift.price, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: nil, authorLayout: authorLayout, author: authorPeer)
                     
                     let text: String
                     if authorId == context.peerId {
@@ -1333,13 +1550,52 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
 
-                case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let saverId):
+                case let .starGiftUnique(gift, isUpgrade, isTransferred, savedToProfile, canExportDate, transferStars, refunded, peerId, senderId, saverId, resaleStars, canTransferDate, canResaleDate):
+                    
+                    
+                    let authorPeer: EnginePeer?
+                    if let authorId = gift.releasedBy {
+                        authorPeer = message.peers[authorId].flatMap(EnginePeer.init)
+                    } else {
+                        #if DEBUG
+                        authorPeer = context.myPeer.flatMap(EnginePeer.init)
+                        #else
+                        authorPeer = nil
+                        #endif
+                    }
+                    
+                    let authorLayout: TextViewLayout?
+                    if let authorPeer, let addressName = authorPeer.addressName {
+                        authorLayout = TextViewLayout(
+                            .initialize(
+                                string: strings().starTransactionReleasedBy(addressName),
+                                color: grayTextColor,
+                                font: .normal(.short)
+                            ),
+                            maximumNumberOfLines: 1,
+                            truncationType: .middle
+                        )
+                    } else {
+                        authorLayout = nil
+                    }
+                    
+                    
                     if case let .unique(gift) = gift {
                         var text: String = ""
                         if let messagePeer = message.peers[message.id.peerId] {
                             let peerName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? messagePeer.compactDisplayTitle
                             let peerIds: [(Int, EnginePeer.Id?)] = [(0, messagePeer.id)]
-                            if isUpgrade {
+                            if let resaleStars {
+                                if message.author?.id == context.account.peerId {
+                                    if message.id.peerId == context.account.peerId {
+                                        text = strings().chatServiceResaleYouSelf("\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)))
+                                    } else {
+                                        text = strings().chatServiceResaleYou("\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)), peerName)
+                                    }
+                                } else {
+                                    text = strings().chatServiceResale(peerName, "\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)))
+                                }
+                            } else if isUpgrade {
                                 if message.author?.id == context.account.peerId {
                                     text = strings().notificationStarsGiftUpgradeYou(peerName)
                                 } else {
@@ -1360,6 +1616,7 @@ class ChatServiceItem: ChatRowItem {
                         
                         let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         
+                        
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
                             if range.location != NSNotFound {
@@ -1368,8 +1625,9 @@ class ChatServiceItem: ChatRowItem {
                                 attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                             }
                         }
+                        attributedString.detectBoldColorInString(with: .medium(.text))
                         
-                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId)
+                        let purpose: Star_TransactionPurpose = .starGift(gift: .unique(gift), convertStars: nil, text: text, entities: nil, nameHidden: false, savedToProfile: savedToProfile, converted: false, fromProfile: false, upgraded: true, transferStars: transferStars, canExportDate: canExportDate, reference: .message(messageId: message.id), sender: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)}, saverId: saverId, canTransferDate: canTransferDate, canResaleDate: canResaleDate)
                         
 
                         
@@ -1398,7 +1656,7 @@ class ChatServiceItem: ChatRowItem {
                         
                         for attribute in gift.attributes {
                             switch attribute {
-                            case let .backdrop(name, _, outerColor, _, _, _):
+                            case let .backdrop(name, _, _, outerColor, _, _, _):
                                 attributes.append(.init(name: .init(.initialize(string: strings().giftUniqueBackdrop, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text))),
                                                         value: .init(.initialize(string: name, color: NSColor.white, font: .medium(.text)))))
                                 backdropColor = NSColor(UInt32(outerColor)).withAlphaComponent(0.7)
@@ -1426,7 +1684,7 @@ class ChatServiceItem: ChatRowItem {
                             info.append(string: strings().giftUpgradeRefunded, color: grayTextColor, font: .normal(theme.fontSize))
                         }
                         
-                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes)
+                        self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: info.string.isEmpty ? nil : TextViewLayout(info, maximumNumberOfLines: 4, alignment: .center), source: .starGift(amount: 0, date: message.timestamp, from: senderId.flatMap { message.peers[$0].flatMap(EnginePeer.init)} ?? message.author.flatMap { .init($0) }, to: toPeer, purpose: purpose), ribbon: ribbon, uniqueAttributes: uniqueAttributes, authorLayout: authorLayout, author: authorPeer)
                         
                     }
                 case let .paidMessagesRefunded(_, stars):
@@ -1448,7 +1706,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case .paidMessagesPriceEdited(let stars):
+                case .paidMessagesPriceEdited(let stars, _):
                     let starsString = strings().starListItemCountCountable(Int(stars))
                     let text: String
                     if authorId == context.peerId {
@@ -1456,6 +1714,9 @@ class ChatServiceItem: ChatRowItem {
                     } else {
                         text = strings().notificationPaidMessagePriceChanged(authorName, starsString)
                     }
+                    
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
@@ -1464,25 +1725,312 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-//                case let .paidMessage(stars):
-//                    
-//                    let text: String
-//                    if authorId == context.peerId {
-//                        text = strings().chatServicePaidMessageYou(strings().starListItemCountCountable(Int(stars)))
-//                    } else {
-//                        text = strings().chatServicePaidMessage(authorName, strings().starListItemCountCountable(Int(stars)))
-//                    }
-//                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-//                    
-//                    if let authorId = authorId {
-//                        let range = attributedString.string.nsstring.range(of: authorName)
-//                        if range.location != NSNotFound {
-//                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
-//                            attributedString.add(link: link, for: range, color: nameColor(authorId))
-//                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-//                        }
-//                    }
+                case let .todoCompletions(completed, incompleted):
+                    
+                    let todo: Message?
+                    if let replyAttribute = message.replyAttribute {
+                        todo = message.associatedMessages[replyAttribute.messageId]
+                    } else {
+                        todo = nil
+                    }
+                    
+                    guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                        break
+                    }
+                    
+                    let marked = !completed.isEmpty ? todoMedia.items.filter({ completed.contains($0.id) }) : todoMedia.items.filter({ incompleted.contains($0.id) })
 
+                    
+                    let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                        var resultString = ""
+                        var entities: [MessageTextEntity] = []
+                        var offset = 0
+
+                        for (index, item) in items.enumerated() {
+                            resultString += "'"
+                            offset += 1
+
+                            for entity in item.entities {
+                                let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                                entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                            }
+
+                            resultString += item.text
+                            offset += item.text.count
+
+                            resultString += "'"
+                            offset += 1
+
+                            if index < items.count - 1 {
+                                resultString += ", "
+                                offset += 2
+                            }
+                        }
+
+                        return (resultString, entities)
+                    }
+
+                    var rawString: String
+
+                                
+                    if !completed.isEmpty {
+                        if authorId == context.peerId {
+                            rawString = strings().chatServiceTodoMarkedDoneYou
+                        } else {
+                            rawString = strings().chatServiceTodoMarkedDone
+                        }
+                    } else if !incompleted.isEmpty {
+                        if authorId == context.peerId {
+                            rawString = strings().chatServiceTodoMarkedUndoneYou
+                        } else {
+                            rawString = strings().chatServiceTodoMarkedUndone
+                        }
+                    } else {
+                        rawString = ""
+                    }
+                    
+                    if !rawString.isEmpty {
+                        
+                        let values = makeValues(marked)
+                        
+                        let valuesRange = rawString.nsstring.range(of: "{values}")
+                        let valuesLength = values.0.length
+                        if valuesRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+                        }
+                        let authorRange = rawString.nsstring.range(of: "{author}")
+                        if authorRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+                        }
+                        
+                        var offset = valuesRange.location
+                        if authorRange.location != NSNotFound {
+                            offset += (authorName.length - authorRange.length)
+                        }
+                        
+                        var entities: [MessageTextEntity] = []
+                        
+                        for entity in values.1 {
+                            entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+                        }
+                        
+                        let _ = attributedString.append(string: rawString, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        
+                        InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
+                        
+                        if valuesRange.location != NSNotFound {
+                            let range = NSMakeRange(offset, valuesLength)
+                            attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                                chatInteraction?.focusMessageId(nil, .init(messageId: todo.id, string: nil), .CenterEmpty)
+                            }), for: range, color: grayTextColor)
+                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+
+                    }
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+                case let .todoAppendTasks(tasks):
+                    let todo: Message?
+                    if let replyAttribute = message.replyAttribute {
+                        todo = message.associatedMessages[replyAttribute.messageId]
+                    } else {
+                        todo = nil
+                    }
+
+                    guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                        break
+                    }
+
+                    let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                        var resultString = ""
+                        var entities: [MessageTextEntity] = []
+                        var offset = 0
+
+                        for (index, item) in items.enumerated() {
+                            resultString += "'"
+                            offset += 1
+
+                            for entity in item.entities {
+                                let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                                entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                            }
+
+                            resultString += item.text
+                            offset += item.text.count
+
+                            resultString += "'"
+                            offset += 1
+
+                            if index < items.count - 1 {
+                                resultString += ", "
+                                offset += 2
+                            }
+                        }
+
+                        return (resultString, entities)
+                    }
+
+                    let isMultiple = tasks.count > 1
+                    var rawString: String
+
+                    if authorId == context.peerId {
+                        rawString = isMultiple ? strings().chatServiceTodoAddedMultiYou : strings().chatServiceTodoAddedYou
+                    } else {
+                        rawString = isMultiple ? strings().chatServiceTodoAddedMulti : strings().chatServiceTodoAdded
+                    }
+
+                    if !rawString.isEmpty {
+                        let values = makeValues(tasks)
+                        let valuesRange = rawString.nsstring.range(of: "{values}")
+                        let valuesLength = values.0.length
+                        if valuesRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+                        }
+
+                        let authorRange = rawString.nsstring.range(of: "{author}")
+                        if authorRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+                        }
+
+                        let taskTitle = "'\(todoMedia.text)'"
+                        let taskRange = rawString.nsstring.range(of: "{task}")
+                        if taskRange.location != NSNotFound {
+                            rawString = rawString.nsstring.replacingCharacters(in: taskRange, with: taskTitle)
+                        }
+
+                        var offset = valuesRange.location
+                        if authorRange.location != NSNotFound {
+                            offset += (authorName.length - authorRange.length)
+                        }
+                        
+
+                        var entities: [MessageTextEntity] = []
+                        for entity in values.1 {
+                            entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+                        }
+
+                        let _ = attributedString.append(string: rawString, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+
+                        InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
+
+                        if valuesRange.location != NSNotFound {
+                            let range = NSMakeRange(offset, valuesLength)
+                            attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
+                                chatInteraction?.focusMessageId(nil, .init(messageId: todo.id, string: nil), .CenterEmpty)
+                            }), for: range, color: grayTextColor)
+                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId: authorId, action: nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+                case let .suggestedPostApprovalStatus(status):
+                    
+                    var peer: Peer = peer
+                    if let monoforumId = (peer as? TelegramChannel)?.linkedMonoforumId {
+                        peer = message.peers[monoforumId] ?? peer
+                    }
+                    
+                    let postId: MessageId?
+                    if let replyAttribute = message.replyAttribute {
+                        postId = replyAttribute.messageId
+                    } else {
+                        postId = nil
+                    }
+                    
+                    self.suggestPostStatus = SuggestPostData(status: status, messageId: postId, peer: peer, isIncoming: isIncoming)
+                case let .giftTon(currency, amount, cryptoCurrency, cryptoAmount, transactionId):
+                    
+                    let cryptoAmount = cryptoAmount ?? 0
+                    
+                    let info = NSMutableAttributedString()
+                    let header = NSMutableAttributedString()
+                    let formatted: String
+                    if let cryptoCurrency {
+                        formatted = formatCurrencyAmount(cryptoAmount, currency: cryptoCurrency).prettyCurrencyNumberUsd + " " + cryptoCurrency
+                    } else {
+                        formatted = formatCurrencyAmount(amount, currency: currency)
+                    }
+                    
+                    header.append(string: formatted, color: grayTextColor, font: .medium(theme.fontSize + 1))
+                    
+                    
+                    _ = info.append(
+                        string: strings().chatServiceTonGiftInfo,
+                        color: grayTextColor,
+                        font: .normal(theme.fontSize)
+                    )
+                    info.detectBoldColorInString(with: .medium(theme.fontSize))
+                    
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(header, alignment: .center), info: TextViewLayout(info, alignment: .center), source: .ton(amount: isIncoming ? cryptoAmount : -cryptoAmount, date: message.timestamp, transactionId: transactionId, peer: isIncoming ? message.author.flatMap(EnginePeer.init) : message.peers[message.id.peerId].flatMap(EnginePeer.init)), ribbon: nil, uniqueAttributes: nil, authorLayout: nil, author: nil)
+                    
+                    
+                    let text: String
+                    if authorId == context.peerId {
+                        text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+                    } else {
+                        if authorId == servicePeerId {
+                            text = strings().chatServicePremiumGiftSent(strings().chatServicePremiumUnknown, formatCurrencyAmount(amount, currency: currency))
+                        } else {
+                            text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+                        }
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            let link = inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo)
+                            attributedString.add(link: link, for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+                case let .suggestedPostSuccess(amount):
+                    var isUser = true
+                    var channelName: String = ""
+                    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                        channelName = peer.title
+                        if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                            isUser = false
+                        }
+                    }
+                    let _ = isUser
+                    
+                    let amountString: String = amount.fullyFormatted
+                    
+                    attributedString.append(string: strings().chatServiceSuggestPostSuccessReceived(channelName, amountString), color: grayTextColor, font: .normal(.text))
+                case let .suggestedPostRefund(info):
+                    var isUser = true
+                    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                        if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                            isUser = false
+                        }
+                    }
+                    let text: String
+                    if info.isUserInitiated {
+                        if isUser {
+                            text = strings().chatServiceSuggestPostRefundedUser
+                        } else {
+                            text = strings().chatServiceSuggestPostRefundedOther
+                        }
+                    } else {
+                        text = strings().chatServiceSuggestPostRefundedDeleted
+                    }
+                    attributedString.append(string: text, color: grayTextColor, font: .normal(.text))
                 default:
                     break
                 }
@@ -1627,6 +2175,12 @@ class ChatServiceItem: ChatRowItem {
         if let data = self.suggestPhotoData {
             height += data.height + (isBubbled ? 9 : 6)
         }
+        if let data = self.suggestPostStatus {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.suggestPostHeader {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
         if let data = self.wallpaperData {
             height += data.height + (isBubbled ? 9 : 6)
         }
@@ -1646,7 +2200,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        text.measure(width: width - 40)
+        text.measure(width: blockWidth)
         
         if let reactions = reactionsLayout {
             reactions.measure(for: min(320, blockWidth))
@@ -1844,29 +2398,51 @@ class UniqueAttributesView : View {
     
     override func layout() {
         super.layout()
-        headerView.centerX(y: 5)
-        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: headerView, frame: headerView.centerFrameX(y: 5))
+
+        // Calculate max widths
         let maxLeftWidth = leftAttrs.subviews.map { $0.frame.width }.max() ?? 0
         let maxRightWidth = rightAttrs.subviews.map { $0.frame.width }.max() ?? 0
+        let attrHeight = size.height - headerView.frame.height - 5
 
-        leftAttrs.setFrameSize(NSMakeSize(maxLeftWidth, frame.height - headerView.frame.height - 5))
-        rightAttrs.setFrameSize(NSMakeSize(maxRightWidth, frame.height - headerView.frame.height - 5))
+        let leftFrame = NSRect(x: 0, y: 0, width: maxLeftWidth, height: attrHeight)
+        let rightFrame = NSRect(x: maxLeftWidth + 6, y: 0, width: maxRightWidth, height: attrHeight)
 
-        
-        attrContainer.setFrameSize(NSMakeSize(leftAttrs.frame.width + 6 + rightAttrs.frame.width, leftAttrs.frame.height))
-        
-        leftAttrs.setFrameOrigin(0, 0)
-        rightAttrs.setFrameOrigin(leftAttrs.frame.maxX + 6, 0)
+        transition.updateFrame(view: leftAttrs, frame: leftFrame)
+        transition.updateFrame(view: rightAttrs, frame: rightFrame)
 
-        
-        attrContainer.centerX(y: headerView.frame.maxY + 5)
-        
+        let containerWidth = maxLeftWidth + 6 + maxRightWidth
+        let containerFrame = NSRect(x: (size.width - containerWidth) / 2,
+                                    y: headerView.frame.maxY + 5,
+                                    width: containerWidth,
+                                    height: attrHeight)
+        transition.updateFrame(view: attrContainer, frame: containerFrame)
+
         var y: CGFloat = 0
         for (i, left) in leftAttrs.subviews.enumerated() {
-            let right = self.rightAttrs.subviews[i]
-            left.setFrameOrigin(leftAttrs.frame.width - left.frame.width, y)
-            right.setFrameOrigin(0, y)
-            y += right.frame.height + 6
+            let right = rightAttrs.subviews[i]
+            
+            let leftFrame = NSRect(
+                x: maxLeftWidth - left.frame.width,
+                y: y,
+                width: left.frame.width,
+                height: left.frame.height
+            )
+            let rightFrame = NSRect(
+                x: 0,
+                y: y,
+                width: right.frame.width,
+                height: right.frame.height
+            )
+
+            transition.updateFrame(view: left, frame: leftFrame)
+            transition.updateFrame(view: right, frame: rightFrame)
+
+            y += max(left.frame.height, right.frame.height) + 6
         }
     }
 }
@@ -1888,6 +2464,8 @@ class ChatServiceRowView: TableRowView {
         private let button = TextButton()
         
         private var badgeView: ImageView?
+        
+        private var authorView: TextView?
         
         private var emoji: PeerInfoSpawnEmojiView?
         private var backgroundView: PeerInfoBackgroundView?
@@ -1915,7 +2493,7 @@ class ChatServiceRowView: TableRowView {
             switch data.source {
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     switch gift {
                     case let .unique(gift):
                         uniqueGift = gift
@@ -1994,9 +2572,11 @@ class ChatServiceRowView: TableRowView {
                 |> deliverOnMainQueue
             case let .stars(amount, _, _, _):
                 stickerFile = .single(LocalAnimatedSticker.bestForStarsGift(abs(amount)).file)
+            case let .ton(amount, _, _, _):
+                stickerFile = .single(LocalAnimatedSticker.bestForTonGift(abs(amount)).file)
             case let .starGift(_, _, _, _, purpose):
                 switch purpose {
-                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _):
+                case let .starGift(gift, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _):
                     switch gift {
                     case let .unique(gift):
                         if let file = gift.file {
@@ -2054,7 +2634,7 @@ class ChatServiceRowView: TableRowView {
 
                     for attribute in uniqueGift.attributes {
                         switch attribute {
-                        case let .backdrop(_, innerColor, outerColor, _, _, _):
+                        case let .backdrop(_, _, innerColor, outerColor, _, _, _):
                             colors = [NSColor(UInt32(innerColor)).withAlphaComponent(1), NSColor(UInt32(outerColor)).withAlphaComponent(1)]
                         default:
                             break
@@ -2079,7 +2659,7 @@ class ChatServiceRowView: TableRowView {
                         switch attribute {
                         case .pattern(_, let file, _):
                             patternFile = file
-                        case let .backdrop(_, _, _, color, _, _):
+                        case let .backdrop(_, _, _, _, color, _, _):
                             patternColor = NSColor(UInt32(color)).withAlphaComponent(0.3)
                         default:
                             break
@@ -2120,6 +2700,28 @@ class ChatServiceRowView: TableRowView {
                 }
             }
             
+            if let authorLayout = data.authorLayout, let author = data.author {
+                let current: TextView
+                if let view = self.authorView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.userInteractionEnabled = true
+                    current.scaleOnClick = true
+                    current.isSelectable = false
+                    self.authorView = current
+                    self.addSubview(current)
+                }
+                current.update(authorLayout)
+                                
+                current.setSingle(handler: { [weak item] view in
+                    item?.chatInteraction.openInfo(author.id, false, nil, nil)
+                }, for: .Click)
+            } else if let view = self.authorView {
+                performSubviewRemoval(view, animated: animated)
+                self.authorView = nil
+            }
+            
             
             needsLayout = true
         }
@@ -2132,29 +2734,56 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            stickerView.centerX(y: 10)
-            textView.centerX(y: stickerView.frame.maxY + 10)
-            if let infoView {
-                infoView.centerX(y: textView.frame.maxY + 4)
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: stickerView, frame: stickerView.centerFrameX(y: 10))
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stickerView.frame.maxY + 10))
+
+            var offset: CGFloat = 0
+            if let authorView {
+                transition.updateFrame(view: authorView, frame: authorView.centerFrameX(y: textView.frame.maxY + 7))
+                offset += authorView.frame.height
             }
-            if let badgeView {
-                badgeView.setFrameOrigin(frame.width - badgeView.frame.width, 0)
-            }
-            button.centerX(y: frame.height - 15 - button.frame.height)
-            visualEffect?.frame = bounds
             
-            if let emoji {
-                emoji.frame = bounds.insetBy(dx: 4, dy: 4).offsetBy(dx: 15, dy: 0)
+            if let infoView {
+                transition.updateFrame(view: infoView, frame: infoView.centerFrameX(y: textView.frame.maxY + 4 + offset))
             }
+
+            if let badgeView {
+                let badgeFrame = NSRect(
+                    x: size.width - badgeView.frame.width,
+                    y: 0,
+                    width: badgeView.frame.width,
+                    height: badgeView.frame.height
+                )
+                transition.updateFrame(view: badgeView, frame: badgeFrame)
+            }
+
+            transition.updateFrame(view: button, frame: button.centerFrameX(y: size.height - 15 - button.frame.height))
+
+            if let visualEffect = visualEffect {
+                transition.updateFrame(view: visualEffect, frame: NSRect(origin: .zero, size: size))
+            }
+
+            if let emoji {
+                let emojiFrame = size.bounds.insetBy(dx: 4, dy: 4).offsetBy(dx: 15, dy: 0)
+                transition.updateFrame(view: emoji, frame: emojiFrame)
+            }
+
             if let backgroundView {
                 backgroundView.layer?.cornerRadius = 10
-                backgroundView.frame = bounds.insetBy(dx: 4, dy: 4)
+                let bgFrame = size.bounds.insetBy(dx: 4, dy: 4)
+                transition.updateFrame(view: backgroundView, frame: bgFrame)
             }
-            
+
             if let attributesView {
-                attributesView.frame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5)
+                let attrFrame = bounds.focusX(attributesView.frame.size, y: textView.frame.maxY + 5 + offset)
+                transition.updateFrame(view: attributesView, frame: attrFrame)
             }
         }
+
         
         deinit {
             disposable.dispose()
@@ -2330,12 +2959,26 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            visualEffect?.frame = bounds
-            photo?.centerX(y: 10)
-            photoVideoView?.centerX(y: 10)
-            textView.centerX(y: 110 + 10)
-            viewButton.centerX(y: textView.frame.maxY + 10)
+            self.updateLayout(size: self.frame.size, transition: .immediate)
         }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            if let visualEffect = visualEffect {
+                transition.updateFrame(view: visualEffect, frame: NSRect(origin: .zero, size: size))
+            }
+
+            if let photo = photo {
+                transition.updateFrame(view: photo, frame: photo.centerFrameX(y: 10))
+            }
+
+            if let photoVideoView = photoVideoView {
+                transition.updateFrame(view: photoVideoView, frame: photoVideoView.centerFrameX(y: 10))
+            }
+
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 120)) // 110 + 10
+            transition.updateFrame(view: viewButton, frame: viewButton.centerFrameX(y: textView.frame.maxY + 10))
+        }
+
         
         deinit {
             disposable.dispose()
@@ -2345,6 +2988,134 @@ class ChatServiceRowView: TableRowView {
             fatalError("init(coder:) has not been implemented")
         }
     }
+    
+    private class SuggestPostView : Control {
+        
+
+        private var visualEffect: VisualEffect?
+        
+        private let textView = InteractiveTextView()
+        private let titleView = InteractiveTextView()
+
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(textView)
+            addSubview(titleView)
+            textView.userInteractionEnabled = false
+            titleView.userInteractionEnabled = false
+            self.scaleOnClick = true
+            layer?.cornerRadius = 10
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.SuggestPostData, animated: Bool) {
+            
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+            
+            titleView.set(text: data.titleLayout, context: item.context)
+            textView.set(text: data.layout, context: item.context)
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: titleView, frame: titleView.centerFrameX(y: 10))
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: titleView.frame.maxY + 10))
+            if let visualEffect {
+                transition.updateFrame(view: visualEffect, frame: size.bounds)
+            }
+        }
+        
+        deinit {
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
+    
+    private class SuggestPostHeaderView : Control {
+        
+
+        private var visualEffect: VisualEffect?
+        
+        private let attributesView = UniqueAttributesView(frame: .zero)
+
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(attributesView)
+            self.scaleOnClick = false
+            layer?.cornerRadius = 10
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.SuggestpostHeader, animated: Bool) {
+            
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+            
+            attributesView.set(attributes: data.attributes, animated: animated)
+            attributesView.setFrameSize(NSMakeSize(frame.width, data.attributes.height))
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: attributesView, frame: attributesView.centerFrameX(y: 0))
+            if let visualEffect {
+                transition.updateFrame(view: visualEffect, frame: size.bounds)
+            }
+        }
+        
+        deinit {
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+
+
     
     private class WallpaperView : Control {
         
@@ -2513,12 +3284,25 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            visualEffect?.frame = bounds
-            wallpaper.centerX(y: 10)
-            viewButton.centerX(y: wallpaper.frame.maxY + 10)
-            progressText?.centerX(y: wallpaper.frame.maxY + 10)
-            progressView?.center()
+            self.updateLayout(size: self.frame.size, transition: .immediate)
         }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            if let visualEffect = visualEffect {
+                transition.updateFrame(view: visualEffect, frame: NSRect(origin: .zero, size: size))
+            }
+
+            transition.updateFrame(view: wallpaper, frame: wallpaper.centerFrameX(y: 10))
+            transition.updateFrame(view: viewButton, frame: viewButton.centerFrameX(y: wallpaper.frame.maxY + 10))
+
+            if let progressText = progressText {
+                transition.updateFrame(view: progressText, frame: progressText.centerFrameX(y: wallpaper.frame.maxY + 10))
+            }
+            if let progressView = progressView {
+                transition.updateFrame(view: progressView, frame: progressView.centerFrame())
+            }
+        }
+
         
         deinit {
             statusDisposable.dispose()
@@ -2633,11 +3417,18 @@ class ChatServiceRowView: TableRowView {
         
         override func layout() {
             super.layout()
-            statusView.centerX(y: 10)
-            mediaView.centerX(y: 13)
-            avatar.centerX(y: 13)
-            textView.centerX(y: statusView.frame.maxY + 10)
+            self.updateLayout(size: self.frame.size, transition: .immediate)
         }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: statusView, frame: statusView.centerFrameX(y: 10))
+
+            transition.updateFrame(view: mediaView, frame: mediaView.centerFrameX(y: 13))
+            transition.updateFrame(view: avatar, frame: avatar.centerFrameX(y: 13))
+
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: statusView.frame.maxY + 10))
+        }
+
         
         deinit {
             disposable.dispose()
@@ -2658,6 +3449,8 @@ class ChatServiceRowView: TableRowView {
     
     private var giftView: GiftView?
     private var storyView: _StoryView?
+    private var suggestPostView: SuggestPostView?
+    private var suggestPostHeaderView: SuggestPostHeaderView?
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
     private var suggestChannelsView: ChatChannelSuggestView?
@@ -2708,31 +3501,12 @@ class ChatServiceRowView: TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layout() {
-        super.layout()
-        
-        if let item = item as? ChatServiceItem {
-            textView.centerX(y:6)
-            if let imageArguments = item.imageArguments {
-                imageView?.setFrameSize(imageArguments.imageSize)
-                imageView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
-                self.imageView?.set(arguments: imageArguments)
-                self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-            
-            let activeView = [giftView, suggestView, wallpaperView, storyView, suggestChannelsView].compactMap { $0 }.first
-            
-            if let view = activeView {
-                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-        }
-    }
     
     
     override func doubleClick(in location: NSPoint) {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
             if self.hitTest(location) == nil || self.hitTest(location) == self, let message = item.message {
-                item.chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil) )
+                item.chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil, todoItemId: nil) )
             }
         }
     }
@@ -2903,7 +3677,7 @@ class ChatServiceRowView: TableRowView {
                 let open: (Control)->Void = { [weak self] _ in
                     if let item = self?.item as? ChatServiceItem, let message = item.message {
                         if !data.isIncoming {
-                            showChatGallery(context: item.context, message: message, item.table, type: .alone)
+                            showChatGallery(context: item.context, message: message, item.table, type: .alone, chatMode: item.chatInteraction.mode, chatLocation: item.chatInteraction.chatLocation)
                         } else {
                             item.openPhotoEditor(data.image)
                         }
@@ -2918,6 +3692,49 @@ class ChatServiceRowView: TableRowView {
             performSubviewRemoval(view, animated: animated)
             self.suggestView = nil
         }
+        
+        if let data = item.suggestPostStatus {
+            let current: SuggestPostView
+            if let view = self.suggestPostView {
+                current = view
+            } else {
+                current = SuggestPostView(frame: NSMakeRect(0, 0, 240, data.height))
+                self.suggestPostView = current
+                addSubview(current)
+            }
+            
+            current.update(item: item, data: data, animated: animated)
+            current.setFrameSize(NSMakeSize(240, data.height))
+            
+            current.setSingle(handler: { [weak item] _ in
+                if let messageId = data.messageId {
+                    item?.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .CenterEmpty)
+                }
+            }, for: .Click)
+        } else if let view = self.suggestPostView {
+            performSubviewRemoval(view, animated: animated)
+            self.suggestPostView = nil
+        }
+        
+        if let data = item.suggestPostHeader {
+            let current: SuggestPostHeaderView
+            if let view = self.suggestPostHeaderView {
+                current = view
+            } else {
+                current = SuggestPostHeaderView(frame: NSMakeRect(0, 0, 240, data.height))
+                self.suggestPostHeaderView = current
+                addSubview(current)
+            }
+            
+            current.update(item: item, data: data, animated: animated)
+            current.setFrameSize(NSMakeSize(160, data.height))
+            
+            
+        } else if let view = self.suggestPostHeaderView {
+            performSubviewRemoval(view, animated: animated)
+            self.suggestPostHeaderView = nil
+        }
+
         
         if let data = item.wallpaperData {
             let current: WallpaperView
@@ -3025,7 +3842,7 @@ class ChatServiceRowView: TableRowView {
         }
         let contentFrameY = frame.height - reactionsLayout.size.height
         
-        var frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY)
+        let frame = self.frame.focusX(reactionsLayout.size, y: contentFrameY).offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0)
         
         return frame
     }
@@ -3040,6 +3857,59 @@ class ChatServiceRowView: TableRowView {
         if let reactionsView {
             transition.updateFrame(view: reactionsView, frame: reactionsRect(item))
         }
+        
+        let offset: CGFloat = item.entry.additionalData.monoforumState == .vertical ? 40 : 0
+        
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 6, addition: offset))
+
+        let baseY = textView.frame.maxY + (item.isBubbled ? 0 : 6)
+
+        if let imageArguments = item.imageArguments {
+            if let imageView = imageView {
+                let imageFrame = NSRect(
+                    x: (size.width - imageArguments.imageSize.width) / 2,
+                    y: baseY,
+                    width: imageArguments.imageSize.width,
+                    height: imageArguments.imageSize.height
+                )
+                transition.updateFrame(view: imageView, frame: imageFrame)
+                imageView.set(arguments: imageArguments)
+            }
+
+            if let photoVideoView = photoVideoView {
+                transition.updateFrame(view: photoVideoView, frame: photoVideoView.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            }
+        }
+        
+        if let view = giftView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestPostView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestPostHeaderView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = wallpaperView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = storyView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+        if let view = suggestChannelsView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: baseY).offsetBy(dx: offset, dy: 0))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+
     }
         
     

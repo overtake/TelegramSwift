@@ -73,17 +73,23 @@ class ChatEmptyPeerItem: TableRowItem {
                 _ = attr.append(string: strings().chatSecretChat4Feature, color: textColor, font: .medium(.text))
                 
             } else if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, peer.groupAccess.isCreator {
-                _ = attr.append(string: strings().emptyGroupInfoTitle, color: textColor, font: .medium(.text))
-                _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoSubtitle, color: textColor, font: .medium(.text))
-                _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: textColor, font: .medium(.text))
-                _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine2, color: textColor, font: .medium(.text))
-                _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine3, color: textColor, font: .medium(.text))
-                _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
+                if chatInteraction.presentation.chatLocation.threadId == nil {
+                    _ = attr.append(string: strings().emptyGroupInfoTitle, color: textColor, font: .medium(.text))
+                    _ = attr.append(string: "\n")
+                    _ = attr.append(string: strings().emptyGroupInfoSubtitle, color: textColor, font: .medium(.text))
+                    _ = attr.append(string: "\n")
+                    _ = attr.append(string: strings().emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: textColor, font: .medium(.text))
+                    _ = attr.append(string: "\n")
+                    _ = attr.append(string: strings().emptyGroupInfoLine2, color: textColor, font: .medium(.text))
+                    _ = attr.append(string: "\n")
+                    _ = attr.append(string: strings().emptyGroupInfoLine3, color: textColor, font: .medium(.text))
+                    _ = attr.append(string: "\n")
+                    _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
+                } else {
+                    lineSpacing = nil
+                    _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
+                }
+                
             } else if let padMessageStars = self.chatInteraction.presentation.sendPaidMessageStars, let peer = self.chatInteraction.peer {
                 attr.append(string: strings().chatEmptyPaidMessage(peer.displayTitle, strings().starListItemCountCountable(Int(padMessageStars.value))), color: textColor, font: .medium(.text))
                 lineSpacing = nil
@@ -99,7 +105,7 @@ class ChatEmptyPeerItem: TableRowItem {
         case .scheduled:
             lineSpacing = nil
             _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
-        case let .thread(_, mode):
+        case let .thread(mode):
             lineSpacing = nil
             switch mode {
             case .comments:
@@ -290,275 +296,224 @@ class ChatEmptyPeerView : TableRowView {
         }
         return theme.backgroundMode.hasWallpaper ? .clear : theme.chatBackground
     }
-    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
-        
-        guard let item = item as? ChatEmptyPeerItem else {
-            return
-        }
-        
+
+        guard let item = item as? ChatEmptyPeerItem else { return }
+
+        // Blur / BG view logic
         if item.shouldBlurService && !isLite(.blur) {
-            let current: VisualEffect
-            if let view = self.visualEffect {
-                current = view
-            } else {
-                current = VisualEffect(frame: .zero)
-                self.visualEffect = current
-                addSubview(current, positioned: .below, relativeTo: nil)
+            if visualEffect == nil {
+                let effect = VisualEffect(frame: .zero)
+                visualEffect = effect
+                addSubview(effect, positioned: .below, relativeTo: nil)
             }
-            current.bgColor = item.presentation.blurServiceColor
-        } else if let view = self.visualEffect {
-            performSubviewRemoval(view, animated: animated)
-            self.visualEffect = nil
-        }
-        
-        if item.shouldBlurService && !isLite(.blur) {
-            if let view = self.bgView {
-                performSubviewRemoval(view, animated: animated)
-                self.bgView = nil
+            visualEffect?.bgColor = item.presentation.blurServiceColor
+            if bgView != nil {
+                performSubviewRemoval(bgView!, animated: animated)
+                bgView = nil
             }
         } else {
-            let current: View
-            if let view = self.bgView {
-                current = view
-            } else {
-                current = View(frame: .zero)
-                self.bgView = current
-                addSubview(current, positioned: .below, relativeTo: nil)
+            if bgView == nil {
+                let view = View(frame: .zero)
+                view.backgroundColor = item.presentation.colors.background
+                bgView = view
+                addSubview(view, positioned: .below, relativeTo: nil)
             }
-            current.backgroundColor = item.presentation.colors.background
+            if let effect = visualEffect {
+                performSubviewRemoval(effect, animated: animated)
+                visualEffect = nil
+            }
+        }
+        
+        bgView?.addSubview(textView)
+
+        // Image View
+        if let media = item.image {
+            let contentNode = ChatLayoutUtils.contentNode(for: media)
+            
+            let contentSize = ChatLayoutUtils.contentSize(for: media, with: 300)
+
+            if imageView == nil || !imageView!.isKind(of: contentNode) {
+                imageView?.removeFromSuperview()
+                imageView = contentNode.init(frame: .zero)
+                bgView?.addSubview(imageView!)
+            }
+            imageView?.update(with: media, size: contentSize, context: item.chatInteraction.context, parent: nil, table: item.table)
+            imageView?.fetch(userInitiated: true)
+        } else if let view = imageView {
+            performSubviewRemoval(view, animated: false)
+            imageView = nil
         }
 
-        
-        needsLayout = true
+        // Sticker
+        if let sticker = item.sticker {
+            let stickerSize = NSMakeSize(150, 150)
+            let size = sticker.dimensions?.size.aspectFitted(stickerSize) ?? stickerSize
+            if stickerView == nil {
+                let view = StickerMediaContentView(frame: size.bounds)
+                view.scaleOnClick = true
+                view.userInteractionEnabled = true
+                view.set(handler: { [weak self] _ in
+                    (self?.item as? ChatEmptyPeerItem)?.sendSticker()
+                }, for: .Click)
+                bgView?.addSubview(view)
+                stickerView = view
+            }
+            stickerView?.update(with: sticker, size: size, context: item.chatInteraction.context, parent: nil, table: item.table)
+        } else if let view = stickerView {
+            performSubviewRemoval(view, animated: false)
+            stickerView = nil
+        }
+
+        // Standalone image
+        if let standImage = item.standImage {
+            if premRequiredImageView == nil {
+                let view = ImageView()
+                bgView?.addSubview(view)
+                premRequiredImageView = view
+            }
+            premRequiredImageView?.image = standImage.0
+            premRequiredImageView?.contentGravity = .resizeAspect
+        } else if let view = premRequiredImageView {
+            performSubviewRemoval(view, animated: false)
+            premRequiredImageView = nil
+        }
+
+        // Link View
+        if let linkText = item.linkText {
+            if linkView == nil {
+                let view = TextView()
+                view.userInteractionEnabled = false
+                view.isSelectable = false
+                bgView?.addSubview(view)
+                linkView = view
+            }
+            linkView?.update(linkText)
+        } else if let view = linkView {
+            performSubviewRemoval(view, animated: false)
+            linkView = nil
+        }
+
+        // Intro info
+        if let introInfo = item.introInfo {
+            if introInfoView == nil {
+                let view = TextView()
+                view.isSelectable = false
+                view.scaleOnClick = true
+                view.set(handler: { [weak item] _ in
+                    if let context = item?.chatInteraction.context {
+                        prem(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
+                    }
+                }, for: .Click)
+                self.addSubview(view)
+                introInfoView = view
+            }
+            introInfo.measure(width: 240)
+            introInfo.generateAutoBlock(backgroundColor: item.presentation.colors.background)
+            introInfoView?.update(introInfo)
+        } else if let view = introInfoView {
+            performSubviewRemoval(view, animated: false)
+            introInfoView = nil
+        }
+
+        // Premium button
+        if item.premiumRequired {
+            if premRequiredButton == nil {
+                let button = TextButton()
+                button.scaleOnClick = true
+                button.set(handler: { [weak item] _ in
+                    if let context = item?.chatInteraction.context {
+                        prem(with: PremiumBoardingController(context: context), for: context.window)
+                    }
+                }, for: .Click)
+                bgView?.addSubview(button)
+                premRequiredButton = button
+            }
+
+            premRequiredButton?.set(background: item.presentation.colors.accent, for: .Normal)
+            premRequiredButton?.set(font: .medium(.text), for: .Normal)
+            premRequiredButton?.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
+            premRequiredButton?.set(text: strings().chatEmptyPremiumRequiredAction, for: .Normal)
+            premRequiredButton?.sizeToFit(NSMakeSize(20, 20))
+            premRequiredButton?.layer?.cornerRadius = premRequiredButton!.frame.height / 2
+        } else if let view = premRequiredButton {
+            performSubviewRemoval(view, animated: false)
+            premRequiredButton = nil
+        }
+
     }
+
     
     override func layout() {
         super.layout()
-        let bgView = self.visualEffect ?? self.bgView
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        guard let item = item as? ChatEmptyPeerItem,
+              let bgView = self.visualEffect ?? self.bgView else { return }
 
-        if let item = item as? ChatEmptyPeerItem, let bgView = bgView {
-            
-            
-            item.textViewLayout.measure(width: min(frame.width - 80, 250))
-            
-            if item.textViewLayout.lineSpacing != nil {
-                for (i, line) in item.textViewLayout.lines.enumerated() {
-                    if i == 0 {
-                        line.penFlush = 0.5
-                    } else {
-                        line.penFlush = 0.0
-                    }
-                }
-            }
-            
-            textView.update(item.textViewLayout)
-            
-            var size = NSMakeSize(max(300, item.textViewLayout.layoutSize.width + 20), 300)
-
-            
-            let bgWidth = max(stickerView != nil || linkView != nil ? 300 : 0, textView.frame.width + 20)
-            
-            if let media = item.image {
-                
-                let contentNode = ChatLayoutUtils.contentNode(for: media)
-                let contentSize = ChatLayoutUtils.contentSize(for: media, with: bgWidth)
-
-                if imageView == nil || !imageView!.isKind(of: contentNode) {
-                    if let view = self.imageView {
-                        performSubviewRemoval(view, animated: false)
-                    }
-                    self.imageView = contentNode.init(frame: contentSize.bounds)
-                    bgView.addSubview(self.imageView!)
-                }
-                
-                self.imageView?.update(with: media, size: contentSize, context: item.chatInteraction.context, parent: nil, table: item.table)
-                self.imageView?.fetch(userInitiated: true)
-//                let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
-                
-            } else if let view = self.imageView {
-                performSubviewRemoval(view, animated: false)
-                self.imageView = nil
-            }
-            
-            if let sticker = item.sticker {
-                let stickerSize = NSMakeSize(150, 150)
-                let size = sticker.dimensions?.size.aspectFitted(stickerSize) ?? stickerSize
-                let current: StickerMediaContentView
-                if let view = self.stickerView {
-                    current = view
-                } else {
-                    current = StickerMediaContentView(frame: size.bounds)
-                    bgView.addSubview(current)
-                    self.stickerView = current
-                    
-                    current.set(handler: { [weak self] _ in
-                        if let item = self?.item as? ChatEmptyPeerItem {
-                            item.sendSticker()
-                        }
-                    }, for: .Click)
-                    current.scaleOnClick = true
-                    
-                    current.userInteractionEnabled = true
-                }
-                current.update(with: sticker, size: size, context: item.chatInteraction.context, parent: nil, table: item.table)
-                
-            } else if let view = self.stickerView {
-                performSubviewRemoval(view, animated: false)
-                self.stickerView = nil
-            }
-            
-            
-            if let standImage = item.standImage {
-                let current: ImageView
-                if let view = self.premRequiredImageView {
-                    current = view
-                } else {
-                    current = ImageView()
-                    current.frame = NSMakeRect(0, 0, size.width, 100)
-                    bgView.addSubview(current)
-                    self.premRequiredImageView = current
-                }
-                current.setFrameSize(size.width, standImage.1)
-                current.image = standImage.0
-                current.contentGravity = .resizeAspect
-            } else if let view = self.premRequiredImageView {
-                performSubviewRemoval(view, animated: false)
-                self.premRequiredImageView = nil
-            }
-            if let linkText = item.linkText {
-                let current: TextView
-                if let view = self.linkView {
-                    current = view
-                } else {
-                    current = TextView()
-                    current.userInteractionEnabled = false
-                    current.isSelectable = false
-                    bgView.addSubview(current)
-                    self.linkView = current
-                }
-                current.update(linkText)
-            } else if let view = self.linkView {
-                performSubviewRemoval(view, animated: false)
-                self.linkView = nil
-            }
-            
-            if let introInfo = item.introInfo {
-                let current: TextView
-                if let view = self.introInfoView {
-                    current = view
-                } else {
-                    current = TextView()
-                    current.isSelectable = false
-                    current.scaleOnClick = true
-                    self.addSubview(current)
-                    self.introInfoView = current
-                    
-                    current.set(handler: { [weak item] _ in
-                        if let context = item?.chatInteraction.context {
-                            prem(with: PremiumBoardingController(context: context, source: .business_intro), for: context.window)
-                        }
-                    }, for: .Click)
-                }
-                introInfo.measure(width: 240)
-                introInfo.generateAutoBlock(backgroundColor: item.presentation.colors.background)
-                current.update(introInfo)
-            } else if let view = self.introInfoView {
-                performSubviewRemoval(view, animated: false)
-                self.introInfoView = nil
-            }
-            
-            if item.premiumRequired {
-                let current: TextButton
-                if let view = self.premRequiredButton {
-                    current = view
-                } else {
-                    current = TextButton()
-                    current.frame = NSMakeRect(0, 0, size.width, 30)
-                    current.background = .random
-                    bgView.addSubview(current)
-                    self.premRequiredButton = current
-                    
-                    current.set(handler: { [weak item] _ in
-                        if let context = item?.chatInteraction.context {
-                            prem(with: PremiumBoardingController(context: context), for: context.window)
-                        }
-                    }, for: .Click)
-                }
-                
-                
-                current.scaleOnClick = true
-                current.set(background: item.presentation.colors.accent, for: .Normal)
-                current.set(font: .medium(.text), for: .Normal)
-                current.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
-                current.set(text: strings().chatEmptyPremiumRequiredAction, for: .Normal)
-                current.sizeToFit(NSMakeSize(20, 20))
-                current.layer?.cornerRadius = current.frame.height / 2
-            } else if let view = self.premRequiredButton {
-                performSubviewRemoval(view, animated: false)
-                self.premRequiredButton = nil
-            }
-            
-            let singleLine = item.textViewLayout.lines.count == 1
-            
-            var h: CGFloat = [self.imageView, premRequiredButton, premRequiredImageView, stickerView, linkView].compactMap { $0 }.reduce(0, { $0 + $1.frame.height })
-            
-            if let _ = premRequiredButton {
-                h += 20
-            }
-            if let _ = premRequiredImageView {
-                h += 10
-            }
-            
-            if let _ = stickerView {
-                h += 10
-            }
-            
-            if let _ = linkView {
-                h += 8
-            }
-            
-            
-            bgView.setFrameSize(NSMakeSize(bgWidth, h + textView.frame.height + 20))
-
-            
-            bgView.addSubview(self.textView)
-            
-            bgView.center()
-            
-            if let view = premRequiredImageView {
-                view.centerX(y: 10)
-                textView.centerX(y: view.frame.maxY + 10)
-            } else if let imageView = imageView {
-                imageView.centerX(y: 0)
-                textView.centerX(y: imageView.frame.maxY + 10)
-            } else if let stickerView = stickerView {
-                textView.centerX(y: 10)
-                stickerView.centerX(y: textView.frame.maxY + 10)
-            } else {
-                textView.center()
-            }
-            
-            if let view = premRequiredButton {
-                view.centerX(y: textView.frame.maxY + 10)
-            }
-            
-            if let view = linkView {
-                view.centerX(y: textView.frame.maxY + 8)
-            }
-            
-            if imageView == nil && premRequiredImageView == nil {
-                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 10
-            } else {
-                bgView.layer?.cornerRadius = 10
-            }
-            
-            if let introInfoView {
-                introInfoView.centerX(y: bgView.frame.maxY + 10)
+        item.textViewLayout.measure(width: min(size.width - 80, 250))
+        if item.textViewLayout.lineSpacing != nil {
+            for (i, line) in item.textViewLayout.lines.enumerated() {
+                line.penFlush = (i == 0) ? 0.5 : 0.0
             }
         }
+        textView.update(item.textViewLayout)
+
+        let textFrameWidth = max(300, item.textViewLayout.layoutSize.width + 20)
+        var bgWidth = textView.frame.width + 20
+        if imageView != nil || linkView != nil {
+            bgWidth = max(bgWidth, 300)
+        }
+
+        var totalHeight: CGFloat = [imageView, premRequiredImageView, premRequiredButton, stickerView, linkView]
+            .compactMap { $0?.frame.height }
+            .reduce(0, +)
+
+        if premRequiredImageView != nil { totalHeight += 10 }
+        if premRequiredButton != nil { totalHeight += 20 }
+        if stickerView != nil { totalHeight += 10 }
+        if linkView != nil { totalHeight += 8 }
+        
+        let xOffset: CGFloat = item.chatInteraction.presentation.monoforumState == .vertical ? 40 : 0
+
+        totalHeight += textView.frame.height + 20
+
+        bgView.setFrameSize(NSMakeSize(bgWidth, totalHeight))
+        transition.updateFrame(view: bgView, frame: bgView.centerFrame().offsetBy(dx: xOffset, dy: 0))
+
+
+        if let view = premRequiredImageView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: 10).offsetBy(dx: xOffset, dy: 0))
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: view.frame.maxY + 10).offsetBy(dx: xOffset, dy: 0))
+        } else if let view = imageView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: 0).offsetBy(dx: xOffset, dy: 0))
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: view.frame.maxY + 10).offsetBy(dx: xOffset, dy: 0))
+        } else if let view = stickerView {
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: 10).offsetBy(dx: xOffset, dy: 0))
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: textView.frame.maxY + 10).offsetBy(dx: xOffset, dy: 0))
+        } else {
+            transition.updateFrame(view: textView, frame: textView.centerFrame().offsetBy(dx: xOffset, dy: 0))
+        }
+
+        if let view = premRequiredButton {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: textView.frame.maxY + 10).offsetBy(dx: xOffset, dy: 0))
+        }
+
+        if let view = linkView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: textView.frame.maxY + 8).offsetBy(dx: xOffset, dy: 0))
+        }
+
+        if let view = introInfoView {
+            transition.updateFrame(view: view, frame: view.centerFrameX(y: bgView.frame.maxY + 10).offsetBy(dx: xOffset, dy: 0))
+        }
+
+        let singleLine = item.textViewLayout.lines.count == 1
+        bgView.layer?.cornerRadius = (imageView == nil && premRequiredImageView == nil) ? (singleLine ? textView.frame.height / 2 : 10) : 10
     }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

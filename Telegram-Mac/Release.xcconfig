@@ -7,7 +7,6 @@
 //
 #include "common.xcconfig"
 DSA_PEM_FILE = dsa_pub_prod.pem
-APPCENTER_SECRET = 0af668a6-29fa-4a9e-8a70-002913f8efba
 SFEED_URL = https:$(SIMPLE_SLASH)/mac-updates.telegram.org/updates/versions.xml
 SOURCE = STABLE
 

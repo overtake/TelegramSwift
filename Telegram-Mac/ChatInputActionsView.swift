@@ -62,7 +62,7 @@ final class StarsSendActionView : Control {
 }
 
 //
-let iconsInset:CGFloat = 20.0
+let iconsInset:CGFloat = 20
 
 class ChatInputActionsView: View {
     
@@ -74,6 +74,9 @@ class ChatInputActionsView: View {
     private let slowModeTimeout:TextButton = TextButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
+    private let gift:ImageButton = ImageButton()
+    private let suggestPost:ImageButton = ImageButton()
+
     private var scheduled:ImageButton?
     
     private var sendPaidMessages: StarsSendActionView?
@@ -89,28 +92,36 @@ class ChatInputActionsView: View {
         super.init(frame: frameRect)
         
         keyboard.autohighlight = false
-        
         addSubview(keyboard)
         addSubview(send)
         addSubview(voice)
         addSubview(inlineCancel)
         addSubview(muteChannelMessages)
         addSubview(slowModeTimeout)
+        
+        addSubview(gift)
+        addSubview(suggestPost)
+
+        
         inlineCancel.isHidden = true
         send.isHidden = true
         voice.isHidden = true
+        suggestPost.isHidden = true
         muteChannelMessages.isHidden = true
         slowModeTimeout.isHidden = true
-        slowModeTimeout.scaleOnClick = true
+        
         voice.autohighlight = false
         muteChannelMessages.autohighlight = false
         send.autohighlight = false
-        
+        gift.autohighlight = false
+        suggestPost.autohighlight = false
+
         send.scaleOnClick = true
         muteChannelMessages.scaleOnClick = true
         slowModeTimeout.scaleOnClick = true
         inlineCancel.scaleOnClick = true
-        
+        gift.scaleOnClick = true
+        suggestPost.scaleOnClick = true
         
         voice.set(handler: { [weak self] _ in
             guard let `self` = self else { return }
@@ -143,6 +154,14 @@ class ChatInputActionsView: View {
 
         keyboard.set(handler: { [weak self] _ in
             self?.toggleKeyboard()
+        }, for: .Up)
+        
+        gift.set(handler: { [weak self] _ in
+            self?.chatInteraction.sendGift()
+        }, for: .Up)
+        
+        suggestPost.set(handler: { [weak self] _ in
+            self?.chatInteraction.suggestPost()
         }, for: .Up)
         
         inlineCancel.set(handler: { [weak self] _ in
@@ -183,6 +202,14 @@ class ChatInputActionsView: View {
         
         keyboard.set(image: theme.icons.chatActiveReplyMarkup, for: .Normal)
         _ = keyboard.sizeToFit()
+        
+        gift.set(image: theme.icons.chat_input_send_gift, for: .Normal)
+        _ = gift.sizeToFit()
+        
+        suggestPost.set(image: theme.icons.chat_input_suggest_post, for: .Normal)
+        _ = suggestPost.sizeToFit()
+
+        
         inlineCancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
         _ = inlineCancel.sizeToFit()
         
@@ -307,7 +334,7 @@ class ChatInputActionsView: View {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect || value.sendPaidMessageStars != oldValue.sendPaidMessageStars {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout || value.boostNeed != oldValue.boostNeed || value.restrictedByBoosts != oldValue.restrictedByBoosts || value.interfaceState.messageEffect != oldValue.interfaceState.messageEffect || value.sendPaidMessageStars != oldValue.sendPaidMessageStars || value.hasGift != oldValue.hasGift || value.allowPostSuggestion != oldValue.allowPostSuggestion || value.interfaceState.suggestPost != oldValue.interfaceState.suggestPost {
 
                 if chatInteraction.hasSetDestructiveTimer, value.interfaceState.messageEffect == nil {
                     if secretTimer == nil {
@@ -493,6 +520,8 @@ class ChatInputActionsView: View {
                 entertaiments.isSelected = value.isShowSidebar 
                 
                 keyboard.isHidden = !value.isKeyboardActive
+                gift.isHidden = !value.hasGift
+                suggestPost.isHidden = !value.allowPostSuggestion || value.interfaceState.suggestPost != nil
                 
                 if let keyboardMessage = value.keyboardButtonsMessage {
                     if let closedId = value.interfaceState.messageActionsState.closedButtonKeyboardMessageId, closedId == keyboardMessage.id {
@@ -555,13 +584,22 @@ class ChatInputActionsView: View {
         
         var size:NSSize = NSMakeSize(sendValue.frame.width + iconsInset + entertaiments.frame.width, frame.height)
         
-        if chatInteraction.hasSetDestructiveTimer, chatInteraction.presentation.interfaceState.messageEffect == nil {
+        if value.hasSetDestructiveTimer, value.interfaceState.messageEffect == nil {
             size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
         }
-        if chatInteraction.presentation.keyboardButtonsMessage != nil {
+        if value.keyboardButtonsMessage != nil {
             size.width += keyboard.frame.width + iconsInset
         }
-        if let peer = chatInteraction.presentation.peer {
+        
+        if value.hasGift {
+            size.width += gift.frame.width + iconsInset
+        }
+        
+        if value.allowPostSuggestion {
+            size.width += suggestPost.frame.width + iconsInset
+        }
+        
+        if let peer = value.peer {
             let hasMute = !(!peer.isChannel || !peer.canSendMessage(value.chatMode.isThreadMode) || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil)
             if hasMute {
                 size.width += muteChannelMessages.frame.width
@@ -586,8 +624,8 @@ class ChatInputActionsView: View {
         transition.updateFrame(view: sendValue, frame: sendValue.centerFrameY(x: size.width - sendValue.frame.width - iconsInset))
         
         
-        transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset + 5))
-        transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: sendValue.frame.minX - entertaiments.frame.width - 0))
+        transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset))
+        transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: sendValue.frame.minX - entertaiments.frame.width))
         transition.updateFrame(view: keyboard, frame: keyboard.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
         transition.updateFrame(view: muteChannelMessages, frame: muteChannelMessages.centerFrameY(x: entertaiments.frame.minX - muteChannelMessages.frame.width))
 
@@ -600,6 +638,15 @@ class ChatInputActionsView: View {
             }
         }
         
+        if let scheduled {
+            transition.updateFrame(view: gift, frame: gift.centerFrameY(x: scheduled.frame.minX - gift.frame.width - iconsInset))
+        } else {
+            transition.updateFrame(view: gift, frame: gift.centerFrameY(x: (scheduled ?? entertaiments).frame.minX - gift.frame.width))
+        }
+        
+        transition.updateFrame(view: suggestPost, frame: suggestPost.centerFrameY(x: entertaiments.frame.minX - suggestPost.frame.width))
+
+        
         let views = [inlineCancel,
          inlineProgress,
          voice,
@@ -608,8 +655,9 @@ class ChatInputActionsView: View {
          slowModeTimeout,
          entertaiments,
          keyboard,
+         gift,
          muteChannelMessages,
-         scheduled].filter { $0 != nil && !$0!.isHidden }.map { $0! }
+         scheduled, suggestPost].filter { $0 != nil && !$0!.isHidden }.map { $0! }
         
         let minView = views.min(by: { $0.frame.minX < $1.frame.minX })
         if let minView = minView, let secretTimer = secretTimer {

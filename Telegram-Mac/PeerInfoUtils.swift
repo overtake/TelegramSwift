@@ -23,6 +23,9 @@ struct GroupAccess {
     let canMakeVoiceChat: Bool
     let canEditMessages: Bool
     let canManageGifts: Bool
+    let canPostMessages: Bool
+    let canManageDirect: Bool
+    let canManageStories: Bool
 }
 
 extension Peer {
@@ -36,15 +39,19 @@ extension Peer {
         var isCreator = false
         var canReport = true
         var canMakeVoiceChat = false
+        var canPostMessages = false
+        var canManageDirect = false
         var canEditMessages = false
         var canPin: Bool
         var canManageGifts = false
+        var canManageStories = false
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true
                 canReport = false
                 canMakeVoiceChat = true
                 canEditMessages = true
+                canPostMessages = true
             }
             highlightAdmins = true
             switch group.role {
@@ -55,6 +62,7 @@ extension Peer {
                 canReport = false
                 canMakeVoiceChat = true
                 canEditMessages = true
+                canPostMessages = true
             case .member:
                 break
             }
@@ -69,6 +77,9 @@ extension Peer {
             isPublic = channel.username != nil
             isCreator = channel.flags.contains(.isCreator)
             canReport = !channel.flags.contains(.isCreator) && channel.adminRights == nil
+            canManageStories = channel.flags.contains(.isCreator)
+            canPostMessages = channel.flags.contains(.isCreator)
+            canManageDirect = channel.flags.contains(.isCreator)
             if channel.hasPermission(.changeInfo) {
                 canEditGroupInfo = true
             }
@@ -93,14 +104,21 @@ extension Peer {
             if channel.hasPermission(.manageCalls) {
                 canMakeVoiceChat = true
             }
+            if channel.hasPermission(.editStories) {
+                canManageStories = true
+            }
             if channel.hasPermission(.editAllMessages) {
                 canEditMessages = true
+            }
+            if let adminRights = channel.adminRights {
+                canPostMessages = adminRights.rights.contains(.canPostMessages)
+                canManageDirect = adminRights.rights.contains(.canManageDirect)
             }
         }
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages, canManageDirect: canManageDirect, canManageStories: canManageStories)
     }
     
     var canInviteUsers:Bool {
@@ -198,11 +216,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank, lhsSuccriptionDate):
+    case let .member(_, lhsInvitedAt, _, _, _, _):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank, rhsSuccriptionDate):
+        case let .member(_, rhsInvitedAt, _, _, _, _):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

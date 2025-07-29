@@ -45,6 +45,9 @@ enum LocalAnimatedSticker : String {
     case police
     case duck_empty
     case ton_logo
+    case bulb
+    
+    case diamond
     
     case affiliate_link
     
@@ -133,6 +136,10 @@ enum LocalAnimatedSticker : String {
     case premium_gift_6
     case premium_gift_3
     
+    case ton_gift_green
+    case ton_gift_blue
+    case ton_gift_red
+
     case single_voice_fire
     
     case show_status_profile
@@ -144,6 +151,8 @@ enum LocalAnimatedSticker : String {
     case browser_more
     
     case improving_video
+    
+    case topics
 
     case menu_add_to_folder
     case menu_archive
@@ -208,6 +217,7 @@ enum LocalAnimatedSticker : String {
     case menu_expand
     case menu_replace
     case menu_folder
+    case menu_folder_add
     case menu_calendar
     case menu_reactions
     case menu_music
@@ -221,6 +231,7 @@ enum LocalAnimatedSticker : String {
     case menu_lock
     case menu_unlock
     case menu_poll
+    case menu_list
     case menu_location
     case menu_camera
     case menu_translate
@@ -311,6 +322,11 @@ enum LocalAnimatedSticker : String {
     case menu_transfer
     case menu_wear
     case menu_wearoff
+    case menu_calendar_up
+    case menu_cash_up
+    case menu_hashtag_up
+    case menu_check
+    case menu_uncheck
     
     case emoji_category_activities
     case emoji_category_angry
@@ -379,6 +395,7 @@ enum LocalAnimatedSticker : String {
     case premium_reaction_effect_5
     
     case freeze_duck
+    case direct_messages
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
@@ -418,6 +435,16 @@ enum LocalAnimatedSticker : String {
             return LocalAnimatedSticker.premium_gift_6
         } else {
             return LocalAnimatedSticker.premium_gift_12
+        }
+    }
+    
+    static func bestForTonGift(_ amount: Int64) -> LocalAnimatedSticker {
+        if amount <= 10 * 1_000_000_000 {
+            return LocalAnimatedSticker.ton_gift_green
+        } else if amount <= 50 * 1_000_000_000 {
+            return LocalAnimatedSticker.ton_gift_blue
+        } else {
+            return LocalAnimatedSticker.ton_gift_red
         }
     }
     
@@ -524,6 +551,8 @@ enum LocalAnimatedSticker : String {
         case .affiliate_link:
             playPolicy = .onceEnd
         case .freeze_duck:
+            playPolicy = .onceEnd
+        case .topics:
             playPolicy = .onceEnd
         default:
             playPolicy = .loop

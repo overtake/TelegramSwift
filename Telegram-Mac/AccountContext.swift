@@ -101,7 +101,8 @@ public struct PremiumConfiguration {
             minGroupCustomWallpaperLevel: 9,
             minGroupEmojiPackLevel: 9,
             minGroupAudioTranscriptionLevel: 9,
-            minChannelWearGiftLevel: 8
+            minChannelWearGiftLevel: 8,
+            minChannelAutotranslationLevel: 3
         )
     }
     
@@ -129,7 +130,7 @@ public struct PremiumConfiguration {
     public let minGroupCustomWallpaperLevel: Int32
     public let minGroupEmojiPackLevel: Int32
     public let minGroupAudioTranscriptionLevel: Int32
-    
+    public let minChannelAutotranslationLevel: Int32
     fileprivate init(
         isPremiumDisabled: Bool,
         showPremiumGiftInAttachMenu: Bool,
@@ -152,7 +153,8 @@ public struct PremiumConfiguration {
         minGroupCustomWallpaperLevel: Int32,
         minGroupEmojiPackLevel: Int32,
         minGroupAudioTranscriptionLevel: Int32,
-        minChannelWearGiftLevel: Int32
+        minChannelWearGiftLevel: Int32,
+        minChannelAutotranslationLevel: Int32
     ) {
         self.isPremiumDisabled = isPremiumDisabled
         self.showPremiumGiftInAttachMenu = showPremiumGiftInAttachMenu
@@ -176,6 +178,7 @@ public struct PremiumConfiguration {
         self.minGroupEmojiPackLevel = minGroupEmojiPackLevel
         self.minGroupAudioTranscriptionLevel = minGroupAudioTranscriptionLevel
         self.minChannelWearGiftLevel = minChannelWearGiftLevel
+        self.minChannelAutotranslationLevel = minChannelAutotranslationLevel
     }
     
     public static func with(appConfiguration: AppConfiguration) -> PremiumConfiguration {
@@ -206,7 +209,8 @@ public struct PremiumConfiguration {
                 minGroupCustomWallpaperLevel: get(data["group_custom_wallpaper_level_min"]) ?? defaultValue.minGroupCustomWallpaperLevel,
                 minGroupEmojiPackLevel: get(data["group_emoji_stickers_level_min"]) ?? defaultValue.minGroupEmojiPackLevel,
                 minGroupAudioTranscriptionLevel: get(data["group_transcribe_level_min"]) ?? defaultValue.minGroupAudioTranscriptionLevel,
-                minChannelWearGiftLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelWearGiftLevel
+                minChannelWearGiftLevel: get(data["channel_emoji_status_level_min"]) ?? defaultValue.minChannelWearGiftLevel,
+                minChannelAutotranslationLevel: get(data["channel_autotranslation_level_min"]) ?? defaultValue.minChannelWearGiftLevel
             )
         } else {
             return defaultValue
@@ -222,6 +226,20 @@ extension AppConfiguration {
     func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
         if let value = self.data?[key] as? Double {
             return Int32(value)
+        } else {
+            return defaultValue
+        }
+    }
+    func getGeneralValue64(_ key: String, orElse defaultValue: Int64) -> Int64 {
+        if let value = self.data?[key] as? Double {
+            return Int64(value)
+        } else {
+            return defaultValue
+        }
+    }
+    func getGeneralValueDouble(_ key: String, orElse defaultValue: Double) -> Double {
+        if let value = self.data?[key] as? Double {
+            return Double(value)
         } else {
             return defaultValue
         }
@@ -303,8 +321,12 @@ enum ChatLocation: Equatable {
 
 extension ChatLocation {
     
-    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId) -> ChatLocation {
-        return .thread(.init(peerId: accountPeerId, threadId: peerId.toInt64(), channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
+    static func makeSaved(_ accountPeerId: PeerId, peerId: PeerId, isMonoforum: Bool = false) -> ChatLocation {
+        return .makeSaved(accountPeerId, threadId: peerId.toInt64(), isMonoforum: isMonoforum)
+    }
+    
+    static func makeSaved(_ accountPeerId: PeerId, threadId: Int64, isMonoforum: Bool = false) -> ChatLocation {
+        return .thread(.init(peerId: accountPeerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforumPost: isMonoforum, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false))
     }
     
     var unreadMessageCountsItem: UnreadMessageCountsItem {
@@ -432,12 +454,22 @@ final class AccountContext {
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
     let starsContext: StarsContext
+    let tonContext: StarsContext
     let starsSubscriptionsContext: StarsSubscriptionsContext
     let currentCountriesConfiguration: Atomic<CountriesConfiguration> = Atomic(value: CountriesConfiguration(countries: loadCountryCodes()))
-    private(set) var contentConfig: ContentSettingsConfiguration = .default
+    var contentConfig: ContentSettingsConfiguration = .default
     private let _countriesConfiguration = Promise<CountriesConfiguration>()
     var countriesConfiguration: Signal<CountriesConfiguration, NoError> {
         return self._countriesConfiguration.get()
+    }
+    
+    func currencyContext(_ currency: CurrencyAmount.Currency) -> StarsContext {
+        switch currency {
+        case .stars:
+            return starsContext
+        case .ton:
+            return tonContext
+        }
     }
 
     #endif
@@ -684,6 +716,7 @@ final class AccountContext {
         self.reactions = Reactions(engine)
         self.dockControl = DockControl(engine, accountManager: sharedContext.accountManager)
         self.starsContext = engine.payments.peerStarsContext()
+        self.tonContext = engine.payments.peerTonContext()
         self.starsSubscriptionsContext = engine.payments.peerStarsSubscriptionsContext(starsContext: self.starsContext)
         
         _ = self.engine.payments.keepStarGiftsUpdated().start()
@@ -1253,7 +1286,7 @@ final class AccountContext {
         case let .peer(peerId):
             return .peer(peerId: peerId, threadId: nil)
         case let .thread(data):
-            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel {
+            if data.isForumPost || data.peerId.namespace != Namespaces.Peer.CloudChannel || data.isMonoforumPost {
                 return .peer(peerId: data.peerId, threadId: data.threadId)
             } else {
                 let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
@@ -1357,7 +1390,7 @@ final class AccountContext {
             } else {
                 updatedMode = .replies(origin: fromId)
             }
-            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: fromId), initialAction: nil, chatLocationContextHolder: result.contextHolder)
+            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(mode: updatedMode), focusTarget: .init(messageId: fromId), initialAction: nil, chatLocationContextHolder: result.contextHolder)
             
             context.bindings.rootNavigation().push(controller)
             
@@ -1643,7 +1676,7 @@ private func chatLocationContext(holder: Atomic<ChatLocationContextHolder?>, acc
         } else {
             return ChatLocationContextHolderImpl(account: account, data: data)
         }
-        } as! ChatLocationContextHolderImpl
+    } as! ChatLocationContextHolderImpl
     return holder.context
 }
 

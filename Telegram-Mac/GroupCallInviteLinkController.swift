@@ -364,7 +364,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("link"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), centerViewAlignment: true, rightAction: .init(image: generate(arguments.presentation.colors.grayIcon), action: { view in
+        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), centerViewAlignment: false, rightAction: .init(image: generate(arguments.presentation.colors.grayIcon), action: { view in
             
             guard let event = NSApp.currentEvent else {
                 return

@@ -740,6 +740,8 @@ public extension NSView {
                     return NSPointInRect(location, self.bounds)
                 } else if let view = view as? EventLessView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
+                } else if let _ = view as? VisualEffect {
+                    return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
                     return NSPointInRect(location, self.bounds)
@@ -3139,4 +3141,58 @@ public func formatMonthYear(_ dateString: String, locale: Locale = .current) -> 
     outputFormatter.setLocalizedDateFormatFromTemplate("MMM yyyy")
     
     return outputFormatter.string(from: date)
+}
+
+
+public func escapeMarkdownSpecialCharacters(in text: String) -> String {
+    return text
+        .replacingOccurrences(of: "\\", with: "\\\\")
+        .replacingOccurrences(of: "[", with: "\\[")
+        .replacingOccurrences(of: "]", with: "\\]")
+        .replacingOccurrences(of: "(", with: "\\(")
+        .replacingOccurrences(of: ")", with: "\\)")
+}
+
+
+public extension CGMutablePath {
+    func addRoundedRect(in rect: CGRect, topLeft: Bool, topRight: Bool, bottomLeft: Bool, bottomRight: Bool, radius: CGFloat) {
+        let maxRadius = min(radius, min(rect.width, rect.height) / 2)
+
+        let tl = topLeft ? maxRadius : 0
+        let tr = topRight ? maxRadius : 0
+        let bl = bottomLeft ? maxRadius : 0
+        let br = bottomRight ? maxRadius : 0
+
+        self.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+
+        // Bottom line
+        self.addLine(to: CGPoint(x: rect.maxX - bl, y: rect.minY))
+        if bl > 0 {
+            self.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + bl),
+                              control: CGPoint(x: rect.maxX, y: rect.minY))
+        }
+
+        // Right line
+        self.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - tr))
+        if tr > 0 {
+            self.addQuadCurve(to: CGPoint(x: rect.maxX - tr, y: rect.maxY),
+                              control: CGPoint(x: rect.maxX, y: rect.maxY))
+        }
+
+        // Top line
+        self.addLine(to: CGPoint(x: rect.minX + tl, y: rect.maxY))
+        if tl > 0 {
+            self.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - tl),
+                              control: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+
+        // Left line
+        self.addLine(to: CGPoint(x: rect.minX, y: rect.minY + bl))
+        if bl > 0 {
+            self.addQuadCurve(to: CGPoint(x: rect.minX + bl, y: rect.minY),
+                              control: CGPoint(x: rect.minX, y: rect.minY))
+        }
+
+        self.closeSubpath()
+    }
 }

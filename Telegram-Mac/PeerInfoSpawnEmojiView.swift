@@ -235,7 +235,7 @@ func patternScaleValueAt(fraction: CGFloat, t: CGFloat, reverse: Bool) -> CGFloa
 class PeerInfoSpawnEmojiView : View {
     private var patternTarget: InlineStickerItemLayer?
 
-    private let avatarBackgroundPatternContainer: CALayer = CALayer()
+    private let avatarBackgroundPatternContainer: CALayer = SimpleLayer()
     
     private var avatarPatternContentLayers:[SimpleLayer] = []
     private var patternColor: NSColor = .clear
@@ -278,6 +278,7 @@ class PeerInfoSpawnEmojiView : View {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        avatarBackgroundPatternContainer.frame = NSMakeRect(size.width / 2, size.height / 2 - 30, size.width, size.height)
         var avatarBackgroundPatternLayerCount = 0
         let lokiRng = LokiRng(seed0: 123, seed1: 0, seed2: 0)
         for row in 0 ..< 4 {

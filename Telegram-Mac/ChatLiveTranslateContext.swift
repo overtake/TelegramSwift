@@ -13,6 +13,22 @@ import TelegramCore
 import Translate
 import InAppSettings
 
+enum AppConfigTranslateState : String {
+    case enabled
+    case disabled
+    case system
+    case alternative
+    
+    var canTranslate: Bool {
+        switch self {
+        case .enabled, .alternative:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
 
 struct ChatTranslationState: Codable {
     enum CodingKeys: String, CodingKey {
@@ -26,14 +42,14 @@ struct ChatTranslationState: Codable {
     var baseLang: String
     var fromLang: String
     var toLang: String?
-    var isEnabled: Bool
+    var isEnabled: Bool?
     var paywall: Bool
     
     init(
         baseLang: String,
         fromLang: String,
         toLang: String?,
-        isEnabled: Bool,
+        isEnabled: Bool?,
         paywall: Bool
     ) {
         self.baseLang = baseLang
@@ -49,7 +65,7 @@ struct ChatTranslationState: Codable {
         self.baseLang = try container.decode(String.self, forKey: .baseLang)
         self.fromLang = try container.decode(String.self, forKey: .fromLang)
         self.toLang = try container.decodeIfPresent(String.self, forKey: .toLang)
-        self.isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        self.isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled)
         self.paywall = try container.decodeIfPresent(Bool.self, forKey: .paywall) ?? false
 
     }
@@ -60,7 +76,7 @@ struct ChatTranslationState: Codable {
         try container.encode(self.baseLang, forKey: .baseLang)
         try container.encode(self.fromLang, forKey: .fromLang)
         try container.encodeIfPresent(self.toLang, forKey: .toLang)
-        try container.encode(self.isEnabled, forKey: .isEnabled)
+        try container.encodeIfPresent(self.isEnabled, forKey: .isEnabled)
         try container.encode(self.paywall, forKey: .paywall)
     }
 }
@@ -125,6 +141,7 @@ final class ChatLiveTranslateContext {
         
         var canTranslate: Bool
         var translate: Bool
+        var autotranslate: Bool
         var from: String
         var to: String
         var paywall: Bool
@@ -140,7 +157,7 @@ final class ChatLiveTranslateContext {
         var result:[Key : Result]
         
         static var `default`: State {
-            return .init(canTranslate: false, translate: false, from: "", to: "", paywall: false, result: [:])
+            return .init(canTranslate: false, translate: false, autotranslate: false, from: "", to: "", paywall: false, result: [:])
         }
         fileprivate var queued:[Message] = []
     }
@@ -176,7 +193,11 @@ final class ChatLiveTranslateContext {
         
         let translationState = chatTranslationState(context: context, peerId: peerId)
         
-        let should: Signal<(ChatTranslationState?, Appearance, Bool), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal, getPeerView(peerId: context.peerId, postbox: context.account.postbox)) |> map { cachedData, translationState, settings, appearance, peer in
+        let autoTranslate = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.AutoTranslateEnabled(id: peerId))
+
+
+        
+        let should: Signal<(ChatTranslationState?, Appearance, Bool, Bool), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal, getPeerView(peerId: context.peerId, postbox: context.account.postbox), autoTranslate) |> map { cachedData, translationState, settings, appearance, peer, autoTranslate in
             
             var isHidden: Bool
             if let cachedData = cachedData as? CachedChannelData {
@@ -188,6 +209,7 @@ final class ChatLiveTranslateContext {
             } else {
                 isHidden = true
             }
+            
             if let peer = peer {
                 isHidden = !peer.isPremium || isHidden
             } else {
@@ -205,15 +227,21 @@ final class ChatLiveTranslateContext {
                 isHidden = false
             }
             
+            let translateConfig = AppConfigTranslateState(rawValue: context.appConfiguration.getStringValue("translations_auto_enabled", orElse: "enabled")) ?? .disabled
+
+            if !isHidden, !translateConfig.canTranslate {
+                isHidden = true
+            }
+            
             if !isHidden && translationState?.fromLang != translationState?.toLang  {
-                return (translationState, appearance, peer?.isPremium == true)
+                return (translationState, appearance, peer?.isPremium == true, autoTranslate)
             } else {
-                return (nil, appearance, peer?.isPremium == true)
+                return (nil, appearance, peer?.isPremium == true, autoTranslate)
             }
             
         } |> deliverOnPrepareQueue
         
-        shouldDisposable.set(should.start(next: { [weak self] state, appearance, isPremium in
+        shouldDisposable.set(should.start(next: { [weak self] state, appearance, isPremium, autoTranslate in
             self?.updateState { current in
                 var current = current
                 let to = state?.toLang ?? appearance.languageCode
@@ -227,9 +255,12 @@ final class ChatLiveTranslateContext {
                 }
                 if let isEnabled = state?.isEnabled {
                     current.translate = isEnabled && isPremium
+                } else if autoTranslate {
+                    current.translate = true
                 } else {
                     current.translate = false
                 }
+                current.autotranslate = autoTranslate
                 current.paywall = isPremium ? false : (state?.paywall ?? false)
                 if !current.canTranslate || !current.translate || toUpdated {
                     current.result = [:]
@@ -260,15 +291,7 @@ final class ChatLiveTranslateContext {
     private func activateTranslation(for msgIds: [MessageId], state: State) -> Void {
         let signal = context.engine.messages.translateMessages(messageIds: msgIds, fromLang: nil, toLang: state.to, enableLocalIfPossible: false)
         
-        actionsDisposable.add(signal.start(next: { [weak self] results in
-            self?.updateState { current in
-                var current = current
-                for id in msgIds {
-                    current.result[.Key(id: id, toLang: current.to)] = .complete(toLang: current.to)
-                }
-                return current
-            }
-        }, error: { [weak self] error in
+        actionsDisposable.add(signal.start(error: { [weak self] error in
             self?.updateState { current in
                 var current = current
                 for id in msgIds {
@@ -289,9 +312,16 @@ final class ChatLiveTranslateContext {
     }
     
     func toggleTranslate() {
+        
+        let state = stateValue.with { $0 }
+        
         _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
             var current = current
-            current.isEnabled = !current.isEnabled
+            if let isEnabled = current.isEnabled {
+                current.isEnabled = !isEnabled
+            } else {
+                current.isEnabled = !state.autotranslate
+            }
             return current
         }).start()
     }
@@ -486,7 +516,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                             }
                         }
                         if let fromLang = mostFrequent?.0 {
-                            let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: false, paywall: false)
+                            let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: nil, paywall: false)
                             let _ = updateChatTranslationState(engine: context.engine, peerId: peerId, state: state).start()
                             if !dontTranslateLanguages.contains(fromLang) {
                                 return state

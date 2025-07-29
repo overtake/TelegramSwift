@@ -278,11 +278,13 @@ public struct TableScrollFocus : Equatable {
     }
     let focus:Bool
     let string: String?
+    let innerId: Int32?
     let action:((NSView)->Void)?
-    public init(focus: Bool, string: String? = nil, action: ((NSView)->Void)? = nil) {
+    public init(focus: Bool, string: String? = nil, innerId: Int32? = nil, action: ((NSView)->Void)? = nil) {
         self.focus = focus
         self.action = action
         self.string = string
+        self.innerId = innerId
     }
     
     
@@ -292,11 +294,12 @@ public enum TableScrollState :Equatable {
     case top(id: AnyHashable, innerId: AnyHashable?, animated: Bool, focus: TableScrollFocus, inset: CGFloat); // stableId, animated, focus, inset
     case bottom(id: AnyHashable, innerId: AnyHashable?, animated: Bool, focus: TableScrollFocus, inset: CGFloat); //  stableId, animated, focus, inset
     case center(id: AnyHashable, innerId: AnyHashable?, animated: Bool, focus: TableScrollFocus, inset: CGFloat); //  stableId, animated, focus, inset
-    case saveVisible(TableSavingSide)
+    case saveVisible(TableSavingSide, Bool)
     case none(TableAnimationInterface?);
     case down(Bool);
     case up(Bool);
     case upOffset(Bool, CGFloat);
+    case animate
     
     public static var CenterEmpty: TableScrollState {
         return .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0)
@@ -327,11 +330,11 @@ public extension TableScrollState {
     func focus(action: @escaping(NSView)->Void) -> TableScrollState {
         switch self {
         case let .top(id, innerId, animated, focus, inset):
-            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+            return .top(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, innerId: focus.innerId, action: action), inset: inset)
         case let .bottom(id, innerId, animated, focus, inset):
-            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+            return .bottom(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, innerId: focus.innerId, action: action), inset: inset)
         case let .center(id, innerId, animated, focus, inset):
-            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, action: action), inset: inset)
+            return .center(id: id, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: focus.string, innerId: focus.innerId, action: action), inset: inset)
         default:
             return self
         }
@@ -363,14 +366,14 @@ public extension TableScrollState {
         }
     }
     
-    func text(string: String?) -> TableScrollState {
+    func text(string: String?, innerId _innerId: Int32?) -> TableScrollState {
         switch self {
         case let .top(stableId, innerId, animated, focus, inset):
-            return .top(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+            return .top(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, innerId: _innerId, action: focus.action), inset: inset)
         case let .bottom(stableId, innerId, animated, focus, inset):
-            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, innerId: _innerId, action: focus.action), inset: inset)
         case let .center(stableId, innerId, animated, focus, inset):
-            return .center(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, action: focus.action), inset: inset)
+            return .center(id: stableId, innerId: innerId, animated: animated, focus: .init(focus: focus.focus, string: string, innerId: _innerId, action: focus.action), inset: inset)
         default:
             return self
         }
@@ -393,6 +396,10 @@ public extension TableScrollState {
         switch self {
         case let .none(animation):
             return animation != nil
+        case .animate:
+            return true
+        case let .saveVisible(_, value):
+            return value
         default:
             return false
         }
@@ -411,6 +418,10 @@ public extension TableScrollState {
         case .up(let animated):
             return animated
         case let .upOffset(animated, _):
+            return animated
+        case .animate:
+            return true
+        case let .saveVisible(_, animated):
             return animated
         default:
             return false
@@ -1221,7 +1232,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                 liveScrollStartPosition = nil
                 liveScrollStack.removeAll()
-                self.merge(with: TableUpdateTransition(deleted: [item.index], inserted: [(item.index, item)], updated: [], animated: false, state: .saveVisible(.upper)))
+                self.merge(with: TableUpdateTransition(deleted: [item.index], inserted: [(item.index, item)], updated: [], animated: false, state: .saveVisible(.upper, false)))
                 
                 autohide.hideHandler(true)
             }
@@ -1286,7 +1297,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: clipView, queue: nil, using: { [weak self] _ in
                 CATransaction.begin()
                 if self?.superview != nil {
-                    self?.updateScroll()
+                    DispatchQueue.main.async {
+                        self?.updateScroll()
+                    }
                 }
                 CATransaction.commit()
             })
@@ -1297,6 +1310,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
+    // Primary stick item properties
     private var stickClass:AnyClass?
     private var stickView:TableStickView?
     
@@ -1315,6 +1329,28 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     private var stickHandler:((TableStickItem?)->Void)?
     private var firstTime: Bool = false
+    
+    // Secondary stick item properties
+    private var secondaryStickClass:AnyClass?
+    private var secondaryStickView:TableStickView?
+    
+    public var p_secondaryStickView: NSView? {
+        return secondaryStickView
+    }
+    
+    private var secondaryStickItem:TableStickItem? {
+        didSet {
+            if secondaryStickItem != oldValue {
+                if let secondaryStickHandler = secondaryStickHandler {
+                    secondaryStickHandler(secondaryStickItem)
+                }
+            }
+        }
+    }
+    private var secondaryStickHandler:((TableStickItem?)->Void)?
+    private var secondaryFirstTime: Bool = false
+    
+    // Primary stick item setup
     public func set(stickClass:AnyClass?, visible: Bool = true, handler:@escaping(TableStickItem?)->Void) {
         self.stickClass = stickClass
         self.stickHandler = handler
@@ -1330,7 +1366,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     stickView!.header = true
                     stickView!.set(item: stickItem, animated: false)
                     stickView!.updateLayout(size: stickView!.frame.size, transition: .immediate)
-                 //   tableView.addSubview(stickView!)
                 }
             }
             
@@ -1341,8 +1376,470 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             stickView = nil
             stickItem = nil
         }
-        
     }
+    
+    // Secondary stick item setup
+    public func setSecondary(stickClass:AnyClass?, visible: Bool = true, handler:@escaping(TableStickItem?)->Void) {
+        self.secondaryStickClass = stickClass
+        self.secondaryStickHandler = handler
+        self.secondaryFirstTime = true
+        if let stickClass = stickClass as? TableStickItem.Type {
+            if secondaryStickView == nil {
+                let stickItem:TableStickItem = stickClass.init(frame.size)
+                stickItem.table = self
+                self.secondaryStickItem = stickItem
+                if visible {
+                    let vz = stickItem.viewClass() as! TableStickView.Type
+                    secondaryStickView = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), stickItem.heightValue))
+                    secondaryStickView!.header = true
+                    secondaryStickView!.set(item: stickItem, animated: false)
+                    secondaryStickView!.updateLayout(size: secondaryStickView!.frame.size, transition: .immediate)
+                }
+            }
+            
+            updateStickAfterScroll(false)
+            
+        } else {
+            secondaryStickView?.removeFromSuperview()
+            secondaryStickView = nil
+            secondaryStickItem = nil
+        }
+    }
+    
+    public func updateStickAfterScroll(_ animated: Bool) -> Void {
+        updateSecondaryStickAfterScroll(animated: animated)
+        updatePrimaryStickAfterScroll(animated: animated)
+    }
+    
+    private func updatePrimaryStickAfterScroll(animated: Bool) {
+        
+        let visibleRect = self.tableView.visibleRect
+        
+        var secondaryOffset: CGFloat = 0
+        if let secondaryStickView = secondaryStickView, !secondaryStickView.isHidden {
+            secondaryOffset = secondaryStickView.frame.height
+        }
+        
+        
+        let range = self.tableView.rows(in: NSMakeRect(visibleRect.minX, visibleRect.minY, visibleRect.width, visibleRect.height - stickTopInset - secondaryOffset))
+
+        
+        if let stickClass = stickClass, !updating {
+            let flipped = tableView.isFlipped
+            
+            var index:Int = flipped ? range.location : range.location + range.length - 1
+            
+          
+            let scrollInset = self.documentOffset.y - stickTopInset + (flipped ? 0 : frame.height)
+            var item:TableRowItem? = optionalItem(at: index)
+            
+            if !flipped {
+                while let s = item, !s.isKind(of: stickClass) {
+                    index += 1
+                    item = self.optionalItem(at: index)
+                }
+            } else {
+                while let s = item, !s.isKind(of: stickClass) {
+                    index -= 1
+                    item = self.optionalItem(at: index)
+                }
+            }
+            
+            if item == nil && !flipped {
+                index = range.location + range.length
+                while item == nil && index < count {
+                    if let s = self.optionalItem(at: index), s.isKind(of: stickClass) {
+                        item = s
+                    }
+                    index += 1
+                }
+            }
+            
+            if let someItem = item as? TableStickItem {
+                var currentStick:TableStickItem?
+                
+                if !flipped {
+                    for index in stride(from: someItem.index - 1, to: -1, by: -1) {
+                        let item = self.optionalItem(at: index)
+                        if let item = item, item.isKind(of: stickClass) {
+                            currentStick = item as? TableStickItem
+                            break
+                        }
+                    }
+                } else {
+                    for index in someItem.index + 1 ..< count {
+                        let item = self.optionalItem(at: index)
+                        if let item = item, item.isKind(of: stickClass) {
+                            currentStick = item as? TableStickItem
+                            break
+                        }
+                    }
+                }
+                
+                if someItem.singletonItem {
+                    currentStick = someItem
+                }
+                
+                if stickView?.item != item {
+                    stickView?.set(item: someItem, animated: animated)
+                    stickView?.updateIsVisible(!firstTime, animated: animated)
+                }
+                
+                if let item = stickItem {
+                    if let view = (viewNecessary(at: item.index) as? TableStickView) {
+                        view.updateIsVisible((!firstTime || !view.header), animated: animated)
+                    }
+                }
+                
+                stickItem = currentStick ?? someItem
+                
+             
+                
+                stickView?.setFrameSize(frame.width, someItem.heightValue)
+                let itemRect:NSRect = someItem.view?.visibleRect ?? NSZeroRect
+                
+                
+                
+                if let item = stickItem, item.isKind(of: stickClass), let stickView = stickView {
+                    let rect:NSRect = self.rectOf(item: item)
+                    let dif:CGFloat
+                    if currentStick != nil {
+                        dif = min(scrollInset - rect.maxY, item.heightValue)
+                    } else {
+                        dif = item.heightValue
+                    }
+                    var yTopOffset:CGFloat
+                    if !flipped {
+                        yTopOffset = min((scrollInset - rect.maxY - secondaryOffset) - rect.height, 0)
+                    } else {
+                        yTopOffset = min(-(rect.height + (scrollInset - rect.minY - secondaryOffset)), 0)
+                    }
+                    if yTopOffset <= -rect.height {
+                        yTopOffset = 0
+                    }
+                    if scrollInset <= 0, item.singletonItem {
+                        yTopOffset = abs(scrollInset)
+                    }
+                                        
+                    let updatedPoint = NSMakePoint(0, yTopOffset + stickTopInset + secondaryOffset)
+                    
+                    
+                    var maybeAnimated: Bool = someItem.index == list.count - 1 && updatedPoint.y == secondaryOffset && stickView.frame.minY == 0
+                     
+                    if someItem.index == list.count - 1, secondaryOffset == 0 {
+                        maybeAnimated = true
+                    }
+                    
+                    do {
+                        let maybeIndex: Int?
+                        
+                        if maybeAnimated {
+                            maybeIndex = nil
+                        } else {
+                            maybeIndex = subviews.firstIndex(where: { $0.className == secondaryStickView?.className })
+                        }
+
+                        let scrollerIndex = maybeIndex ?? subviews.firstIndex(where: { $0 is NSScroller || $0.className == secondaryStickClass.flatMap(NSStringFromClass) })
+                        
+                        let stickViewIndex = subviews.firstIndex(where: { $0.className == NSStringFromClass(stickClass) })
+                        if let scrollerIndex = scrollerIndex, stickViewIndex == nil || stickViewIndex! > scrollerIndex {
+                            addSubview(stickView, positioned: .below, relativeTo: subviews[scrollerIndex])
+                        }
+                    }
+
+                    if stickView.frame.origin != updatedPoint {
+                        stickView._change(pos: updatedPoint, animated: animated || maybeAnimated)
+                    }
+                    stickView.header = abs(dif) <= item.heightValue
+                    
+                    if !firstTime {
+                        let rows:[Int] = [tableView.row(at: NSMakePoint(0, min(scrollInset - stickView.frame.height, documentSize.height - stickView.frame.height))), tableView.row(at: NSMakePoint(0, scrollInset))]
+                        var applied: Bool = false
+                        for row in rows {
+                            let row = min(max(0, row), list.count - 1)
+                            if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView, dateItem.className == NSStringFromClass(stickClass) {
+                                if documentOffset.y > (documentSize.height - frame.height) && !tableView.isFlipped {
+                                    yTopOffset = -1
+                                }
+                                view.updateIsVisible(yTopOffset < 0 , animated: false)
+                                applied = true
+                            }
+                        }
+                        if !applied {
+                            self.enumerateVisibleViews(with: { view in
+                                if stickView.className == view.className {
+                                    (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                                }
+                            })
+                        }
+                        
+                    }
+                    
+                    if previousStickMinY == nil {
+                        previousStickMinY = documentOffset.y
+                    }
+                    
+                    if previousStickMinY != documentOffset.y {
+                        stickView.isHidden = false
+                        previousStickMinY = documentOffset.y
+                        if !animated || stickView.layer?.opacity != 0 {
+                            stickView.updateIsVisible(true, animated: true)
+                            firstTime = false
+                        }
+                    }
+                    if tableView.isFlipped {
+                        stickView.isHidden = (documentOffset.y <= 0 && !item.singletonItem)
+                    } else {
+                        stickView.isHidden = documentSize.height <= frame.height || documentOffset.y > (documentSize.height - frame.height)
+                    }
+                    
+                    stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
+                        
+                        if itemRect.height == 0, let stickView = stickView {
+                            stickView.updateIsVisible(false, animated: true)
+                        }
+                    }))
+                    
+                }
+                
+            } else {
+                if index == -1 {
+                    if animated, let stickView = self.stickView {
+                        stickView._change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
+                            stickView?.removeFromSuperview()
+                        })
+                    } else {
+                        stickView?.removeFromSuperview()
+                    }
+                } else {
+                    stickView?.setFrameOrigin(0, 0)
+                    stickView?.header = true
+                    stickView?.isHidden = true
+                }
+                
+                self.enumerateViews(with: { view in
+                    if stickView?.className == view.className {
+                        (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                    }
+                    return true
+                })
+            }
+        }
+    }
+    
+    private func updateSecondaryStickAfterScroll(animated: Bool) {
+        
+        let visibleRect = self.tableView.visibleRect
+        let range = self.tableView.rows(in: NSMakeRect(visibleRect.minX, visibleRect.minY, visibleRect.width, visibleRect.height - stickTopInset))
+        
+        if let secondaryStickClass = secondaryStickClass, !updating {
+            let flipped = tableView.isFlipped
+            
+            var index:Int = flipped ? range.location : range.location + range.length - 1
+            
+            let scrollInset = self.documentOffset.y - stickTopInset + (flipped ? 0 : frame.height)
+            var item:TableRowItem? = optionalItem(at: index)
+            
+            if !flipped {
+                while let s = item, !s.isKind(of: secondaryStickClass) {
+                    index += 1
+                    item = self.optionalItem(at: index)
+                }
+            } else {
+                while let s = item, !s.isKind(of: secondaryStickClass) {
+                    index -= 1
+                    item = self.optionalItem(at: index)
+                }
+            }
+            
+            if item == nil && !flipped {
+                index = range.location + range.length
+                while item == nil && index < count {
+                    if let s = self.optionalItem(at: index), s.isKind(of: secondaryStickClass) {
+                        item = s
+                    }
+                    index += 1
+                }
+            }
+            
+            if let someItem = item as? TableStickItem {
+                var currentStick:TableStickItem?
+                
+                if !flipped {
+                    for index in stride(from: someItem.index - 1, to: -1, by: -1) {
+                        let item = self.optionalItem(at: index)
+                        if let item = item, item.isKind(of: secondaryStickClass) {
+                            currentStick = item as? TableStickItem
+                            break
+                        }
+                    }
+                } else {
+                    for index in someItem.index + 1 ..< count {
+                        let item = self.optionalItem(at: index)
+                        if let item = item, item.isKind(of: secondaryStickClass) {
+                            currentStick = item as? TableStickItem
+                            break
+                        }
+                    }
+                }
+                
+                if someItem.singletonItem {
+                    currentStick = someItem
+                }
+                
+                if secondaryStickView?.item != item {
+                    secondaryStickView?.set(item: someItem, animated: animated)
+                    secondaryStickView?.updateIsVisible(!secondaryFirstTime, animated: animated)
+                }
+                
+                if let item = secondaryStickItem {
+                    if let view = (viewNecessary(at: item.index) as? TableStickView) {
+                        view.updateIsVisible((!secondaryFirstTime || !view.header), animated: animated)
+                    }
+                }
+                
+                secondaryStickItem = currentStick ?? someItem
+                
+                if let secondaryStickView = secondaryStickView {
+                    let scrollerIndex = subviews.firstIndex(where: { $0 is NSScroller })
+                    let stickViewIndex = subviews.firstIndex(where: { $0.className == NSStringFromClass(secondaryStickClass) })
+                    if let scrollerIndex = scrollerIndex, stickViewIndex == nil || stickViewIndex! > scrollerIndex {
+                        addSubview(secondaryStickView, positioned: .below, relativeTo: subviews[scrollerIndex])
+                    }
+                }
+                
+                secondaryStickView?.setFrameSize(frame.width, someItem.heightValue)
+                let itemRect:NSRect = someItem.view?.visibleRect ?? NSZeroRect
+                
+                if let item = secondaryStickItem, item.isKind(of: secondaryStickClass), let secondaryStickView = secondaryStickView {
+                    let rect:NSRect = self.rectOf(item: item)
+                    let dif:CGFloat
+                    if currentStick != nil {
+                        dif = min(scrollInset - rect.maxY, item.heightValue)
+                    } else {
+                        dif = item.heightValue
+                    }
+                    var yTopOffset:CGFloat
+                    if !flipped {
+                        yTopOffset = min((scrollInset - rect.maxY) - rect.height, 0)
+                    } else {
+                        yTopOffset = min(-(rect.height + (scrollInset - rect.minY)), 0)
+                    }
+                    if yTopOffset <= -rect.height {
+                        yTopOffset = 0
+                    }
+                    if scrollInset <= 0, item.singletonItem {
+                        yTopOffset = abs(scrollInset)
+                    }
+                                        
+                    // Position secondary stick view at the top
+                    let updatedPoint = NSMakePoint(0, yTopOffset + stickTopInset)
+                    if secondaryStickView.frame.origin != updatedPoint {
+                        secondaryStickView._change(pos: updatedPoint, animated: animated)
+                    }
+                    secondaryStickView.header = abs(dif) <= item.heightValue
+                    
+                    if !secondaryFirstTime {
+                        let rows:[Int] = [tableView.row(at: NSMakePoint(0, min(scrollInset - secondaryStickView.frame.height, documentSize.height - secondaryStickView.frame.height))), tableView.row(at: NSMakePoint(0, scrollInset))]
+                        var applied: Bool = false
+                        for row in rows {
+                            let row = min(max(0, row), list.count - 1)
+                            if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView, dateItem.className == NSStringFromClass(secondaryStickClass) {
+                                if documentOffset.y > (documentSize.height - frame.height) && !tableView.isFlipped {
+                                    yTopOffset = -1
+                                }
+                                view.updateIsVisible(yTopOffset < 0 , animated: false)
+                                applied = true
+                            }
+                        }
+                        if !applied {
+                            self.enumerateVisibleViews(with: { view in
+                                if secondaryStickView.className == view.className {
+                                    (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                                }
+                            })
+                        }
+                    }
+                    
+                    if secondaryPreviousStickMinY == nil {
+                        secondaryPreviousStickMinY = documentOffset.y
+                    }
+                                        
+                    if secondaryPreviousStickMinY != documentOffset.y {
+                        secondaryStickView.isHidden = false
+                        secondaryPreviousStickMinY = documentOffset.y
+                        if !animated || secondaryStickView.layer?.opacity != 0 {
+                            secondaryStickView.updateIsVisible(true, animated: true)
+                            secondaryFirstTime = false
+                        }
+                    }
+                    if tableView.isFlipped {
+                        secondaryStickView.isHidden = (documentOffset.y <= 0 && !item.singletonItem)
+                    } else {
+                        secondaryStickView.isHidden = documentSize.height <= frame.height || documentOffset.y > (documentSize.height - frame.height)
+                    }
+                    
+                    // Ensure primary stick is always positioned below secondary
+                    if let stickView = stickView, !stickView.isHidden {
+                        let primaryYPos = stickView.frame.origin.y
+                        let secondaryYMaxPos = secondaryStickView.frame.origin.y + secondaryStickView.frame.height
+                        
+                        if primaryYPos < secondaryYMaxPos {
+                          //  stickView._change(pos: NSMakePoint(0, secondaryYMaxPos), animated: animated)
+                        }
+                    }
+                    
+//                    // Set timeout for secondary stick
+//                    secondaryStickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak secondaryStickView] in
+//                        if itemRect.height == 0, let secondaryStickView = secondaryStickView {
+//                            secondaryStickView.updateIsVisible(false, animated: true)
+//                        }
+//                    }))
+                }
+                
+            } else {
+                if index == -1 {
+                    if animated, let secondaryStickView = self.secondaryStickView {
+                        secondaryStickView._change(pos: NSMakePoint(0, -secondaryStickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak secondaryStickView] _ in
+                            secondaryStickView?.removeFromSuperview()
+                        })
+                    } else {
+                        secondaryStickView?.removeFromSuperview()
+                    }
+                } else {
+                    secondaryStickView?.setFrameOrigin(0, 0)
+                    secondaryStickView?.header = true
+                    secondaryStickView?.isHidden = true
+                }
+                
+                self.enumerateViews(with: { view in
+                    if secondaryStickView?.className == view.className {
+                        (view as? TableStickView)?.updateIsVisible(true, animated: false)
+                    }
+                    return true
+                })
+            }
+        }
+    }
+    
+    private let stickTimeoutDisposable = MetaDisposable()
+    private var secondaryStickTimeoutDisposable = MetaDisposable()
+    
+    private var previousStickMinY: CGFloat? = nil
+    private var secondaryPreviousStickMinY: CGFloat? = nil
+    
+    private var stickTopInset: CGFloat = 0
+    public func updateStickInset(_ inset: CGFloat, animated: Bool) {
+        if stickTopInset != inset {
+            stickTopInset = inset
+            updateStickAfterScroll(animated)
+        }
+    }
+    
+    
+    // Add a disposable for the secondary stick view timeout
+    
+
     
     public func optionalItem(at:Int) -> TableRowItem? {
         return at < count && at >= 0 ? self.item(at: at) : nil
@@ -1450,211 +1947,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
 
     
-    private let stickTimeoutDisposable = MetaDisposable()
-    private var previousStickMinY: CGFloat? = nil
+  
     
-    private var stickTopInset: CGFloat = 0
-    public func updateStickInset(_ inset: CGFloat, animated: Bool) {
-        if stickTopInset != inset {
-            stickTopInset = inset
-            updateStickAfterScroll(animated)
-        }
-    }
-    
-    
-    public func updateStickAfterScroll(_ animated: Bool) -> Void {
-        let visibleRect = self.tableView.visibleRect
-        let range = self.tableView.rows(in: NSMakeRect(visibleRect.minX, visibleRect.minY, visibleRect.width, visibleRect.height - stickTopInset))
-        
-        if let stickClass = stickClass, !updating {
-         //   if documentSize.height > frame.height {
-                
-                let flipped = tableView.isFlipped
-
-                
-                var index:Int = flipped ? range.location : range.location + range.length - 1
-            
-            
-                
-                let scrollInset = self.documentOffset.y - stickTopInset + (flipped ? 0 : frame.height)
-                var item:TableRowItem? = optionalItem(at: index)
-                
-                if !flipped {
-                    while let s = item, !s.isKind(of: stickClass) {
-                        index += 1
-                        item = self.optionalItem(at: index)
-                    }
-                } else {
-                    while let s = item, !s.isKind(of: stickClass) {
-                        index -= 1
-                        item = self.optionalItem(at: index)
-                    }
-                }
-               
-                
-                if item == nil && !flipped {
-                    index = range.location + range.length
-                    while item == nil && index < count {
-                        if let s = self.optionalItem(at: index), s.isKind(of: stickClass) {
-                            item = s
-                        }
-                        index += 1
-                    }
-                }
-                
-                
-                if let someItem = item as? TableStickItem {
-                    var currentStick:TableStickItem?
-                    
-                    if !flipped {
-                        for index in stride(from: someItem.index - 1, to: -1, by: -1) {
-                            let item = self.optionalItem(at: index)
-                            if let item = item, item.isKind(of: stickClass) {
-                                currentStick = item as? TableStickItem
-                                break
-                            }
-                        }
-                    } else {
-                        for index in someItem.index + 1 ..< count {
-                            let item = self.optionalItem(at: index)
-                            if let item = item, item.isKind(of: stickClass) {
-                                currentStick = item as? TableStickItem
-                                break
-                            }
-                        }
-                    }
-                    
-                    if someItem.singletonItem {
-                        currentStick = someItem
-                    }
-                    
-                    if stickView?.item != item {
-                        stickView?.set(item: someItem, animated: animated)
-                        stickView?.updateIsVisible(!firstTime, animated: animated)
-                    }
-                    
-                    if let item = stickItem {
-                        if let view = (viewNecessary(at: item.index) as? TableStickView) {
-                            view.updateIsVisible((!firstTime || !view.header), animated: animated)
-                        }
-                    }
-                    
-                    stickItem = currentStick ?? someItem
-                    
-                    if let stickView = stickView {
-                        let scrollerIndex = subviews.firstIndex(where: { $0 is NSScroller })
-                        let stickViewIndex = subviews.firstIndex(where: { $0 is TableStickView })
-                        if let scrollerIndex = scrollerIndex, stickViewIndex == nil || stickViewIndex! > scrollerIndex {
-                            addSubview(stickView, positioned: .below, relativeTo: subviews[scrollerIndex])
-                        }
-                    }
-                    
-                    stickView?.setFrameSize(frame.width, someItem.heightValue)
-                    let itemRect:NSRect = someItem.view?.visibleRect ?? NSZeroRect
-
-                    if let item = stickItem, item.isKind(of: stickClass), let stickView = stickView {
-                        let rect:NSRect = self.rectOf(item: item)
-                        let dif:CGFloat
-                        if currentStick != nil {
-                            dif = min(scrollInset - rect.maxY, item.heightValue)
-                        } else {
-                            dif = item.heightValue
-                        }
-                        var yTopOffset:CGFloat
-                        if !flipped {
-                            yTopOffset = min((scrollInset - rect.maxY) - rect.height, 0)
-                        } else {
-                            yTopOffset = min(-(rect.height + (scrollInset - rect.minY)), 0)
-                        }
-                        if yTopOffset <= -rect.height {
-                            yTopOffset = 0
-                        }
-                        if scrollInset <= 0, item.singletonItem {
-                            yTopOffset = abs(scrollInset)
-                        }
-                        
-                        let updatedPoint = NSMakePoint(0, yTopOffset + stickTopInset)
-                        if stickView.frame.origin != updatedPoint {
-                            stickView._change(pos: updatedPoint, animated: animated)
-                        }
-                        stickView.header = abs(dif) <= item.heightValue
-                        
-                        if !firstTime {
-                            let rows:[Int] = [tableView.row(at: NSMakePoint(0, min(scrollInset - stickView.frame.height, documentSize.height - stickView.frame.height))), tableView.row(at: NSMakePoint(0, scrollInset))]
-                            var applied: Bool = false
-                            for row in rows {
-                                let row = min(max(0, row), list.count - 1)
-                                if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
-                                    if documentOffset.y > (documentSize.height - frame.height) && !tableView.isFlipped {
-                                        yTopOffset = -1
-                                    }
-                                    view.updateIsVisible(yTopOffset < 0 , animated: false)
-                                    applied = true
-                                }
-                            }
-                            if !applied {
-                                self.enumerateVisibleViews(with: { view in
-                                   (view as? TableStickView)?.updateIsVisible(true, animated: false)
-                                })
-                            }
-                            
-                        }
-                        
-                        
-                        if previousStickMinY == nil {
-                            previousStickMinY = documentOffset.y
-                        }
-                        
-                       
-                        
-                        if previousStickMinY != documentOffset.y {
-                            stickView.isHidden = false
-                            previousStickMinY = documentOffset.y
-                            if !animated || stickView.layer?.opacity != 0 {
-                                stickView.updateIsVisible(true, animated: true)
-                                firstTime = false
-                            }
-                        }
-                        if tableView.isFlipped {
-                            stickView.isHidden = (documentOffset.y <= 0 && !item.singletonItem)// && !stickView.isAlwaysUp
-                        } else {
-                            stickView.isHidden = documentSize.height <= frame.height || documentOffset.y > (documentSize.height - frame.height)
-                        }
-
-                        stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
-                            
-                            if itemRect.height == 0, let stickView = stickView {
-                                stickView.updateIsVisible(false, animated: true)
-                            }
-                        }))
-                        
-                    }
-                    
-                } else  {
-                    if index == -1 {
-                        if animated, let stickView = self.stickView {
-                            stickView._change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
-                                stickView?.removeFromSuperview()
-                            })
-                        } else {
-                            stickView?.removeFromSuperview()
-                        }
-                    } else {
-                        stickView?.setFrameOrigin(0, 0)
-                        stickView?.header = true
-                        stickView?.isHidden = true
-                    }
-                    
-                     self.enumerateViews(with: { view in
-                        (view as? TableStickView)?.updateIsVisible(true, animated: false)
-                        return true
-                     })
-                }
-
-          //  }
-        }
-    }
-
     
     public func resetScrollNotifies() ->Void {
         self.previousScroll = nil
@@ -2905,8 +3199,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
         case .up, .down, .upOffset:
             self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
-        case let .saveVisible(side):
+        case let .saveVisible(side, _):
             saveVisible(side)
+        case .animate:
+            break
         }
               
         var nonAnimatedItems: [(Int, TableRowItem)] = []
@@ -2931,7 +3227,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-        
+        listhash.removeAll()
+        for item in list {
+            listhash[item.stableId] = item
+        }
         
         let visible = self.visibleItems()
 
@@ -3030,7 +3329,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         first = false
         performScrollEvent(transition.animated)
-        updateStickAfterScroll(transition.animated)
+        updateStickAfterScroll(transition.animated || (transition.state.animated || transition.state.isNone))
     }
     
     public func updateEmpties(animated: Bool = false) {
@@ -3316,6 +3615,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             fatalError("for scroll to item, you can use only .top, center, .bottom enumeration")
         }
         
+        innerId = innerId ?? focus.innerId.flatMap(AnyHashable.init)
+        
         let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
         let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
 
@@ -3365,8 +3666,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let view = self.viewNecessary(at: item.index)
                 if let view = view, view.visibleRect.height == item.heightValue {
                     if focus.focus {
-                        view.focusAnimation(innerId, text: focus.string)
-                        focus.action?(view.interactableView)
+                        DispatchQueue.main.async {
+                            view.focusAnimation(innerId, text: focus.string)
+                            focus.action?(view.interactableView)
+                        }
                     }
                     completion(true)
                     return
@@ -3427,8 +3730,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         } else {
             if let item = item  {
                 if focus.focus, let view = viewNecessary(at: item.index) {
-                    view.focusAnimation(innerId, text: focus.string)
-                    focus.action?(view.interactableView)
+                    DispatchQueue.main.async {
+                        view.focusAnimation(innerId, text: focus.string)
+                        focus.action?(view.interactableView)
+                    }
                 }
                 completion(true)
             } else {
@@ -3542,6 +3847,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     deinit {
         mergeDisposable.dispose()
         stickTimeoutDisposable.dispose()
+        secondaryStickTimeoutDisposable.dispose()
     }
     
     

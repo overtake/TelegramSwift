@@ -271,6 +271,62 @@ struct UIChatFrozenAction : UIChatListTextAction {
 }
 
 
+struct UICustomLinkAction : UIChatListTextAction {
+    var text: NSAttributedString
+    
+    var info: NSAttributedString
+    
+    func action() {
+        let context = self.context
+        execute(inapp: inApp(for: self.url.nsstring, context: context, openInfo: { peerId, _, messageId, action in
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: messageId), initialAction: action))
+        }))
+    }
+    
+    func dismiss() {
+        _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: self.id).start()
+    }
+    
+    func isEqual(_ rhs: UIChatListTextAction) -> Bool {
+        if let _ = rhs as? UICustomLinkAction {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private let context: AccountContext
+    private let id: String
+    private let url: String
+    var canDismiss: Bool {
+        return true
+    }
+    
+    init(context: AccountContext, id: String, url: String, title: ServerSuggestionInfo.Item.Text, subtitle: ServerSuggestionInfo.Item.Text) {
+        self.context = context
+        self.id = id
+        self.url = url
+               
+        let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: title.entities)], for: title.string, message: nil, context: context, fontSize: .text, openInfo: { peerId, _, messageId, initAction in
+            
+        }, textColor: theme.colors.text, isDark: theme.colors.isDark, bubbled: false).mutableCopy() as! NSMutableAttributedString
+        
+        InlineStickerItem.apply(to: text, associatedMedia: [:], entities: title.entities, isPremium: true)
+        
+        self.text = text
+        
+        let info = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: subtitle.entities)], for: subtitle.string, message: nil, context: context, fontSize: .text, openInfo: { _, _ ,_ , _ in }, textColor: theme.colors.grayText, isDark: theme.colors.isDark, bubbled: false).mutableCopy() as! NSMutableAttributedString
+        
+        InlineStickerItem.apply(to: info, associatedMedia: [:], entities: subtitle.entities, isPremium: true)
+
+        
+        self.info = info
+
+    }
+    
+}
+
+
 
 
 protocol UIChatListTextAction {
@@ -544,7 +600,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         })
         
         let animated = animated
-        let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
+        let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower, false))
         
       
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, grouping: !animated || scrollState != nil, animateVisibleOnly: false, groupInOne: false)
@@ -800,7 +856,7 @@ class ChatListController : PeersListController {
         }, switchOffForum: {
             switch mode {
             case let .forum(peerId, _, _):
-                _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false).start()
+                _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false, displayForumAsTabs: true).start()
             default:
                 break
             }
@@ -896,7 +952,7 @@ class ChatListController : PeersListController {
         } |> mapToSignal { values, dismissed in
             return context.account.postbox.transaction { transaction in
                 var birthdays:[UIChatListBirthday] = []
-                if !dismissed.contains(.todayBirthdays) {
+                if !dismissed.contains(ServerProvidedSuggestion.todayBirthdays.id) {
                     for (key, value) in values {
                         if let peer = transaction.getPeer(key) {
                             birthdays.append(.init(birthday: value, peer: .init(peer)))
@@ -1018,11 +1074,22 @@ class ChatListController : PeersListController {
             }
             
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
+                for suggestion in suggestions {
+                    switch suggestion {
+                    case let .link(id, url, title, subtitle):
+                        additionItems.append(.custom(UICustomLinkAction(context: context, id: id, url: url, title: title, subtitle: subtitle)))
+                    default:
+                        break
+                    }
+                }
+            }
+            
+            if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(.gracePremium) {
                     additionItems.append(.grace(true))
                 }
             }
-            
+                        
             if state.mode == .plain, !update.list.hasLater, state.splitState != .minimisize, state.filterData.filter == .allChats {
                 if suggestions.contains(.setupBirthday), myBirthday == nil {
                     additionItems.append(.birthdays([]))
@@ -1621,7 +1688,7 @@ class ChatListController : PeersListController {
                 strongSelf.didSuggestAutoarchive = true
                 
                 let context = strongSelf.context
-                _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: .autoarchivePopular).startStandalone()
+                _ = context.engine.notices.dismissServerProvidedSuggestion(suggestion: ServerProvidedSuggestion.autoarchivePopular.id).startStandalone()
                 
                 verifyAlert_button(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, ok: strings().alertHideNewChatsOK, cancel: strings().alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
@@ -1984,7 +2051,7 @@ class ChatListController : PeersListController {
             
             if let modalAction = modalAction as? FWDNavigationAction {
                 if item.peerId == context.peerId {
-                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map { $0.id }, context: context, peerId: context.peerId, replyId: nil).start()
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map { $0.id }, context: context, peerId: context.peerId, replyId: nil, threadId: nil).start()
                     _ = showModalSuccess(for: item.context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false

@@ -14,7 +14,7 @@ class SearchEmptyRowItem: GeneralRowItem {
     let isLoading:Bool
     let icon:CGImage
     let text:TextViewLayout?
-    
+    let header: TextViewLayout?
     struct Action {
         var click:()->Void
         var title: String
@@ -24,11 +24,17 @@ class SearchEmptyRowItem: GeneralRowItem {
 
     
     private let _heightValue: CGFloat?
-    init(_ initialSize: NSSize, stableId:AnyHashable, height: CGFloat? = nil, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil, action: Action? = nil) {
+    init(_ initialSize: NSSize, stableId:AnyHashable, height: CGFloat? = nil, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, header: String? = nil, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil, action: Action? = nil) {
         self.isLoading = isLoading
         self.icon = icon
         self.buttonAction = action
         self._heightValue = height
+        if let header = header {
+            self.header = TextViewLayout(.initialize(string: header, color: customTheme?.textColor ?? theme.colors.text, font: .normal(.header)), alignment: .center)
+            self.header?.measure(width: initialSize.width - 60)
+        } else {
+            self.header = nil
+        }
         if let text = text {
             self.text = TextViewLayout(.initialize(string: text, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .normal(.title)), alignment: .center)
             self.text?.measure(width: initialSize.width - 60)
@@ -41,6 +47,7 @@ class SearchEmptyRowItem: GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
         text?.measure(width: width - 60)
+        header?.measure(width: width - 60)
         return success
     }
     
@@ -73,6 +80,7 @@ class SearchEmptyRowItem: GeneralRowItem {
 class SearchEmptyRowView : TableRowView {
     private let imageView:ImageView = ImageView()
     private let textView:TextView = TextView()
+    private var headerView: TextView?
     private let indicator:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 35, 35))
     private var action: TextButton?
     required init(frame frameRect: NSRect) {
@@ -105,11 +113,18 @@ class SearchEmptyRowView : TableRowView {
         imageView.center()
         indicator.center()
         if let item = item as? SearchEmptyRowItem {
+            
             textView.update(item.text)
             textView.center()
             
+            if let headerView {
+                headerView.centerX(y: textView.frame.minY - headerView.frame.height - 10)
+            }
+            
             if let action {
-                action.frame = NSMakeRect(20, textView.frame.maxY + 10, frame.width - 40, 40)
+                var rect = focus(NSMakeSize(min(260, frame.width - 40), 40))
+                rect.origin.y = textView.frame.maxY + 15
+                action.frame = rect
             }
         }
     }
@@ -163,6 +178,23 @@ class SearchEmptyRowView : TableRowView {
                 }, for: .Click)
             }
             
+            if let header = item.header {
+                let current: TextView
+                if let view = headerView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.isSelectable = false
+                    current.userInteractionEnabled = false
+                    addSubview(current)
+                    self.headerView = current
+                }
+                current.update(header)
+                
+            } else if let headerView {
+                performSubviewRemoval(headerView, animated: animated)
+                self.headerView = nil
+            }
             
             self.needsLayout = true
         }

@@ -24,7 +24,7 @@ enum MessageTextMediaViewType {
 
 
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false, todoItemId: Int32? = nil) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
     
     if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
@@ -173,6 +173,17 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             messageText = invoice.title
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
+        case let todo as TelegramMediaTodo:
+            if let todoItemId, let item = todo.items.first(where: { $0.id == todoItemId }) {
+                let completed = todo.completions.contains(where: { $0.id == todoItemId })
+                if completed {
+                    messageText = "✅ \(item.text)"
+                } else {
+                    messageText = "☑️ \(item.text)"
+                }
+            } else {
+                messageText = "☑️ \(todo.text)"
+            }
         case let story as TelegramMediaStory:
             if message.isExpiredStory {
                 if story.isMention {
@@ -242,7 +253,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false, todoItemId: Int32? = nil) -> NSAttributedString {
     
     
     if let draft = draft, !draft.text.isEmpty {
@@ -324,7 +335,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications)
+        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications, todoItemId: todoItemId)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         
@@ -356,6 +367,9 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
             
             if let media = message.media.first as? TelegramMediaPoll, !notifications {
+                InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
+            }
+            if let media = message.media.first as? TelegramMediaTodo, !notifications {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: message.associatedMedia, entities: media.textEntities, isPremium: true, offset: 3)
             }
             
@@ -985,7 +999,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceStarGiftSent(authorName, strings().starListItemCountCountable(Int(gift.generic!.price)))
             }
-        case .starGiftUnique(gift: let gift, isUpgrade: let isUpgrade, isTransferred: let isTransferred, savedToProfile: let savedToProfile, canExportDate: let canExportDate, transferStars: let transferStars, let refunded, let peerId, let senderId, let savedId):
+        case let .starGiftUnique(gift, isUpgrade, isTransferred, savedToProfile, canExportDate, transferStars, refunded, peerId, senderId, savedId, _, _, _):
             
             let authorName = senderId.flatMap { message.peers[$0]?.displayTitle } ?? authorName
             
@@ -1017,7 +1031,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().notificationPaidMessageRefund(authorName, starsString)
             }
-        case .paidMessagesPriceEdited(let stars):
+        case .paidMessagesPriceEdited(let stars, _):
             let starsString = strings().starListItemCountCountable(Int(stars))
             
             if authorId == account.peerId {
@@ -1031,7 +1045,226 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().notificationGroupCallIncoming
             }
+        case let .todoCompletions(completed, incompleted):
+            
+            let todo: Message?
+            if let replyAttribute = message.replyAttribute {
+                todo = message.associatedMessages[replyAttribute.messageId]
+            } else {
+                todo = nil
+            }
+            
+            guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                break
+            }
+            
+            let marked = !completed.isEmpty ? todoMedia.items.filter({ completed.contains($0.id) }) : todoMedia.items.filter({ incompleted.contains($0.id) })
+            
+            let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                var resultString = ""
+                var entities: [MessageTextEntity] = []
+                var offset = 0
 
+                for (index, item) in items.enumerated() {
+                    resultString += "'"
+                    offset += 1
+
+                    for entity in item.entities {
+                        let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                        entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                    }
+
+                    resultString += item.text
+                    offset += item.text.count
+
+                    resultString += "'"
+                    offset += 1
+
+                    if index < items.count - 1 {
+                        resultString += ", "
+                        offset += 2
+                    }
+                }
+
+                return (resultString, entities)
+            }
+
+            var rawString: String
+
+                        
+            if !completed.isEmpty {
+                if authorId == account.peerId {
+                    rawString = strings().chatServiceTodoMarkedDoneYou
+                } else {
+                    rawString = strings().chatServiceTodoMarkedDone
+                }
+            } else if !incompleted.isEmpty {
+                if authorId == account.peerId {
+                    rawString = strings().chatServiceTodoMarkedUndoneYou
+                } else {
+                    rawString = strings().chatServiceTodoMarkedUndone
+                }
+            } else {
+                rawString = ""
+            }
+            
+            if !rawString.isEmpty {
+                
+                let values = makeValues(marked)
+                
+                let valuesRange = rawString.nsstring.range(of: "{values}")
+                if valuesRange.location != NSNotFound {
+                    rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+                }
+                let authorRange = rawString.nsstring.range(of: "{author}")
+                if authorRange.location != NSNotFound {
+                    rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+                }
+                
+                var offset = valuesRange.location
+                if authorRange.location != NSNotFound {
+                    offset += (authorName.length - authorRange.length)
+                }
+                
+                for entity in values.1 {
+                    entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+                }
+            }
+            text = rawString
+        case let .todoAppendTasks(tasks):
+            let todo: Message?
+            if let replyAttribute = message.replyAttribute {
+                todo = message.associatedMessages[replyAttribute.messageId]
+            } else {
+                todo = nil
+            }
+
+            guard let todo, let todoMedia = todo.media.first as? TelegramMediaTodo else {
+                break
+            }
+
+            let makeValues: ([TelegramMediaTodo.Item]) -> (String, [MessageTextEntity]) = { items in
+                var resultString = ""
+                var entities: [MessageTextEntity] = []
+                var offset = 0
+
+                for (index, item) in items.enumerated() {
+                    resultString += "'"
+                    offset += 1
+
+                    for entity in item.entities {
+                        let adjustedRange = (entity.range.lowerBound + offset)..<(entity.range.upperBound + offset)
+                        entities.append(MessageTextEntity(range: adjustedRange, type: entity.type))
+                    }
+
+                    resultString += item.text
+                    offset += item.text.count
+
+                    resultString += "'"
+                    offset += 1
+
+                    if index < items.count - 1 {
+                        resultString += ", "
+                        offset += 2
+                    }
+                }
+
+                return (resultString, entities)
+            }
+
+            var rawString: String
+
+            let isMultiple = tasks.count > 1
+
+            if authorId == account.peerId {
+                rawString = isMultiple ? strings().chatServiceTodoAddedMultiYou : strings().chatServiceTodoAddedYou
+            } else {
+                rawString = isMultiple ? strings().chatServiceTodoAddedMulti : strings().chatServiceTodoAdded
+            }
+
+            let values = makeValues(tasks)
+
+            let valuesRange = rawString.nsstring.range(of: "{values}")
+            if valuesRange.location != NSNotFound {
+                rawString = rawString.nsstring.replacingCharacters(in: valuesRange, with: values.0)
+            }
+
+            let authorRange = rawString.nsstring.range(of: "{author}")
+            if authorRange.location != NSNotFound {
+                rawString = rawString.nsstring.replacingCharacters(in: authorRange, with: authorName)
+            }
+
+            let taskTitle = "'\(todoMedia.text)'"
+            let taskRange = rawString.nsstring.range(of: "{task}")
+            if taskRange.location != NSNotFound {
+                rawString = rawString.nsstring.replacingCharacters(in: taskRange, with: taskTitle)
+            }
+
+            // Adjust offset for text entities
+            var offset = valuesRange.location
+            if authorRange.location != NSNotFound {
+                offset += (authorName.length - authorRange.length)
+            }
+            if taskRange.location != NSNotFound {
+                offset += (taskTitle.length - taskRange.length)
+            }
+
+            for entity in values.1 {
+                entities.append(.init(range: entity.range.lowerBound + offset ..< entity.range.upperBound + offset, type: entity.type))
+            }
+
+            text = rawString
+        case let .suggestedPostApprovalStatus(status):
+            switch status {
+            case .approved:
+                text = strings().chatServiceSuggestPostStatusApproved
+            case .rejected:
+                text = strings().chatServiceSuggestPostStatusRejected
+            }
+        case let .giftTon(currency, amount, cryptoCurrency, cryptoAmount, transactionId):
+            let formatted: String
+            
+            if let cryptoCurrency, let cryptoAmount {
+                formatted = formatCurrencyAmount(cryptoAmount, currency: cryptoCurrency).prettyCurrencyNumberUsd + " " + cryptoCurrency
+            } else {
+                formatted = formatCurrencyAmount(amount, currency: currency)
+            }
+            
+            if authorId == account.peerId {
+                text = strings().chatServicePremiumGiftSentYou(formatted)
+            } else {
+                text = strings().chatServicePremiumGiftSent(authorName, formatted)
+            }
+        case let .suggestedPostSuccess(amount):
+            var isUser = true
+            var channelName: String = ""
+            if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                channelName = peer.title
+                if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                    isUser = false
+                }
+            }
+            let _ = isUser
+            
+            let amountString: String = amount.fullyFormatted
+            text = strings().chatServiceSuggestPostSuccessReceived(channelName, amountString)
+
+        case let .suggestedPostRefund(info):
+            var isUser = true
+            if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+                if peer.isMonoForum, let linkedMonoforumId = peer.linkedMonoforumId, let mainChannel = message.peers[linkedMonoforumId] as? TelegramChannel, mainChannel.hasPermission(.manageDirect) {
+                    isUser = false
+                }
+            }
+            if info.isUserInitiated {
+                if isUser {
+                    text = strings().chatServiceSuggestPostRefundedUser
+                } else {
+                    text = strings().chatServiceSuggestPostRefundedOther
+                }
+            } else {
+                text = strings().chatServiceSuggestPostRefundedDeleted
+            }
         }
     }
     return (text, entities, media)
@@ -1102,7 +1335,19 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
 }
 
 func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false, ignoreActivity: Bool = false) -> PeerStatusStringResult {
-    if let peer = peerViewMainPeer(peerView) {
+    
+    
+    let mainPeer = peerViewMainPeer(peerView)
+    let monoforumPeer = peerViewMonoforumMainPeer(peerView)
+    
+    var effectivePeer: Peer? = mainPeer
+    
+    if let mainPeer = mainPeer as? TelegramChannel, mainPeer.isMonoForum {
+        effectivePeer = monoforumPeer
+
+    }
+    
+    if let peer = effectivePeer {
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {

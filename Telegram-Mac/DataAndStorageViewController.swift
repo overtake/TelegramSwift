@@ -477,6 +477,8 @@ private func entries(state: State, data: DataAndStorageData, proxy: ProxySetting
     }
     entries.append(.proxySettings(sectionId, text, viewType: .singleItem))
     
+    
+    
     if let contentSettingsConfiguration = contentSettingsConfiguration, contentSettingsConfiguration.canAdjustSensitiveContent {
         entries.append(.sectionId(sectionId))
         sectionId += 1
@@ -528,9 +530,17 @@ class DataAndStorageViewController: TableViewController {
 
     }
     
+    private var enableSensitiveContent:(()->Void)? = nil
+    @objc private func enableExternalSensitiveContent() {
+        enableSensitiveContent?()
+    }
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+
         
         let context = self.context
         let initialSize = self.atomicSize
@@ -552,6 +562,28 @@ class DataAndStorageViewController: TableViewController {
           let contentSettingsConfiguration = Promise<ContentSettingsConfiguration?>()
           contentSettingsConfiguration.set(.single(nil)
           |> then(updatedContentSettingsConfiguration))
+        
+        
+        let updateSensitiveContent:(Bool)->Void = { value in
+            let _ = (contentSettingsConfiguration.get()
+            |> take(1)
+            |> deliverOnMainQueue).start(next: { [weak contentSettingsConfiguration] settings in
+                if var settings = settings {
+                    settings.sensitiveContentEnabled = value
+                    contentSettingsConfiguration?.set(.single(settings))
+                }
+            })
+            updateSensitiveContentDisposable.set(updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start())
+            
+            context.contentConfig.sensitiveContentEnabled = true
+
+        }
+        
+        enableSensitiveContent = {
+            updateSensitiveContent(true)
+        }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(enableExternalSensitiveContent), name: NSNotification.Name("external_age_verify"), object: nil)
 
         
         let dataAndStorageDataPromise = Promise<DataAndStorageData>()
@@ -631,24 +663,30 @@ class DataAndStorageViewController: TableViewController {
             pushControllerImpl(controller)
         }, toggleSensitiveContent: { value in
             
-            let update = {
-                let _ = (contentSettingsConfiguration.get()
-                |> take(1)
-                |> deliverOnMainQueue).start(next: { [weak contentSettingsConfiguration] settings in
-                    if var settings = settings {
-                        settings.sensitiveContentEnabled = value
-                        contentSettingsConfiguration?.set(.single(settings))
-                    }
-                })
-                updateSensitiveContentDisposable.set(updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start())
-            }
-            
             if value {
-                verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
-                    update()
-                })
+                
+                let lastAgeVerification = FastSettings.lastAgeVerification
+                
+                if let lastAgeVerification, lastAgeVerification + .day > Date().timeIntervalSince1970 {
+                    showModalText(
+                        for: context.window,
+                        text: strings().dataAndStorageVerifyAgainError(stringForMediumDate(timestamp: Int32(lastAgeVerification + .day)))
+                    )
+                } else {
+                    let need_verification = context.appConfiguration.getBoolValue("need_age_video_verification", orElse: false)
+                    
+                    if need_verification {
+                        showModal(with: VerifyAgeAlertController(context: context), for: context.window)
+                    } else {
+                        verifyAlert(for: context.window, header: strings().dataAndStorageSensitiveContentConfirmHeader, information: strings().dataAndStorageSensitiveContentConfirmText, ok: strings().dataAndStorageSensitiveContentConfirmOk, successHandler: { _ in
+                            updateSensitiveContent(true)
+                        })
+                    }
+                }
+                
+                
             } else {
-                update()
+                updateSensitiveContent(value)
             }
         })
         
@@ -683,6 +721,7 @@ class DataAndStorageViewController: TableViewController {
     
     deinit {
         disposable.dispose()
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func getRightBarViewOnce() -> BarView {

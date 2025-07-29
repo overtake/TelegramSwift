@@ -339,22 +339,24 @@ final class BrowserStateContext {
 
     
     func add(_ recently: WebappRecentlyUsed) {
-        if recently.tabdata.data.canBeRecent {
-            updateState { current in
-                var current = current
-                if let index = current.recentlyUsed.firstIndex(where: { $0.tabdata.unique == recently.tabdata.unique }) {
-                    current.recentlyUsed.move(at: index, to: 0)
-                    current.recentlyUsed[0] = recently
-                } else {
-                    current.recentlyUsed.insert(recently, at: 0)
+        if recently.tabdata.peer?.addressName != context.appConfiguration.getStringValue("verify_age_bot_username", orElse: "") {
+            if recently.tabdata.data.canBeRecent {
+                updateState { current in
+                    var current = current
+                    if let index = current.recentlyUsed.firstIndex(where: { $0.tabdata.unique == recently.tabdata.unique }) {
+                        current.recentlyUsed.move(at: index, to: 0)
+                        current.recentlyUsed[0] = recently
+                    } else {
+                        current.recentlyUsed.insert(recently, at: 0)
+                    }
+                    return current
                 }
-                return current
             }
         }
     }
     func setExternalState(_ unique: BrowserTabData.Unique, external: WebpageModalState) {
         updateState { current in
-            var current = current
+            let current = current
             if let index = current.recentlyUsed.firstIndex(where: { $0.tabdata.unique == unique }) {
                 current.recentlyUsed[index].tabdata.external = external
             }
@@ -397,15 +399,15 @@ final class BrowserStateContext {
             }
 
         }
-        
+        let verify_age_bot = context.appConfiguration.getStringValue("verify_age_bot_username", orElse: "")
+
         
         if let peer = tab.peer {
             
             
             let peerId = peer.id
-            let botData = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotAppSettings(id: peerId)) |> deliverOnMainQueue
             
-            if FastSettings.shouldConfirmWebApp(peerId) {
+            if FastSettings.shouldConfirmWebApp(peerId), peer.addressName != verify_age_bot {
                 
                 let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotPrivacyPolicyUrl(id: peerId)) |> deliverOnMainQueue
                 _ = signal.startStandalone(next: { [weak self] privacyUrl in
@@ -420,7 +422,7 @@ final class BrowserStateContext {
                                                 
                         let data = ModalAlertData(title: nil, info: strings().webAppFirstOpenTerms(privacyUrl), description: nil, ok: strings().botLaunchApp, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
                             return AlertHeaderItem(initialSize, stableId: stableId, presentation: presentation, context: context, peer: peer, info: strings().botMoreAbout, callback: { _ in
-                                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                                 closeAllModals(window: context.window)
                             })
                         }))

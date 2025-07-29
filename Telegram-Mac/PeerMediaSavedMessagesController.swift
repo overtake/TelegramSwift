@@ -228,7 +228,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
         statePromise.set(stateValue.modify (f))
     }
     let location: ChatLocation = .makeSaved(context.peerId, peerId: peerId)
-    let mode: ChatMode = .thread(data: location.threadMessage!, mode: .saved(origin: .init(peerId: peerId, namespace: 0, id: 0)))
+    let mode: ChatMode = .thread(mode: .saved(origin: .init(peerId: peerId, namespace: 0, id: 0)))
     
     let chatInteraction = ChatInteraction(chatLocation: location, context: context, mode: mode, isPeerSavedMessages: true)
     
@@ -242,7 +242,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     chatInteraction.openInfo = { peerId, toChat, postId, action in
         let navigation = context.bindings.rootNavigation()
         if toChat {
-            navigation.push(ChatController(context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action))
+            navigateToChat(navigation: navigation, context: context, chatLocation: .peer(peerId), focusTarget: .init(messageId: postId), initialAction: action)
         } else {
             PeerInfoController.push(navigation: navigation, context: context, peerId: peerId)
         }
@@ -355,7 +355,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
     }
     
     func setInitialLocation() {
-        setLocation(.init(content: .Navigation(index: .upperBound, anchorIndex: .upperBound, count: 100, side: .upper), tag: nil, id: getNextId()))
+        setLocation(.init(content: .Navigation(index: .upperBound, anchorIndex: .upperBound, count: 100, side: .upper), chatLocation: location, tag: nil, id: getNextId()))
     }
     
     let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
@@ -443,7 +443,7 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
                 effectiveEntries = view.entries
             }
             
-            let messages: [ChatHistoryEntry] = messageEntries(effectiveEntries, renderType: theme.bubbled ? .bubble : .list, pollAnswersLoading: state.pollAnswers, groupingPhotos: true, searchState: state.searchMessages?.resultState, chatTheme: state.appearance.presentation, mediaRevealed: state.mediaRevealed, automaticDownload: initialData.autodownloadSettings).reversed()
+            let messages: [ChatHistoryEntry] = messageEntries(effectiveEntries, renderType: theme.bubbled ? .bubble : .list, pollAnswersLoading: state.pollAnswers, groupingPhotos: true, searchState: state.searchMessages?.resultState, chatTheme: state.appearance.presentation, mediaRevealed: state.mediaRevealed, automaticDownload: initialData.autodownloadSettings, contentConfig: context.contentConfig).reversed()
             
             
             let entries = messages.map {
@@ -571,11 +571,11 @@ func PeerMediaSavedMessagesController(context: AccountContext, peerId: PeerId) -
                     break
                 }
                 if let messageIndex = messageIndex {
-                    let location: ChatHistoryLocation = .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 100, side: .lower)
-                    guard location != locationValue?.content else {
+                    let lc: ChatHistoryLocation = .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 100, side: .lower)
+                    guard lc != locationValue?.content else {
                         return
                     }
-                    setLocation(.init(content: location, tag: nil, id: getNextId()))
+                    setLocation(.init(content: lc, chatLocation: location, tag: nil, id: getNextId()))
                 }
             }
         }

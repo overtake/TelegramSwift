@@ -149,7 +149,7 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
         statePromise.set(stateValue.modify (f))
     }
     
-    let view = chatListViewForLocation(chatListLocation: .savedMessagesChats, location: .Initial(0, nil), filter: nil, account: context.account)
+    let view = chatListViewForLocation(chatListLocation: .savedMessagesChats(peerId: context.peerId), location: .Initial(0, nil), filter: nil, account: context.account)
     
     actionsDisposable.add(view.start(next: { view in
         updateState { current in
@@ -161,9 +161,9 @@ func SavedPeersController(context: AccountContext) -> InputDataController {
 
     let arguments = Arguments(context: context, open: { threadId in
         let messageId = makeThreadIdMessageId(peerId: context.peerId, threadId: threadId)
-        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
+        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
         
-        let controller = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: messageId)))
+        let controller = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(mode: .savedMessages(origin: messageId)))
         context.bindings.rootNavigation().push(controller)
     })
     

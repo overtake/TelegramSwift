@@ -229,7 +229,7 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
 public enum ChatListControllerLocation {
     case chatList(groupId: PeerGroupId)
     case forum(peerId: PeerId)
-    case savedMessagesChats
+    case savedMessagesChats(peerId: EnginePeer.Id)
 }
 
 struct ChatListViewUpdate {
@@ -405,15 +405,29 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
             isFirst = false
             return ChatListViewUpdate(list: list, type: type, scroll: nil, removeNextAnimation: false)
         }
-    case .savedMessagesChats:
-        let viewKey: PostboxViewKey = .savedMessagesIndex(peerId: account.peerId)
-        
+    case let .savedMessagesChats(peerId):
+        let viewKey: PostboxViewKey = .savedMessagesIndex(peerId: peerId)
+        let interfaceStateKey: PostboxViewKey = .chatInterfaceState(peerId: peerId)
+
+
         var isFirst = true
-        return account.postbox.combinedView(keys: [viewKey])
+        return account.postbox.combinedView(keys: [viewKey, interfaceStateKey])
         |> map { views -> ChatListViewUpdate in
             guard let view = views.views[viewKey] as? MessageHistorySavedMessagesIndexView else {
                 preconditionFailure()
             }
+            
+            var draft: EngineChatList.Draft?
+            if let interfaceStateView = views.views[interfaceStateKey] as? ChatInterfaceStateView {
+                if let embeddedState = interfaceStateView.value, let _ = embeddedState.overrideChatTimestamp {
+                    if let opaqueState = _internal_decodeStoredChatInterfaceState(state: embeddedState) {
+                        if let text = opaqueState.synchronizeableInputState?.text {
+                            draft = EngineChatList.Draft(text: text, entities: opaqueState.synchronizeableInputState?.entities ?? [])
+                        }
+                    }
+                }
+            }
+
             
             var items: [EngineChatList.Item] = []
             for item in view.items {
@@ -434,9 +448,10 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                     id: .chatList(sourceId),
                     index: .chatList(ChatListIndex(pinningIndex: item.pinnedIndex.flatMap(UInt16.init), messageIndex: mappedMessageIndex)),
                     messages: messages,
-                    readCounters: nil,
+                    readCounters: EnginePeerReadCounters(
+                        incomingReadId: 0, outgoingReadId: 0, count: Int32(item.unreadCount), markedUnread: false),
                     isMuted: false,
-                    draft: nil,
+                    draft: sourceId == account.peerId ? draft : nil,
                     threadData: nil,
                     renderedPeer: EngineRenderedPeer(peer: EnginePeer(sourcePeer)),
                     presence: nil,

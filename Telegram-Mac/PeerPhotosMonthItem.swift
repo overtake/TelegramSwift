@@ -28,6 +28,7 @@ protocol MediaCellLayoutable {
     var hasImmediateData: Bool { get }
     var isSecret: Bool { get }
     var isSpoiler: Bool { get }
+    var isSensitive: Bool { get }
     var id: MessageId { get }
     var peerId: PeerId { get }
 
@@ -65,8 +66,13 @@ struct MediaCellLayoutItem : Equatable, MediaCellLayoutable {
         return self.message.isMediaSpoilered || self.message.containsSecretMedia
     }
     var isSpoiler: Bool {
-        return self.message.isMediaSpoilered
+        return self.message.isMediaSpoilered || self.message.isSensitiveContent(platform: "ios")
     }
+    
+    var isSensitive: Bool {
+        return self.message.isSensitiveContent(platform: "ios") && !context.contentConfig.sensitiveContentEnabled
+    }
+    
     var id: MessageId {
         return self.message.id
     }
@@ -277,7 +283,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
                 self?.chatInteraction.focusMessageId(nil, .init(messageId: message.id, string: nil), .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
             }, itemImage: MenuAnimation.menu_show_message.value))
             
-            if canDeleteMessage(message, account: context.account, mode: .history) {
+            if canDeleteMessage(message, account: context.account, chatLocation: self.chatInteraction.chatLocation, mode: .history) {
                 items.append(ContextSeparatorItem())
                 items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
                    self?.chatInteraction.deleteMessages([message.id])
@@ -544,7 +550,7 @@ class MediaCell : Control {
                 fatalError()
             }
             let imageReference = layout.makeImageReference(image)
-            current.update(isRevealed: false, updated: isUpdated, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false, isSensitive: false, payAmount: nil)
+            current.update(isRevealed: false, updated: isUpdated, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false, isSensitive: layout.isSensitive, payAmount: nil)
             current.frame = layout.frame.size.bounds
         } else {
             if let view = self.inkView {

@@ -328,6 +328,9 @@ private final class StarGiftFilterRowItem : GeneralRowItem {
             case .stars(let int64):
                 attr.append(string: "\(clown_space)\(int64)", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
                 attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+            case .resale:
+                attr.append(string: strings().giftingStarGiftResale, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
             default:
                 break
             }
@@ -453,6 +456,7 @@ private struct State : Equatable {
         case myGifts
         case limited
         case available
+        case resale
         case stars(Int64)
     }
     
@@ -578,6 +582,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return list.filter { $0.stars == stars }
             case .available:
                 return list.filter({ !$0.limited || $0.native.generic?.soldOut == nil })
+            case .resale:
+                return list.filter({ $0.native.generic?.availability?.minResaleStars != nil })
             default:
                 return list
             }
@@ -644,7 +650,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
 //
 
@@ -670,7 +676,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
         statePromise.set(stateValue.modify (f))
     }
     
-    var getController:(()->ViewController?)? = nil
+    var getController:(()->InputDataController?)? = nil
     var close:(()->Void)? = nil
     var window:Window {
         get {
@@ -690,12 +696,16 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     
     let birtday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: peerId))
     
-    let giftsContext = starGiftsContext ?? ProfileGiftsContext(account: context.account, peerId: context.peerId)
+    let giftsContext = ProfileGiftsContext(account: context.account, peerId: context.peerId)
     
     giftsContext.updateFilter(.unique)
     
-    let disallowedGifts = context.account.viewTracker.peerView(peerId, updateData: true) |> map {
-        ($0.cachedData as? CachedUserData)?.disallowedGifts
+    let disallowedGifts: Signal<TelegramDisallowedGifts?, NoError> = context.account.viewTracker.peerView(peerId, updateData: true) |> map { view in
+        if peerId == context.peerId {
+            return nil
+        } else {
+            return (view.cachedData as? CachedUserData)?.disallowedGifts
+        }
     }
     
     
@@ -716,9 +726,10 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             current.disallowedGifts = disallowedGifts ?? []
             current.collectibles = myGifts.filteredGifts
 
+            
             if let gifts {
                 current.starGifts = gifts.compactMap { $0.generic }.map {
-                    .init(media: $0.file, stars: $0.price, limited: $0.availability != nil, native: .generic($0))
+                    .init(media: $0.file, stars: $0.price, limited: $0.availability != nil && $0.availability?.minResaleStars == nil, native: .generic($0))
                 }
                 if birthday?.isEligble == true || isBirthday {
                     current.starGifts = current.starGifts.sorted { gift1, gift2 in
@@ -745,8 +756,15 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                     })
                 }
                 
-                let customFilters: [State.StarGiftFilter] = current.starGifts.compactMap { $0.native.generic }.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
+                var customFilters: [State.StarGiftFilter] = current.starGifts.compactMap { $0.native.generic }.sorted(by: { $0.price < $1.price }).map { $0.price }.uniqueElements.map { .stars($0) }
                 
+                let hasResale = current.starGifts.contains(where: {
+                    $0.native.generic?.availability?.minResaleStars != nil && $0.native.generic?.soldOut != nil
+                })
+                
+                if hasResale {
+                    customFilters.insert(.resale, at: 0)
+                }
                 
                 
                 current.starFilters = [.emptyLeft, .all] + (current.collectibles.isEmpty ? [] : [.myGifts]) + [.limited, .available] + customFilters + [.emptyRight]
@@ -769,6 +787,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }))
     
     
+    actionsDisposable.add(context.engine.payments.keepStarGiftsUpdated().startStrict())
     
 
     let arguments = Arguments(context: context, selectFilter: { filter in
@@ -777,13 +796,33 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
             current.selectedStarFilter = filter
             return current
         }
+        
+        getController?()?.tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_star_filters), innerId: nil, animated: true, focus: .init(focus: false), inset: -50))
+        
     }, executeLink: { link in
         
     }, openGift: { option in
+        
+        if let gift = option.native.generic, gift.flags.contains(.requiresPremium) {
+            if !context.isPremium {
+                prem(with: PremiumBoardingController(context: context, source: .limitedGift(gift)), for: context.window)
+                return
+            } else if let limit = gift.perUserLimit {
+                if limit.remains == 0 {
+                    showModalText(
+                        for: window,
+                        text: strings().giftSendErrorLimitReached(Int(limit.total))
+                    )
+                }
+            }
+        }
+        
         let state = stateValue.with { $0 }
         if let peer = state.peer {
-            if option.native.generic?.availability?.remains == 0 {
-                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(value: 0, nanos: 0), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil), purpose: .unavailableGift), for: context.window)
+            if let gift = option.native.generic, gift.availability?.minResaleStars != nil && gift.soldOut != nil {
+                showModal(with: StarGift_MarketplaceController(context: context, peerId: peer.id, gift: gift), for: window)
+            } else if option.native.generic?.availability?.remains == 0 {
+                showModal(with: Star_TransactionScreen(context: context, fromPeerId: context.peerId, peer: nil, transaction: .init(flags: [.isGift], id: "", count: .init(amount: .init(value: 0, nanos: 0), currency: .stars), date: 0, peer: .unsupported, title: "", description: "", photo: nil, transactionDate: nil, transactionUrl: nil, paidMessageId: nil, giveawayMessageId: nil, media: [], subscriptionPeriod: nil, starGift: option.native, floodskipNumber: nil, starrefCommissionPermille: nil, starrefPeerId: nil, starrefAmount: nil, paidMessageCount: nil, premiumGiftMonths: nil, adsProceedsFromDate: nil, adsProceedsToDate: nil), purpose: .unavailableGift), for: context.window)
             } else {
                 showModal(with: PreviewStarGiftController(context: context, option: .starGift(option: option), peer: peer, disallowedGifts: state.disallowedGifts, starGiftsProfile: starGiftsContext), for: window)
             }
@@ -868,7 +907,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     }
 
     let modalController = InputDataModalController(controller, size: NSMakeSize(380, 0))
-    
+    modalController.fullSizeList = true
     
     
     modalController.getModalTheme = {

@@ -244,8 +244,17 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(SelectColorController(context: context, peer: peer))
     }
     
+    func openPostSuggestions() {
+        pushViewController(SuggestPostController(context: context, peerId: peerId))
+    }
+    
+    func toggleAutoTranslate(value: Bool) {
+        _ = context.engine.peers.toggleAutoTranslation(peerId: peerId, enabled: value).start()
+        //pushViewController(SuggestPostController(context: context, peerId: peerId))
+    }
+    
     func archiveStories() {
-        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true), standalone: true, isArchived: true))
+        self.pushViewController(StoryMediaController(context: context, peerId: peerId, listContext: PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true, folderId: nil), standalone: true, isArchived: true))
     }
     
     func boosts(_ access: GroupAccess) {
@@ -267,6 +276,26 @@ class ChannelInfoArguments : PeerInfoArguments {
                 }
             })
         }
+    }
+    
+    func openBoostInfo() {
+        
+        let context = self.context
+        let targetLevel = PremiumConfiguration.with(appConfiguration: context.appConfiguration).minChannelAutotranslationLevel
+
+        
+        let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = context.account.postbox.loadedPeerWithId(peerId) |> mapToSignal { value in
+            return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                (value, $0, $1)
+            }
+        }
+        _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+            if let value = value, let boosts = value.1 {
+                showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2, infoOnly: true, source: .autotranslation(targetLevel)), for: context.window)
+            } else {
+                alert(for: context.window, info: strings().unknownError)
+            }
+        })
     }
     
     func openRequests() {
@@ -659,6 +688,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
     }
     
+    func open_chat(_ peerId: PeerId) {
+        pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
+    }
+    
     func updateEditingDescriptionText(_ text:String) -> Void {
         updateState { state in
             if let editingState = state.editingState {
@@ -703,6 +736,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, reactionsCount: Int32?, starsAllowed: Bool?, viewType: GeneralViewType)
     case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
+    case postSuggestion(section: ChannelInfoSection, enabled: Bool, amount: StarsAmount?, viewType: GeneralViewType)
+    case autotranslate(section: ChannelInfoSection, peer: PeerEquatable, enabled: Bool, viewType: GeneralViewType)
     case stats(section: ChannelInfoSection, datacenterId: Int32, monetization: Bool, stars: Bool, viewType: GeneralViewType)
     case balance(section: ChannelInfoSection, ton: String?, stars: String?, canSeeTon: Bool, canSeeStars: Bool, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
@@ -735,6 +770,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .reactions(section, text, allowedReactions, availableReactions, reactionsCount, starsAllowed, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, reactionsCount: reactionsCount, starsAllowed: starsAllowed, viewType: viewType)
         case let .color(section, peer, _): return .color(section: section, peer: peer, viewType: viewType)
+        case let .postSuggestion(section, enabled, amount, _): return .postSuggestion(section: section, enabled: enabled, amount: amount, viewType: viewType)
+        case let .autotranslate(section, peer, enabled, _): return .autotranslate(section: section, peer: peer, enabled: enabled, viewType: viewType)
         case let .stats(section, datacenterId, monetization, stars, _): return .stats(section: section, datacenterId: datacenterId, monetization: monetization, stars: stars, viewType: viewType)
         case let .balance(section, ton, stars, canSeeTon, canSeeStars, _): return .balance(section: section, ton: ton, stars: stars, canSeeTon: canSeeTon, canSeeStars: canSeeStars, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
@@ -901,6 +938,18 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .postSuggestion(sectionId, enabled, amount, viewType):
+            if case .postSuggestion(sectionId, enabled, amount, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .autotranslate(sectionId, peer, enabled, viewType):
+            if case .autotranslate(sectionId, peer, enabled, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .stats(sectionId, datacenterId, monetization, stars, viewType):
             if case .stats(sectionId, datacenterId, monetization, stars, viewType) = entry {
                 return true
@@ -996,24 +1045,28 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 16
         case .color:
             return 17
-        case .reactions:
+        case .postSuggestion:
             return 18
-        case .discussion:
+        case .autotranslate:
             return 19
-        case .discussionDesc:
+        case .reactions:
             return 20
-        case .aboutInput:
+        case .discussion:
             return 21
-        case .aboutDesc:
+        case .discussionDesc:
             return 22
-        case .verifiedInfo:
+        case .aboutInput:
             return 23
-        case .report:
+        case .aboutDesc:
             return 24
-        case .leave:
+        case .verifiedInfo:
             return 25
-        case .media:
+        case .report:
             return 26
+        case .leave:
+            return 27
+        case .media:
+            return 28
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -1052,6 +1105,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .reactions(sectionId, _, _, _, _, _, _):
             return sectionId.rawValue
         case let .color(sectionId, _, _):
+            return sectionId.rawValue
+        case let .postSuggestion(sectionId, _, _, _):
+            return sectionId.rawValue
+        case let .autotranslate(sectionId, _, _, _):
             return sectionId.rawValue
         case let .stats(sectionId, _, _, _, _):
             return sectionId.rawValue
@@ -1109,6 +1166,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .reactions(sectionId, _, _, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .color(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .postSuggestion(sectionId, _, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .autotranslate(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .stats(sectionId, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1173,6 +1234,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 attr.insertEmbedded(.embedded(name: "Icon_Verified_Telegram", color: theme.colors.grayIcon, resize: false), for: clown)
             }
+            attr.detectLinks(type: [.Links], color: theme.colors.listGrayText)
+
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: .attributed(attr), viewType: viewType, context: arguments.context)
         case let .userName(_, value, viewType):
             let link = "@\(value[0].username)"
@@ -1245,6 +1308,15 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelAppearance, icon: theme.icons.profile_channel_color, type: .imageContext(generateSettingsMenuPeerColorsLabelIcon(peer: peer.peer, context: arguments.context), ""), viewType: viewType, action: {
                 arguments.openNameColor(peer: peer.peer)
             }, afterNameImage: level == 0 ? generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(1)) : nil)
+        case let .postSuggestion(_, enabled, amount, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDirectMessagesText, icon: NSImage(resource: .iconPeerInfoPostSuggestion).precomposed(flipVertical: true), type: .nextContext(enabled ? strings().peerInfoDirectMessagesOn : strings().peerInfoDirectMessagesOff), viewType: viewType, action: arguments.openPostSuggestions)
+        case let .autotranslate(_, peer, enabled, viewType):
+            
+            let level = (peer.peer as? TelegramChannel)?.approximateBoostLevel ?? 0
+            let targetLevel = PremiumConfiguration.with(appConfiguration: arguments.context.appConfiguration).minChannelAutotranslationLevel
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAutoTranslateMessages, icon: NSImage(resource: .iconAutoTranslate).precomposed(flipVertical: true), type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleAutoTranslate(value: !enabled)
+            }, enabled: level >= targetLevel, disabledAction: arguments.openBoostInfo, afterNameImage: level >= targetLevel ? nil : generateDisclosureActionBoostLevelBadgeImage(text: strings().boostBadgeLevelPLus(Int(targetLevel))))
         case let .stats(_, datacenterId, monetization, stars, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoStatAndBoosts, icon: theme.icons.profile_channel_stats, type: .next, viewType: viewType, action: {
                 arguments.stats(datacenterId, monetization: monetization, stars: stars)
@@ -1282,7 +1354,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, stories: PeerExpiringStoryListContext.State?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, stories: PeerExpiringStoryListContext.State?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: StarsRevenueStatsContextState?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {
@@ -1361,6 +1433,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     
                     block.append(.color(section: .type, peer: PeerEquatable(peer: channel), viewType: .singleItem))
                     
+                    block.append(.postSuggestion(section: .type, enabled: channel.linkedMonoforumId != nil, amount: nil, viewType: .singleItem))
+                    block.append(.autotranslate(section: .type, peer: PeerEquatable(peer: channel), enabled: channel.flags.contains(.autoTranslateEnabled), viewType: .singleItem))
+
                     block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.reactionSettings.knownValue?.allowedReactions, availableReactions: availableReactions, reactionsCount: cachedData?.reactionSettings.knownValue?.maxReactionCount, starsAllowed: cachedData?.reactionSettings.knownValue?.starsAllowed, viewType: .singleItem))
                     
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
@@ -1440,13 +1515,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 entries.append(.stats(section: .manage, datacenterId: cachedData.statsDatacenterId, monetization: cachedData.flags.contains(.canViewRevenue), stars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))
                 
                 
-                let stars: String? = revenueState?.stats?.balances.availableBalance.stringValue
-                let ton: String?
-                if let tonBalance = tonRevenueState?.stats?.balances.availableBalance {
-                    ton = formatCurrencyAmount(tonBalance, currency: TON).prettyCurrencyNumberUsd
-                } else {
-                    ton = nil
-                }
+                let stars: String? = revenueState?.stats?.balances.availableBalance.fullyFormatted
+                let ton: String? = tonRevenueState?.stats?.balances.availableBalance.fullyFormatted
+                
                 
                 if cachedData.flags.contains(.canViewRevenue) || cachedData.flags.contains(.canViewStarsRevenue), stars != nil || ton != nil {
                     entries.append(.balance(section: .manage, ton: ton, stars: stars, canSeeTon: cachedData.flags.contains(.canViewRevenue), canSeeStars: cachedData.flags.contains(.canViewStarsRevenue), viewType: .innerItem))

@@ -258,10 +258,10 @@ class StoryLayoutView : Control {
     }
     
     func restart() {
-        self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
+        self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .playing)))
     }
     
-    func appear(isMuted: Bool) {
+    func appear(isMuted: Bool, volume: Float) {
         self.updateState(.waiting)
         
         if let story = self.story, let context = self.context, let media = self.media {
@@ -289,9 +289,9 @@ class StoryLayoutView : Control {
             
         } else {
             if let current = state.status {
-                self.updateState(.paused(.init(generationTimestamp: current.generationTimestamp, duration: self.duration, dimensions: .zero, timestamp: current.timestamp + (CACurrentMediaTime() - current.generationTimestamp), baseRate: 1, volume: 1, seekId: 0, status: .paused)))
+                self.updateState(.paused(.init(generationTimestamp: current.generationTimestamp, duration: self.duration, dimensions: .zero, timestamp: current.timestamp + (CACurrentMediaTime() - current.generationTimestamp), baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .paused)))
             } else {
-                self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .paused)))
+                self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .paused)))
             }
         }
         
@@ -302,9 +302,9 @@ class StoryLayoutView : Control {
             
         } else {
             if let current = state.status {
-                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: current.timestamp, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
+                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: current.timestamp, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .playing)))
             } else {
-                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
+                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .playing)))
             }
         }
     }
@@ -316,7 +316,7 @@ class StoryLayoutView : Control {
             if let current = state.status {
                 self.updateState(.paused(.init(generationTimestamp: current.generationTimestamp, duration: self.duration, dimensions: .zero, timestamp: current.timestamp + (CACurrentMediaTime() - current.generationTimestamp), baseRate: 1, volume: 1, seekId: 0, status: .paused)))
             } else {
-                self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .paused)))
+                self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .paused)))
             }
         }
         
@@ -329,7 +329,7 @@ class StoryLayoutView : Control {
             if let current = state.status {
                 self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: current.timestamp, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
             } else {
-                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
+                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: 0, status: .playing)))
             }
         }
         
@@ -342,7 +342,9 @@ class StoryLayoutView : Control {
     func unmute() {
         
     }
-    
+    func setVolume(_ volume: Float) {
+        
+    }
     
     static public var size: NSSize = NSMakeSize(9 * 40, 16 * 40)
     
@@ -536,7 +538,7 @@ class StoryVideoView : StoryImageView {
         
         let file = media as! TelegramMediaFile
         let reference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
-        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peerId), userContentType: .video, reference: reference.resourceReference(file.resource), streamable: true, video: true, preferSoftwareDecoding: false, isSeekable: false, enableSound: true, fetchAutomatically: true)
+        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peerId), userContentType: .video, reference: reference.resourceReference(file.resource), streamable: true, video: true, preferSoftwareDecoding: false, isSeekable: false, enableSound: true, volume: FastSettings.volumeStoryRate, fetchAutomatically: true)
                 
         mediaPlayer.attachPlayerView(self.view)
         
@@ -616,6 +618,10 @@ class StoryVideoView : StoryImageView {
     override func unmute() {
         mediaPlayer?.setVolume(1)
     }
+    override func setVolume(_ volume: Float) {
+        mediaPlayer?.setVolume(volume)
+    }
+    
     override func play() {
         super.play()
         mediaPlayer?.play()
@@ -624,9 +630,9 @@ class StoryVideoView : StoryImageView {
         super.pause()
         mediaPlayer?.pause()
     }
-    override func appear(isMuted: Bool) {
-        super.appear(isMuted: isMuted)
-        mediaPlayer?.setVolume(isMuted ? 0 : 1)
+    override func appear(isMuted: Bool, volume: Float) {
+        super.appear(isMuted: isMuted, volume: volume)
+        mediaPlayer?.setVolume(isMuted ? 0 : volume)
     }
     override func disappear() {
         super.disappear()
@@ -654,9 +660,9 @@ class StoryVideoView : StoryImageView {
         }
         switch status.status {
         case .playing:
-            self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: result, baseRate: 1, volume: 1, seekId: nextSeekdId(), status: .playing)))
+            self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: result, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: nextSeekdId(), status: .playing)))
         case .paused:
-            self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: result, baseRate: 1, volume: 1, seekId: nextSeekdId(), status: .paused)))
+            self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: result, baseRate: 1, volume: FastSettings.volumeStoryRate, seekId: nextSeekdId(), status: .paused)))
         case .buffering:
             break
         }

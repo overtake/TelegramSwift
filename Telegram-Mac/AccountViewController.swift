@@ -71,13 +71,14 @@ fileprivate final class AccountInfoArguments {
     let openPremium:(Bool)->Void
     let giftPremium:()->Void
     let stars:()->Void
+    let ton:()->Void
     let addAccount:([AccountWithInfo])->Void
     let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
     let openStory:(StoryInitialIndex?)->Void
     let openWebBot:(AttachMenuBot)->Void
-    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping(Bool)->Void, giftPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void, stars:@escaping()->Void) {
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping(Bool)->Void, giftPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void, stars:@escaping()->Void, ton:@escaping()->Void) {
         self.context = context
         self.storyList = storyList
         self.presentController = presentController
@@ -93,6 +94,7 @@ fileprivate final class AccountInfoArguments {
         self.openStory = openStory
         self.openWebBot = openWebBot
         self.stars = stars
+        self.ton = ton
     }
 }
 
@@ -146,7 +148,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case premium(index: Int, viewType: GeneralViewType)
     case business(index: Int, viewType: GeneralViewType)
     case giftPremium(index: Int, viewType: GeneralViewType)
-    case stars(index: Int, count: Int64, viewType: GeneralViewType)
+    case stars(index: Int, count: StarsAmount, viewType: GeneralViewType)
+    case ton(index: Int, count: StarsAmount, viewType: GeneralViewType)
     case about(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
     case ask(index: Int, viewType: GeneralViewType)
@@ -201,14 +204,16 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(20)
         case .stars:
             return .index(21)
-        case .faq:
+        case .ton:
             return .index(22)
-        case .ask:
+        case .faq:
             return .index(23)
-        case .about:
+        case .ask:
             return .index(24)
+        case .about:
+            return .index(25)
         case let .attach(index, _, _):
-            return .index(25 + index)
+            return .index(26 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -263,6 +268,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .giftPremium(index, _):
             return index
         case let .stars(index, _, _):
+            return index
+        case let .ton(index, _, _):
             return index
         case let .faq(index, _):
             return index
@@ -420,7 +427,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .giftPremium(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsSendGift, icon: theme.icons.settingsGiftPremium, activeIcon: theme.icons.settingsGiftPremium, type: .next, viewType: viewType, action: arguments.giftPremium, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stars(_, stars, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStars, icon: theme.icons.settingsStars, activeIcon: theme.icons.settingsStars, type: .nextContext(stars > 0 ? "\(stars)" : ""), viewType: viewType, action: arguments.stars, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStars, icon: theme.icons.settingsStars, activeIcon: theme.icons.settingsStars, type: .nextContext(stars.value > 0 ? "\(stars.stringValue)" : ""), viewType: viewType, action: arguments.stars, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .ton(_, ton, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsTon, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .nextContext(ton.value > 0 ? "\(ton.string(.ton))" : ""), viewType: viewType, action: arguments.ton, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .faq(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .ask(_, viewType):
@@ -474,7 +483,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?, attachMenuBots: [AttachMenuBot], stars: StarsContext.State?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?, attachMenuBots: [AttachMenuBot], stars: StarsContext.State?, ton: StarsContext.State?) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -635,8 +644,13 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         
         let stars_purchase_blocked = context.appConfiguration.getBoolValue("stars_purchase_blocked", orElse: true)
         
-        if !stars_purchase_blocked, let stars, stars.balance.value > 0 || !stars.transactions.isEmpty  {
-            entries.append(.stars(index: index, count: stars.balance.value, viewType: .singleItem))
+        if !stars_purchase_blocked, let stars  {
+            entries.append(.stars(index: index, count: stars.balance, viewType: .singleItem))
+            index += 1
+        }
+        
+        if let ton, ton.balance.value > 0 || !ton.transactions.isEmpty  {
+            entries.append(.ton(index: index, count: ton.balance, viewType: .singleItem))
             index += 1
         }
 
@@ -931,7 +945,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }
         
         
-        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), presentController: { [weak self] controller, main in
+        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false, folderId: nil), presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.layout else {return}
             if main {
@@ -997,6 +1011,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             openWebBot(bot, context: context)
         }, stars: {
             showModal(with: Star_ListScreen(context: context, source: .account), for: context.window)
+        }, ton: {
+            showModal(with: Star_ListScreen(context: context, currency: .ton, source: .account), for: context.window)
         })
         
         self.arguments = arguments
@@ -1057,8 +1073,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }))
         
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats, acceptBots.get(), context.starsContext.state) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats, attachMenuBots, stars -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats, attachMenuBots: attachMenuBots, stars: stars).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats, acceptBots.get(), context.starsContext.state, context.tonContext.state) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats, attachMenuBots, stars, ton -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats, attachMenuBots: attachMenuBots, stars: stars, ton: ton).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -1192,6 +1208,9 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             }
             return .invokeNext
         }, with: self, for: .Escape, priority:.low)
+        
+        context.starsContext.load(force: true)
+        context.tonContext.load(force: true)
     }
     
     override func viewWillDisappear(_ animated: Bool) {

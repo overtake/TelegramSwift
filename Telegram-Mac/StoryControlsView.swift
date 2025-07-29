@@ -203,6 +203,15 @@ final class StoryControlsView : Control {
             }
         }, for: .Click)
         
+        muted.contextMenu = { [weak self] in
+            let menu = ContextMenu()
+            menu.name = "volume"
+            menu.addItem(SliderContextMenuItem(volume: CGFloat(FastSettings.volumeStoryRate), minValue: 0, maxValue: 1.0, midValue: 0.5, drawable: MenuAnimation.menu_speaker, drawable_muted: MenuAnimation.menu_speaker_muted, { value, _ in
+                self?.arguments?.interaction.setVolume(Float(value))
+            }))
+            return menu
+        }
+        
         more.contextMenu = { [weak self] in
             if let story = self?.story, let arguments = self?.arguments {
                 return arguments.storyContextMenu(story)
@@ -240,14 +249,14 @@ final class StoryControlsView : Control {
         return arguments.interaction.hasNoSound(story.storyItem)
     }
     
-    func updateMuted(isMuted: Bool) {
+    func updateMuted(isMuted: Bool, volume: Float) {
         guard let story = self.story, let arguments = self.arguments else {
             return
         }
         if arguments.interaction.hasNoSound(story.storyItem) {
             muted.set(image: cant_unmute, for: .Normal)
         } else {
-            muted.set(image: isMuted ? muted_image : unmuted_image, for: .Normal)
+            muted.set(image: isMuted || volume == 0 ? muted_image : unmuted_image, for: .Normal)
         }
     }
     
@@ -355,7 +364,7 @@ final class StoryControlsView : Control {
         if hasNoSound {
             muted.set(image: cant_unmute, for: .Normal)
         } else {
-            muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
+            muted.set(image: arguments.interaction.presentation.isMuted || arguments.interaction.presentation.volume == 0 ? muted_image : unmuted_image, for: .Normal)
         }
         muted.isHidden = !arguments.interaction.canBeMuted(story.storyItem)
         more.isHidden = context.peerId == groupId || peer.isBot

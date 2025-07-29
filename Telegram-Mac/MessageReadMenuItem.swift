@@ -662,15 +662,39 @@ extension ContextMenuItem {
         
         if peer.id == account.peerId, selfAsSaved {
             let icon = theme.icons.searchSaved
-            signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
+            signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil), bubble: false) |> deliverOnMainQueue |> map { ($0, true) }
         } else {
             signal = peerAvatarImage(account: account, photo: source, displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
         }
-        _ = signal.start(next: { [weak item] image, _ in
+        item.contextObject = signal.start(next: { [weak item] image, _ in
             if let image = image {
                 item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
             }
         })
+    }
+    
+    static func makeEmoji(_ item: ContextMenuItem, context: AccountContext, file: TelegramMediaFile) {
+     
+        let size = NSMakeSize(18, 18)
+        
+        let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+        
+        let signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+
+        let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: aspectSize, intrinsicInsets: .init(), emptyColor: nil)
+        
+        let result = signal |> map { data -> TransformImageResult in
+            let context = data.execute(arguments, data.data)
+            let image = context?.generateImage()
+            return TransformImageResult(image, context?.isHighQuality ?? false)
+        } |> deliverOnMainQueue
+                
+        item.contextObject = result.start(next: { [weak item] result in
+            item?.image = result.image.flatMap({
+                NSImage(cgImage: $0, size: size)
+            })
+        })
+        
     }
 }
 
@@ -733,7 +757,7 @@ final class ReactionPeerMenu : ContextMenuItem {
         
         super.init(title, handler: handler)
         
-        if peer.isForum, case let .forward(callback) = destination {
+        if peer.isForum || (peer.isAdmin && peer.isMonoForum), case let .forward(callback) = destination {
             let signal = chatListViewForLocation(chatListLocation: .forum(peerId: peer.id), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
                 !$0.list.isLoading
             } |> map {
@@ -756,7 +780,17 @@ final class ReactionPeerMenu : ContextMenuItem {
                                     callback(threadId)
                                 }
                             })
-                            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
+                            
+                            let threadMesssage = item.messages.first
+                            
+                            if let threadId, peer.isMonoForum, let peer = threadMesssage?.peers[PeerId(threadId)] {
+                                ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, threadMesssage?._asMessage(), nil))
+                                menuItem.title = peer.displayTitle
+                            } else {
+                                ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
+                                menuItem.title = threadData.info.title
+                            }
+                            
                             switch destination {
                             case .forward:
                                 ContextMenuItem.checkPremiumRequired(menuItem, context: context, peer: peer)
@@ -1163,5 +1197,123 @@ private final class MessageContainsPacksItemView: AppMenuRowView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
+
+
+
+final class MessageAuthorMenuItem : ContextMenuItem {
+   
+    private let context: AccountContext
+    private let messageId: MessageId
+    
+    fileprivate var peerId: PeerId?
+    
+    init(handler:@escaping(PeerId)->Void, messageId: MessageId, context: AccountContext) {
+        self.messageId = messageId
+        self.context = context
+        var invoke:()->Void = { }
+        super.init("", handler: {
+            invoke()
+        }, removeTail: false)
+        
+        invoke = { [weak self] in
+            if let peerId = self?.peerId {
+                handler(peerId)
+            }
+        }
+        
+    }
+    
+    override var cuttail: Int? {
+        return nil
+    }
+    
+    override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return MessageAuthorMenuRowItem(item: self, messageId: messageId, interaction: interaction, presentation: presentation, context: context)
+    }
+    
+    required init(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
+final class MessageAuthorMenuRowItem : AppMenuRowItem {
+
+    let context: AccountContext
+    let messageId: MessageId
+    
+    enum State : Equatable {
+        case loading
+        case peer(EnginePeer)
+    }
+    
+    fileprivate var state: State = .loading {
+        didSet {
+            updateState(state)
+        }
+    }
+    
+    private let disposable = MetaDisposable()
+    
+    init(item: ContextMenuItem, messageId: MessageId, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext) {
+        self.messageId = messageId
+        self.context = context
+        super.init(.zero, item: item, interaction: interaction, presentation: presentation)
+        
+        let signal = context.engine.messages.requestMessageAuthor(id: messageId) |> deliverOnMainQueue
+        
+        disposable.set(signal.startStrict(next: { [weak self] peer in
+            if let peer {
+                self?.state = .peer(peer)
+            }
+        }))
+    }
+    
+    private func updateState(_ state: State) {
+        guard let menuItem = menuItem as? MessageAuthorMenuItem else {
+            return
+        }
+        switch state {
+        case .loading:
+            break
+        case let .peer(peer):
+//            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer._asPeer(), source: .peer(peer._asPeer(), peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil, nil))
+            menuItem.title = strings().monoforumSentBy(peer._asPeer().displayTitle)
+            menuItem.peerId = peer.id
+        }
+        
+        self.redraw(animated: false)
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    
+    override func viewClass() -> AnyClass {
+        return MessageAuthorMenuItemView.self
+    }
+
+}
+
+private final class MessageAuthorMenuItemView: AppMenuRowView {
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? MessageAuthorMenuRowItem else {
+            return
+        }
     }
 }

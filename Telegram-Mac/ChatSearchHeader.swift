@@ -661,7 +661,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
         switch state.main {
-        case let .search(interactions, _, initialString, _, _):
+        case let .search(interactions, _, initialString, _, _, _):
             self.interactions = interactions
             self.parentInteractions = chatInteraction
             self.calendarController = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
@@ -704,7 +704,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             self?.searchView.isLoading = loading
         }))
         switch state.main {
-        case let .search(_, initialPeer, _, _, _):
+        case let .search(_, initialPeer, _, _, _, _):
             if let initialPeer = initialPeer {
                 self.chatInteraction.movePeerToInput(initialPeer)
             }
@@ -714,6 +714,8 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         Queue.mainQueue().justDispatch { [weak self] in
             self?.applySearchResponder(false)
         }
+        
+        chatInteraction.add(observer: self)
     }
     
     func measure(_ width: CGFloat) {
@@ -739,8 +741,11 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         return chatInteraction.mode != .scheduled && chatInteraction.mode != .pinned
     }
     
-    private var fromAbility: Bool {
+    private func fromAbility(_ chatLocation: ChatLocation) -> Bool {
         if let peer = chatInteraction.presentation.peer {
+            if peer.isMonoForum {
+                return false
+            }
             return (peer.isSupergroup || peer.isGroup) && (chatInteraction.mode == .history || chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode)
         } else {
             return false
@@ -762,11 +767,11 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             
             if let peer = chatInteraction.presentation.peer {
                 if value.inputQueryResult != oldValue.inputQueryResult {
-                    inputContextHelper.context(with: value.inputQueryResult, for: view, relativeView: superview, position: .below, selectIndex: value.selectedIndex != -1 ? value.selectedIndex : nil, animated: animated)
+                    inputContextHelper.context(with: value.inputQueryResult, for: view, relativeView: superview, position: .below, selectIndex: value.selectedIndex != -1 ? value.selectedIndex : nil, animated: animated, inset: superview.frame.minX)
                 }
                 switch value.tokenState {
                 case .none:
-                    from.isHidden = !fromAbility
+                    from.isHidden = !fromAbility(self.chatInteraction.chatLocation)
                     calendar.isHidden = !calendarAbility
                     needsLayout = true
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
@@ -869,6 +874,18 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
                     })
                 }
             }
+        } else if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
+            if value.chatLocation != oldValue.chatLocation {
+                
+                let request = self.searchView.query
+                
+                self.parentInteractions.updateSearchRequest(SearchMessagesResultState(request, []))
+                self.inputInteraction.update({$0.updatedMessages(([], nil)).updatedSelectedIndex(-1)})
+                self.parentInteractions.loadingMessage.set(.single(true))
+                self.query.set(SearchStateQuery(request, nil))
+                self.parentInteractions.setLocationTag(nil)
+                
+            }
         }
     }
     
@@ -885,7 +902,6 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     
     private func initialize(_ state: ChatHeaderState) {
-        self.from.isHidden = !fromAbility
         
         _ = self.searchView.tokenPromise.get().start(next: { [weak self] state in
             self?.inputInteraction.update({$0.updatedTokenState(state)})
@@ -997,8 +1013,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         
         searchContainer.addSubview(calendar)
         
-        calendar.isHidden = !calendarAbility
-        
+
         _ = cancel.sizeToFit()
         
         let interactions = self.interactions
@@ -1043,8 +1058,14 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     func update(with state: ChatHeaderState, animated: Bool) {
         
+        
         switch state.main {
-        case let .search(_, _, _, tags, tag):
+        case let .search(_, _, _, tags, tag, chatLocation):
+            
+            self.calendar.isHidden = !calendarAbility
+            self.from.isHidden = !fromAbility(chatLocation)
+
+            
             if let tags = tags {
                 let current: ChatSearchTagsView
                 if let view = self.tagsView {
@@ -1146,29 +1167,48 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
-        
-        searchContainer.frame = NSMakeRect(0, 0, frame.width, 44)
-        
-        
-        prev.centerY(x:10)
-        next.centerY(x:prev.frame.maxX)
-
-
-        cancel.centerY(x:frame.width - cancel.frame.width - 20)
-
-        searchView.setFrameSize(NSMakeSize(searchWidth, 30))
-        inputContextHelper.controller.view.setFrameSize(frame.width, inputContextHelper.controller.frame.height)
-        searchView.centerY(x: 80)
-        separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
-        
-        from.centerY(x: searchView.frame.maxX + 20)
-        calendar.centerY(x: (from.isHidden ? searchView : from).frame.maxX + 20)
-        
-        if let tagsView = tagsView {
-            tagsView.frame = NSMakeRect(0, searchContainer.frame.maxY - 5, frame.width, 40)
-        }
-
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
+    
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, 0, size.width, 44))
+
+        transition.updateFrame(view: prev, frame: prev.centerFrameY(x: 10))
+        transition.updateFrame(view: next, frame: next.centerFrameY(x: prev.frame.maxX))
+
+        transition.updateFrame(view: cancel, frame: cancel.centerFrameY(x: size.width - cancel.frame.width - 20))
+        
+        transition.updateFrame(view: searchView, frame: NSMakeRect(80, 10, searchWidth, 30))
+        searchView.updateLayout(size: searchView.frame.size, transition: transition)
+
+        let inputContextView = inputContextHelper.controller.view
+        
+        let rect = CGRect(origin: inputContextHelper.controller.frame.origin, size: NSSize(width: size.width, height: inputContextHelper.controller.frame.height))
+        transition.updateFrame(view: inputContextView, frame: rect)
+
+        
+                
+        transition.updateFrame(view: separator, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
+
+        transition.updateFrame(view: from, frame: from.centerFrameY(x: searchView.frame.maxX + 20))
+
+        let calendarAnchor = from.isHidden ? searchView : from
+        transition.updateFrame(view: calendar, frame: calendar.centerFrameY(x: calendarAnchor.frame.maxX + 20))
+
+        if let tagsView = tagsView {
+            transition.updateFrame(view: tagsView, frame: NSMakeRect(0, searchContainer.frame.maxY - 5, size.width, 40))
+        }
+    }
+
     
     override func viewDidMoveToWindow() {
         if let _ = window {
@@ -1192,6 +1232,8 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         self.disposable.dispose()
         self.inputInteraction.remove(observer: self)
         self.loadingDisposable.dispose()
+        self.chatInteraction.remove(observer: self)
+        
         if let window = window as? Window {
             window.removeAllHandlers(for: self)
         }

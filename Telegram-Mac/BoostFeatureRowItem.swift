@@ -23,6 +23,7 @@ enum BoostChannelPerk: Equatable {
     case audioTranscription
     case emojiPack
     case noAds
+    case autotranslation
     func title(isGroup: Bool) -> String {
         switch self {
         case let .story(value):
@@ -67,6 +68,8 @@ enum BoostChannelPerk: Equatable {
             return strings().channelBoostTableEmojiPack
         case .noAds:
             return strings().channelBoostTableNoAds
+        case .autotranslation:
+            return strings().channelBoostAutotranslation
 
         }
     }
@@ -100,6 +103,8 @@ enum BoostChannelPerk: Equatable {
             return theme.icons.channel_feature_emoji_pack
         case .noAds:
             return theme.icons.channel_feature_no_ads
+        case .autotranslation:
+            return theme.icons.channel_feature_autotranslate
         }
     }
 }

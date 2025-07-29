@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>APPCENTER_SECRET</key>
-	<string>${APPCENTER_SECRET}</string>
 	<key>ATSApplicationFontsPath</key>
 	<string>fonts</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -35,7 +33,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>272031</string>
+	<string>274210</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationCategoryType</key>

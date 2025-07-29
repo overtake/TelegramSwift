@@ -741,7 +741,7 @@ struct ModalAlertData : Equatable {
     
     struct Footer : Equatable {
         var value:(NSSize, AnyHashable, TelegramPresentationTheme, @escaping()->Void)->TableRowItem
-        
+        var validateData: (([InputDataIdentifier : InputDataValue]) -> InputDataValidation)? = nil
         static func ==(lhs: Footer, rhs: Footer) -> Bool {
             return true
         }
@@ -830,6 +830,19 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     }
     
     let arguments = Arguments(presentation: presentation, action: {
+        
+        if let footer = data.footer {
+            if let result = footer.validateData?([:]) {
+                switch result {
+                case .fail:
+                    getController?()?.proccessValidation(result)
+                    return
+                default:
+                    break
+                }
+            }
+        }
+        
         let state = stateValue.with { $0 }
         if state.actionEnabled {
             var result:[Int : Bool] = [:]
@@ -887,7 +900,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground)
     }
     
-    controller.validateData = { _ in
+    controller.validateData = { inputData in
         arguments.action()
         return .none
     }
@@ -899,13 +912,13 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
     if data.hasClose {
         controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: {
             close?()
-            cancel()
+           // cancel()
         })
     }
     
     
     modalController.closableImpl = {
-        cancel()
+       // cancel()
         return true
     }
     

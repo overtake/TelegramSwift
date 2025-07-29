@@ -313,6 +313,39 @@ final class TelegramChatColors {
         }
     }
     
+    private var _chatActionSuggestApprove: CGImage?
+    func chatActionSuggestApprove(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionSuggestApprove = _chatActionSuggestApprove {
+            return chatActionSuggestApprove
+        } else {
+            let image = NSImage(resource: .iconSuggestPostApprove).precomposed(theme.chatServiceItemTextColor)
+            _chatActionSuggestApprove = image
+            return image
+        }
+    }
+    
+    private var _chatActionSuggestDecline: CGImage?
+    func chatActionSuggestDecline(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionSuggestDecline = _chatActionSuggestDecline {
+            return chatActionSuggestDecline
+        } else {
+            let image = NSImage(resource: .iconSuggestPostDecline).precomposed(theme.chatServiceItemTextColor)
+            _chatActionSuggestDecline = image
+            return image
+        }
+    }
+    
+    private var _chatActionSuggestEdit: CGImage?
+    func chatActionSuggestEdit(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionSuggestEdit = _chatActionSuggestEdit {
+            return chatActionSuggestEdit
+        } else {
+            let image = NSImage(resource: .iconSuggestPostEdit).precomposed(theme.chatServiceItemTextColor)
+            _chatActionSuggestEdit = image
+            return image
+        }
+    }
+    
     private var _chatActionCopy: CGImage?
     func chatActionCopy(theme: TelegramPresentationTheme) -> CGImage {
         if let chatActionUrl = _chatActionCopy {
@@ -488,6 +521,14 @@ final class TelegramChatColors {
     func pollSelection(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
         return bubbled ? incoming ? icons.poll_selection_incoming : icons.poll_selection_outgoing : icons.poll_selection
     }
+    
+    func todoSelected(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.todo_selected_other_incoming : icons.todo_selected_other_outgoing : icons.todo_selection
+    }
+    func todoSelection(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.todo_selection_other_incoming : icons.todo_selection_other_outgoing : icons.todo_selected
+    }
+    
     func pollSelectedCorrect(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
         return bubbled ? incoming ? icons.poll_selected_correct_incoming : icons.poll_selected_correct_outgoing : icons.poll_selected_correct
     }

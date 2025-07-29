@@ -335,7 +335,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
-                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu).mutableCopy() as! NSMutableAttributedString
+                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: isIncoming, bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark, bubbled: entry.renderType == .bubble, codeSyntaxData: entry.additionalData.codeSyntaxData, loadCodeSyntax: chatInteraction.enqueueCodeSyntax, openPhoneNumber: chatInteraction.openPhoneNumberContextMenu, ignoreLinks: !entry.additionalData.canHighlightLinks && isIncoming).mutableCopy() as! NSMutableAttributedString
                 
              }
              
@@ -437,8 +437,9 @@ class ChatMessageItem: ChatRowItem {
             
             super.init(initialSize, chatInteraction, context, entry, theme: theme)
             
+             let ignoreWebpage = !entry.additionalData.canHighlightLinks && isIncoming
             
-             if let webpage = media as? TelegramMediaWebpage {
+             if let webpage = media as? TelegramMediaWebpage, !ignoreWebpage {
                  switch webpage.content {
                  case let .Loaded(content):
                      var content = content
@@ -530,7 +531,7 @@ class ChatMessageItem: ChatRowItem {
                         }
                     }
                 }
-                showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
+                showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone, chatMode: chatInteraction.mode, chatLocation: chatInteraction.chatLocation)
             }
             
             openSpecificTimecodeFromReply = { [weak self] timecode in
@@ -714,7 +715,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent), isDark: Bool, bubbled: Bool, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], loadCodeSyntax: @escaping(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }, openPhoneNumber: ((String)->Void)? = nil, confirm: Bool = true) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent), isDark: Bool, bubbled: Bool, codeSyntaxData: [CodeSyntaxKey : CodeSyntaxResult] = [:], loadCodeSyntax: @escaping(MessageId, NSRange, String, String, SyntaxterTheme)->Void = { _, _, _, _, _ in }, openPhoneNumber: ((String)->Void)? = nil, confirm: Bool = true, ignoreLinks: Bool = false) -> NSAttributedString {
         var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -733,7 +734,28 @@ class ChatMessageItem: ChatRowItem {
         var nsString: NSString?
         entities = entities + (new ?? [])
         
-        entities = concatMessageAttributes(entities)
+        entities = concatMessageAttributes(entities).filter({ entity in
+            if ignoreLinks {
+                switch entity.type {
+                case .Url, .TextUrl, .TextMention, .Email, .PhoneNumber, .BankCard, .BotCommand, .Mention:
+                    return false
+                default:
+                    return true
+                }
+            } else {
+                if let message, message.peers[message.id.peerId]?.isMonoForum == true {
+                    switch entity.type {
+                    case .BotCommand:
+                        return false
+                    default:
+                        return true
+                    }
+                }
+                return true
+            }
+        })
+        
+        
     
         
         for attr in attributes {

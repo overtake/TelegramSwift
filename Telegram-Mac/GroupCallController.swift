@@ -790,7 +790,7 @@ final class GroupCallUIController : ViewController {
     private var videoViews: [(DominantVideo, GroupCallUIState.ActiveVideo.Mode, GroupVideoView)] = []
 
     private var idleTimer: SwiftSignalKit.Timer?
-    private var speakController: MicroListenerContext
+//    private var speakController: MicroListenerContext
     
     let size: ValuePromise<NSSize> = ValuePromise(.zero, ignoreRepeated: true)
     
@@ -806,7 +806,7 @@ final class GroupCallUIController : ViewController {
     var disableSounds: Bool = false
     init(_ data: UIData, size: NSSize) {
         self.data = data
-        self.speakController = MicroListenerContext(devices: data.call.sharedContext.devicesContext, accountManager: data.call.sharedContext.accountManager)
+//        self.speakController = MicroListenerContext(devices: data.call.sharedContext.devicesContext, accountManager: data.call.sharedContext.accountManager)
         super.init(frame: NSMakeRect(0, 0, size.width, size.height))
         bar = .init(height: 0)
         isFullScreen.set(size.width >= GroupCallTheme.fullScreenThreshold)
@@ -1739,6 +1739,7 @@ final class GroupCallUIController : ViewController {
                             
                             
                             for type in types {
+                               
                                 strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
                                     guard let videoView = videoView else {
                                         return
@@ -1753,18 +1754,21 @@ final class GroupCallUIController : ViewController {
                                     case .profile:
                                         videoView.setVideoContentMode(.resizeAspectFill)
                                     }
-                                    videoView.setOnFirstFrameReceived( { [weak self] f in
-                                        if let videoViewValue = videoViewValue, let peer = member.peer?._asPeer() {
-                                            self?.videoViews.append((DominantVideo(peer.id, endpointId, videoMode, nil), type, videoViewValue))
-                                            updateActiveVideoViews { current in
-                                                var current = current
-                                                current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
-                                                current.index -= 1
-                                                return current
-                                            }
+                                    
+                                    if let videoViewValue = videoViewValue, let peer = member.peer?._asPeer() {
+                                        self?.videoViews.append((DominantVideo(peer.id, endpointId, videoMode, nil), type, videoViewValue))
+                                        updateActiveVideoViews { current in
+                                            var current = current
+                                            current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
+                                            current.index -= 1
+                                            return current
                                         }
-                                        videoViewValue = nil
-                                    })
+                                    }
+                                    videoViewValue = nil
+                                    
+//                                    videoView.setOnFirstFrameReceived( { [weak self] f in
+//                                       
+//                                    })
                                 })
                             }
                         }
@@ -2124,39 +2128,39 @@ final class GroupCallUIController : ViewController {
 
     
     private func checkMicro(_ state: GroupCallUIState) {
-        
-        
-        switch state.state.networkState {
-        case .connecting:
-            speakController.pause()
-        case .connected:
-            if !state.dismissedTooltips.contains(.micro), state.controlsTooltip == nil {
-                if state.isMuted && state.state.muteState?.canUnmute == true {
-                    speakController.resume(onSpeaking: { [weak self] _ in
-                        self?.updateTooltips { current in
-                            var current = current
-                            current.speachDetected = true
-                            return current
-                        }
-                    })
-                } else {
-                    speakController.pause()
-                }
-            } else {
-                speakController.pause()
-            }
-            if !state.isMuted {
-                if !state.isMuted {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.updateTooltips { current in
-                            var current = current
-                            current.dismissed.insert(.micro)
-                            return current
-                        }
-                    }
-                }
-            }
-        }
+//        
+//        
+//        switch state.state.networkState {
+//        case .connecting:
+//            speakController.pause()
+//        case .connected:
+//            if !state.dismissedTooltips.contains(.micro), state.controlsTooltip == nil {
+//                if state.isMuted && state.state.muteState?.canUnmute == true {
+//                    speakController.resume(onSpeaking: { [weak self] _ in
+//                        self?.updateTooltips { current in
+//                            var current = current
+//                            current.speachDetected = true
+//                            return current
+//                        }
+//                    })
+//                } else {
+//                    speakController.pause()
+//                }
+//            } else {
+//                speakController.pause()
+//            }
+//            if !state.isMuted {
+//                if !state.isMuted {
+//                    DispatchQueue.main.async { [weak self] in
+//                        self?.updateTooltips { current in
+//                            var current = current
+//                            current.dismissed.insert(.micro)
+//                            return current
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
     
     deinit {

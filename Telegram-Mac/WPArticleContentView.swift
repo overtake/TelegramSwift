@@ -151,7 +151,7 @@ class WPArticleContentView: WPContentView {
                 return
             }
             if layout.isGalleryAssemble {
-                showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
+                showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone, chatMode: layout.chatInteraction.mode, chatLocation: layout.chatInteraction.chatLocation)
             } else if layout.isStory {
                 layout.openStory()
             } else if let wallpaper = layout.wallpaper {

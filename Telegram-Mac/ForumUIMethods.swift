@@ -55,33 +55,39 @@ struct ForumUI {
     }
     
     
-    static func open(_ peerId: PeerId, context: AccountContext, threadId: Int64? = nil) {
+    static func open(_ peerId: PeerId, addition: Bool, context: AccountContext, threadId: Int64? = nil) {
 
         let signal: Signal<Bool, NoError>
         
         if let threadId = threadId {
             signal = openTopic(threadId, peerId: peerId, context: context) |> map { _ in context.layout == .dual }
         } else {
-            let viewAsMessages: Signal<Bool?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
-            |> map { $0 as? CachedChannelData }
-            |> map { $0?.viewForumAsMessages.knownValue }
+            let viewAsMessages: Signal<(Bool?, Bool?), NoError> = combineLatest(getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> map { $0 as? CachedChannelData }, context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)))
+            |> map { ($0?.viewForumAsMessages.knownValue, $1?._asPeer().displayForumAsTabs) }
             |> deliverOnMainQueue
             |> take(1)
             
-            signal = viewAsMessages |> mapToSignal { value in
-                if let value = value {
+            signal = viewAsMessages |> mapToSignal { value, displayAsTabs in
+                let insertChat:(Bool)->Signal<Bool, NoError> = { displayAsTabs in
+                    let ready = Promise<Bool>()
+                    let controller: ChatController
+                    if addition {
+                        controller = ChatAdditionController(context: context, chatLocation: .peer(peerId))
+                    } else {
+                        controller = ChatController(context: context, chatLocation: .peer(peerId))
+                    }
+                    context.bindings.rootNavigation().push(controller)
+                    ready.set(controller.ready.get() |> map { displayAsTabs ? false : context.layout == .single ? false : $0 })
+                    return ready.get() |> take(1)
+                }
+                
+                if displayAsTabs == true {
+                    return insertChat(true)
+                } else if let value = value {
                     if !value {
                         return .single(true)
                     } else {
-                        let ready = Promise<Bool>()
-                        
-                        let controller = ChatController(context: context, chatLocation: .peer(peerId))
-
-                        context.bindings.rootNavigation().push(controller)
-                        
-                        ready.set(controller.ready.get() |> map { context.layout == .single ? false : $0 })
-                        
-                        return ready.get() |> take(1)
+                       return insertChat(false)
                     }
                 } else {
                     return .single(true)
@@ -107,7 +113,7 @@ struct ForumUI {
                     parentIsArchive = controller.mode.groupId == .archive
                 }
                 
-                let mode: PeerListMode = peerId == context.peerId ? .savedMessagesChats : .forum(peerId, false, parentIsArchive)
+                let mode: PeerListMode = peerId == context.peerId ? .savedMessagesChats(peerId: peerId) : .forum(peerId, false, parentIsArchive)
                 navigation.push(ChatListController(context, modal: false, mode: mode))
                 if context.layout == .single {
                     context.bindings.rootNavigation().gotoEmpty()
@@ -116,7 +122,7 @@ struct ForumUI {
         })
        
     }
-    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) -> Signal<Bool, NoError> {
+    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil, isMonoforum: Bool = false) -> Signal<Bool, NoError> {
         
         let controller = context.bindings.rootNavigation().controller as? ChatController
         
@@ -134,8 +140,15 @@ struct ForumUI {
         
         let threadMessageId = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
         let context = context
-        let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)
-        |> deliverOnMainQueue
+        let signal: Signal<ThreadInfo?, FetchChannelReplyThreadMessageError>
+        
+        if isMonoforum {
+            signal = .single(nil)
+        } else {
+            signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false) |> map(Optional.init)
+            |> deliverOnMainQueue
+            
+        }
         
         _ = context.engine.peers.updateForumViewAsMessages(peerId: peerId, value: false).start()
         
@@ -143,14 +156,27 @@ struct ForumUI {
         
         _ = signal.start(next: { result in
             
-            let updatedMode: ReplyThreadMode = .topic(origin: threadMessageId)
+            let updatedMode: ChatMode
             
             
             let controller: ChatController
-            if addition {
-                controller = ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: messageId), initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
+            
+            let chatLocation: ChatLocation
+            
+            let chatLocationContextHolder = result?.contextHolder ?? Atomic<ChatLocationContextHolder?>(value: nil)
+
+            
+            if let result {
+                chatLocation = .thread(result.message)
+                updatedMode = .thread(mode:  .topic(origin: threadMessageId))
             } else {
-                controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), focusTarget: .init(messageId: messageId), initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
+                chatLocation = .makeSaved(peerId, peerId: PeerId(threadId), isMonoforum: true)
+                updatedMode = .history
+            }
+            if addition {
+                controller = ChatAdditionController(context: context, chatLocation: chatLocation, mode: updatedMode, focusTarget: .init(messageId: messageId), initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder)
+            } else {
+                controller = ChatController(context: context, chatLocation: chatLocation, mode: updatedMode, focusTarget: .init(messageId: messageId), initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder)
             }
             
             context.bindings.rootNavigation().push(controller, style: animated ? .push : nil)
@@ -179,7 +205,7 @@ struct ForumUI {
             return controller.ready.get()
         }
         
-        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
+        let threadMessage = ChatReplyThreadMessage(peerId: context.peerId, threadId: threadId, channelMessageId: nil, isChannelPost: false, isForumPost: false, isMonoforumPost: false, maxMessage: nil, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil, unreadCount: 0, initialFilledHoles: IndexSet(), initialAnchor: .automatic, isNotAvailable: false)
         let threadMessageId = makeThreadIdMessageId(peerId: context.peerId, threadId: threadId)
 
         
@@ -187,9 +213,9 @@ struct ForumUI {
         
                 
         if addition {
-            newController = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
+            newController = ChatAdditionController(context: context, chatLocation: .thread(threadMessage), mode: .thread(mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
         } else {
-            newController = ChatController(context: context, chatLocation: .thread(threadMessage), mode: .thread(data: threadMessage, mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
+            newController = ChatController(context: context, chatLocation: .thread(threadMessage), mode: .thread(mode: .savedMessages(origin: threadMessageId)), focusTarget: .init(messageId: messageId))
         }
         
         context.bindings.rootNavigation().push(newController, style: animated ? .push : nil)

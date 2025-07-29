@@ -174,84 +174,86 @@ private final class Arguments {
     }
 }
 
-private struct State : Equatable {
+
+struct Star_SliderAmount: Equatable {
+    private let sliderSteps: [Int]
+    let maxRealValue: Int
+    let maxSliderValue: Int
+    private let isLogarithmic: Bool
     
-    struct Amount: Equatable {
-        private let sliderSteps: [Int]
-        let maxRealValue: Int
-        let maxSliderValue: Int
-        private let isLogarithmic: Bool
-        
-        private(set) var realValue: Int
-        private(set) var sliderValue: Int
-        
-        private static func makeSliderSteps(maxRealValue: Int, isLogarithmic: Bool) -> [Int] {
-            if isLogarithmic {
-                var sliderSteps: [Int] = [ 1, 10, 50, 100, 500, 1_000, 2_000, 5_000, 7_500, 10_000 ]
-                sliderSteps.removeAll(where: { $0 >= maxRealValue })
-                sliderSteps.append(maxRealValue)
-                return sliderSteps
-            } else {
-                return [1, maxRealValue]
-            }
-        }
-        
-        private static func remapValueToSlider(realValue: Int, maxSliderValue: Int, steps: [Int]) -> Int {
-            guard realValue >= steps.first!, realValue <= steps.last! else { return 0 }
-
-            for i in 0 ..< steps.count - 1 {
-                if realValue >= steps[i] && realValue <= steps[i + 1] {
-                    let range = steps[i + 1] - steps[i]
-                    let relativeValue = realValue - steps[i]
-                    let stepFraction = Float(relativeValue) / Float(range)
-                    return Int(Float(i) * Float(maxSliderValue) / Float(steps.count - 1)) + Int(stepFraction * Float(maxSliderValue) / Float(steps.count - 1))
-                }
-            }
-            return maxSliderValue // Return max slider position if value equals the last step
-        }
-
-        private static func remapSliderToValue(sliderValue: Int, maxSliderValue: Int, steps: [Int]) -> Int {
-            guard sliderValue >= 0, sliderValue <= maxSliderValue else { return steps.first! }
-
-            let stepIndex = Int(Float(sliderValue) / Float(maxSliderValue) * Float(steps.count - 1))
-            let fraction = Float(sliderValue) / Float(maxSliderValue) * Float(steps.count - 1) - Float(stepIndex)
-            
-            if stepIndex >= steps.count - 1 {
-                return steps.last!
-            } else {
-                let range = steps[stepIndex + 1] - steps[stepIndex]
-                return steps[stepIndex] + Int(fraction * Float(range))
-            }
-        }
-        
-        init(realValue: Int, maxRealValue: Int, maxSliderValue: Int, isLogarithmic: Bool) {
-            self.sliderSteps = Amount.makeSliderSteps(maxRealValue: maxRealValue, isLogarithmic: isLogarithmic)
-            self.maxRealValue = maxRealValue
-            self.maxSliderValue = maxSliderValue
-            self.isLogarithmic = isLogarithmic
-            
-            self.realValue = realValue
-            self.sliderValue = Amount.remapValueToSlider(realValue: self.realValue, maxSliderValue: self.maxSliderValue, steps: self.sliderSteps)
-        }
-        
-        init(sliderValue: Int, maxRealValue: Int, maxSliderValue: Int, isLogarithmic: Bool) {
-            self.sliderSteps = Amount.makeSliderSteps(maxRealValue: maxRealValue, isLogarithmic: isLogarithmic)
-            self.maxRealValue = maxRealValue
-            self.maxSliderValue = maxSliderValue
-            self.isLogarithmic = isLogarithmic
-            
-            self.sliderValue = sliderValue
-            self.realValue = Amount.remapSliderToValue(sliderValue: self.sliderValue, maxSliderValue: self.maxSliderValue, steps: self.sliderSteps)
-        }
-        
-        func withRealValue(_ realValue: Int) -> Amount {
-            return Amount(realValue: realValue, maxRealValue: self.maxRealValue, maxSliderValue: self.maxSliderValue, isLogarithmic: self.isLogarithmic)
-        }
-        
-        func withSliderValue(_ sliderValue: Int) -> Amount {
-            return Amount(sliderValue: sliderValue, maxRealValue: self.maxRealValue, maxSliderValue: self.maxSliderValue, isLogarithmic: self.isLogarithmic)
+    private(set) var realValue: Int
+    private(set) var sliderValue: Int
+    
+    private static func makeSliderSteps(maxRealValue: Int, isLogarithmic: Bool) -> [Int] {
+        if isLogarithmic {
+            var sliderSteps: [Int] = [ 1, 10, 50, 100, 500, 1_000, 2_000, 5_000, 7_500, 10_000 ]
+            sliderSteps.removeAll(where: { $0 >= maxRealValue })
+            sliderSteps.append(maxRealValue)
+            return sliderSteps
+        } else {
+            return [1, maxRealValue]
         }
     }
+    
+    private static func remapValueToSlider(realValue: Int, maxSliderValue: Int, steps: [Int]) -> Int {
+        guard realValue >= steps.first!, realValue <= steps.last! else { return 0 }
+
+        for i in 0 ..< steps.count - 1 {
+            if realValue >= steps[i] && realValue <= steps[i + 1] {
+                let range = steps[i + 1] - steps[i]
+                let relativeValue = realValue - steps[i]
+                let stepFraction = Float(relativeValue) / Float(range)
+                return Int(Float(i) * Float(maxSliderValue) / Float(steps.count - 1)) + Int(stepFraction * Float(maxSliderValue) / Float(steps.count - 1))
+            }
+        }
+        return maxSliderValue // Return max slider position if value equals the last step
+    }
+
+    private static func remapSliderToValue(sliderValue: Int, maxSliderValue: Int, steps: [Int]) -> Int {
+        guard sliderValue >= 0, sliderValue <= maxSliderValue else { return steps.first! }
+
+        let stepIndex = Int(Float(sliderValue) / Float(maxSliderValue) * Float(steps.count - 1))
+        let fraction = Float(sliderValue) / Float(maxSliderValue) * Float(steps.count - 1) - Float(stepIndex)
+        
+        if stepIndex >= steps.count - 1 {
+            return steps.last!
+        } else {
+            let range = steps[stepIndex + 1] - steps[stepIndex]
+            return steps[stepIndex] + Int(fraction * Float(range))
+        }
+    }
+    
+    init(realValue: Int, maxRealValue: Int, maxSliderValue: Int, isLogarithmic: Bool) {
+        self.sliderSteps = Star_SliderAmount.makeSliderSteps(maxRealValue: maxRealValue, isLogarithmic: isLogarithmic)
+        self.maxRealValue = maxRealValue
+        self.maxSliderValue = maxSliderValue
+        self.isLogarithmic = isLogarithmic
+        
+        self.realValue = realValue
+        self.sliderValue = Star_SliderAmount.remapValueToSlider(realValue: self.realValue, maxSliderValue: self.maxSliderValue, steps: self.sliderSteps)
+    }
+    
+    init(sliderValue: Int, maxRealValue: Int, maxSliderValue: Int, isLogarithmic: Bool) {
+        self.sliderSteps = Star_SliderAmount.makeSliderSteps(maxRealValue: maxRealValue, isLogarithmic: isLogarithmic)
+        self.maxRealValue = maxRealValue
+        self.maxSliderValue = maxSliderValue
+        self.isLogarithmic = isLogarithmic
+        
+        self.sliderValue = sliderValue
+        self.realValue = Star_SliderAmount.remapSliderToValue(sliderValue: self.sliderValue, maxSliderValue: self.maxSliderValue, steps: self.sliderSteps)
+    }
+    
+    func withRealValue(_ realValue: Int) -> Star_SliderAmount {
+        return Star_SliderAmount(realValue: realValue, maxRealValue: self.maxRealValue, maxSliderValue: self.maxSliderValue, isLogarithmic: self.isLogarithmic)
+    }
+    
+    func withSliderValue(_ sliderValue: Int) -> Star_SliderAmount {
+        return Star_SliderAmount(sliderValue: sliderValue, maxRealValue: self.maxRealValue, maxSliderValue: self.maxSliderValue, isLogarithmic: self.isLogarithmic)
+    }
+}
+
+private struct State : Equatable {
+    
 
     
     struct TopPeer : Equatable {
@@ -261,7 +263,7 @@ private struct State : Equatable {
         var isAnonymous: Bool
     }
     
-    var amount: Amount = Amount(realValue: 1, maxRealValue: 2500, maxSliderValue: 2500, isLogarithmic: true)
+    var amount: Star_SliderAmount = Star_SliderAmount(realValue: 1, maxRealValue: 2500, maxSliderValue: 2500, isLogarithmic: true)
     
     var myPeer: EnginePeer
     var myBalance: Int64 = 1000
@@ -562,7 +564,7 @@ private final class SendersView: View {
                 let icon = theme.icons.chat_hidden_author
                 self.avatarView.setState(account: context.account, state: .Empty)
                 let size = self.avatarView.frame.size
-                self.avatarView.setSignal(generateEmptyPhoto(size, type: .icon(colors: (top: NSColor(0xb8b8b8), bottom: NSColor(0xb8b8b8).withAlphaComponent(0.6)), icon: icon, iconSize: icon.backingSize, cornerRadius: nil)) |> map {($0, false)})
+                self.avatarView.setSignal(generateEmptyPhoto(size, type: .icon(colors: (top: NSColor(0xb8b8b8), bottom: NSColor(0xb8b8b8).withAlphaComponent(0.6)), icon: icon, iconSize: icon.backingSize, cornerRadius: nil), bubble: false) |> map {($0, false)})
             }
             
             sender.titleLayout.measure(width: frame.width + 20)
@@ -668,7 +670,7 @@ private final class SendersView: View {
     }
 }
 
-private final class Star_SliderView : Control {
+final class Star_SliderView : Control {
     let dotLayer = View(frame: NSMakeRect(0, 0, 28, 28))
     private let foregroundLayer = SimpleGradientLayer()
     private let emptyLayer = SimpleLayer()
@@ -792,7 +794,7 @@ private final class Star_SliderView : Control {
     }
 }
 
-private final class BadgeView : View {
+final class Star_BadgeView : View {
     private let shapeLayer = SimpleShapeLayer()
     private let foregroundLayer = SimpleGradientLayer()
     private let textView = InteractiveTextView()
@@ -1017,7 +1019,7 @@ private final class HeaderItemView : GeneralContainableRowView {
     
     private let accept: AcceptView = AcceptView(frame: .zero)
     
-    let badgeView = BadgeView(frame: NSMakeRect(0, 0, 100, 48))
+    let badgeView = Star_BadgeView(frame: NSMakeRect(0, 0, 100, 48))
     let sliderView = Star_SliderView(frame: NSMakeRect(0, 0, 100, 30))
     
     private var sendersView: SendersView?
@@ -1231,7 +1233,7 @@ func Star_ReactionsController(context: AccountContext, message: Message) -> Inpu
 
     let max_value = Int(context.appConfiguration.getGeneralValue("stars_paid_reaction_amount_max", orElse: 1))
     
-    let amount = State.Amount(realValue: 50, maxRealValue: max_value, maxSliderValue: max_value, isLogarithmic: true)
+    let amount = Star_SliderAmount(realValue: 50, maxRealValue: max_value, maxSliderValue: max_value, isLogarithmic: true)
     
     context.reactions.forceSendStarReactions?()
     

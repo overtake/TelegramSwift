@@ -4,6 +4,35 @@ import TGUIKit
 import ColorPalette
 import Localization
 
+public extension InputTextView {
+    static func rawTextHeight(for attributedString: NSAttributedString, width: CGFloat) -> CGFloat {
+        let textStorage = NSTextStorage(attributedString: attributedString)
+        let layoutManager = NSLayoutManager()
+        layoutManager.delegate = nil // no delegate needed for raw height
+        
+        let textContainer = ChatInputTextContainer(size: CGSize(width: width, height: 1000000.0))
+        textContainer.widthTracksTextView = false
+        textContainer.heightTracksTextView = false
+        
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+
+        // Force layout
+        layoutManager.ensureLayout(for: textContainer)
+
+        // Get text bounding height without any insets
+        var textSize = layoutManager.usedRect(for: textContainer).size
+
+        // Mimic InputTextView's "empty string" compensation
+        if attributedString.string.isEmpty {
+            textSize.height += 2
+        }
+
+        return ceil(textSize.height)
+    }
+}
+
+
 private enum InputViewSubviewDestination {
     case below
     case above
@@ -956,11 +985,11 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
     
     public override func menu(for event: NSEvent) -> NSMenu? {
-        let menu = super.menu(for: event)
+        let menu = super.menu(for: event) as? NSMenu
         var removeItems = [NSMenuItem]()
         var addedTransformations = false
 
-        menu?.appearance = self.appearance
+//        menu?.appearance = self.appearance
 
         menu?.items.enumerated().forEach { (idx, item) in
             if item.action == NSSelectorFromString("submenuAction:") {

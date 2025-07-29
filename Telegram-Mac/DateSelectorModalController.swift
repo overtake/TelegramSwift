@@ -20,6 +20,12 @@ final class DateSelectorModalView : View {
     private let containerView = View()
     fileprivate let sendOn = TextButton()
     fileprivate let sendWhenOnline = TextButton()
+    fileprivate var actionView: TextView?
+    
+    fileprivate var infoText: TextView?
+    
+    var dismiss: (()->Void)? = nil
+    
     required init(frame frameRect: NSRect, hasSeconds: Bool) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: DateSelectorUtil.formatDay(Date()), value: Date()))
@@ -62,11 +68,11 @@ final class DateSelectorModalView : View {
     
     private var mode: DateSelectorModalController.Mode?
     
-    func updateWithMode(_ mode: DateSelectorModalController.Mode, sendWhenOnline: Bool) {
+    func updateWithMode(_ mode: DateSelectorModalController.Mode, sendWhenOnline: Bool, infoText: TextViewLayout?) {
         self.mode = mode
         self.sendWhenOnline.isHidden = !sendWhenOnline
         switch mode {
-        case .date:
+        case .date, .dateAction:
             self.atView.isHidden = true
             self.sendOn.isHidden = true
             self.sendWhenOnline.isHidden = true
@@ -75,6 +81,48 @@ final class DateSelectorModalView : View {
             self.sendOn.isHidden = false
             self.sendWhenOnline.isHidden = !sendWhenOnline
         }
+        
+        if case let .dateAction(_, _, action) = mode {
+            let current: TextView
+            if let view = actionView {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.scaleOnClick = true
+                addSubview(current)
+                self.actionView = current
+            }
+            let layout = TextViewLayout(.initialize(string: action.string, color: theme.colors.accent, font: .medium(.text)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            current.update(layout)
+            
+            current.set(handler: { [weak self] _ in
+                action.callback()
+                self?.dismiss?()
+            }, for: .Click)
+        } else if let actionView {
+            performSubviewRemoval(actionView, animated: false)
+            self.actionView = nil
+        }
+        
+        if let infoText {
+            let current: TextView
+            if let view = self.infoText {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                addSubview(current)
+                self.infoText = current
+            }
+            current.update(infoText)
+        } else if let view = self.infoText {
+            performSubviewRemoval(view, animated: false)
+            self.infoText = nil
+        }
+        
         needsLayout = true
     }
     
@@ -93,7 +141,7 @@ final class DateSelectorModalView : View {
                 self.dayPicker.centerY(x: 0)
                 self.timePicker.centerY(x: dayPicker.frame.maxX + 15)
                 self.containerView.centerX(y: 10)
-            case .schedule:
+            case .schedule, .dateAction:
                 self.dayPicker.setFrameSize(NSMakeSize(120, 30))
                 self.timePicker.setFrameSize(NSMakeSize(120, 30))
                 let fullWidth = dayPicker.frame.width + 15 + atView.frame.width + 15 + timePicker.frame.width
@@ -108,7 +156,15 @@ final class DateSelectorModalView : View {
             }
         }
         
+        var offset: CGFloat = containerView.frame.maxY + 15
         
+        if let infoText {
+            infoText.centerX(y: offset)
+            offset += infoText.frame.height + 10
+        }
+        if let actionView {
+            actionView.centerX(y: offset)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -133,8 +189,13 @@ extension TimePickerOption {
 class DateSelectorModalController: ModalViewController {
     
     enum Mode {
+        struct Action {
+            var string: String
+            var callback:()->Void
+        }
         case schedule(PeerId)
         case date(title: String, doneTitle: String)
+        case dateAction(title: String, done: (Date)->String, action: Action)
     }
     
     private let context: AccountContext
@@ -143,16 +204,26 @@ class DateSelectorModalController: ModalViewController {
     private var sendWhenOnline: Bool = false
     fileprivate let mode: Mode
     private let disposable = MetaDisposable()
-    init(context: AccountContext, defaultDate: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 1 * 60 * 60), mode: Mode, selectedAt:@escaping(Date)->Void) {
+    private let infoText: TextViewLayout?
+    init(context: AccountContext, defaultDate: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 1 * 60 * 60), mode: Mode, selectedAt:@escaping(Date)->Void, infoText: TextViewLayout? = nil) {
         self.context = context
         self.defaultDate = defaultDate
         self.selectedAt = selectedAt
+        self.infoText = infoText
         self.mode = mode
+        
+        var add_Height: CGFloat = 0
+        if let infoText {
+            add_Height = infoText.layoutSize.height + 15
+        }
+        
         switch mode {
         case .schedule:
-            super.init(frame: NSMakeRect(0, 0, 330, 180))
+            super.init(frame: NSMakeRect(0, 0, 330, 180 + add_Height))
+        case .dateAction:
+            super.init(frame: NSMakeRect(0, 0, 330, 80 + add_Height))
         case .date:
-            super.init(frame: NSMakeRect(0, 0, 330, 70))
+            super.init(frame: NSMakeRect(0, 0, 330, 70 + add_Height))
         }
         self.bar = .init(height: 0)
     }
@@ -176,6 +247,8 @@ class DateSelectorModalController: ModalViewController {
             title = strings().scheduleControllerTitle
         case let .date(value, _):
             title = value
+        case let .dateAction(value, _, _):
+            title = value
         }
         return (left: ModalHeaderData(title: nil, image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
@@ -188,11 +261,21 @@ class DateSelectorModalController: ModalViewController {
     
     override open func measure(size: NSSize) {
         var height: CGFloat = 0
+        
+        if let infoText {
+            height += infoText.layoutSize.height
+        }
+        
         switch mode {
         case .date:
-            height = 70
+            height += 70
+        case .dateAction:
+            height += 80
+            if infoText != nil {
+                height += 10
+            }
         case .schedule:
-            height = sendWhenOnline ? 160 : 130
+            height += sendWhenOnline ? 160 : 130
         }
         
         self.modal?.resize(with:NSMakeSize(frame.width, height), animated: false)
@@ -251,10 +334,27 @@ class DateSelectorModalController: ModalViewController {
             let formatted = hasSeconds ? DateSelectorUtil.formatTime(date) : DateSelectorUtil.shortFormatTime(date)
             genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), formatted), for: .Normal)
         }
+        
+        switch mode {
+        case let .dateAction(_, done, _):
+            let date = self.currentDate
+            self.modal?.interactions?.updateDone { button in
+                button.set(text: done(date), for: .Normal)
+            }
+        default:
+            break
+        }
+        
+        
     }
     
     override var handleAllEvents: Bool {
         return true
+    }
+    
+    var currentDate:Date {
+        let day = self.genericView.dayPicker.selected.value
+        return day.startOfDay.addingTimeInterval(self.genericView.timePicker.selected.interval)
     }
     
     private func select() {
@@ -302,6 +402,10 @@ class DateSelectorModalController: ModalViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+                
+        genericView.dismiss = { [weak self] in
+            self?.close()
+        }
         
         let context = self.context
         
@@ -324,7 +428,7 @@ class DateSelectorModalController: ModalViewController {
                 self?.sendWhenOnline = sendWhenOnline
                 self?.initialize()
             }))
-        case .date:
+        case .date, .dateAction:
             initialize()
         }
     }
@@ -337,6 +441,10 @@ class DateSelectorModalController: ModalViewController {
             return ModalInteractions(acceptTitle: doneTitle, accept: { [weak self] in
                 self?.select()
             }, singleButton: true)
+        case let .dateAction(_, done, _):
+            return ModalInteractions(acceptTitle: done(currentDate), accept: { [weak self] in
+                self?.select()
+            }, singleButton: true)
         }
     }
     
@@ -344,7 +452,7 @@ class DateSelectorModalController: ModalViewController {
         switch mode {
         case .schedule:
             return false
-        case .date:
+        case .date, .dateAction:
             return true
         }
     }
@@ -362,7 +470,7 @@ class DateSelectorModalController: ModalViewController {
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: DateSelectorUtil.formatDay(date), value: date)
         self.genericView.timePicker.selected = TimePickerOption(hours: 0, minutes: 0, seconds: hasSeconds ? 0 : nil)
         
-        self.genericView.updateWithMode(self.mode, sendWhenOnline: self.sendWhenOnline)
+        self.genericView.updateWithMode(self.mode, sendWhenOnline: self.sendWhenOnline, infoText: infoText)
         
         self.applyDay(date)
         

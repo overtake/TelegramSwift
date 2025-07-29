@@ -12,8 +12,10 @@ import TelegramCore
 
 final class InteractiveTextView : Control {
     let textView = TextView()
+    private var context: AccountContext?
     
     var isLite: Bool = false
+    private var decreaseAvatar: CGFloat = 0
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: SimpleLayer] = [:]
     
@@ -50,8 +52,10 @@ final class InteractiveTextView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(text: TextViewLayout?, context: AccountContext?, insetEmoji: CGFloat = 0) {
+    func set(text: TextViewLayout?, context: AccountContext?, insetEmoji: CGFloat = 0, decreaseAvatar: CGFloat = 0) {
+        self.decreaseAvatar = decreaseAvatar
         self.textView.update(text)
+        self.context = context
         if let text {
             self.setFrameSize(text.layoutSize)
         }
@@ -61,6 +65,11 @@ final class InteractiveTextView : Control {
         }
     }
     
+    func resize(_ width: CGFloat) {
+        self.textView.textLayout?.measure(width: width)
+        self.set(text: self.textView.textLayout, context: self.context)
+    }
+
     
     func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: SimpleLayer], insetEmoji: CGFloat) {
         var validIds: [InlineStickerItemLayer.Key] = []
@@ -100,7 +109,7 @@ final class InteractiveTextView : Control {
                 } else if case let .avatar(peer) = stickerItem.source {
                     let id = InlineStickerItemLayer.Key(id: peer.id.toInt64(), index: index)
                     validIds.append(id)
-                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 3, item.rect.width - 3, item.rect.width - 3)
+                    let rect = NSMakeRect(item.rect.minX, item.rect.minY + 3, item.rect.width - 3 - decreaseAvatar, item.rect.width - 3 - decreaseAvatar)
                    
                     let view: InlineAvatarLayer
                     if let current = itemViews[id] as? InlineAvatarLayer {

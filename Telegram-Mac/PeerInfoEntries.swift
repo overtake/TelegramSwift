@@ -80,9 +80,9 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: RevenueStatsContextState?, webAppPermissionsState: WebAppPermissionsState?) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, threadPeer: EnginePeer?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?, personalChannel: UserInfoPersonalChannel?, revenueState: StarsRevenueStatsContextState?, tonRevenueState: StarsRevenueStatsContextState?, webAppPermissionsState: WebAppPermissionsState?) -> [PeerInfoEntry] {
     if let threadData = threadData {
-        return topicInfoEntries(view: view, threadData: threadData, arguments: arguments, mediaTabsData: mediaTabsData)
+        return topicInfoEntries(view: view, threadData: threadData, threadPeer: threadPeer, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if peerViewMainPeer(view) is TelegramUser {
         return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState, tonRevenueState: tonRevenueState, webAppPermissionsState: webAppPermissionsState)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {

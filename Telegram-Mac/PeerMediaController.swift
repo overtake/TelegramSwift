@@ -626,11 +626,11 @@ protocol PeerMediaSearchable : AnyObject {
          if isBot {
              self.storyListContext = BotPreviewStoryListContext(account: context.account, engine: context.engine, peerId: peerId, language: nil, assumeEmpty: false)
          } else {
-             self.storyListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false)
+             self.storyListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: false, folderId: nil)
          }
          
         if peerId == context.peerId, threadInfo == nil, isProfileIntended {
-            let archiveStoryListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true)
+            let archiveStoryListContext = PeerStoryListContext(account: context.account, peerId: peerId, isArchived: true, folderId: nil)
             self.archiveStoryListContext = archiveStoryListContext
             self.archiveStories = StoryMediaController(context: context, peerId: peerId, listContext: archiveStoryListContext, isArchived: true)
         } else {
@@ -680,6 +680,9 @@ protocol PeerMediaSearchable : AnyObject {
                 self?.setCenterTitle(title)
             }
         }
+         
+        stories.parentController = self
+        archiveStories?.parentController = self
     }
 
     var unableToHide: Bool {
@@ -878,7 +881,7 @@ protocol PeerMediaSearchable : AnyObject {
                         var canForward:Bool = !ids.isEmpty
                         if let interactions = self?.interactions {
                             for message in messages {
-                                if !canDeleteMessage(message, account: context.account, mode: .history) {
+                                if !canDeleteMessage(message, account: context.account, chatLocation: interactions.chatLocation, mode: .history) {
                                     canDelete = false
                                 }
                                 if !canForwardMessage(message, chatInteraction: interactions) {
@@ -979,7 +982,7 @@ protocol PeerMediaSearchable : AnyObject {
             if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
             } else if let _ = view.cachedData as? CachedChannelData {
-                if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup {
+                if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup, !peer.isMonoForum {
                     return (exist: true, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
@@ -1268,7 +1271,7 @@ protocol PeerMediaSearchable : AnyObject {
         let ready = data |> map { _ in return true }
         
         genericView.segmentPanelView.segmentControl.didChangeSelectedItem = { [weak self] item in
-            let newMode = PeerMediaCollectionMode(rawValue: item.uniqueId)!
+            let newMode = PeerMediaCollectionMode(rawValue: Int32(item.uniqueId))!
             
             if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
                 self?.currentMainTableView?(mainTable, true, true)
@@ -1285,13 +1288,19 @@ protocol PeerMediaSearchable : AnyObject {
             let location: ChatLocation
             let mode: ChatMode
             if let threadInfo = threadInfo, peerId == id {
+            
                 location = .thread(threadInfo.message)
-                mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.effectiveTopId))
+                if threadInfo.isMonoforumPost {
+                    mode = .history
+                } else {
+                    mode = .thread(mode: .topic(origin: threadInfo.message.effectiveTopId))
+                }
             } else {
                 location = .peer(id)
                 mode = .history
             }
-            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder))
+            navigateToChat(navigation: self?.navigationController, context: context, chatLocation: location, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: threadInfo?.contextHolder)
+
         }
         
         interactions.focusMessageId = { _, focusMessageId, _ in
@@ -1339,7 +1348,7 @@ protocol PeerMediaSearchable : AnyObject {
                         var otherCounter:Int32 = 0
                         var _mustDeleteForEveryoneMessage: Bool = true
                         for message in messages {
-                            if !canDeleteMessage(message, account: context.account, mode: .history) {
+                            if !canDeleteMessage(message, account: context.account, chatLocation: strongSelf.interactions.chatLocation, mode: .history) {
                                 canDelete = false
                             }
                             if !mustDeleteForEveryoneMessage(message) {
@@ -1445,10 +1454,10 @@ protocol PeerMediaSearchable : AnyObject {
         tabsDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] tabs, selected, hasLoaded in
             var items:[ScrollableSegmentItem] = []
             if hasLoaded, let `self` = self {
-                let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
+                let insets = NSEdgeInsets(left: 5, right: 5, bottom: 2)
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
-                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: Int64(tab.rawValue), selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
                 self.genericView.updateEmpty(items.isEmpty, animated: !firstTabAppear)
@@ -1501,9 +1510,12 @@ protocol PeerMediaSearchable : AnyObject {
         summaries.append(.webPage)
         summaries.append(.voiceOrInstantVideo)
         summaries.append(.music)
+        
+        let mediaPeerId = threadInfo?.message.peerId ?? peerId
+        let threadId = threadInfo?.message.threadId
 
         let counters: Signal<(PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]), NoError> = combineLatest(self.modeValue.get(), context.engine.data.subscribe(EngineDataMap(
-            summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: peerId, threadId: nil, tag: $0) }
+            summaries.map { TelegramEngine.EngineData.Item.Messages.MessageCount(peerId: mediaPeerId, threadId: threadId, tag: $0) }
         )), storiesCount, archiveStoriesCount, similarChannelsCount, similarBotsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount)
         |> map { mode, summaries, storiesCount, archiveStoriesCount, similarChannelsCount, similarBotsCount, commonGroupsCount, savedMessagesCount, savedCount, giftsCount -> (PeerMediaCollectionMode?, [PeerMediaCollectionMode: Int32]) in
             var result: [PeerMediaCollectionMode: Int32] = [:]

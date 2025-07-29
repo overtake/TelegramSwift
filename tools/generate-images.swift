@@ -945,6 +945,7 @@ func initialize() -> [String] {
     array.append("channel_feature_emoji_pack")
     array.append("channel_feature_voice_to_text")
     array.append("channel_feature_no_ads")
+    array.append("channel_feature_autotranslate")
 
     array.append("chat_hidden_author")
     array.append("chat_my_notes")
@@ -968,8 +969,22 @@ func initialize() -> [String] {
     array.append("chatlist_apps")
     
     array.append("chat_input_channel_gift")
+    array.append("chat_input_suggest_message")
 
     
+    array.append("chat_input_send_gift")
+    array.append("chat_input_suggest_post")
+
+    
+    array.append("todo_selection")
+    array.append("todo_selected")
+    
+    array.append("todo_selection_other_incoming")
+    array.append("todo_selection_other_outgoing")
+    
+    array.append("todo_selected_other_incoming")
+    array.append("todo_selected_other_outgoing")
+
 
     return array
 }

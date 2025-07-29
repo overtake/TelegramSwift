@@ -186,6 +186,15 @@ private final class ConferenceCallE2EContextStateImpl: ConferenceCallE2EContextS
         return self.call.emojiState()
     }
     
+    func getParticipantLatencies() -> [Int64: Double] {
+        let dict = self.call.participantLatencies()
+        var result: [Int64: Double] = [:]
+        for (k, v) in dict {
+            result[k.int64Value] = v.doubleValue
+        }
+        return result
+    }
+    
     func getParticipants() -> [ConferenceCallE2EContext.BlockchainParticipant] {
         return self.call.participants().map { ConferenceCallE2EContext.BlockchainParticipant(userId: $0.userId, internalId: $0.internalId) }
     }
@@ -194,8 +203,8 @@ private final class ConferenceCallE2EContextStateImpl: ConferenceCallE2EContextS
         return self.call.participants().map { $0.userId }
     }
 
-    func applyBlock(block: Data) {
-        self.call.applyBlock(block)
+    func applyBlock(block: Data) -> Bool {
+        return self.call.applyBlock(block)
     }
 
     func applyBroadcastBlock(block: Data) {
@@ -1047,6 +1056,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         return self.statePromise.get()
     }
     
+    private var checkIndex = 0
+    
     private var stateVersionValue: Int = 0 {
         didSet {
             if self.stateVersionValue != oldValue {
@@ -1745,7 +1756,16 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 if let keyPair = strongSelf.keyPair {
                     if let mappedKeyPair = TdKeyPair(keyId: keyPair.id, publicKey: keyPair.publicKey.data) {
                         let userId = strongSelf.joinAsPeerId.id._internalGetInt64Value()
+                        var checkIndex = 0
                         generateE2EData = { block -> JoinGroupCallE2E? in
+                            
+                            checkIndex += 1
+                            
+                            if checkIndex > 1 {
+                                var bp = 0
+                                bp += 1
+                            }
+                            
                             if let block {
                                 guard let resultBlock = tdGenerateSelfAddBlock(mappedKeyPair, userId, block) else {
                                     return nil
@@ -1776,6 +1796,12 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
 
                 strongSelf.currentLocalSsrc = ssrc
+                strongSelf.checkIndex += 1
+                
+                if strongSelf.checkIndex > 1 {
+                    var bp = 0
+                    bp += 1
+                }
                 strongSelf.requestDisposable.set((strongSelf.accountContext.engine.calls.joinGroupCall(
                     peerId: strongSelf.peerId,
                     joinAs: strongSelf.joinAsPeerId,
@@ -3737,6 +3763,15 @@ private func startGroupCall(context: AccountContext, peerId: PeerId?, joinAs: Pe
             subscribedToScheduled: initialInfo.subscribedToScheduled,
             isStream: false
         ), .id(id: initialInfo.id, accessHash: initialInfo.accessHash))
+    } else if let initialCall {
+        initial = (EngineGroupCallDescription(
+            id: initialCall.id,
+            accessHash: initialCall.accessHash,
+            title: initialCall.title,
+            scheduleTimestamp: initialCall.scheduleTimestamp,
+            subscribedToScheduled: initialCall.subscribedToScheduled,
+            isStream: false
+        ), .id(id: initialCall.id, accessHash: initialCall.accessHash))
     }
     
     

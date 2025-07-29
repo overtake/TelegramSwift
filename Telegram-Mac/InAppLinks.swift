@@ -61,7 +61,7 @@ private func hTmeParseDuration(_ durationStr: String) -> Int {
 
 let itunesAppLink = "https://apps.apple.com/us/app/telegram/id747648890"
 
-let XTR: String = TelegramCurrency.xtr.rawValue
+let XTR: String = LocalTelegramCurrency.xtr.rawValue
 let XTRSTAR: String = "⭐️"
 let XTR_ICON = "Icon_Peer_Premium"
 let TINY_SPACE = "\u{2009}\u{2009}"
@@ -84,9 +84,9 @@ let star_sub_period: Int32 = 300
 let star_sub_period: Int32 = 2592000
 #endif
 
-let TON: String = TelegramCurrency.ton.rawValue
+let TON: String = LocalTelegramCurrency.ton.rawValue
 
-enum TelegramCurrency : String {
+enum LocalTelegramCurrency : String {
     case xtr = "XTR"
     case ton = "TON"
     
@@ -580,7 +580,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             let navigation = context.bindings.rootNavigation()
             let current = navigation.controller as? ChatController
             
-            if let current = current, current.chatInteraction.mode.threadId64 == result.message.threadId {
+            if let current = current, current.chatInteraction.chatLocation.threadId == result.message.threadId {
                 if let commentId = commentId {
                     let commentMessageId = MessageId(peerId: result.message.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                     current.chatInteraction.focusMessageId(nil, .init(messageId: commentMessageId, string: nil), .CenterEmpty)
@@ -599,7 +599,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     commentMessageId = MessageId(peerId: result.message.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
-                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), focusTarget: .init(messageId: commentMessageId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(mode: mode), focusTarget: .init(messageId: commentMessageId), initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }
         }, error: { error in
             switch error {
@@ -685,9 +685,9 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                             break
                         case let .result(messages):
                             if let threadId = messages.first?.threadId {
-                                _ = ForumUI.openTopic(threadId, peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
+                                _ = ForumUI.openTopic(threadId, peerId: peer.id, context: context, messageId: nil, animated: true, addition: true).start(next: { result in
                                     if !result {
-                                        ForumUI.open(peer.id, context: context)
+                                        ForumUI.open(peer.id, addition: true, context: context)
                                     }
                                 })
                             }
@@ -697,7 +697,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                     
                     
                 } else {
-                    ForumUI.open(peer.id, context: context)
+                    ForumUI.open(peer.id, addition: true, context: context)
                 }
             } else {
                 let openChat: Bool
@@ -1053,7 +1053,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
     case let .joinchat(_, hash, context, interaction):
         
         let openForum:(PeerId)->Void = { peerId in
-            ForumUI.open(peerId, context: context)
+            ForumUI.open(peerId, addition: true, context: context)
         }
         
 //        #if DEBUG
@@ -1326,6 +1326,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 text = strings().unknownError
             case .disallowedStarGift:
                 text = strings().giftSendDisallowError
+            case .starGiftResellTooEarly:
+                text = strings().unknownError
+            case .starGiftUserLimit:
+                text = strings().giftOptionsGiftBuyLimitReached
             }
             showModalText(for: getWindow(context), text: text)
         })
@@ -1390,8 +1394,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
         afterComplete(true)
     case let .folder(_, slug, context):
         loadAndShowSharedFolder(context: context, slug: slug)
+        afterComplete(true)
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
+        afterComplete(true)
     case let .boost(_, username, context):
         let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = resolveUsername(username: username, context: context) |> mapToSignal { value in
             if let value = value {
@@ -1418,6 +1424,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 
             }
         })
+        afterComplete(true)
     case let .gift(_, slug, context):
         _ = showModalProgress(signal: context.engine.payments.checkPremiumGiftCode(slug: slug), for: getWindow(context)).start(next: { info in
             if let info = info {
@@ -1426,6 +1433,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 alert(for: getWindow(context), info: strings().unknownError)
             }
         })
+        afterComplete(true)
     case let .multigift(_, context):
         let behaviour = SelectContactsBehavior.init(settings: [.contacts, .remote, .excludeBots], excludePeerIds: [], limit: 10)
         
@@ -1433,6 +1441,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             
             showModal(with: PremiumGiftingController(context: context, peerIds: peerIds), for: getWindow(context))
         })
+        afterComplete(true)
     case .businessLink(link: let link, slug: let slug, context: let context):
         _ = showModalProgress(signal: context.engine.peers.resolveMessageLink(slug: slug), for: getWindow(context)).startStandalone(next: { link in
             if let link {
@@ -1452,8 +1461,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().chatLinkUnavailable)
             }
         })
+        afterComplete(true)
     case let .tonsite(link, context):
         BrowserStateContext.get(context).open(tab: .tonsite(url: link))
+        afterComplete(true)
     case let .starsTopup(_, amount, purpose, context):
         let balance = context.starsContext.state |> map { $0?.balance } |> take(1) |> deliverOnMainQueue
         _ = balance.startStandalone(next: { balance in
@@ -1467,6 +1478,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 }
             }
         })
+        afterComplete(true)
     case let .nft(_, slug, context):
         _ = showModalProgress(signal: context.engine.payments.getUniqueStarGift(slug: slug), for: getWindow(context)).start(next: { gift in
             if let gift {
@@ -1475,6 +1487,7 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().unknownError)
             }
         })
+        afterComplete(true)
     case let .joinCall(_, slug, context):
                 
         _ = showModalProgress(signal: context.engine.calls.getCurrentGroupCall(reference: .link(slug: slug)), for: getWindow(context)).start(next: { summary in
@@ -1487,6 +1500,10 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
                 showModalText(for: getWindow(context), text: strings().groupCallInviteLinkExpired)
             }
         })
+        afterComplete(true)
+    case let .starsInfo(_, context):
+        showModal(with: Star_ListScreen(context: context, source: .account), for: getWindow(context))
+        afterComplete(true)
     }
     
 }
@@ -1511,31 +1528,34 @@ private func updateAppAsYouWish(text: String, updateApp: Bool) {
 
 func escape(with link:String, addPercent: Bool = true) -> String {
     var escaped = addPercent ? link.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? link : link
-    escaped = escaped.replacingOccurrences(of: "%21", with: "!")
-    escaped = escaped.replacingOccurrences(of: "%24", with: "$")
-    escaped = escaped.replacingOccurrences(of: "%26", with: "&")
-    escaped = escaped.replacingOccurrences(of: "%2B", with: "+")
-    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
-    escaped = escaped.replacingOccurrences(of: "%2F", with: "/")
-    escaped = escaped.replacingOccurrences(of: "%3A", with: ":")
-    escaped = escaped.replacingOccurrences(of: "%3B", with: ";")
-    escaped = escaped.replacingOccurrences(of: "%3D", with: "=")
-    escaped = escaped.replacingOccurrences(of: "%3F", with: "?")
-    escaped = escaped.replacingOccurrences(of: "%40", with: "@")
-    escaped = escaped.replacingOccurrences(of: "%20", with: " ")
-    escaped = escaped.replacingOccurrences(of: "%09", with: "\t")
-    escaped = escaped.replacingOccurrences(of: "%23", with: "#")
-    escaped = escaped.replacingOccurrences(of: "%3C", with: "<")
-    escaped = escaped.replacingOccurrences(of: "%3E", with: ">")
-    escaped = escaped.replacingOccurrences(of: "%22", with: "\"")
-    escaped = escaped.replacingOccurrences(of: "%0A", with: "\n")
-    escaped = escaped.replacingOccurrences(of: "%25", with: "%")
-    escaped = escaped.replacingOccurrences(of: "%2E", with: ".")
-    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
-    escaped = escaped.replacingOccurrences(of: "%7D", with: "}")
-    escaped = escaped.replacingOccurrences(of: "%7B", with: "{")
-    escaped = escaped.replacingOccurrences(of: "%5B", with: "[")
-    escaped = escaped.replacingOccurrences(of: "%5D", with: "]")
+    
+    escaped = escaped.removingPercentEncoding ?? escaped
+//    
+//    escaped = escaped.replacingOccurrences(of: "%21", with: "!")
+//    escaped = escaped.replacingOccurrences(of: "%24", with: "$")
+//    escaped = escaped.replacingOccurrences(of: "%26", with: "&")
+//    escaped = escaped.replacingOccurrences(of: "%2B", with: "+")
+//    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
+//    escaped = escaped.replacingOccurrences(of: "%2F", with: "/")
+//    escaped = escaped.replacingOccurrences(of: "%3A", with: ":")
+//    escaped = escaped.replacingOccurrences(of: "%3B", with: ";")
+//    escaped = escaped.replacingOccurrences(of: "%3D", with: "=")
+//    escaped = escaped.replacingOccurrences(of: "%3F", with: "?")
+//    escaped = escaped.replacingOccurrences(of: "%40", with: "@")
+//    escaped = escaped.replacingOccurrences(of: "%20", with: " ")
+//    escaped = escaped.replacingOccurrences(of: "%09", with: "\t")
+//    escaped = escaped.replacingOccurrences(of: "%23", with: "#")
+//    escaped = escaped.replacingOccurrences(of: "%3C", with: "<")
+//    escaped = escaped.replacingOccurrences(of: "%3E", with: ">")
+//    escaped = escaped.replacingOccurrences(of: "%22", with: "\"")
+//    escaped = escaped.replacingOccurrences(of: "%0A", with: "\n")
+//    escaped = escaped.replacingOccurrences(of: "%25", with: "%")
+//    escaped = escaped.replacingOccurrences(of: "%2E", with: ".")
+//    escaped = escaped.replacingOccurrences(of: "%2C", with: ",")
+//    escaped = escaped.replacingOccurrences(of: "%7D", with: "}")
+//    escaped = escaped.replacingOccurrences(of: "%7B", with: "{")
+//    escaped = escaped.replacingOccurrences(of: "%5B", with: "[")
+//    escaped = escaped.replacingOccurrences(of: "%5D", with: "]")
     return escaped
 }
 
@@ -1631,6 +1651,7 @@ enum inAppLink {
     case multigift(link: String, context: AccountContext)
     case nft(link: String, slug: String, context: AccountContext)
     case joinCall(link: String, slug: String, context: AccountContext)
+    case starsInfo(link: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1708,6 +1729,8 @@ enum inAppLink {
             return link
         case let .joinCall(link, _, _):
             return link
+        case let .starsInfo(link, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1720,7 +1743,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/", "nft/", "call/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call", "stars"]
 
 
 let ton_scheme:String = "ton://"
@@ -1743,6 +1766,7 @@ private let keyURLStartattach = "startattach";
 private let keyURLAttach = "attach";
 private let keyURLStartGroup = "startgroup";
 private let keyURLStartChannel = "startchannel";
+private let keyURLStartAdmin = "admin";
 private let keyURLSecret = "secret";
 private let keyURLproxy = "proxy";
 private let keyURLLivestream = "livestream";
@@ -2057,7 +2081,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 let username:String = userAndVariables[0]
                 var action:ChatInitialAction? = nil
                 if userAndVariables.count == 2 {
-                    let (vars, _) = urlVars(with: userAndVariables[1])
+                    let (vars, emptyValue) = urlVars(with: userAndVariables[1])
+                    
+                    
+                    if emptyValue.contains(keyURLStartChannel) || emptyValue.contains(keyURLStartGroup) {
+                        if let openInfo = openInfo, let context = context {
+                            let rights = vars[keyURLAdmin]
+                            return .inviteBotToGroup(link: urlString, username: username, context: context, action: nil, rights: rights, isChannel: emptyValue.contains(keyURLStartChannel), callback: openInfo)
+                        }
+                    }
+                    
                     loop: for (key,value) in vars {
                         switch key {
                         case keyURLStart:
@@ -2312,6 +2345,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         var action:ChatInitialAction? = nil
                         loop: for (key,value) in vars {
                             switch key {
+                            case keyURLStartapp:
+                                action = .makeWebview(appname: "", command: value)
                             case keyURLStart:
                                 action = .start(parameter: escape(with: value, addPercent: false), behavior: .none)
                                 break loop;
@@ -2340,7 +2375,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break
                             }
                         }
-                        if action == nil && emptyVars.contains(keyURLVoiceChat) {
+                        if action == nil && emptyVars.contains(keyURLStartapp) {
+                            action = .makeWebview(appname: "", command: nil)
+                        } else if action == nil && emptyVars.contains(keyURLVoiceChat) {
                             action = .joinVoiceChat(nil)
                         } else if action == nil, vars[keyURLStartattach] != nil || vars[keyURLAttach] != nil {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
@@ -2570,6 +2607,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[25]:
                     if let context = context, let slug = vars[keyURLSlug] {
                         return .joinCall(link: urlString, slug: slug, context: context)
+                    }
+                case known_scheme[26]:
+                    if let context = context{
+                        return .starsInfo(link: urlString, context: context)
                     }
                 default:
                     break

@@ -14,7 +14,6 @@ import SwiftSignalKit
 import TGUIKit
 import InputView
 
-private let optionsLimit: Int = 10
 private let maxTextLength:Int32 = 255
 private let maxOptionLength: Int32 = 100
 
@@ -260,6 +259,8 @@ private func entries(_ state: NewPollState, arguments: Arguments, canBePublic: B
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
+    let optionsLimit = Int(arguments.context.appConfiguration.getGeneralValue("poll_answers_max", orElse: 10))
+    
     
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? strings().newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : strings().newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
@@ -479,6 +480,8 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         statePromise.set(stateValue.modify (f))
     }
     
+    let optionsLimit = Int(context.appConfiguration.getGeneralValue("poll_answers_max", orElse: 10))
+    
     var shouldMakeNextResponderAfterTransition: (InputDataIdentifier, Bool, InputDataIdentifier?, Bool)? = nil
     var shouldMakeNearResponderAfterTransition: (InputDataIdentifier, Int)? = nil
 
@@ -583,12 +586,18 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
             return addOption(true)
         }
         
+        let state = stateValue.with { $0 }
+        
         var fails: [InputDataIdentifier : InputDataValidationFailAction] = [:]
-        for (key, value) in data {
-            if let string = value.stringValue, string.trimmed.isEmpty {
-                fails[key] = .shake
+        if state.textState.string.trimmed.isEmpty {
+            fails[_id_input_title] = .shake
+        }
+        for value in state.options {
+            if value.text.trimmed.isEmpty {
+                fails[value.identifier] = .shake
             }
         }
+        
         if !fails.isEmpty {
             
             let state = stateValue.with { $0 }

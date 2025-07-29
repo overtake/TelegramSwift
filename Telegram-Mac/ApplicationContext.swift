@@ -11,6 +11,49 @@ import IOKit
 import CodeSyntax
 import Dock
 import PrivateCallScreen
+import DetectSpeech
+
+
+func navigateToChat(navigation: NavigationViewController?, context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, focusTarget:ChatFocusTarget? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil, additional: Bool = false, animated: Bool = true, navigationStyle: ViewControllerStyle? = nil) {
+    
+    let open:()->Void = { [weak navigation] in
+        if additional {
+            navigation?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+        } else {
+            navigation?.push(ChatController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+        }
+    }
+    
+    let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: chatLocation.peerId)) |> deliverOnMainQueue
+    
+    _ = signal.start(next: { peer in
+        if let peer = peer?._asPeer() {
+            if peer.hasSensitiveContent(platform: "ios") {
+                if !context.contentConfig.sensitiveContentEnabled, context.contentConfig.canAdjustSensitiveContent {
+                    let need_verification = context.appConfiguration.getBoolValue("need_age_video_verification", orElse: false)
+                    
+                    if need_verification {
+                        showModal(with: VerifyAgeAlertController(context: context), for: context.window)
+                        return
+                    }
+                }
+                if context.contentConfig.sensitiveContentEnabled {
+                    open()
+                } else {
+                    verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: context.contentConfig.canAdjustSensitiveContent ? strings().chatSensitiveContentConfirmThird : nil, optionIsSelected: false, successHandler: { result in
+                        
+                        if result == .thrid {
+                            let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                        }
+                        open()
+                    })
+                }
+            } else {
+                open()
+            }
+        }
+    })
+}
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -525,21 +568,21 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
+        
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-                
-//            showModal(with: WebappTransferDataController(context: context, storedKeys: [WebAppSecureStorage.ExistingKey(uuid: "1", accountName: "Test Account", timestamp: context.timestamp)], completion: { _ in
-//                
-//            }), for: window)
             
-          //  showModal(with: StarGift_Nft_Controller(context: context), for: window)
-          //  context.bindings.rootNavigation().push(Affiliate_StartController(context: context))
+           // showModal(with: AddTonBalanceController(context: context), for: window)
             
+           // context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
+
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
         
         self.context.window.set(handler: { _ -> KeyHandlerResult in
-                        
+                       
+            showModal(with: SuggetMessageModalController(context: context), for: window)
+
            // showModal(with: GroupCallInviteLinkController(context: context, link: .init(link: "t.me/call/+kd93KsOsdd239k"), presentation: darkAppearance), for: window)
 
             return .invoked
@@ -733,8 +776,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                     return
                 }
                 self.view.updateLeftSideView(self.leftSidebarController?.genericView, animated: animated)
-                if !self.window.isFullScreen {
-                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
+                if !self.window.isFullScreen, let screen = self.window.screen {
+                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, min(self.window.frame.width + enlarge, screen.frame.width), self.window.frame.height), display: true, animate: false)
                 }
                 self.updateMinMaxWindowSize(animated: animated)
             }))

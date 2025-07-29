@@ -30,60 +30,60 @@ import TelegramMedia
 import RLottie
 import KeyboardKey
 
-#if !APP_STORE
-import AppCenter
-import AppCenterCrashes
+#if BETA || DEBUG
+import Firebase
+import FirebaseCrashlytics
 #endif
 
 
-
-@available(macOS 13, *)
-class AppIntentObserver : NSObject {
-    
-    private let defaults = UserDefaults(suiteName: ApiEnvironment.intentsBundleId)!
-    
-    private var current: AppIntentDataModel?
-    
-    override init() {
-        super.init()
-        let modelData = defaults.value(forKey: AppIntentDataModel.keyInternal) as? Data
-        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
-            self.current = model
-        }
-        defaults.addObserver(self, forKeyPath: AppIntentDataModel.key, options: .new, context: nil)
-    }
-    
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == AppIntentDataModel.key {
-            update()
-        }
-    }
-    
-    deinit {
-        defaults.removeObserver(self, forKeyPath: AppIntentDataModel.key)
-    }
-    
-    var onUpdate:((AppIntentDataModel?)->Void)?
-    
-    func update() {
-        let modelData = defaults.value(forKey: AppIntentDataModel.key) as? Data
-        let model: AppIntentDataModel?
-        if let modelData, let value = AppIntentDataModel.decoded(modelData) {
-            model = value
-        } else {
-            model = nil
-        }
-        if let model = model {
-            defaults.setValue(model.encoded(), forKey: AppIntentDataModel.keyInternal)
-        }
-        if model != self.current {
-            self.onUpdate?(model)
-        }
-        self.current = model
-    }
-    
-    public static let shared: AppIntentObserver = AppIntentObserver()
-}
+//
+//@available(macOS 13, *)
+//class AppIntentObserver : NSObject {
+//    
+//    private let defaults = UserDefaults(suiteName: ApiEnvironment.intentsBundleId)!
+//    
+//    private var current: AppIntentDataModel?
+//    
+//    override init() {
+//        super.init()
+//        let modelData = defaults.value(forKey: AppIntentDataModel.keyInternal) as? Data
+//        if let modelData, let model = AppIntentDataModel.decoded(modelData) {
+//            self.current = model
+//        }
+//        defaults.addObserver(self, forKeyPath: AppIntentDataModel.key, options: .new, context: nil)
+//    }
+//    
+//    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+//        if keyPath == AppIntentDataModel.key {
+//            update()
+//        }
+//    }
+//    
+//    deinit {
+//        defaults.removeObserver(self, forKeyPath: AppIntentDataModel.key)
+//    }
+//    
+//    var onUpdate:((AppIntentDataModel?)->Void)?
+//    
+//    func update() {
+//        let modelData = defaults.value(forKey: AppIntentDataModel.key) as? Data
+//        let model: AppIntentDataModel?
+//        if let modelData, let value = AppIntentDataModel.decoded(modelData) {
+//            model = value
+//        } else {
+//            model = nil
+//        }
+//        if let model = model {
+//            defaults.setValue(model.encoded(), forKey: AppIntentDataModel.keyInternal)
+//        }
+//        if model != self.current {
+//            self.onUpdate?(model)
+//        }
+//        self.current = model
+//    }
+//    
+//    public static let shared: AppIntentObserver = AppIntentObserver()
+//}
 
 final class CodeSyntax {
     private let syntaxer: Syntaxer
@@ -332,6 +332,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func updateGraphicContext() {
         ctxLayer?.display()
     }
+    
+    
 
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -339,6 +341,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         _ = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { event in
             return BrowserStateContext.checkKey(event)
         })
+        
+        UserDefaults.standard.set(true, forKey: "NSApplicationCrashOnExceptions")
         
         
        // NSApplication.shared.applicationIconImage = NSImage(named: "PremiumBlack")
@@ -455,11 +459,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         mw = window
         
+        
         #if BETA || DEBUG
-            if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
-                AppCenter.start(withAppSecret: secret, services: [Crashes.self])
-            }
+        FirebaseApp.configure()
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+        Crashlytics.crashlytics().sendUnsentReports()
         #endif
+        
         
         
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
@@ -822,56 +828,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 self.hangKeybind(sharedContext)
                 
                 
-                if #available(macOS 13, *) {
-                    AppIntentObserver.shared.onUpdate = { value in
-                        _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
-                            if value?.alwaysUseDarkMode == true {
-                                return settings.withUpdatedToDefault(dark: true)
-                            } else {
-                                return settings.withUpdatedToDefault(dark: settings.defaultIsDark)
-                            }
-                        }).start()
-                        
-                        if let value = value?.useUnableStatus {
-                            
-                            _ = (sharedContext.activeAccountsWithInfo |> deliverOnMainQueue |> take(1)).startStandalone(next: { accounts in
-                                for account in accounts.1 {
-                                    _ = updateSomeSettingsInteractively(postbox: account.account.postbox, { current in
-                                        var current = current
-                                        if value {
-                                            current.focusIntentStatusFallback = account.peer.emojiStatus?.fileId
-                                        }
-                                        current.focusIntentStatusEnabled = value
-                                        return current
-                                    }).startStandalone()
-                                }
-                            })
-                            
-                            if value {
-                               
-                                
-                                /*
-                                 let files = context.diceCache.top_emojies_status |> deliverOnMainQueue
-                                  _ = files.startStandalone(next: { files in
-                                      if let file = files.first(where: { $0.customEmojiText == "⛔️" }) {
-                                          _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
-                                      }
-                                  })
-                                 */
-                                
-                                if let context = self.contextValue?.context {
-                                  
-                                }
-                                
-
-                            } else {
-                                
-                            }
-                        }
-                    }
-                    AppIntentObserver.shared.update()
-                }
-                
+              
                 
                 let rawAccounts = sharedContext.activeAccounts
                     |> map { _, accounts, _ -> [Account] in
@@ -940,7 +897,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     } else {
                                         updatedMode = .replies(origin: fromId)
                                     }
-                                    pushController(chatLocation, .thread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
+                                    pushController(chatLocation, .thread(mode: updatedMode), fromId, result.contextHolder, currentInChat)
                                     
                                 }, error: { error in
                                     
@@ -1152,7 +1109,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     applicationUpdateUrlPrefix = nil
                                 }
                                 setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
-                                #if STABLE
+                                #if STABLE || BETA || DEBUG
                                 updater_resetWithUpdaterSource(.internal(context: context.context))
                                 #else
                                 updater_resetWithUpdaterSource(.external(context: context.context))
@@ -1436,6 +1393,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     
+    
+    
     func window(_ window: NSWindow, willPositionSheet sheet: NSWindow, using rect: NSRect) -> NSRect {
         var rect = rect
         rect.origin.y -= 22
@@ -1652,7 +1611,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             if context.account.id == identifier.recordId {
                 switch identifier.source {
                 case let .peerId(peerId):
-                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                    navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                 }
             } else {
                 switch identifier.source {

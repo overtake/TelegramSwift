@@ -56,7 +56,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let simpleTransform: Bool
     fileprivate let allowedLinkHosts: [String]
     fileprivate let playAnimation: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = [], playAnimation: Bool = true) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: Updated_ChatTextInputState, viewType: GeneralViewType, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, simpleTransform: Bool = true, filter:@escaping(String)->String, updateState:@escaping(Updated_ChatTextInputState)->Void, limit: Int32, hasEmoji: Bool = false, allowedLinkHosts: [String] = [], playAnimation: Bool = true, enabled: Bool = true) {
         self.filter = filter
         self.limit = limit
         self.context = context
@@ -71,7 +71,7 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.state = state
         self.inputPlaceholder = .initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text))
         self.placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        super.init(initialSize, stableId: stableId, viewType: viewType, enabled: enabled)
     }
     
     var textFieldLeftInset: CGFloat {
@@ -95,6 +95,9 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     var hasTextLimitation: Bool {
+        if self.height == 16 + (viewType.innerInset.top + viewType.innerInset.bottom) {
+            return false
+        }
         if let placeholder = placeholder {
             return placeholder.hasLimitationText
         } else {
@@ -123,10 +126,12 @@ class InputTextDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     override var height: CGFloat {
         let attr = NSMutableAttributedString()
-        attr.append(self.state.inputText)
+        attr.append(string: self.state.inputText.string)
+                
         attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
-        let size = attr.sizeFittingWidth(textWidth)
-        return max(16, size.height) + (viewType.innerInset.top + viewType.innerInset.bottom)
+        let height = InputTextView.rawTextHeight(for: attr, width: textWidth)
+        
+        return max(16, height) + (viewType.innerInset.top + viewType.innerInset.bottom)
     }
     
     private(set) fileprivate var additionRightInset: CGFloat = 0
@@ -300,8 +305,8 @@ class InputTextDataRowView : GeneralContainableRowView {
         if let rightItem = item.rightItem {
             switch rightItem {
             case .action:
-                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right - (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0), innerInsets.top - 7), size: rightActionView.frame.size))
-                emojiOffset += rightActionView.frame.width + 10 + (item.isTextLimitVisible ? textLimitation.frame.width + 4 : 0)
+                transition.updateFrame(view: rightActionView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - rightActionView.frame.width - innerInsets.right, innerInsets.top - 5), size: rightActionView.frame.size))
+                emojiOffset += rightActionView.frame.width
             case .loading:
                 if let loadingView = loadingView  {
                     transition.updateFrame(view: loadingView, frame: CGRect(origin: NSMakePoint(self.containerView.frame.width - loadingView.frame.width - innerInsets.right, innerInsets.top), size: loadingView.frame.size))
@@ -313,7 +318,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         
         
         if let emoji {
-            transition.updateFrame(view: emoji, frame: CGRect(origin: NSMakePoint(containerView.frame.width - emoji.frame.width - innerInsets.right - emojiOffset, innerInsets.top - 1), size: emoji.frame.size))
+            transition.updateFrame(view: emoji, frame: CGRect(origin: NSMakePoint(containerView.frame.width - emoji.frame.width - innerInsets.right - emojiOffset, innerInsets.top - 3), size: emoji.frame.size))
         }
         
         self.textInputSuggestionsView?.updateRect(transition: transition)
@@ -452,7 +457,7 @@ class InputTextDataRowView : GeneralContainableRowView {
         }
         
         if item.hasTextLimitation {
-            textLimitation.isHidden = item.state.inputText.string.length < item.limit / 3 * 2 || item.state.inputText.string.length == item.limit
+            textLimitation.isHidden = item.state.inputText.string.length < item.limit / 3 * 2 || item.state.inputText.string.length == item.limit || !item.enabled
             let color: NSColor = item.state.inputText.string.length > item.limit ? theme.colors.redUI : theme.colors.grayText
             textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.state.inputText.string.length))", color: color, font: .normal(.small))
             textLimitation.sizeToFit()
@@ -518,8 +523,14 @@ class InputTextDataRowView : GeneralContainableRowView {
         textView.interactions.allowedLinkHosts = item.allowedLinkHosts
         textView.interactions.canTransform = item.canMakeTransformations
         textView.interactions.simpleTransform = item.simpleTransform
+        textView.interactions.inputIsEnabled = item.enabled
         
         
+        self.textView.change(opacity: item.enabled ? 1 : 0.5, animated: animated)
+        self.rightActionView.isHidden = !item.enabled
+        self.placeholderAction?.isHidden = !item.enabled
+        self.emoji?.isHidden = !item.enabled
+
         let prevPolicy = textView.interactions.emojiPlayPolicy
             
         textView.interactions.emojiPlayPolicy = item.playAnimation ? .loop : .framesCount(1)

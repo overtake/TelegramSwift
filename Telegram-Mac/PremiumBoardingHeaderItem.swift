@@ -19,6 +19,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         case coin
         case star
         case grace
+        case gift(StarGift.Gift)
     }
     
     fileprivate let titleLayout: TextViewLayout
@@ -40,6 +41,16 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         var info = NSMutableAttributedString()
         
         switch sceneType {
+        case let .gift(gift):
+            let limit = gift.perUserLimit?.total ?? 0
+            title = .initialize(string: strings().premiumStarGiftTitle, color: presentation.colors.text, font: .medium(.header))
+            info.append(
+                string: strings().premiumStarGiftInfo(Int(limit)),
+                color: theme.colors.text,
+                font: .normal(.text)
+            )
+            info.detectBoldColorInString(with: .medium(.text))
+
         case .coin:
             title = .initialize(string: strings().premiumBoardingBusinessTelegramBusiness, color: presentation.colors.text, font: .medium(.header))
             if isPremium {
@@ -237,7 +248,20 @@ private final class PremiumBoardingHeaderView : TableRowView {
         
         timer?.start()
         
-        if let status = item.peer?.emojiStatus {
+        
+        
+        if case let .gift(gift) = item.sceneType {
+            if let view = self.premiumView {
+                performSubviewRemoval(view, animated: animated)
+                self.premiumView = nil
+            }
+            if self.statusView == nil {
+                let status = InlineStickerView(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: gift.file.fileId.id, file: gift.file, emoji: ""), size: NSMakeSize(100, 100))
+                self.statusView = status
+                addSubview(status)
+            }
+            
+        } else if let status = item.peer?.emojiStatus {
             if let view = self.premiumView {
                 performSubviewRemoval(view, animated: animated)
                 self.premiumView = nil
@@ -253,7 +277,8 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 performSubviewRemoval(view, animated: animated)
                 self.statusView = nil
             }
-            var current: (PremiumSceneView & NSView)
+            
+            var current: (PremiumSceneView & NSView)?
             if let view = self.premiumView {
                 current = view
             } else {
@@ -262,13 +287,21 @@ private final class PremiumBoardingHeaderView : TableRowView {
                     current = PremiumCoinSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
                 case .star, .grace:
                     current = PremiumStarSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
+                case .gift:
+                    current = nil
                 }
-                addSubview(current)
-                self.premiumView = current
+                if let current {
+                    addSubview(current)
+                    self.premiumView = current
+                } else {
+                    self.premiumView?.removeFromSuperview()
+                    self.premiumView = nil
+                }
             }
-            current.sceneBackground = backdorColor
-            current.updateLayout(size: current.frame.size, transition: .immediate)
-
+            if var current {
+                current.sceneBackground = backdorColor
+                current.updateLayout(size: current.frame.size, transition: .immediate)
+            }
         }
         
         needsLayout = true

@@ -12,6 +12,8 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 
+
+
 final class Star_TransactionItem : GeneralRowItem {
     fileprivate let context:AccountContext
     fileprivate let transaction: Star_Transaction
@@ -23,18 +25,41 @@ final class Star_TransactionItem : GeneralRowItem {
             
     fileprivate let callback: (Star_Transaction)->Void
     
+    fileprivate let preview: TelegramMediaFile?
+    
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, transaction: Star_Transaction, callback: @escaping(Star_Transaction)->Void) {
         self.context = context
         self.transaction = transaction
         self.callback = callback
         
-        let amountAttr = NSMutableAttributedString()
-        if transaction.amount.value < 0 {
-            amountAttr.append(string: "\(transaction.amount) \(clown)", color: theme.colors.redUI, font: .medium(.text))
+        
+        if let gift = transaction.native.starGift {
+            self.preview = gift.generic?.file ?? gift.unique?.file
         } else {
-            amountAttr.append(string: "+\(transaction.amount) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
+            self.preview = nil
         }
-        amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
+       
+        let amountAttr = NSMutableAttributedString()
+        switch transaction.currency {
+        case .stars:
+            if transaction.amount.value < 0 {
+                amountAttr.append(string: "\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.redUI, font: .medium(.text))
+            } else {
+                amountAttr.append(string: "+\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
+            }
+        case .ton:
+            if transaction.amount.value < 0 {
+                amountAttr.append(string: "\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.redUI, font: .medium(.text))
+            } else {
+                amountAttr.append(string: "+\(transaction.amount.string(transaction.currency)) \(clown)", color: theme.colors.greenUI, font: .medium(.text))
+            }
+        }
+        switch transaction.currency {
+        case .stars:
+            amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file, playPolicy: .onceEnd), for: clown)
+        case .ton:
+            amountAttr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.ton_logo.file, color: transaction.amount.value < 0 ? theme.colors.redUI : theme.colors.greenUI, playPolicy: .onceEnd), for: clown)
+        }
         
         self.amountLayout = .init(amountAttr)
         
@@ -72,7 +97,9 @@ final class Star_TransactionItem : GeneralRowItem {
         self.dateLayout = .init(.initialize(string: date, color: theme.colors.grayText, font: .normal(.text)))
         
         var descString: String? = nil
-        if let count = transaction.native.paidMessageCount {
+        if transaction.native.flags.contains(.isStarGiftResale)  {
+            descString = transaction.amount.value < 0 ? strings().starTransactionGiftPurchase : strings().starTransactionGiftSale
+        } else if let count = transaction.native.paidMessageCount {
             descString = strings().starTransactionMessageFeeCountable(Int(count))
         } else if let premiumGiftMonths = transaction.native.premiumGiftMonths {
             descString = strings().starsTransactionPremiumFor(Int(premiumGiftMonths))
@@ -163,6 +190,9 @@ private final class TransactionView : GeneralContainableRowView {
     private var photo: TransformImageView?
     private var avatarImage: ImageView?
     private var descView: TextView?
+    
+    private var previewView: InlineStickerView?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(amountView)
@@ -245,7 +275,7 @@ private final class TransactionView : GeneralContainableRowView {
             }
             current.layer?.cornerRadius = 10
                         
-            let reference = StarsTransactionReference(peerId: messageId.peerId, id: item.transaction.id, isRefund: item.transaction.native.flags.contains(.isRefund))
+            let reference = StarsTransactionReference(peerId: messageId.peerId, ton: item.transaction.currency == .ton, id: item.transaction.id, isRefund: item.transaction.native.flags.contains(.isRefund))
             
             var updateImageSignal: Signal<ImageDataTransformation, NoError>?
             
@@ -356,6 +386,26 @@ private final class TransactionView : GeneralContainableRowView {
         }
 
         
+        if let preview = item.preview {
+            
+            if let view = self.previewView, view.animateLayer.file?.fileId != preview.fileId {
+                performSubviewRemoval(view, animated: animated)
+                self.previewView = nil
+            }
+            
+            let current: InlineStickerView
+            if let view = self.previewView {
+                current = view
+            } else {
+                current = InlineStickerView(account: item.context.account, file: preview, size: NSMakeSize(18, 18), playPolicy: .onceEnd)
+                addSubview(current)
+                self.previewView = current
+            }
+        } else if let view = self.previewView {
+            performSubviewRemoval(view, animated: animated)
+            self.previewView = nil
+        }
+        
         if let descLayout = item.descLayout {
             let current: TextView
             if let view = self.descView {
@@ -387,8 +437,17 @@ private final class TransactionView : GeneralContainableRowView {
         nameView.setFrameOrigin(NSMakePoint(10 + 44 + 10, 7))
         dateView.setFrameOrigin(NSMakePoint(nameView.frame.minX, containerView.frame.height - dateView.frame.height - 7))
         
+        
+        var offset: CGFloat = 0
+        
+        if let previewView {
+            previewView.setFrameOrigin(NSMakePoint(nameView.frame.minX, dateView.frame.minY - previewView.frame.height - 2))
+            
+            offset += previewView.frame.width + 4
+        }
+        
         if let descView {
-            descView.setFrameOrigin(NSMakePoint(nameView.frame.minX, dateView.frame.minY - descView.frame.height - 2))
+            descView.setFrameOrigin(NSMakePoint(nameView.frame.minX + offset, dateView.frame.minY - descView.frame.height - 2))
         }
 
     }

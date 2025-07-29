@@ -14,6 +14,22 @@ import RangeSet
 import TelegramMedia
 import TelegramMediaPlayer
 import TelegramCore
+import Postbox
+
+final class SVideoAdsArguments {
+    let context: AccountContext
+    let removeAd: (Message, Bool, Bool)->Void
+    let maybeNext:(Message)->Void
+    let markAsSeen:(Message)->Void
+    let invoke:(Message)->Void
+    init(context: AccountContext, removeAd: @escaping(Message, Bool, Bool)->Void, maybeNext:@escaping(Message)->Void, markAsSeen:@escaping(Message)->Void, invoke:@escaping(Message)->Void) {
+        self.context = context
+        self.removeAd = removeAd
+        self.maybeNext = maybeNext
+        self.markAsSeen = markAsSeen
+        self.invoke = invoke
+    }
+}
 
 private func selectBestQualityIcon(for quality: UniversalVideoContentVideoQuality) -> NSImage {
     
@@ -347,6 +363,311 @@ final class SVideoInteractions {
     }
 }
 
+private class AdMessageView : Control {
+    
+    
+    class AdView: Control {
+        private let textView = TextView()
+        private let imageView = ImageView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(textView)
+            addSubview(imageView)
+            imageView.image = NSImage(resource: .iconSearchAd).precomposed(NSColor.white)
+            imageView.sizeToFit()
+            
+            let layout = TextViewLayout(.initialize(string: strings().searchAd, color: NSColor.white, font: .normal(.small)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            self.textView.update(layout)
+            
+            self.textView.userInteractionEnabled = false
+            self.textView.isSelectable = false
+            
+            set(background: NSColor.white.withAlphaComponent(0.2), for: .Normal)
+            
+            setFrameSize(NSMakeSize(textView.frame.width + 8 + imageView.frame.width, 16))
+            
+            self.layer?.cornerRadius = frame.height / 2
+            
+            scaleOnClick = true
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            textView.centerY(x: 5)
+            imageView.centerY(x: textView.frame.maxX)
+        }
+        
+    }
+    
+    private let avatarControl: AvatarControl = AvatarControl(font: .avatar(13))
+    private let titleView = TextView()
+    private let infoView = InteractiveTextView()
+    private var progressContainer = Control(frame: NSMakeRect(0, 0, 40, 40))
+    private let progress = FireTimerControl(frame: NSMakeRect(0, 0, 36, 36))
+    private let close = ImageView()
+    
+    private let backgroundView = NSVisualEffectView()
+    
+    private var counterView: DynamicCounterTextView?
+    
+    private let adView = AdView(frame: .zero)
+    
+    private var timer: SwiftSignalKit.Timer?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        backgroundView.material = .dark
+        backgroundView.blendingMode = .withinWindow
+        backgroundView.wantsLayer = true
+
+        addSubview(backgroundView)
+        addSubview(titleView)
+        addSubview(infoView)
+        addSubview(avatarControl)
+        progressContainer.addSubview(progress)
+        progressContainer.addSubview(close)
+        addSubview(progressContainer)
+        
+        addSubview(adView)
+        
+        
+        
+        
+        progress.userInteractionEnabled = false
+        close.isEventLess = true
+        
+        self.progressContainer.scaleOnClick = true
+        self.scaleOnClick = true
+                
+        avatarControl.setFrameSize(NSMakeSize(36, 36))
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
+        infoView.userInteractionEnabled = false
+        
+        self.backgroundColor = NSColor.grayForeground.withAlphaComponent(0.35)
+        self.layer?.cornerRadius = 10
+        
+        self.layout()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(message: Message, arguments: SVideoAdsArguments, width: CGFloat, animated: Bool) {
+        
+        setSingle(handler: { [weak arguments] _ in
+            arguments?.invoke(message)
+        }, for: .Click)
+        
+        let context: AccountContext = arguments.context
+        
+        let titleLayout = TextViewLayout(.initialize(string: message.author?.displayTitle, color: .white, font: .medium(.text)), maximumNumberOfLines: 1)
+        titleLayout.measure(width: width - avatarControl.frame.maxX - 60)
+        self.titleView.update(titleLayout)
+        
+        
+        let attr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: 13, openInfo: { _, _, _, _ in }, textColor: .white, linkColor: darkPalette.accent, monospacedPre: .white, monospacedCode: .white, isDark: false, bubbled: false).mutableCopy() as! NSMutableAttributedString
+        
+        InlineStickerItem.apply(to: attr, associatedMedia: message.associatedMedia, entities: message.entities, isPremium: context.isPremium)
+        
+
+        let textViewLayout = TextViewLayout(attr)
+        textViewLayout.measure(width: width - avatarControl.frame.maxX - 60)
+        self.infoView.set(text: textViewLayout, context: arguments.context)
+
+        close.image = NSImage(resource: .iconStoryClose).precomposed(NSColor.white)
+        close.sizeToFit()
+        
+        self.avatarControl.setPeer(account: context.account, peer: message.author)
+        
+        let counterView = DynamicCounterTextView(frame: .zero)
+        progressContainer.addSubview(counterView)
+        self.counterView = counterView
+        
+
+        self.close.layer?.opacity = 0
+              
+        let duration: Double = Double(message.adAttribute?.minDisplayDuration ?? 15)
+        let deadline = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+        
+        progress.updateValue = { [weak counterView] current in
+            let value = Int(floor(duration * Double(current)))
+            let dynamicResult = DynamicCounterTextView.make(for: "\(value)", count: "\(value)", font: .normal(.text), textColor: .white, width: .greatestFiniteMagnitude)
+            if let counterView {
+                counterView.update(dynamicResult, animated: true)
+                counterView.change(size: dynamicResult.size, animated: animated)
+                counterView.change(pos: counterView.centerFrame().origin, animated: animated)
+            }
+        }
+
+        progress.update(color: NSColor.white, timeout: duration, deadlineTimestamp: deadline + duration)
+        
+        progress.reachedTimeout = { [weak self] in
+            self?.progress.change(opacity: 0, animated: true)
+            if let counterView = self?.counterView {
+                performSubviewRemoval(counterView, animated: animated)
+                self?.counterView = nil
+            }
+            self?.close.change(opacity: 1, animated: true)
+        }
+        
+        if let adAttribute = message.adAttribute {
+            
+            adView.contextMenu = { [weak self, weak arguments] in
+                
+                guard let window = self?.window as? Window, let arguments else {
+                    return ContextMenu()
+                }
+                
+                let menu = ContextMenu(presentation: .current(darkPalette))
+                
+                menu.onShow = { [weak self] _ in
+                    self?.progress.isPaused = true
+                }
+                menu.onClose = {
+                    self?.progress.isPaused = false
+                }
+
+                if let text = message.adAttribute?.sponsorInfo {
+                    let submenu = ContextMenu(presentation: .current(darkPalette))
+                    
+                    let item = ContextMenuItem(strings().searchAdSponsorInfo, itemImage: MenuAnimation.menu_show_info.value)
+                    
+                    item.submenu = submenu
+                    
+                    submenu.addItem(ContextMenuItem(text, handler: {
+                        copyToClipboard(text)
+                        showModalText(for: window, text: strings().contextAlertCopied)
+                    }, removeTail: false))
+                    
+                    if let text = message.adAttribute?.additionalInfo {
+                        if !submenu.items.isEmpty {
+                            submenu.addItem(ContextSeparatorItem())
+                        }
+                        submenu.addItem(ContextMenuItem(text, handler: {
+                            copyToClipboard(text)
+                            showModalText(for: window, text: strings().contextAlertCopied)
+                        }, removeTail: false))
+                    }
+                    
+                }
+                
+                menu.addItem(ContextMenuItem(strings().chatMessageSponsoredAbout, handler: {
+                    showModal(with: SearchAdAboutController(context: context), for: window)
+                }, itemImage: MenuAnimation.menu_show_info.value))
+
+                
+                menu.addItem(ContextMenuItem(strings().chatMessageSponsoredReport, handler: {
+                    
+                    _ = showModalProgress(signal: context.engine.messages.reportAdMessage(opaqueId: adAttribute.opaqueId, option: nil), for: window).startStandalone(next: { result in
+                        switch result {
+                        case .reported:
+                            showModalText(for: window, text: strings().chatMessageSponsoredReportAready)
+                        case .adsHidden:
+                            break
+                        case let .options(title, options):
+                            showComplicatedReport(context: context, title: title, info: strings().chatMessageSponsoredReportLearnMore, header: strings().chatMessageSponsoredReport, data: .init(subject: .list(options.map { .init(string: $0.text, id: $0.option) }), title: strings().chatMessageSponsoredReportOptionTitle), report: { report in
+                                return context.engine.messages.reportAdMessage(opaqueId: adAttribute.opaqueId, option: report.id) |> `catch` { error in
+                                    return .single(.reported)
+                                } |> deliverOnMainQueue |> map { result in
+                                    switch result {
+                                    case let .options(_, options):
+                                        return .init(subject: .list(options.map { .init(string: $0.text, id: $0.option) }), title: report.string)
+                                    case .reported:
+                                        showModalText(for: window, text: strings().chatMessageSponsoredReportSuccess)
+                                        arguments.removeAd(message, false, false)
+                                        return nil
+                                    case .adsHidden:
+                                        return nil
+                                    }
+                                }
+                                
+                            }, window: window)
+                        }
+                    }, error: { error in
+                        switch error {
+                        case .premiumRequired:
+                            prem(with: PremiumBoardingController(context: context, source: .no_ads, openFeatures: true), for: window)
+                        case .generic:
+                            break
+                        }
+                    })
+                }, itemImage: MenuAnimation.menu_restrict.value))
+                
+                
+                if !context.premiumIsBlocked {
+                    menu.addItem(ContextSeparatorItem())
+
+                    menu.addItem(ContextMenuItem(strings().searchAdRemoveAd, handler: {
+                        arguments.removeAd(message, false, false)
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                }
+
+                return menu
+            }
+        }
+        
+        self.progressContainer.setSingle(handler: { [weak arguments, weak self] _ in
+            arguments?.removeAd(message, true, self?.counterView != nil)
+        }, for: .Click)
+        
+        let maxDuration = Double(message.adAttribute?.maxDisplayDuration ?? 30)
+
+        self.timer = SwiftSignalKit.Timer(timeout: maxDuration, repeat: false, completion: { [weak arguments] in
+            arguments?.maybeNext(message)
+        }, queue: .mainQueue())
+        
+        self.timer?.start()
+        
+        self.setFrameSize(NSMakeSize(width, height))
+    }
+    
+    func resize(width: CGFloat) {
+        infoView.resize(width - avatarControl.frame.maxX - 60)
+        titleView.resize(width - avatarControl.frame.maxX - 60)
+    }
+    
+    var height: CGFloat {
+        return 8 + titleView.frame.height + 2 + infoView.frame.height + 8
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        
+
+        transition.updateFrame(view: backgroundView, frame: size.bounds)
+        
+        transition.updateFrame(view: avatarControl, frame: CGRect(origin: NSMakePoint(10, 7), size: avatarControl.frame.size))
+        transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(avatarControl.frame.maxX + 10, 8), size: titleView.frame.size))
+        transition.updateFrame(view: infoView, frame: CGRect(origin: NSMakePoint(avatarControl.frame.maxX + 10, size.height - infoView.frame.height - 8), size: infoView.frame.size))
+        
+        transition.updateFrame(view: progressContainer, frame: progressContainer.centerFrameY(x: size.width - progressContainer.frame.width - 6))
+
+        transition.updateFrame(view: progress, frame: progress.centerFrame())
+        transition.updateFrame(view: close, frame: close.centerFrame())
+        
+        if let counterView {
+            transition.updateFrame(view: counterView, frame: counterView.centerFrame())
+        }
+
+        
+        transition.updateFrame(view: adView, frame: NSMakeRect(titleView.frame.maxX + 2, titleView.frame.minY, adView.frame.width, adView.frame.height))
+    }
+}
+
 private final class SVideoControlsView : Control {
     
     fileprivate weak var mediaPlayer: (UniversalVideoContentView & NSView)?
@@ -549,7 +870,6 @@ private final class SVideoControlsView : Control {
     private var controlMovePosition: NSPoint? = nil
     
     
-    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(backgroundView)
@@ -606,6 +926,8 @@ private final class SVideoControlsView : Control {
         
         backgroundView.material = .dark
         backgroundView.blendingMode = .withinWindow
+        backgroundView.wantsLayer = true
+        backgroundView.layer?.cornerRadius = 15
         
         playOrPause.autohighlight = false
         rewindForward.autohighlight = false
@@ -733,47 +1055,116 @@ private final class SVideoControlsView : Control {
     
     override func layout() {
         super.layout()
-        backgroundView.frame = bounds
-        
-        playOrPause.centerX(y: 16)
-        
-        rewindBackward.setFrameOrigin(playOrPause.frame.minX - rewindBackward.frame.width - 36, 16)
-        rewindForward.setFrameOrigin(playOrPause.frame.maxX + 36, 16)
-        
-        
-        menuItems.setFrameOrigin(NSMakePoint(frame.width - menuItems.frame.width - 16, 16))
-
-        if menuItems.isHidden {
-            toggleFullscreen.setFrameOrigin(frame.width - toggleFullscreen.frame.width - 16, 16)
-        } else {
-            toggleFullscreen.setFrameOrigin(menuItems.frame.minX - toggleFullscreen.frame.width - 10, 16)
-        }
-        
-        switch controlStyle {
-        case .compact:
-            togglePip.setFrameOrigin(16, 16)
-        case .regular:
-            togglePip.setFrameOrigin(toggleFullscreen.frame.minX - togglePip.frame.width - 10, 16)
-        }
-        
-        
-        volumeContainer.setFrameOrigin(16, 16)
-        volumeToggle.centerY(x: 0)
-        volumeSlider.centerY(x: volumeToggle.frame.maxX + 16)
-        
-        
-        switch controlStyle {
-        case .compact:
-            progress.setFrameOrigin(16 + currentTimeView.frame.width + 16, frame.height - 20 - progress.frame.height + (progress.frame.height - progress.progressHeight) / 2)
-        case .regular:
-            progress.setFrameOrigin(volumeContainer.frame.minX + volumeSlider.frame.minX, frame.height - 20 - progress.frame.height + (progress.frame.height - progress.progressHeight) / 2)
-        }
-        progress.setFrameSize(NSMakeSize(max(frame.width - progress.frame.origin.x - 16 - 16 - durationView.frame.width, 0), 12))
-        
-        currentTimeView.setFrameOrigin(16, progress.frame.minY)
-        durationView.setFrameOrigin(frame.width - durationView.frame.width - 16, progress.frame.minY)
-
+        updateLayout(size: frame.size, transition: .immediate)
     }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        var offset: CGFloat = 0
+//        if let adMessageView {
+//            offset = adMessageView.frame.height + 20
+//        }
+        let yOffset: CGFloat = 16 + offset
+        
+        
+        let bgRect: NSRect
+//        if let adMessageView {
+//            bgRect = NSMakeRect(0, adMessageView.frame.height + 20, size.width, size.height - (adMessageView.frame.height + 20))
+//        } else {
+            bgRect = size.bounds
+//        }
+        
+        transition.updateFrame(view: backgroundView, frame: bgRect)
+
+        
+
+        transition.updateFrame(view: playOrPause, frame: playOrPause.centerFrameX(y: yOffset))
+
+        transition.updateFrame(
+            view: rewindBackward,
+            frame: NSRect(
+                origin: NSPoint(x: playOrPause.frame.minX - rewindBackward.frame.width - 36, y: yOffset),
+                size: rewindBackward.frame.size
+            )
+        )
+
+        transition.updateFrame(
+            view: rewindForward,
+            frame: NSRect(
+                origin: NSPoint(x: playOrPause.frame.maxX + 36, y: yOffset),
+                size: rewindForward.frame.size
+            )
+        )
+
+        transition.updateFrame(
+            view: menuItems,
+            frame: NSRect(
+                origin: NSPoint(x: size.width - menuItems.frame.width - 16, y: yOffset),
+                size: menuItems.frame.size
+            )
+        )
+
+        let fullscreenX: CGFloat
+        if menuItems.isHidden {
+            fullscreenX = size.width - toggleFullscreen.frame.width - 16
+        } else {
+            fullscreenX = menuItems.frame.minX - toggleFullscreen.frame.width - 10
+        }
+        transition.updateFrame(
+            view: toggleFullscreen,
+            frame: NSRect(origin: NSPoint(x: fullscreenX, y: yOffset), size: toggleFullscreen.frame.size)
+        )
+
+        let pipX: CGFloat
+        switch controlStyle {
+        case .compact:
+            pipX = 16
+        case .regular:
+            pipX = fullscreenX - togglePip.frame.width - 10
+        }
+
+        transition.updateFrame(
+            view: togglePip,
+            frame: NSRect(origin: NSPoint(x: pipX, y: yOffset), size: togglePip.frame.size)
+        )
+
+        transition.updateFrame(
+            view: volumeContainer,
+            frame: NSRect(origin: NSPoint(x: 16, y: yOffset), size: volumeContainer.frame.size)
+        )
+
+        transition.updateFrame(view: volumeToggle, frame: volumeToggle.centerFrameY(x: 0))
+        transition.updateFrame(view: volumeSlider, frame: volumeSlider.centerFrameY(x: volumeToggle.frame.maxX + 16))
+
+        let progressY = size.height - 20 - progress.frame.height + (progress.frame.height - progress.progressHeight) / 2
+
+        let progressX: CGFloat
+        switch controlStyle {
+        case .compact:
+            progressX = 16 + currentTimeView.frame.width + 16
+        case .regular:
+            progressX = volumeContainer.frame.minX + volumeSlider.frame.minX
+        }
+
+        let progressWidth = max(size.width - progressX - 16 - 16 - durationView.frame.width, 0)
+
+        transition.updateFrame(
+            view: progress,
+            frame: NSRect(origin: NSPoint(x: progressX, y: progressY), size: NSSize(width: progressWidth, height: 12))
+        )
+
+        transition.updateFrame(
+            view: currentTimeView,
+            frame: NSRect(origin: NSPoint(x: 16, y: progressY), size: currentTimeView.frame.size)
+        )
+
+        transition.updateFrame(
+            view: durationView,
+            frame: NSRect(origin: NSPoint(x: size.width - durationView.frame.width - 16, y: progressY), size: durationView.frame.size)
+        )
+    }
+
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -844,6 +1235,56 @@ class SVideoView: NSView {
     private var previewView: PreviewView?
     private var overlayPreview: ImageView?
     
+    private var adMessage: Message?
+    private var adsArguments: SVideoAdsArguments?
+    
+    private var adMessageView: AdMessageView?
+    
+    
+    func set(adMessage: Message?, arguments: SVideoAdsArguments?, animated: Bool) {
+        self.adMessage = adMessage
+        self.adsArguments = arguments
+        
+        if let adMessage, let arguments {
+            let current: AdMessageView
+            let isNew: Bool
+            if let view = self.adMessageView {
+                current = view
+                isNew = false
+            } else {
+                current = AdMessageView(frame: NSMakeRect(10, 0, controls.frame.width, 50))
+                self.adMessageView = current
+                addSubview(current, positioned: .below, relativeTo: controls)
+                isNew = true
+            }
+            
+            let width: CGFloat
+            if let _ = pipControls {
+                width = frame.width - 40
+            } else {
+                width = controls.frame.width
+            }
+            
+            current.set(message: adMessage, arguments: arguments, width: width, animated: animated)
+            
+            if isNew {
+                current.centerX(y: frame.height - current.frame.height - 10)
+
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        } else if let view = self.adMessageView {
+            performSubviewRemoval(view, animated: animated)
+            self.adMessageView = nil
+        }
+        
+        if let adMessage {
+            arguments?.markAsSeen(adMessage)
+        }
+        
+        let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeOut)
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
     var status: MediaPlayerStatus? = nil {
         didSet {
             if status != oldValue {
@@ -875,12 +1316,24 @@ class SVideoView: NSView {
         didSet {
             if let ranges = bufferingStatus {
                 var bufRanges: [Range<CGFloat>] = []
+                guard ranges.1 != 0 else {
+                    print("Warning: Division by zero avoided")
+                    return
+                }
+
                 for range in ranges.0.ranges {
                     let low = CGFloat(range.lowerBound) / CGFloat(ranges.1)
                     let high = CGFloat(range.upperBound) / CGFloat(ranges.1)
-                    let br: Range<CGFloat> = Range<CGFloat>(uncheckedBounds: (lower: low, upper: high))
-                    bufRanges.append(br)
+                    
+                    // Ensure lowerBound <= upperBound
+                    let lower = min(low, high)
+                    let upper = max(low, high)
+                    
+                    if lower < upper {
+                        bufRanges.append(lower..<upper)
+                    }
                 }
+
                 controls.bufferingRanges = bufRanges
                 pipControls?.bufferingRanges = bufRanges
             } else {
@@ -905,22 +1358,60 @@ class SVideoView: NSView {
     
     override func layout() {
         super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         let oldSize = mediaPlayer.frame.size
-        mediaPlayer.frame = bounds
-        mediaPlayer.updateLayout(size: bounds.size, transition: .immediate)
-        let previousIsCompact: Bool = self.controlsStyle.isCompact
-        self.controlsStyle = self.controlsStyle.withUpdatedStyle(compact: frame.width < 300).withUpdatedHideRewind(hideRewind: frame.width < 400)
-        controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), self.isControlsLimited ? 46 : 94)
-        let bufferingStatus = self.bufferingStatus
-        self.bufferingStatus = bufferingStatus
-        if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact || oldSize != frame.size {
-            controls.centerX(self, y: frame.height - controls.frame.height - 24)
-        }
-        bufferingIndicator.center()
-        bufferingIndicator.progressColor = .white
-        backgroundView.frame = bounds
-        self.pipControls?.frame = bounds
+        transition.updateFrame(view: mediaPlayer, frame: NSRect(origin: .zero, size: size))
+        mediaPlayer.updateLayout(size: size, transition: transition)
+
+        let previousIsCompact = controlsStyle.isCompact
+        self.controlsStyle = self.controlsStyle
+            .withUpdatedStyle(compact: size.width < 300)
+            .withUpdatedHideRewind(hideRewind: size.width < 400)
+
+        let controlsWidth = self.controlsStyle.isCompact ? 220 : min(size.width - 10, 510)
+        let controlsHeight: CGFloat = self.isControlsLimited ? 46 : 94
         
+        var offset: CGFloat = 0
+        
+        if let adMessageView {
+            let adWidth: CGFloat
+            if let _ = pipControls {
+                adWidth = size.width - 40
+            } else {
+                adWidth = controlsWidth
+            }
+            adMessageView.resize(width: adWidth)
+            
+            let x = focus(NSMakeSize(adWidth, adMessageView.height)).minX
+            
+            transition.updateFrame(view: adMessageView, frame: CGRect(origin: CGPoint(x: x, y: size.height - adMessageView.height - 20), size: NSMakeSize(adWidth, adMessageView.height)))
+            adMessageView.updateLayout(size: adMessageView.frame.size, transition: transition)
+            
+            offset += adMessageView.frame.height
+        }
+        
+        var controlsRect = CGRect(origin: NSMakePoint(floorToScreenPixels((size.width - controlsWidth) / 2), size.height - controlsHeight - 24 - offset), size: NSSize(width: controlsWidth, height: controlsHeight))
+
+        let bufferingStatus = self.bufferingStatus
+        self.bufferingStatus = bufferingStatus // possibly triggers side effects?
+
+        transition.updateFrame(view: controls, frame: controlsRect)
+        controls.updateLayout(size: controls.frame.size, transition: transition)
+
+
+        transition.updateFrame(view: bufferingIndicator, frame: bufferingIndicator.centerFrame())
+        bufferingIndicator.progressColor = .white
+
+        transition.updateFrame(view: backgroundView, frame: NSRect(origin: .zero, size: size))
+
+        if let pipControls = pipControls {
+            transition.updateFrame(view: pipControls, frame: NSRect(origin: .zero, size: size))
+        }
+        
+
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -928,6 +1419,10 @@ class SVideoView: NSView {
     }
     
     func hideControls(_ hide: Bool, animated: Bool) {
+        
+        var hide = hide
+        
+        
         if !hide {
             controls.isHidden = false
         }
@@ -1041,6 +1536,9 @@ class SVideoView: NSView {
                 return !controls.isHidden
             }
         }
+        if let adMessageView, NSPointInRect(point, adMessageView.frame) {
+            return true
+        }
         return NSPointInRect(point, controls.frame) && !controls.isHidden
     }
     
@@ -1083,7 +1581,7 @@ class SVideoView: NSView {
         bufferingIndicator.layer?.cornerRadius = 20
         
         backgroundView.isHidden = true
-
+        
         
         controls.playOrPause.set(handler: { [weak self] _ in
             self?.interactions?.playOrPause()

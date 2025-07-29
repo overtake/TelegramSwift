@@ -191,7 +191,8 @@ class FastSettings {
     private static let kReactionsMode = "kReactionsMode"
 
     private static let kVolumeRate = "kVolumeRate"
-    
+    private static let kStoryVolumeRate = "kStoryVolumeRate"
+
     private static let kArchiveAutohidden = "kArchiveAutohidden"
     private static let kAutohideArchiveFeature = "kAutohideArchiveFeature"
 
@@ -216,6 +217,8 @@ class FastSettings {
     
     
     private static let kContactsSort = "kContactsSort";
+    
+    private static let kAgeVerification = "kAgeVerification2";
     
     public static var contactsSort: PeerListState.ContactsSort {
         get {
@@ -284,6 +287,16 @@ class FastSettings {
     static func toggleChannelMessagesMuted(_ peerId: PeerId) -> Void {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
+    
+    static func monoforumState(_ peerId: PeerId) -> MonoforumUIState {
+        let int = UserDefaults.standard.integer(forKey: "\(peerId)_monoforum_state")
+        return MonoforumUIState(rawValue: int) ?? .vertical
+    }
+    
+    static func setMonoforumState(_ peerId: PeerId, state: MonoforumUIState) -> Void {
+        UserDefaults.standard.set(state.rawValue, forKey: "\(peerId)_monoforum_state")
+    }
+
     
     static var photoDimension: CGFloat {
         if let largePhotos = UserDefaults.standard.value(forKey: kPhotoSize) as? Bool {
@@ -427,6 +440,18 @@ class FastSettings {
         }
     }
     
+    static var volumeStoryRate: Float {
+        if UserDefaults.standard.value(forKey: kStoryVolumeRate) != nil {
+            return min(max(UserDefaults.standard.float(forKey: kStoryVolumeRate), 0), 1)
+        } else {
+            return 0.8
+        }
+    }
+    
+    static func setStoryVolumeRate(_ rate: Float) {
+        UserDefaults.standard.set(rate, forKey: kStoryVolumeRate)
+    }
+    
     static func setVolumeRate(_ rate: Float) {
         UserDefaults.standard.set(rate, forKey: kVolumeRate)
     }
@@ -545,6 +570,15 @@ class FastSettings {
     
     static func markChannelIntroHasSeen() {
         UserDefaults.standard.set(true, forKey: kNeedShowChannelIntro)
+    }
+    
+    static var lastAgeVerification: TimeInterval? {
+        get {
+            return UserDefaults.standard.value(forKey: kAgeVerification) as? TimeInterval
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kAgeVerification)
+        }
     }
     
     static var forceTouchAction: ForceTouchAction {

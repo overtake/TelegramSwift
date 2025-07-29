@@ -23,7 +23,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
     fileprivate let removeAd:((AdPeer, Bool)->Void)?
     let isRecentApp: Bool
     
-    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, controlAction:@escaping()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, unreadBadge: UnreadSearchBadge = .none, canAddAsTag: Bool = false, storyStats: PeerStoryStats? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, customAction: ShortPeerRowItem.CustomAction? = nil, isGrossingApp: Bool = false, isRecentApp: Bool = false, adPeer: AdPeer? = nil, removeAd:((AdPeer, Bool)->Void)? = nil) {
+    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, controlAction:@escaping()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, unreadBadge: UnreadSearchBadge = .none, canAddAsTag: Bool = false, storyStats: PeerStoryStats? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }, customAction: ShortPeerRowItem.CustomAction? = nil, isGrossingApp: Bool = false, isRecentApp: Bool = false, adPeer: AdPeer? = nil, removeAd:((AdPeer, Bool)->Void)? = nil, monoforumPeer: Peer? = nil) {
         self.canRemoveFromRecent = canRemoveFromRecent
         self.controlAction = controlAction
         self.canAddAsTag = canAddAsTag
@@ -40,7 +40,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
         }
         
 
-        super.init(initialSize, peer: peer, account: account, context: context, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems, highlightVerified: true, story: storyStats?.subscriptionItem(peer), openStory: openStory, customAction: badge != nil ? nil : customAction, makeAvatarRound: isGrossingApp)
+        super.init(initialSize, peer: peer, account: account, context: context, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems, highlightVerified: true, story: storyStats?.subscriptionItem(peer), openStory: openStory, customAction: badge != nil ? nil : customAction, makeAvatarRound: isGrossingApp, monoforumPeer: monoforumPeer)
     }
     
     
@@ -49,7 +49,7 @@ class RecentPeerRowItem: ShortPeerRowItem {
     }
     
     override var textAdditionInset:CGFloat {
-        return (self.canRemoveFromRecent || self.canAddAsTag ? 5 : 0) + (highlightVerified ? 25 : 0)
+        return (self.canRemoveFromRecent || self.canAddAsTag ? 5 : 0) + (highlightVerified ? 25 : 0) + (adPeer != nil ? 30 : 0)
     }
 }
 

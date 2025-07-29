@@ -45,7 +45,7 @@ class PeerInfoArguments {
     let mediaController: ()->PeerMediaController?
     
     let getStarsContext:(()->StarsRevenueStatsContext?)?
-    let getTonContext:(()->RevenueStatsContext?)?
+    let getTonContext:(()->StarsRevenueStatsContext?)?
     let getStarGiftsContext:(()->ProfileGiftsContext?)?
     
     
@@ -146,7 +146,7 @@ class PeerInfoArguments {
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->RevenueStatsContext?)? = nil, getStarGiftsContext: (()->ProfileGiftsContext?)? = nil) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?, getStarsContext: (()->StarsRevenueStatsContext?)? = nil, getTonContext: (()->StarsRevenueStatsContext?)? = nil, getStarGiftsContext: (()->ProfileGiftsContext?)? = nil) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -269,7 +269,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
                 return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
             })
             
-            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower), grouping: true, animateVisibleOnly: false))
+            subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower, false), grouping: true, animateVisibleOnly: false))
             subscriber.putCompletion()
         }
         
@@ -401,7 +401,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     private let mediaController: PeerMediaController
     
     private let revenueContext: StarsRevenueStatsContext?
-    private let tonRevenueContext: RevenueStatsContext?
+    private let tonRevenueContext: StarsRevenueStatsContext?
     
     private let starGiftsProfile: ProfileGiftsContext
     
@@ -504,10 +504,23 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             }
             return
         }
-        let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
-        _ = signal.start(next: { [weak navigation] peer in
-            if peer.restrictionText(context.contentSettings) == nil {
-                navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode, starGiftsProfile: starGiftsProfile), animated, style: animated ? .push : Optional.none)
+        let signal = context.account.postbox.peerView(id:peerId) |> take(1) |> deliverOnMainQueue
+        _ = signal.start(next: { [weak navigation] view in
+            let mainPeer = peerViewMainPeer(view)
+            let monoforumPeer = peerViewMonoforumMainPeer(view)
+            
+            var effectivePeer: Peer? = mainPeer
+            
+            if let mainPeer = mainPeer as? TelegramChannel, mainPeer.isMonoForum {
+                if !mainPeer.groupAccess.canManageDirect {
+                    effectivePeer = monoforumPeer
+                }
+            }
+            
+            if let peer = effectivePeer {
+                if peer.restrictionText(context.contentSettings) == nil {
+                    navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode, starGiftsProfile: starGiftsProfile), animated, style: animated ? .push : Optional.none)
+                }
             }
         })
     }
@@ -535,13 +548,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         #endif
         
         if peer.isBot, let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) || test {
-            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
-            self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+            self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: false)
+            self.tonRevenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: true)
         } else if peer.isChannel || peer.isSupergroup {
             if peer.isAdmin {
-                self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId)
+                self.revenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: false)
                 if peer.isChannel {
-                    self.tonRevenueContext = RevenueStatsContext(account: context.account, peerId: peerId)
+                    self.tonRevenueContext = StarsRevenueStatsContext(account: context.account, peerId: peerId, ton: true)
                 } else {
                     self.tonRevenueContext = nil
                 }
@@ -864,7 +877,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             self._channelArguments?.peer = peer
             self._userArguments?.peer = peer
 
-            if peer.isForum && threadId != nil {
+            if peer.isForumOrMonoForum && threadId != nil {
                 return .single(self._topicArguments)
             }
             if peer.isGroup || peer.isSupergroup {
@@ -906,7 +919,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             revenueState = .single(nil)
         }
         
-        let tonRevenueState: Signal<RevenueStatsContextState?, NoError>
+        let tonRevenueState: Signal<StarsRevenueStatsContextState?, NoError>
         if let tonRevenueContext {
             tonRevenueState = tonRevenueContext.state |> map(Optional.init)
         } else {
@@ -940,7 +953,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             personalChannelSignal = .single(nil)
         }
         
-        let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
+        let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?, EnginePeer?), NoError> = arguments.get() |> mapToSignal { arguments in
             
             let inviteLinksCount: Signal<Int32, NoError>
             if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
@@ -1003,6 +1016,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             
             
             let threadData: Signal<MessageHistoryThreadData?, NoError>
+            let threadPeer: Signal<EnginePeer?, NoError>
             if let threadId = threadId {
                 let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: threadId)
                 threadData = context.account.postbox.combinedView(keys: [key]) |> map { views in
@@ -1010,27 +1024,28 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                     let data = view?.info?.data.get(MessageHistoryThreadData.self)
                     return data
                 }
+                threadPeer = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: PeerId(threadId)))
             } else {
                 threadData = .single(nil)
+                threadPeer = .single(nil)
             }
             
             
             
-            
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal, personalChannelSignal, revenueState, tonRevenueState, webAppPermissionsState(context: context, peerId: peerId))
-            |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories, personalChannel, revenueState, tonRevenueState, webAppPermissionsState -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, threadPeer, storiesSignal, personalChannelSignal, revenueState, tonRevenueState, webAppPermissionsState(context: context, peerId: peerId))
+            |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, threadPeer, stories, personalChannel, revenueState, tonRevenueState, webAppPermissionsState -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?, EnginePeer?), NoError> in
                     
                     
-                let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState, tonRevenueState: tonRevenueState, webAppPermissionsState: webAppPermissionsState).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, threadPeer: threadPeer, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories, personalChannel: personalChannel, revenueState: revenueState, tonRevenueState: tonRevenueState, webAppPermissionsState: webAppPermissionsState).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
-                    return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
+                    return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData, threadPeer) }
                     
             } |> deliverOnMainQueue
             } |> afterDisposed {
                 actionsDisposable.dispose()
             }
                 
-        disposable.set(transition.start(next: { [weak self] (peerView, transition, threadData) in
+        disposable.set(transition.start(next: { [weak self] (peerView, transition, threadData, threadPeer) in
             
             _ = self?.peerView.swap(peerView)
             
@@ -1043,7 +1058,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                     case .group:
                         if let threadData = threadData {
                             let right = peer.adminRights?.rights.contains(.canManageTopics) ?? false
-                            editable = (peer.isAdmin && right) || threadData.isOwnedByMe
+                            editable = ((peer.isAdmin && right) || threadData.isOwnedByMe) && threadPeer == nil
                         } else {
                             editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
                         }

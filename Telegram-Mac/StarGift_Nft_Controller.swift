@@ -12,6 +12,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import InputView
 
 final class TransferUniqueGiftHeaderItem : GeneralRowItem {
     fileprivate let gift: StarGift.UniqueGift
@@ -94,7 +95,7 @@ private final class TransferHeaderView : GeneralRowView {
         container.setFrameSize(NSMakeSize(transferContainer.frame.width + avatar.frame.width + 45, 70))
         
         if item.toPeer.id == item.context.peerId {
-            avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: (top: theme.colors.listBackground, bottom: theme.colors.listBackground), icon: NSImage(resource: .iconStarTransactionRowFragment).precomposed(), iconSize: avatar.frame.size, cornerRadius: nil)) |> map {($0, false)})
+            avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: (top: theme.colors.listBackground, bottom: theme.colors.listBackground), icon: NSImage(resource: .iconStarTransactionRowFragment).precomposed(), iconSize: avatar.frame.size, cornerRadius: nil), bubble: false) |> map {($0, false)})
         } else {
             avatar.setPeer(account: item.context.account, peer: item.toPeer._asPeer())
         }
@@ -548,6 +549,8 @@ private final class HeaderItem : GeneralRowItem {
         
         self.title = .init(.initialize(string: state.headerTitle, color: .white, font: .medium(18)))
         self.info = .init(.initialize(string: state.headerInfo, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), alignment: .center)
+        
+       
 
         for model in models {
             switch model {
@@ -565,9 +568,18 @@ private final class HeaderItem : GeneralRowItem {
                     arguments.transfer()
                 }), .init(title: state.weared ? strings().starNftTakeOff : strings().starNftWear, image: NSImage(resource: .iconNFTWear).precomposed(.white), action: {
                     arguments.toggleWear(uniqueGift)
-                }), .init(title: strings().starNftShare, image: NSImage(resource: .iconNFTShare).precomposed(.white), action: {
-                    arguments.shareNft(uniqueGift)
                 })]
+                
+                if case .starGift = state.purpose {
+                    actions.append(.init(title: uniqueGift.resellStars != nil ? strings().starNftUnlist : strings().starNftSell, image: NSImage(resource: (uniqueGift.resellStars != nil ? .iconNftUnlist : .iconNftSell)).precomposed(.white), action: {
+                        arguments.sellNft(uniqueGift, false)
+                    }))
+                } else {
+                    actions.append(.init(title: strings().starNftShare, image: NSImage(resource: .iconNFTShare).precomposed(.white), action: {
+                        arguments.shareNft(uniqueGift)
+                    }))
+                }
+                
             }
         default:
             break
@@ -602,7 +614,7 @@ private final class HeaderItem : GeneralRowItem {
     var patternColor: NSColor {
         let value = self.backdrops[self.backdropIndex]
         switch value {
-        case let .backdrop(_, _, _, patternColor, _, _):
+        case let .backdrop(_, _, _, _, patternColor, _, _):
             return NSColor.init(UInt32(patternColor))
         default:
             fatalError()
@@ -614,6 +626,10 @@ private final class HeaderItem : GeneralRowItem {
         
         self.title.measure(width: width - 40)
         self.info.measure(width: width - 40)
+        
+        if state.author != nil {
+            self.info.generateAutoBlock(backgroundColor: patternColor.withAlphaComponent(0.4))
+        }
         
         for action in actions {
             action.measure(width: 120)
@@ -633,7 +649,7 @@ private final class HeaderItem : GeneralRowItem {
         
         height += title.layoutSize.height
         height += 5
-        height += info.layoutSize.height
+        height += 20//info.layoutSize.height
         height += 10
         
         if !actions.isEmpty {
@@ -649,7 +665,7 @@ private final class HeaderItem : GeneralRowItem {
     
     var backgroundGradient: [NSColor] {
         switch self.backdrops[self.backdropIndex] {
-        case let .backdrop(_, inner, outer, _, _, _):
+        case let .backdrop(_, _, inner, outer, _, _, _):
             return [NSColor(UInt32(inner)), NSColor(UInt32(outer))]
         default:
             fatalError()
@@ -715,6 +731,8 @@ private final class HeaderView : GeneralRowView {
         addSubview(textView)
         addSubview(infoView)
         addSubview(dismiss)
+        
+        infoView.isSelectable = false
         
         giftView.scaleOnClick = true
         giftView.tooltipOnclick = true
@@ -873,6 +891,74 @@ private final class HeaderView : GeneralRowView {
         textView.update(item.title)
         infoView.update(item.info)
         
+        
+        if let author = item.state.author {
+            let context = item.context
+            
+            infoView.setSingle(handler: { [weak item] view in
+                if let event = NSApp.currentEvent {
+                    let data = context.engine.data.subscribe(
+                        TelegramEngine.EngineData.Item.Peer.Peer(id: author.id),
+                        TelegramEngine.EngineData.Item.Peer.AboutText(id: author.id)
+                    ) |> take(1) |> deliverOnMainQueue
+                    
+                    _ = data.start(next: { [weak view, weak item] data in
+                        
+                        guard let peer = data.0, let view = view else {
+                            return
+                        }
+                        
+                        var firstBlock:[ContextMenuItem] = []
+                        var secondBlock:[ContextMenuItem] = []
+                        let thirdBlock: [ContextMenuItem] = []
+                        
+                        firstBlock.append(GroupCallAvatarMenuItem(peer._asPeer(), context: context))
+                        
+                        firstBlock.append(ContextMenuItem(peer._asPeer().displayTitle, handler: {
+                            item?.arguments.openPeer(peer, true)
+                        }, itemImage: MenuAnimation.menu_open_profile.value))
+                        
+                        if let username = peer.addressName {
+                            firstBlock.append(ContextMenuItem("\(username)", handler: {
+                                item?.arguments.openPeer(peer, true)
+                            }, itemImage: MenuAnimation.menu_atsign.value))
+                        }
+                        
+                        switch data.1 {
+                        case let .known(about):
+                            if let about = about, !about.isEmpty {
+                                firstBlock.append(ContextMenuItem(about, handler: {
+                                    item?.arguments.openPeer(peer, true)
+                                }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                            }
+                        default:
+                            break
+                        }
+                        
+                        let blocks:[[ContextMenuItem]] = [firstBlock,
+                                                          secondBlock,
+                                                          thirdBlock].filter { !$0.isEmpty }
+                        var items: [ContextMenuItem] = []
+
+                        for (i, block) in blocks.enumerated() {
+                            if i != 0 {
+                                items.append(ContextSeparatorItem())
+                            }
+                            items.append(contentsOf: block)
+                        }
+                        
+                        let menu = ContextMenu()
+                        
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        AppMenu.show(menu: menu, event: event, for: view)
+                    })
+                }
+            }, for: .Click)
+        } else {
+            infoView.removeAllHandlers()
+        }
         backgroundView.backgroundColor = .blackTransparent
 
         //let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
@@ -889,7 +975,7 @@ private final class HeaderView : GeneralRowView {
             ownerActions.setFrameSize(NSMakeSize(size.width, 60))
             ownerActions.centerX(y: size.height - ownerActions.frame.height - 10)
             
-            infoView.centerX(y: ownerActions.frame.minY - infoView.frame.height - 10)
+            infoView.centerX(y: ownerActions.frame.minY - 20 - 10)
 
                         
             let itemSize = (frame.width - (CGFloat(ownerActions.subviews.count + 1) * 10)) / CGFloat(ownerActions.subviews.count)
@@ -899,12 +985,12 @@ private final class HeaderView : GeneralRowView {
                 x += subview.frame.width + 10
             }
         } else {
-            infoView.centerX(y: size.height - infoView.frame.height - 15)
+            infoView.centerX(y: size.height - 20 - 15)
         }
         
         backgroundView.offset = 30
         
-        transition.updateFrame(view: backgroundView, frame: NSMakeSize(340, 274).bounds)
+        transition.updateFrame(view: backgroundView, frame: NSMakeSize(340, 278).bounds)
         backgroundView.updateLayout(size: backgroundView.frame.size, transition: transition)
         
         dismiss.setFrameOrigin(NSMakePoint(10, 10))
@@ -939,17 +1025,21 @@ private final class Arguments {
     let transfer:()->Void
     let copyNftLink:(StarGift.UniqueGift)->Void
     let shareNft:(StarGift.UniqueGift)->Void
+    let sellNft:(StarGift.UniqueGift, Bool)->Void
     let toggleWear:(StarGift.UniqueGift)->Void
     let togglePin:()->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void) {
+    let openPeer:(EnginePeer, Bool)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, toggleName:@escaping()->Void, transfer:@escaping()->Void, copyNftLink:@escaping(StarGift.UniqueGift)->Void, shareNft:@escaping(StarGift.UniqueGift)->Void, sellNft:@escaping(StarGift.UniqueGift, Bool)->Void, toggleWear:@escaping(StarGift.UniqueGift)->Void, togglePin:@escaping()->Void, openPeer:@escaping(EnginePeer, Bool)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.toggleName = toggleName
         self.transfer = transfer
         self.copyNftLink = copyNftLink
         self.shareNft = shareNft
+        self.sellNft = sellNft
         self.toggleWear = toggleWear
         self.togglePin = togglePin
+        self.openPeer = openPeer
     }
 }
 
@@ -960,18 +1050,23 @@ private struct State : Equatable {
     var nameEnabled: Bool = true
     var converted: Bool = false
     
+    var form: BotPaymentForm?
+    
+
+    var author: EnginePeer?
+    
     var purpose: Star_TransactionPurpose?
     
     var weared: Bool {
         return owner?.emojiStatus?.fileId == gift.unique?.file?.fileId.id
     }
     
-    var convertedGift: ProfileGiftsContext.State.StarGift?
     var upgradeForm: BotPaymentForm?
         
     var attributes: [StarGift.UniqueGift.Attribute]
     
     var starsState: StarsContext.State?
+    var myBalance: StarsAmount?
     var tonAddress: String? = nil
     
     var owner: EnginePeer?
@@ -990,7 +1085,7 @@ private struct State : Equatable {
         case let .quickLook(peer, gift):
             if let purpose {
                 switch purpose {
-                case let .starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _):
+                case let .starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _, _, _):
                     if let _ = reference {
                         var canManage: Bool
                         let peer = peer ?? owner
@@ -1011,6 +1106,9 @@ private struct State : Equatable {
                 default:
                     break
                 }
+            }
+            if let resellStars = gift.resellStars {
+                return strings().starNftBuyFor(strings().starListItemCountCountable(Int(resellStars)))
             }
             return strings().modalOK
         case .previewWear:
@@ -1052,7 +1150,11 @@ private struct State : Equatable {
             return strings().peerStatusOnline
         default:
             if let unique = gift.unique {
-                return strings().starTransactionGiftCollectible("#\(unique.number)")
+                if let author {
+                    return strings().starTransactionGiftCollectible("#\(unique.number)") + " by @\(author.addressName ?? "")"
+                } else {
+                    return strings().starTransactionGiftCollectible("#\(unique.number)")
+                }
             } else {
                 return strings().giftUpgradeDescription
             }
@@ -1110,7 +1212,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let ownerAttr: NSAttributedString
             
             if let peer = state.owner {
-                ownerAttr = parseMarkdownIntoAttributedString("[\(peer._asPeer().displayTitle)]()", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                ownerAttr = parseMarkdownIntoAttributedString("[\(peer._asPeer().displayTitle)](owner)", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else if let ownerName = state.ownerName {
@@ -1129,7 +1231,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             ownerText.interactions.processURL = { url in
                 if let url = url as? String, !url.isEmpty {
-                    execute(inapp: .external(link: explorerUrl + url, false))
+                    if url == "owner", let peer = state.owner {
+                        arguments.openPeer(peer, false)
+                    } else {
+                        execute(inapp: .external(link: explorerUrl + url, false))
+                    }
                 }
             }
             
@@ -1175,13 +1281,38 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             switch state.gift {
             case let .unique(gift):
+                
+                let badge: InputDataTableBasedItem.Row.Right.Badge?
+                
+                if let owner = state.owner, owner.id == arguments.context.peerId || owner._asPeer().groupAccess.canManageGifts {
+                    badge = .init(text: strings().starNftPriceEdit, callback: {
+                        arguments.sellNft(gift, true)
+                    })
+                } else {
+                    badge = nil
+                }
+                
+                
+                if let resellStars = gift.resellStars, badge != nil {
+                    rows.append(.init(left: .init(.initialize(string: strings().starNftPriceSale, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "\(resellStars)", color: theme.colors.text, font: .normal(.text))), leftView: { previous in
+                        let control: ImageView
+                        if let previous = previous as? ImageView {
+                            control = previous
+                        } else {
+                            control = ImageView(frame: NSMakeRect(0, 0, 20, 20))
+                        }
+                        control.image = NSImage(resource: .iconStarCurrency).precomposed()
+                        return control
+                    }, badge: badge)))
+                }
+                
                 for attr in gift.attributes {
                     switch attr {
                     case .model(let name, _, let rarity):
                         rows.append(.init(left: .init(.initialize(string: strings().giftUniqueModel, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 10).string)%", callback: {}))))
                     case .pattern(let name, _, let rarity):
                         rows.append(.init(left: .init(.initialize(string: strings().giftUniqueSymbol, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 10).string)%", callback: {}))))
-                    case .backdrop(let name, _, _, _, _, let rarity):
+                    case .backdrop(let name, _, _, _, _, _, let rarity):
                         rows.append(.init(left: .init(.initialize(string: strings().giftUniqueBackdrop, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: name, color: theme.colors.text, font: .normal(.text))), badge: .init(text: "\((Double(rarity) / 10).string)%", callback: {}))))
                     default:
                         break
@@ -1209,10 +1340,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 if case .quickLook = state.source {
                     entries.append(.sectionId(sectionId, type: .legacy))
                     sectionId += 1
-                } else if state.convertedGift != nil {
-                    entries.append(.sectionId(sectionId, type: .legacy))
-                    sectionId += 1
                 }
+                /*
+                 else if state.convertedGift != nil {
+                     entries.append(.sectionId(sectionId, type: .legacy))
+                     sectionId += 1
+                 }
+                 */
             }
             
           
@@ -1229,8 +1363,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
     }
-            
-    
     
     return entries
 }
@@ -1291,10 +1423,21 @@ struct GiftPinnedInfo : Equatable {
     var reference: StarGiftReference
 }
 
-func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil, pinnedInfo: GiftPinnedInfo? = nil) -> InputDataModalController {
+func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: StarGiftNftSource, transaction: StarsContext.State.Transaction? = nil, purpose: Star_TransactionPurpose? = nil, giftsContext: ProfileGiftsContext? = nil, resaleContext: ResaleGiftsContext? = nil, pinnedInfo: GiftPinnedInfo? = nil, toPeerId: PeerId? = nil) -> InputDataModalController {
 
+    
+    let toPeerId = toPeerId ?? context.peerId
+    
+    let giftsContext = giftsContext ?? ProfileGiftsContext(account: context.account, peerId: toPeerId)
+    
     let actionsDisposable = DisposableSet()
     
+    let authorPeer: Signal<EnginePeer?, NoError>
+    if let authorId = gift.releasedBy {
+        authorPeer = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: authorId))
+    } else {
+        authorPeer = .single(nil)
+    }
     let initialState = State(source: source, gift: gift, transaction: transaction, converted: source.isQuickLook, purpose: purpose, attributes: source.attributes, accountPeerId: context.peerId, pinnedInfo: pinnedInfo)
     
     var close:(()->Void)? = nil
@@ -1306,10 +1449,12 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         statePromise.set(stateValue.modify (f))
     }
     
-    actionsDisposable.add(context.starsContext.state.startStrict(next: { state in
+    actionsDisposable.add(combineLatest(context.starsContext.state, authorPeer).startStrict(next: { state, authorPeer in
         updateState { current in
             var current = current
             current.starsState = state
+            current.myBalance = state?.balance
+            current.author = authorPeer
             return current
         }
     }))
@@ -1363,6 +1508,25 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         break
     }
     
+    actionsDisposable.add(giftsContext.state.startStrict(next: { state in
+        let unique = state.gifts.first(where: { $0.gift.unique?.slug == gift.unique?.slug })
+        
+        if let unique = unique?.gift.unique {
+            updateState { current in
+                var current = current
+                current.gift = .unique(unique)
+                switch current.source {
+                case let .quickLook(peer, _):
+                    current.source = .quickLook(peer, unique)
+                default:
+                    break
+                }
+                return current
+            }
+        }
+        
+    }))
+    
     
     var getController:(()->ViewController?)? = nil
     
@@ -1370,6 +1534,93 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         get {
             return bestWindow(context, getController?())
         }
+    }
+    
+    switch source {
+    case let .quickLook(_, gift):
+        if let _ = gift.resellStars {
+            let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId), themeParams: nil)
+            
+            actionsDisposable.add(formAndMaybeValidatedInfo.startStrict(next: { form in
+                updateState { current in
+                    var current = current
+                    current.form = form
+                    return current
+                }
+                
+            }))
+        }
+    default:
+        break
+    }
+    
+    
+    
+    let buyResellGift:(StarGift.UniqueGift, EnginePeer)->Void = { [weak giftsContext, weak resaleContext] gift, peer in
+        let state = stateValue.with { $0 }
+        let myBalance = state.myBalance ?? .init(value: 0, nanos: 0)
+                
+        let resellStars = state.form?.invoice.prices.first?.amount ?? gift.resellStars!
+        
+        let infoText: String
+        if peer.id == context.peerId {
+            infoText = strings().starNftGiftBuyConfirmSelf(gift.title, strings().starListItemCountCountable(Int(resellStars)))
+        } else {
+            infoText = strings().starNftGiftBuyConfirm(gift.title, strings().starListItemCountCountable(Int(resellStars)), peer._asPeer().displayTitle)
+        }
+        
+        verifyAlert(for: window, header: strings().starNftGiftConfirmTitle, information: infoText, ok: strings().starNftGiftConfirmOk(strings().starListItemCountCountable(Int(resellStars))), successHandler: { _ in
+            
+            if resellStars > myBalance.value {
+                let sourceValue: Star_ListScreenSource
+                sourceValue = .buy(suffix: nil, amount: resellStars)
+                showModal(with: Star_ListScreen(context: context, source: sourceValue), for: window)
+            } else if let form = state.form {
+                _ = showModalProgress(signal: context.engine.payments.sendStarsPaymentForm(formId: form.id, source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId)), for: window).startStandalone(next: { result in
+                    switch result {
+                    case let .done(receiptMessageId, subscriptionPeerId, _):
+                        PlayConfetti(for: window, stars: true)
+                        context.starsContext.load(force: true)
+                        context.starsSubscriptionsContext.load(force: true)
+                        giftsContext?.removeStarGift(gift: .unique(gift))
+                        resaleContext?.removeStarGift(gift: .unique(gift))
+                        
+                        let successText: String
+                        if peer.id == context.peerId {
+                            successText = strings().starNftGiftBuySuccessSelf(gift.title, strings().starListItemCountCountable(Int(resellStars)))
+                        } else {
+                            successText = strings().starNftGiftBuySuccess(gift.title, strings().starListItemCountCountable(Int(resellStars)), peer._asPeer().displayTitle)
+                        }
+                        showModalText(for: window, text: successText)
+                        
+                        close?()
+                    default:
+                        break
+                    }
+                }, error: { error in
+                    let text: String
+                    switch error {
+                    case .alreadyPaid:
+                        text = strings().checkoutErrorInvoiceAlreadyPaid
+                    case .generic:
+                        text = strings().unknownError
+                    case .paymentFailed:
+                        text = strings().checkoutErrorPaymentFailed
+                    case .precheckoutFailed:
+                        text = strings().checkoutErrorPrecheckoutFailed
+                    case .starGiftOutOfStock:
+                        text = strings().giftSoldOutError
+                    case .disallowedStarGift:
+                        text = strings().giftSendDisallowError
+                    case .starGiftUserLimit:
+                        text = strings().giftOptionsGiftBuyLimitReached
+                    }
+                    showModalText(for: window, text: text)
+                })
+            }
+            
+        })
+        
     }
 
     let arguments = Arguments(context: context, dismiss:{
@@ -1398,25 +1649,22 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         var additionalItem: SelectPeers_AdditionTopItem?
         
         
-        var canExportDate: Int32?
-        let transferStars: Int64?
-        let convertStars: Int64?
-        let reference: StarGiftReference?
-        if let convertedGift = state.convertedGift, let _canExportDate = convertedGift.canExportDate {
-            canExportDate = _canExportDate
-            transferStars = convertedGift.transferStars
-            convertStars = convertedGift.convertStars
-            reference = convertedGift.reference
-        } else if case let .starGift(_, _convertStars, _, _, _, _, _, _, _, _transferStars, _canExportDate, _reference, _, _) = purpose {
+        var canExportDate: Int32? = nil
+        var transferStars: Int64? = nil
+        var convertStars: Int64? = nil
+        var canTransferDate: Int32? = nil
+        var reference: StarGiftReference? = nil
+        if case let .starGift(_, _convertStars, _, _, _, _, _, _, _, _transferStars, _canExportDate, _reference, _, _, _, _canTransferDate) = state.purpose {
             canExportDate = _canExportDate
             transferStars = _transferStars
             convertStars = _convertStars
             reference = _reference
-        } else {
-            canExportDate = nil
-            transferStars = nil
-            convertStars = nil
-            reference = nil
+            canTransferDate = _canTransferDate
+        }
+        
+        if let canTransferDate, canTransferDate > context.timestamp {
+            alert(for: window, header: strings().giftTransferUnavailableTitle, info: strings().giftTransferUnavailableText(stringForFullDate(timestamp: canTransferDate)))
+            return
         }
         
         
@@ -1424,12 +1672,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             additionalItem = .init(title: strings().giftTransferSendViaBlockchain, color: theme.colors.text, icon: NSImage(resource: .iconSendViaTon).precomposed(flipVertical: true), callback: {
                 let currentTime = Int32(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970)
                 
-                var testPass: Bool = false
-                #if DEBUG
-                testPass = arc4random64() % 2 == 0
-                #endif
-                
-                if currentTime > canExportDate || testPass, let unique = state.gift.unique, let reference {
+                if currentTime > canExportDate, let unique = state.gift.unique, let reference {
                     
                     let data = ModalAlertData(title: nil, info: strings().giftWithdrawText(unique.title + " #\(unique.number)"), description: nil, ok: strings().giftWithdrawProceed, options: [], mode: .confirm(text: strings().modalCancel, isThird: false), header: .init(value: { initialSize, stableId, presentation in
                         return TransferUniqueGiftHeaderItem(initialSize, stableId: stableId, gift: unique, toPeer: .init(context.myPeer!), context: context)
@@ -1498,11 +1741,7 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         }))
                         
                         showModalAlert(for: window, data: data, completion: { result in
-                            if let giftsContext {
-                                _ = giftsContext.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
-                            } else {
-                                _ = context.engine.payments.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
-                            }
+                            _ = giftsContext.transferStarGift(prepaid: transferStars == nil, reference: reference, peerId: peerId).startStandalone()
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                             close?()
                         })
@@ -1515,6 +1754,45 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         showModalText(for: window, text: strings().contextAlertCopied)
     }, shareNft: { gift in
         showModal(with: ShareModalController(ShareLinkObject(context, link: gift.link)), for: window)
+    }, sellNft: { gift, updatePrice in
+        
+        let state = stateValue.with { $0 }
+        
+        if case let .starGift(_, _, _, _, _, _, _, _, _, _, _, reference, _, _, _, canResaleDate) = state.purpose {
+            if let _ = gift.resellStars, !updatePrice, let reference {
+                verifyAlert(for: window, header: strings().giftUnlistConfirmTitle, information: strings().giftUnlistConfirmText, ok: strings().giftUnlistConfirmOk, successHandler: { _ in
+                    _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: nil, id: gift.id), for: window).startStandalone()
+                })
+            } else if let reference {
+                
+                if let canResaleDate, canResaleDate > context.timestamp {
+                    alert(for: window, header: strings().giftResaleUnavailableTitle, info: strings().giftResaleUnavailableText(stringForFullDate(timestamp: canResaleDate)))
+                    return
+                }
+                
+                showModal(with: sellNft(context: context, resellPrice: gift.resellStars, gift: gift, callback: { value in
+                    if !updatePrice {
+                        verifyAlert(for: window, header: strings().giftSellConfirmTitle, information: strings().giftSellConfirmText(gift.title, strings().starListItemCountCountable(Int(value))), successHandler: { _ in
+                            _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: value, id: gift.id), for: window).startStandalone(error: { error in
+                                switch error {
+                                case let .starGiftResellTooEarly(value):
+                                    showModalText(for: window, text: strings().giftResaleUnavailableText(stringForFullDate(timestamp: value)))
+                                default:
+                                    break
+                                }
+                            }, completed: {
+                                showModalText(for: window, text: strings().giftResaleSetSuccess)
+                            })
+                        })
+                    } else {
+                        _ = showModalProgress(signal: giftsContext.updateStarGiftResellPrice(reference: reference, price: value, id: gift.id), for: window).startStandalone(completed: {
+                            showModalText(for: window, text: strings().giftResalePriceUpdate)
+                        })
+                    }
+                }), for: window)
+            }
+        }
+        
     }, toggleWear: { gift in
         
         let weared = stateValue.with { $0.weared }
@@ -1542,8 +1820,6 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 return current
             }
         }
-        
-        
     }, togglePin: { [weak giftsContext] in
         let pinnedInfo = stateValue.with { $0.pinnedInfo }
         if let pinnedInfo {
@@ -1554,6 +1830,13 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 return current
             }
             showModalText(for: window, text: !pinnedInfo.pinnedInfo ? strings().giftTooltipPinned : strings().giftTooltipUnpinned)
+        }
+    }, openPeer: { peer, toChat in
+        close?()
+        if toChat {
+            context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))
+        } else {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peer.id)
         }
     })
     
@@ -1599,9 +1882,9 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         case .preview:
             close?()
         case let .quickLook(peer, gift):
-            if let purpose {
+            if let purpose = state.purpose {
                 switch purpose {
-                case let.starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _):
+                case let.starGift(_, _, _, _, _, savedToProfile, _, _, _, _, _, reference, _, _, _, _):
                     if let reference {
                         var canManage: Bool
                         let peer = peer ?? state.owner
@@ -1614,12 +1897,25 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         if canManage {
                             giftsContext?.updateStarGiftAddedToProfile(reference: reference, added: !savedToProfile)
                         }
+                        close?()
+                    } else if let _ = gift.resellStars {
+                        let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: toPeerId)) |> deliverOnMainQueue
+                        
+                        _ = signal.start(next: { peer in
+                            if let peer {
+                                buyResellGift(gift, peer)
+                            }
+                            
+                        })
+                    } else {
+                        close?()
                     }
                 default:
-                    break
+                    close?()
                 }
+            } else {
+                close?()
             }
-            close?()
         case let .previewWear(peer, gift):
             
             let owner = stateValue.with { $0.owner }
@@ -1669,10 +1965,13 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                 updateState { current in
                     var current = current
                     current.gift = converted.gift
-                    current.convertedGift = converted
+                    
+                    current.purpose = .starGift(gift: converted.gift, convertStars: converted.convertStars, text: converted.text, entities: converted.entities, nameHidden: converted.nameHidden, savedToProfile: converted.savedToProfile, converted: true, fromProfile: false, upgraded: true, transferStars: converted.transferStars, canExportDate: converted.canExportDate, reference: converted.reference, sender: nil, saverId: nil, canTransferDate: converted.canTransferDate, canResaleDate: converted.canResaleDate)
+                    
                     current.converted = true
                     switch converted.gift {
                     case let .unique(gift):
+                        current.source = .quickLook(nil, gift)
                         current.attributes = gift.attributes
                     default:
                         break
@@ -1720,3 +2019,346 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
 
 
 
+
+
+private final class SellNftArguments {
+    let context: AccountContext
+    let interactions: TextView_Interactions
+    let updateState: (Updated_ChatTextInputState)->Void
+    init(context: AccountContext, interactions: TextView_Interactions, updateState: @escaping(Updated_ChatTextInputState)->Void) {
+        self.context = context
+        self.interactions = interactions
+        self.updateState = updateState
+    }
+}
+
+
+private final class SellNftInputItem : GeneralRowItem {
+    let inputState: Updated_ChatTextInputState
+    let arguments: SellNftArguments
+    let interactions: TextView_Interactions
+    init(_ initialSize: NSSize, stableId: AnyHashable, inputState: Updated_ChatTextInputState, arguments: SellNftArguments) {
+        self.inputState = inputState
+        self.arguments = arguments
+        self.interactions = arguments.interactions
+        super.init(initialSize, stableId: stableId)
+    }
+    
+    override var height: CGFloat {
+        return 40
+    }
+    
+    override func viewClass() -> AnyClass {
+        return SellNftInputView.self
+    }
+}
+
+
+private final class SellNftInputView : GeneralRowView {
+    
+    private final class Input : View {
+        
+        private weak var item: SellNftInputItem?
+        let inputView: UITextView = UITextView(frame: NSMakeRect(0, 0, 100, 40))
+        private let starView = InteractiveTextView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(starView)
+            addSubview(inputView)
+                        
+
+            layer?.cornerRadius = 10
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(item: SellNftInputItem, animated: Bool) {
+            self.item = item
+            self.backgroundColor = theme.colors.background
+            
+            let attr = NSMutableAttributedString()
+            attr.append(string: clown)
+            attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+            
+            let layout = TextViewLayout(attr)
+            layout.measure(width: .greatestFiniteMagnitude)
+            
+            self.starView.set(text: layout, context: item.arguments.context)
+
+            
+            inputView.placeholder = strings().fragmentStarAmountPlaceholder
+            
+            inputView.context = item.arguments.context
+            inputView.interactions.max_height = 500
+            inputView.interactions.min_height = 13
+            inputView.interactions.emojiPlayPolicy = .onceEnd
+            inputView.interactions.canTransform = false
+            
+            item.interactions.min_height = 13
+            item.interactions.max_height = 500
+            item.interactions.emojiPlayPolicy = .onceEnd
+            item.interactions.canTransform = false
+            
+            let value = Int64(item.inputState.string) ?? 0
+            
+            let min_resale = item.arguments.context.appConfiguration.getGeneralValue("stars_stargift_resale_amount_min", orElse: 125)
+            let max_resale = item.arguments.context.appConfiguration.getGeneralValue("stars_stargift_resale_amount_max", orElse: 35000)
+
+            inputView.inputTheme = inputView.inputTheme.withUpdatedTextColor(value < min_resale || value > max_resale ? theme.colors.redUI : theme.colors.text)
+            
+            
+            item.interactions.filterEvent = { event in
+                if let chars = event.characters {
+                    return chars.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890\u{7f}")).isEmpty
+                } else {
+                    return false
+                }
+            }
+
+            self.inputView.set(item.interactions.presentation.textInputState())
+
+            self.inputView.interactions = item.interactions
+            
+            item.interactions.inputDidUpdate = { [weak self] state in
+                guard let `self` = self else {
+                    return
+                }
+                self.set(state)
+                self.inputDidUpdateLayout(animated: true)
+            }
+            
+        }
+        
+        
+        var textWidth: CGFloat {
+            return frame.width - 20
+        }
+        
+        func textViewSize() -> (NSSize, CGFloat) {
+            let w = textWidth
+            let height = inputView.height(for: w)
+            return (NSMakeSize(w, min(max(height, inputView.min_height), inputView.max_height)), height)
+        }
+        
+        private func inputDidUpdateLayout(animated: Bool) {
+            self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            let (textSize, textHeight) = textViewSize()
+            
+            transition.updateFrame(view: starView, frame: starView.centerFrameY(x: 10))
+            
+            transition.updateFrame(view: inputView, frame: CGRect(origin: CGPoint(x: starView.frame.maxX + 10, y: 7), size: textSize))
+            inputView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+        }
+        
+        private func set(_ state: Updated_ChatTextInputState) {
+            guard let item else {
+                return
+            }
+            item.arguments.updateState(state)
+            
+            item.redraw(animated: true)
+        }
+    }
+    
+    private let inputView = Input(frame: NSMakeRect(0, 0, 40, 40))
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(inputView)
+    }
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? SellNftInputItem else {
+            return
+        }
+        
+        self.inputView.update(item: item, animated: animated)
+        
+               
+        self.inputView.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+    }
+    
+    override func shakeView() {
+        inputView.shake(beep: true)
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        transition.updateFrame(view: inputView, frame: NSMakeRect(20, 0, size.width - 40,40))
+        inputView.updateLayout(size: inputView.frame.size, transition: transition)
+        
+    }
+    override var firstResponder: NSResponder? {
+        return inputView.inputView.inputView
+    }
+}
+
+private struct SellNftState : Equatable {
+    
+    var inputState: Updated_ChatTextInputState = .init()
+    
+    var floorPrice: Int64?
+    
+    var value: Int64 {
+        if let value = Int64(inputState.string) {
+            return value
+        } else {
+            return 0
+        }
+    }
+}
+
+
+private let _id_input = InputDataIdentifier("_id_input")
+
+private func sellNftEntries(_ state: SellNftState, arguments: SellNftArguments) -> [InputDataEntry] {
+    var entries: [InputDataEntry] = []
+    
+    var sectionId:Int32 = 0
+    var index: Int32 = 0
+    
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().starNftSellHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_input, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        return SellNftInputItem(initialSize, stableId: stableId, inputState: state.inputState, arguments: arguments)
+    }))
+    
+    let comission = arguments.context.appConfiguration.getGeneralValue("stars_stargift_resale_commission_permille", orElse: 800).decemial / 100.0
+    
+    var text: String
+    if state.value == 0 {
+        text = strings().starNftSellInfo("\(comission * 100.0)%")
+    } else {
+        text = strings().starNftSellInfo(strings().starListItemCountCountable(Int((Double(state.value) * comission))))
+    }
+    
+    if let floorPrice = state.floorPrice {
+        text += "\n\n" + strings().starNftSellFloor(strings().starListItemCountCountable(Int(floorPrice))) 
+    }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(text, linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    return entries
+}
+
+
+
+private func sellNft(context: AccountContext, resellPrice: Int64?, gift: StarGift.UniqueGift, callback:@escaping(Int64)->Void) -> InputDataModalController {
+    let initialState = SellNftState(inputState: .init(inputText: .initialize(string: resellPrice != nil ? "\(resellPrice!)" : "")))
+
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((SellNftState) -> SellNftState) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+    
+
+
+
+    let actionsDisposable = DisposableSet()
+    
+    var close:(()->Void)? = nil
+    var getController:(()->InputDataController?)? = nil
+        
+    let interactions = TextView_Interactions(presentation: initialState.inputState)
+    
+    actionsDisposable.add(context.engine.payments.cachedStarGifts().start(next: { gifts in
+        updateState { current in
+            var current = current
+            current.floorPrice = gifts?.first(where: { $0.generic?.title == gift.title })?.generic?.availability?.minResaleStars
+            return current
+        }
+    }))
+
+    let arguments = SellNftArguments(context: context, interactions: interactions, updateState: { [weak interactions] value in
+        
+        interactions?.update { _ in
+            return value
+        }
+        updateState { current in
+            var current = current
+            current.inputState = value
+            return current
+        }
+    })
+    
+    let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+        return InputDataSignalValue(entries: sellNftEntries(state, arguments: arguments))
+    }
+    
+    let min_resale = context.appConfiguration.getGeneralValue("stars_stargift_resale_amount_min", orElse: 125)
+    let max_resale = context.appConfiguration.getGeneralValue("stars_stargift_resale_amount_max", orElse: 35000)
+
+    
+    let controller = InputDataController(dataSignal: signal, title: strings().starNftSellTitle)
+    
+    controller.validateData = { _ in
+        let value = stateValue.with { $0.value }
+        
+        if value < min_resale || value > max_resale {
+            return .fail(.fields([_id_input : .shake]))
+        }
+        callback(value)
+        close?()
+        return .none
+    }
+        
+    controller.onDeinit = {
+        actionsDisposable.dispose()
+    }
+    
+   
+    
+    let modalInteractions = ModalInteractions(acceptTitle: resellPrice != nil ? strings().starNftSellButtonUpdate : strings().starNftSellButtonSell, accept: { [weak controller] in
+        _ = controller?.returnKeyAction()
+    }, singleButton: true)
+
+    
+    
+    actionsDisposable.add(statePromise.get().startStrict(next: { [weak modalInteractions] state in
+        DispatchQueue.main.async {
+            modalInteractions?.updateDone { button in
+                button.isEnabled = state.value >= min_resale && state.value <= max_resale
+            }
+        }
+    }))
+    
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
+    
+    close = { [weak modalController] in
+        modalController?.close()
+    }
+    getController = { [weak controller] in
+        return controller
+    }
+    
+    
+    return modalController
+}

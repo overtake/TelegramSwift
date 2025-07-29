@@ -66,7 +66,8 @@ private final class SelectivePrivacySettingsControllerArguments {
     let toggleLimitedGifts:()->Void
     let toggleUniqueGifts:()->Void
     let togglePremiumGifts:()->Void
-    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void, uploadPublicPhoto:@escaping()->[ContextMenuItem], removePublicPhoto:@escaping()->Void, toggleHideReadTime:@escaping()->Void, openPremium:@escaping(Bool)->Void, setupBirthday:@escaping()->Void, toggleUnlimitedGifts:@escaping()->Void, toggleLimitedGifts:@escaping()->Void, toggleUniqueGifts:@escaping()->Void, togglePremiumGifts:@escaping()->Void) {
+    let toggleShowGiftButton:()->Void
+    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void, uploadPublicPhoto:@escaping()->[ContextMenuItem], removePublicPhoto:@escaping()->Void, toggleHideReadTime:@escaping()->Void, openPremium:@escaping(Bool)->Void, setupBirthday:@escaping()->Void, toggleUnlimitedGifts:@escaping()->Void, toggleLimitedGifts:@escaping()->Void, toggleUniqueGifts:@escaping()->Void, togglePremiumGifts:@escaping()->Void, toggleShowGiftButton:@escaping()->Void) {
         self.context = context
         self.updateType = updateType
         self.openEnableFor = openEnableFor
@@ -82,6 +83,7 @@ private final class SelectivePrivacySettingsControllerArguments {
         self.toggleLimitedGifts = toggleLimitedGifts
         self.toggleUniqueGifts = toggleUniqueGifts
         self.togglePremiumGifts = togglePremiumGifts
+        self.toggleShowGiftButton = toggleShowGiftButton
     }
 }
 
@@ -108,6 +110,8 @@ private func stringForUserCount(_ count: Int, enableForPremium: Bool = false, en
 private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
     case settingHeader(Int32, String, GeneralViewType)
     case birthdayHeader(Int32, String, GeneralViewType)
+    case showGiftButton(Int32, Bool, Bool, GeneralViewType)
+    case showGiftButtonInfo(Int32, GeneralViewType)
     case everybody(Int32, Bool, Bool, GeneralViewType)
     case contacts(Int32, Bool, Bool, Bool, GeneralViewType)
     case nobody(Int32, Bool, Bool, Bool, GeneralViewType)
@@ -146,38 +150,40 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         switch self {
         case .settingHeader: return 0
         case .birthdayHeader: return 1
-        case .everybody: return 2
-        case .contacts: return 3
-        case .nobody: return 4
-        case .settingInfo: return 5
-        case .disableFor: return 6
-        case .enableFor: return 7
-        case .peersInfo: return 8
-        case .p2pHeader: return 9
-        case .p2pAlways: return 10
-        case .p2pContacts: return 11
-        case .p2pNever: return 12
-        case .p2pDesc: return 13
-        case .p2pDisableFor: return 14
-        case .p2pEnableFor: return 15
-        case .p2pPeersInfo: return 16
-        case .phoneDiscoveryHeader: return 17
-        case .phoneDiscoveryEverybody: return 18
-        case .phoneDiscoveryMyContacts: return 19
-        case .phoneDiscoveryInfo: return 20
-        case .publicPhoto: return 21
-        case .removePublicPhoto: return 22
-        case .publicPhotoInfo: return 23
-        case .hideReadTime: return 24
-        case .hideReadTimeInfo: return 25
-        case .premium: return 26
-        case .premiumInfo: return 27
-        case .giftsHeader: return 28
-        case .giftsLimited: return 29
-        case .giftsUnique: return 30
-        case .giftsUnlimited: return 31
-        case .giftsInfo: return 32
-        case .giftsPremium: return 33
+        case .showGiftButton: return 2
+        case .showGiftButtonInfo: return 3
+        case .everybody: return 4
+        case .contacts: return 5
+        case .nobody: return 6
+        case .settingInfo: return 7
+        case .disableFor: return 8
+        case .enableFor: return 9
+        case .peersInfo: return 10
+        case .p2pHeader: return 11
+        case .p2pAlways: return 12
+        case .p2pContacts: return 13
+        case .p2pNever: return 14
+        case .p2pDesc: return 15
+        case .p2pDisableFor: return 16
+        case .p2pEnableFor: return 17
+        case .p2pPeersInfo: return 18
+        case .phoneDiscoveryHeader: return 19
+        case .phoneDiscoveryEverybody: return 20
+        case .phoneDiscoveryMyContacts: return 21
+        case .phoneDiscoveryInfo: return 22
+        case .publicPhoto: return 23
+        case .removePublicPhoto: return 24
+        case .publicPhotoInfo: return 25
+        case .hideReadTime: return 26
+        case .hideReadTimeInfo: return 27
+        case .premium: return 28
+        case .premiumInfo: return 29
+        case .giftsHeader: return 30
+        case .giftsLimited: return 31
+        case .giftsUnique: return 32
+        case .giftsUnlimited: return 33
+        case .giftsInfo: return 34
+        case .giftsPremium: return 35
         case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -186,6 +192,8 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         switch self {
         case .settingHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
         case .birthdayHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .showGiftButton(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .showGiftButtonInfo(let sectionId, _): return (sectionId * 1000) + stableId
         case .everybody(let sectionId, _, _, _): return (sectionId * 1000) + stableId
         case .contacts(let sectionId, _, _, _, _): return (sectionId * 1000) + stableId
         case .nobody(let sectionId, _, _, _, _): return (sectionId * 1000) + stableId
@@ -235,6 +243,12 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { _ in
                 arguments.setupBirthday()
             }), textColor: theme.colors.listGrayText, linkColor: theme.colors.link, viewType: viewType, fontSize: 12)
+        case let .showGiftButton(_, value, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerGiftShowGiftIcon, type: .switchable(value), viewType: viewType, action: arguments.toggleShowGiftButton, enabled: enabled, disabledAction: {
+                arguments.openPremium(false)
+            })
+        case let .showGiftButtonInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(strings().privacySettingsControllerGiftShowGiftIconInfo), textColor: theme.colors.listGrayText, linkColor: theme.colors.link, viewType: viewType, fontSize: 12)
         case let .everybody(_, value, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.everybody)
@@ -363,7 +377,10 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
     
     var hasBirthday: Bool
     var enableForBots: Bool
-    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?, fallbackPhoto: TelegramMediaImage?, updatePhotoState: PeerInfoUpdatingPhotoState?, hideReadTime: Bool?, enableForPremium: Bool, hasBirthday: Bool, enableForBots: Bool, gifts: TelegramDisallowedGifts) {
+    
+    var showGiftButton: Bool
+    
+    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?, fallbackPhoto: TelegramMediaImage?, updatePhotoState: PeerInfoUpdatingPhotoState?, hideReadTime: Bool?, enableForPremium: Bool, hasBirthday: Bool, enableForBots: Bool, gifts: TelegramDisallowedGifts, showGiftButton: Bool) {
         self.setting = setting
         self.enableFor = enableFor
         self.disableFor = disableFor
@@ -379,6 +396,7 @@ private struct SelectivePrivacySettingsControllerState: Equatable {
         self.hasBirthday = hasBirthday
         self.enableForBots = enableForBots
         self.gifts = gifts
+        self.showGiftButton = showGiftButton
     }
 }
 
@@ -465,6 +483,17 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
     default:
         break
     }
+    
+    
+    if kind == .gifts {
+        
+        entries.append(.showGiftButton(sectionId, state.showGiftButton, context.isPremium, .singleItem))
+        entries.append(.showGiftButtonInfo(sectionId, .textBottomItem))
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+    }
+   
     
     let enabledSettings: Bool = !(kind == .gifts && state.gifts == .All)
 
@@ -668,7 +697,7 @@ class SelectivePrivacySettingsController: TableViewController {
         }
 
 
-        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled, fallbackPhoto: nil, updatePhotoState: nil, hideReadTime: kind == .presence ? self.globalSettings?.hideReadTime : nil, enableForPremium: enableForPremium, hasBirthday: true, enableForBots: enableForBots, gifts: self.globalSettings?.disallowedGifts ?? [])
+        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled, fallbackPhoto: nil, updatePhotoState: nil, hideReadTime: kind == .presence ? self.globalSettings?.hideReadTime : nil, enableForPremium: enableForPremium, hasBirthday: true, enableForBots: enableForBots, gifts: self.globalSettings?.disallowedGifts ?? [], showGiftButton: self.globalSettings?.displayGiftButton ?? false)
 
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1115,6 +1144,12 @@ class SelectivePrivacySettingsController: TableViewController {
                 }
                 return current
             }
+        }, toggleShowGiftButton: {
+            updateState { current in
+                var current = current
+                current.showGiftButton = !current.showGiftButton
+                return current
+            }
         })
 
 
@@ -1186,6 +1221,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 if var globalSettings = globalSettings {
                     globalSettings.hideReadTime = stateValue.with { $0.hideReadTime ?? false }
                     globalSettings.disallowedGifts = stateValue.with { $0.gifts }
+                    globalSettings.displayGiftButton = stateValue.with { $0.showGiftButton }
                     global = context.engine.privacy.updateGlobalPrivacySettings(settings: globalSettings)
                     gSettings = globalSettings
                 } else {

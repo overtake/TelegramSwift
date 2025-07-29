@@ -482,7 +482,8 @@ final class PremiumGiftController : ModalViewController {
                     chat?.chatInteraction.invokeInitialAction(action: action)
                 }
             } else {
-                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), initialAction: action))
+                navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId), initialAction: action)
+
             }
         }
 
@@ -512,7 +513,7 @@ final class PremiumGiftController : ModalViewController {
                     switch status {
                     case .paid:
                         PlayConfetti(for: context.window)
-                        context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                        navigateToChat(navigation: context.bindings.rootNavigation(), context: context, chatLocation: .peer(peerId))
                         close()
                     case .cancelled:
                         break

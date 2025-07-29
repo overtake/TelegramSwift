@@ -8,7 +8,6 @@
 	<array>
 		<string>6N38VWS5BX.ru.keepcoder.Telegram</string>
 		<string>6N38VWS5BX.ru.keepcoder.Telegram.TelegramShare</string>
-		<string>6N38VWS5BX.ru.keepcoder.Telegram.FocusIntents</string>
 	</array>
 	<key>com.apple.security.device.audio-input</key>
 	<true/>

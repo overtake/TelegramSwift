@@ -718,15 +718,38 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
     })!
 }
 
+private func generateTodoSelection(color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(19, 19), rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: size.bounds.focus(NSMakeSize(6, 6)))
+    })!
+}
+private func generateTodoSelected(color: NSColor) -> CGImage {
+    let image = NSImage(resource: .iconTodoOtherCheck).precomposed(color)
+    return generateImage(NSMakeSize(19, 19), contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.draw(image, in: size.bounds.focus(image.backingSize))
+    })!
+}
+
 private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(19, 19), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
         ctx.setBlendMode(.copy)
         ctx.round(size, size.height / 2)
+        
+        
+        if backgound != NSColor(0xffffff) {
+            ctx.setFillColor(NSColor(0xffffff).cgColor)
+            ctx.fillEllipse(in: rect)
+        }
+        
         ctx.setFillColor(backgound.cgColor)
-        ctx.fill(rect)
+        ctx.fillEllipse(in: rect.insetBy(dx: 1, dy: 1))
+        
         
         ctx.setBlendMode(.normal)
         let image = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!
@@ -734,6 +757,8 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
             ctx.clip(to: rect, mask: image)
             ctx.clear(rect)
         } else {
+            
+         
             ctx.draw(image, in: rect.focus(image.backingSize))
         }
     })!
@@ -1734,14 +1759,27 @@ func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor
     })!
 }
 
-func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1) -> CGImage {
+func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1, bubble: Bool = false) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-        if cornerRadius == -1 {
-            ctx.round(size, size.width/2)
+        if bubble {
+            let rect = CGRect(origin: CGPoint(), size: size)
+            ctx.translateBy(x: rect.midX, y: rect.midY)
+            ctx.scaleBy(x: 1.0, y: -1.0)
+            ctx.translateBy(x: -rect.midX, y: -rect.midY)
+            addAvatarBubblePath(context: ctx, rect: rect)
+            ctx.translateBy(x: rect.midX, y: rect.midY)
+            ctx.scaleBy(x: 1.0, y: -1.0)
+            ctx.translateBy(x: -rect.midX, y: -rect.midY)
+            ctx.clip()
         } else {
-            ctx.round(size, min(cornerRadius, size.width / 2))
+            if cornerRadius == -1 {
+                ctx.round(size, size.width/2)
+            } else {
+                ctx.round(size, min(cornerRadius, size.width / 2))
+            }
         }
+        
         ctx.setFillColor(foregroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
     })!
@@ -2805,7 +2843,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsAskQuestion: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)) },
                                                settingsFaq: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)) },
                                                settingsStories: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(flipVertical: true)) },
-                                                settingsGeneral: { NSImage(resource: .iconSettingsGeneral).precomposed(flipVertical: true) },
+                                                settingsGeneral: { generateSettingsIcon(NSImage(resource: .iconSettingsGeneral).precomposed(flipVertical: true)) },
                                                settingsLanguage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)) },
                                                settingsNotifications: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)) },
                                                settingsSecurity: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
@@ -3389,6 +3427,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               channel_feature_emoji_pack: { NSImage(named: "Icon_ChannelFeature_EmojiPack")!.precomposed(palette.accent) },
                               channel_feature_voice_to_text: { NSImage(named: "Icon_ChannelFeature_VoiceToText")!.precomposed(palette.accent) },
                               channel_feature_no_ads: { NSImage(resource: .iconFragmentNoAds).precomposed(palette.accent) },
+                              channel_feature_autotranslate: { NSImage(resource: .iconBoostTranslation).precomposed(palette.accent) },
                               chat_hidden_author: { NSImage(named: "Icon_AuthorHidden")!.precomposed(.white) },
                               chat_my_notes: { NSImage(named: "Icon_MyNotes")!.precomposed(.white) },
                               premium_required_forward: { NSImage(named: "Icon_PremiumRequired_Forward")!.precomposed() },
@@ -3401,9 +3440,21 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               avatar_star_badge_gray: { generateAvatarStarBadge(color: palette.listBackground) },
                               avatar_star_badge_large_gray: { generateAvatarStarBadgeLarge(color: palette.listBackground) },
                               chatlist_apps: { NSImage(resource: .iconChatListApps).precomposed(palette.accent) },
-                              chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) }
+                              chat_input_channel_gift:  { NSImage(resource: .iconChannelGift).precomposed(palette.accent) },
+                              chat_input_suggest_message: { NSImage(resource: .iconChatInputMessageSuggestion).precomposed(palette.accent) },
+                              chat_input_send_gift: { NSImage(resource: .iconChannelGift).precomposed(palette.grayIcon) },
+                              chat_input_suggest_post: { NSImage(resource: .iconInputSuggestPost).precomposed(palette.grayIcon) },
+                              todo_selection: { generateTodoSelection(color: palette.webPreviewActivity) },
+                              todo_selected: { generateTodoSelected(color: palette.webPreviewActivity) },
+                              todo_selection_other_incoming: { generateTodoSelection(color: palette.webPreviewActivityBubble_incoming) },
+                              todo_selection_other_outgoing: { generateTodoSelection(color: palette.webPreviewActivityBubble_outgoing) },
+                              todo_selected_other_incoming: { generateTodoSelected(color: palette.webPreviewActivityBubble_incoming) },
+                              todo_selected_other_outgoing: { generateTodoSelected(color: palette.webPreviewActivityBubble_outgoing) }
+                              
     )
 }
+
+
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper, backgroundSize: NSSize = NSMakeSize(1040, 1580)) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,

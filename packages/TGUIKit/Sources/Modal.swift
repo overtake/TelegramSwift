@@ -67,16 +67,17 @@ public class ModalInteractions {
     var doneUpdatable:(((TextButton)->Void)->Void)? = nil
     var cancelUpdatable:(((TextButton)->Void)->Void)? = nil
     let singleButton: Bool
-    
+    let inset: CGFloat
     fileprivate var customTheme: ()->ModalViewController.Theme
 
-    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 60, alignCancelLeft: Bool = false, singleButton: Bool = false, customTheme: @escaping() -> ModalViewController.Theme = { .init() })  {
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 60, inset: CGFloat = 0, alignCancelLeft: Bool = false, singleButton: Bool = false, customTheme: @escaping() -> ModalViewController.Theme = { .init() })  {
         self.drawBorder = drawBorder
         self.accept = accept
         self.cancel = cancel
         self.acceptTitle = acceptTitle
         self.cancelTitle = cancelTitle
         self.height = height
+        self.inset = inset
         self.alignCancelLeft = alignCancelLeft
         self.singleButton = singleButton
         self.customTheme = customTheme
@@ -269,7 +270,7 @@ private class ModalInteractionsContainer : View {
         
         if self.interactions.singleButton {
             backgroundView.frame = bounds
-            acceptView.frame = CGRect(origin: NSMakePoint(20, 0), size: NSMakeSize(frame.width - 40, 40))
+            acceptView.frame = CGRect(origin: NSMakePoint(20, self.interactions.inset), size: NSMakeSize(frame.width - 40, 40))
         } else {
             self.backgroundView.frame = bounds
             if cancelView == nil {
@@ -630,6 +631,8 @@ public class Modal: NSObject {
         container.borderView.layer?.cornerRadius = controller.cornerRadius
         
         container.borderView.isHidden = noBorder
+        
+        controller._window = window
 
         if !controller.contentBelowBackground {
             container.addSubview(controller.view)
@@ -1173,6 +1176,7 @@ public func showModal(with controller:ModalViewController, for window:Window, is
     if #available(OSX 10.12.2, *) {
         window.touchBar = nil
     }
+    window.makeKeyAndOrderFront(nil)
     controller.modal?.show()
 }
 

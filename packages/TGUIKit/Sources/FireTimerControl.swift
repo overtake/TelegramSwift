@@ -56,6 +56,26 @@ public class FireTimerControl: Control {
     private var particles: [ContentParticle] = []
 
     
+    private var pauseStartTimestamp: CFAbsoluteTime?
+    private var accumulatedPauseDuration: CFAbsoluteTime = 0
+
+    
+    public var isPaused: Bool = false {
+        didSet {
+            self.animator?.isPaused = false // Keep animation running even if paused
+
+            let now = CFAbsoluteTimeGetCurrent()
+
+            if isPaused {
+                pauseStartTimestamp = now
+            } else if let pauseStart = pauseStartTimestamp {
+                accumulatedPauseDuration += now - pauseStart
+                pauseStartTimestamp = nil
+            }
+        }
+    }
+
+    
     
     private var currentParams: Params?
     
@@ -89,6 +109,8 @@ public class FireTimerControl: Control {
         )
         self.currentParams = params
         self.reachedHalfNotified = false
+        self.accumulatedPauseDuration = 0
+        self.pauseStartTimestamp = nil
         self.updateValues()
     }
     
@@ -106,7 +128,13 @@ public class FireTimerControl: Control {
         
         if let deadlineTimestamp = params.deadlineTimestamp {
             let fractionalTimestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            fractionalTimeout = min(Double(params.timeout), max(0.0, Double(deadlineTimestamp) - fractionalTimestamp))
+            let pauseDuration = isPaused ? CFAbsoluteTimeGetCurrent() - (pauseStartTimestamp ?? CFAbsoluteTimeGetCurrent()) : 0
+            let effectivePauseDuration = accumulatedPauseDuration + pauseDuration
+
+            fractionalTimeout = min(
+                Double(params.timeout),
+                max(0.0, Double(deadlineTimestamp) - fractionalTimestamp + effectivePauseDuration)
+            )
         } else {
             fractionalTimeout = Double(params.timeout)
         }

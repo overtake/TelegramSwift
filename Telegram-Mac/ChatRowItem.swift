@@ -130,6 +130,10 @@ class ChatRowItem: TableRowItem {
     private(set) var entry:ChatHistoryEntry
     private(set) var message:Message?
     
+    var monoforumState: MonoforumUIState? {
+        return entry.additionalData.monoforumState
+    }
+    
     private var updateCountDownTimer: SwiftSignalKit.Timer?
     var updateTooltip:((String)->Void)? = nil
     var firstMessage: Message? {
@@ -265,7 +269,17 @@ class ChatRowItem: TableRowItem {
             return chatInteraction.presentation.selectionState != nil ? 42.0 : 20.0
         }
     }
-    let leftInset:CGFloat = 20
+    var leftInset:CGFloat {
+        var inset: CGFloat = 20
+        if let monoforum = entry.additionalData.monoforumState {
+            if case .vertical = monoforum {
+                if isIncoming || !isBubbled {
+                    inset += 80
+                }
+            }
+        }
+        return inset
+    }
 
     
     var _defaultHeight:CGFloat {
@@ -325,6 +339,15 @@ class ChatRowItem: TableRowItem {
             widthForContent -= leftContentInset
         }
         
+        if let monoforumState = entry.additionalData.monoforumState {
+            if case .vertical = monoforumState {
+                if self is ChatServiceItem {
+                    widthForContent -= 80
+                } else if !isIncoming, isBubbled {
+                    widthForContent -= 80
+                }
+            }
+        }
         return widthForContent
     }
     
@@ -460,7 +483,7 @@ class ChatRowItem: TableRowItem {
         if let id = _id {
             return id
         }
-        var id: String = super.identifier
+        let id: String = super.identifier
         _id = id
         return id
     }
@@ -655,6 +678,7 @@ class ChatRowItem: TableRowItem {
             inset += 36 + 10
         }
         
+        
         return inset
     }
     
@@ -676,7 +700,7 @@ class ChatRowItem: TableRowItem {
             }
         } else {
             if let message = message, let peer = message.peers[message.id.peerId] {
-                if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
+                if chatInteraction.chatLocation.threadMsgId == effectiveCommentMessage?.id {
                     return false
                 }
                 if (isIncoming && message.id.peerId == context.peerId) {
@@ -813,7 +837,7 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.mode {
         case .pinned:
             return true
-        case let .customChatContents(contents):
+        case .customChatContents:
             return false
         default:
             if let message = message {
@@ -838,7 +862,7 @@ class ChatRowItem: TableRowItem {
     }
     
     override var isSelectable: Bool {
-        return chatInteraction.mode.threadId != effectiveCommentMessage?.id && self.message?.adAttribute == nil
+        return chatInteraction.chatLocation.threadMsgId != effectiveCommentMessage?.id && self.message?.adAttribute == nil
     }
     
     var disableInteractions: Bool {
@@ -854,7 +878,7 @@ class ChatRowItem: TableRowItem {
                 } else {
                     chatInteraction.focusMessageId(message.id, .init(messageId: replyAttribute.messageId, string: replyAttribute.quote?.text), .CenterEmpty)
                 }
-            } else if let quote = message.quoteAttribute {
+            } else if let _ = message.quoteAttribute {
                 let id = MessageId(peerId: .init(0), namespace: 0, id: 0)
                 chatInteraction.focusMessageId(id, .init(messageId: id, string: nil), .CenterEmpty)
             }
@@ -1014,7 +1038,7 @@ class ChatRowItem: TableRowItem {
             if message.containsSecretMedia {
                 return false
             }
-            if let media = message.extendedMedia, let action = media as? TelegramMediaAction {
+            if let media = message.extendedMedia, let _ = media as? TelegramMediaAction {
                 return message.flags.contains(.ReactionsArePossible)
             }
             if let media = message.extendedMedia as? TelegramMediaStory {
@@ -1130,7 +1154,7 @@ class ChatRowItem: TableRowItem {
     var canHasFloatingPhoto: Bool {
         if chatInteraction.mode.isSavedMode {
             return false
-        } else if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
+        } else if chatInteraction.mode.isThreadMode, chatInteraction.chatLocation.threadMsgId == message?.id {
             return false
         } else {
             return isIncoming && self.hasPhoto
@@ -1237,7 +1261,7 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 
-                if let peer = message.peers[message.id.peerId] as? TelegramChannel, let author = message.author {
+                if let peer = message.peers[message.id.peerId] as? TelegramChannel, let _ = message.author {
                     switch peer.info {
                     case let .broadcast(info):
                         if info.flags.contains(.messagesShouldHaveProfiles) {
@@ -1364,6 +1388,9 @@ class ChatRowItem: TableRowItem {
         
         } else if let message = message {
             if entry.additionalData.eventLog != nil {
+                return true
+            }
+            if message.adAttribute != nil {
                 return true
             }
             return !bigEmojiMessage(sharedContext, message: message)
@@ -1610,7 +1637,7 @@ class ChatRowItem: TableRowItem {
     var topicLinkLayout: TopicReplyItemLayout? {
         if let value = _topicLinkLayout {
             return value
-        } else if let message = self.message, let threadInfo = message.associatedThreadInfo, chatInteraction.mode == .history, let peer = message.peers[message.id.peerId], peer.isForum {
+        } else if let message = self.message, let threadInfo = message.associatedThreadInfo, chatInteraction.mode == .history, let peer = message.peers[message.id.peerId], peer.isForum, !peer.displayForumAsTabs {
             var ignore: Bool = false
             
             if renderType == .bubble {
@@ -1730,6 +1757,7 @@ class ChatRowItem: TableRowItem {
         var itemType: ChatItemType = .Full(rank: nil, header: .normal)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
+        
         
         var object = object
         var captionMessage: Message? = object.message
@@ -1912,9 +1940,9 @@ class ChatRowItem: TableRowItem {
                 if case .Full = itemType {
                     switch entry {
                     case let .MessageEntry(message, _, _, _, _, _, _):
-                        isFull = chatInteraction.mode.threadId != message.id
+                        isFull = chatInteraction.chatLocation.threadMsgId != message.id
                     case let .groupedPhotos(entries, groupInfo: _):
-                        isFull = chatInteraction.mode.threadId != entries.first?.message?.id
+                        isFull = chatInteraction.chatLocation.threadMsgId != entries.first?.message?.id
                     default:
                         isFull = true
                     }
@@ -2242,7 +2270,6 @@ class ChatRowItem: TableRowItem {
                 if let peer = titlePeer {
                     var nameColor:NSColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                     
-                    let color: PeerNameColors.Colors
                     if let _nameColor = peer.nameColor {
                         nameColor = context.peerNameColors.get(_nameColor).main
                     }
@@ -2451,7 +2478,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if attribute.messageId == attribute.threadMessageId || Int64(attribute.messageId.id) == threadId, chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode {
+                    if threadId == message.threadId && Int64(attribute.messageId.id) == threadId {
                         ignore = true
                     }
                     
@@ -2530,6 +2557,13 @@ class ChatRowItem: TableRowItem {
                             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid, xtrAmount: xtrAmount)
                         }
                     }
+                } else if let attribute = attribute as? SuggestedPostMessageAttribute {
+                    if attribute.state == nil, let peer = message.peers[message.id.peerId], isIncoming {
+                        //peer.groupAccess.canPostMessages
+                        
+                        let markupAttribute = attribute.replyMarkup(isIncoming: isIncoming)
+                        replyMarkupModel = ReplyMarkupNode(markupAttribute.rows, markupAttribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid, xtrAmount: nil, isPostSuggest: true)
+                    }
                 }
             }
 
@@ -2603,6 +2637,8 @@ class ChatRowItem: TableRowItem {
             return GeneralRowItem(initialSize, height: height, stableId: entry.stableId, backgroundColor: .clear)
         case let .userInfo(status, peer, commonGroups, _, _, theme):
             return ChatUserInfoRowItem(initialSize, interaction, entry, settings: status, peer: peer, commonGroups: commonGroups, theme: theme)
+        case .topicSeparator:
+            return ChatTopicSeparatorItem(initialSize, entry, interaction: interaction, theme: theme)
         default:
             break
         }
@@ -2631,7 +2667,7 @@ class ChatRowItem: TableRowItem {
                        return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
                    case .phoneCall:
                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
-                   case let .conferenceCall(call):
+                   case .conferenceCall:
                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, theme: theme)
 //                   case .starGift:
 //                       return ChatServiceStarsGiftItem(initialSize, interaction, interaction.context, entry, theme: theme)
@@ -2698,6 +2734,8 @@ class ChatRowItem: TableRowItem {
                     return ChatMessageItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaPoll {
                     return ChatPollItem(initialSize, interaction, interaction.context, entry, theme: theme)
+                } else if message.anyMedia is TelegramMediaTodo {
+                    return ChatRowTodoItem(initialSize, interaction, interaction.context, entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaUnsupported {
                     return ChatMessageItem(initialSize, interaction, interaction.context,entry, theme: theme)
                 } else if message.anyMedia is TelegramMediaDice {
@@ -2813,7 +2851,7 @@ class ChatRowItem: TableRowItem {
         if let forwardNameLayout = forwardNameLayout {
             var w = widthForContent
             if isBubbled && !hasBubble {
-                w = width - _contentSize.width - 85
+                w = width - _contentSize.width - 85 - (monoforumState == .vertical ? 80 : 0)
             }
             forwardNameLayout.measure(width: min(w, 250))
         }
@@ -3312,14 +3350,14 @@ class ChatRowItem: TableRowItem {
     }
     
     func replyAction() -> Bool {
-        if chatInteraction.presentation.canReplyInRestrictedMode, chatInteraction.mode.threadId != effectiveCommentMessage?.id, let message = message {
-            chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil))
+        if chatInteraction.presentation.canReplyInRestrictedMode, chatInteraction.chatLocation.threadMsgId != effectiveCommentMessage?.id, let message = message {
+            chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: nil, todoItemId: nil))
             return true
         }
         return false
     }
     func editAction() -> Bool {
-         if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing, chatInteraction.mode.threadId != effectiveCommentMessage?.id {
+         if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing, chatInteraction.chatLocation.threadMsgId != effectiveCommentMessage?.id {
             if let message = message, canEditMessage(message, chatInteraction: chatInteraction, context: context) {
                 chatInteraction.beginEditingMessage(message)
                 return true

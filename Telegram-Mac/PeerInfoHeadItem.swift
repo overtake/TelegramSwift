@@ -247,8 +247,8 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: strings().peerInfoBotAddToGroup, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botAddToGroup))
             }
            
-            if let cachedData = item.peerView.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
-                for command in botInfo.commands {
+            if let cachedData = item.peerView.cachedData as? CachedUserData, let cachedInfo = cachedData.botInfo {
+                for command in cachedInfo.commands {
                     if command.text == "settings" {
                         items.append(ActionItem(text: strings().peerInfoBotSettings, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botSettings))
                     }
@@ -259,15 +259,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                         items.append(ActionItem(text: strings().peerInfoBotPrivacy, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botPrivacy))
                     }
                 }
-                
-                if peer.id != verifyCodePeerId {
+                if peer.id != verifyCodePeerId, botInfo.flags.contains(.canEdit) {
                     items.append(ActionItem(text: strings().peerInfoReportBot, color: item.accentColor, image: theme.icons.profile_report, animation: .menu_report, action: arguments.reportBot))
                     
                     items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, color: item.accentColor, image: theme.icons.profile_more, animation: .menu_restrict, destruct: true, action: {
                         arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
                     }))
                 }
-            
                 
                 
             }
@@ -350,6 +348,18 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         
+        
+        if let monoforum = peer.linkedMonoforumId, !peer.isMonoForum {
+            switch peer.participationStatus {
+            case .member:
+                items.append(ActionItem(text: strings().peerInfoActionMessage, color: item.accentColor, image: theme.icons.profile_message, animation: .menu_show_message, action: {
+                    arguments.open_chat(monoforum)
+                }))
+            default:
+                break
+            }
+            
+        }
         
         if peer.participationStatus == .left {
             items.append(ActionItem(text: strings().peerInfoActionJoinChannel, color: item.accentColor, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
@@ -485,7 +495,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 height += maxActionSize.height + insets.top
             }
             if self.threadId != nil {
-                height += 40
+                height += 50
             }
         } else {
             height = photoDimension
@@ -509,16 +519,27 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let emojiStatus = peer?.emojiStatus {
             switch emojiStatus.content {
             case let .starGift(_, _, _, _, _, _, _, patternColor, _):
-                return .init(UInt32(patternColor))
+                if backgroundGradient.last!.lightness >= 0.2 {
+                    return .init(UInt32(patternColor)).withAlphaComponent(0.5)
+                } else {
+                    return .init(UInt32(patternColor))
+                }
             default:
                 break
             }
         }
         
+        let color: NSColor
+        
         if let nameColor = nameColor, threadId == nil, !editing {
-            return context.peerNameColors.getProfile(nameColor).main
+            color = context.peerNameColors.getProfile(nameColor).main
         } else {
-            return theme.colors.text
+            color = theme.colors.text
+        }
+        if color.lightness >= 0.2 {
+            return color.withAlphaComponent(0.5)
+        } else {
+            return color
         }
     }
     var backgroundGradient: [NSColor] {
@@ -534,7 +555,7 @@ class PeerInfoHeadItem: GeneralRowItem {
             let colors = context.peerNameColors.getProfile(nameColor)
             return [colors.main, colors.secondary ?? colors.main].compactMap { $0 }
         } else {
-            return [NSColor(0xffffff, 0)]
+            return [NSColor(0xffffff, 0), NSColor(0xffffff, 0)]
         }
     }
     
@@ -599,14 +620,22 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate var nameLayout: TextViewLayout
     
     
+    var effectivePeer: Peer? {
+        return threadPeer?._asPeer() ?? peer
+    }
+    
     let context: AccountContext
     let peer:Peer?
+    let threadPeer: EnginePeer?
     let isVerified: Bool
     let isPremium: Bool
     let isScam: Bool
     let isFake: Bool
     let isMuted: Bool
     let peerView:PeerView
+    
+    let rating: TelegramStarRating?
+    
     var result:PeerStatusStringResult {
         didSet {
             nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
@@ -648,9 +677,10 @@ class PeerInfoHeadItem: GeneralRowItem {
     let giftsContext: ProfileGiftsContext?
     
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }, giftsContext: ProfileGiftsContext? = nil) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }, giftsContext: ProfileGiftsContext? = nil, threadPeer: EnginePeer? = nil) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
+        self.threadPeer = threadPeer
         self.threadData = threadData
         self.peerView = peerView
         self.context = context
@@ -666,6 +696,8 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.isMuted = peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
+        
+        self.rating = (peerView.cachedData as? CachedUserData)?.starRating
         
         if let storyState = stories, !storyState.items.isEmpty {
             
@@ -717,10 +749,18 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
         var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), titleColor: PeerInfoHeadItem.textColor(peer, threadId: threadId, context: context), statusFont: threadId != nil ? .medium(.text) : .normal(.text), statusColor: PeerInfoHeadItem.grayTextColor(peer, threadId: threadId, context: context), highlightIfActivity: false), expanded: true)
         
+        
+        
         if let threadData = threadData {
-            result = result
-                .withUpdatedTitle(threadData.info.title)
-                .withUpdatedStatus(peer?.displayTitle ?? "")
+            if let peer = peerViewMonoforumMainPeer(peerView), let threadPeer {
+                result = result
+                    .withUpdatedTitle(peer.displayTitle)
+                    .withUpdatedStatus(threadPeer._asPeer().displayTitle)
+            } else {
+                result = result
+                    .withUpdatedTitle(threadData.info.title)
+                    .withUpdatedStatus(peer?.displayTitle ?? "")
+            }
         }
         if peerView.peerIsContact, let user = peer as? TelegramUser, user.photo.contains(where: { $0.isPersonal }) {
             result = result.withUpdatedStatus(result.status.string + " \(strings().bullet) " + strings().userInfoSetByYou)
@@ -862,7 +902,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     func openNavigationTopics() {
         if let peer = peer, isTopic {
-            ForumUI.open(peer.id, context: context)
+            ForumUI.open(peer.id, addition: true, context: context)
         }
     }
     
@@ -1238,7 +1278,7 @@ private class GiftIconLayer: SimpleLayer {
             for attribute in gift.attributes {
                 if case let .model(_, fileValue, _) = attribute {
                     file = fileValue
-                } else if case let .backdrop(_, innerColor, _, _, _, _) = attribute {
+                } else if case let .backdrop(_, _, innerColor, _, _, _, _) = attribute {
                     color = NSColor(rgb: UInt32(bitPattern: innerColor))
                 }
             }
@@ -1290,7 +1330,7 @@ private class GiftIconLayer: SimpleLayer {
             for attribute in gift.attributes {
                 if case let .model(_, fileValue, _) = attribute {
                     file = fileValue
-                } else if case let .backdrop(_, innerColor, _, _, _, _) = attribute {
+                } else if case let .backdrop(_, _, innerColor, _, _, _, _) = attribute {
                     color = NSColor(rgb: UInt32(bitPattern: innerColor))
                 }
             }
@@ -1413,8 +1453,8 @@ private final class SpawnGiftsView: View {
         
         for (_, iconLayer) in self.iconLayers {
             if iconLayer.frame.contains(location), let window = window as? Window {
-                if let context = self.context, let unique = iconLayer.gift.gift.unique, let reference = iconLayer.gift.reference {
-                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique), giftsContext: self.giftsContext, pinnedInfo: .init(pinnedInfo: iconLayer.gift.pinnedToTop, reference: reference)), for: window)
+                if let context = self.context, let unique = iconLayer.gift.gift.unique {
+                    showModal(with: StarGift_Nft_Controller(context: context, gift: .unique(unique), source: .quickLook(peer, unique), giftsContext: self.giftsContext, pinnedInfo: iconLayer.gift.reference.flatMap { .init(pinnedInfo: iconLayer.gift.pinnedToTop, reference: $0) }), for: window)
                 }
             }
         }
@@ -1439,9 +1479,9 @@ private final class SpawnGiftsView: View {
 //
 //        excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 140), size: CGSize(width: frame.width, height: 140)))
 //
-//        for rect in excludeRects {
+//        for (_, iconLayer) in self.iconLayers {
 //            ctx.setFillColor(NSColor.random.cgColor)
-//            ctx.fill(rect)
+//            ctx.fill(iconLayer.frame)
 //        }
 //        
     }
@@ -1463,11 +1503,11 @@ private final class SpawnGiftsView: View {
         avatarCenter = NSMakeSize(140, 140).centered(in: bounds).offsetBy(dx: 70, dy: 0).origin
         avatarCenter.y = 70 + 60
         
-        let giftIds = self.gifts.map { gift in
-            if case let .unique(gift) = gift.gift {
+        let giftIds = self.gifts.compactMap { gift in
+            if case let .unique(gift) = gift.gift, peer?.profileColor != nil {
                 return gift.id
             } else {
-                return 0
+                return nil
             }
         }
         
@@ -1478,7 +1518,7 @@ private final class SpawnGiftsView: View {
             var excludeRects: [CGRect] = []
                                          
             excludeRects.append(CGRect(origin: NSMakePoint(avatarCenter.x - 90, 50), size: NSMakeSize(170, 170)))
-            excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 100), size: CGSize(width: frame.width, height: 100)))
+            excludeRects.append(CGRect(origin: NSMakePoint(0, frame.height - 120), size: CGSize(width: frame.width, height: 120)))
 
             
             let positionGenerator = PositionGenerator(
@@ -1613,10 +1653,21 @@ private final class PeerInfoHeadView : GeneralRowView {
     private let photoView: AvatarStoryControl = AvatarStoryControl(font: .avatar(30), size: NSMakeSize(120, 120))
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    
+    private var ratingView: PeerRatingView?
+    private var ratingState: PeerRatingView.State = .short {
+        didSet {
+            if let item {
+                self.set(item: item, animated: true)
+            }
+        }
+    }
+    
 
     private let backgroundView = PeerInfoBackgroundView(frame: .zero)
     
     private var emojiSpawn: PeerInfoSpawnEmojiView?
+    private let bottomHolder = View()
     private let spawnGiftsView: SpawnGiftsView = .init(frame: .zero)
     
     private let nameView = NameContainer(frame: .zero)
@@ -1662,6 +1713,7 @@ private final class PeerInfoHeadView : GeneralRowView {
 
         //addBasicSubview(backgroundView, positioned: .below)
         
+        
         addSubview(backgroundView)
         
         photoContainer.addSubview(photoView)
@@ -1677,7 +1729,10 @@ private final class PeerInfoHeadView : GeneralRowView {
         statusContainer.addSubview(statusView)
         addSubview(statusContainer)
         
+        statusContainer.layer?.masksToBounds = false
         
+        addSubview(bottomHolder)
+
         
         listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateSpawnerFraction()
@@ -1857,45 +1912,85 @@ private final class PeerInfoHeadView : GeneralRowView {
     }
     
     
-    
-    override func layout() {
-        super.layout()
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         
         
-        backgroundView.frame = NSMakeRect(0, -110, frame.width, frame.height + 110)
-        spawnGiftsView.frame = NSMakeRect(0, -70, frame.width, frame.height + 70)
+        let statusContainerSize: NSSize
+        if let ratingView {
+            switch ratingState {
+            case .short:
+                statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
+            case .full:
+                statusContainerSize = NSMakeSize(ratingView.frame.width, statusContainer.subviewsWidthSize.height)
+            }
+        } else {
+            statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
+        }
+        
 
-        
+        transition.updateFrame(view: backgroundView, frame: NSRect(x: 0, y: -110, width: size.width, height: size.height + 110))
+        transition.updateFrame(view: spawnGiftsView, frame: NSRect(x: 0, y: -70, width: size.width, height: size.height + 70))
+
         guard let item = item as? PeerInfoHeadItem else {
             return
         }
-        
-        photoContainer.centerX(y: 0)
-        
-        photoView.center()
-        photoEditableView?.center()
-        
-        emojiSpawn?.centerX(y: 0)
-                
+
+        transition.updateFrame(view: photoContainer, frame: photoContainer.centerFrameX(y: 0))
+        transition.updateFrame(view: photoView, frame: photoView.centerFrame())
+        if let editable = photoEditableView {
+            transition.updateFrame(view: editable, frame: editable.centerFrame())
+        }
+
+        if let emoji = emojiSpawn {
+            transition.updateFrame(view: emoji, frame: emoji.centerFrameX(y: 0))
+        }
+
         if item.isTopic {
-            nameView.centerX(y: photoContainer.frame.maxY - 12)
-            statusContainer.centerX(y: nameView.frame.maxY + 8)
+            let statusContainerFrame = CGRect(
+                       x: floor((size.width - statusContainerSize.width) / 2),
+                       y: nameView.frame.maxY + 8,
+                       width: statusContainerSize.width,
+                       height: statusContainerSize.height
+                   )
+            transition.updateFrame(view: nameView, frame: nameView.centerFrameX(y: photoContainer.frame.maxY - 12))
+            transition.updateFrame(view: statusContainer, frame: statusContainerFrame)
         } else {
-            nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
-            statusContainer.centerX(y: nameView.frame.maxY + 4)
+            let statusContainerFrame = CGRect(
+                        x: floor((size.width - statusContainerSize.width) / 2),
+                        y: nameView.frame.maxY + 4,
+                        width: statusContainerSize.width,
+                        height: statusContainerSize.height
+                    )
+            transition.updateFrame(view: nameView, frame: nameView.centerFrameX(y: photoContainer.frame.maxY + item.viewType.innerInset.top))
+            transition.updateFrame(view: statusContainer, frame: statusContainerFrame)
         }
-        actionsView.centerX(y: self.frame.height - actionsView.frame.height - (item.nameColor != nil ? 20 : 0))
-        
-        if let photo = self.topicPhotoView {
-            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
+        let actionsY = size.height - actionsView.frame.height - (item.nameColor != nil ? 20 : 0)
+        transition.updateFrame(view: actionsView, frame: actionsView.centerFrameX(y: actionsY))
+
+        if let photo = topicPhotoView {
+            let photoX = floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2
+            let photoY = floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2
+            let frame = NSRect(x: photoX, y: photoY, width: item.photoDimension, height: item.photoDimension)
+            transition.updateFrame(view: photo, frame: frame)
         }
 
-        if let showStatusView {
-            showStatusView.centerY(x: statusView.frame.maxX + 4)
+        if let showStatus = showStatusView {
+            transition.updateFrame(view: showStatus, frame: showStatus.centerFrameY(x: statusView.frame.maxX + 4))
         }
-        
+
+        var statusOffset: CGFloat = 0
+        if let rating = ratingView {
+            transition.updateFrame(view: rating, frame: rating.centerFrameY(x: 0))
+            statusOffset = rating.smallSize.width + 3
+        }
+
+        transition.updateFrame(view: statusView, frame: statusView.centerFrameY(x: statusOffset))
+
+        transition.updateFrame(view: bottomHolder, frame: NSRect(x: 0, y: size.height, width: size.width, height: 20))
     }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -1957,12 +2052,18 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         item.table?.addScroll(listener: listener)
         
-        photoView.setPeer(account: item.context.account, peer: item.peer)
+        if let monoforum = peerViewMonoforumMainPeer(item.peerView), let peer = item.effectivePeer, item.threadPeer == nil {
+            photoView.setState(account: item.context.account, state: .PeerAvatar(peer, monoforum.displayLetters, monoforum.smallProfileImage, monoforum.nameColor, nil, nil, true, nil))
+        } else {
+            photoView.setPeer(account: item.context.account, peer: item.effectivePeer)
+        }
+        
 
         updatePhoto(item, animated: animated)
         
         photoView.isHidden = item.isTopic
-        
+        bottomHolder.backgroundColor = theme.colors.listBackground
+
         if !item.photos.isEmpty {
             
             if let first = item.photos.first, let video = first.image.videoRepresentations.last, item.updatingPhotoState == nil {
@@ -2046,10 +2147,36 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.emojiSpawn = current
                 addSubview(current, positioned: .above, relativeTo: backgroundView)
             }
-            current.set(fileId: emoji, color: item.profileEmojiColor.withAlphaComponent(0.3), context: item.context, animated: animated)
+            
+            current.set(fileId: emoji, color: item.profileEmojiColor, context: item.context, animated: animated)
         } else if let view = self.emojiSpawn {
             performSubviewRemoval(view, animated: animated)
             self.emojiSpawn = nil
+        }
+        
+        if let rating = item.rating, !item.editing {
+            let current: PeerRatingView
+            if let view = self.ratingView {
+                current = view
+            } else {
+                current = PeerRatingView(frame: .zero)
+                self.ratingView = current
+                statusContainer.addSubview(current)
+            }
+            let size = current.set(data: rating, context: item.context, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, state: self.ratingState, animated: animated)
+            
+            current.change(size: size, animated: animated)
+            current.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            
+            current.setSingle(handler: { [weak self] _ in
+                if let self {
+                    self.ratingState = self.ratingState.toggle()
+                }
+            }, for: .Click)
+            
+        } else if let view = self.ratingView {
+            performSubviewRemoval(view, animated: animated)
+            self.ratingView = nil
         }
         
         self.updateSpawnerFraction()
@@ -2166,11 +2293,15 @@ private final class PeerInfoHeadView : GeneralRowView {
             self.showStatusView = nil
         }
         
-        statusContainer.setFrameSize(NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height))
+        
+        statusView.change(opacity: ratingState == .full ? 0 : 1, animated: animated)
+        showStatusView?.change(opacity: ratingState == .full ? 0 : 1, animated: animated)
 
         
-        needsLayout = true
+        self.updateLayout(size: self.frame.size, transition: transition)
+        
         updateListeners()
+        
     }
     
     
@@ -2189,7 +2320,7 @@ private final class PeerInfoHeadView : GeneralRowView {
     private func updatePhoto(_ item: PeerInfoHeadItem, animated: Bool) {
         let context = item.context
         
-        if let threadData = item.threadData {
+        if let threadData = item.threadData, item.isForum {
             let size = NSMakeSize(item.photoDimension, item.photoDimension)
             let topicView: Control
             if let view = self.topicPhotoView {

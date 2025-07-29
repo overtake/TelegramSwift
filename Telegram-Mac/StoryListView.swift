@@ -1698,8 +1698,14 @@ final class StoryListView : Control, Notifable {
             } else {
                 current?.unmute()
             }
-            controls.updateMuted(isMuted: value.isMuted)
         }
+        
+        if oldValue.volume != value.volume {
+            current?.setVolume(value.volume)
+        }
+        
+        controls.updateMuted(isMuted: value.isMuted, volume: value.volume)
+        
         if oldValue.readingText != value.readingText {
             if let story = self.current?.story {
                 self.updateText(story, state: value.readingText ? .revealed : .concealed, animated: animated, context: context)
@@ -2054,7 +2060,7 @@ final class StoryListView : Control, Notifable {
             self?.updateStoryState(state)
         }
         
-        current.appear(isMuted: arguments.interaction.presentation.isMuted)
+        current.appear(isMuted: arguments.interaction.presentation.isMuted, volume: arguments.interaction.presentation.volume)
         self.updateStoryState(current.state)
 
         self.inputView.update(entry.item, animated: false)

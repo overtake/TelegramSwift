@@ -133,10 +133,10 @@ public final class ScrollableSegmentItem : Equatable, Comparable, Identifiable {
     let icon: CGImage?
     let equatable: UIEquatable?
     public let index: Int
-    public let uniqueId: Int32
+    public let uniqueId: Int64
     fileprivate var customTextView: (()->NSView?)?
     
-    public init(title: String, index: Int, uniqueId: Int32, selected: Bool, insets: NSEdgeInsets, icon: CGImage?, theme: ScrollableSegmentTheme, equatable: UIEquatable?, customTextView: (()->NSView?)? = nil) {
+    public init(title: String, index: Int, uniqueId: Int64, selected: Bool, insets: NSEdgeInsets, icon: CGImage?, theme: ScrollableSegmentTheme, equatable: UIEquatable?, customTextView: (()->NSView?)? = nil) {
         self.title = title
         self.index = index
         self.uniqueId = uniqueId
@@ -148,7 +148,7 @@ public final class ScrollableSegmentItem : Equatable, Comparable, Identifiable {
         self.customTextView = customTextView
     }
     
-    public var stableId: Int32 {
+    public var stableId: Int64 {
         return uniqueId
     }
     public static func <(lhs: ScrollableSegmentItem, rhs: ScrollableSegmentItem) -> Bool {
@@ -249,13 +249,19 @@ private final class SegmentItemView : Control {
     }
     
     var size: NSSize {
-        var width: CGFloat = self.textLayout.layoutSize.width + item.insets.left + item.insets.right
+        var width: CGFloat = item.insets.left + item.insets.right
+        if let view = self.customTextView {
+            width += view.frame.width
+        } else {
+            width += self.textLayout.layoutSize.width
+        }
         if let imageView = imageView {
             width += 5 + imageView.frame.width
         }
         if self.textLayout.layoutSize.width == 0 {
             width -= (5 + (item.insets.left + item.insets.right) / 2)
         }
+        
         return NSMakeSize(width, frame.height)
     }
     
@@ -337,11 +343,11 @@ private final class SegmentItemView : Control {
         }
         if let imageView = imageView {
             if textView.frame.width > 0 {
-                imageView.centerY(x: textView.frame.maxX + 5)
+                imageView.setFrameOrigin(NSMakePoint(textView.frame.maxX + 5, textView.frame.minY - 2))
             } else {
                 imageView.center()
             }
-            imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - (item.insets.bottom + item.insets.top) + 1))
+         //   imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - (item.insets.bottom + item.insets.top) + 1))
         }
         
     }

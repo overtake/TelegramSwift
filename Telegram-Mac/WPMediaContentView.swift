@@ -35,7 +35,7 @@ private final class GiftView: View {
 
         for attribute in uniqueGift.attributes {
             switch attribute {
-            case let .backdrop(_, innerColor, outerColor, _, _, _):
+            case let .backdrop(_, _, innerColor, outerColor, _, _, _):
                 colors = [NSColor(UInt32(innerColor)).withAlphaComponent(1), NSColor(UInt32(outerColor)).withAlphaComponent(1)]
             default:
                 break
@@ -51,7 +51,7 @@ private final class GiftView: View {
             switch attribute {
             case .pattern(_, let file, _):
                 patternFile = file
-            case let .backdrop(_, _, _, color, _, _):
+            case let .backdrop(_, _, _, _, color, _, _):
                 patternColor = NSColor(UInt32(color)).withAlphaComponent(0.3)
             default:
                 break

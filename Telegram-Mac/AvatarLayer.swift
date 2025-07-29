@@ -139,12 +139,12 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false, cornerRadius: CGFloat? = nil) {
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false, cornerRadius: CGFloat? = nil, forceMonoforum: Bool = false) {
         self.account = account
         self.disableForum = disableForum
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, message, size, peer.isForum && !disableForum, cornerRadius)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, message, size, (peer.isForumOrMonoForum && !disableForum) || forceMonoforum, cornerRadius)
         } else {
             state = .Empty
         }
@@ -222,13 +222,17 @@ class AvatarControl: NSView {
                 self.imageContents = nil
                 let photo: PeerPhoto?
                 var updatedSize: NSSize = self.frame.size
+                
+                let _disableForum: Bool
+                
                 switch state {
-                case let .PeerAvatar(peer, letters, representation, nameColor, message, size, _, cornerRadius):
+                case let .PeerAvatar(peer, letters, representation, nameColor, message, size, isForum, cornerRadius):
+                    _disableForum = !isForum
                     if let peer = peer as? TelegramUser, peer.firstName == nil && peer.lastName == nil {
                         photo = nil
                         self.setState(account: account, state: .Empty)
                         let icon = theme.icons.deletedAccount
-                        self.setSignal(generateEmptyPhoto(updatedSize, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id._internalGetInt64Value() % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, updatedSize.width - 20), min(updatedSize.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
+                        self.setSignal(generateEmptyPhoto(updatedSize, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id._internalGetInt64Value() % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, updatedSize.width - 20), min(updatedSize.height - 20, 50))), cornerRadius: nil), bubble: peer.isMonoForum) |> map {($0, false)})
                         return
                     } else {
                         photo = .peer(peer, representation, nameColor, letters, message, cornerRadius)
@@ -236,11 +240,13 @@ class AvatarControl: NSView {
                     updatedSize = size ?? frame.size
                 case .Empty:
                     photo = nil
+                    _disableForum = disableForum
                 default:
                     photo = nil
+                    _disableForum = disableForum
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous, disableForum: disableForum), force: false)
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous, disableForum: _disableForum), force: false)
                 } else {
                     let content = self.imageContents
                     self.displaySuspended = false

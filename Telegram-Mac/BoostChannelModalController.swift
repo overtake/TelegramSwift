@@ -183,6 +183,8 @@ private struct State : Equatable {
                     title = strings().channelBoostEnableReactions
                 case .wallpaper:
                     title = strings().channelBoostEnableWallpapers
+                case .autotranslation:
+                    title = strings().channelBoostAutotranslation
                 default:
                     if self.isGroup {
                         title = strings().channelBoostTitleGroup
@@ -282,6 +284,8 @@ private final class BoostRowItem : TableRowItem {
                         } else {
                             string = strings().channelBoostEnableReactionsText("\(level + 1)", "\(level)")
                         }
+                    case let .autotranslation(level):
+                        string = strings().channelBoostEnableAutoTranslationText("\(level)")
                     case let .noAds(level):
                         string = strings().channelBoostEnableNoAdsLevelText("\(level)")
                     default:
@@ -1010,6 +1014,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         for level in levels {
             var perks: [BoostChannelPerk] = []
+            
+            if !isGroup, level >= premiumConfiguration.minChannelAutotranslationLevel {
+                perks.append(.autotranslation)
+            }
+            
             perks.append(.story(level))
                                 
             if !isGroup {
@@ -1025,7 +1034,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if !isGroup && nameColorsCount > 0 {
                 perks.append(.nameColor(nameColorsCount))
             }
-            
+           
             if isGroup && level >= premiumConfiguration.minGroupAudioTranscriptionLevel {
                 perks.append(.audioTranscription)
             }
@@ -1104,6 +1113,7 @@ enum BoostChannelSource : Equatable {
     case unblockText(Int32)
     case unblockSlowmode(Int32)
     case noAds(Int32)
+    case autotranslation(Int32)
     case wearStatus
 }
 

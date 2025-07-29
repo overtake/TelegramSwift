@@ -45,12 +45,17 @@ class ChatDateStickItem : TableStickItem {
     let isBubbled: Bool
     let layout:TextViewLayout
     let presentation: TelegramPresentationTheme
+    
+    var monoforumState: MonoforumUIState? {
+        return entry.additionalData.monoforumState
+    }
+    
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
         self.presentation = theme
-        if case let .DateEntry(index, _, _) = entry {
+        if case let .DateEntry(index, _, _, _) = entry {
             self.timestamp = index.timestamp
         } else {
             fatalError()
@@ -120,7 +125,7 @@ class ChatDateStickItem : TableStickItem {
     }
     
     required init(_ initialSize: NSSize) {
-        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list, theme)
+        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list, theme, .init())
         timestamp = 0
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
@@ -269,13 +274,22 @@ class ChatDateStickView : TableStickView {
         
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-    }
     
     override func layout() {
         super.layout()
-        textView.center()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        guard let item = item as? ChatDateStickItem else {
+            return
+        }
+        
+        let rect = textView.centerFrame().offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0)
+        
+        transition.updateFrame(view: textView, frame: rect)
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -283,11 +297,13 @@ class ChatDateStickView : TableStickView {
             textView.update(item.layout)
             textView.setFrameSize(item.layout.layoutSize.width + 16, item.layout.layoutSize.height + 6)
             textView.layer?.cornerRadius = textView.frame.height / 2
-            self.needsLayout = true
-
 
         }
         super.set(item: item, animated:animated)
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
     }
     
     override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {

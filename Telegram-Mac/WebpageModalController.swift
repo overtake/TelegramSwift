@@ -1072,7 +1072,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         return self.requestData?.bot ?? botPeer ?? data?.bot
     }
     
-    private var biometryState: TelegramBotBiometricsState? {
+    private var biometryState: TelegramBotBiometricsState? = TelegramBotBiometricsState.create() {
         didSet {
             if let biometryState, let bot = requestData?.bot {
                 context.engine.peers.updateBotBiometricsState(peerId: bot.id, update: { _ in
@@ -1251,11 +1251,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         let isFullscreen = window?.isFullScreen ?? false
         
         let contentInsetsData = "{top:\(isFullscreen ? 60 : 0), bottom:0.0, left:0.0, right:0.0}"
-        sendEvent(name: "content_safe_area_changed", data: contentInsetsData)
+        sendEvent(name: "safe_area_changed", data: contentInsetsData)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.window?.onToggleFullScreen = { [weak self] fullscreen in
+            let paramsString = "{is_fullscreen: \( fullscreen ? "true" : "false" )}"
+            self?.sendEvent(name: "fullscreen_changed", data: paramsString)
+
+        }
         
         if let data = self.settings?.placeholderData, let svg = generateStickerPlaceholderImage(data: data, size: NSMakeSize(50, 50), scale: System.backingScale, imageSize: NSMakeSize(512, 512), backgroundColor: nil, foregroundColor: theme.colors.grayText) {
             self.genericView.placeholderIcon = (svg, true)
@@ -1307,7 +1313,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         installedBotsDisposable.set(bots.start(next: { [weak self] items in
             self?.installedBots = items.filter { $0.flags.contains(.showInAttachMenu) }.map { $0.peer.id }
         }))
-        
+                
         guard let botPeer = requestData?.bot else {
             return
         }
@@ -1617,18 +1623,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     let inputQuery = "@\(address)" + " " + query
 
                     if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
-                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { [weak self] peerId, threadId in
+                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { peerId, threadId in
                             let action: ChatInitialAction = .inputText(text: .init(inputText: inputQuery), behavior: .automatic)
                             if let threadId = threadId {
-                                _ = ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
+                                _ = ForumUI.openTopic(threadId, peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
                             } else {
                                 context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: action))
                             }
-                            self?.needCloseConfirmation = false
-                            self?.close()
                             return .complete()
                         }))
-                        showModal(with: controller, for: window)
+                        showModal(with: controller, for: context.window)
+                        
+                        self.needCloseConfirmation = false
+                        self.close()
+
                     } else {
                         self.needCloseConfirmation = false
                         self.close()
@@ -1657,6 +1665,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
             }
+            self.updateSize()
         case "web_app_setup_secondary_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {
@@ -1678,6 +1687,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
             }
+            self.updateSize()
         case "web_app_request_viewport":
             self.updateSize()
         case "web_app_expand":
@@ -2172,14 +2182,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_request_fullscreen":
             if !window.isFullScreen {
                 window.toggleFullScreen(nil)
-                self.sendEvent(name: "fullscreen_changed", data: nil)
-            } else {
-                self.sendEvent(name: "fullscreen_failed", data: nil)
             }
         case "web_app_exit_fullscreen":
             if window.isFullScreen {
                 window.toggleFullScreen(nil)
-                self.sendEvent(name: "fullscreen_changed", data: nil)
             }
         case "web_app_request_safe_area":
             updateSafeInsets()
@@ -2369,6 +2375,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     })
                 }
             }
+        case "web_app_request_theme":
+            self.sendThemeChangedEvent()
         case "web_app_secure_storage_clear":
             if let json, let requestId = json["req_id"] as? String, let botId = bot?.id {
                 let _ = (WebAppSecureStorage.clearStorage(context: self.context, botId: botId)
@@ -2378,6 +2386,32 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     ]
                     self?.sendEvent(name: "secure_storage_cleared", data: data.string)
                 })
+            }
+        case "web_app_verify_age":
+            let verify_age_bot = context.appConfiguration.getStringValue("verify_age_bot_username", orElse: "")
+            if let json, let passed = json["passed"] as? Bool, let age = json["age"] as? Int32, bot?.addressName == verify_age_bot {
+                
+                let passed = passed && context.appConfiguration.getGeneralValue("verify_age_min", orElse: 18) <= age
+                
+                let header: String
+                let info: String
+                if passed {
+                    header = strings().verifyAgeAlertPassedHeader
+                    info = strings().verifyAgeAlertPassedInfo
+                } else {
+                    header = strings().verifyAgeAlertFailedHeader
+                    info = strings().verifyAgeAlertFailedInfo
+                }
+
+                showModalText(for: context.window, text: info, title: header)
+                _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                
+                context.contentConfig.sensitiveContentEnabled = true
+                
+                NotificationCenter.default.post(name: NSNotification.Name("external_age_verify"), object: nil)
+                
+                FastSettings.lastAgeVerification = Date().timeIntervalSince1970
+                
             }
         default:
             break
@@ -2423,6 +2457,23 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }), for: window)
         
         
+    }
+    
+    private func sendThemeChangedEvent() {
+        let themeParams = generateWebAppThemeParams(theme)
+        var themeParamsString = "{theme_params: {"
+        for (key, value) in themeParams {
+            if let value = value as? Int32 {
+                let color = NSColor(rgb: UInt32(bitPattern: value))
+                
+                if themeParamsString.count > 16 {
+                    themeParamsString.append(", ")
+                }
+                themeParamsString.append("\"\(key)\": \"\(color.hexString)\"")
+            }
+        }
+        themeParamsString.append("}}")
+        self.sendEvent(name: "theme_changed", data: themeParamsString)
     }
     
     fileprivate func openLocationSettings() {
@@ -2755,9 +2806,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     fileprivate func sendBiometricInfo(biometryState: TelegramBotBiometricsState) {
         
-        guard let botPeer = self.bot else {
-            return
-        }
         let type: String = laContext.biometricTypeString
         var error: NSErrorPointer = .none
         
@@ -2805,6 +2853,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         if let contentSize = window?.screen?.frame.size {
            measure(size: contentSize)
         }
+        self.sendEvent(name: "viewport_changed", data: nil)
     }
     
     private func poupDidClose(_ id: String) {
@@ -2832,22 +2881,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        
-        let themeParams = generateWebAppThemeParams(theme)
-        var themeParamsString = "{theme_params: {"
-        for (key, value) in themeParams {
-            if let value = value as? Int32 {
-                let color = NSColor(rgb: UInt32(bitPattern: value))
-                
-                if themeParamsString.count > 16 {
-                    themeParamsString.append(", ")
-                }
-                themeParamsString.append("\"\(key)\": \"\(color.hexString)\"")
-            }
-        }
-        themeParamsString.append("}}")
-        
-        self.sendEvent(name: "theme_changed", data: themeParamsString)
+        self.sendThemeChangedEvent()
         
         
         genericView.updateHeader(title: self.defaultBarTitle, subtitle: strings().presenceMiniapp, left: isBackButton ? .back : .dismiss, animated: true, leftCallback: { [weak self] in
@@ -2872,37 +2906,43 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     func contextMenu() -> ContextMenu {
         var items:[ContextMenuItem] = []
         
-        let inFullscreen = window?.isFullScreen == true
-
-        items.append(.init(!inFullscreen ? strings().webAppFullscreen : strings().webAppExitFullscreen, handler: { [weak self] in
-            self?.window?.toggleFullScreen(nil)
-        }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
+        let verify_age_bot = context.appConfiguration.getStringValue("verify_age_bot_username", orElse: "")
 
         
-        items.append(.init(strings().webAppReload, handler: { [weak self] in
-            self?.reloadPage()
-        }, itemImage: MenuAnimation.menu_reload.value))
+        if self.bot?.addressName != verify_age_bot {
+            let inFullscreen = window?.isFullScreen == true
 
-        if self.hasSettings == true {
-            items.append(.init(strings().webAppSettings, handler: { [weak self] in
-                self?.settingsPressed()
-            }, itemImage: MenuAnimation.menu_gear.value))
-        }
-        
-        if let data = self.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
-            if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                if installedBots.contains(where: { $0 == bot.id }) {
-                    items.append(ContextSeparatorItem())
-                    items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
-                        self?.removeBotFromAttachMenu(bot: bot)
-                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                } else {
-                    items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
-                        self?.addBotToAttachMenu(bot: bot)
-                    }, itemImage: MenuAnimation.menu_plus.value))
+            items.append(.init(!inFullscreen ? strings().webAppFullscreen : strings().webAppExitFullscreen, handler: { [weak self] in
+                self?.window?.toggleFullScreen(nil)
+            }, itemImage: self.window?.isFullScreen == false ? MenuAnimation.menu_expand.value : MenuAnimation.menu_collapse.value))
+
+            
+            items.append(.init(strings().webAppReload, handler: { [weak self] in
+                self?.reloadPage()
+            }, itemImage: MenuAnimation.menu_reload.value))
+
+            if self.hasSettings == true {
+                items.append(.init(strings().webAppSettings, handler: { [weak self] in
+                    self?.settingsPressed()
+                }, itemImage: MenuAnimation.menu_gear.value))
+            }
+            
+            if let data = self.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
+                if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+                    if installedBots.contains(where: { $0 == bot.id }) {
+                        items.append(ContextSeparatorItem())
+                        items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
+                            self?.removeBotFromAttachMenu(bot: bot)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    } else {
+                        items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
+                            self?.addBotToAttachMenu(bot: bot)
+                        }, itemImage: MenuAnimation.menu_plus.value))
+                    }
                 }
             }
         }
+        
         
         if self.isBackButton == true, browser == nil {
             items.append(.init(strings().webAppClose, handler: { [weak self] in

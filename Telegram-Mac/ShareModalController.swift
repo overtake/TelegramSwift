@@ -17,6 +17,7 @@ import InAppSettings
 import InputView
 
 
+
 fileprivate class ShareButton : Control {
     private var badge: BadgeNode?
     private var badgeView: View = View()
@@ -322,8 +323,8 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             switch item.id {
             case let .forum(id):
                 threadId = id
-            default:
-                threadId = nil
+            case let .chatList(peerId):
+                threadId = peerId.toInt64()
             }
             return SearchTopicRowItem(initialSize, stableId: self.item.id, item: self.item, context: arguments.context, action: {
                 if let threadId = threadId {
@@ -511,7 +512,7 @@ class ShareObject {
     var withoutSound: Bool = false
     var scheduleDate: Date? = nil
     
-    var threadIds: [PeerId : MessageId] = [:]
+    var threadIds: [PeerId : Int64] = [:]
     
     init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], defaultSelectedIds: Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil, limit: Int? = nil) {
         self.limit = limit
@@ -567,7 +568,7 @@ class ShareObject {
         return false
     }
     
-    func perform(to entries:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         return .complete()
     }
     func limitReached() {
@@ -603,9 +604,9 @@ class ShareObject {
 }
 
 class SharefilterCallbackObject : ShareObject {
-    private let callback:(PeerId, MessageId?)->Signal<Never, NoError>
+    private let callback:(PeerId, Int64?)->Signal<Never, NoError>
     private let limits: [String]
-    init(_ context: AccountContext, limits: [String], callback:@escaping(PeerId, MessageId?)->Signal<Never, NoError>) {
+    init(_ context: AccountContext, limits: [String], callback:@escaping(PeerId, Int64?)->Signal<Never, NoError>) {
         self.callback = callback
         self.limits = limits
         super.init(context)
@@ -615,7 +616,7 @@ class SharefilterCallbackObject : ShareObject {
         return false
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         if let peerId = peerIds.first {
             return callback(peerId, threadId) |> castError(String.self)
         } else {
@@ -679,9 +680,9 @@ class ShareChatContextResult : ShareObject {
         super.init(context)
     }
     
-    override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds: [PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         for peerId in peerIds {
-            _ = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: peerId, threadId: optionalMessageThreadId(threadId), botId: preparedMessage.botId, result: preparedMessage.result, replyToMessageId: nil, sendPaidMessageStars: sendPaidMessageStars[peerId])
+            _ = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: peerId, threadId: threadId, botId: preparedMessage.botId, result: preparedMessage.result, replyToMessageId: nil, sendPaidMessageStars: sendPaidMessageStars[peerId])
         }
         return .complete()
     }
@@ -717,7 +718,7 @@ class ShareLinkObject : ShareObject {
         copyToClipboard(link)
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         for peerId in peerIds {
             var link = self.link
             if let comment = comment, !comment.inputText.isEmpty {
@@ -726,7 +727,7 @@ class ShareLinkObject : ShareObject {
             
             let attributes:[MessageAttribute] = attributes(peerId, sendPaidMessageStars: sendPaidMessageStars[peerId])
         
-            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
         }
         return .complete()
     }
@@ -752,14 +753,14 @@ class ShareUrlObject : ShareObject {
         copyToClipboard(url)
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         for peerId in peerIds {
             
             let attributes:[MessageAttribute] = attributes(peerId, sendPaidMessageStars: sendPaidMessageStars[peerId])
             
             let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)], alternativeRepresentations: [])
                         
-            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
         }
         return .complete()
     }
@@ -782,13 +783,13 @@ class ShareContactObject : ShareObject {
         return !excludePeerIds.contains(peer.id) && peer.canSendMessage(media: media)
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         for peerId in peerIds {
             if let comment = comment, !comment.inputText.isEmpty {
                 let attributes:[MessageAttribute] = attributes(peerId, sendPaidMessageStars: sendPaidMessageStars[peerId])
-                _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
             }
-            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, threadId: optionalMessageThreadId(threadId)).start()
+            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: nil, threadId: threadId).start()
         }
         return .complete()
     }
@@ -802,7 +803,7 @@ class ShareCallbackObject : ShareObject {
         super.init(context)
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         return callback(peerIds) |> castError(String.self)
     }
     
@@ -832,7 +833,7 @@ class ShareCallbackPeerTypesObject : ShareObject {
         return true
     }
     
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         return callback(peerIds) |> castError(String.self)
     }
     
@@ -920,7 +921,7 @@ class ShareMessageObject : ShareObject {
         exportLinkDisposable.dispose()
     }
 
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         
         let context = self.context
         let messageIds = self.messageIds
@@ -945,7 +946,7 @@ class ShareMessageObject : ShareObject {
             let threadId = threadIds[peerId] ?? threadId
             
             signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
-                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs, sendPaidMessageStars: sendPaidMessageStars[peerId])
+                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: nil, threadId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs, sendPaidMessageStars: sendPaidMessageStars[peerId])
                 var caption: Signal<[MessageId?], NoError>?
                 if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                     let parsingUrlType: ParsingType
@@ -961,7 +962,7 @@ class ShareMessageObject : ShareObject {
                         attributes.append(SendAsMessageAttribute(peerId: sendAs))
                     }
                     
-                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                 }
                 if let caption = caption {
                     return caption |> then(forward)
@@ -1017,7 +1018,7 @@ class ShareStoryObject : ShareObject {
     deinit {
     }
 
-    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         
         let context = self.context
         var signals: [Signal<[MessageId?], NoError>] = []
@@ -1052,7 +1053,7 @@ class ShareStoryObject : ShareObject {
             
             signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                 
-                let forward: Signal<[MessageId?], NoError> = Sender.enqueue(media: media, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, threadId: optionalMessageThreadId(threadId), silent: withoutSound, atDate: date)
+                let forward: Signal<[MessageId?], NoError> = Sender.enqueue(media: media, context: context, peerId: peerId, replyId: nil, threadId: threadId, silent: withoutSound, atDate: date)
                 var caption: Signal<[MessageId?], NoError>?
                 if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                     let parsingUrlType: ParsingType
@@ -1073,7 +1074,7 @@ class ShareStoryObject : ShareObject {
                     if let date = date {
                         attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
                     }
-                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                 }
                 if let caption = caption {
                     return caption |> then(forward)
@@ -1131,7 +1132,7 @@ final class ReplyForwardMessageObject : ShareObject {
         return !excludePeerIds.contains(peer.id) && canSend
     }
     
-    override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds: [PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         
         if let peerId = peerIds.first {
             let context = self.context
@@ -1169,7 +1170,7 @@ final class ReplyForwardMessageObject : ShareObject {
                             let initialAction: ChatInitialAction = .reply(subject, behavior: .automatic)
                             
                             if let threadId = threadId {
-                                return ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
+                                return ForumUI.openTopic(threadId, peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction, isMonoforum: peer.isMonoForum) |> filter {$0}
                                 |> take(1)
                                 |> ignoreValues
                                 |> castError(String.self)
@@ -1241,7 +1242,7 @@ final class ForwardMessagesObject : ShareObject {
     
     
     
-    override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
+    override func perform(to peerIds: [PeerId], threadId: Int64?, comment: ChatTextInputState? = nil, sendPaidMessageStars:[PeerId: StarsAmount] = [:]) -> Signal<Never, String> {
         
         if peerIds.count == 1 {
             let context = self.context
@@ -1301,9 +1302,9 @@ final class ForwardMessagesObject : ShareObject {
                                     parsingUrlType = [.Links, .Hashtags]
                                 }
                                 let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start()
+                                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start()
                             }
-                            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }).start()
+                            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId, replyId: nil, threadId: threadId).start()
                             if let controller = context.bindings.rootNavigation().controller as? ChatController {
                                 controller.chatInteraction.update({$0.withoutSelectionState()})
                             }
@@ -1325,7 +1326,7 @@ final class ForwardMessagesObject : ShareObject {
                                 let initialAction: ChatInitialAction = .forward(messageIds: messageIds, text: comment, behavior: .automatic)
                                 
                                 if let threadId = threadId {
-                                    return ForumUI.openTopic(Int64(threadId.id), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
+                                    return ForumUI.openTopic(threadId, peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction, isMonoforum: peer.isMonoForum) |> filter {$0}
                                     |> take(1)
                                     |> ignoreValues
                                     |> castError(String.self)
@@ -1387,7 +1388,7 @@ final class ForwardMessagesObject : ShareObject {
                 let threadId = threadIds[peerId] ?? threadId
                 
                 signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
-                    let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
+                    let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: nil, threadId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                     var caption: Signal<[MessageId?], NoError>?
                     if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                         let parsingUrlType: ParsingType
@@ -1403,7 +1404,7 @@ final class ForwardMessagesObject : ShareObject {
                             attributes.append(SendAsMessageAttribute(peerId: sendAs))
                         }
                         
-                        caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                        caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                     }
                     if let caption = caption {
                         return caption |> then(forward)
@@ -1453,13 +1454,13 @@ enum SelectablePeersEntry : Comparable, Identifiable {
     case folders([ChatListFilter], ChatListFilter)
     case secretChat(Peer, PeerId, ChatListIndex, PeerStatusStringResult?, Bool, Bool)
     //peer, index, presence, autoDeletion, separator, multiple
-    case plain(Peer, ChatListIndex, PeerStatusStringResult?, Int32?, Bool, Bool)
+    case plain(RenderedPeer, ChatListIndex, PeerStatusStringResult?, Int32?, Bool, Bool)
     case separator(String, ChatListIndex)
     case emptySearch
     var stableId: SelectablePeersEntryStableId {
         switch self {
         case let .plain(peer, index, _, _, _, _):
-            return .plain(peer.id, index)
+            return .plain(peer.peerId, index)
         case let .secretChat(_, peerId, index, _, _, _):
             return .plain(peerId, index)
         case let .separator(_, index):
@@ -1493,9 +1494,9 @@ func <(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 
 func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
     switch lhs {
-    case let .plain(lhsPeer, index, presence, autoDeletion, separator, multiple):
-        if case .plain(let rhsPeer, index, presence, autoDeletion, separator, multiple) = rhs {
-            return lhsPeer.isEqual(rhsPeer)
+    case let .plain(peer, index, presence, autoDeletion, separator, multiple):
+        if case .plain(peer, index, presence, autoDeletion, separator, multiple) = rhs {
+            return true
         } else {
             return false
         }
@@ -1533,11 +1534,16 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
     let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
         
         switch entry {
-        case let .plain(peer, _, presence, autoDeletion, drawSeparator, multiple):
+        case let .plain(renderedPeer, _, presence, autoDeletion, drawSeparator, multiple):
             let theme = share.presentation ?? theme
+            
+            guard let peer = renderedPeer.peer else {
+                return .init(initialSize)
+            }
+            
             return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .interactable(selectInteraction), action: {
-                if peer.isForum && share.selectTopics {
-                    _ = selectInteraction.openForum(peer.id)
+                if share.selectTopics, peer.isForum || (peer.groupAccess.canManageDirect && peer.isMonoForum) {
+                    _ = selectInteraction.openForum(peer.id, peer.isMonoForum)
                 } else {
                     selectInteraction.action(peer.id, nil)
                 }
@@ -1549,7 +1555,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
                         }
                     }, itemImage: MenuAnimation.menu_select_messages.value)
                 ])
-            }, highlightVerified: true, customTheme: .initialize(theme), drawStarsPaid: share.messagesCount > 0 && peer.id != context.peerId ? peer.sendPaidMessageStars : nil)
+            }, highlightVerified: true, customTheme: .initialize(theme), drawStarsPaid: share.messagesCount > 0 && peer.id != context.peerId ? peer.sendPaidMessageStars : nil, monoforumPeer: renderedPeer.chatOrMonoforumMainPeer)
         case let .secretChat(peer, peerId, _, _, drawSeparator, multiple):
             let theme = share.presentation ?? theme
             return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
@@ -1569,7 +1575,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
     })
     
     
-    return TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower), grouping: true, animateVisibleOnly: false)
+    return TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower, false), grouping: true, animateVisibleOnly: false)
     
 }
 
@@ -1897,10 +1903,10 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
         return .modal
     }
     
-    private func openForum(_ peerId: PeerId, animated: Bool) {
+    private func openForum(_ peerId: PeerId, isMonoforum: Bool, animated: Bool) {
         let context = share.context
         let selectInteractions = self.selectInteractions
-        var filter = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
+        var filter = chatListViewForLocation(chatListLocation: isMonoforum ? .savedMessagesChats(peerId: peerId) : .forum(peerId: peerId), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
             !$0.list.isLoading
         } |> take(1)
         genericView.basicSearchView.setString("")
@@ -2085,12 +2091,11 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                     self?.selectInteractions.toggleSelection(peer)
                     self?.cancelForum(animated: true)
                 })
-                self.share.threadIds[peerId] = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
+                self.share.threadIds[peerId] = threadId
                 return
             }
             
-            let id = threadId != nil ? makeThreadIdMessageId(peerId: peerId, threadId: threadId!) : nil
-            let signal = share.perform(to: [peerId], threadId: id, comment: self.contextChatInteraction.presentation.interfaceState.inputState) |> deliverOnMainQueue
+            let signal = share.perform(to: [peerId], threadId: threadId, comment: self.contextChatInteraction.presentation.interfaceState.inputState) |> deliverOnMainQueue
             _ = signal.start(error: { error in
                alert(for: context.window, info: error)
             }, completed: { [weak self] in
@@ -2100,9 +2105,9 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
             })
         }
         
-        selectInteraction.openForum = { [weak self] peerId in
+        selectInteraction.openForum = { [weak self] peerId, isMonoforum in
             if share.selectTopics {
-                self?.openForum(peerId, animated: true)
+                self?.openForum(peerId, isMonoforum: isMonoforum, animated: true)
             }
             return share.selectTopics
         }
@@ -2265,7 +2270,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                         }
                         
                         
-                        entries.append(.plain(user, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: Int32.max), timestamp: Int32.max)), nil, nil, top.isEmpty && recent.isEmpty, multipleSelection))
+                        entries.append(.plain(.init(peer: user), ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: Int32.max), timestamp: Int32.max)), nil, nil, top.isEmpty && recent.isEmpty, multipleSelection))
                         contains[user.id] = user.id
                         
                         if !top.isEmpty {
@@ -2275,7 +2280,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                             for peer in top {
                                 if contains[peer.id] == nil {
                                     if share.possibilityPerformTo(peer) {
-                                        entries.insert(.plain(peer, chatListIndex(), nil, nil, count < 4, multipleSelection), at: 0)
+                                        entries.insert(.plain(.init(peer: peer), chatListIndex(), nil, nil, count < 4, multipleSelection), at: 0)
                                         contains[peer.id] = peer.id
                                         count += 1
                                     }
@@ -2294,7 +2299,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                                 if let peer = rendered.peer.chatMainPeer {
                                     if contains[peer.id] == nil {
                                         if share.possibilityPerformTo(peer) {
-                                            entries.insert(.plain(peer, chatListIndex(), nil, nil, true, multipleSelection), at: 0)
+                                            entries.insert(.plain(rendered.peer, chatListIndex(), nil, nil, true, multipleSelection), at: 0)
                                             contains[peer.id] = peer.id
                                         }
                                     }
@@ -2346,7 +2351,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                                 
                                 let status = NSAttributedString.initialize(string: item.status, color: theme.statusColor, font: theme.statusFont)
                                 let title = NSAttributedString.initialize(string: item.peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
-                                entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), nil, true, multipleSelection && additionTopItems.selectable))
+                                entries.append(.plain(.init(peer: item.peer), index, PeerStatusStringResult(title, status), nil, true, multipleSelection && additionTopItems.selectable))
                                 offset -= 1
                             }
                             if !additionTopItems.bottomSeparator.isEmpty {
@@ -2357,7 +2362,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                         }
                         
                         if !share.excludePeerIds.contains(value.3.id), value.1.isEmpty || value.1.filter == .allChats {
-                            entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, nil, true, multipleSelection))
+                            entries.append(.plain(.init(peer: value.3), ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, nil, true, multipleSelection))
                             contains[value.3.id] = value.3.id
                         }
                         
@@ -2369,7 +2374,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                                             if main.id.namespace == Namespaces.Peer.SecretChat {
                                                 entries.append(.secretChat(peer, main.id, item.chatListIndex, value.2[peer.id], true, multipleSelection))
                                             } else {
-                                                entries.append(.plain(peer, item.chatListIndex, value.2[peer.id], item.autoremoveTimeout, true, multipleSelection))
+                                                entries.append(.plain(.init(item.renderedPeer), item.chatListIndex, value.2[peer.id], item.autoremoveTimeout, true, multipleSelection))
                                             }
                                         }
                                         contains[main.id] = main.id
@@ -2425,7 +2430,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                         var i:Int32 = Int32.max
                         if query.request.isSavedMessagesText || values.0.contains(where: {$0.peerId == context.peerId}), !share.excludePeerIds.contains(values.2.id) {
                             let index = MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: i), timestamp: i)
-                            entries.append(.plain(values.2, ChatListIndex(pinningIndex: 0, messageIndex: index), nil, nil, true, multipleSelection))
+                            entries.append(.plain(.init(peer: values.2), ChatListIndex(pinningIndex: 0, messageIndex: index), nil, nil, true, multipleSelection))
                             i -= 1
                             contains[values.2.id] = values.2.id
                         }
@@ -2442,7 +2447,7 @@ class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
                                             if main.id.namespace == Namespaces.Peer.SecretChat {
                                                 entries.append(.secretChat(peer, main.id, id, values.1[peer.id], true, multipleSelection))
                                             } else {
-                                                entries.append(.plain(peer, id, values.1[peer.id], nil, true, multipleSelection))
+                                                entries.append(.plain(renderedPeer, id, values.1[peer.id], nil, true, multipleSelection))
                                             }
                                         }
                                         contains[main.id] = main.id
