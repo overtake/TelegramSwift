@@ -183,6 +183,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             }, completionHandler: {
                 self.destinationOrigin = nil
                 self.point = nil
+                self.setBoundsOrigin(point)
                 self.scrollCompletion?(point == self.bounds.origin)
                 self.scrollDidComplete?(point == self.bounds.origin)
             })

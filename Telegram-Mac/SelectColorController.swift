@@ -1225,7 +1225,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             for (i, tuple) in tupls.enumerated() {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: tuple.chunk.map { .initialize($0.starGift) }, perRowCount: 3, fitToSize: true, viewType: tuple.viewType, callback: { option in
+                    return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: tuple.chunk.map { .initialize($0.starGift, context: arguments.context) }, perRowCount: 3, fitToSize: true, viewType: tuple.viewType, callback: { option in
                         if let gift = option.gift {
                             arguments.wearCollectible(gift)
                         }

@@ -50,13 +50,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         var items: [Tuple] = []
         for (i, channel) in channels.channels.enumerated() {
             var viewType: GeneralViewType = bestGeneralViewType(channels.channels, for: i)
-            if i == 0 {
-                if i == channels.channels.count - 1 {
-                    viewType = .lastItem
-                } else {
-                    viewType = .innerItem
-                }
-            }
+            viewType = .innerItem
             var status = strings().peerMediaStatusSubscribersCountable(Int(channel.subscribers))
             status = status.replacingOccurrences(of: "\(channel.subscribers)", with: Int(channel.subscribers).prettyNumber)
             items.append(.init(channel: channel, viewType: viewType, status: status))
@@ -69,20 +63,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }, highlightVerified: true)
             }))
         }
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
+       
         let limit = arguments.context.appConfiguration.getGeneralValue("recommended_channels_limit_premium", orElse: 0)
         
         if !state.isPremium {
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_more, equatable: .init(state.isPremium), comparable: nil, item: { initialSize, stableId in
-                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().channelSimilarPremium(Int(limit)), font: .normal(.text), insets: .init(), centerViewAlignment: true, linkCallback: { _ in
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .innerItem, text: strings().channelSimilarPremium(Int(limit)), font: .normal(.text), insets: .init(), centerViewAlignment: true, linkCallback: { _ in
                     arguments.premium()
                 })
             }))
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
+//            entries.append(.sectionId(sectionId, type: .normal))
+//            sectionId += 1
         }
     }
     

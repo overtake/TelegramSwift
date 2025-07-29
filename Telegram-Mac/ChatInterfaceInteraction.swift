@@ -684,6 +684,10 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })
+            case .storyAlbum:
+                update(animated: animated, {
+                    $0.withoutInitialAction()
+                })
             case let .joinVoiceChat(joinHash):
                 update(animated: animated, {
                     $0.updatedGroupCall { $0?.withUpdatedJoinHash(joinHash) }.withoutInitialAction()

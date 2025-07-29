@@ -330,7 +330,7 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
                 let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void = { [weak chatInteraction] peerId, toChat, postId, initialAction in
-                    chatInteraction?.openInfo(peerId, toChat, postId, toChat ? (initialAction ?? .source(message.id, nil)) : nil)
+                    chatInteraction?.openInfo(peerId, toChat, postId, toChat ? (initialAction ?? .source(message.id, nil)) : initialAction)
                 }
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.hashtag, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in

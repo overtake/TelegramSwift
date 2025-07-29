@@ -650,7 +650,7 @@ private final class PreviewRowView : GeneralContainableRowView {
         
         override func layout() {
             super.layout()
-            sticker.centerX(y: 0)
+            sticker.centerX(y: 5)
             visualEffect?.frame = bounds
             if let imageView {
                 imageView.setFrameOrigin(frame.width - imageView.frame.width, 0)

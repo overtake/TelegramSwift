@@ -9,6 +9,7 @@
 import Cocoa
 import SwiftSignalKit
 import AVFoundation
+import AppKit
 
 public enum TableSeparator {
     case bottom;

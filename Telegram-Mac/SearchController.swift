@@ -144,7 +144,8 @@ final class SearchControllerArguments {
     let openStorySearch:(SearchStoryListContext.State)->Void
     let toggleMessageSourceValue:(SearchController.MessaagesSourceValue)->Void
     let removeAd:(AdPeer, Bool)->Void
-    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openStorySearch:@escaping(SearchStoryListContext.State)->Void, toggleMessageSourceValue:@escaping(SearchController.MessaagesSourceValue)->Void, removeAd:@escaping(AdPeer, Bool)->Void) {
+    let approveGlobalSearch:(String, StarsAmount?)->Void
+    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openStorySearch:@escaping(SearchStoryListContext.State)->Void, toggleMessageSourceValue:@escaping(SearchController.MessaagesSourceValue)->Void, removeAd:@escaping(AdPeer, Bool)->Void, approveGlobalSearch:@escaping(String, StarsAmount?)->Void) {
         self.context = context
         self.target = target
         self.removeRecentPeerId = removeRecentPeerId
@@ -155,6 +156,7 @@ final class SearchControllerArguments {
         self.openStorySearch = openStorySearch
         self.toggleMessageSourceValue = toggleMessageSourceValue
         self.removeAd = removeAd
+        self.approveGlobalSearch = approveGlobalSearch
     }
     
 }
@@ -233,7 +235,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case topPeers(Int, articlesEnabled: Bool, unreadArticles: Int32, selfPeer: Peer, peers: [Peer], unread: [PeerId: UnreadSearchBadge], online: [PeerId : Bool])
     case foundStories(StoryListContext.State, index: Int, query: String)
     case emptySearch(isLoading: Bool)
-    case emptyList(listType: SearchTags.ListType)
+    case emptyList(listType: SearchTags.ListType, postState: TelegramGlobalPostSearchState?, isPremium: Bool, query: String)
     case disclaimer(String)
     var stableId: ChatListSearchEntryStableId {
         switch self {
@@ -360,8 +362,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case .emptyList:
-            if case .emptyList = rhs {
+        case let .emptyList(listType, postState, isPremium, query):
+            if case .emptyList(listType: listType, postState: postState, isPremium: isPremium, query: query) = rhs {
                 return true
             } else {
                 return false
@@ -663,24 +665,33 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             })
         case let .emptySearch(isLoading):
             return SearchEmptyRowItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, isLoading: isLoading, border: [.Right])
-        case let .emptyList(listType):
-            let attr = NSMutableAttributedString()
+        case let .emptyList(listType, postSearchState, isPremium, query):
             
-            let text1: String
-            let text2: String
-            switch listType {
-            case .bots:
-                text1 = strings().chatListAppsSearchEmptyTitle
-                text2 = strings().chatListAppsSearchEmptyInfo
-            case .channels:
-                text1 = strings().chatListChannelSearchEmptyTitle
-                text2 = strings().chatListChannelSearchEmptyInfo
+            if listType == .globalPosts {
+                return SearchGlobalApproveItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, context: arguments.context, query: query, postState: postSearchState, isPremium: isPremium, approve: arguments.approveGlobalSearch)
+            } else {
+                let attr = NSMutableAttributedString()
+                
+                let text1: String
+                let text2: String
+                switch listType {
+                case .bots:
+                    text1 = strings().chatListAppsSearchEmptyTitle
+                    text2 = strings().chatListAppsSearchEmptyInfo
+                case .channels:
+                    text1 = strings().chatListChannelSearchEmptyTitle
+                    text2 = strings().chatListChannelSearchEmptyInfo
+                case .globalPosts:
+                    text1 = "-"
+                    text2 = "-"
+                }
+                
+                attr.append(string: text1, color: theme.colors.darkGrayText, font: .medium(.header))
+                attr.append(string: "\n")
+                attr.append(string: text2, color: theme.colors.darkGrayText, font: .normal(.text))
+                return AnimatedStickerHeaderItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, context: arguments.context, sticker: LocalAnimatedSticker.duck_empty, text: attr, bgColor: theme.colors.background, isFullView: true)
             }
-            
-            attr.append(string: text1, color: theme.colors.darkGrayText, font: .medium(.header))
-            attr.append(string: "\n")
-            attr.append(string: text2, color: theme.colors.darkGrayText, font: .normal(.text))
-            return AnimatedStickerHeaderItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, context: arguments.context, sticker: LocalAnimatedSticker.duck_empty, text: attr, bgColor: theme.colors.background, isFullView: true)
+           
         case let .topPeers(_, articlesEnabled, unreadArticles, selfPeer, peers, unread, online):
             return PopularPeersRowItem(initialSize, stableId: entry.stableId, context: arguments.context, selfPeer: selfPeer, articlesEnabled: articlesEnabled, unreadArticles: unreadArticles, peers: peers, unread: unread, online: online, action: { type in
                 arguments.openTopPeer(type)
@@ -738,6 +749,7 @@ struct SearchTags : Hashable {
     enum ListType : Equatable {
         case channels
         case bots
+        case globalPosts
     }
     
     let messageTags:MessageTags?
@@ -763,13 +775,15 @@ struct SearchTags : Hashable {
         return messageTags == nil && peerTag == nil && text == nil
     }
     
-    func scope(_ value: SearchController.MessaagesSourceValue) -> TelegramSearchPeersScope {
+    func scope(_ value: SearchController.MessaagesSourceValue, allowPaidStars: Int64? = nil) -> TelegramSearchPeersScope {
         if let listType {
             switch listType {
             case .channels:
                 return .channels
             case .bots:
                 return .everywhere
+            case .globalPosts:
+                return .globalPosts(allowPaidStars: allowPaidStars.flatMap(Int.init))
             }
         } else {
             return value.scope
@@ -777,11 +791,11 @@ struct SearchTags : Hashable {
         
     }
     
-    func location(_ value: SearchController.MessaagesSourceValue) -> SearchMessagesLocation {
+    func location(_ value: SearchController.MessaagesSourceValue, allowPaidStars: Int64? = nil) -> SearchMessagesLocation {
         if let peerTag = peerTag {
             return .peer(peerId: peerTag, fromId: nil, tags: messageTags, reactions: nil, threadId: nil, minDate: nil, maxDate: nil)
         } else {
-            return .general(scope: scope(value), tags: messageTags, minDate: nil, maxDate: nil)
+            return .general(scope: scope(value, allowPaidStars: allowPaidStars), tags: messageTags, minDate: nil, maxDate: nil)
         }
     }
     
@@ -792,6 +806,16 @@ private struct SearchAdState : Equatable {
     var excludeAll: Bool = false
 }
 
+
+public struct ApprovedGlobalPostQueryState: Equatable {
+    public var query: String
+    public var price: StarsAmount?
+    
+    public init(query: String, price: StarsAmount?) {
+        self.query = query
+        self.price = price
+    }
+}
 
 
 class SearchController: GenericViewController<TableView>,TableViewDelegate {
@@ -821,6 +845,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
     private let globalTagsValue: ValuePromise<SearchTags> = ValuePromise(ignoreRepeated: true)
 
+    private let refreshGlobalPostSearchStateDisposable = MetaDisposable()
     
     enum MessaagesSourceValue {
         case allChats
@@ -858,9 +883,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     private let messagesSourceValue: ValuePromise<MessaagesSourceValue> = ValuePromise(.allChats, ignoreRepeated: true)
 
     private let searchAdState = ValuePromise<SearchAdState>(.init(), ignoreRepeated: true)
-    
+    private let approvedGlobalPostQueryState = ValuePromise<ApprovedGlobalPostQueryState?>(nil, ignoreRepeated: true)
 
-    
+
+    private var globalPostSearchUnlockTimer: Foundation.Timer?
+    private var isPremium: Bool = false
+
+
+
     
     private var globalStorySearchContext: SearchStoryListContext?
     private let globalStorySearchState:Promise<StoryListContext.State?> = Promise(nil)
@@ -907,7 +937,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         //genericView.border = [.Right]
         
         request(with: self.defaultQuery)
-
+        
+//        if let type = self.searchTags?.listType, type == .globalPosts {
+//            refreshGlobalPostSearchStateDisposable.set(context.engine.messages.refreshGlobalPostSearchState().startStrict())
+//            
+//            context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.GlobalPostSearchState()).startStandalone(next: { result in
+//                var bp = 0
+//                bp += 1
+//            })
+//        }
         
         
         genericView.getBackgroundColor = {
@@ -923,6 +961,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         let messagesSourceValue = messagesSourceValue.get()
         let searchAdState = self.searchAdState.get()
+        let approvedGlobalPostQueryState = self.approvedGlobalPostQueryState.get()
 
 
         let isRevealed = self.isRevealed.get()
@@ -937,10 +976,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let globalStorySearchState = self.globalStorySearchState.get()
 
         
-        let searchItems = combineLatest(globalTagsValue.get(), searchQuery.get(), viewOnStage |> filter { $0 } |> distinctUntilChanged) |> mapToSignal { globalTags, query, _ -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
+        let searchItems = combineLatest(globalTagsValue.get(), searchQuery.get(), viewOnStage |> filter { $0 } |> distinctUntilChanged, approvedGlobalPostQueryState) |> mapToSignal { globalTags, query, _, approveGlobalPostState -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
             let query = query ?? ""
             var ids:[PeerId:PeerId] = [:]
-            if !query.isEmpty || !globalTags.isEmpty {
+            if !query.isEmpty || !globalTags.isEmpty, globalTags.listType != .globalPosts {
                 
 
                 
@@ -969,6 +1008,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     return peer.peer?.isChannel == true
                                 case .bots:
                                     return peer.peer?.botInfo?.flags.contains(.hasWebApp) == true
+                                case .globalPosts:
+                                    return peer.peer?.isChannel == true
                                 }
                             } else {
                                 return true
@@ -1377,7 +1418,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return (value.0, value.1, false, value.2, value.3)
                     }
                 
-            } else if query.isEmpty, let listType = globalTags.listType {
+            } else if query.isEmpty, let listType = globalTags.listType, listType != .globalPosts {
                 let channels: Signal<[FoundPeer], NoError> = context.engine.peers.recommendedChannels(peerId: nil) |> map {
                     $0?.channels.map {
                         .init(peer: $0.peer._asPeer(), subscribers: $0.subscribers)
@@ -1506,7 +1547,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         }
                         
                         if entries.isEmpty {
-                            entries.append(.emptyList(listType: listType))
+                            entries.append(.emptyList(listType: listType, postState: nil, isPremium: context.isPremium, query: query))
                         } else {
                             entries.append(.disclaimer(strings().botGrossingDisclaimer))
                         }
@@ -1564,8 +1605,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         }
                         
                         if entries.isEmpty {
-                            entries.append(.emptyList(listType: listType))
+                            entries.append(.emptyList(listType: listType, postState: nil, isPremium: context.isPremium, query: query))
                         }
+                    case .globalPosts:
+                        break
                     }
                     
                     
@@ -1575,6 +1618,64 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     return (value.0, value.1, true, nil, nil)
                 }
                 
+            } else if let listType = globalTags.listType, listType == .globalPosts {
+                
+                if !query.isEmpty, approveGlobalPostState?.query != query {
+                    
+                    let isPremium = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)) |> map {
+                        $0?._asPeer().isPremium ?? false
+                    }
+                    let postSearchState = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Messages.GlobalPostSearchState())
+                    
+                    return combineLatest(postSearchState, isPremium) |> mapToSignal { postSearchState, isPremium in
+                        return .single(([.emptyList(listType: .globalPosts, postState: postSearchState, isPremium: isPremium, query: query)], false, false, nil, nil))
+                    }
+                } else {
+                    let location: SearchMessagesLocation = globalTags.location(.allChats, allowPaidStars: approveGlobalPostState?.price?.value)
+                                        
+                    return searchMessagesState.get() |> mapToSignal { state in
+                        var signal = context.engine.messages.searchMessages(location: location, query: query, state: state?.state)
+                        
+                        
+                        if let state {
+                            signal = .single((state.result, state.state)) |> then(signal)
+                        }
+                        
+                        let result = signal |> map { result -> ([ChatListSearchEntry], Bool, Bool, SearchMessagesState?, SearchMessagesResult?) in
+                            var entries: [ChatListSearchEntry] = []
+                            var index = 20001
+                            for message in result.0.messages {
+                                switch target {
+                                case .forum:
+                                    if let threadInfo = result.0.threadInfo[message.id] {
+                                        entries.append(.message(message, query, result.0.readStates[message.id.peerId], threadInfo, index))
+                                        index += 1
+                                    }
+                                case .common:
+                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
+                                    index += 1
+                                case .savedMessages:
+                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
+                                    index += 1
+                                }
+                                
+                            }
+                            if entries.isEmpty {
+                                entries.append(.emptySearch(isLoading: false))
+                            }
+                            return (entries, false, false, result.1, result.0)
+                        }
+                        
+                        return .single(([.emptySearch(isLoading: true)], true, true, nil, nil)) |> then(result)
+                        
+                    }
+                    |> delay(0.2, queue: prepareQueue)
+                    
+                    
+                }
+                
+                            
+
             } else if options.contains(.chats), target.isCommon {
 
                 let recently = context.engine.peers.recentlySearchedPeers() |> mapToSignal { recently -> Signal<[PeerView], NoError> in
@@ -1904,6 +2005,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         openPeerDisposable.dispose()
         globalDisposable.dispose()
         disposable.dispose()
+        refreshGlobalPostSearchStateDisposable.dispose()
     }
     
     enum Target {
@@ -1937,6 +2039,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self.open = open
         self.options = options
         self.target = target
+        self.searchTags = tags
         
         super.init(frame:frame)
         self.bar = .init(height: 0)
@@ -1947,6 +2050,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let searchAdState = Atomic(value: SearchAdState())
         let updateSearchState: ((SearchAdState) -> SearchAdState) -> Void = { [weak self] f in
             self?.searchAdState.set(searchAdState.modify (f))
+        }
+        
+        let approvedGlobalPostQueryState = Atomic<ApprovedGlobalPostQueryState?>(value: nil)
+        let updateApprovedGlobalPostQueryState: ((ApprovedGlobalPostQueryState?) -> ApprovedGlobalPostQueryState?) -> Void = { [weak self] f in
+            self?.approvedGlobalPostQueryState.set(approvedGlobalPostQueryState.modify (f))
         }
         
         self.arguments = SearchControllerArguments(context: context, target: target, removeRecentPeerId: { peerId in
@@ -1985,6 +2093,18 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 current.excludeAll = all
                 return current
             }
+        }, approveGlobalSearch: { [weak self] query, stars in
+            if let window = self?.window {
+                updateApprovedGlobalPostQueryState { _ in
+                    return .init(query: query, price: stars)
+                }
+                
+                if let stars {
+                    //TODOLANG
+                    showModalText(for: window, text: "\(strings().starListItemCountCountable(Int(stars.value))) spent on extra search.")
+                }
+            }
+            
         })
         
         setPeerAsTag = { [weak self] peer in

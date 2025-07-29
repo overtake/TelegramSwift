@@ -299,10 +299,10 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
     
     override func layout() {
         super.layout()
-        if tableView.listHeight < bounds.width {
+        if tableView.listHeight < bounds.width - 40 {
             tableView.frame = focus(NSMakeSize(tableView.listHeight, 40))
         } else {
-            tableView.frame = focus(NSMakeSize(bounds.width, 40))
+            tableView.frame = focus(NSMakeSize(bounds.width - 40, 40))
         }
     }
 }
@@ -384,7 +384,7 @@ private struct State : Equatable {
         return gift.collectionIds?.contains(collectionId) == true
     }
     
-    var perRowCount: Int = 3
+    var perRowCount: Int = 4
     var peer: EnginePeer?
     var starsState: StarsContext.State?
     var collectionsState:[Int32: ProfileGiftsContext.State] = [:]
@@ -451,7 +451,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     let chunks: [[GiftOptionsRowItem.Option]]
     let collection = state.collections.first(where: { $0.stableId == state.selectedCollection }) ?? .all
-    let list = state.gifts.map { GiftOptionsRowItem.Option.initialize($0) }
+    let list = state.gifts.map { GiftOptionsRowItem.Option.initialize($0, context: arguments.context) }
     chunks = list.chunks(state.perRowCount)
 
     
@@ -669,7 +669,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
     let giftsContext = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peerId)
     
     
-    let collectionsContext = ProfileGiftsCollectionsContext(account: context.account, peerId: peerId)
+    let collectionsContext = ProfileGiftsCollectionsContext(account: context.account, peerId: peerId, allGiftsContext: giftsContext)
     
     
     let takeContext:() -> ProfileGiftsContext? = { [weak giftsContext, weak collectionsContext] in
@@ -876,7 +876,14 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
 
     }, togglePin: { option in
         if let reference = option.reference {
-            takeContext()?.updateStarGiftPinnedToTop(reference: reference, pinnedToTop: !option.pinnedToTop)
+            var pinned = stateValue.with { $0.state?.gifts.filter({ $0.pinnedToTop }) ?? [] }
+            if !option.pinnedToTop {
+                pinned.insert(option, at: 0)
+                pinned = Array(pinned.prefix(6))
+            } else {
+                pinned.removeAll(where: { $0.reference == reference })
+            }
+            takeContext()?.updatePinnedToTopStarGifts(references: pinned.compactMap(\.reference))
         }
     }, toggleWear: { option in
         let peer = stateValue.with({ $0.peer?._asPeer() })
@@ -1222,13 +1229,13 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
     
     
     controller.didResize = { controller in
-        var rowCount:Int = 4
+        var rowCount:Int = 3
         var perWidth: CGFloat = 0
         let blockWidth = max(380, min(600, controller.atomicSize.with { $0.width }))
         while true {
             let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)
-            if perWidth >= 110 {
+            if perWidth >= 135 {
                 break
             } else {
                 rowCount -= 1

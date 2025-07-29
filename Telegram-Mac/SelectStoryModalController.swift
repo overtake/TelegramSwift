@@ -154,7 +154,7 @@ func SelectStoryModalController(context: AccountContext, folderId: Int64, peerId
                 if current.selected.map(\.id).contains(story.id) {
                     current.selected.removeAll(where: { $0.id == story.id })
                 } else {
-                    if limit > current.selected.count {
+                    if limit < current.selected.count {
                         failedToAdd = true
                     } else {
                         current.selected.append(story)

@@ -615,6 +615,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], location: ChatLoca
     var groupInfo: MessageGroupInfo?
         
     var messagesEntries = messagesEntries
+    
+    if let cachedData = cachedData as? CachedChannelData, cachedData.isNotAccessible {
+        messagesEntries = []
+    }
+    
     var topMessageIndex: Int? = nil
     if let topMessages = topFixedMessages, !topMessages.isEmpty {
         messagesEntries.insert(contentsOf: topMessages.map { MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: .init(authorIsContact: false))}, at: 0)

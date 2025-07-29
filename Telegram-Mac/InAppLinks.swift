@@ -234,7 +234,7 @@ enum ChatInitialAction : Equatable {
     case attachBot(_ bot: String, _ payload: String?, _ choose:[String]?)
     case makeWebview(appname: String, command: String?)
     case openWebview(botPeer: PeerEquatable, botApp: BotApp, result: RequestWebViewResult)
-
+    case storyAlbum(album: Int32)
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
@@ -1501,8 +1501,8 @@ func execute(inapp:inAppLink, window: Window? = nil, afterComplete: @escaping(Bo
             }
         })
         afterComplete(true)
-    case let .starsInfo(_, context):
-        showModal(with: Star_ListScreen(context: context, source: .account), for: getWindow(context))
+    case let .starsInfo(_, context, isTon):
+        showModal(with: Star_ListScreen(context: context, currency: isTon ? .ton : .stars, source: .account), for: getWindow(context))
         afterComplete(true)
     }
     
@@ -1651,7 +1651,7 @@ enum inAppLink {
     case multigift(link: String, context: AccountContext)
     case nft(link: String, slug: String, context: AccountContext)
     case joinCall(link: String, slug: String, context: AccountContext)
-    case starsInfo(link: String, context: AccountContext)
+    case starsInfo(link: String, context: AccountContext, isTon: Bool)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1729,7 +1729,7 @@ enum inAppLink {
             return link
         case let .joinCall(link, _, _):
             return link
-        case let .starsInfo(link, _):
+        case let .starsInfo(link, _, _):
             return link
         case .nothing:
             return ""
@@ -1743,7 +1743,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/", "m/", "nft/", "call/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call", "stars"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode", "premium_multigift", "stars_topup", "message", "nft", "call", "stars", "ton"]
 
 
 let ton_scheme:String = "ton://"
@@ -1784,6 +1784,7 @@ private let keyURLBalance = "balance"
 private let keyURLPurpose = "purpose"
 
 private let keyURLChannel = "channel";
+private let keyURLAlbum = "album";
 
 
 private let keyURLAppname = "appname";
@@ -1852,7 +1853,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     url = domain
                 }
                 let host = urlWithoutScheme(from: url)?.host
-                if let host, host.components(separatedBy: ".").last == "ton" {
+                if let host, host.components(separatedBy: ".").last == "ton", urlString != "tg://ton" {
                     var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
                     components?.scheme = "tonsite"
                     var urlString: String? = nil
@@ -2289,8 +2290,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 action = .source(messageId, nil)
                             }
                         
-                            
-                            if userAndPost.count == 3, let storyId = post, userAndPost[1] == "s" {
+                            if userAndPost.count == 3, let album = post, userAndPost[1] == "a" {
+                                return .followResolvedName(link: urlString, username: name, postId: nil, forceProfile: forceProfile, context: context, action: .storyAlbum(album: album), callback: openInfo)
+                            } else if userAndPost.count == 3, let storyId = post, userAndPost[1] == "s" {
                                 return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
                             } else if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: name, context: context, threadId: post, commentId: comment)
@@ -2342,6 +2344,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let thread = vars[keyURLThreadId]?.nsstring.intValue
                         let topic = vars[keyURLTopicId]?.nsstring.intValue
                         let story = vars[keyURLStoryId]?.nsstring.intValue
+                        let storyAlbum = vars[keyURLAlbum]?.nsstring.intValue
                         var action:ChatInitialAction? = nil
                         loop: for (key,value) in vars {
                             switch key {
@@ -2371,6 +2374,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     action = .inputText(text: .init(inputText: escape(with: text, addPercent: false)), behavior: .automatic)
                                 }
                                 break loop
+                            case keyURLAlbum:
+                                if let storyAlbum {
+                                    action = .storyAlbum(album: storyAlbum)
+                                }
                             default:
                                 break
                             }
@@ -2609,8 +2616,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         return .joinCall(link: urlString, slug: slug, context: context)
                     }
                 case known_scheme[26]:
-                    if let context = context{
-                        return .starsInfo(link: urlString, context: context)
+                    if let context = context {
+                        return .starsInfo(link: urlString, context: context, isTon: false)
+                    }
+                case known_scheme[27]:
+                    if let context = context {
+                        return .starsInfo(link: urlString, context: context, isTon: true)
                     }
                 default:
                     break

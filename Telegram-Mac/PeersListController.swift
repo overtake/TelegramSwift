@@ -76,6 +76,7 @@ struct PeerListState : Equatable {
         case downloads = -3
         case channels = -2
         case apps = -1
+        case globalPosts = 0
         case photos = 256
         case videos = 512
         case links = 8
@@ -116,6 +117,8 @@ struct PeerListState : Equatable {
                 return SearchTags(messageTags: nil, peerTag: nil, listType: .channels)
             case .apps:
                 return SearchTags(messageTags: nil, peerTag: nil, listType: .bots)
+            case .globalPosts:
+                return SearchTags(messageTags: nil, peerTag: nil, listType: .globalPosts)
             case .hashtagThisChat:
                 return SearchTags(messageTags: nil, peerTag: hashtag?.peer?.id, text: hashtag?.text, publicPosts: false, myMessages: false)
             case .hashtagMyMessages:
@@ -153,6 +156,9 @@ struct PeerListState : Equatable {
                 return strings().chatListChannelsTag
             case .apps:
                 return strings().chatListAppsTag
+            case .globalPosts:
+                //TODO
+                return "Posts"
             case .photos:
                 return strings().searchFilterPhotos
             case .videos:
@@ -186,6 +192,8 @@ struct PeerListState : Equatable {
                 return nil
             case .apps:
                 return nil
+            case .globalPosts:
+                return nil
             case .photos:
                 return .photo
             case .videos:
@@ -218,8 +226,8 @@ struct PeerListState : Equatable {
                     }
                     list.append(.channels)
                     list.append(.apps)
+                    list.append(.globalPosts)
                 }
-                
                 list.append(.photos)
                 list.append(.videos)
                 list.append(.links)
@@ -2105,6 +2113,10 @@ private class SearchContainer : Control {
                     index += 1
                     items.append(.init(title: strings().chatListAppsTag, index: index, uniqueId: -1, selected: state.selectedTag == .apps, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
+                    //TODOLAG
+                    items.append(.init(title: "Posts", index: index, uniqueId: 0, selected: state.selectedTag == .globalPosts, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    index += 1
+
                 }
                 
                 
@@ -3065,6 +3077,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     
                     searchController.navigationController = self.navigationController
                     
+                    if tag == .globalPosts {
+                        var bp = 0
+                        bp += 1
+                    }
+                    
                     items.append(.init(title: { "\(tag.rawValue)" }, controller: searchController))
                 }
             }
@@ -3251,8 +3268,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                                 current.chatInteraction.focusMessageId(nil, .init(messageId: messageId, string: nil), .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                             } else {
                                 let chatLocation: ChatLocation = .peer(peerId)
-                                let mode: ChatMode
-                                
                                 
                                 let animated = context.layout == .single || forceAnimated
 

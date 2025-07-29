@@ -276,10 +276,10 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
     
     override func layout() {
         super.layout()
-        if tableView.listHeight < bounds.width {
+        if tableView.listHeight < bounds.width - 40 {
             tableView.frame = focus(NSMakeSize(tableView.listHeight, 40))
         } else {
-            tableView.frame = focus(NSMakeSize(bounds.width, 40))
+            tableView.frame = focus(NSMakeSize(bounds.width - 40, 40))
         }
     }
 }
@@ -619,15 +619,17 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             entries.append(.section(index: index, height: 20))
             index = index.peerLocalPredecessor()
         } else {
-//            if !hasFolders {
-//            entries.append(.section(index: index, height: 20))
-//                index = index.peerLocalSuccessor()
-//            }
+            if standalone {
+                entries.append(.section(index: index, height: 20))
+                index = index.peerLocalSuccessor()
+            }
         }
 
     } else {
-//        entries.append(.section(index: index, height: 20))
-//        index = index.peerLocalSuccessor()
+        if standalone {
+            entries.append(.section(index: index, height: 20))
+            index = index.peerLocalSuccessor()
+        }
         if arguments.isMy {
             entries.append(.emptySelf(index: index, collection: state.collection, viewType: .singleItem))
         }
@@ -646,14 +648,9 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
                 let stableId = MessageIndex(id: MessageId(peerId: index.id.peerId, namespace: 0, id: item.storyItem.id), timestamp: item.storyItem.timestamp)
 
                 var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
-                if i == 0 && j == 0, !standalone {
-                    if chunks.count > 1 {
-                        viewType = hasFolders ? .firstItem : .innerItem
-                    } else {
-                        viewType = hasFolders ? .singleItem : .lastItem
-                    }
+                if !standalone {
+                    viewType = .innerItem
                 }
-                viewType = .innerItem
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                 updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: updatedViewType, collections: collections))
             }
@@ -1166,6 +1163,14 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         }
     }
     
+    func selectAlbum(_ album: Int32) {
+        updateState { current in
+            var current = current
+            current.selectedCollection = Int64(album)
+            return current
+        }
+    }
+    
     override var removeAfterDisapper: Bool {
         return false
     }
@@ -1250,13 +1255,28 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 let data = ModalAlertData(title: "Update Name", info: "Update a name for your folder.", description: nil, ok: "Update", options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: footer)
                 
                 if let window = self.window {
-                    showModalAlert(for: window, data: data, completion: { [weak folderContext, weak self, weak window] result in
-                        guard let folderContext, let window else {
+                    showModalAlert(for: window, data: data, completion: { [weak self, weak window] result in
+                        guard let peerListContext = self?.peerListContext, let window else {
                             return
                         }
-                        self?.actionsDisposable.add(folderContext.renameFolder(id: value.id, title: text))
+                        self?.actionsDisposable.add(peerListContext.renameFolder(id: value.id, title: text))
                         showModalText(for: window, text: "Name Successfully Updated")
                     })
+                }
+            default:
+                break
+            }
+        }
+        
+        let share:(State.Collection)->Void = { [weak self] collection in
+            guard let self else {
+                return
+            }
+            switch collection {
+            case let .collection(value):
+                let peer = self.stateValue.with { $0.peer }
+                if let address = peer?._asPeer().addressName, let window = self.window {
+                    showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(address)/a/\(value.id)")), for: window)
                 }
             default:
                 break
@@ -1453,9 +1473,15 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                         addToCollection(collection, nil)
                     }, itemImage: MenuAnimation.menu_add.value))
                     
+                    items.append(ContextMenuItem(strings().modalShare, handler: {
+                        share(collection)
+                    }, itemImage: MenuAnimation.menu_share.value))
+                    
                     items.append(ContextMenuItem("Rename", handler: {
                         renameCollection(collection)
                     }, itemImage: MenuAnimation.menu_edit.value))
+                    
+                    
                     
                     items.append(ContextSeparatorItem())
                     
