@@ -669,7 +669,7 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
     let giftsContext = starGiftsProfile ?? ProfileGiftsContext(account: context.account, peerId: peerId)
     
     
-    let collectionsContext = ProfileGiftsCollectionsContext(account: context.account, peerId: peerId)
+    let collectionsContext = ProfileGiftsCollectionsContext(account: context.account, peerId: peerId, allGiftsContext: giftsContext)
     
     
     let takeContext:() -> ProfileGiftsContext? = { [weak giftsContext, weak collectionsContext] in
