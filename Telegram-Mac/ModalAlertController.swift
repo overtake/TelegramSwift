@@ -813,7 +813,9 @@ private func minimumSize(_ data: ModalAlertData) -> NSSize {
     return size
 }
 
-private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, onDeinit:(()->Void)?, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
+private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, onDeinit:(()->Void)?, presentation: TelegramPresentationTheme = theme, takeNewData:((@escaping(ModalAlertData)->Void)->Void)? = nil) -> InputDataModalController {
+    
+    
     
     let actionsDisposable = DisposableSet()
     
@@ -916,6 +918,14 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         })
     }
     
+    takeNewData?() { data in
+        updateState { current in
+            var current = current
+            current.data = data
+            return current
+        }
+    }
+    
     
     modalController.closableImpl = {
        // cancel()
@@ -940,7 +950,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
 
 
 
-func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, onDeinit:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
-    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, onDeinit: onDeinit, presentation: presentation), for: window, animationType: .scaleCenter)
+func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, onDeinit:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme, takeNewData:((@escaping(ModalAlertData)->Void)->Void)? = nil) {
+    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, onDeinit: onDeinit, presentation: presentation, takeNewData: takeNewData), for: window, animationType: .scaleCenter)
 }
 

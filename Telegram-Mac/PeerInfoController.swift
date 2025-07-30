@@ -285,7 +285,7 @@ final class PeerInfoView : View {
     let tableView: TableView
     let navigationBarView = NavigationBarView(frame: .zero)
     private let navBgView = View()
-    private let borderView = View()
+    let borderView = View()
     required init(frame frameRect: NSRect) {
         tableView = .init(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
@@ -485,9 +485,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         } else {
             self.genericView.set(leftBar: _leftBar, centerView: centerView ?? _centerBar, rightView: rightView ?? _rightBar, controller: self, animated: animation == .crossfade)
         }
+        self.genericView.borderView.change(opacity: leftView == leftBarView && self.scrollState == .pageIn ? 1 : 0)
     }
     
-    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil, shake: Bool = true, starGiftsProfile: ProfileGiftsContext? = nil) {
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, animated: Bool = true, mediaMode: PeerMediaCollectionMode? = nil, shake: Bool = true, starGiftsProfile: ProfileGiftsContext? = nil, storyAlbumId: Int32? = nil) {
         
         
         guard !context.isFrozen else {
@@ -519,17 +520,19 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             
             if let peer = effectivePeer {
                 if peer.restrictionText(context.contentSettings) == nil {
-                    navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode, starGiftsProfile: starGiftsProfile), animated, style: animated ? .push : Optional.none)
+                    navigation?.push(PeerInfoController(context: context, peer: peer, threadInfo: threadInfo, stories: stories, isAd: isAd, source: source, mediaMode: mediaMode, starGiftsProfile: starGiftsProfile, storyAlbumId: storyAlbumId), animated, style: animated ? .push : Optional.none)
                 }
             }
         })
     }
     
     private let mediaMode: PeerMediaCollectionMode?
+    private let storyAlbumId: Int32?
     
-    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, mediaMode: PeerMediaCollectionMode? = nil, starGiftsProfile: ProfileGiftsContext? = nil) {
+    init(context: AccountContext, peer:Peer, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none, mediaMode: PeerMediaCollectionMode? = nil, starGiftsProfile: ProfileGiftsContext? = nil, storyAlbumId: Int32? = nil) {
         let peerId = peer.id
         self.peerId = peer.id
+        self.storyAlbumId = storyAlbumId
         self.peer = peer
         self.source = source
         self.threadInfo = threadInfo
@@ -654,6 +657,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             isBirthdayPlayable = false
         }
         
+       
         
     }
     
@@ -766,6 +770,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
     }
     
     override func getLeftBarViewOnce() -> BarView {
@@ -1045,6 +1050,9 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 actionsDisposable.dispose()
             }
                 
+        
+        var scrollToMedia = false
+        
         disposable.set(transition.start(next: { [weak self] (peerView, transition, threadData, threadPeer) in
             
             _ = self?.peerView.swap(peerView)
@@ -1103,6 +1111,26 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         break
                     case .Removed:
                         self?.navigationController?.close()
+                    }
+                }
+            }
+            
+            if let mediaMode = self?.mediaMode, !scrollToMedia {
+                var stableId: AnyHashable?
+                self?.genericView.tableView.enumerateItems(with: { item in
+                    if let item = item as? PeerMediaBlockRowItem {
+                        stableId = item.stableId
+                        return false
+                    } else {
+                        return true
+                    }
+                })
+                
+                if let stableId {
+                    scrollToMedia = true
+                    self?.genericView.tableView.scroll(to: .top(id: stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+                    if let storyAlbumId = self?.storyAlbumId {
+                        self?.mediaController.selectStoryAlbum(storyAlbumId)
                     }
                 }
             }

@@ -11035,6 +11035,38 @@ public final class L10n {
   public static var givewayChannelsInfo: String  { return L10n.tr("Localizable", "Giveway.Channels.Info") }
   /// Choose the groups or channels users need to be subscribed to take part in the giveaway.
   public static var givewayChannelsInfoGroup: String  { return L10n.tr("Localizable", "Giveway.Channels.Info.Group") }
+  /// Global search is a Premium feature.
+  public static var globalSearchEmptyDescPremiumRequired: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.PremiumRequired") }
+  /// %d free searches remaining today
+  public static func globalSearchEmptyDescRemaining(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining", p1)
+  }
+  /// You can make up to %d search queries per day.
+  public static func globalSearchEmptyInfoLimitReached(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached", p1)
+  }
+  /// Type a keyword to search all posts from public channels.
+  public static var globalSearchEmptyInfoPremium: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Info.Premium") }
+  /// free search unlocks in %@
+  public static func globalSearchEmptyTitleFreeUnlocksIn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Title.FreeUnlocksIn", p1)
+  }
+  /// Limit Reached
+  public static var globalSearchEmptyTitleLimitReached: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Title.LimitReached") }
+  /// Global Search
+  public static var globalSearchEmptyTitlePremium: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Title.Premium") }
+  /// Premium Required
+  public static var globalSearchEmptyTitlePremiumRequired: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Title.PremiumRequired") }
+  /// Search
+  public static var globalSearchEmptyTitleSearchPrefix: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Title.SearchPrefix") }
+  /// Search for %@ %@
+  public static func globalSearchEmptyTitleSearchWithPrice(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Title.SearchWithPrice", p1, p2)
+  }
+  /// %@ spent on extra search.
+  public static func globalSearchPayAlertStarsSpent(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Pay.Alert.StarsSpent", p1)
+  }
   /// Off
   public static var globalTimerOff: String  { return L10n.tr("Localizable", "GlobalTimer.Off") }
   /// Set Custom Time
@@ -13715,6 +13747,46 @@ public final class L10n {
   public static var peerMediaCalendarTitle: String  { return L10n.tr("Localizable", "Peer.Media.Calendar.Title") }
   /// Media will appear hear.
   public static var peerMediaShareMediaSavedMessages: String  { return L10n.tr("Localizable", "Peer.Media.ShareMedia.SavedMessages") }
+  /// Understood
+  public static var peerRatingPreviewAccept: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Accept") }
+  /// Level %d
+  public static func peerRatingPreviewLevel(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Level", p1)
+  }
+  /// Level %d
+  public static func peerRatingPreviewNextLevel(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.NextLevel", p1)
+  }
+  /// Rating
+  public static var peerRatingPreviewTitle: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Title") }
+  /// ADDED
+  public static var peerRatingPreviewBadgeAdded: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Badge.Added") }
+  /// DEDUCTED
+  public static var peerRatingPreviewBadgeDeducted: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Badge.Deducted") }
+  /// This rating reflects **%@'s** activity on Telegram. What affects it:
+  public static func peerRatingPreviewInfoHeader(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Header", p1)
+  }
+  /// This rating reflects your activity on Telegram. What affects it:
+  public static var peerRatingPreviewInfoHeaderYou: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Info.Header.You") }
+  /// Refunds and Conversions
+  public static var peerRatingPreviewRefundsHeader: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Refunds.Header") }
+  /// 10x of refunded Stars and %@ of bought gifts converted to Stars.
+  public static func peerRatingPreviewRefundsText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Refunds.Text", p1)
+  }
+  /// Gifts from Telegram
+  public static var peerRatingPreviewTelegramHeader: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Telegram.Header") }
+  /// %@ of the Stars spent on gifts purchased from Telegram.
+  public static func peerRatingPreviewTelegramText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Telegram.Text", p1)
+  }
+  /// Gifts and Posts from Users
+  public static var peerRatingPreviewUsersHeader: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Users.Header") }
+  /// %@ of the Stars spent on resold gifts, paid messages and channel posts.
+  public static func peerRatingPreviewUsersText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Users.Text", p1)
+  }
   /// channel
   public static var peerStatusChannel: String  { return L10n.tr("Localizable", "Peer.Status.channel") }
   /// forum
@@ -17123,6 +17195,12 @@ public final class L10n {
   public static var selectPeersTitleSelectGroup: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectGroup") }
   /// Add to Group or Channel
   public static var selectPeersTitleSelectGroupOrChannel: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectGroupOrChannel") }
+  /// Add Stories
+  public static var selectStoryAccept: String  { return L10n.tr("Localizable", "SelectStory.Accept") }
+  /// Limit Reached
+  public static var selectStoryLimitReached: String  { return L10n.tr("Localizable", "SelectStory.LimitReached") }
+  /// Add Stories
+  public static var selectStoryTitle: String  { return L10n.tr("Localizable", "SelectStory.Title") }
   /// clear
   public static var separatorClear: String  { return L10n.tr("Localizable", "Separator.Clear") }
   /// show less
@@ -18605,6 +18683,12 @@ public final class L10n {
   public static func starPurchaseTextInZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Star.Purchase.Text.In_zero", p1)
   }
+  /// If the buyer pays you in TON, there's no risk of refunds, unlike with Stars payments.
+  public static var starSellTonDescription: String  { return L10n.tr("Localizable", "Star.Sell.Ton.Description") }
+  /// Only Accept TON
+  public static var starSellTonOnlyAccept: String  { return L10n.tr("Localizable", "Star.Sell.Ton.OnlyAccept") }
+  /// Pay with TON to skip the 21-day wait\nbefore transferring the gift again.
+  public static var starSellTonTooltip: String  { return L10n.tr("Localizable", "Star.Sell.Ton.Tooltip") }
   /// %@ / month
   public static func starSubScreenPrice(_ p1: String) -> String {
     return L10n.tr("Localizable", "Star.SubScreen.Price", p1)
@@ -18869,6 +18953,14 @@ public final class L10n {
   public static var starGiftPreviewTitle: String  { return L10n.tr("Localizable", "StarGift.Preview.Title") }
   /// Buy a Gift
   public static var starGiftPreviewTitleBuy: String  { return L10n.tr("Localizable", "StarGift.Preview.Title.Buy") }
+  /// The seller only accepts TON as payment.
+  public static var starGiftSellAlertOnlyTon: String  { return L10n.tr("Localizable", "StarGift.Sell.Alert.OnlyTon") }
+  /// Pay in Stars
+  public static var starGiftSellAlertPayInStars: String  { return L10n.tr("Localizable", "StarGift.Sell.Alert.PayInStars") }
+  /// Pay in TON
+  public static var starGiftSellAlertPayInTon: String  { return L10n.tr("Localizable", "StarGift.Sell.Alert.PayInTon") }
+  /// Confirm Payment
+  public static var starGiftSellAlertTitleConfirmPayment: String  { return L10n.tr("Localizable", "StarGift.Sell.Alert.Title.ConfirmPayment") }
   /// TON
   public static var starListTon: String  { return L10n.tr("Localizable", "StarList.Ton") }
   /// Offer TON to submit post suggestions to channels on Telegram
@@ -20375,6 +20467,60 @@ public final class L10n {
   public static var storyMediaUnarchive: String  { return L10n.tr("Localizable", "StoryMedia.Unarchive") }
   /// Unpin
   public static var storyMediaUnpin: String  { return L10n.tr("Localizable", "StoryMedia.Unpin") }
+  /// Add Album
+  public static var storyMediaAlbumAdd: String  { return L10n.tr("Localizable", "StoryMedia.Album.Add") }
+  /// All Stories
+  public static var storyMediaAlbumAll: String  { return L10n.tr("Localizable", "StoryMedia.Album.All") }
+  /// Story added to **%@**
+  public static func storyMediaAlbumAlertAdded(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Album.Alert.Added", p1)
+  }
+  /// Story removed from **%@**
+  public static func storyMediaAlbumAlertRemoved(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Album.Alert.Removed", p1)
+  }
+  /// Add Stories
+  public static var storyMediaAlbumButtonAddStories: String  { return L10n.tr("Localizable", "StoryMedia.Album.Button.AddStories") }
+  /// Add Folder
+  public static var storyMediaAlbumContextMenuAddFolder: String  { return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.AddFolder") }
+  /// Add Stories
+  public static var storyMediaAlbumContextMenuAddStories: String  { return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.AddStories") }
+  /// Add To Album
+  public static var storyMediaAlbumContextMenuAddToAlbum: String  { return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.AddToAlbum") }
+  /// Delete
+  public static var storyMediaAlbumContextMenuDelete: String  { return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.Delete") }
+  /// New Album
+  public static var storyMediaAlbumContextMenuNewAlbum: String  { return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.NewAlbum") }
+  /// Rename
+  public static var storyMediaAlbumContextMenuRename: String  { return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.Rename") }
+  /// Are you sure you want to delete **%@**?
+  public static func storyMediaAlbumContextMenuDeleteConfirm(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryMedia.Album.ContextMenu.Delete.Confirm", p1)
+  }
+  /// Add to Album
+  public static var storyMediaAlbumEmptyAction: String  { return L10n.tr("Localizable", "StoryMedia.Album.Empty.Action") }
+  /// Organize Your Stories
+  public static var storyMediaAlbumEmptyHeader: String  { return L10n.tr("Localizable", "StoryMedia.Album.Empty.Header") }
+  /// Add some stories to this album.
+  public static var storyMediaAlbumEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Album.Empty.Text") }
+  /// Choose a name for your folder and start adding your stories there.
+  public static var storyMediaAlbumNewInfo: String  { return L10n.tr("Localizable", "StoryMedia.Album.New.Info") }
+  /// Create
+  public static var storyMediaAlbumNewOk: String  { return L10n.tr("Localizable", "StoryMedia.Album.New.Ok") }
+  /// Title...
+  public static var storyMediaAlbumNewPlaceholder: String  { return L10n.tr("Localizable", "StoryMedia.Album.New.Placeholder") }
+  /// Create a New Folder
+  public static var storyMediaAlbumNewTitle: String  { return L10n.tr("Localizable", "StoryMedia.Album.New.Title") }
+  /// Update a name for your folder.
+  public static var storyMediaAlbumUpdateInfo: String  { return L10n.tr("Localizable", "StoryMedia.Album.Update.Info") }
+  /// Update
+  public static var storyMediaAlbumUpdateOk: String  { return L10n.tr("Localizable", "StoryMedia.Album.Update.Ok") }
+  /// Title...
+  public static var storyMediaAlbumUpdatePlaceholder: String  { return L10n.tr("Localizable", "StoryMedia.Album.Update.Placeholder") }
+  /// Name Successfully Updated
+  public static var storyMediaAlbumUpdateSuccess: String  { return L10n.tr("Localizable", "StoryMedia.Album.Update.Success") }
+  /// Update Name
+  public static var storyMediaAlbumUpdateTitle: String  { return L10n.tr("Localizable", "StoryMedia.Album.Update.Title") }
   /// Upload a new story to view it here
   public static var storyMediaArchiveEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Archive.Empty.Text") }
   /// No Archived Stories

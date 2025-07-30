@@ -823,6 +823,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
     }
     
+    func previewRatig() {
+        if let rating, let peer {
+            showModal(with: PeerRatingModalController(context: context, peer: peer, rating: rating), for: context.window)
+        }
+    }
+    
     var colorfulProfile: Bool {
         if let _ = nameColor {
             return true
@@ -1655,13 +1661,7 @@ private final class PeerInfoHeadView : GeneralRowView {
     private var photoVideoPlayer: MediaPlayer?
     
     private var ratingView: PeerRatingView?
-    private var ratingState: PeerRatingView.State = .short {
-        didSet {
-            if let item {
-                self.set(item: item, animated: true)
-            }
-        }
-    }
+   
     
 
     private let backgroundView = PeerInfoBackgroundView(frame: .zero)
@@ -1917,16 +1917,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         
         
         let statusContainerSize: NSSize
-        if let ratingView {
-            switch ratingState {
-            case .short:
-                statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
-            case .full:
-                statusContainerSize = NSMakeSize(ratingView.frame.width, statusContainer.subviewsWidthSize.height)
-            }
-        } else {
-            statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
-        }
+        statusContainerSize = NSMakeSize(statusContainer.subviewsWidthSize.width + 4, statusContainer.subviewsWidthSize.height)
         
 
         transition.updateFrame(view: backgroundView, frame: NSRect(x: 0, y: -110, width: size.width, height: size.height + 110))
@@ -2163,15 +2154,13 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.ratingView = current
                 statusContainer.addSubview(current)
             }
-            let size = current.set(data: rating, context: item.context, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, state: self.ratingState, animated: animated)
+            current.set(data: rating, context: item.context, borderColor: .white, bgColor: .white, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, animated: animated)
             
-            current.change(size: size, animated: animated)
-            current.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            current.change(size: current.smallSize, animated: animated)
+            current.updateLayout(size: current.smallSize, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             
-            current.setSingle(handler: { [weak self] _ in
-                if let self {
-                    self.ratingState = self.ratingState.toggle()
-                }
+            current.setSingle(handler: { [weak item] _ in
+                item?.previewRatig()
             }, for: .Click)
             
         } else if let view = self.ratingView {
@@ -2294,9 +2283,6 @@ private final class PeerInfoHeadView : GeneralRowView {
         }
         
         
-        statusView.change(opacity: ratingState == .full ? 0 : 1, animated: animated)
-        showStatusView?.change(opacity: ratingState == .full ? 0 : 1, animated: animated)
-
         
         self.updateLayout(size: self.frame.size, transition: transition)
         

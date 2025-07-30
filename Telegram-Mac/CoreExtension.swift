@@ -4243,7 +4243,7 @@ extension CurrencyAmount {
         case .ton:
             return self.amount.string(currency) + " " + TON
         case .stars:
-            return strings().starListItemCountCountable(Int(self.amount.value))
+            return strings().starListItemCountCountable(Int(self.amount.value)).replacingOccurrences(of: "\(self.amount.value)", with: self.amount.value.separatedNumber)
         }
     }
     

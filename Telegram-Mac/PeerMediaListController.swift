@@ -169,16 +169,17 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
             case let .messageEntry(message, messages, settings, _):
                 var viewType = bestGeneralViewType(group.items, for: item)
                 
-                if i == 0, item == group.items.first {
-                    if group.items.count > 1 {
-                        viewType = .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
-                    } else {
-                        if !isExternalSearch {
-                            viewType = .modern(position: .last, insets: NSEdgeInsetsMake(7, 7, 7, 12))
-                        }
-                    }
-                }
-                
+//                if i == 0, item == group.items.first {
+//                    if group.items.count > 1 {
+//                        viewType = .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+//                    } else {
+//                        if !isExternalSearch {
+//                            viewType = .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+//                        }
+//                    }
+//                }
+                viewType = .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+
                 converted.append(.messageEntry(message, messages, settings, viewType))
             default:
                 fatalError()

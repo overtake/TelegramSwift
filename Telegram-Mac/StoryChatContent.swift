@@ -531,7 +531,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isMy: item.isMy,
                         myReaction: item.myReaction,
                         forwardInfo: forwardInfo, 
-                        author: item.authorId.flatMap { peers[$0].flatMap(EnginePeer.init) }
+                        author: item.authorId.flatMap { peers[$0].flatMap(EnginePeer.init) },
+                        folderIds: item.folderIds
                     )
                 }
                 var totalCount = peerStoryItemsView.items.count
@@ -568,7 +569,8 @@ final class StoryContentContextImpl: StoryContentContext {
                                 isMy: true,
                                 myReaction: nil,
                                 forwardInfo: pendingForwardsInfo[item.randomId],
-                                author: nil
+                                author: nil,
+                                folderIds: nil
                             ))
                             totalCount += 1
                         }
@@ -1552,7 +1554,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isMy: itemValue.isMy,
                     myReaction: itemValue.myReaction,
                     forwardInfo: itemValue.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, peers: peers) }, 
-                    author: itemValue.authorId.flatMap { peers[$0].flatMap(EnginePeer.init) }
+                    author: itemValue.authorId.flatMap { peers[$0].flatMap(EnginePeer.init) },
+                    folderIds: itemValue.folderIds
                 )
                 
                 let mainItem = StoryContentItem(
@@ -2444,7 +2447,8 @@ private func getCachedStory(storyId: StoryId, transaction: Transaction) -> Engin
             isMy: item.isMy,
             myReaction: item.myReaction,
             forwardInfo: item.forwardInfo.flatMap { EngineStoryItem.ForwardInfo($0, transaction: transaction) }, 
-            author: item.authorId.flatMap { transaction.getPeer($0).flatMap(EnginePeer.init) }
+            author: item.authorId.flatMap { transaction.getPeer($0).flatMap(EnginePeer.init) },
+            folderIds: item.folderIds
         )
     } else {
         return nil

@@ -704,7 +704,7 @@ open class ViewController : NSObject {
     
     
     open func dismiss() {
-        if navigationController?.controller == self {
+        if navigationController?.controller === self {
             navigationController?.back()
         } 
     }

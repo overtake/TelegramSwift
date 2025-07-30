@@ -133,18 +133,33 @@ private final class CollectionRowItem : TableStickItem {
         
         var text: NSAttributedString {
             let attr = NSMutableAttributedString()
-            //TODOLANG
             switch self.value {
             case .all:
-                attr.append(string: "All Stories", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.append(
+                    string: strings().storyMediaAlbumAll,
+                    color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText,
+                    font: .normal(.text)
+                )
             case let .collection(value):
-                attr.append(string: value.title, color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
+                attr.append(
+                    string: value.title,
+                    color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText,
+                    font: .normal(.text)
+                )
             case .add:
-                attr.append(string: "\(clown_space)Add Album", color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText, font: .normal(.text))
-                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.menu_add.file, color: theme.colors.listGrayText, playPolicy: .framesCount(1)), for: clown)
+                attr.append(
+                    string: "\(clown_space)\(strings().storyMediaAlbumAdd)",
+                    color: selected ? theme.colors.darkGrayText : theme.colors.listGrayText,
+                    font: .normal(.text)
+                )
+                attr.insertEmbedded(
+                    .embeddedAnimated(LocalAnimatedSticker.menu_add.file, color: theme.colors.listGrayText, playPolicy: .framesCount(1)),
+                    for: clown
+                )
             }
             return attr
         }
+
     }
     
     fileprivate let items: [Item]
@@ -212,6 +227,11 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
         }
         
         tableView.delegate = self
+        
+        tableView.layer?.masksToBounds = false
+        tableView.documentView?.layer?.masksToBounds = false
+        tableView.clipView.layer?.masksToBounds = false
+
     }
     
     override var backdorColor: NSColor {
@@ -271,10 +291,10 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
     
     override func layout() {
         super.layout()
-        if tableView.listHeight < bounds.width {
+        if tableView.listHeight < bounds.width - 40 {
             tableView.frame = focus(NSMakeSize(tableView.listHeight, 40))
         } else {
-            tableView.frame = focus(NSMakeSize(bounds.width, 40))
+            tableView.frame = focus(NSMakeSize(bounds.width - 40, 40))
         }
     }
 }
@@ -282,7 +302,7 @@ private final class CollectionFilterRowView : TableStickView, TableViewDelegate 
 
 private enum Entry : TableItemListNodeEntry {
     case headerText(index: MessageIndex, stableId: MessageIndex, text: String, viewType: GeneralViewType)
-    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: [Int32], rowCount: Int, viewType: GeneralViewType)
+    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [StoryListContextState.Item], selected: Set<StoryId>?, pinnedIds: [Int32], rowCount: Int, viewType: GeneralViewType, collections: [State.Collection])
     case date(index: MessageIndex)
     case section(index: MessageIndex, height: CGFloat)
     case collections(index: MessageIndex, [State.Collection], Int64)
@@ -295,43 +315,104 @@ private enum Entry : TableItemListNodeEntry {
         switch self {
         case let .headerText(_, stableId, text, viewType):
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: viewType, text: text, font: .normal(.text))
-        case let .month(_, stableId, peerId, peerReference, items, selected, pinnedIds, rowCount, viewType):
+        case let .month(_, stableId, peerId, peerReference, items, selected, pinnedIds, rowCount, viewType, collections):
             return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
-                if selected == nil, arguments.isMy {
-                   
-                    if !story.isPinned {
+                if selected == nil, arguments.isMy, let state = arguments.state() {
+                    
+                    let addItem = ContextMenuItem(
+                        strings().storyMediaAlbumContextMenuAddToAlbum,
+                        handler: {},
+                        itemImage: MenuAnimation.menu_add_to_folder.value
+                    )
+
+                    let foldersLimit = arguments.context.appConfiguration.getGeneralValue("stories_albums_limit", orElse: 16)
+
+                    let addMenu = ContextMenu()
+                    if foldersLimit > state.folderCount {
+                        addMenu.addItem(ContextMenuItem(
+                            strings().storyMediaAlbumContextMenuNewAlbum,
+                            handler: {
+                                arguments.collection(.add, story)
+                            },
+                            itemImage: MenuAnimation.menu_folder_add.value
+                        ))
+
+                        addMenu.addItem(ContextSeparatorItem())
+                    }
+
+                    
+                    for collection in collections {
+                        switch collection {
+                        case let .collection(value):
+                            
+                            let contains = state.contains(collectionId: value.id, story: story.storyItem)
+                            
+                            let item = ContextMenuItem(value.title, handler: {
+                                arguments.addToCollection(collection, story)
+                            }, state: contains ? .on : nil)
+                            
+                            if let preview = state.previews {
+                                if let folder = preview.folder.first(where: { $0.folder.id == collection.stableId }), let story = folder.item {
+                                    ContextMenuItem.makeFolderPreview(item, context: arguments.context, peerReference: preview.peer, story: story)
+                                }
+                            }
+                            
+                            
+                            addMenu.addItem(item)
+                            
+                        default:
+                            break
+                        }
+                    }
+                    
+                    if !addMenu.items.isEmpty  {
+                        addItem.submenu = addMenu
+                        
+                        items.append(addItem)
+                        items.append(ContextSeparatorItem())
+                    }
+
+                    if !story.storyItem.isPinned {
                         items.append(ContextMenuItem(strings().storyMediaUnarchive, handler: { [weak arguments] in
-                            arguments?.toggleStory(story)
+                            arguments?.toggleStory(story.storyItem)
                         }, itemImage: MenuAnimation.menu_save_to_profile.value))
                     } else {
                         items.append(ContextMenuItem(strings().storyMediaArchive, handler: { [weak arguments] in
-                            arguments?.toggleStory(story)
+                            arguments?.toggleStory(story.storyItem)
                         }, itemImage: MenuAnimation.menu_archive.value))
                     }
                     
-                    items.append(ContextMenuItem(pinnedIds.contains(story.id) ? strings().messageContextUnpin : strings().messageContextPin, handler: { [weak arguments] in
-                        arguments?.togglePinned(story)
-                    }, itemImage: pinnedIds.contains(story.id) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
+                    items.append(ContextMenuItem(pinnedIds.contains(story.storyItem.id) ? strings().messageContextUnpin : strings().messageContextPin, handler: { [weak arguments] in
+                        arguments?.togglePinned(story.storyItem)
+                    }, itemImage: pinnedIds.contains(story.storyItem.id) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
                     
                     items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak arguments] in
-                        arguments?.toggleSelected(.init(peerId: peerId, id: story.id))
+                        arguments?.toggleSelected(.init(peerId: peerId, id: story.storyItem.id))
                     }, itemImage: MenuAnimation.menu_check_selected.value))
                     
                     items.append(ContextSeparatorItem())
                     
                     items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak arguments] in
-                        arguments?.deleteStory(story)
+                        arguments?.deleteStory(story.storyItem)
                     }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 return items
             })
         case let .emptySelf(index, collection, viewType):
             if collection != .all {
-                //TODOLANG
-                return SearchEmptyRowItem(initialSize, stableId: stableId, header: "Organize Your Stories", text: "Add some stories to this folder.", action: .init(click: {
-                    arguments.addToCollection(collection, nil)
-                }, title: "Add to Folder"))
+                return SearchEmptyRowItem(
+                    initialSize,
+                    stableId: stableId,
+                    header: strings().storyMediaAlbumEmptyHeader,
+                    text: strings().storyMediaAlbumEmptyText,
+                    action: .init(
+                        click: {
+                            arguments.addToCollection(collection, nil)
+                        },
+                        title: strings().storyMediaAlbumEmptyAction
+                    )
+                )
             } else {
                 return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, isArchive: arguments.isArchive, showArchive: arguments.showArchive)
             }
@@ -346,7 +427,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var stableId: MessageIndex {
         switch self {
-        case let .month(_, stableId, _, _, _, _, _, _, _):
+        case let .month(_, stableId, _, _, _, _, _, _, _, _):
             return stableId
         default:
             return self.index
@@ -355,7 +436,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _, _, _, _, _, _, _):
+        case let .month(index, _, _, _, _, _, _, _, _, _):
             return index
         case let .headerText(index, _, _, _):
             return index
@@ -389,7 +470,8 @@ private final class Arguments {
     let addToCollection:(State.Collection, StoryListContextState.Item?)->Void
     let collectionContextMenu:(State.Collection)->[ContextMenuItem]
     let resort:(Int, Int)->Void
-    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void, archiveSelected:@escaping()->Void, toggleStory: @escaping(EngineStoryItem)->Void, deleteStory:@escaping(EngineStoryItem)->Void, deleteSelected:@escaping()->Void, togglePinned:@escaping(EngineStoryItem)->Void, togglePinSelected:@escaping()->Void, collection:@escaping(State.Collection, StoryListContextState.Item?)->Void, addToCollection: @escaping(State.Collection, StoryListContextState.Item?)->Void, collectionContextMenu:@escaping(State.Collection)->[ContextMenuItem], resort:@escaping(Int, Int)->Void) {
+    let state:()->State?
+    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void, archiveSelected:@escaping()->Void, toggleStory: @escaping(EngineStoryItem)->Void, deleteStory:@escaping(EngineStoryItem)->Void, deleteSelected:@escaping()->Void, togglePinned:@escaping(EngineStoryItem)->Void, togglePinSelected:@escaping()->Void, collection:@escaping(State.Collection, StoryListContextState.Item?)->Void, addToCollection: @escaping(State.Collection, StoryListContextState.Item?)->Void, collectionContextMenu:@escaping(State.Collection)->[ContextMenuItem], resort:@escaping(Int, Int)->Void, state:@escaping()->State?) {
         self.context = context
         self.standalone = standalone
         self.isArchive = isArchive
@@ -407,7 +489,7 @@ private final class Arguments {
         self.addToCollection = addToCollection
         self.collectionContextMenu = collectionContextMenu
         self.resort = resort
-        
+        self.state = state
     }
 }
 
@@ -430,6 +512,15 @@ private struct State : Equatable {
         }
     }
     
+    struct Preview: Equatable {
+        struct Folder : Equatable {
+            var folder: StoryListContext.State.Folder
+            var item: EngineStoryItem?
+        }
+        var peer: PeerReference
+        var folder: [Folder]
+    }
+    
     var state:PeerStoryListContext.State? {
         return collectionStates[selectedCollection] ?? collectionStates[Collection.all.stableId]
     }
@@ -438,8 +529,13 @@ private struct State : Equatable {
         return collectionStates[Collection.all.stableId]
     }
     
-    func contains(collectionId: Int64, storyId: StoryId) -> Bool {
-        return collectionStates[collectionId]?.items.contains(where: { $0.id == storyId }) == true
+    func contains(collectionId: Int64, story: EngineStoryItem) -> Bool {
+        let contains = collectionStates[collectionId]?.items.contains(where: { $0.id.id == story.id }) == true
+        if contains {
+            return true
+        } else {
+            return story.folderIds?.contains(collectionId) == true
+        }
     }
     
     var sortedFolderIds: [Int64] {
@@ -460,6 +556,9 @@ private struct State : Equatable {
     var peer: EnginePeer?
     var collectionStates:[Int64: PeerStoryListContext.State] = [:]
     var onStage: Bool = false
+    
+    var previews: Preview?
+    
     func access(_ accountPeerId: PeerId) -> Bool {
         return peer?.id == accountPeerId || peer?._asPeer().groupAccess.canManageStories == true
     }
@@ -469,6 +568,17 @@ private struct State : Equatable {
     
     var collection: Collection {
         return self.collections.first(where: { $0.stableId == selectedCollection}) ?? .all
+    }
+    
+    var folderCount: Int {
+        return collections.reduce(0, { current, value in
+            switch value {
+            case .collection:
+                return current + 1
+            default:
+                return current
+            }
+        })
     }
 
     init(state: PeerStoryListContext.State?, selected:Set<StoryId>?, perRowCount: Int) {
@@ -499,21 +609,22 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
         entries.append(.section(index: index, height: 0))
         index = index.peerLocalSuccessor()
         entries.append(.collections(index: index, state.collections, state.selectedCollection))
-//        index = index.peerLocalSuccessor()
-//        entries.append(.section(index: index, height: 0))
+        index = index.peerLocalSuccessor()
+        entries.append(.section(index: index, height: 0))
+
 
         hasFolders = true
     }
 
-    if let state = state.state, !state.items.isEmpty, let peerReference = state.peerReference {
+    if let contextState = state.state, !contextState.items.isEmpty, let peerReference = contextState.peerReference {
         
         
         
-        let items = state.items.uniqueElements
+        let items = contextState.items.uniqueElements
         let peerId = peerReference.id
         let viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
         
-        entries.append(.month(index: MessageIndex.absoluteUpperBound(), stableId: MessageIndex.absoluteUpperBound(), peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: state.pinnedIds, rowCount: perRowCount, viewType: viewType))
+        entries.append(.month(index: MessageIndex.absoluteUpperBound(), stableId: MessageIndex.absoluteUpperBound(), peerId: peerId, peerReference: peerReference, items: items, selected: selected, pinnedIds: contextState.pinnedIds, rowCount: perRowCount, viewType: viewType, collections: state.collections))
 
         var index = MessageIndex.absoluteUpperBound()
         
@@ -527,15 +638,17 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             entries.append(.section(index: index, height: 20))
             index = index.peerLocalPredecessor()
         } else {
-//            if !hasFolders {
-//            entries.append(.section(index: index, height: 20))
-//                index = index.peerLocalSuccessor()
-//            }
+            if standalone {
+                entries.append(.section(index: index, height: 20))
+                index = index.peerLocalSuccessor()
+            }
         }
 
     } else {
-        entries.append(.section(index: index, height: 20))
-        index = index.peerLocalSuccessor()
+        if standalone {
+            entries.append(.section(index: index, height: 20))
+            index = index.peerLocalSuccessor()
+        }
         if arguments.isMy {
             entries.append(.emptySelf(index: index, collection: state.collection, viewType: .singleItem))
         }
@@ -547,22 +660,18 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     var j: Int = 0
     for entry in entries {
         switch entry {
-        case let .month(index, _, peerId, peerReference, items, _, pinnedIds, rowCount, _):
+        case let .month(index, _, peerId, peerReference, items, _, pinnedIds, rowCount, _, collections):
             let chunks = items.chunks(state.perRowCount)
             for (i, chunk) in chunks.enumerated() {
                 let item = chunk[0]
                 let stableId = MessageIndex(id: MessageId(peerId: index.id.peerId, namespace: 0, id: item.storyItem.id), timestamp: item.storyItem.timestamp)
 
                 var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
-                if i == 0 && j == 0, !standalone {
-                    if chunks.count > 1 {
-                        viewType = hasFolders ? .firstItem : .innerItem
-                    } else {
-                        viewType = hasFolders ? .singleItem : .lastItem
-                    }
+                if !standalone {
+                    viewType = .innerItem
                 }
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: updatedViewType))
+                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, pinnedIds: pinnedIds, rowCount: rowCount, viewType: updatedViewType, collections: collections))
             }
             j += 1
         case .date:
@@ -719,8 +828,7 @@ final class StoryMediaView : View {
 
             self.add.set(font: .medium(.text), for: .Normal)
             self.add.set(color: theme.colors.underSelectedColor, for: .Normal)
-            //TODOLANG
-            self.add.set(text: "Add Stories", for: .Normal)
+            self.add.set(text: strings().storyMediaAlbumButtonAddStories, for: .Normal)
             self.add.sizeToFit(.zero, NSMakeSize(frame.width - 40, 40), thatFit: true)
             self.add.set(background: theme.colors.accent, for: .Normal)
             
@@ -891,17 +999,28 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         doneButton?.style = navigationButtonStyle
     }
     
-    private func addCollection() {
+    private func addCollection(_ story: PeerStoryListContext.State.Item?) {
         var text: String = ""
-        //TODOLANG
-        
+
         var footer: ModalAlertData.Footer = .init(value: { initialSize, stableId, presentation, updateData in
-            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: .singleItem, currentText: "", placeholder: nil, inputPlaceholder: "Title...", filter: { $0 }, updated: { updated in
-                text = updated
-                DispatchQueue.main.async(execute: updateData)
-            }, limit: 16)
+            return InputDataRowItem(
+                initialSize,
+                stableId: stableId,
+                mode: .plain,
+                error: nil,
+                viewType: .singleItem,
+                currentText: "",
+                placeholder: nil,
+                inputPlaceholder: strings().storyMediaAlbumNewPlaceholder,
+                filter: { $0 },
+                updated: { updated in
+                    text = updated
+                    DispatchQueue.main.async(execute: updateData)
+                },
+                limit: 16
+            )
         })
-        
+
         footer.validateData = { _ in
             if text.isEmpty {
                 return .fail(.fields([InputDataIdentifier("footer") : .shake]))
@@ -909,18 +1028,33 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 return .none
             }
         }
-        
-        let data = ModalAlertData(title: "Create a New Folder", info: "Choose a name for your folder and start adding your stories there.", description: nil, ok: "Create", options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: footer)
-        
+
+        let data = ModalAlertData(
+            title: strings().storyMediaAlbumNewTitle,
+            info: strings().storyMediaAlbumNewInfo,
+            description: nil,
+            ok: strings().storyMediaAlbumNewOk,
+            options: [],
+            mode: .confirm(text: strings().modalCancel, isThird: false),
+            footer: footer
+        )
+
         if let window = self.window {
             showModalAlert(for: window, data: data, completion: { [weak self] result in
-                self?.peerListContext?.addFolder(title: text, completion: { id in
-                    self?.updateState { current in
-                        var current = current
-                        current.selectedCollection = id
-                        return current
-                    }
-                })
+                guard let peerListContext = self?.peerListContext else {
+                    return
+                }
+                self?.actionsDisposable.add(
+                    peerListContext.addFolder(title: text, items: story.flatMap { [$0.storyItem] } ?? [], completion: { id in
+                        if let id {
+                            self?.updateState { current in
+                                var current = current
+                                current.selectedCollection = id
+                                return current
+                            }
+                        }
+                    })
+                )
             })
         }
     }
@@ -986,25 +1120,24 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         
         var items: [ContextMenuItem] = []
         
+        let foldersLimit = context.appConfiguration.getGeneralValue("stories_albums_limit", orElse: 16)
         
         items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
             self?.parentController?.changeState()
         }, itemImage: MenuAnimation.menu_edit.value))
         
-        //TODOLANG
-        #if DEBUG
-        if state.access(context.peerId), !self.isArchived {
+        if state.access(context.peerId), !self.isArchived, foldersLimit > state.folderCount {
             items.append(ContextSeparatorItem())
-            items.append(ContextMenuItem("Add Folder", handler: { [weak self] in
-               self?.addCollection()
-           }, itemImage: MenuAnimation.menu_add.value))
+            items.append(ContextMenuItem(
+                strings().storyMediaAlbumContextMenuAddFolder,
+                handler: { [weak self] in
+                    self?.addCollection(nil)
+                },
+                itemImage: MenuAnimation.menu_add.value
+            ))
         }
-        #endif
-        
-        
-        
-       
-        
+
+                
         return items
     }
     
@@ -1066,6 +1199,14 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         }
     }
     
+    func selectAlbum(_ album: Int32) {
+        updateState { current in
+            var current = current
+            current.selectedCollection = Int64(album)
+            return current
+        }
+    }
+    
     override var removeAfterDisapper: Bool {
         return false
     }
@@ -1074,9 +1215,9 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         super.viewDidLoad()
         
         
-        genericView.tableView.set(stickClass: CollectionRowItem.self, handler: { _ in
-            
-        })
+//        genericView.tableView.set(stickClass: CollectionRowItem.self, handler: { _ in
+//            
+//        })
         
         genericView.willMove = { [weak self] window in
             self?.updateState { current in
@@ -1117,19 +1258,33 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         
         let renameCollection:(State.Collection)->Void = { [weak self] collection in
         
+            guard let self else {
+                return
+            }
+            
             switch collection {
             case let .collection(value):
-                
                 var text: String = ""
-                //TODOLANG
-                
+
                 var footer: ModalAlertData.Footer = .init(value: { initialSize, stableId, presentation, updateData in
-                    return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: .singleItem, currentText: value.title, placeholder: nil, inputPlaceholder: "Title...", filter: { $0 }, updated: { updated in
-                        text = updated
-                        DispatchQueue.main.async(execute: updateData)
-                    }, limit: 16)
+                    return InputDataRowItem(
+                        initialSize,
+                        stableId: stableId,
+                        mode: .plain,
+                        error: nil,
+                        viewType: .singleItem,
+                        currentText: value.title,
+                        placeholder: nil,
+                        inputPlaceholder: strings().storyMediaAlbumUpdatePlaceholder,
+                        filter: { $0 },
+                        updated: { updated in
+                            text = updated
+                            DispatchQueue.main.async(execute: updateData)
+                        },
+                        limit: 16
+                    )
                 })
-                
+
                 footer.validateData = { _ in
                     if text.isEmpty {
                         return .fail(.fields([InputDataIdentifier("footer") : .shake]))
@@ -1137,13 +1292,41 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                         return .none
                     }
                 }
-                
-                let data = ModalAlertData(title: "Update Name", info: "Update a name for your folder.", description: nil, ok: "Update", options: [], mode: .confirm(text: strings().modalCancel, isThird: false), footer: footer)
-                
-                if let window = self?.window {
-                    showModalAlert(for: window, data: data, completion: { result in
-                        
+
+                let data = ModalAlertData(
+                    title: strings().storyMediaAlbumUpdateTitle,
+                    info: strings().storyMediaAlbumUpdateInfo,
+                    description: nil,
+                    ok: strings().storyMediaAlbumUpdateOk,
+                    options: [],
+                    mode: .confirm(text: strings().modalCancel, isThird: false),
+                    footer: footer
+                )
+
+                if let window = self.window {
+                    showModalAlert(for: window, data: data, completion: { [weak self, weak window] result in
+                        guard let peerListContext = self?.peerListContext, let window else {
+                            return
+                        }
+                        self?.actionsDisposable.add(peerListContext.renameFolder(id: value.id, title: text))
+                        showModalText(for: window, text: strings().storyMediaAlbumUpdateSuccess)
                     })
+                }
+
+            default:
+                break
+            }
+        }
+        
+        let share:(State.Collection)->Void = { [weak self] collection in
+            guard let self else {
+                return
+            }
+            switch collection {
+            case let .collection(value):
+                let peer = self.stateValue.with { $0.peer }
+                if let address = peer?._asPeer().addressName, let window = self.window {
+                    showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(address)/a/\(value.id)")), for: window)
                 }
             default:
                 break
@@ -1164,42 +1347,31 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 
                 let folderContext = self.collectionsContexts[value.id]
 
-                
                 if let story {
-                    let contains = state.contains(collectionId: value.id, storyId: story.id)
-                    //TODOLANG
-                    if contains {
-                        folderContext?.removeFromFolder(id: value.id, itemIds: [story.id.id])
-                        showModalText(for: window, text: "Story removed from **\(value.title)**")
-                    } else {
-                        folderContext?.addToFolder(id: value.id, items: [story.storyItem])
-                        showModalText(for: window, text: "Story added to **\(value.title)**")
+                    let contains = state.contains(collectionId: value.id, story: story.storyItem)
+                    if let folderContext {
+                        if contains {
+                            self.actionsDisposable.add(folderContext.removeFromFolder(id: value.id, itemIds: [story.id.id]))
+                            showModalText(for: window, text: strings().storyMediaAlbumAlertRemoved(value.title))
+                        } else {
+                            self.actionsDisposable.add(folderContext.addToFolder(id: value.id, items: [story.storyItem]))
+                            showModalText(for: window, text: strings().storyMediaAlbumAlertAdded(value.title))
+                        }
                     }
                 } else {
                     
-                    let prevItems = stateValue.with { $0.collectionStates[value.id]?.items ?? [] }
-//
-                    var previous: [StoryReferenceEntry] = []
-                    for i in 0 ..< prevItems.count {
-                        previous.append(.init(index: i, story: prevItems[i].storyItem))
-                    }
-                    
                     if let folderContext = self.collectionsContexts[collection.stableId] {
-                        showModal(with: SelectStoryModalController(context: context, peerId: peerId, listContext: self.peerListContext, folderContext: folderContext, callback: { [weak folderContext] result in
+                        showModal(with: SelectStoryModalController(context: context, folderId: collection.stableId, peerId: peerId, listContext: self.peerListContext, callback: { [weak folderContext, weak self] selected, unselected in
                             
-                            var current: [StoryReferenceEntry] = []
-                            for i in 0 ..< result.count {
-                                current.append(.init(index: i, story: result[i]))
+                            guard let folderContext else {
+                                return
                             }
                             
-                            let (deleteIndices, indicesAndItems) = mergeListsStable(leftList: previous, rightList: current)
-                            
-                            if !indicesAndItems.isEmpty {
-                                folderContext?.addToFolder(id: collection.stableId, items: indicesAndItems.map(\.1.story))
+                            if !selected.isEmpty {
+                                self?.actionsDisposable.add(folderContext.addToFolder(id: collection.stableId, items: selected))
                             }
-                            if !deleteIndices.isEmpty {
-                                let removeValue = deleteIndices.map { previous[$0] }
-                                folderContext?.removeFromFolder(id: collection.stableId, itemIds: removeValue.map(\.story.id))
+                            if !unselected.isEmpty {
+                                self?.actionsDisposable.add(folderContext.removeFromFolder(id: collection.stableId, itemIds: unselected.map(\.id)))
                             }
                             
                         }), for: context.window)
@@ -1313,8 +1485,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             self?.toggleSelection()
         }, collection: { [weak self] collection, story in
             if collection == .add {
-                
-                self?.addCollection()
+                self?.addCollection(story)
             } else {
                 self?.updateState { current in
                     var current = current
@@ -1324,7 +1495,6 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             }
             
             self?.parentController?.currentMainTableView?(self?.parentController?.genericView.mainTable, true, true)
-            
         }, addToCollection: { collection, story in
     //        let state = stateValue.with { $0 }
     //        let collection = state.collections.first(where: { $0.stableId == state.selectedCollection }) ?? .all
@@ -1347,71 +1517,121 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 let access = state.access(context.peerId)
 
                 if access {
-                    //TODOLANG
-                    items.append(ContextMenuItem("Add Stories", handler: {
-                        addToCollection(collection, nil)
-                    }, itemImage: MenuAnimation.menu_add.value))
-                    
-                    items.append(ContextMenuItem("Rename", handler: {
-                        renameCollection(collection)
-                    }, itemImage: MenuAnimation.menu_edit.value))
-                    
+                    items.append(ContextMenuItem(
+                        strings().storyMediaAlbumContextMenuAddStories,
+                        handler: {
+                            addToCollection(collection, nil)
+                        },
+                        itemImage: MenuAnimation.menu_add.value
+                    ))
+
+                    items.append(ContextMenuItem(
+                        strings().modalShare,
+                        handler: {
+                            share(collection)
+                        },
+                        itemImage: MenuAnimation.menu_share.value
+                    ))
+
+                    items.append(ContextMenuItem(
+                        strings().storyMediaAlbumContextMenuRename,
+                        handler: {
+                            renameCollection(collection)
+                        },
+                        itemImage: MenuAnimation.menu_edit.value
+                    ))
+
                     items.append(ContextSeparatorItem())
-                    
-                    //TODOLANG
-                    items.append(ContextMenuItem("Delete", handler: { [weak self] in
-                        if let window = self?.window {
-                            verifyAlert(for: window, information: "Are you sure you want to delete **\(value.title)**?", successHandler: { _ in
-                                self?.peerListContext?.removeFolder(id: value.id)
-                            })
-                        }
-                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                    
+
+                    items.append(ContextMenuItem(
+                        strings().storyMediaAlbumContextMenuDelete,
+                        handler: { [weak self] in
+                            if let window = self?.window {
+                                verifyAlert(
+                                    for: window,
+                                    information: strings().storyMediaAlbumContextMenuDeleteConfirm(value.title),
+                                    successHandler: { _ in
+                                        if let peerListContext = self?.peerListContext {
+                                            self?.actionsDisposable.add(peerListContext.removeFolder(id: value.id))
+                                        }
+                                    }
+                                )
+                            }
+                        },
+                        itemMode: .destruct,
+                        itemImage: MenuAnimation.menu_delete.value
+                    ))
                 }
                
                 return items
             }
         }, resort: { [weak self] from, to in
-            guard let self else {
+            guard let self, let peerListContext = self.peerListContext else {
                 return
             }
             
             var list = self.stateValue.with { $0.collections }
             list.move(at: from, to: to)
             
-            self.peerListContext?.reorderFolders(ids: list.compactMap { value in
+            self.actionsDisposable.add(peerListContext.reorderFolders(ids: list.compactMap { value in
                 switch value {
                 case let .collection(value):
                     return value.id
                 default:
                     return nil
                 }
-            })
+            }))
+        }, state: { [weak self] in
+            let state = self?.stateValue.with { $0 }
+            return state
         })
+        
+        let foldersLimit = context.appConfiguration.getGeneralValue("stories_albums_limit", orElse: 16)
 
         let stateSignal = listContext.state |> deliverOnMainQueue
         let peer = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
+        
+        
         actionsDisposable.add(combineLatest(queue: .mainQueue(), stateSignal, peer).start(next: { [weak self] state, peer in
             
             guard let self else {
                 return
             }
             
+            let prevCollections = self.stateValue.with { $0.collections }
+            
             self.updateState { current in
                 var current = current
                 current.collectionStates[State.Collection.all.stableId] = state
                 current.peer = peer
-                if !state.availableFolders.isEmpty {
-                    current.collections = [.all] + state.availableFolders.map { .collection(value: $0) }
-                    if current.access(context.peerId)  {
-                        current.collections.append(.add)
+                if !isArchived {
+                    if !state.availableFolders.isEmpty {
+                        current.collections = [.all] + state.availableFolders.map { .collection(value: $0) }
+                        if current.access(context.peerId), current.folderCount < foldersLimit  {
+                            current.collections.append(.add)
+                        }
                     }
-                }
-                if !current.collections.contains(where: { $0.stableId == current.selectedCollection }) {
-                    current.selectedCollection = State.Collection.all.stableId
+                    if !current.collections.contains(where: { $0.stableId == current.selectedCollection }) {
+                        current.selectedCollection = State.Collection.all.stableId
+                    }
                 }
                 return current
             }
+            let currentCollections = self.stateValue.with { $0.collections }
+
+            if prevCollections != currentCollections {
+                let previewsSignal = PeerStoryListContext.folderPreviews(peerId: peerId, account: context.account) |> deliverOnPrepareQueue
+                self.actionsDisposable.add(previewsSignal.startStrict(next: { [weak self] value in
+                    self?.updateState { current in
+                        var current = current
+                        current.previews = .init(peer: value.peer, folder: value.1.map {
+                            .init(folder: $0.folder, item: $0.item)
+                        })
+                        return current
+                    }
+                }))
+            }
+            
             if state.totalCount > 0 {
                 self.setCenterStatus(strings().chatListArchiveStoryCountCountable(state.totalCount).lowercased())
             } else {

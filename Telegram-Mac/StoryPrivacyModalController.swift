@@ -386,7 +386,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return StoryPreviewHeaderItem(initialSize, stableId: stableId, viewType: .textTopItem, presentation: presentation, context: arguments.context, peer: peer)
         }))
         
-        let storyContentItem = StoryContentItem(position: nil, dayCounters: nil, peer: peer, storyItem: .init(id: 0, timestamp: 0, expirationTimestamp: 0, media: .init(media), alternativeMediaList: [], mediaAreas: [], text: "", entities: [], views: nil, privacy: nil, isPinned: false, isExpired: false, isPublic: false, isPending: false, isCloseFriends: false, isContacts: false, isSelectedContacts: false, isForwardingDisabled: false, isEdited: false, isMy: false, myReaction: nil, forwardInfo: nil, author: nil), entityFiles: [:], itemPeer: nil)
+        let storyContentItem = StoryContentItem(position: nil, dayCounters: nil, peer: peer, storyItem: .init(id: 0, timestamp: 0, expirationTimestamp: 0, media: .init(media), alternativeMediaList: [], mediaAreas: [], text: "", entities: [], views: nil, privacy: nil, isPinned: false, isExpired: false, isPublic: false, isPending: false, isCloseFriends: false, isContacts: false, isSelectedContacts: false, isForwardingDisabled: false, isEdited: false, isMy: false, myReaction: nil, forwardInfo: nil, author: nil, folderIds: []), entityFiles: [:], itemPeer: nil)
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return StoryPreviewRowItem(initialSize, stableId: stableId, viewType: .singleItem, presentation: presentation, context: arguments.context, story: storyContentItem, interactions: arguments.interactions, state: state.textState, updateState: arguments.updateState, showEmojis: arguments.showEmojis)
@@ -950,7 +950,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 
                 switch availability {
                 case .available:
-                    _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo).start()
+                    _ = context.engine.messages.uploadStory(target: target, media: .existing(media: story.storyItem.media._asMedia()), mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: forwardInfo, folders: []).start()
                     showModalText(for: window, text: strings().storyPrivacySaveRepost)
                     close?()
                 default:
@@ -979,7 +979,7 @@ func StoryPrivacyModalController(context: AccountContext, presentation: Telegram
                 actionsDisposable.add((context.engine.messages.checkStoriesUploadAvailability(target: target) |> deliverOnMainQueue).start(next: { availability in
                     switch availability {
                     case .available:
-                        _ = context.engine.messages.uploadStory(target: target, media: inputMedia, mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: nil).start()
+                        _ = context.engine.messages.uploadStory(target: target, media: inputMedia, mediaAreas: [], text: textState.inputText, entities: textState.messageTextEntities(), pin: privacy.pin, privacy: selectedPrivacy, isForwardingDisabled: privacy.isForwardingDisabled, period: 24 * 60 * 60, randomId: arc4random64(), forwardInfo: nil, folders: []).start()
                         showModalText(for: window, text: strings().storyPrivacySaveRepost)
                         close?()
                     default:

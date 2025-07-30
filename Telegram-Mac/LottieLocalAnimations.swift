@@ -384,7 +384,7 @@ enum LocalAnimatedSticker : String {
     
     case star_currency_new
     case star_currency_part_new
-    
+    case star_currency_mono
     
     case premium_reaction_6
     

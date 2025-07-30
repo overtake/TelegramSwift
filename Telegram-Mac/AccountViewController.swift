@@ -1040,11 +1040,11 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
 
         let twoStep: Signal<TwoStepVeriticationAccessConfiguration?, NoError> = .single(nil) |> then(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
         
-        let storyStats = context.engine.messages.storySubscriptions(isHidden: false)
+        let storyStats: Signal<EngineStorySubscriptions, NoError> = .single(EngineStorySubscriptions.init(accountItem: nil, items: [], hasMoreToken: nil)) |> then(context.engine.messages.storySubscriptions(isHidden: false))
         
         let bots = context.engine.messages.attachMenuBots() |> then(.complete() |> suspendAwareDelay(1.0, queue: .mainQueue())) |> restart
         
-        let acceptBots:ValuePromise<[AttachMenuBot]> = ValuePromise(ignoreRepeated: true)
+        let acceptBots:ValuePromise<[AttachMenuBot]> = ValuePromise([], ignoreRepeated: true)
         
         var loading:Set<PeerId> = Set()
         actionsDisposable.add(bots.start(next: { value in
