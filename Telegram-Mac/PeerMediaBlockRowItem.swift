@@ -23,7 +23,7 @@ class PeerMediaBlockRowItem: GeneralRowItem {
         self.controller = controller
         self.isMediaVisible = isVisible
         self.listener = TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { _ in })
-        super.init(initialSize, height: initialSize.height, stableId: stableId, viewType: viewType)
+        super.init(initialSize, height: initialSize.height, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
     deinit {
@@ -224,7 +224,7 @@ private final class PeerMediaBlockRowView : TableRowView {
                         }
                     } else if updated {
                         DispatchQueue.main.async {
-                            item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                            item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
                         }
                     }
                 }

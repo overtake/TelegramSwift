@@ -634,7 +634,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             for (i, chunk) in chunks.enumerated() {
                 if !chunk.isEmpty {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stars_gifts(i), equatable: .init(chunk), comparable: nil, item: { initialSize, stableId in
-                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0, transfrarable: true) }, insets: .init(left: 10, right: 10), callback: { option in
+                        return GiftOptionsRowItem(initialSize, stableId: stableId, context: arguments.context, options: chunk.map { .initialize($0, context: arguments.context, transfrarable: true) }, insets: .init(left: 10, right: 10), callback: { option in
                             if let gift = option.nativeProfileGift {
                                 arguments.transfer(gift)
                             }

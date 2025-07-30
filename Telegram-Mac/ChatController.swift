@@ -4526,7 +4526,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
-                if toChat || action != nil {
+                
+                var album: Int32?
+                var mediaMode: PeerMediaCollectionMode? = nil
+                if case let .album(id, collection) = action {
+                    album = id
+                    mediaMode = collection
+                } else {
+                    album = nil
+                }
+                
+                if toChat || action != nil, album == nil {
                     
                     if peerId == strongSelf.chatInteraction.peerId {
                         if let postId = postId {
@@ -4567,7 +4577,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let controller = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isBot: false)
                             navigation.push(controller)
                         } else {
-                            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories)
+                            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories, mediaMode: mediaMode, albumId: album)
                         }
                     }
                 }
@@ -9168,11 +9178,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if let peer = chatInteraction.peer {
             if peer.isRestrictedChannel(context.contentSettings), let reason = peer.restrictionText(context.contentSettings) {
-                alert(for: context.window, info: reason, completion: { [weak self] in
+                alert(for: context.window, info: reason, completion: { }, onDeinit: { [weak self] in
                     self?.dismiss()
                 })
             } else if chatInteraction.presentation.isNotAccessible {
-                alert(for: context.window, info: peer.isChannel ? strings().chatChannelUnaccessible : strings().chatGroupUnaccessible, completion: { [weak self] in
+                alert(for: context.window, info: peer.isChannel ? strings().chatChannelUnaccessible : strings().chatGroupUnaccessible, completion: {}, onDeinit: { [weak self] in
                     self?.dismiss()
                 })
             }

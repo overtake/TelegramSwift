@@ -1588,12 +1588,12 @@ class ChatServiceItem: ChatRowItem {
                             if let resaleStars {
                                 if message.author?.id == context.account.peerId {
                                     if message.id.peerId == context.account.peerId {
-                                        text = strings().chatServiceResaleYouSelf("\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)))
+                                        text = strings().chatServiceResaleYouSelf("\(gift.title) #\(gift.number)", resaleStars.fullyFormatted)
                                     } else {
-                                        text = strings().chatServiceResaleYou("\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)), peerName)
+                                        text = strings().chatServiceResaleYou("\(gift.title) #\(gift.number)", resaleStars.fullyFormatted, peerName)
                                     }
                                 } else {
-                                    text = strings().chatServiceResale(peerName, "\(gift.title) #\(gift.number)", strings().starListItemCountCountable(Int(resaleStars)))
+                                    text = strings().chatServiceResale(peerName, "\(gift.title) #\(gift.number)", resaleStars.fullyFormatted)
                                 }
                             } else if isUpgrade {
                                 if message.author?.id == context.account.peerId {

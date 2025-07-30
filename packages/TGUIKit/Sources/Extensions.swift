@@ -500,7 +500,7 @@ public extension NSMutableAttributedString {
     }
 
     
-    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
+    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = .normal(.text)) -> NSRange {
         
         if(string == nil) {
             return NSMakeRange(0, 0)

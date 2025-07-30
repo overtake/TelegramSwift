@@ -87,7 +87,7 @@ protocol PeerMediaSearchable : AnyObject {
     case leftToRight
     case rightToLeft
  }
- private let sectionOffset: CGFloat = 20
+ private let sectionOffset: CGFloat = 0
  
  final class PeerMediaContainerView : View {
     
@@ -317,7 +317,7 @@ protocol PeerMediaSearchable : AnyObject {
         switch state.state.state {
         case .Focus:
             if searchPanelView == nil {
-                self.searchPanelView = SearchContainerView(frame: NSMakeRect(0, -topPanelView.frame.height, topPanelView.frame.width, 50))
+                self.searchPanelView = SearchContainerView(frame: NSMakeRect(0, -topPanelView.frame.height, topPanelView.frame.width, 40))
                 
                 guard let searchPanelView = self.searchPanelView else {
                     fatalError()
@@ -342,8 +342,7 @@ protocol PeerMediaSearchable : AnyObject {
             segmentPanelView._change(pos: NSMakePoint(0, topPanelView.frame.height), animated: state.animated)
         case .None:
             CATransaction.begin()
-            segmentPanelView.removeFromSuperview()
-            topPanelView.addSubview(segmentPanelView, positioned: .above, relativeTo: topPanelSeparatorView)
+           // topPanelView.addSubview(segmentPanelView, positioned: .above, relativeTo: topPanelSeparatorView)
             segmentPanelView._change(pos: NSZeroPoint, animated: state.animated)
             if let searchPanelView = self.searchPanelView {
                 self.searchPanelView = nil
@@ -369,19 +368,23 @@ protocol PeerMediaSearchable : AnyObject {
             return segmentPanelView
         }
     }
+     
+     override func setFrameSize(_ newSize: NSSize) {
+         super.setFrameSize(newSize)
+     }
     
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        topPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
+        topPanelView.frame = NSMakeRect(0, 0, frame.width, 40)
         topPanelView.setCorners(self.corners)
         topPanelSeparatorView.frame = NSMakeRect(0, topPanelView.frame.height - .borderSize, topPanelView.frame.width, .borderSize)
         
         if let searchPanelView = self.searchPanelView {
-            searchPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
-            segmentPanelView.frame = NSMakeRect(0, topPanelView.frame.height, frame.width, 50)
+            searchPanelView.frame = NSMakeRect(0, 0, frame.width, 40)
+            segmentPanelView.frame = NSMakeRect(0, topPanelView.frame.height, frame.width, 40)
         } else {
-            segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 50)
+            segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 40)
         }
         mainView?.frame = NSMakeRect(0, topPanelView.isHidden ? 0 : topPanelView.frame.height, frame.width, frame.height - inset - (topPanelView.isHidden ? 0 : topPanelView.frame.height))
         
@@ -579,9 +582,9 @@ protocol PeerMediaSearchable : AnyObject {
         
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
-            if isLoaded() {
-                currentMainTableView?(genericView.mainTable, initialMode != nil, initialMode != nil)
-            }
+//            if isLoaded() {
+//                currentMainTableView?(genericView.mainTable, initialMode != nil, initialMode != nil)
+//            }
         }
     }
     
@@ -667,6 +670,8 @@ protocol PeerMediaSearchable : AnyObject {
          
         super.init(context)
          
+//         self.bar = .init(height: super.bar.height, enableBorder: false, custom: false)
+         
          self.stories.parentToggleSelection = { [weak self] in
              self?.changeState()
          }
@@ -699,14 +704,17 @@ protocol PeerMediaSearchable : AnyObject {
              return self.externalSearchData == nil
          }
      }
+     
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         interactions.add(observer: self)
         
+       
         if let mode = self.mode {
             self.controller(for: mode).viewDidAppear(animated)
         }
+        
         
         
         
@@ -926,10 +934,21 @@ protocol PeerMediaSearchable : AnyObject {
          }
          
      }
+     
+     func selectStoryAlbum(_ album: Int32) {
+         self.stories.selectAlbum(album)
+     }
+     func selectGiftsAlbum(_ album: Int32) {
+        let arguments = (self.gifts as? InputDataController)?.contextObject_second as? PeerMediaGiftsExternalArguments
+         arguments?.setAlbum(album)
+     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+//        if let initialMode {
+//            currentMainTableView?(genericView.mainTable, true, true)
+//        }
 
         
         genericView.updateInteraction(interactions)
@@ -966,7 +985,7 @@ protocol PeerMediaSearchable : AnyObject {
             }
             if let cachedData = view.cachedData as? CachedChannelData {
                 if let starGiftsCount = cachedData.starGiftsCount, starGiftsCount > 0 {
-                    return (exist: true, loaded: true)
+                    return (exist: !cachedData.isNotAccessible, loaded: true)
                 }
             }
             return (exist: false, loaded: true)
@@ -981,9 +1000,9 @@ protocol PeerMediaSearchable : AnyObject {
             }
             if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
-            } else if let _ = view.cachedData as? CachedChannelData {
+            } else if let cachedData = view.cachedData as? CachedChannelData {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup, !peer.isMonoForum {
-                    return (exist: true, loaded: true)
+                    return (exist: !cachedData.isNotAccessible, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }
@@ -1454,9 +1473,15 @@ protocol PeerMediaSearchable : AnyObject {
         tabsDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] tabs, selected, hasLoaded in
             var items:[ScrollableSegmentItem] = []
             if hasLoaded, let `self` = self {
-                let insets = NSEdgeInsets(left: 5, right: 5, bottom: 2)
+                
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
+                    var insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
+                    if i == 0 {
+                        insets.left = 20
+                    } else if i == tabs.count - 1 {
+                        insets.right = 20
+                    }
                     items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: Int64(tab.rawValue), selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
@@ -1673,7 +1698,7 @@ protocol PeerMediaSearchable : AnyObject {
             } else {
                 corners = filter.isEmpty ? .all : [.topLeft, .topRight]
             }
-            self?.genericView.updateCorners(corners, animated: !firstUpdate)
+            self?.genericView.updateCorners([], animated: !firstUpdate)
             firstUpdate = false
         }
         self.currentMainTableView?(genericView.mainTable, animated, previous != controller && genericView.segmentPanelView.segmentControl.contains(oldMode?.rawValue ?? -3))

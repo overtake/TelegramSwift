@@ -504,7 +504,7 @@ public class ScrollableSegmentView: View {
         if let selectedItem = selectedItem, let view = selectedItem.view {
             let point: NSPoint
             if scrollView.clipView.isAnimateScrolling {
-                point = NSMakePoint(min(max(view.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0)
+                point = scrollView.documentOffset
             } else {
                 point = scrollView.documentOffset
             }

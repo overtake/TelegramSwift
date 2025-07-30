@@ -105,7 +105,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
         
         enum TypeValue {
             case price(String)
-            case stars(Int64, Bool, Bool)
+            case stars(Int64, Bool, Bool, Bool)
             case none
         }
         struct Badge {
@@ -213,10 +213,10 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 resale = false
             }
             
-            return .init(file: option.media, image: nil, colors: [], text: nil, type: .stars(price, false, resale), badge: badge, peer: nil, invisible: false, pinned: false, toggleSelect: nil, priceBadge: nil, nativeStarGift: option)
+            return .init(file: option.media, image: nil, colors: [], text: nil, type: .stars(price, false, resale, false), badge: badge, peer: nil, invisible: false, pinned: false, toggleSelect: nil, priceBadge: nil, nativeStarGift: option)
         }
         
-        static func initialize(_ option: StarGift.UniqueGift, resale: Bool = false, showNumber: Bool = false) -> Option {
+        static func initialize(_ option: StarGift.UniqueGift, context: AccountContext, resale: Bool = false, showNumber: Bool = false) -> Option {
             
             let badge: Option.Badge?
             
@@ -235,11 +235,11 @@ final class GiftOptionsRowItem : GeneralRowItem {
                 badge = nil
             }
             
-            return .init(file: option.file!, image: nil, colors: [], text: nil, type: option.resellStars != nil ? .stars(option.resellStars!, true, resale) : .none, badge: badge, peer: nil, invisible: false, pinned: false, toggleSelect: nil, priceBadge: nil, nativeStarUniqueGift: option)
+            return .init(file: option.file!, image: nil, colors: [], text: nil, type: option.resellAmounts != nil ? .stars(option.resellStars(context)!.amount.value, true, resale, option.resellForTonOnly) : .none, badge: badge, peer: nil, invisible: false, pinned: false, toggleSelect: nil, priceBadge: nil, nativeStarUniqueGift: option)
         }
         
         
-        static func initialize(_ option: ProfileGiftsContext.State.StarGift, transfrarable: Bool = false, selected: Bool? = nil) -> Option {
+        static func initialize(_ option: ProfileGiftsContext.State.StarGift, context: AccountContext, transfrarable: Bool = false, selected: Bool? = nil) -> Option {
             
             var blueColor: [NSColor] = []
             
@@ -252,12 +252,12 @@ final class GiftOptionsRowItem : GeneralRowItem {
             var priceBadge: TextViewLayout? = nil
             
             let badge: Badge?
-            if let resellStars = option.gift.unique?.resellStars {
-                badge = .init(text: strings().giftSale, colors: [NSColor(0x74b036), NSColor(0x87d151)], textColor: theme.colors.underSelectedColor, outline: false)
+            if let resellStars = option.gift.unique?.resellStars(context) {
+                badge = .init(text: strings().giftSale, colors: [NSColor(0x74b036), NSColor(0x87d151)], textColor: theme.colors.underSelectedColor, outline: true)
                 
                 let attr = NSMutableAttributedString()
-                attr.append(.initialize(string: "\(clown_space)\(resellStars)", color: .white, font: .normal(.text)))
-                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_new.file), for: clown)
+                attr.append(.initialize(string: "\(clown_space)\(resellStars.amount.value.separatedNumber)", color: .white, font: .normal(.text)))
+                attr.insertEmbedded(.embeddedAnimated(LocalAnimatedSticker.star_currency_mono.file), for: clown)
                 
                 priceBadge = .init(attr)
                 priceBadge?.measure(width: .greatestFiniteMagnitude)
@@ -287,7 +287,7 @@ final class GiftOptionsRowItem : GeneralRowItem {
             case .stars:
                 height = 135
             case .none:
-                height = 100
+                height = 130
             }
             if let starsPrice {
                 height += starsPrice.layoutSize.height + 10
@@ -390,6 +390,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 addSubview(textView)
                 textView.isEventLess = true
                 textView.userInteractionEnabled = false
+                self.bgColor = NSColor.black.withAlphaComponent(0.05)
             }
             
             required init?(coder: NSCoder) {
@@ -428,6 +429,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
         private let surfaceView: View = View()
         private var premiumSelectView: View?
         private var toggleSelect: SelectingControl?
+        private var onlyTonView: OnlyTonView?
 
         private class PriceView: View {
             private let textView = TextView()
@@ -452,6 +454,35 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 super.layout()
                 self.textView.center()
             }
+        }
+        
+        private class OnlyTonView : View {
+            private let visual = VisualEffect(frame: NSMakeRect(0, 0, 24, 24))
+            private let imageView = ImageView()
+            required init(frame frameRect: NSRect) {
+                super.init(frame: frameRect)
+                addSubview(visual)
+                addSubview(imageView)
+                
+                imageView.image = NSImage.init(resource: .iconTonCurrency).precomposed(.white)
+                imageView.sizeToFit()
+                self.layer?.cornerRadius = 15
+                
+                needsLayout = true
+                
+            }
+            
+            required init?(coder: NSCoder) {
+                fatalError("init(coder:) has not been implemented")
+            }
+            
+            
+            override func layout() {
+                super.layout()
+                self.visual.frame = bounds
+                self.imageView.center()
+            }
+            
         }
         
         private class StarPriceView: View {
@@ -518,6 +549,8 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
             self.setSingle(handler: { _ in
                 callback(option)
             }, for: .Click)
+            
+            
             
             if let file = option.file {
                 let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .framesCount(2), alwaysAccept: true, cache: .temporaryLZ4(.thumb), hidePlayer: false, media: file, colors: option.colors, shimmer: false, thumbAtFrame: 1)
@@ -587,6 +620,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                     self.starPriceView = nil
                 }
                 
+                
                 let current: PriceView
                 if let view = self.priceView {
                     current = view
@@ -600,7 +634,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 current.backgroundColor = option.gift?.unique != nil ? NSColor.white.withAlphaComponent(0.2) : theme.colors.accent.withAlphaComponent(0.2)
                 current.update(text: priceLayout)
                 
-            case let .stars(int64, plain, addPlus):
+            case let .stars(int64, plain, addPlus, _):
                 if let view = self.priceView {
                     performSubviewRemoval(view, animated: false)
                     self.priceView = nil
@@ -613,6 +647,11 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                     current = StarPriceView(frame: .zero)
                     self.addSubview(current)
                     self.starPriceView = current
+                }
+                
+                if let view = self.onlyTonView {
+                    performSubviewRemoval(view, animated: false)
+                    self.onlyTonView = nil
                 }
                 
                 current.effect.isHidden = plain
@@ -632,6 +671,10 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 if let view = self.starPriceView {
                     performSubviewRemoval(view, animated: false)
                     self.starPriceView = nil
+                }
+                if let view = self.onlyTonView {
+                    performSubviewRemoval(view, animated: false)
+                    self.onlyTonView = nil
                 }
             }
             
@@ -787,6 +830,20 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
                 self.priceBadgeView = nil
             }
             
+            if option.nativeProfileGift?.gift.unique?.resellForTonOnly == true {
+                let current: OnlyTonView
+                if let view = self.onlyTonView {
+                    current = view
+                } else {
+                    current = OnlyTonView(frame: NSMakeRect(4, 4, 30, 30))
+                    self.onlyTonView = current
+                    addSubview(current)
+                }
+            } else if let view = self.onlyTonView {
+                performSubviewRemoval(view, animated: animated)
+                self.onlyTonView = nil
+            }
+            
             if selected {
                 let current: View
                 if let view = selectionView {
@@ -873,7 +930,11 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
         
         override func layout() {
             super.layout()
-            sticker.centerX(y: priceView != nil ? 0 : 10)
+            if starsPrice != nil || starPriceView != nil || priceView != nil {
+                sticker.centerX(y: 10)
+            } else {
+                sticker.center()
+            }
             textView?.centerX(y: sticker.frame.maxY + 5)
             if let badgeView {
                 badgeView.setFrameOrigin(frame.width - badgeView.frame.width, 0)
@@ -901,6 +962,9 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
             }
             if let avatarView {
                 avatarView.setFrameOrigin(NSMakePoint(4, 4))
+            }
+            if let onlyTonView {
+                onlyTonView.setFrameOrigin(NSMakePoint(4, 4))
             }
             if let backgroundView {
                 backgroundView.frame = NSMakeRect(1, 1, bounds.width - 2, bounds.height - 1)

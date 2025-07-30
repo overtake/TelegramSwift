@@ -2347,9 +2347,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         var items:[GroupInfoEntry] = []
         var sectionId:Int = 0
         for entry in entries {
-            if entry.sectionId == GroupInfoSection.media.rawValue {
-                sectionId = entry.sectionId
-            } else if entry.sectionId != sectionId {
+            if entry.sectionId != sectionId {
                 items.append(.section(sectionId))
                 sectionId = entry.sectionId
             }

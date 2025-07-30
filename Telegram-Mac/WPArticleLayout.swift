@@ -63,11 +63,7 @@ class WPArticleLayout: WPLayout {
                             content = content.withUpdatedFile(file)
                         }
                     }
-                case .stickerPack:
-                    break
-                case .unsupported:
-                    break
-                case .starGift:
+                default:
                     break
                 }
             }

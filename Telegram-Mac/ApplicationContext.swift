@@ -18,9 +18,9 @@ func navigateToChat(navigation: NavigationViewController?, context: AccountConte
     
     let open:()->Void = { [weak navigation] in
         if additional {
-            navigation?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+            navigation?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
         } else {
-            navigation?.push(ChatController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+            navigation?.push(ChatController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
         }
     }
     
