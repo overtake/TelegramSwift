@@ -2207,12 +2207,21 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: toPeerId)) |> deliverOnMainQueue
                         
                         
-                        let formAndMaybeValidatedInfo_Stars = context.engine.payments.fetchBotPaymentForm(source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId, ton: false), themeParams: nil)
+                        let formAndMaybeValidatedInfo_Stars: Signal<BotPaymentForm?, BotPaymentFormRequestError>
+                        if gift.resellForTonOnly {
+                            formAndMaybeValidatedInfo_Stars = .single(nil)
+                        } else {
+                            formAndMaybeValidatedInfo_Stars = context.engine.payments.fetchBotPaymentForm(source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId, ton: false), themeParams: nil)
+                            |> map(Optional.init)
+                        }
+                        
+                        
+                        
                         let formAndMaybeValidatedInfo_Ton = context.engine.payments.fetchBotPaymentForm(source: .starGiftResale(slug: gift.slug, toPeerId: toPeerId, ton: true), themeParams: nil)
 
                         _ = showModalProgress(signal: combineLatest(signal |> castError(BotPaymentFormRequestError.self), formAndMaybeValidatedInfo_Stars, formAndMaybeValidatedInfo_Ton), for: window).start(next: { peer, starsForm, tonForm in
                             if let peer {
-                                buyResellGift(gift, peer, starsForm, tonForm)
+                                buyResellGift(gift, peer, starsForm ?? tonForm, tonForm)
                             }
                             
                         })

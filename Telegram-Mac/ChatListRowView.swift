@@ -1603,7 +1603,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      self.chatNameTextView = current
                      self.contentView.addSubview(current)
                  }
-                 current.set(text: nameText, context: item.context)
+                 current.set(text: nameText, context: item.context, decreaseAvatar: 2)
                  
              } else if let view = self.chatNameTextView {
                  self.chatNameTextView = nil
