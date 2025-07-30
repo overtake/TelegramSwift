@@ -641,6 +641,13 @@ private class CollectionPanel : View {
     }
 }
 
+class PeerMediaGiftsExternalArguments {
+    let setAlbum:(Int32)->Void
+    init(setAlbum:@escaping(Int32)->Void) {
+        self.setAlbum = setAlbum
+    }
+}
+
 func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGiftsProfile: ProfileGiftsContext? = nil) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
@@ -896,9 +903,8 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
         var additionalItem: SelectPeers_AdditionTopItem?
         
         
-        var canExportDate: Int32? = option.canExportDate
+        let canExportDate: Int32? = option.canExportDate
         let transferStars: Int64? = option.transferStars
-        let convertStars: Int64? = option.convertStars
         let reference: StarGiftReference? = option.reference
         
         
@@ -1318,7 +1324,13 @@ func PeerMediaGiftsController(context: AccountContext, peerId: PeerId, starGifts
     }))
     
     controller.contextObject = (giftsContext, collectionsContext, collectionsContexts)
-
+    controller.contextObject_second = PeerMediaGiftsExternalArguments(setAlbum: { value in
+        updateState { current in
+            var current = current
+            current.selectedCollection = value
+            return current
+        }
+    })
     return controller
     
 }

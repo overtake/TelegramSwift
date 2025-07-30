@@ -684,7 +684,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })
-            case .storyAlbum:
+            case .album:
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })

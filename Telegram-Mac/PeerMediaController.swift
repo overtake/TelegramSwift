@@ -938,6 +938,10 @@ protocol PeerMediaSearchable : AnyObject {
      func selectStoryAlbum(_ album: Int32) {
          self.stories.selectAlbum(album)
      }
+     func selectGiftsAlbum(_ album: Int32) {
+        let arguments = (self.gifts as? InputDataController)?.contextObject_second as? PeerMediaGiftsExternalArguments
+         arguments?.setAlbum(album)
+     }
     
     override func viewDidLoad() {
         super.viewDidLoad()

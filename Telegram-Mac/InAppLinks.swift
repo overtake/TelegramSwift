@@ -234,7 +234,7 @@ enum ChatInitialAction : Equatable {
     case attachBot(_ bot: String, _ payload: String?, _ choose:[String]?)
     case makeWebview(appname: String, command: String?)
     case openWebview(botPeer: PeerEquatable, botApp: BotApp, result: RequestWebViewResult)
-    case storyAlbum(album: Int32)
+    case album(album: Int32, mode: PeerMediaCollectionMode)
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
@@ -1785,6 +1785,7 @@ private let keyURLPurpose = "purpose"
 
 private let keyURLChannel = "channel";
 private let keyURLAlbum = "album";
+private let keyURLCollection = "collection";
 
 
 private let keyURLAppname = "appname";
@@ -2291,7 +2292,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         
                             if userAndPost.count == 3, let album = post, userAndPost[1] == "a" {
-                                return .followResolvedName(link: urlString, username: name, postId: nil, forceProfile: forceProfile, context: context, action: .storyAlbum(album: album), callback: openInfo)
+                                return .followResolvedName(link: urlString, username: name, postId: nil, forceProfile: forceProfile, context: context, action: .album(album: album, mode: .stories), callback: openInfo)
+                            } else if userAndPost.count == 3, let album = post, userAndPost[1] == "c" {
+                                return .followResolvedName(link: urlString, username: name, postId: nil, forceProfile: forceProfile, context: context, action: .album(album: album, mode: .gifts), callback: openInfo)
                             } else if userAndPost.count == 3, let storyId = post, userAndPost[1] == "s" {
                                 return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
                             } else if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
@@ -2345,6 +2348,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let topic = vars[keyURLTopicId]?.nsstring.intValue
                         let story = vars[keyURLStoryId]?.nsstring.intValue
                         let storyAlbum = vars[keyURLAlbum]?.nsstring.intValue
+                        let giftsAlbum = vars[keyURLCollection]?.nsstring.intValue
+
                         var action:ChatInitialAction? = nil
                         loop: for (key,value) in vars {
                             switch key {
@@ -2376,7 +2381,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop
                             case keyURLAlbum:
                                 if let storyAlbum {
-                                    action = .storyAlbum(album: storyAlbum)
+                                    action = .album(album: storyAlbum, mode: .stories)
+                                }
+                            case keyURLCollection:
+                                if let giftsAlbum {
+                                    action = .album(album: giftsAlbum, mode: .gifts)
                                 }
                             default:
                                 break

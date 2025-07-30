@@ -4527,14 +4527,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
                 
-                var storyAlbum: Int32?
-                if case let .storyAlbum(album) = action {
-                    storyAlbum = album
+                var album: Int32?
+                var mediaMode: PeerMediaCollectionMode? = nil
+                if case let .album(id, collection) = action {
+                    album = id
+                    mediaMode = collection
                 } else {
-                    storyAlbum = nil
+                    album = nil
                 }
                 
-                if toChat || action != nil, storyAlbum == nil {
+                if toChat || action != nil, album == nil {
                     
                     if peerId == strongSelf.chatInteraction.peerId {
                         if let postId = postId {
@@ -4575,7 +4577,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let controller = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isBot: false)
                             navigation.push(controller)
                         } else {
-                            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories, mediaMode: storyAlbum != nil ? .stories : nil, storyAlbumId: storyAlbum)
+                            PeerInfoController.push(navigation: navigation, context: context, peerId: peerId, threadInfo: threadInfo, stories: stories, mediaMode: mediaMode, albumId: album)
                         }
                     }
                 }

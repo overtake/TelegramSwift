@@ -1816,10 +1816,8 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
         let state = stateValue.with { $0 }
         
        
-        
-                
-        let resellStars = gift.resell.flatMap(\.fullyFormatted) ?? ""
-        
+        let resellStars = gift.resell?.fullyFormatted ?? ""
+
         let amount = gift.resell?.amount ?? .zero
         
         
@@ -1832,7 +1830,11 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             
             let form = buyForSelected == .stars ? starsForm : tonForm
             
-            let resellStars = gift.resell(buyForSelected).flatMap(\.fullyFormatted) ?? ""
+            let fullAmount = form.invoice.prices.first?.amount ?? 0
+            
+            let resellAmount = CurrencyAmount(amount: StarsAmount.init(value: fullAmount, nanos: 0), currency: buyForSelected)
+            
+            let resellStars = resellAmount.fullyFormatted
             
             let infoText: String
             if peer.id == context.peerId {
@@ -1861,12 +1863,15 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
             }
             
             let form = buyForSelected == .stars ? starsForm : tonForm
-            
-            if amount.value > myBalance.value {
+                        
+            let fullAmount = form.invoice.prices.first?.amount ?? 0
+            let resellAmount = CurrencyAmount(amount: StarsAmount.init(value: fullAmount, nanos: 0), currency: buyForSelected).fullyFormatted
+
+            if fullAmount > myBalance.value {
                 if buyForSelected == .ton {
-                    showModal(with: AddTonBalanceController(context: context, tonAmount: amount.value - myBalance.value), for: window)
+                    showModal(with: AddTonBalanceController(context: context, tonAmount: fullAmount - myBalance.value), for: window)
                 } else {
-                    let sourceValue: Star_ListScreenSource =  .buy(suffix: nil, amount: gift.resellStars(context)?.amount.value ?? 0)
+                    let sourceValue: Star_ListScreenSource =  .buy(suffix: nil, amount: fullAmount)
                     showModal(with: Star_ListScreen(context: context, source: sourceValue), for: window)
                 }
             } else {
@@ -1881,9 +1886,9 @@ func StarGift_Nft_Controller(context: AccountContext, gift: StarGift, source: St
                         
                         let successText: String
                         if peer.id == context.peerId {
-                            successText = strings().starNftGiftBuySuccessSelf(gift.title, resellStars)
+                            successText = strings().starNftGiftBuySuccessSelf(gift.title, resellAmount)
                         } else {
-                            successText = strings().starNftGiftBuySuccess(gift.title, resellStars, peer._asPeer().displayTitle)
+                            successText = strings().starNftGiftBuySuccess(gift.title, resellAmount, peer._asPeer().displayTitle)
                         }
                         showModalText(for: window, text: successText)
                         

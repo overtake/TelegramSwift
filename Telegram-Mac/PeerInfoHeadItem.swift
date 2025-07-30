@@ -2154,7 +2154,7 @@ private final class PeerInfoHeadView : GeneralRowView {
                 self.ratingView = current
                 statusContainer.addSubview(current)
             }
-            current.set(data: rating, context: item.context, borderColor: .white, bgColor: .white, textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor.black, animated: animated)
+            current.set(data: rating, context: item.context, borderColor: NSColor(0xffffff), bgColor: NSColor(0xffffff), textColor: item.colorfulProfile ? item.backgroundGradient[0] : NSColor(0x000000), animated: animated)
             
             current.change(size: current.smallSize, animated: animated)
             current.updateLayout(size: current.smallSize, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)

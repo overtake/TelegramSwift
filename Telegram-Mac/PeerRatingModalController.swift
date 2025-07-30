@@ -346,7 +346,7 @@ private final class RowItem : GeneralRowItem {
         let infoImage_3 = generateTextIcon_AccentBadge(
             text: strings().peerRatingPreviewBadgeDeducted,
             bgColor: theme.colors.grayForeground,
-            textColor: theme.colors.underSelectedColor
+            textColor: theme.colors.text
         )
 
         options.append(.init(
