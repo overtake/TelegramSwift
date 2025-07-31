@@ -562,13 +562,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let pendingRating = state.pendingRating {
         let pendingAmount = pendingRating.rating.currentLevelStars - state.rating.currentLevelStars
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().peerRatingPreviewInfoPendingCountable(Int(pendingAmount))), data: .init(color: theme.colors.listGrayText, centerViewAlignment: true, alignment: .center)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().peerRatingPreviewInfoPendingCountable(Int(pendingAmount))), data: .init(color: theme.colors.listGrayText, viewType: .singleItem, centerViewAlignment: true, alignment: .center)))
         index += 1
     }
     
 
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("info"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
