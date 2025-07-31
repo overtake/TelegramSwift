@@ -45,7 +45,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
             let limit = gift.perUserLimit?.total ?? 0
             title = .initialize(string: strings().premiumStarGiftTitle, color: presentation.colors.text, font: .medium(.header))
             info.append(
-                string: strings().premiumStarGiftInfo(Int(limit)),
+                string: strings().premiumStarGiftInfoCountable(Int(limit)),
                 color: theme.colors.text,
                 font: .normal(.text)
             )

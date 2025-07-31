@@ -841,7 +841,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     func previewRatig() {
         if let rating, let peer {
-            showModal(with: PeerRatingModalController(context: context, peer: peer, rating: rating), for: context.window)
+            showModal(with: PeerRatingModalController(context: context, peer: peer, rating: rating, pendingRating: (peerView.cachedData as? CachedUserData)?.pendingStarRating), for: context.window)
         }
     }
     

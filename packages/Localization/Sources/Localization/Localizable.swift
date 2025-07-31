@@ -10457,9 +10457,33 @@ public final class L10n {
   }
   /// User is not accepting gifts
   public static var giftSendDisallowError: String  { return L10n.tr("Localizable", "Gift.Send.Disallow.Error") }
-  /// You've already sent %d of these gifts, and it's the limit.
-  public static func giftSendErrorLimitReached(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached", p1)
+  /// %d
+  public static func giftSendErrorLimitReachedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_countable", p1)
+  }
+  /// You've already sent %d gifts, and it's the limit.
+  public static func giftSendErrorLimitReachedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_few", p1)
+  }
+  /// You've already sent %d gifts, and it's the limit.
+  public static func giftSendErrorLimitReachedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_many", p1)
+  }
+  /// You've already sent %d gift, and it's the limit.
+  public static func giftSendErrorLimitReachedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_one", p1)
+  }
+  /// You've already sent %d gifts, and it's the limit.
+  public static func giftSendErrorLimitReachedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_other", p1)
+  }
+  /// You've already sent %d gifts, and it's the limit.
+  public static func giftSendErrorLimitReachedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_two", p1)
+  }
+  /// You've already sent %d gifts, and it's the limit.
+  public static func giftSendErrorLimitReachedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Gift.Send.Error.LimitReached_zero", p1)
   }
   /// Enable this to let %1$@ turn your gift into a unique collectible. [Learn More >]()
   public static func giftSendUpgradeInfo(_ p1: String) -> String {
@@ -11039,13 +11063,61 @@ public final class L10n {
   public static var givewayChannelsInfoGroup: String  { return L10n.tr("Localizable", "Giveway.Channels.Info.Group") }
   /// Global search is a Premium feature.
   public static var globalSearchEmptyDescPremiumRequired: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.PremiumRequired") }
+  /// %d
+  public static func globalSearchEmptyDescRemainingCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_countable", p1)
+  }
   /// %d free searches remaining today
-  public static func globalSearchEmptyDescRemaining(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining", p1)
+  public static func globalSearchEmptyDescRemainingFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_few", p1)
+  }
+  /// %d free searches remaining today
+  public static func globalSearchEmptyDescRemainingMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_many", p1)
+  }
+  /// %d free search remaining today
+  public static func globalSearchEmptyDescRemainingOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_one", p1)
+  }
+  /// %d free searches remaining today
+  public static func globalSearchEmptyDescRemainingOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_other", p1)
+  }
+  /// %d free searches remaining today
+  public static func globalSearchEmptyDescRemainingTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_two", p1)
+  }
+  /// %d free searches remaining today
+  public static func globalSearchEmptyDescRemainingZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Desc.Remaining_zero", p1)
+  }
+  /// %d
+  public static func globalSearchEmptyInfoLimitReachedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_countable", p1)
   }
   /// You can make up to %d search queries per day.
-  public static func globalSearchEmptyInfoLimitReached(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached", p1)
+  public static func globalSearchEmptyInfoLimitReachedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_few", p1)
+  }
+  /// You can make up to %d search queries per day.
+  public static func globalSearchEmptyInfoLimitReachedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_many", p1)
+  }
+  /// You can make up to %d search query per day.
+  public static func globalSearchEmptyInfoLimitReachedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_one", p1)
+  }
+  /// You can make up to %d search queries per day.
+  public static func globalSearchEmptyInfoLimitReachedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_other", p1)
+  }
+  /// You can make up to %d search queries per day.
+  public static func globalSearchEmptyInfoLimitReachedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_two", p1)
+  }
+  /// You can make up to %d search queries per day.
+  public static func globalSearchEmptyInfoLimitReachedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GlobalSearch.Empty.Info.LimitReached_zero", p1)
   }
   /// Type a keyword to search all posts from public channels.
   public static var globalSearchEmptyInfoPremium: String  { return L10n.tr("Localizable", "GlobalSearch.Empty.Info.Premium") }
@@ -13769,6 +13841,34 @@ public final class L10n {
   public static func peerRatingPreviewInfoHeader(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.RatingPreview.Info.Header", p1)
   }
+  /// %d
+  public static func peerRatingPreviewInfoPendingCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_countable", p1)
+  }
+  /// The rating updates in 21 days after purchases. %d points are pending
+  public static func peerRatingPreviewInfoPendingFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_few", p1)
+  }
+  /// The rating updates in 21 days after purchases. %d points are pending
+  public static func peerRatingPreviewInfoPendingMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_many", p1)
+  }
+  /// The rating updates in 21 days after purchases. %d point is pending
+  public static func peerRatingPreviewInfoPendingOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_one", p1)
+  }
+  /// The rating updates in 21 days after purchases. %d points are pending
+  public static func peerRatingPreviewInfoPendingOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_other", p1)
+  }
+  /// The rating updates in 21 days after purchases. %d points are pending
+  public static func peerRatingPreviewInfoPendingTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_two", p1)
+  }
+  /// The rating updates in 21 days after purchases. %d points are pending
+  public static func peerRatingPreviewInfoPendingZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.RatingPreview.Info.Pending_zero", p1)
+  }
   /// This rating reflects your activity on Telegram. What affects it:
   public static var peerRatingPreviewInfoHeaderYou: String  { return L10n.tr("Localizable", "Peer.RatingPreview.Info.Header.You") }
   /// Refunds and Conversions
@@ -15449,9 +15549,33 @@ public final class L10n {
   public static func premiumShowStatusUpgradeToPremiumReadInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.ShowStatus.UpgradeToPremium.Read.Info", p1)
   }
-  /// Subscribe to **Telegram Premium** to send up to **%d** of these gifts and unlock access to multiple additional features.
-  public static func premiumStarGiftInfo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Premium.StarGift.Info", p1)
+  /// %d
+  public static func premiumStarGiftInfoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_countable", p1)
+  }
+  /// Subscribe to **Telegram Premium** to send up to **%d** gifts and unlock access to multiple additional features.
+  public static func premiumStarGiftInfoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_few", p1)
+  }
+  /// Subscribe to **Telegram Premium** to send up to **%d** gifts and unlock access to multiple additional features.
+  public static func premiumStarGiftInfoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_many", p1)
+  }
+  /// Subscribe to **Telegram Premium** to send up to **%d** gift and unlock access to multiple additional features.
+  public static func premiumStarGiftInfoOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_one", p1)
+  }
+  /// Subscribe to **Telegram Premium** to send up to **%d** gifts and unlock access to multiple additional features.
+  public static func premiumStarGiftInfoOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_other", p1)
+  }
+  /// Subscribe to **Telegram Premium** to send up to **%d** gifts and unlock access to multiple additional features.
+  public static func premiumStarGiftInfoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_two", p1)
+  }
+  /// Subscribe to **Telegram Premium** to send up to **%d** gifts and unlock access to multiple additional features.
+  public static func premiumStarGiftInfoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Premium.StarGift.Info_zero", p1)
   }
   /// Premium Gift
   public static var premiumStarGiftTitle: String  { return L10n.tr("Localizable", "Premium.StarGift.Title") }

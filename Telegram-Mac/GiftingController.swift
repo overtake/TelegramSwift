@@ -813,7 +813,7 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                 if limit.remains == 0 {
                     showModalText(
                         for: window,
-                        text: strings().giftSendErrorLimitReached(Int(limit.total))
+                        text: strings().giftSendErrorLimitReachedCountable(Int(limit.total))
                     )
                 }
             }

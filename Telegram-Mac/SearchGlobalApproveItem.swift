@@ -61,10 +61,10 @@ final class SearchGlobalApproveItem : GeneralRowItem {
             if count > 0 {
                 title = strings().globalSearchEmptyTitlePremium
                 info = strings().globalSearchEmptyInfoPremium
-                descText = strings().globalSearchEmptyDescRemaining(Int(count))
+                descText = strings().globalSearchEmptyDescRemainingCountable(Int(count))
             } else {
                 title = strings().globalSearchEmptyTitleLimitReached
-                info = strings().globalSearchEmptyInfoLimitReached(Int(maxCount))
+                info = strings().globalSearchEmptyInfoLimitReachedCountable(Int(maxCount))
                 descText = nil
             }
         }

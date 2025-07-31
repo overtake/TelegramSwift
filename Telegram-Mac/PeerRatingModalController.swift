@@ -542,6 +542,7 @@ private final class Arguments {
 
 private struct State : Equatable {
     var rating: TelegramStarRating
+    var pendingRating: TelegramStarPendingRating?
     var peer: EnginePeer
 }
 
@@ -559,8 +560,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return LevelRowItem(initialSize, stableId: stableId, rating: state.rating)
     }))
     
-//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("The rating updates in 21 days after purchases. 345 points are pending."), data: .init(color: theme.colors.listGrayText, centerViewAlignment: true, alignment: .center)))
-//    index += 1
+    if let pendingRating = state.pendingRating {
+        let pendingAmount = pendingRating.rating.currentLevelStars - state.rating.currentLevelStars
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().peerRatingPreviewInfoPendingCountable(Int(pendingAmount))), data: .init(color: theme.colors.listGrayText, centerViewAlignment: true, alignment: .center)))
+        index += 1
+    }
+    
+
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -575,11 +581,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PeerRatingModalController(context: AccountContext, peer: Peer, rating: TelegramStarRating) -> InputDataModalController {
+func PeerRatingModalController(context: AccountContext, peer: Peer, rating: TelegramStarRating, pendingRating: TelegramStarPendingRating?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(rating: rating, peer: .init(peer))
+    let initialState = State(rating: rating, pendingRating: pendingRating, peer: .init(peer))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -595,7 +601,7 @@ func PeerRatingModalController(context: AccountContext, peer: Peer, rating: Tele
             return bestWindow(context, getController?())
         }
     }
-
+    
     let arguments = Arguments(context: context)
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
