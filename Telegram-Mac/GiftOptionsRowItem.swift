@@ -931,7 +931,7 @@ private final class GiftOptionsRowView:  GeneralContainableRowView {
         override func layout() {
             super.layout()
             if starsPrice != nil || starPriceView != nil || priceView != nil {
-                sticker.centerX(y: 10)
+                sticker.centerX(y: 5)
             } else {
                 sticker.center()
             }

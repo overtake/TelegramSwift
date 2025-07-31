@@ -590,24 +590,24 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         let chunks = filtered(state.starGifts, state.selectedStarFilter).chunks(3)
         
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars(selfGift: arguments.context.peerId == peer.id), context: arguments.context, openPromo: arguments.openPromo)
+        }))
+        
+        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_filters, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return StarGiftFilterRowItem(initialSize, stableId: stableId, context: arguments.context, filters: state.starFilters, selected: state.selectedStarFilter, arguments: arguments)
+        }))
+        
+        
         if !chunks.isEmpty {
             
-            
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return HeaderTextRowItem(initialSize, stableId: stableId, peer: peer, type: .stars(selfGift: arguments.context.peerId == peer.id), context: arguments.context, openPromo: arguments.openPromo)
-            }))
-            
-            entries.append(.sectionId(sectionId, type: .customModern(10)))
-            sectionId += 1
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_star_filters, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return StarGiftFilterRowItem(initialSize, stableId: stableId, context: arguments.context, filters: state.starFilters, selected: state.selectedStarFilter, arguments: arguments)
-            }))
-            
-           
             entries.append(.sectionId(sectionId, type: .customModern(10)))
             sectionId += 1
             
@@ -696,10 +696,8 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
     
     let birtday = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Birthday(id: peerId))
     
-    let giftsContext = ProfileGiftsContext(account: context.account, peerId: context.peerId)
-    
-    giftsContext.updateFilter(.unique)
-    
+    let giftsContext = ProfileGiftsContext(account: context.account, peerId: context.peerId, filter: [.unique, .displayed, .hidden])
+        
     let disallowedGifts: Signal<TelegramDisallowedGifts?, NoError> = context.account.viewTracker.peerView(peerId, updateData: true) |> map { view in
         if peerId == context.peerId {
             return nil
@@ -744,10 +742,14 @@ func GiftingController(context: AccountContext, peerId: PeerId, isBirthday: Bool
                 if let disallowedGifts {
                     current.starGifts = current.starGifts.filter({ gift in
                         if gift.limited && disallowedGifts.contains(.limited) {
-                            return false
+                            if gift.native.generic?.availability?.minResaleStars == nil {
+                                return false
+                            }
                         }
                         if !gift.limited && disallowedGifts.contains(.unlimited) {
-                            return false
+                            if gift.native.generic?.availability?.minResaleStars == nil {
+                                return false
+                            }
                         }
                         if gift.native.unique != nil && disallowedGifts.contains(.unique) {
                             return false

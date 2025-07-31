@@ -2768,7 +2768,7 @@ class ChatServiceRowView: TableRowView {
             }
 
             if let emoji {
-                let emojiFrame = size.bounds.insetBy(dx: 4, dy: 4).offsetBy(dx: 15, dy: 0)
+                let emojiFrame = size.bounds.offsetBy(dx: 0, dy: -60)
                 transition.updateFrame(view: emoji, frame: emojiFrame)
             }
 
