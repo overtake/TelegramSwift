@@ -56,7 +56,7 @@ private func commonGroupsEntries(state: GroupsInCommonState, arguments: GroupsIn
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsetsZero, viewType: tuple.viewType, action: {
                 arguments.open(tuple.peer.peer.id)
-            })
+            }, fullSize: true)
         }))
         index += 1
     }

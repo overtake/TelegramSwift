@@ -379,12 +379,14 @@ class GeneralRowItem: TableRowItem {
     }
     
     let containable: Bool
+    let fullSize: Bool
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false, containable: Bool = false) {
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false, containable: Bool = false, fullSize: Bool = false) {
         self.type = type
         _height = height
         _stableId = stableId
         self.border = border
+        self.fullSize = fullSize
         self._inset = inset
         self.containable = containable
         self.customTheme = customTheme
@@ -435,7 +437,11 @@ class GeneralRowItem: TableRowItem {
         case .legacy:
             return self.width - self.inset.left - self.inset.right
         case .modern:
-            return min(600, self.width - self.inset.left - self.inset.right)
+            if fullSize {
+                return self.width - self.inset.left - self.inset.right
+            } else {
+                return min(600, self.width - self.inset.left - self.inset.right)
+            }
         }
     }
     
