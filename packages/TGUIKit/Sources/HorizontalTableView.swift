@@ -127,7 +127,7 @@ open class HorizontalScrollView : ScrollView {
             return
         }
         
-        if contentView.bounds == self.frame {
+        if documentSize == self.frame.size {
             superview?.scrollWheel(with: event)
             return
         }
