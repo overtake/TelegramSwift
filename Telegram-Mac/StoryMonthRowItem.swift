@@ -113,7 +113,7 @@ final class StoryMonthRowItem : GeneralRowItem {
         self.pinnedIds = pinnedIds
         self.rowCountValue = rowCount
         self.presentation = presentation
-        super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsets())
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsets(), fullSize: !standalone)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {

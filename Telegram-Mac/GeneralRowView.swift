@@ -61,7 +61,10 @@ class GeneralContainableRowView : TableRowView {
     }
     
     var maxBlockWidth: CGFloat {
-        return 600
+        guard let item = item as? GeneralRowItem else {
+            return 600
+        }
+        return item.fullSize ? frame.width : 600
     }
     var maxWidth: CGFloat {
         return frame.width

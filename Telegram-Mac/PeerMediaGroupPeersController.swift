@@ -129,7 +129,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                         arguments.peerInfo(peer.id)
                     }, contextMenuItems: {
                         return .single(menuItems)
-                    }, inputActivity: inputActivity, highlightVerified: true, story: stories?.subscriptionItem(peer), openStory: arguments.openStory)
+                    }, inputActivity: inputActivity, highlightVerified: true, story: stories?.subscriptionItem(peer), openStory: arguments.openStory, fullSize: true)
                 }))
             case let .showMore(_, _, viewType):
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_show_more"), equatable: nil, comparable: nil, item: { initialSize, stableId in
