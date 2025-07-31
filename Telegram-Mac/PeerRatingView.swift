@@ -44,7 +44,7 @@ final class PeerRatingView : Control {
 //
     
     var smallSize: NSSize {
-        return NSMakeSize(22, 22)
+        return NSMakeSize(26, 26)
     }
     
     func set(data: TelegramStarRating, context: AccountContext, borderColor: NSColor, bgColor: NSColor, textColor: NSColor, animated: Bool) {
@@ -91,7 +91,7 @@ final class PeerRatingView : Control {
                 context.setBlendMode(.normal)
             }
             
-            let attributedText = NSAttributedString.initialize(string: "\(data.level)", color: textColor, font: NSFont.bold(10.0))
+            let attributedText = NSAttributedString.initialize(string: "\(data.level)", color: textColor, font: NSFont.bold(11))
             
             let titleScale: CGFloat
             if data.level < 10 {

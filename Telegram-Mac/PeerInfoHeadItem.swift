@@ -559,6 +559,22 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
     }
     
+    var hasBackgroundGradient: Bool {
+        if let emojiStatus = peer?.emojiStatus {
+            switch emojiStatus.content {
+            case .starGift:
+                return true
+            default:
+                break
+            }
+        }
+        if let nameColor = nameColor, threadId == nil, !editing {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     var actionColor: NSColor {
         if let nameColor = nameColor, threadId == nil, !editing {
             let textColor = context.peerNameColors.getProfile(nameColor).main.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
@@ -2127,7 +2143,7 @@ private final class PeerInfoHeadView : GeneralRowView {
         }
         
 
-        if let emoji = item.peer?.profileBackgroundEmojiId, !item.editing {
+        if let emoji = item.peer?.profileBackgroundEmojiId, !item.editing, item.hasBackgroundGradient {
             let current: PeerInfoSpawnEmojiView
             if let view = self.emojiSpawn {
                 current = view
