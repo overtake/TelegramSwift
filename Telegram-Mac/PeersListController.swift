@@ -2114,7 +2114,7 @@ private class SearchContainer : Control {
                     items.append(.init(title: strings().chatListAppsTag, index: index, uniqueId: -1, selected: state.selectedTag == .apps, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                     //TODOLAG
-                    items.append(.init(title: "Posts", index: index, uniqueId: 0, selected: state.selectedTag == .globalPosts, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                    items.append(.init(title: strings().chatListPostsTag, index: index, uniqueId: 0, selected: state.selectedTag == .globalPosts, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
 
                 }

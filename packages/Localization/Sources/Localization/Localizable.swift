@@ -7795,6 +7795,8 @@ public final class L10n {
   public static var chatListPopoverConfirm: String  { return L10n.tr("Localizable", "ChatList.Popover.Confirm") }
   /// Read All
   public static var chatListPopoverReadAll: String  { return L10n.tr("Localizable", "ChatList.Popover.ReadAll") }
+  /// Posts
+  public static var chatListPostsTag: String  { return L10n.tr("Localizable", "ChatList.Posts.Tag") }
   /// Collapse
   public static var chatListRevealActionCollapse: String  { return L10n.tr("Localizable", "ChatList.RevealAction.Collapse") }
   /// Expand
