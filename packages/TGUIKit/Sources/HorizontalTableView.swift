@@ -127,6 +127,12 @@ open class HorizontalScrollView : ScrollView {
             return
         }
         
+        if contentView.bounds == self.frame {
+            superview?.scrollWheel(with: event)
+            return
+        }
+        
+        
         var scrollPoint = contentView.bounds.origin
         let isInverted: Bool = System.isScrollInverted
         if event.scrollingDeltaY != 0 {

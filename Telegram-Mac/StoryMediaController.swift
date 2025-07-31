@@ -1714,7 +1714,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
     private var perRowCount: Int {
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
-        let blockWidth = min(600, atomicSize.with { $0.width }) - (standalone ? 60 : 0)
+        let blockWidth = atomicSize.with ({ $0.width })//min(600, atomicSize.with { $0.width }) - (standalone ? 60 : 0)
         while true {
             let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)

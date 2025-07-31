@@ -332,7 +332,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     private var perRowCount: Int {
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
-        let blockWidth = min(600, atomicSize.with { $0.width })
+        let blockWidth = atomicSize.with { $0.width }//min(600, atomicSize.with { $0.width })
         while true {
             let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)
@@ -348,7 +348,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     private func perPageCount() -> Int {
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
-        let blockWidth = min(600, atomicSize.with { $0.width })
+        let blockWidth = atomicSize.with { $0.width }//min(600, atomicSize.with { $0.width })
         while true {
             let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)

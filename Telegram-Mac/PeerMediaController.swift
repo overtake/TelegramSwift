@@ -127,7 +127,7 @@ protocol PeerMediaSearchable : AnyObject {
     override func layout() {
         super.layout()
         
-        let blockWidth = min(600, frame.width - sectionOffset * 2)
+        let blockWidth = frame.width//min(600, frame.width - sectionOffset * 2)
         
         
         view.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), sectionOffset, blockWidth, frame.height - sectionOffset)
@@ -582,9 +582,9 @@ protocol PeerMediaSearchable : AnyObject {
         
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
-//            if isLoaded() {
-//                currentMainTableView?(genericView.mainTable, initialMode != nil, initialMode != nil)
-//            }
+            if isLoaded() {
+                currentMainTableView?(genericView.mainTable, initialMode != nil, initialMode != nil)
+            }
         }
     }
     
