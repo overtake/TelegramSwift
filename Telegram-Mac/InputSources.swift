@@ -19,7 +19,7 @@ final class InputSources: NSObject {
     
     var value: Signal<[String], NoError> {
         _inputSource.set(Signal { subscriber in
-            subscriber.putNext([currentKeyboardLanguage()])
+            subscriber.putNext(currentAppInputSource().uniqueElements)
             subscriber.putCompletion()
             return EmptyDisposable
         } |> runOn(.mainQueue()))
