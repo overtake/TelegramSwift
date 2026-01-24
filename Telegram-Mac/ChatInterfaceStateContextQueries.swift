@@ -91,7 +91,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 case .installed:
                     scope = [.installed]
                 }
-            return context.engine.stickers.searchStickers(query: query, emoticon: [], scope: scope) |> map { $0.items }
+            return context.engine.stickers.searchStickers(query: nil, emoticon: [query.basicEmoji.0], scope: scope) |> map { $0.items }
         }
         |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in
