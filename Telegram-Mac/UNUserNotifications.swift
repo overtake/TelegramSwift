@@ -61,9 +61,9 @@ class UNUserNotifications : NSObject {
     }
     
     static func recurrentAuthorizationStatus(_ context: AccountContext) -> Signal<AuthorizationStatus, NoError> {
-        return context.window.keyWindowUpdater |> mapToSignal { _ in
+        return .single(.authorized) |> then(context.window.keyWindowUpdater |> mapToSignal { _ in
             return (authorizationStatus |> then(.complete() |> suspendAwareDelay(1 * 60.0, queue: Queue.concurrentDefaultQueue()))) |> restart
-        }
+        })
     }
     
     static var authorizationStatus: Signal<AuthorizationStatus, NoError> {
