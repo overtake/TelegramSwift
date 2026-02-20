@@ -1158,11 +1158,12 @@ class PeerListContainerView : Control {
         
         self.mode = state.mode
         
-        if let stories = state.stories, state.hasStories {
-            self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
-        } else {
+        // Закомментировано: отключено отображение блока сторис в интерфейсе
+        // if let stories = state.stories, state.hasStories {
+        //     self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+        // } else {
             self.storiesItem = nil
-        }
+        // }
         
         if !state.filterData.isEmpty && !state.filterData.sidebar, state.splitState != .minimisize, state.mode == .plain {
             self.foldersItem = .init(frame.size, context: arguments.context, tabs: state.filterData.tabs, selected: state.filterData.filter, counters: state.filterData.badges, action: arguments.setupFilter, openSettings: {
@@ -1733,7 +1734,10 @@ class PeerListContainerView : Control {
         
 
 
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - bottomInset))
+        // Закомментировано: исправлено позиционирование tableView - теперь он начинается после поиска
+        // transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - bottomInset))
+        let tableViewY = searchY + componentSize.height
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tableViewY, size.width, size.height - tableViewY - bottomInset))
         
         
         if let downloads = downloads {

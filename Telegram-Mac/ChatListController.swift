@@ -1139,7 +1139,8 @@ class ChatListController : PeersListController {
                 animated = false
             }
             
-            mapped.append(.space)
+            // Закомментировано: отключено добавление блока сторис в список
+            // mapped.append(.space)
 
             
             let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
