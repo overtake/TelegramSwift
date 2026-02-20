@@ -59,7 +59,8 @@
 		270376412CA59398003EC235 /* NativeMediaPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270376402CA59398003EC235 /* NativeMediaPlayer.swift */; };
 		27049A532DC9F92E001B2E3E /* MonoforumVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27049A522DC9F926001B2E3E /* MonoforumVerticalView.swift */; };
 		27049A552DC9FC1C001B2E3E /* MonoforumHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27049A542DC9FC17001B2E3E /* MonoforumHorizontalView.swift */; };
-		27049A572DCBA64A001B2E3E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 27049A562DCBA64A001B2E3E /* FirebaseCrashlytics */; settings = {ATTRIBUTES = (Weak, ); }; };
+			// Закомментировано: отключен Firebase для локальной сборки
+			// 27049A572DCBA64A001B2E3E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 27049A562DCBA64A001B2E3E /* FirebaseCrashlytics */; settings = {ATTRIBUTES = (Weak, ); }; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270595D82B6941C400E05493 /* ChatSearchHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270595D72B6941C400E05493 /* ChatSearchHeader.swift */; };
 		270595E42B6BDCF500E05493 /* menu_boost.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270595E32B6BDCF500E05493 /* menu_boost.tgs */; };
@@ -269,7 +270,8 @@
 		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
 		274DF1DB2DC0BE0400188E7A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 274DF1DA2DC0BE0400188E7A /* GoogleService-Info.plist */; };
-		274DF1DE2DC0BF6F00188E7A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */; settings = {ATTRIBUTES = (Weak, ); }; };
+			// Закомментировано: отключен Firebase для локальной сборки
+			// 274DF1DE2DC0BF6F00188E7A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */; settings = {ATTRIBUTES = (Weak, ); }; };
 		274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274E585F2A825A6600EEBDBF /* PeersStatusView.swift */; };
 		2750B8C22B887E9C0035C37F /* business_chatbot.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BD2B887E980035C37F /* business_chatbot.tgs */; };
 		2750B8C32B887E9C0035C37F /* business_hours.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2750B8BE2B887E990035C37F /* business_hours.tgs */; };
@@ -3525,7 +3527,8 @@
 				2796FEF527423D2100DA653C /* EDSunriseSet in Frameworks */,
 				2796FEFB2742408C00DA653C /* OCR in Frameworks */,
 				27D43DAE27917738006968A6 /* libjpeg.a in Frameworks */,
-				27049A572DCBA64A001B2E3E /* FirebaseCrashlytics in Frameworks */,
+					// Закомментировано: отключен Firebase для локальной сборки
+					// 27049A572DCBA64A001B2E3E /* FirebaseCrashlytics in Frameworks */,
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
@@ -3537,7 +3540,8 @@
 				27EBC7B227579A7200C6A820 /* Reactions in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
-				274DF1DE2DC0BF6F00188E7A /* FirebaseAnalytics in Frameworks */,
+					// Закомментировано: отключен Firebase для локальной сборки
+					// 274DF1DE2DC0BF6F00188E7A /* FirebaseAnalytics in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				27D696F2274F844D008A723E /* Strings in Frameworks */,
 				2796FF01274242D200DA653C /* GZIP in Frameworks */,
@@ -6994,7 +6998,8 @@
 				C23D0D7B1F1A648600AF5151 /* Fonts */,
 				C2786FF51FEC128F001FB044 /* Palettes */,
 				C2D85FD51F25FE5400EDEA15 /* ShellScript */,
-				9F193BD82130B968001C0800 /* ShellScript */,
+				// Закомментировано: отключен скрипт исправления Firebase фреймворков (Firebase отключен)
+				// 9F193BD82130B968001C0800 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -7076,8 +7081,9 @@
 				27B29E402CABEC55007FDA6B /* TelegramSystem */,
 				27BE52412D9AC72600F40837 /* TdBinding */,
 				2739D49F2DBFC3C50086DAEF /* DetectSpeech */,
-				274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */,
-				27049A562DCBA64A001B2E3E /* FirebaseCrashlytics */,
+					// Закомментировано: отключен Firebase для локальной сборки
+					// 274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */,
+					// 27049A562DCBA64A001B2E3E /* FirebaseCrashlytics */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7112,7 +7118,6 @@
 					D098C7141D7E175A007784E4 = {
 						CreatedOnToolsVersion = 8.0;
 						LastSwiftMigration = 0800;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.Mac = {
 								enabled = 1;
@@ -7692,7 +7697,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Fix Firebase frameworks structure for macOS (deep bundle format)\n# This script runs after all build phases but before code signing\n# Wait a bit to ensure frameworks are fully copied\nsleep 0.5\nfor fw in GoogleAppMeasurement FirebaseAnalytics GoogleAppMeasurementIdentitySupport; do\n  fw_path=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Frameworks/${fw}.framework\"\n  if [ -d \"$fw_path\" ] && [ -f \"$fw_path/Info.plist\" ] && [ ! -d \"$fw_path/Versions\" ]; then\n    cd \"$fw_path\"\n    mkdir -p Versions/A/Resources\n    bin_name=$(find . -maxdepth 1 -type f -perm +111 ! -name \".*\" | head -1 | xargs basename)\n    [ -z \"$bin_name\" ] && bin_name=\"$fw\"\n    [ -f \"$bin_name\" ] && [ ! -L \"$bin_name\" ] && mv \"$bin_name\" Versions/A/ 2>/dev/null || true\n    [ -f Info.plist ] && [ ! -L Info.plist ] && mv Info.plist Versions/A/Resources/ 2>/dev/null || true\n    [ -d \"_CodeSignature\" ] && mv \"_CodeSignature\" Versions/A/ 2>/dev/null || true\n    for item in *; do\n      [ \"$item\" = \"Versions\" ] && continue\n      [ -L \"$item\" ] && continue\n      [ -d \"$item\" ] && mv \"$item\" Versions/A/ 2>/dev/null || true\n      [ -f \"$item\" ] && mv \"$item\" Versions/A/ 2>/dev/null || true\n    done\n    ln -sf \"Versions/A/$bin_name\" \"$bin_name\" 2>/dev/null || true\n    ln -sf \"Versions/Current/Resources/Info.plist\" Info.plist 2>/dev/null || true\n    ln -sf \"A\" Versions/Current 2>/dev/null || true\n  fi\ndone\n";
+			shellScript = "# Fix Firebase frameworks structure for macOS (deep bundle format)\n# This script runs after all build phases but before code signing\n# Wait a bit to ensure frameworks are fully copied\nsleep 0.5\nfor fw in GoogleAppMeasurement FirebaseAnalytics GoogleAppMeasurementIdentitySupport; do\n  fw_path=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Frameworks/${fw}.framework\"\n  if [ -d \"$fw_path\" ]; then\n    cd \"$fw_path\"\n    # Закомментировано: агрессивная очистка лишних файлов которые вызывают ошибку \"unsealed contents\"\n    find . -name \".DS_Store\" -delete 2>/dev/null || true\n    find . -name \"__MACOSX\" -type d -exec rm -rf {} + 2>/dev/null || true\n    find . -name \"._*\" -delete 2>/dev/null || true\n    find . -name \"*.swiftmodule\" -type d -exec find {} -name \".*\" -delete \\; 2>/dev/null || true\n    # Удаляем все файлы в корне фреймворка кроме необходимых (если структура уже правильная)\n    if [ -d \"Versions\" ]; then\n      # Если структура уже правильная, удаляем все лишнее в корне\n      for item in *; do\n        [ \"$item\" = \"Versions\" ] && continue\n        [ \"$item\" = \"Info.plist\" ] && continue\n        [ \"$item\" = \"_CodeSignature\" ] && continue\n        [ -L \"$item\" ] && continue\n        # Удаляем все файлы и папки кроме символических ссылок и необходимых\n        [ -f \"$item\" ] && rm -f \"$item\" 2>/dev/null || true\n        [ -d \"$item\" ] && rm -rf \"$item\" 2>/dev/null || true\n      done\n    fi\n    if [ -f \"Info.plist\" ] && [ ! -d \"Versions\" ]; then\n      mkdir -p Versions/A/Resources\n      bin_name=$(find . -maxdepth 1 -type f -perm +111 ! -name \".*\" | head -1 | xargs basename)\n      [ -z \"$bin_name\" ] && bin_name=\"$fw\"\n      [ -f \"$bin_name\" ] && [ ! -L \"$bin_name\" ] && mv \"$bin_name\" Versions/A/ 2>/dev/null || true\n      [ -f Info.plist ] && [ ! -L Info.plist ] && mv Info.plist Versions/A/Resources/ 2>/dev/null || true\n      [ -d \"_CodeSignature\" ] && mv \"_CodeSignature\" Versions/A/ 2>/dev/null || true\n      for item in *; do\n        [ \"$item\" = \"Versions\" ] && continue\n        [ -L \"$item\" ] && continue\n        [ -d \"$item\" ] && mv \"$item\" Versions/A/ 2>/dev/null || true\n        [ -f \"$item\" ] && mv \"$item\" Versions/A/ 2>/dev/null || true\n      done\n      ln -sf \"Versions/A/$bin_name\" \"$bin_name\" 2>/dev/null || true\n      ln -sf \"Versions/Current/Resources/Info.plist\" Info.plist 2>/dev/null || true\n      ln -sf \"A\" Versions/Current 2>/dev/null || true\n    fi\n    # Финальная проверка - удаляем все что осталось лишнего в корне\n    for item in *; do\n      [ \"$item\" = \"Versions\" ] && continue\n      [ \"$item\" = \"Info.plist\" ] && continue\n      [ \"$item\" = \"_CodeSignature\" ] && continue\n      [ -L \"$item\" ] && continue\n      [ -f \"$item\" ] && rm -f \"$item\" 2>/dev/null || true\n      [ -d \"$item\" ] && rm -rf \"$item\" 2>/dev/null || true\n    done\n    # Очищаем расширенные атрибуты которые могут вызывать проблемы с подписью\n    xattr -cr . 2>/dev/null || true\n  fi\ndone\n";
 		};
 		C2D85FD51F25FE5400EDEA15 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -8836,6 +8841,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				NEW_SETTING = "";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.FocusIntents;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -8888,6 +8894,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
 				NEW_SETTING = "";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.FocusIntents;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -8957,12 +8964,12 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = NO;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Sandbox.entitlements";
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 245482;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 9JLFAPH7R7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -9001,7 +9008,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.14.1;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-Wl,-ld_classic",
@@ -9057,7 +9064,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.14.1;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram.TelegramShare;
@@ -9109,7 +9116,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.14.1;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				OTHER_LDFLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				"OTHER_SWIFT_FLAGS[arch=*]" = "";
@@ -9231,7 +9238,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 11.14.1;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp=none";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-Wl,-ld_classic",
@@ -9294,14 +9301,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = exactVersion;
-				version = 10.3.0;
-			};
-		};
+		// Закомментировано: отключен Firebase для локальной сборки
+		// 274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		// 	isa = XCRemoteSwiftPackageReference;
+		// 	repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+		// 	requirement = {
+		// 		kind = exactVersion;
+		// 		version = 10.3.0;
+		// 	};
+		// };
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -9341,11 +9349,12 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = libwebp;
 		};
-		27049A562DCBA64A001B2E3E /* FirebaseCrashlytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCrashlytics;
-		};
+		// Закомментировано: отключен Firebase для локальной сборки
+		// 27049A562DCBA64A001B2E3E /* FirebaseCrashlytics */ = {
+		// 	isa = XCSwiftPackageProductDependency;
+		// 	package = 274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+		// 	productName = FirebaseCrashlytics;
+		// };
 		271891F72B08A7DB0008B238 /* LokiRng */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LokiRng;
@@ -9398,11 +9407,12 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ApiCredentials;
 		};
-		274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalytics;
-		};
+		// Закомментировано: отключен Firebase для локальной сборки
+		// 274DF1DD2DC0BF6F00188E7A /* FirebaseAnalytics */ = {
+		// 	isa = XCSwiftPackageProductDependency;
+		// 	package = 274DF1DC2DC0BF6F00188E7A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+		// 	productName = FirebaseAnalytics;
+		// };
 		2755491C274B7FCB0098A3CD /* TextRecognizing */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TextRecognizing;
