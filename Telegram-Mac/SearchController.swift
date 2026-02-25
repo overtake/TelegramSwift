@@ -971,9 +971,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     return peer.peer?.botInfo?.flags.contains(.hasWebApp) == true
                                 }
                             } else {
-                                // Закомментировано: исключаем каналы из локального поиска
-                                // return true
-                                return peer.peer?.isChannel != true
+                                return true
                             }
                         }
                     }
@@ -1033,11 +1031,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             if let peer = inLinkPeer {
                                 if ids[peer.id] == nil {
                                     ids[peer.id] = peer.id
-                                    // Закомментировано: исключаем каналы из результатов поиска по ссылке
-                                    if !peer.isChannel {
-                                        entries.append(.localPeer(.init(peer: peer), index, nil, .none, true, false, nil))
-                                        index += 1
-                                    }
+                                    entries.append(.localPeer(.init(peer: peer), index, nil, .none, true, false, nil))
+                                    index += 1
                                 }
                             }
                             
@@ -1045,15 +1040,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 if ids[rendered.peerId] == nil {
                                     ids[rendered.peerId] = rendered.peerId
                                     if let peer = rendered.chatMainPeer {
-                                        // Закомментировано: исключаем каналы из локальных результатов
-                                        if !peer.isChannel {
-                                            var wrapper:SearchSecretChatWrapper? = nil
-                                            if rendered.peers[rendered.peerId] is TelegramSecretChat {
-                                                wrapper = SearchSecretChatWrapper(peerId: rendered.peerId)
-                                            }
-                                            entries.append(.localPeer(rendered, index, wrapper, peers.1[rendered.peerId] ?? .none, true, true, peers.2[peer.id] ?? nil))
-                                            index += 1
+                                        var wrapper:SearchSecretChatWrapper? = nil
+                                        if rendered.peers[rendered.peerId] is TelegramSecretChat {
+                                            wrapper = SearchSecretChatWrapper(peerId: rendered.peerId)
                                         }
+                                        entries.append(.localPeer(rendered, index, wrapper, peers.1[rendered.peerId] ?? .none, true, true, peers.2[peer.id] ?? nil))
+                                        index += 1
                                     }
                                     
                                 }
@@ -1085,20 +1077,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             foundRemotePeers = query.hasPrefix("#") || query.hasPrefix("$") || !options.contains(.chats) || !globalTags.isEmpty || globalTags.listType == .bots ? .single(([], [], false)) : .single(([], [], true)) |> then(combineLatest(context.engine.contacts.searchRemotePeers(query: query, scope: globalTags.scope(.allChats)), adPeers)
                                 |> delay(0.2, queue: prepareQueue)
                                 |> map { (founds, adPeers) -> ([FoundPeer], [FoundPeer], [AdPeer]) in
-                                    // Закомментировано: фильтрация каналов из глобального поиска
-                                    // Исключаем каналы из результатов поиска
                                     return (founds.0.filter { found -> Bool in
                                         let first = ids[found.peer.id] == nil
                                         ids[found.peer.id] = found.peer.id
-                                        // Исключаем каналы из результатов
-                                        // return first
-                                        return first && !found.peer.isChannel
+                                        return first
                                     }, founds.1.filter { found -> Bool in
                                         let first = ids[found.peer.id] == nil
                                         ids[found.peer.id] = found.peer.id
-                                        // Исключаем каналы из результатов
-                                        // return first
-                                        return first && !found.peer.isChannel
+                                        return first
                                     }, adPeers)
                                 
                                  }
@@ -1137,34 +1123,29 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     }
                                 }
                                 |> map { _local, _remote, unread, adPeers -> ([ChatListSearchEntry], [ChatListSearchEntry], Bool) in
+                                    let hideChannels = FastSettings.hideChannelsFromSearch
                                     var local: [ChatListSearchEntry] = []
                                     var index = 1000
                                     for peer in _local {
-                                        // Закомментировано: исключаем каналы из локальных результатов
-                                        if !peer.peer.isChannel {
-                                            local.append(.localPeer(.init(peer), index, nil, unread[peer.peer.id] ?? .none, true, true, nil))
-                                            index += 1
-                                        }
+                                        if hideChannels && peer.peer is TelegramChannel { continue }
+                                        local.append(.localPeer(.init(peer), index, nil, unread[peer.peer.id] ?? .none, true, true, nil))
+                                        index += 1
                                     }
                                     
                                     var remote: [ChatListSearchEntry] = []
                                     index = 10001
                                     if !adPeers.isEmpty {
                                         for adPeer in adPeers {
-                                            // Закомментировано: исключаем каналы из рекламных результатов
-                                            if !adPeer.peer._asPeer().isChannel {
-                                                remote.append(.globalPeer(.init(peer: adPeer.peer._asPeer(), subscribers: nil), .none, index, adPeer))
-                                                index += 1
-                                            }
+                                            if hideChannels && adPeer.peer._asPeer() is TelegramChannel { continue }
+                                            remote.append(.globalPeer(.init(peer: adPeer.peer._asPeer(), subscribers: nil), .none, index, adPeer))
+                                            index += 1
                                         }
                                     }
                                 
                                     for peer in _remote {
-                                        // Закомментировано: исключаем каналы из глобальных результатов
-                                        if !peer.peer.isChannel {
-                                            remote.append(.globalPeer(peer, unread[peer.peer.id] ?? .none, index, nil))
-                                            index += 1
-                                        }
+                                        if hideChannels && peer.peer is TelegramChannel { continue }
+                                        remote.append(.globalPeer(peer, unread[peer.peer.id] ?? .none, index, nil))
+                                        index += 1
                                     }
                                     return (local, remote, false)
                                 })
@@ -1326,7 +1307,19 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
                             
-                            let peers = (localPeers + remotePeers.0)
+                            var peers = localPeers + remotePeers.0
+                            if FastSettings.hideChannelsFromSearch {
+                                peers = peers.filter { entry in
+                                    switch entry {
+                                    case let .localPeer(rendered, _, _, _, _, _, _):
+                                        return rendered.chatMainPeer is TelegramChannel == false
+                                    case let .globalPeer(found, _, _, _):
+                                        return (found.peer as? TelegramChannel) == nil
+                                    default:
+                                        return true
+                                    }
+                                }
+                            }
 
                             switch target {
                             case .forum:
@@ -1748,16 +1741,16 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
         
         
-        let transition = combineLatest(queue: prepareQueue, searchItems, appearanceSignal, context.globalPeerHandler.get() |> distinctUntilChanged, pinnedPromise.get()) |> map { value, appearance, location, pinnedItems in
-            return (value.0.map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}, value.1, value.2 ? nil : location, value.2, pinnedItems, value.3, value.4)
+        let transition = combineLatest(queue: prepareQueue, searchItems, appearanceSignal, context.globalPeerHandler.get() |> distinctUntilChanged, pinnedPromise.get()) |> map { (value: ([ChatListSearchEntry], Bool, Bool, SearchMessagesState?, SearchMessagesResult?), appearance: Appearance, location: ChatLocation?, pinnedItems: [PinnedItemId]) in
+            return (value.0.map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }, value.1, value.2 ? nil : location, value.2, pinnedItems, value.3, value.4)
         }
-        |> map { entries, loading, location, animated, pinnedItems, searchMessagesState, searchMessagesResult -> (TableUpdateTransition, Bool, ChatLocation?, SearchMessagesState?, SearchMessagesResult?) in
+        |> map { (entries: [AppearanceWrapperEntry<ChatListSearchEntry>], loading: Bool, location: ChatLocation?, animated: Bool, pinnedItems: [PinnedItemId], searchMessagesState: SearchMessagesState?, searchMessagesResult: SearchMessagesResult?) -> (TableUpdateTransition, Bool, ChatLocation?, SearchMessagesState?, SearchMessagesResult?) in
             let transition = prepareEntries(from: previousSearchItems.swap(entries) , to: entries, arguments: arguments, pinnedItems: pinnedItems, initialSize: atomicSize.modify { $0 }, animated: animated, target: target)
             return (transition, loading, location, searchMessagesState, searchMessagesResult)
         } |> deliverOnMainQueue
         
         
-        disposable.set(transition.start(next: { [weak self] (transition, loading, location, searchMessagesState, searchMessagesResult) in
+        disposable.set(transition.start(next: { [weak self] (transition: TableUpdateTransition, loading: Bool, location: ChatLocation?, searchMessagesState: SearchMessagesState?, searchMessagesResult: SearchMessagesResult?) in
             guard let `self` = self else {return}
             self.genericView.merge(with: transition)
             self.isLoading.set(.single(loading))

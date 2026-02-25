@@ -216,8 +216,9 @@ struct PeerListState : Equatable {
                     if state.hasDownloads {
                         list.append(.downloads)
                     }
-                    // Закомментировано: убрана вкладка каналов из поиска
-                    // list.append(.channels)
+                    if !FastSettings.hideChannelsFromSearch {
+                        list.append(.channels)
+                    }
                     list.append(.apps)
                 }
                 
@@ -1158,12 +1159,11 @@ class PeerListContainerView : Control {
         
         self.mode = state.mode
         
-        // Закомментировано: отключено отображение блока сторис в интерфейсе
-        // if let stories = state.stories, state.hasStories {
-        //     self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
-        // } else {
+        if let stories = state.stories, state.hasStories {
+            self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+        } else {
             self.storiesItem = nil
-        // }
+        }
         
         if !state.filterData.isEmpty && !state.filterData.sidebar, state.splitState != .minimisize, state.mode == .plain {
             self.foldersItem = .init(frame.size, context: arguments.context, tabs: state.filterData.tabs, selected: state.filterData.filter, counters: state.filterData.badges, action: arguments.setupFilter, openSettings: {
@@ -1734,10 +1734,7 @@ class PeerListContainerView : Control {
         
 
 
-        // Закомментировано: исправлено позиционирование tableView - теперь он начинается после поиска
-        // transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - bottomInset))
-        let tableViewY = searchY + componentSize.height
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tableViewY, size.width, size.height - tableViewY - bottomInset))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - bottomInset))
         
         
         if let downloads = downloads {
@@ -2106,9 +2103,10 @@ private class SearchContainer : Control {
                         items.append(.init(title: strings().chatListDownloadsTag, index: index, uniqueId: -3, selected: state.selectedTag == .downloads, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                         index += 1
                     }
-                    // Закомментировано: убрана вкладка каналов из интерфейса поиска
-                    // items.append(.init(title: strings().chatListChannelsTag, index: index, uniqueId: -2, selected: state.selectedTag == .channels, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
-                    // index += 1
+                    if !FastSettings.hideChannelsFromSearch {
+                        items.append(.init(title: strings().chatListChannelsTag, index: index, uniqueId: -2, selected: state.selectedTag == .channels, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
+                        index += 1
+                    }
                     items.append(.init(title: strings().chatListAppsTag, index: index, uniqueId: -1, selected: state.selectedTag == .apps, insets: insets, icon: nil, theme: presentation, equatable: UIEquatable(state)))
                     index += 1
                 }
@@ -2533,9 +2531,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
                 
         let storyList = self.storyList
+        let hideStoriesSignal = Signal<Bool, NoError>.single(FastSettings.hideStories) |> then(FastSettings.hideStoriesPromise.get())
         let storyState: Signal<EngineStorySubscriptions?, NoError>
         if let storyList = storyList {
-            storyState = storyList |> map(Optional.init)
+            let rawStoryState = storyList |> map(Optional.init)
+            storyState = combineLatest(hideStoriesSignal, rawStoryState) |> map { hide, list in hide ? nil : list }
         } else {
             storyState = .single(nil)
         }

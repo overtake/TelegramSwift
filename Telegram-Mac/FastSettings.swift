@@ -168,6 +168,8 @@ class FastSettings {
     private static let kSidebarType = "kSidebarType1"
     private static let kSidebarShownType = "kSidebarShownType2"
     private static let kDebugWebApp = "kDebugWebApp"
+    private static let kHideStories = "kHideStories"
+    private static let kHideChannelsFromSearch = "kHideChannelsFromSearch"
     private static let kRecordingStateType = "kRecordingStateType"
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
@@ -473,7 +475,35 @@ class FastSettings {
         }
     }
     
+    /// Скрыть блок сторис в списке чатов (показывать архив вместо основной ленты).
+    static var hideStories: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: kHideStories) == nil {
+                return true
+            }
+            return UserDefaults.standard.bool(forKey: kHideStories)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kHideStories)
+            hideStoriesPromise.set(newValue)
+        }
+    }
     
+    /// Уведомление об изменении настройки «Скрыть сторис» для обновления UI без рестарта.
+    static let hideStoriesPromise: ValuePromise<Bool> = ValuePromise(UserDefaults.standard.object(forKey: kHideStories) == nil ? true : UserDefaults.standard.bool(forKey: kHideStories), ignoreRepeated: true)
+    
+    /// Скрыть вкладку «Каналы» в поиске.
+    static var hideChannelsFromSearch: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: kHideChannelsFromSearch) == nil {
+                return true
+            }
+            return UserDefaults.standard.bool(forKey: kHideChannelsFromSearch)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kHideChannelsFromSearch)
+        }
+    }
     
     static var sidebarEnabled:Bool {
         return UserDefaults.standard.bool(forKey: kSidebarType)

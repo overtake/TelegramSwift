@@ -931,10 +931,15 @@ class ChatListController : PeersListController {
         
         //            self.storyList =
 
-        
+        let hideStoriesSignal: Signal<Bool, NoError> = .single(FastSettings.hideStories) |> then(FastSettings.hideStoriesPromise.get())
         let storyState: Signal<EngineStorySubscriptions?, NoError>
         if self.mode.groupId == .root {
-            storyState = context.engine.messages.storySubscriptions(isHidden: true) |> map(Optional.init)
+            storyState = hideStoriesSignal |> mapToSignal { hide in
+                if hide {
+                    return .single(nil)
+                }
+                return context.engine.messages.storySubscriptions(isHidden: false) |> map(Optional.init)
+            }
         } else {
             storyState = .single(nil)
         }
@@ -1024,6 +1029,8 @@ class ChatListController : PeersListController {
                 return .chat(item.0, state.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state.selectedForum, appearMode: state.controllerAppear, hideContent: state.appear == .short, folders: state.filterData, canPreviewChat: additionalSettings.previewChats)
             }
             
+            let effectiveStoryState: EngineStorySubscriptions? = FastSettings.hideStories ? nil : storyState
+            
             if case .filter = filterData.filter, mapped.isEmpty {} else {
                 if !update.list.hasLater {
                     let hideStatus: ItemHideStatus
@@ -1034,17 +1041,15 @@ class ChatListController : PeersListController {
                         hideStatus = hiddenItems.archive
                     }
                     for (i, group) in update.list.groupItems.reversed().enumerated() {
-                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short, storyState))
+                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short, effectiveStoryState))
                     }
-                    if state.mode == .plain, state.filterData.filter == .allChats, !update.list.hasLater {
-                        if update.list.groupItems.isEmpty, let storyState = storyState, !storyState.items.isEmpty {
-                            mapped.append(.group(0, .init(id: .archive, topMessage: nil, items: [], unreadCount: 0), animateGroupNextTransition.swap(nil) == .archive, hideStatus, state.controllerAppear, state.appear == .short, storyState))
-                        }
-                    }
+                    // Строку сторис в таблицу не добавляем — кружочки рисуются только в фиксированном storiesView (PeersListController)
                 }
             }
             
-           
+            if state.mode == .plain {
+                mapped.insert(.space, at: 0)
+            }
             
             if mapped.isEmpty {
                 if !update.list.isLoading {

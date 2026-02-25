@@ -1239,6 +1239,7 @@
 		C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */; };
 		C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */; };
 		C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3AE1FD099AA00C1C849 /* DeveloperViewController.swift */; };
+		C21BE3C01FD099AB00C1C849 /* SandboxViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3BF1FD099AB00C1C849 /* SandboxViewController.swift */; };
 		C21BE3B11FD14CDB00C1C849 /* ParseAppearanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */; };
 		C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2203EA11DDE2AB8001E6AB6 /* ChatSelectText.swift */; };
 		C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221ED531EA684BE00471C65 /* DataAndStorageViewController.swift */; };
@@ -2909,6 +2910,7 @@
 		C21B24601ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SuggestionLocalizationViewController.swift; sourceTree = "<group>"; };
 		C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MMMenuItem.swift; sourceTree = "<group>"; };
 		C21BE3AE1FD099AA00C1C849 /* DeveloperViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperViewController.swift; sourceTree = "<group>"; };
+		C21BE3BF1FD099AB00C1C849 /* SandboxViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandboxViewController.swift; sourceTree = "<group>"; };
 		C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseAppearanceColors.swift; sourceTree = "<group>"; };
 		C2203E9F1DDE040F001E6AB6 /* libcommonCrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcommonCrypto.tbd; path = usr/lib/system/libcommonCrypto.tbd; sourceTree = SDKROOT; };
 		C2203EA11DDE2AB8001E6AB6 /* ChatSelectText.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatSelectText.swift; sourceTree = "<group>"; };
@@ -5172,6 +5174,7 @@
 			isa = PBXGroup;
 			children = (
 				C21BE3AE1FD099AA00C1C849 /* DeveloperViewController.swift */,
+				C21BE3BF1FD099AB00C1C849 /* SandboxViewController.swift */,
 				C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */,
 			);
 			name = developer;
@@ -7883,6 +7886,7 @@
 				2729C3CA2D7F384F00BD64CC /* FrozenAccountController.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatMessageAccessoryView.swift in Sources */,
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
+				C21BE3C01FD099AB00C1C849 /* SandboxViewController.swift in Sources */,
 				2719D8162A1F555500081079 /* StoryChatContent.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				27307E9C2ADEB45800D970EE /* SelectColorController.swift in Sources */,

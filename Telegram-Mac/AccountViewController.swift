@@ -151,6 +151,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case stars(index: Int, count: StarsAmount, viewType: GeneralViewType)
     case ton(index: Int, count: StarsAmount, viewType: GeneralViewType)
     case about(index: Int, viewType: GeneralViewType)
+    case sandbox(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
     case ask(index: Int, viewType: GeneralViewType)
 
@@ -212,8 +213,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(24)
         case .about:
             return .index(25)
+        case .sandbox:
+            return .index(26)
         case let .attach(index, _, _):
-            return .index(26 + index)
+            return .index(27 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -256,6 +259,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .activeSessions(index, _, _):
             return index
         case let .about(index, _):
+            return index
+        case let .sandbox(index, _):
             return index
         case let .passport(index, _, _):
             return index
@@ -409,6 +414,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .activeSessions(_, viewType, count):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsActiveSessions, icon: theme.icons.settingsSessions, activeIcon: theme.icons.settingsSessionsActive, type: count > 0 ? .nextContext("\(count)") : .none, viewType: viewType, action: {
                 arguments.presentController(RecentSessionsController(arguments.context), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .sandbox(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Sandbox", icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
+                arguments.context.bindings.rootNavigation().push(SandboxViewController(context: arguments.context))
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case .about:
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .modern(position: .single, insets: .init()), text: APP_VERSION_STRING, font: .normal(.text), color: theme.colors.grayText)
@@ -673,9 +682,14 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
     
+    if !context.isSupport {
+        entries.append(.sandbox(index: index, viewType: .singleItem))
+        index += 1
+    }
+    
     entries.append(.about(index: index, viewType: .singleItem))
     index += 1
-    
+
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
     
