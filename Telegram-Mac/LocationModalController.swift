@@ -10,10 +10,9 @@ import Cocoa
 import TGUIKit
 import MapKit
 import TelegramCore
-import SyncCore
 import SwiftSignalKit
 import Postbox
-
+import HackUtils
 
 
 private enum PickLocationState : Equatable {
@@ -81,7 +80,7 @@ private final class LocationMapView : View {
     private let headerTextView: TextView = TextView()
     private let header: View = View()
     private let expandContainer: Control = Control(frame: NSMakeRect(0, 0, 0, 50))
-    private let expandButton: TitleButton = TitleButton()
+    private let expandButton: TextButton = TextButton()
     private var state: LocationViewState = .normal(.user(nil))
     private var hasExpand: Bool = true
     private let loadingView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))
@@ -98,7 +97,6 @@ private final class LocationMapView : View {
         mapView.mapType = .standard
         mapView.isZoomEnabled = true
         mapView.isScrollEnabled = true
-        mapView.showsUserLocation = true
         mapView.showsZoomControls = true
         mapView.wantsLayer = true
         header.addSubview(headerTextView)
@@ -116,6 +114,8 @@ private final class LocationMapView : View {
         addSubview(expandContainer)
         locateButton.autohighlight = false
         mapView.addSubview(locationPinView)
+        
+        locateButton.scaleOnClick = true
     }
     
     fileprivate func getSelectedLocation() -> CLLocation? {
@@ -138,21 +138,22 @@ private final class LocationMapView : View {
         loadingView.progressColor = theme.colors.accent
         expandContainer.border = [.Top]
         expandContainer.backgroundColor = theme.colors.background
-        let title = TextViewLayout(.initialize(string: L10n.locationSendTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        let title = TextViewLayout(.initialize(string: strings().locationSendTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         title.measure(width: frame.width - 20)
         
         headerTextView.update(title)
         headerTextView.center()
     }
     
-    fileprivate func updateExpandState(_ state: LocationViewState, loading: Bool, hasVenues: Bool, animated: Bool, toggleExpand:@escaping(LocationViewState)->Void) {
+    fileprivate func updateExpandState(_ state: LocationViewState, loading: Bool, hasVenues: Bool, animated: Bool, toggleExpand:@escaping(LocationViewState)->Void, destination: SelectLocationDestination) {
         loadingView.isHidden = !loading && hasVenues
         expandButton.isHidden = loading || !hasVenues
-        hasExpand = (loading || hasVenues)
+        hasExpand = (loading || hasVenues) && destination == .chat
         self.state = state
         
         let duration: Double = 0.3
         let timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.spring
+        
         
         CATransaction.begin()
         let mapY: CGFloat
@@ -168,7 +169,7 @@ private final class LocationMapView : View {
             }
             locationPinView.change(opacity: loading ? 0 : 1, animated: animated)
             locationPinView.updateState(pickState, animated: animated)
-            expandButton.set(text: L10n.locationSendShowNearby, for: .Normal)
+            expandButton.set(text: strings().locationSendShowNearby, for: .Normal)
             tableView.change(size: NSMakeSize(frame.width, 60), animated: animated, timingFunction: CAMediaTimingFunctionName.spring)
             tableView.change(pos: NSMakePoint(0, frame.height - 60 - (hasExpand ? expandContainer.frame.height : 0)), animated: animated, duration: duration, timingFunction: timingFunction)
             mapY = header.frame.height
@@ -177,7 +178,7 @@ private final class LocationMapView : View {
             locateButton.userInteractionEnabled = false
             locateButton.set(image: theme.icons.locationMapLocate, for: .Normal)
             locationPinView.change(opacity: 0, animated: animated)
-            expandButton.set(text: L10n.locationSendHideNearby, for: .Normal)
+            expandButton.set(text: strings().locationSendHideNearby, for: .Normal)
             let tableHeight = min(tableView.listHeight, frame.height - (hasExpand ? expandContainer.frame.height : 0) - header.frame.height - 50)
             tableView.change(size: NSMakeSize(frame.width, tableHeight), animated: animated, duration: duration, timingFunction: timingFunction)
             tableView.change(pos: NSMakePoint(0, frame.height - (hasExpand ? expandContainer.frame.height : 0) - tableHeight), animated: animated, duration: duration, timingFunction: timingFunction)
@@ -254,11 +255,13 @@ private final class LocationMapView : View {
 
 private final class MapItemsArguments {
     let context: AccountContext
+    let destination: SelectLocationDestination
     let sendCurrent:()->Void
     let sendVenue:(TelegramMediaMap)->Void
     let searchVenues:(String)->Void
-    init(context: AccountContext, sendCurrent:@escaping()->Void, sendVenue:@escaping(TelegramMediaMap)->Void, searchVenues: @escaping(String)->Void) {
+    init(context: AccountContext, destination: SelectLocationDestination, sendCurrent:@escaping()->Void, sendVenue:@escaping(TelegramMediaMap)->Void, searchVenues: @escaping(String)->Void) {
         self.context = context
+        self.destination = destination
         self.sendCurrent = sendCurrent
         self.sendVenue = sendVenue
         self.searchVenues = searchVenues
@@ -271,9 +274,6 @@ private enum MapItemEntryId : Hashable {
     case nearby(Int32)
     case search
     case searchEmptyId
-    var hashValue: Int {
-        return 0
-    }
 }
 
 private enum MapItemEntry : TableItemListNodeEntry {
@@ -328,9 +328,9 @@ private enum MapItemEntry : TableItemListNodeEntry {
                 arguments.searchVenues(state.request)
             }, { state in
                 arguments.searchVenues(state.request)
-            }), inset: NSEdgeInsets(left: 10,right: 10, top: 10, bottom: 10))
+            }), inset: NSEdgeInsets(left: 10,right: 10, top: 0, bottom: 0))
         case let .currentLocation(_, state):
-            return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, action: {
+            return LocationSendCurrentItem(initialSize, stableId: stableId, state: state, destination: arguments.destination, action: {
                 arguments.sendCurrent()
             })
         case let .searchEmpty(_, loading):
@@ -363,9 +363,9 @@ private func mapEntries(result: [ChatContextResult], loading: Bool, location: CL
         case let .custom(_, name):
             let text: String
             if let name = name {
-                text = name.isEmpty ? L10n.locationSendThisLocationUnknown : name
+                text = name.isEmpty ? strings().locationSendThisLocationUnknown : name
             } else {
-                text = L10n.locationSendLocating
+                text = strings().locationSendLocating
             }
             selectState = .selected(location: text)
         }
@@ -429,11 +429,14 @@ private class MapDelegate : NSObject, MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, didFailToLocateUserWithError error: Error) {
         if "\(error)".contains("Code=1") {
-            self.location.set(.single(nil))
-            isPinRaised = true
-            didChangeRegion()
-            mapView.showsUserLocation = false
+            cancelRequestLocation()
         }
+    }
+
+    func cancelRequestLocation() {
+        self.location.set(.single(nil))
+        isPinRaised = true
+        didChangeRegion()
     }
     
     
@@ -452,17 +455,47 @@ private class MapDelegate : NSObject, MKMapViewDelegate {
         mapView.setRegion(region, animated: animated)
         animated = true
     }
+    
+    func focusVenue(mapView: MKMapView, _ location: CLLocationCoordinate2D) {
+        let userLocation = location
+        var region = MKCoordinateRegion()
+        var span = MKCoordinateSpan()
+        span.latitudeDelta = CLLocationDegrees(0.005)
+        span.longitudeDelta = CLLocationDegrees(0.005)
+        var location = CLLocationCoordinate2D()
+        location.latitude = userLocation.latitude
+        location.longitude = userLocation.longitude
+        region.span = span
+        region.center = location
+        mapView.setRegion(region, animated: true)
+    }
+}
+
+enum SelectLocationDestination : Equatable {
+    case chat
+    case business(CLLocationCoordinate2D?)
+}
+
+extension CLLocationCoordinate2D : Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        return lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
 }
 
 class LocationModalController: ModalViewController {
+    
+    
 
     private let chatInteraction: ChatInteraction
     private let delegate: MapDelegate = MapDelegate()
     private let disposable = MetaDisposable()
     private let sendDisposable = MetaDisposable()
+    private let requestDisposable = MetaDisposable()
     private let statePromise:Promise<LocationViewState> = Promise()
-    init(_ chatInteraction: ChatInteraction) {
+    private let destination: SelectLocationDestination
+    init(_ chatInteraction: ChatInteraction, destination: SelectLocationDestination = .chat) {
         self.chatInteraction = chatInteraction
+        self.destination = destination
         super.init(frame: NSMakeRect(0, 0, 360, 380))
     }
     
@@ -503,24 +536,71 @@ class LocationModalController: ModalViewController {
     }
 
     private func sendLocation(_ media: TelegramMediaMap? = nil) {
-        sendDisposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
-            switch state {
-            case let .normal(picked):
-                if let location = picked.location {
-                    self?.chatInteraction.sendLocation(location.coordinate, nil)
-                    self?.close()
+        
+        let invoke:()->Void = { [weak self] in
+            guard let self else {
+                return
+            }
+            self.sendDisposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
+                switch state {
+                case let .normal(picked):
+                    if let location = picked.location {
+                        self?.chatInteraction.sendLocation(location.coordinate, nil)
+                        self?.close()
+                    }
+                case let .expanded(location):
+                    if let media = media {
+                        let coordinate = CLLocationCoordinate2D(latitude: media.latitude, longitude: media.longitude)
+                        self?.chatInteraction.sendLocation(coordinate, media.venue)
+                        self?.close()
+                    } else if let location = location {
+                        self?.chatInteraction.sendLocation(location.coordinate, nil)
+                        self?.close()
+                    }
                 }
-            case let .expanded(location):
-                if let media = media {
-                    let coordinate = CLLocationCoordinate2D(latitude: media.latitude, longitude: media.longitude)
-                    self?.chatInteraction.sendLocation(coordinate, media.venue)
-                    self?.close()
-                } else if let location = location {
-                    self?.chatInteraction.sendLocation(location.coordinate, nil)
-                    self?.close()
+            }))
+        }
+        
+        let presentation = self.chatInteraction.presentation
+        let context = self.chatInteraction.context
+        
+        let messagesCount = 1
+        
+        if let payStars = presentation.sendPaidMessageStars, let peer = presentation.peer, let starsState = presentation.starsState {
+            let starsPrice = Int(payStars.value * Int64(messagesCount))
+            let amount = strings().starListItemCountCountable(starsPrice)
+            
+            if !presentation.alwaysPaidMessage {
+                
+                let messageCountText = strings().chatPayStarsConfirmMessagesCountable(messagesCount)
+                
+                verifyAlert(for: chatInteraction.context.window, header: strings().chatPayStarsConfirmTitle, information: strings().chatPayStarsConfirmText(peer.displayTitle, amount, amount, messageCountText), ok: strings().chatPayStarsConfirmPayCountable(messagesCount), option: strings().chatPayStarsConfirmCheckbox, optionIsSelected: false, successHandler: { result in
+                    
+                    if starsState.balance.value > starsPrice {
+                        self.chatInteraction.update({ current in
+                            return current
+                                .withUpdatedAlwaysPaidMessage(result == .thrid)
+                        })
+                        if result == .thrid {
+                            FastSettings.toggleCofirmPaid(peer.id, price: starsPrice)
+                        }
+                        invoke()
+                    } else {
+                        showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
+                    }
+                })
+                
+            } else {
+                if starsState.balance.value > starsPrice {
+                    invoke()
+                } else {
+                    showModal(with: Star_ListScreen(context: context, source: .buy(suffix: nil, amount: Int64(starsPrice))), for: context.window)
                 }
             }
-        }))
+        } else {
+            invoke()
+        }
+        
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
@@ -550,6 +630,16 @@ class LocationModalController: ModalViewController {
             delegate.focusUserLocation(genericView.mapView)
         }
         
+        switch destination {
+        case let .business(coordinate):
+            if let coordinate = coordinate {
+                delegate.focusVenue(mapView: genericView.mapView, coordinate)
+                self.delegate.isPinRaised = true
+            }
+        default:
+            break
+        }
+        
         var handleRegion: Bool = true
         
         delegate.willChangeRegion = { [weak self] in
@@ -576,13 +666,23 @@ class LocationModalController: ModalViewController {
         
         var cachedData:[String : ChatContextResultCollection] = [:]
         let previousResult:Atomic<ChatContextResultCollection?> = Atomic(value: nil)
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(resolvePeerByName(account: context.account, name: "foursquare") )
+        
+        
+        
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare", referrer: nil) |> mapToSignal { result in
+            switch result {
+            case .progress:
+                return .never()
+            case let .result(peer):
+                return .single(peer?._asPeer().id)
+            }
+        })
         let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
             |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {
                     let first = Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError>.single((cachedData[query] ?? previousResult.modify {$0}, location.location, cachedData[query] == nil, !query.isEmpty))
                     if cachedData[query] == nil {
-                        return first |> then(requestChatContextResults(account: context.account, botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
+                        return first |> then(context.engine.messages.requestChatContextResults(botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
                             |> `catch` { _ in return .complete() }
                             |> deliverOnPrepareQueue |> map { result in
                                 var value = result?.results
@@ -607,7 +707,7 @@ class LocationModalController: ModalViewController {
         let previous: Atomic<[AppearanceWrapperEntry<MapItemEntry>]> = Atomic(value: [])
         
         let initialSize = self.atomicSize
-        let arguments = MapItemsArguments(context: context, sendCurrent: { [weak self] in
+        let arguments = MapItemsArguments(context: context, destination: self.destination, sendCurrent: { [weak self] in
             self?.sendLocation()
         }, sendVenue: { [weak self] venue in
             self?.sendLocation(venue)
@@ -640,7 +740,7 @@ class LocationModalController: ModalViewController {
             return .single(state)
         } |> distinctUntilChanged
         
-        let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), NoError> = combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateModified |> deliverOnPrepareQueue) |> map { data, appearance, state in
+        let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), NoError> = combineLatest(queue: prepareQueue, signal, appearanceSignal, stateModified) |> map { data, appearance, state in
             let results:[ChatContextResult] = data.0?.results ?? []
             let entries = mapEntries(result: results, loading: data.2, location: data.1, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), data.2, state, !results.isEmpty || data.3)
@@ -661,15 +761,23 @@ class LocationModalController: ModalViewController {
                 self?.genericView.tableView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
                 search.set(.single(""))
                 state.set(viewState)
-            })
+            }, destination: self.destination)
             self.readyOnce()
         }))
-        
+
+        let request = requestUserLocation() |> deliverOnMainQueue
+        requestDisposable.set(request.start(next: { [weak self] result in
+            self?.genericView.mapView.showsUserLocation = true
+        }, error: { [weak self] error in
+            self?.delegate.cancelRequestLocation()
+        }))
+
     }
     
     deinit {
         disposable.dispose()
         sendDisposable.dispose()
+        requestDisposable.dispose()
     }
     
     private var genericView: LocationMapView {

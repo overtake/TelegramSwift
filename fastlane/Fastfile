@@ -19,45 +19,11 @@ default_platform :mac
 # don't worry, fastlane will prompt you for required
 # info which you can add here later
 
-lane :beta do
-    sh("rm -rf ./output")
-    sh("mkdir ./output")
-    gym(
-      scheme: "Hockeyapp",
-      clean: true,
-      silent: true,
-      output_directory: "./output"
-    )
-end
-
-lane :alpha do
-    sh("rm -rf ./output")
-    sh("mkdir ./output")
-    gym(
-      scheme: "HockeyappAlpha",
-      clean: true,
-      silent: true,
-      output_directory: "./output"
-    )
-end
-
-lane :appstore do
-    sh("rm -rf ./output")
-    sh("mkdir ./output")
-    gym(
-      scheme: "store",
-      clean: true,
-      silent: true,
-      output_directory: "./output"
-    )
-end
-
-lane :release do
+lane :Release do
     sh("rm -rf ./output")
     sh("mkdir ./output")
     gym(
       scheme: "Release",
-      clean: true,
       silent: true,
       output_directory: "./output"
     )

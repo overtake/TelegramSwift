@@ -9,34 +9,38 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
 private class JoinLinkPreviewView : View {
-    private let imageView:AvatarControl = AvatarControl(font: .avatar(.huge))
+    private let imageView:AvatarControl = AvatarControl(font: .avatar(30))
     private let titleView:TextView = TextView()
     private let basicContainer:View = View()
     private let usersContainer: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.backgroundColor = theme.colors.background
+        self.backgroundColor = .clear
         imageView.setFrameSize(70,70)
         addSubview(basicContainer)
-        basicContainer.backgroundColor = theme.colors.background
-        titleView.backgroundColor = theme.colors.background
+        basicContainer.backgroundColor = .clear
+        titleView.backgroundColor = .clear
         basicContainer.addSubview(imageView)
         basicContainer.addSubview(titleView)
         addSubview(usersContainer)
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
     }
     
     func update(with peer:TelegramGroup, account:Account, participants:[Peer]? = nil, groupUserCount: Int32 = 0) -> Void {
+        
         imageView.setPeer(account: account, peer: peer)
         let attr = NSMutableAttributedString()
         _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .normal(.title))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: L10n.peerStatusMemberCountable(peer.participantCount).replacingOccurrences(of: "\(peer.participantCount)", with: peer.participantCount.formattedWithSeparator), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().peerStatusMemberCountable(peer.participantCount).replacingOccurrences(of: "\(peer.participantCount)", with: peer.participantCount.formattedWithSeparator), color: theme.colors.grayText, font: .normal(.text))
         let titleLayout = TextViewLayout(attr, alignment: .center)
         titleLayout.measure(width: frame.width - 40)
         titleView.update(titleLayout)
@@ -77,7 +81,7 @@ private class JoinLinkPreviewView : View {
                                 CTLineDraw(line.line, ctx)
                             }
                         })!
-                        avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize, cornerRadius: nil)) |> map {($0, false)})
+                        avatar.setSignal(generateEmptyPhoto(avatar.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize, cornerRadius: nil), bubble: false) |> map {($0, false)})
                         usersContainer.addSubview(avatar)
                     }
                     break
@@ -91,13 +95,17 @@ private class JoinLinkPreviewView : View {
         
     }
     
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
+    
     override func layout() {
         super.layout()
         imageView.centerX(y: 0)
-        titleView.centerX(y: 80)
+        titleView.centerX(y: imageView.frame.maxY + 10)
         
         if !usersContainer.subviews.isEmpty {
-            basicContainer.centerX(y: 20)
+            basicContainer.centerX(y: 0)
             var x:CGFloat = 0
             for avatar in usersContainer.subviews {
                 avatar.setFrameOrigin(NSMakePoint(x, 0))
@@ -105,7 +113,7 @@ private class JoinLinkPreviewView : View {
             }
             usersContainer.setFrameSize(x - 10, usersContainer.subviews[0].frame.height)
         } else {
-            basicContainer.center()
+            basicContainer.centerX(y: 0)
         }
         
         usersContainer.centerX(y: basicContainer.frame.maxY + 20)
@@ -121,13 +129,13 @@ class JoinLinkPreviewModalController: ModalViewController {
     private let context:AccountContext
     private let join:ExternalJoiningChatState
     private let joinhash:String
-    private let interaction:(PeerId?)->Void
+    private let interaction:(Peer)->Void
     override func viewDidLoad() {
         super.viewDidLoad()
         switch join {
-        case let .invite(title: title, image, memberCount, participants):
-            let peer = TelegramGroup(id: PeerId(namespace: 0, id: 0), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
-                        genericView.update(with: peer, account: context.account, participants: participants, groupUserCount: memberCount)
+        case let .invite(state):
+            let peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt64Value(0)), title: state.title, photo: state.photoRepresentation.flatMap { [$0] } ?? [], participantCount: Int(state.participantsCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
+            genericView.update(with: peer, account: context.account, participants: state.participants?.map { $0._asPeer() }, groupUserCount: state.participantsCount)
         default:
             break
         }
@@ -142,46 +150,71 @@ class JoinLinkPreviewModalController: ModalViewController {
         return JoinLinkPreviewView.self
     }
     
-    init(_ context: AccountContext, hash:String, join:ExternalJoiningChatState, interaction:@escaping(PeerId?)->Void) {
+    init(_ context: AccountContext, hash:String, join:ExternalJoiningChatState, interaction:@escaping(Peer)->Void) {
         self.context = context
         self.join = join
         self.joinhash = hash
         self.interaction = interaction
         
-        var rect = NSMakeRect(0, 0, 270, 180)
+        var rect = NSMakeRect(0, 50, 300, 190)
         switch join {
-        case let .invite(_, _, _, participants):
-            if let participants = participants, participants.count > 0 {
-                rect.size.height = 230
+        case let .invite(state):
+            if let participants = state.participants, participants.count > 0 {
+                rect.size.height = 260
             }
         default:
             break
         }
         super.init(frame: rect)
-        bar = .init(height: 0)
+    }
+    
+    override var dynamicSize: Bool {
+        return true
     }
     
     override var modalInteractions: ModalInteractions? {
         let context = self.context
-        return ModalInteractions(acceptTitle: L10n.joinLinkJoin, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.context.account), for: window).start(next: { [weak strongSelf] peerId in
-                    strongSelf?.interaction(peerId)
-                    self?.close()
+                _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: strongSelf.joinhash), for: window).start(next: { [weak strongSelf] peer in
+                    if let peer = peer?._asPeer() {
+                        strongSelf?.interaction(peer)
+                    }
+                    strongSelf?.close()
                 }, error: { error in
                     let text: String
                     switch error {
                     case .generic:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                     case .tooMuchJoined:
                         showInactiveChannels(context: context, source: .join)
                         return
+                    case .tooMuchUsers:
+                        text = strings().groupUsersTooMuchError
+                    case .requestSent:
+                        text = strings().unknownError
+                    case .flood:
+                        text = strings().joinLinkFloodError
                     }
                     alert(for: context.window, info: text)
                 })
             }
-        }, cancelTitle: tr(L10n.modalCancel))
+        }, singleButton: true)
         
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: nil, right: nil)
+    }
+    
+    override var containerBackground: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
     }
     
 }

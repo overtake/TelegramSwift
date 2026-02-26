@@ -1,6 +1,6 @@
 import Foundation
 import TelegramCore
-import SyncCore
+
 
 enum SecureIdVerificationLocalDocumentState {
     case uploading(Float)

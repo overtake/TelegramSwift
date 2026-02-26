@@ -10,8 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
+import TGModernGrowingTextView
 
 
 enum ESearchCommand {
@@ -59,10 +60,9 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
-    override open func updateLocalizationAndTheme(theme: PresentationTheme) {
+    override open func updateLocalizationAndTheme(theme presentation: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        
-        let theme = (theme as! TelegramPresentationTheme)
+        let theme = theme as! TelegramPresentationTheme
         inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
         input.backgroundColor = presentation.colors.background
@@ -70,13 +70,15 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
         placeholder.backgroundColor = presentation.colors.background
         self.backgroundColor = presentation.colors.background
         placeholder.sizeToFit()
+        _ =  clear.sizeToFit()
+        input.insertionPointColor = presentation.search.textColor
+        progressIndicator.progressColor = presentation.colors.grayIcon
+        needsLayout = true
+
         search.image = theme.icons.entertainment_Search
         search.sizeToFit()
         clear.set(image: theme.icons.entertainment_SearchCancel, for: .Normal)
-        _ =  clear.sizeToFit()
-        input.insertionPointColor = presentation.search.textColor
-        progressIndicator.progressColor = theme.colors.grayIcon
-        needsLayout = true
+
         
     }
     
@@ -273,8 +275,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             change(state: .None, true)
         }
         
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
+        self._window?.removeAllHandlers(for: self)
+        self._window?.removeObserver(for: self)
     }
     
     open func didBecomeResponder() {
@@ -284,7 +286,7 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
         
         change(state: .Focus, true)
         
-        self.kitWindow?.set(escape: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(escape: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.changeResponder() ? .invoked : .rejected
             }
@@ -292,21 +294,21 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             
         }, with: self, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
         }, with: self, for: .RightArrow, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
+        self._window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
         }, with: self, for: .LeftArrow, priority: .modal)
         
-        self.kitWindow?.set(responder: {[weak self] () -> NSResponder? in
+        self._window?.set(responder: {[weak self] () -> NSResponder? in
             return self?.input
         }, with: self, priority: .modal)
     }
@@ -354,8 +356,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             
             if state == .None {
                 
-                self.kitWindow?.removeAllHandlers(for: self)
-                self.kitWindow?.removeObserver(for: self)
+                self._window?.removeAllHandlers(for: self)
+                self._window?.removeObserver(for: self)
                 
                 self.input.isHidden = true
                 self.input.string = ""
@@ -386,8 +388,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
             if isEmpty {
                 change(state: .None, false)
             }
-            self.kitWindow?.removeAllHandlers(for: self)
-            self.kitWindow?.removeObserver(for: self)
+            self._window?.removeAllHandlers(for: self)
+            self._window?.removeObserver(for: self)
         }
     }
     
@@ -444,8 +446,8 @@ open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
     }
     
     deinit {
-        self.kitWindow?.removeAllHandlers(for: self)
-        self.kitWindow?.removeObserver(for: self)
+        self._window?.removeAllHandlers(for: self)
+        self._window?.removeObserver(for: self)
     }
     
     public var query:String {
@@ -480,14 +482,17 @@ public final class EntertainmentInteractions {
     
     var current:EntertainmentState = .emoji
     
-    var sendEmoji:(String) ->Void = {_ in}
-    var sendSticker:(TelegramMediaFile, Bool) ->Void = { _, _ in}
-    var sendGIF:(TelegramMediaFile, Bool) ->Void = { _, _ in}
+    var sendEmoji:(String, CGRect?) ->Void = { _,_ in }
+    var sendAnimatedEmoji:(StickerPackItem, StarGift.UniqueGift?, StickerPackCollectionInfo?, Int32?, NSRect?) ->Void = { _, _, _, _, _ in}
+    var sendSticker:(TelegramMediaFile, Bool, Bool, ItemCollectionId?) ->Void = { _, _, _, _ in}
+    var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
     var showEntertainment:(EntertainmentState, Bool)->Void = { _,_  in}
     var close:()->Void = {}
 
     var toggleSearch:()->Void = { }
+    
+    var showStickerPremium:(TelegramMediaFile, NSView)->Void = { _, _ in }
     
     let peerId:PeerId
     
@@ -501,11 +506,12 @@ final class EntertainmentView : View {
     fileprivate var sectionView: NSView
     private let bottomView = View()
     private let borderView = View()
-    fileprivate let emoji: ImageButton = ImageButton()
-    fileprivate let stickers: ImageButton = ImageButton()
-    fileprivate let gifs: ImageButton = ImageButton()
+    fileprivate let emoji: TextButton = TextButton()
+    fileprivate let stickers: TextButton = TextButton()
+    fileprivate let gifs: TextButton = TextButton()
     
-    
+    private var premiumView: StickerPremiumHolderView?
+
     
     private let sectionTabs: View = View()
     init(sectionView: NSView, frame: NSRect) {
@@ -516,6 +522,15 @@ final class EntertainmentView : View {
         addSubview(self.bottomView)
         self.bottomView.addSubview(sectionTabs)
         
+        self.emoji.scaleOnClick = true
+        self.emoji.autoSizeToFit = false
+        
+        self.stickers.scaleOnClick = true
+        self.stickers.autoSizeToFit = false
+
+        self.gifs.scaleOnClick = true
+        self.gifs.autoSizeToFit = false
+        
         self.sectionTabs.addSubview(self.emoji)
         self.sectionTabs.addSubview(self.stickers)
         self.sectionTabs.addSubview(self.gifs)
@@ -525,53 +540,48 @@ final class EntertainmentView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
         self.borderView.background = theme.colors.border
-        self.emoji.set(image: theme.icons.entertainment_Emoji, for: .Normal)
-        self.stickers.set(image: theme.icons.entertainment_Stickers, for: .Normal)
-        self.gifs.set(image: theme.icons.entertainment_Gifs, for: .Normal)
-        _ = self.emoji.sizeToFit()
-        _ = self.stickers.sizeToFit()
-        _ = self.gifs.sizeToFit()
         
+        self.emoji.set(font: .medium(.title), for: .Normal)
+        self.emoji.set(color: theme.colors.grayIcon, for: .Normal)
+        self.stickers.set(font: .medium(.title), for: .Normal)
+        self.stickers.set(color: theme.colors.grayIcon, for: .Normal)
+        self.gifs.set(font: .medium(.title), for: .Normal)
+        self.gifs.set(color: theme.colors.grayIcon, for: .Normal)
+
+        
+        self.emoji.set(color: theme.colors.darkGrayText, for: .Highlight)
+        self.stickers.set(color: theme.colors.darkGrayText, for: .Highlight)
+        self.gifs.set(color: theme.colors.darkGrayText, for: .Highlight)
+
+        self.emoji.set(background: theme.colors.background, for: .Normal)
+        self.stickers.set(background: theme.colors.background, for: .Normal)
+        self.gifs.set(background: theme.colors.background, for: .Normal)
+
+        self.emoji.set(background: theme.colors.grayText.withAlphaComponent(0.2), for: .Highlight)
+        self.stickers.set(background: theme.colors.grayText.withAlphaComponent(0.2), for: .Highlight)
+        self.gifs.set(background: theme.colors.grayText.withAlphaComponent(0.2), for: .Highlight)
+
+        
+        self.emoji.set(text: strings().entertainmentEmojiNew, for: .Normal)
+        self.stickers.set(text: strings().entertainmentStickersNew, for: .Normal)
+        self.gifs.set(text: strings().entertainmentGIFNew, for: .Normal)
+        
+        _ = self.emoji.sizeToFit(NSMakeSize(10, 8))
+        _ = self.stickers.sizeToFit(NSMakeSize(10, 8))
+        _ = self.gifs.sizeToFit(NSMakeSize(10, 8))
+        
+        self.emoji.layer?.cornerRadius = self.emoji.frame.height / 2
+        self.stickers.layer?.cornerRadius = self.emoji.frame.height / 2
+        self.gifs.layer?.cornerRadius = self.emoji.frame.height / 2
+
     }
     
     func toggleSearch(_ signal:ValuePromise<SearchState>) {
-//        if let searchView = self.searchView {
-//            self.searchView = nil
-//            searchView.searchInteractions = nil
-//            signal.set(.init(state: .None, request: nil))
-//            searchView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak searchView] _ in
-//                searchView?.removeFromSuperview()
-//            })
-//            self.search.isSelected = false
-//        } else {
-//            self.searchView = EntertainmentSearchView(frame: NSMakeRect(0, 0, frame.width, 50))
-//            self.addSubview(self.searchView!)
-//            self.searchView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//            self.searchView?.searchInteractions = SearchInteractions({ [weak self] state, _ in
-//                signal.set(state)
-//                switch state.state {
-//                case .Focus:
-//                    break
-//                case .None:
-//                    self?.toggleSearch(signal)
-//                }
-//            }, { [weak self] state in
-//                signal.set(state)
-//                switch state.state {
-//                case .Focus:
-//                    break
-//                case .None:
-//                    self?.toggleSearch(signal)
-//                }
-//            })
-//            self.search.isSelected = true
-//            self.searchView?.change(state: .Focus, false)
-//        }
+
     }
     
-    func updateSelected(_ state: EntertainmentState) {
+    func updateSelected(_ state: EntertainmentState, mode: EntertainmentViewController.Mode) {
         self.emoji.isSelected = false
         self.stickers.isSelected = false
         self.gifs.isSelected = false
@@ -584,7 +594,46 @@ final class EntertainmentView : View {
         case .gifs:
             self.gifs.isSelected = true
         }
+        emoji.isHidden = mode == .selectAvatar
+        stickers.isHidden = false
+        gifs.isHidden = false
+
+        needsLayout = true
     }
+    
+    func previewPremium(_ file: TelegramMediaFile, context: AccountContext, view: NSView, animated: Bool) {
+        let current: StickerPremiumHolderView
+        if let view = premiumView {
+            current = view
+        } else {
+            current = StickerPremiumHolderView(frame: bounds)
+            self.premiumView = current
+            addSubview(current)
+            
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        }
+        current.set(file: file, context: context, callback: { [weak self] in
+            prem(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+            self?.closePremium()
+        })
+        current.close = { [weak self] in
+            self?.closePremium()
+        }
+    }
+    
+    var isPremium: Bool {
+        return self.premiumView != nil
+    }
+    
+    func closePremium() {
+        if let view = premiumView {
+            performSubviewRemoval(view, animated: true)
+            self.premiumView = nil
+        }
+    }
+    
     
     
     override func layout() {
@@ -592,12 +641,18 @@ final class EntertainmentView : View {
         self.sectionView.frame = NSMakeRect(0, 0, self.frame.width, self.frame.height - 50)
         self.bottomView.frame = NSMakeRect(0, self.frame.height - 50, self.frame.width, 50)
         self.borderView.frame = NSMakeRect(0, 0, self.bottomView.frame.width, .borderSize)
-        self.sectionTabs.setFrameSize(NSMakeSize(self.sectionTabs.subviewsSize.width + 40, 40))
+        
+        let buttons:[NSView] = [self.emoji, self.stickers, self.gifs].filter { !$0.isHidden }
+        
+        self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1) * 4, 40))
         self.sectionTabs.center()
         
-        self.emoji.centerY(x: 0)
-        self.stickers.centerY(x: self.emoji.frame.maxX + 20)
-        self.gifs.centerY(x: self.stickers.frame.maxX + 20)
+        var x: CGFloat = 0
+        for button in buttons {
+            button.centerY(x: x)
+            x += button.frame.width + 4
+        }
+        self.premiumView?.frame = bounds
     }
     
     required init?(coder: NSCoder) {
@@ -622,10 +677,18 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     private var disposable:MetaDisposable = MetaDisposable()
     private var locked:Bool = false
 
+    enum Mode {
+        case common
+        case selectAvatar
+        case stories
+        case intro
+    }
+    
+    private let mode: Mode
 
-    private let emoji:EmojiViewController
+    private let emoji:EmojiesController
     private let stickers:NStickersViewController
-    private let gifs:GIFViewController
+    private let gifs:GifKeyboardController
     
     private let searchState = ValuePromise<SearchState>(.init(state: .None, request: nil))
     
@@ -645,29 +708,70 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     func update(with chatInteraction:ChatInteraction) -> Void {
         self.chatInteraction = chatInteraction
         
-        let interactions = EntertainmentInteractions(FastSettings.entertainmentState, peerId: chatInteraction.peerId)
+        let context = self.context
+        
+        let state: EntertainmentState
+        if mode == .selectAvatar {
+            state = .stickers
+        } else {
+            state = FastSettings.entertainmentState
+        }
+        
+        let interactions = EntertainmentInteractions(state, peerId: chatInteraction.peerId)
 
         interactions.close = { [weak self] in
             self?.closePopover()
         }
-        interactions.sendSticker = { [weak self] file, silent in
-            self?.chatInteraction?.sendAppFile(file, silent)
-            self?.closePopover()
-        }
-        interactions.sendGIF = { [weak self] file, silent in
-            self?.chatInteraction?.sendAppFile(file, silent)
-            self?.closePopover()
-        }
-        interactions.sendEmoji = { [weak self] emoji in
-            _ = self?.chatInteraction?.appendText(emoji)
-            guard let `self` = self else {
-                return
+        interactions.sendSticker = { [weak self] file, silent, scheduled, collectionId in
+            let cachedData = self?.chatInteraction?.presentation.cachedData
+            if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendStickers, cachedData: cachedData) {
+                showModalText(for: context.window, text: text)
+            } else {
+                self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, collectionId)
             }
-            
-//            if self.genericView.searchView != nil {
-//                self.genericView.toggleSearch(self.searchState)
-//            }
+            self?.closePopover()
         }
+        interactions.sendGIF = { [weak self] file, silent, scheduled in
+            let cachedData = self?.chatInteraction?.presentation.cachedData
+            if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendGifs, cachedData: cachedData) {
+                showModalText(for: context.window, text: text)
+            } else {
+                self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, nil)
+            }
+            self?.closePopover()
+        }
+        interactions.sendEmoji = { [weak self] emoji, fromRect in
+            if self?.mode == .selectAvatar {
+                _ = self?.chatInteraction?.sendPlainText(emoji)
+                self?.closePopover()
+            } else {
+                let cachedData = self?.chatInteraction?.presentation.cachedData
+                if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendText, cachedData: cachedData) {
+                    showModalText(for: context.window, text: text)
+                } else {
+                    self?.chatInteraction?.appendAttributedText(.initialize(string: emoji))
+                }
+            }
+        }
+        
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, info, _, fromRect in
+            if self?.mode == .selectAvatar {
+              
+            } else {
+                let cachedData = self?.chatInteraction?.presentation.cachedData
+                if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendText, cachedData: cachedData) {
+                    showModalText(for: context.window, text: text)
+                } else {
+                    let text = (sticker.file._parse().customEmojiText ?? sticker.file._parse().stickerText ?? "😀").normalizedEmoji
+                    self?.chatInteraction?.appendAttributedText(.makeAnimated(sticker.file._parse(), text: text, info: info?.id))
+                }
+            }
+        }
+        
+        interactions.showStickerPremium = { [weak self] file, view in
+            self?.genericView.previewPremium(file, context: context, view: view, animated: true)
+        }
+        
         interactions.toggleSearch = { [weak self] in
             guard let `self` = self else {
                 return
@@ -676,7 +780,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         }
         self.interactions = interactions
         
-        emoji.update(with: interactions)
+        emoji.update(with: interactions, chatInteraction: chatInteraction)
         stickers.update(with: interactions, chatInteraction: chatInteraction)
         gifs.update(with: interactions, chatInteraction: chatInteraction)
     }
@@ -686,19 +790,38 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         self.viewWillDisappear(false)
     }
     
-    init(size:NSSize, context:AccountContext) {
-        
+    private var presentation: TelegramPresentationTheme? = nil
+    
+    init(size:NSSize, context:AccountContext, mode: Mode = .common, presentation: TelegramPresentationTheme? = nil) {
+        self.mode = mode
+        self.presentation = presentation
         self.cap = SidebarCapViewController(context)
-        self.emoji = EmojiViewController(context)
-        self.stickers = NStickersViewController(context)
-        self.gifs = GIFViewController(context)
+        self.emoji = EmojiesController(context, mode: mode == .stories ? .stories : .emoji, presentation: presentation)
+        self.stickers = NStickersViewController(context, presentation: presentation)
+        self.gifs = GifKeyboardController(context, presentation: presentation)
+
+        
+        self.stickers.mode = mode
+        self.gifs.mode = mode
         
         var items:[SectionControllerItem] = []
-        items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))
-        items.append(SectionControllerItem(title: {L10n.entertainmentStickers.uppercased()}, controller: stickers))
-        items.append(SectionControllerItem(title: {L10n.entertainmentGIF.uppercased()}, controller: gifs))
-        self.section = SectionViewController(sections: items, selected: Int(FastSettings.entertainmentState.rawValue), hasHeaderView: false)
+        if mode == .common || mode == .stories {
+            items.append(SectionControllerItem(title:{strings().entertainmentEmoji.uppercased()}, controller: emoji))
+        }
+        items.append(SectionControllerItem(title: {strings().entertainmentStickers.uppercased()}, controller: stickers))
+        items.append(SectionControllerItem(title: {strings().entertainmentGIF.uppercased()}, controller: gifs))
+
+        
+
+        let index: Int
+        if mode == .selectAvatar {
+            index = 0
+        } else {
+            index = Int(FastSettings.entertainmentState.rawValue)
+        }
+        self.section = SectionViewController(sections: items, selected: index, hasHeaderView: false)
         super.init(context)
+        _frameRect = size.bounds
         bar = .init(height: 0)
     }
 
@@ -727,13 +850,16 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         section.viewWillAppear(animated)
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
     }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         section.viewWillDisappear(animated)
         window?.removeAllHandlers(for: self)
     }
+
+    
     
     private func toggleSearch() {
         if let searchView = self.effectiveSearchView {
@@ -754,7 +880,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             guard let `self` = self else {
                 return .rejected
             }
-            if self.context.sharedContext.bindings.rootNavigation().genericView.state != .single {
+            if self.context.bindings.rootNavigation().genericView.state != .single {
                 return .rejected
             }
             self.toggleSearch()
@@ -765,6 +891,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         section.viewDidDisappear(animated)
+        genericView.closePremium()
     }
     
     override func initializer() -> EntertainmentView {
@@ -780,11 +907,36 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         return effectiveSearchView//genericView.searchView?.input
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if genericView.isPremium {
+            genericView.closePremium()
+            return .invoked
+        }
+        let result = self.section.selectedSection.controller.escapeKeyAction()
+        if result == .rejected {
+            return super.escapeKeyAction()
+        }
+        return result
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         cap.loadViewIfNeeded()
 
-        self.genericView.updateSelected(FastSettings.entertainmentState)
+        let state:EntertainmentState
+        if mode == .selectAvatar {
+            state = .stickers
+        } else {
+            state = FastSettings.entertainmentState
+        }
+        
+        
+        
+        self.genericView.updateSelected(state, mode: mode)
 
         
         let callSearchCmd:(ESearchCommand, SearchView)->Void = { command, view in
@@ -807,11 +959,13 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 callSearchCmd(command, view)
             }
         }
+                
         self.gifs.makeSearchCommand = { [weak self] command in
             if self?.gifs.view.superview != nil, let view = self?.gifs.genericView.searchView  {
                 callSearchCmd(command, view)
             }
         }
+        
         self.emoji.makeSearchCommand = { [weak self] command in
             if self?.emoji.view.superview != nil, let view = self?.emoji.genericView.searchView  {
                 callSearchCmd(command, view)
@@ -819,7 +973,10 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         }
         
         
-        
+        let e_index: Int = 0
+        let s_index: Int = mode == .selectAvatar ? 0 : 1
+        let g_index: Int = mode == .selectAvatar ? 1 : 2
+
         self.genericView.emoji.set(handler: { [weak self] _ in
             guard let `self` = self else {
                 return
@@ -827,9 +984,9 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.genericView.emoji.isSelected {
                 self.emoji.scrollup()
             }
-            self.section.select(0, true, notifyApper: true)
+            self.section.select(e_index, true, notifyApper: true)
             
-        }, for: .Click)
+        }, for: .SingleClick)
         
         self.genericView.stickers.set(handler: { [weak self] _ in
             guard let `self` = self else {
@@ -838,8 +995,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.genericView.stickers.isSelected {
                 self.stickers.scrollup()
             }
-            self.section.select(1, true, notifyApper: true)
-        }, for: .Click)
+            self.section.select(s_index, true, notifyApper: true)
+        }, for: .SingleClick)
         
         self.genericView.gifs.set(handler: { [weak self] _ in
             guard let `self` = self else {
@@ -848,21 +1005,32 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.genericView.gifs.isSelected {
                 self.gifs.scrollup()
             }
-            self.section.select(2, true, notifyApper: true)
-        }, for: .Click)
+            self.section.select(g_index, true, notifyApper: true)
+        }, for: .SingleClick)
         
+
+        
+        let mode = self.mode
         
         section.selectionUpdateHandler = { [weak self] index in
+            var index = index
+            if mode == .selectAvatar {
+                index += 1
+            }
+            
             let state = EntertainmentState(rawValue: Int32(index))!
-            FastSettings.changeEntertainmentState(state)
-            self?.chatInteraction?.update({$0.withUpdatedIsEmojiSection(index == 0)})
-            self?.genericView.updateSelected(state)
+            if mode == .common || mode == .stories {
+                FastSettings.changeEntertainmentState(state)
+            }
+            self?.chatInteraction?.update({ $0.withUpdatedIsEmojiSection(state == .emoji )})
+            self?.genericView.updateSelected(state, mode: mode)
+            
         }
 
         self.ready.set(section.ready.get())
         
         languageDisposable.set((combineLatest(appearanceSignal, ready.get() |> filter {$0} |> take(1))).start(next: { [weak self] _ in
-            self?.updateLocalizationAndTheme(theme: theme)
+            self?.updateLocalizationAndTheme(theme: self?.presentation ?? theme)
         }))
     }
     

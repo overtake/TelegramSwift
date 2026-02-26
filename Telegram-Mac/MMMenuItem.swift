@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Localization
 
 class MMMenuItem: NSMenuItem {
     override var title: String {

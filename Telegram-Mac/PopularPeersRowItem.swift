@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 enum PopularItemType : Hashable {
     
@@ -53,11 +53,11 @@ enum PopularItemType : Hashable {
 
 private final class PopularPeerItem : TableRowItem {
     fileprivate let type: PopularItemType
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     fileprivate let actionHandler: (PopularItemType)->Void
-    init(type: PopularItemType, account: Account, action: @escaping(PopularItemType)->Void) {
+    init(type: PopularItemType, context: AccountContext, action: @escaping(PopularItemType)->Void) {
         self.type = type
-        self.account = account
+        self.context = context
         self.actionHandler = action
         super.init(NSZeroSize)
     }
@@ -76,14 +76,12 @@ private final class PopularPeerItem : TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
+        let context = self.context
         switch type {
         case let .peer(peer, _, _):
-            items.append(ContextMenuItem(L10n.searchPopularDelete, handler: { [weak self] in
-                guard let `self` = self else {return}
-               // self.table?.remove(at: self.index, redraw: true, animation: .effectFade)
-                _ = removeRecentPeer(account: self.account, peerId: peer.id).start()
-  
-            }))
+            items.append(ContextMenuItem(strings().searchPopularDelete, handler: {
+                _ = context.engine.peers.removeRecentPeer(peerId: peer.id).start()
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         default:
             break
         }
@@ -120,6 +118,8 @@ private final class PopularPeerItemView : HorizontalRowView {
             item.actionHandler(item.type)
         }, for: .Click)
         
+        self.container.layer?.masksToBounds = false
+        self.layer?.masksToBounds = false
         
     }
 //    
@@ -138,12 +138,12 @@ private final class PopularPeerItemView : HorizontalRowView {
         switch item.type {
         case .savedMessages:
             let icon = theme.icons.searchSaved
-            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            text = L10n.searchPopularSavedMessages
+            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil), bubble: false) |> map {($0, false)})
+            text = strings().searchPopularSavedMessages
         case let .articles(unreadCount):
             let icon = theme.icons.searchArticle
-            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(4), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            text = L10n.searchPopularArticles
+            imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(4), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil), bubble: false) |> map {($0, false)})
+            text = strings().searchPopularArticles
             if unreadCount > 0 {
                 let node = BadgeNode(NSAttributedString.initialize(string: "\(unreadCount)", color: .white, font: .medium(11)), theme.chatList.badgeBackgroundColor)
                 node.view = badgeView
@@ -154,7 +154,7 @@ private final class PopularPeerItemView : HorizontalRowView {
                 badgeView.removeFromSuperview()
             }
         case let .peer(peer, unreadBadge, isActive):
-            imageView.setPeer(account: item.account, peer: peer)
+            imageView.setPeer(account: item.context.account, peer: peer)
             text = peer.compactDisplayTitle
             
             activeImage.isHidden = !isActive
@@ -189,8 +189,9 @@ private final class PopularPeerItemView : HorizontalRowView {
             }
         }
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .normal(11)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 10)
+        layout.measure(width: frame.width - 2)
         textView.update(layout)
+        
         
         self.needsLayout = true
     }
@@ -211,23 +212,23 @@ private final class PopularPeerItemView : HorizontalRowView {
 class PopularPeersRowItem: GeneralRowItem {
 
     let peers: [Peer]
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     fileprivate let unreadArticles: Int32
     fileprivate let selfPeer: Peer
     fileprivate let actionHandler: (PopularItemType)->Void
     fileprivate let articlesEnabled: Bool
     fileprivate let unread: [PeerId : UnreadSearchBadge]
     fileprivate let online: [PeerId: Bool]
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, selfPeer: Peer, articlesEnabled: Bool, unreadArticles: Int32, peers:[Peer], unread: [PeerId : UnreadSearchBadge], online: [PeerId: Bool], action: @escaping(PopularItemType)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, selfPeer: Peer, articlesEnabled: Bool, unreadArticles: Int32, peers:[Peer], unread: [PeerId : UnreadSearchBadge], online: [PeerId: Bool], action: @escaping(PopularItemType)->Void) {
         self.peers = Array(peers.prefix(15))
-        self.account = account
+        self.context = context
         self.unread = unread
         self.online = online
         self.articlesEnabled = articlesEnabled
         self.selfPeer = selfPeer
         self.actionHandler = action
         self.unreadArticles = unreadArticles
-        super.init(initialSize, height: 74, stableId: stableId)
+        super.init(initialSize, height: 84, stableId: stableId)
     }
     
     override func viewClass() -> AnyClass {
@@ -244,7 +245,7 @@ private final class PopularPeersRowView : TableRowView {
     private let tableView: HorizontalTableView
     private let separator: View = View()
     required init(frame frameRect: NSRect) {
-        tableView = HorizontalTableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        tableView = HorizontalTableView(frame: NSMakeRect(0, 10, frameRect.width, frameRect.height - 10))
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(separator)
@@ -252,7 +253,7 @@ private final class PopularPeersRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        tableView.frame = bounds
+        tableView.frame = NSMakeRect(0, 10, frame.width, frame.height - 10)
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
     }
     
@@ -263,16 +264,18 @@ private final class PopularPeersRowView : TableRowView {
         tableView.beginTableUpdates()
         tableView.removeAll(animation: .effectFade)
         
+        _ = tableView.addItem(item: GeneralRowItem(.zero, height: 5, stableId: arc4random64()))
+        
         guard let item = item as? PopularPeersRowItem else {return}
-        _ = tableView.addItem(item: PopularPeerItem(type: .savedMessages(item.selfPeer), account: item.account, action: item.actionHandler))
+        _ = tableView.addItem(item: PopularPeerItem(type: .savedMessages(item.selfPeer), context: item.context, action: item.actionHandler))
         if item.articlesEnabled {
-            _ = tableView.addItem(item: PopularPeerItem(type: .articles(item.unreadArticles), account: item.account, action: item.actionHandler))
+            _ = tableView.addItem(item: PopularPeerItem(type: .articles(item.unreadArticles), context: item.context, action: item.actionHandler))
         }
         
         for peer in item.peers {
-            _ = tableView.addItem(item: PopularPeerItem(type: .peer(peer, item.unread[peer.id], item.online[peer.id] ?? false), account: item.account, action: item.actionHandler))
+            _ = tableView.addItem(item: PopularPeerItem(type: .peer(peer, item.unread[peer.id], item.online[peer.id] ?? false), context: item.context, action: item.actionHandler))
         }
-        
+                
         tableView.endTableUpdates()
         separator.backgroundColor = theme.colors.border
     }

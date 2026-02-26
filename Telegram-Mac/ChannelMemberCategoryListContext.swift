@@ -9,7 +9,7 @@
 import Cocoa
 
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -28,7 +28,7 @@ extension ChannelParticipant {
         switch self {
         case .creator:
             return nil
-        case let .member(_, _, adminInfo, _, _):
+        case let .member(_, _, adminInfo, _, _, _):
             return adminInfo
         }
     }
@@ -37,13 +37,13 @@ extension ChannelParticipant {
         switch self {
         case .creator:
             return nil
-        case let .member(_, _, _, banInfo, _):
+        case let .member(_, _, _, banInfo, _, _):
             return banInfo
         }
     }
 }
 
-private extension CachedChannelAdminRankType {
+private extension CachedChannelAdminRank {
     init(participant: ChannelParticipant) {
         switch participant {
         case let .creator(_, _, rank):
@@ -52,7 +52,7 @@ private extension CachedChannelAdminRankType {
             } else {
                 self = .owner
             }
-        case let .member(_, _, _, _, rank):
+        case let .member(_, _, _, _, rank, _):
             if let rank = rank {
                 self = .custom(rank)
             } else {
@@ -64,16 +64,9 @@ private extension CachedChannelAdminRankType {
 
 
 struct ChannelMemberListState {
-    let list: [RenderedChannelParticipant]
-    let loadingState: ChannelMemberListLoadingState
-    
-    func withUpdatedList(_ list: [RenderedChannelParticipant]) -> ChannelMemberListState {
-        return ChannelMemberListState(list: list, loadingState: self.loadingState)
-    }
-    
-    func withUpdatedLoadingState(_ loadingState: ChannelMemberListLoadingState) -> ChannelMemberListState {
-        return ChannelMemberListState(list: self.list, loadingState: loadingState)
-    }
+    var list: [RenderedChannelParticipant]
+    var peerStoryStats: [EnginePeer.Id: PeerStoryStats]
+    var loadingState: ChannelMemberListLoadingState
 }
 
 enum ChannelMemberListCategory {
@@ -107,9 +100,8 @@ private func isParticipantMember(_ participant: ChannelParticipant, infoIsMember
 }
 
 private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategoryListContext {
-    private let postbox: Postbox
-    private let network: Network
-    private let accountPeerId: PeerId
+    private let engine: TelegramEngine
+    private let account: Account
     private let peerId: PeerId
     private let category: ChannelMemberListCategory
     
@@ -117,18 +109,19 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
         didSet {
             self.listStatePromise.set(.single(self.listStateValue))
             if case .admins(nil) = self.category, case .ready = self.listStateValue.loadingState {
-                let ranks: [PeerId: CachedChannelAdminRankType] = self.listStateValue.list.reduce([:]) { (ranks, participant) in
+                let ranks: [PeerId: CachedChannelAdminRank] = self.listStateValue.list.reduce([:]) { (ranks, participant) in
                     var ranks = ranks
-                    ranks[participant.participant.peerId] = CachedChannelAdminRankType(participant: participant.participant)
+                    ranks[participant.participant.peerId] = CachedChannelAdminRank(participant: participant.participant)
                     return ranks
                 }
-                let previousRanks: [PeerId: CachedChannelAdminRankType] = oldValue.list.reduce([:]) { (ranks, participant) in
+                let previousRanks: [PeerId: CachedChannelAdminRank] = oldValue.list.reduce([:]) { (ranks, participant) in
                     var ranks = ranks
-                    ranks[participant.participant.peerId] = CachedChannelAdminRankType(participant: participant.participant)
+                    ranks[participant.participant.peerId] = CachedChannelAdminRank(participant: participant.participant)
                     return ranks
                 }
                 if ranks != previousRanks {
-                    let _ = updateCachedChannelAdminRanks(postbox: self.postbox, peerId: self.peerId, ranks: ranks).start()
+                    
+                    let _ = updateCachedChannelAdminRanks(postbox: account.postbox, peerId: self.peerId, ranks: ranks).start()
                 }
             }
         }
@@ -136,22 +129,34 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
 
     private var listStatePromise: Promise<ChannelMemberListState>
     var listState: Signal<ChannelMemberListState, NoError> {
+        let postbox = self.account.postbox
         return self.listStatePromise.get()
+        |> mapToSignal { state -> Signal<ChannelMemberListState, NoError> in
+            let key: PostboxViewKey = .peerStoryStats(peerIds: Set(state.list.map(\.peer.id)))
+            return postbox.combinedView(keys: [key])
+            |> map { views -> ChannelMemberListState in
+                var state = state
+                if let view = views.views[key] as? PeerStoryStatsView {
+                    state.peerStoryStats = view.storyStats
+                }
+                
+                return state
+            }
+        }
     }
+
     
     private let loadingDisposable = MetaDisposable()
     private let headUpdateDisposable = MetaDisposable()
     
     private var headUpdateTimer: SwiftSignalKit.Timer?
     
-    init(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, category: ChannelMemberListCategory) {
-        self.postbox = postbox
-        self.network = network
-        self.accountPeerId = accountPeerId
+    init(engine: TelegramEngine, account: Account, peerId: PeerId, category: ChannelMemberListCategory) {
+        self.engine = engine
         self.peerId = peerId
         self.category = category
-        
-        self.listStateValue = ChannelMemberListState(list: [], loadingState: .ready(hasMore: true))
+        self.account = account
+        self.listStateValue = ChannelMemberListState(list: [], peerStoryStats: [:], loadingState: .ready(hasMore: true))
         self.listStatePromise = Promise(self.listStateValue)
         self.loadMoreInternal(initial: true)
     }
@@ -178,7 +183,7 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             loadCount = requestBatchSize
         }
         
-        self.listStateValue = self.listStateValue.withUpdatedLoadingState(.loading(initial: initial))
+        self.listStateValue.loadingState = .loading(initial: initial)
         
         self.loadingDisposable.set((self.loadMoreSignal(count: loadCount)
             |> deliverOnMainQueue).start(next: { [weak self] members in
@@ -197,11 +202,14 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             }
             
             self.loadingDisposable.set(nil)
-            self.listStateValue = self.listStateValue.withUpdatedLoadingState(loadingState).withUpdatedList(list)
+            var listStateValue = self.listStateValue
+            listStateValue.list = list
+            listStateValue.loadingState = loadingState
+            self.listStateValue = listStateValue
         }
     }
     
-    private func loadSignal(offset: Int32, count: Int32, hash: Int32) -> Signal<[RenderedChannelParticipant]?, NoError> {
+    private func loadSignal(offset: Int32, count: Int32, hash: Int64) -> Signal<[RenderedChannelParticipant]?, NoError> {
         let requestCategory: ChannelMembersCategory
         var adminQuery: String? = nil
         switch self.category {
@@ -227,7 +235,7 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
         case let .banned(query):
             requestCategory = .banned(query.flatMap(ChannelMembersCategoryFilter.search) ?? .all)
         }
-        return channelMembers(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, category: requestCategory, offset: offset, limit: count, hash: hash) |> map { members in
+        return engine.peers.channelMembers(peerId: self.peerId, category: requestCategory, offset: offset, limit: count, hash: hash) |> map { members in
             switch requestCategory {
             case .admins:
                 if let query = adminQuery {
@@ -260,15 +268,17 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                 }
             }
             self.loadingDisposable.set(nil)
-            self.listStateValue = self.listStateValue.withUpdatedList(list)
+            var listStateValue = self.listStateValue
+            listStateValue.list = list
+            self.listStateValue = listStateValue
             if case .loading = self.listStateValue.loadingState {
                 self.loadMore()
             }
         }
         
-        self.headUpdateTimer?.invalidate()
-        self.headUpdateTimer = nil
-        self.checkUpdateHead()
+//        self.headUpdateTimer?.invalidate()
+//        self.headUpdateTimer = nil
+        //self.checkUpdateHead()
     }
     
     private func appendMembersAndFinishLoading(_ members: [RenderedChannelParticipant]) {
@@ -286,7 +296,10 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                 list.append(member)
             }
         }
-        self.listStateValue = self.listStateValue.withUpdatedList(list).withUpdatedLoadingState(.ready(hasMore: members.count >= requestBatchSize))
+        var listStateValue = self.listStateValue
+        listStateValue.list = list
+        listStateValue.loadingState = .ready(hasMore: members.count >= requestBatchSize)
+        self.listStateValue = listStateValue
         if firstLoad {
             self.checkUpdateHead()
         }
@@ -308,14 +321,15 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                     return
                 }
                 
-                var hash: UInt32 = 0
-                
+                var acc: UInt64 = 0
+                                
                 for i in 0 ..< min(strongSelf.listStateValue.list.count, Int(initialBatchSize)) {
                     let peerId = strongSelf.listStateValue.list[i].peer.id
-                    hash = (hash &* 20261) &+ UInt32(peerId.id)
+                    combineInt64Hash(&acc, with: peerId)
                 }
-                hash = hash % 0x7FFFFFFF
-                strongSelf.headUpdateDisposable.set((strongSelf.loadSignal(offset: 0, count: initialBatchSize, hash: Int32(bitPattern: hash))
+                let hashResult = finalizeInt64Hash(acc)
+
+                strongSelf.headUpdateDisposable.set((strongSelf.loadSignal(offset: 0, count: initialBatchSize, hash: hashResult)
                     |> deliverOnMainQueue).start(next: { members in
                         self?.updateHeadMembers(members)
                     }))
@@ -341,7 +355,7 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             switch self.category {
             case let .admins(query):
                 if let updated = updated, (query == nil || updated.peer.indexName.matchesByTokens(query!)) {
-                    if case let .member(_, _, adminInfo, _, _) = updated.participant, adminInfo == nil {
+                    if case let .member(_, _, adminInfo, _, _, _) = updated.participant, adminInfo == nil {
                         loop: for i in 0 ..< list.count {
                             if list[i].peer.id == updated.peer.id {
                                 list.remove(at: i)
@@ -530,7 +544,9 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             }
         }
         if updatedList {
-            self.listStateValue = self.listStateValue.withUpdatedList(list)
+            var listStateValue = self.listStateValue
+            listStateValue.list = list
+            self.listStateValue = listStateValue
         }
     }
 
@@ -552,18 +568,23 @@ private final class ChannelMemberMultiCategoryListContext: ChannelMemberCategory
             }
         }
         if !allReady {
-            return ChannelMemberListState(list: [], loadingState: .loading(initial: true))
+            return ChannelMemberListState(list: [], peerStoryStats: [:], loadingState: .loading(initial: true))
         }
         
         var list: [RenderedChannelParticipant] = []
         var existingIds = Set<PeerId>()
         var loadingState: ChannelMemberListLoadingState = .ready(hasMore: false)
+        var peerStoryStats: [PeerId: PeerStoryStats] = [:]
+
         loop: for i in 0 ..< listStates.count {
             for item in listStates[i].list {
                 if !existingIds.contains(item.peer.id) {
                     existingIds.insert(item.peer.id)
                     list.append(item)
                 }
+            }
+            for (id, value) in listStates[i].peerStoryStats {
+                peerStoryStats[id] = value
             }
             switch listStates[i].loadingState {
             case let .loading(initial):
@@ -576,7 +597,7 @@ private final class ChannelMemberMultiCategoryListContext: ChannelMemberCategory
                 }
             }
         }
-        return ChannelMemberListState(list: list, loadingState: loadingState)
+        return ChannelMemberListState(list: list, peerStoryStats: peerStoryStats, loadingState: loadingState)
     }
     
     var listState: Signal<ChannelMemberListState, NoError> {
@@ -588,9 +609,9 @@ private final class ChannelMemberMultiCategoryListContext: ChannelMemberCategory
         }
     }
     
-    init(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, categories: [ChannelMemberListCategory]) {
+    init(engine: TelegramEngine, account: Account, peerId: PeerId, categories: [ChannelMemberListCategory]) {
         self.contexts = categories.map { category in
-            return ChannelMemberSingleCategoryListContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, category: category)
+            return ChannelMemberSingleCategoryListContext(engine: engine, account: account, peerId: peerId, category: category)
         }
     }
     
@@ -638,6 +659,8 @@ private final class PeerChannelMemberContextWithSubscribers {
     private let becameEmpty: () -> Void
     
     private var emptyTimer: SwiftSignalKit.Timer?
+    private var currentValue: ChannelMemberListState?
+
     
     init(context: ChannelMemberCategoryListContext, emptyTimeout: Double, becameEmpty: @escaping () -> Void) {
         self.context = context
@@ -646,6 +669,7 @@ private final class PeerChannelMemberContextWithSubscribers {
         self.disposable.set((context.listState
             |> deliverOnMainQueue).start(next: { [weak self] value in
                 if let strongSelf = self {
+                    strongSelf.currentValue = value
                     for f in strongSelf.subscribers.copyItems() {
                         f(value)
                     }
@@ -675,7 +699,10 @@ private final class PeerChannelMemberContextWithSubscribers {
     func subscribe(requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> Disposable {
         let wasEmpty = self.subscribers.isEmpty
         let index = self.subscribers.add(updated)
-        updated(self.context.listStateValue)
+        if let currentValue = self.currentValue {
+            updated(currentValue)
+        }
+
         if wasEmpty {
             self.emptyTimer?.invalidate()
             if requestUpdate {
@@ -696,18 +723,16 @@ private final class PeerChannelMemberContextWithSubscribers {
 }
 
 final class PeerChannelMemberCategoriesContext {
-    private let postbox: Postbox
-    private let network: Network
-    private let accountPeerId: PeerId
+    private let engine: TelegramEngine
+    private let account: Account
     private let peerId: PeerId
     private var becameEmpty: (Bool) -> Void
     
     private var contexts: [PeerChannelMemberContextKey: PeerChannelMemberContextWithSubscribers] = [:]
     
-    init(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, becameEmpty: @escaping (Bool) -> Void) {
-        self.postbox = postbox
-        self.network = network
-        self.accountPeerId = accountPeerId
+    init(engine: TelegramEngine, account: Account, peerId: PeerId, becameEmpty: @escaping (Bool) -> Void) {
+        self.engine = engine
+        self.account = account
         self.peerId = peerId
         self.becameEmpty = becameEmpty
     }
@@ -753,13 +778,13 @@ final class PeerChannelMemberCategoriesContext {
             default:
                 mappedCategory = .recent
             }
-            context = ChannelMemberSingleCategoryListContext(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, category: mappedCategory)
+            context = ChannelMemberSingleCategoryListContext(engine: engine, account: self.account, peerId: self.peerId, category: mappedCategory)
         case let .restrictedAndBanned(query):
-            context = ChannelMemberMultiCategoryListContext(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, categories: [.restricted(query), .banned(query)])
+            context = ChannelMemberMultiCategoryListContext(engine: engine, account: self.account, peerId: self.peerId, categories: [.restricted(query), .banned(query)])
         case let .restricted(query):
-            context = ChannelMemberSingleCategoryListContext(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, category: .restricted(query))
+            context = ChannelMemberSingleCategoryListContext(engine: engine, account: self.account, peerId: self.peerId, category: .restricted(query))
         case let .banned(query):
-            context = ChannelMemberSingleCategoryListContext(postbox: self.postbox, network: self.network, accountPeerId: self.accountPeerId, peerId: self.peerId, category: .banned(query))
+            context = ChannelMemberSingleCategoryListContext(engine: engine, account: self.account, peerId: self.peerId, category: .banned(query))
         }
         let contextWithSubscribers = PeerChannelMemberContextWithSubscribers(context: context, emptyTimeout: emptyTimeout, becameEmpty: { [weak self] in
             assert(Queue.mainQueue().isCurrent())

@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 
@@ -17,7 +17,7 @@ extension NSAttributedString.Key {
     static let URL: NSAttributedString.Key = NSAttributedString.Key("TelegramURL")
 }
 
-final class InstantPageUrlItem: Equatable {
+struct InstantPageUrlItem: Hashable {
     let url: String
     let webpageId: MediaId?
     

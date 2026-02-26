@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
 
@@ -25,44 +25,52 @@ let kBotInlineTypeGeo:String = "geo";
 let kBotInlineTypeFile:String = "file";
 let kBotInlineTypeVoice:String = "voice";
 
-enum InputMediaContextEntry : Equatable {
+enum InputMediaContextEntry : Hashable {
     case gif(thumb: ImageMediaReference?, file: FileMediaReference)
     case photo(image:TelegramMediaImage)
     case sticker(thumb: TelegramMediaImage?, file: TelegramMediaFile)
 
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case let .gif(_, file):
+            hasher.combine(file.media.fileId.hashValue)
+        case let .sticker(_, file):
+            hasher.combine(file.fileId.hashValue)
+        case let .photo(image):
+            hasher.combine(image.imageId.hashValue)
+
+        }
+    }
+    
 }
 
 
 func ==(lhs:InputMediaContextEntry, rhs:InputMediaContextEntry) -> Bool {
     switch lhs {
-    case let .gif(lhsData):
-        if case let .gif(rhsData) = rhs {
-            if !lhsData.file.media.isEqual(to: rhsData.file.media) {
+    case let .gif(lhsThumb, lhsFile):
+        if case let .gif(rhsThumb, rhsFile) = rhs {
+            if !lhsFile.media.isEqual(to: rhsFile.media) {
                 return false
             }
-            if (lhsData.thumb == nil) != (lhsData.thumb == nil) {
+            if (lhsThumb == nil) != (rhsThumb == nil) {
                 return false
-            } else if let lhsThumb = lhsData.thumb, let rhsThumb = rhsData.thumb, lhsThumb.media != rhsThumb.media {
+            } else if let lhsThumb = lhsThumb, let rhsThumb = rhsThumb, lhsThumb.media != rhsThumb.media {
                 return false
             }
-            
-            
             return true
         } else {
             return false
         }
-    case let .sticker(lhsData):
-        if case let .sticker(rhsData) = rhs {
-            if lhsData.file != rhsData.file {
+    case let .sticker(lhsThumb, lhsFile):
+        if case let .sticker(rhsThumb, rhsFile) = rhs {
+            if !lhsFile.isEqual(to: rhsFile) {
                 return false
             }
-            if (lhsData.thumb == nil) != (lhsData.thumb == nil) {
+            if (lhsThumb == nil) != (rhsThumb == nil) {
                 return false
-            } else if let lhsThumb = lhsData.thumb, let rhsThumb = rhsData.thumb, lhsThumb != rhsThumb {
+            } else if let lhsThumb = lhsThumb, let rhsThumb = rhsThumb, lhsThumb != rhsThumb {
                 return false
             }
-            
-            
             return true
         } else {
             return false
@@ -70,10 +78,9 @@ func ==(lhs:InputMediaContextEntry, rhs:InputMediaContextEntry) -> Bool {
        
     case let .photo(lhsData):
         if case let .photo(rhsData) = rhs {
-            if lhsData == rhsData {
+            if lhsData != rhsData {
                 return false
             }
-            
             return true
         } else {
             return false
@@ -81,7 +88,7 @@ func ==(lhs:InputMediaContextEntry, rhs:InputMediaContextEntry) -> Bool {
     }
 }
 
-struct InputMediaContextRow :Equatable {
+struct InputMediaContextRow : Hashable, Equatable {
     let entries:[InputMediaContextEntry]
     let results:[ChatContextResult]
     let messages:[Message]
@@ -92,6 +99,18 @@ struct InputMediaContextRow :Equatable {
         self.results = results
         self.sizes = sizes
         self.messages = messages
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        for message in messages {
+            hasher.combine(message.id)
+        }
+        for result in results {
+            hasher.combine(result.id)
+        }
+        for entry in entries {
+            hasher.combine(entry.hashValue)
+        }
     }
     
     func isFilled(for width:CGFloat) -> Bool {
@@ -218,6 +237,7 @@ func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSi
 func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSize:NSSize) -> [InputMediaContextRow] {
     var entries:[InputMediaContextEntry] = []
     var rows:[InputMediaContextRow] = []
+    
 
     var dimensions:[NSSize] = []
     var removeResultIndexes:[Int] = []
@@ -233,10 +253,10 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
                 if let content = data.content {
                     var image:ImageMediaReference? = nil
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
-                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(result.id.hashValue)), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                         image = isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
                     }
-                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/gif", size: content.resource.size, attributes: [TelegramMediaFileAttribute.Animated])
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 1, id: MediaId.Id(result.id.hashValue)), partialReference: nil, resource: content.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/gif", size: content.resource.size, attributes: [TelegramMediaFileAttribute.Animated], alternativeRepresentations: [])
                     entries.append(.gif(thumb: image, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
                 } else {
                     removeResultIndexes.append(i)
@@ -247,10 +267,10 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
                 if let content = data.content, let dimensions = content.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
-                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource, progressiveSizes: []))
+                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     }
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: content.resource, progressiveSizes: []))
-                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: content.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
+                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(result.id.hashValue)), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 }
                 if let image = image {
                     entries.append(.photo(image: image))
@@ -261,9 +281,9 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
                 if let content = data.content {
                     var image:TelegramMediaImage? = nil
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 1, id: MediaId.Id(result.id.hashValue)), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     }
-                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: content.attributes)))
+                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(result.id.hashValue)), partialReference: nil, resource: content.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: content.attributes, alternativeRepresentations: [])))
                 } else {
                     removeResultIndexes.append(i)
                 }
@@ -279,7 +299,7 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
                     if let image = data.image {
                         thumb = ImageMediaReference.standalone(media: image)
                     } else if !file.previewRepresentations.isEmpty {
-                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 1, id: MediaId.Id(result.id.hashValue)), representations: file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                         thumb =  isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
                     }
                     entries.append(.gif(thumb: thumb, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
@@ -350,7 +370,6 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
         }
 
     }
-    
     return rows
 }
 
@@ -367,7 +386,7 @@ func makeChatGridMediaEnties(_ results:[Message], initialSize:NSSize) -> [InputM
         
         let result = results[i]
         
-        if let file = result.media.first as? TelegramMediaFile {
+        if let file = result.anyMedia as? TelegramMediaFile {
             let dimension:NSSize = file.videoSize
             
             let imageReference: ImageMediaReference?

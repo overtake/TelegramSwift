@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 import AVKit
 import SwiftSignalKit
 
@@ -61,15 +61,15 @@ private final class VideoAvatarKeyFramePreviewView: Control {
 }
 
 private final class VideoAvatarModalView : View {
-    private var avPlayer: AVPlayerView
+    private let avPlayer: AVPlayerLayer
     private var videoSize: NSSize = .zero
     private let playerContainer: View = View()
     private var keyFramePreview: VideoAvatarKeyFramePreviewView?
     private var keyFrameDotView: View?
     private let controls: View = View()
     
-    fileprivate let ok: TitleButton = TitleButton()
-    fileprivate let cancel: TitleButton = TitleButton()
+    fileprivate let ok: TextButton = TextButton()
+    fileprivate let cancel: TextButton = TextButton()
 
     fileprivate let scrubberView: VideoEditorScrubblerControl = VideoEditorScrubblerControl(frame: .zero)
     fileprivate let selectionRectView: SelectionRectView
@@ -78,16 +78,21 @@ private final class VideoAvatarModalView : View {
     private let descView: TextView = TextView()
     
     required init(frame frameRect: NSRect) {
-        selectionRectView = SelectionRectView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
-        avPlayer = AVPlayerView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
-        super.init(frame: frameRect)
-        playerContainer.addSubview(avPlayer)
-        avPlayer.controlsStyle = .none
         
+        
+        selectionRectView = SelectionRectView(frame: frameRect.size.bounds)
+        avPlayer = AVPlayerLayer()
+        avPlayer.frame = frameRect.size.bounds
+        super.init(frame: frameRect)
+        playerContainer.layer?.addSublayer(avPlayer)
+        
+        avPlayer.videoGravity = .resizeAspectFill
         playerContainer.addSubview(selectionRectView)
         controls.addSubview(scrubberView)
         selectionRectView.isCircleCap = true
         selectionRectView.dimensions = .square
+        
+        self.videoSize = frameRect.size
         
 
         addSubview(playerContainer)
@@ -107,15 +112,15 @@ private final class VideoAvatarModalView : View {
         ok.set(background: .accent, for: .Normal)
         
         cancel.set(background: NSColor.grayText.withAlphaComponent(0.8), for: .Highlight)
-        ok.set(background: NSColor.accent.withAlphaComponent(0.8), for: .Highlight)
+        ok.set(background: NSColor.accent.highlighted, for: .Highlight)
 
         
         cancel.set(color: .white, for: .Normal)
-        cancel.set(text: L10n.videoAvatarButtonCancel, for: .Normal)
+        cancel.set(text: strings().videoAvatarButtonCancel, for: .Normal)
 
         
         ok.set(color: .white, for: .Normal)
-        ok.set(text: L10n.videoAvatarButtonSet, for: .Normal)
+        ok.set(text: strings().videoAvatarButtonSet, for: .Normal)
 
         _ = cancel.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
         _ = ok.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
@@ -255,7 +260,7 @@ private final class VideoAvatarModalView : View {
         let oldSize = self.frame.size
         super.setFrameSize(newSize)
         
-        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(frame.width, frame.height - 200))
+        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(newSize.width, newSize.height - 200))
         let oldVideoContainerSize = playerContainer.frame.size
         playerContainer.setFrameSize(videoContainerSize)
 
@@ -265,7 +270,9 @@ private final class VideoAvatarModalView : View {
             selectionRectView.applyRect(selectionRectView.selectedRect.apply(multiplier: multiplier))
         }
         
-        avPlayer.frame = playerContainer.bounds
+        avPlayer.frame = videoContainerSize.bounds
+        
+        
         selectionRectView.frame = playerContainer.bounds
         controls.setFrameSize(NSMakeSize(370, 44))
         scrubberView.setFrameSize(controls.frame.size)
@@ -344,14 +351,20 @@ class VideoAvatarModalController: ModalViewController {
     
     private var state: Promise<VideoAvatarGeneratorState> = Promise()
     private let localize: String
-    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String) {
+    private let quality: String
+    private let holder: AVAsset
+    private let confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)?
+    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String, quality: String, holder: AVAsset, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
         self.context = context
         self.asset = asset
+        self.confirm = confirm
         self.track = track
+        self.holder = holder
+        self.quality = quality
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
-        self.item = AVPlayerItem(asset: asset)
         
+        self.item = AVPlayerItem(asset: asset)
         self.player = AVPlayer(playerItem: item)
         
         let videoComposition = AVMutableVideoComposition()
@@ -421,8 +434,34 @@ class VideoAvatarModalController: ModalViewController {
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
-        self.state.set(generateVideo(asset, composition: self.currentVideoComposition(), values: self.scrubberValues.with { $0 }))
-        close()
+        
+        let dataSignal = generateVideo(self.asset, composition: self.currentVideoComposition(), quality: self.quality, values: self.scrubberValues.with { $0 })
+        
+        let promise: Promise<VideoAvatarGeneratorState> = Promise()
+        promise.set(dataSignal)
+        
+        let invoke = { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            self.state.set(promise.get())
+            self.close()
+        }
+        
+        if let confirm = confirm {
+            confirm(promise.get() |> mapToSignal { value in
+                switch value {
+                case let .start(thumb):
+                    return .single(URL(fileURLWithPath: thumb))
+                case let .complete(thumb, _, _):
+                    return .single(URL(fileURLWithPath: thumb))
+                default:
+                    return .never()
+                }
+            }, invoke)
+        } else {
+            invoke()
+        }
         
         return .invoked
     }
@@ -732,7 +771,7 @@ class VideoAvatarModalController: ModalViewController {
 
 
 
-func selectVideoAvatar(context: AccountContext, path: String, localize: String, signal:@escaping(Signal<VideoAvatarGeneratorState, NoError>)->Void) {
+func selectVideoAvatar(context: AccountContext, path: String, localize: String, quality: String = AVAssetExportPresetMediumQuality, signal:@escaping(Signal<VideoAvatarGeneratorState, NoError>)->Void, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
     let asset = AVURLAsset(url: URL(fileURLWithPath: path))
     let track = asset.tracks(withMediaType: .video).first
     if let track = track {
@@ -740,22 +779,24 @@ func selectVideoAvatar(context: AccountContext, path: String, localize: String, 
         guard let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
             return
         }
+                        
         do {
+
             try compositionVideoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: asset.duration), of: track, at: .zero)
-            let controller = VideoAvatarModalController(context: context, asset: composition, track: track, localize: localize)
+            let controller = VideoAvatarModalController(context: context, asset: composition, track: track, localize: localize, quality: quality, holder: asset, confirm: confirm)
             showModal(with: controller, for: context.window)
             signal(controller.completeState)
-        } catch {
+        } catch { 
             
         }
     }
 }
 
 
-private func generateVideo(_ asset: AVComposition, composition: AVVideoComposition, values: VideoScrubberValues) -> Signal<VideoAvatarGeneratorState, NoError> {
+private func generateVideo(_ asset: AVComposition, composition: AVVideoComposition, quality: String, values: VideoScrubberValues) -> Signal<VideoAvatarGeneratorState, NoError> {
     return Signal { subscriber in
         
-        let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality)!
+        let exportSession = AVAssetExportSession(asset: asset, presetName: quality)!
         exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = true
         
@@ -848,19 +889,19 @@ private func generateVideo(_ asset: AVComposition, composition: AVVideoCompositi
 
 
 /*
- - (UIImageOrientation)getVideoOrientationFromAsset:(AVAsset *)asset
+ - (NSImageOrientation)getVideoOrientationFromAsset:(AVAsset *)asset
  {
  AVAssetTrack *videoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
  CGSize size = [videoTrack naturalSize];
  CGAffineTransform txf = [videoTrack preferredTransform];
  
  if (size.width == txf.tx && size.height == txf.ty)
- return UIImageOrientationLeft; //return UIInterfaceOrientationLandscapeLeft;
+ return NSImageOrientationLeft; //return UIInterfaceOrientationLandscapeLeft;
  else if (txf.tx == 0 && txf.ty == 0)
- return UIImageOrientationRight; //return UIInterfaceOrientationLandscapeRight;
+ return NSImageOrientationRight; //return UIInterfaceOrientationLandscapeRight;
  else if (txf.tx == 0 && txf.ty == size.width)
- return UIImageOrientationDown; //return UIInterfaceOrientationPortraitUpsideDown;
+ return NSImageOrientationDown; //return UIInterfaceOrientationPortraitUpsideDown;
  else
- return UIImageOrientationUp;  //return UIInterfaceOrientationPortrait;
+ return NSImageOrientationUp;  //return UIInterfaceOrientationPortrait;
  }
  */

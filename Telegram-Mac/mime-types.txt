@@ -639,3 +639,4 @@ zip:multipart/x-zip
 zsh:text/x-script.zsh
 swift:text/plain
 crash:text/plain
+icns:image/icns

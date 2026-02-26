@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>APPCENTER_SECRET</key>
-	<string>${APPCENTER_SECRET}</string>
 	<key>ATSApplicationFontsPath</key>
 	<string>fonts</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -21,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>7.2.4</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -31,12 +29,13 @@
 			<array>
 				<string>tg</string>
 				<string>telegram</string>
-				<string>ton</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>209821</string>
+	<string>274210</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -50,16 +49,22 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera so that you can record video messages.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>We need access to your Downloads folder so that you can save files from chats.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2016 Telegram. All rights reserved.</string>
+	<string>Copyright © 2024 Telegram. All rights reserved.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need access to your location so that you can send your current locations and setup Auto-Night theme</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need access to your location so that you can send your current locations.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need access to your microphone so that you can record voice messages and make calls.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SOURCE</key>
+	<string>${SOURCE}</string>
 	<key>SUFeedURL</key>
 	<string>${SFEED_URL}</string>
 	<key>SUPublicDSAKeyFile</key>

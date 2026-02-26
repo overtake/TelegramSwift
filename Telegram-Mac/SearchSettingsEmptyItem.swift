@@ -12,7 +12,7 @@ import TGUIKit
 class SearchSettingsEmptyItem: TableRowItem {
     let textLayout:TextViewLayout
     override init(_ initialSize:NSSize) {
-        textLayout = TextViewLayout(.initialize(string: L10n.settingsSearchEmptyItem, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
+        textLayout = TextViewLayout(.initialize(string: strings().settingsSearchEmptyItem, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
         super.init(initialSize)
     }
     

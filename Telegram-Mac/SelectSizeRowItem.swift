@@ -14,19 +14,23 @@ import TGUIKit
 class SelectSizeRowItem: GeneralRowItem {
 
     fileprivate let titles:[String]?
+    fileprivate let titlesImages:[CGImage]?
     fileprivate let sizes: [Int32]
     fileprivate var current: Int32
     fileprivate let initialCurrent: Int32
     fileprivate let selectAction:(Int)->Void
     fileprivate let hasMarkers: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, viewType: GeneralViewType = .legacy, selectAction: @escaping(Int)->Void) {
+    fileprivate let dottedIndexes: [Int]
+    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, titlesImages: [CGImage]? = nil, dottedIndexes:[Int] = [], viewType: GeneralViewType = .legacy, selectAction: @escaping(Int)->Void) {
         self.sizes = sizes
         self.titles = titles
+        self.titlesImages = titlesImages
+        self.dottedIndexes = dottedIndexes
         self.initialCurrent = current
         self.hasMarkers = hasMarkers
         self.current = current
         self.selectAction = selectAction
-        super.init(initialSize, height: titles != nil ? 70 : 40, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 30, right: 30))
+        super.init(initialSize, height: titles != nil ? 70 : 40, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 20, right: 20))
     }
     
     override func viewClass() -> AnyClass {
@@ -78,7 +82,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
         if item.sizes.count == availableRects.count {
             let point = containerView.convert(event.locationInWindow, from: nil)
             for i in 0 ..< availableRects.count {
-                if NSPointInRect(point, availableRects[i]), item.current != i {
+                if NSPointInRect(point, availableRects[i]), item.sizes.firstIndex(of: item.current) != i {
                     item.selectAction(i)
                     return
                 }
@@ -137,7 +141,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             let width: CGFloat = containerView.frame.width - (item.inset.left + minF.width) - (item.inset.right + maxF.width) - insetBetweenFont * 2
             
-            let per = floorToScreenPixels(backingScaleFactor, width / (count - 1))
+            let per = floorToScreenPixels(backingScaleFactor, width / (count))
             
             ctx.setFillColor(theme.colors.accent.cgColor)
             let lineSize = NSMakeSize(width, 2)
@@ -152,7 +156,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             let selectSize = NSMakeSize(20, 20)
             
-            let selectPoint = NSMakePoint(minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / CGFloat(item.sizes.count - 1)) * current - selectSize.width / 2, _focus(selectSize).minY)
+            let selectPoint = NSMakePoint(minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / CGFloat(count)) * current - selectSize.width / 2, _focus(selectSize).minY)
             
             ctx.setFillColor(theme.colors.grayText.cgColor)
             let unMinX = selectPoint.x + selectSize.width / 2
@@ -171,15 +175,22 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 
                 if let titles = item.titles, titles.count == item.sizes.count {
                     let title = titles[i]
-                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                    titleNode.1.draw(NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                    let titleRect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
+                    
+                    if let image = item.titlesImages?[i] {
+                        ctx.draw(image, in: CGRect(origin: NSMakePoint(titleRect.minX - image.backingSize.width, titleRect.minY), size: image.backingSize))
+                    }
+                    
+                    titleNode.1.draw(titleRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
             
             if let titles = item.titles, titles.count == 1, let title = titles.first {
                 let perSize = NSMakeSize(10, 10)
                 let perF = _focus(perSize)
-                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                
                 titleNode.1.draw(NSMakeRect(_focus(titleNode.0.size).minX, perF.minY - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
@@ -195,7 +206,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             for i in 0 ..< item.sizes.count {
                 let perF = _focus(selectSize)
-                let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / (count - 1)) * CGFloat(i) - selectSize.width / 2, perF.minY)
+                let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / (count)) * CGFloat(i) - selectSize.width / 2, perF.minY)
                 let rect = NSMakeRect(point.x, point.y, selectSize.width, selectSize.height)
                 addCursorRect(rect, cursor: NSCursor.pointingHand)
                 availableRects.append(rect)
@@ -216,13 +227,13 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 maxNode.1.draw(NSMakeRect(containerView.frame.width - insets.right - maxF.width, maxF.minY, maxF.width, maxF.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
-            let count = CGFloat(item.sizes.count)
+            let count = max(1, CGFloat(item.sizes.count) - 1)
             
             let insetBetweenFont: CGFloat = item.hasMarkers ? 20 : 0
             
             let width: CGFloat = containerView.frame.width - (insets.left + minF.width) - (insets.right + maxF.width) - insetBetweenFont * 2
             
-            let per = floorToScreenPixels(backingScaleFactor, width / (count - 1))
+            let per = floorToScreenPixels(backingScaleFactor, width / (count))
             
             ctx.setFillColor(theme.colors.accent.cgColor)
             let lineSize = NSMakeSize(width, 2)
@@ -237,12 +248,15 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             let selectSize = NSMakeSize(20, 20)
             
-            let selectPoint = NSMakePoint(minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / CGFloat(item.sizes.count - 1)) * current - selectSize.width / 2, _focus(selectSize).minY)
+            let selectPoint = NSMakePoint(minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / CGFloat(count)) * current - selectSize.width / 2, _focus(selectSize).minY)
             
             ctx.setFillColor(theme.colors.grayText.cgColor)
             let unMinX = selectPoint.x + selectSize.width / 2
+
+
+
             ctx.fill(NSMakeRect(unMinX, lc.minY, lc.maxX - unMinX, lc.height))
-            
+
             
             for i in 0 ..< item.sizes.count {
                 let perSize = NSMakeSize(10, 10)
@@ -251,41 +265,69 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 ctx.setFillColor(theme.colors.background.cgColor)
                 ctx.fill(NSMakeRect(point.x, point.y, perSize.width, perSize.height))
                 
-                ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
+                ctx.setFillColor(i <= (item.sizes.firstIndex(of: item.current) ?? 0) ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
                 ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
-                
-                if let titles = item.titles, titles.count == item.sizes.count {
+
+
+                if item.dottedIndexes.contains(i), i > 0 {
+                    let prevPoint = NSMakePoint(minX + per * CGFloat(i - 1) + (i == 1 ? perSize.width : perSize.width / 2), lc.minY)
+                    let rect = NSMakeRect(prevPoint.x, lc.minY, point.x - prevPoint.x, lc.height)
+                    ctx.clear(rect)
+                    let w: CGFloat = 16
+
+
+                    let count = Int(floor(rect.width / w))
+                    let total = CGFloat(count) * w
+
+                    let inset: CGFloat = ceil((rect.width - total) / 2)
+
+                    for j in 0 ..< count {
+                        let rect = NSMakeRect(rect.minX + CGFloat(j) * w, rect.minY, w, rect.height)
+                        ctx.saveGState()
+                        ctx.setFillColor(i <= (item.sizes.firstIndex(of: item.current) ?? 0) ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
+                        ctx.fill(NSMakeRect(rect.minX + inset + 2, rect.minY, w - 4, rect.height))
+                        ctx.restoreGState()
+                    }
+                }
+
+                if let titles = item.titles, titles.count == item.sizes.count, titles.count > 1 {
                     let title = titles[i]
-                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                    
-                    var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
-                    
+                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+
+                    var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 4, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
+
                     if i == titles.count - 1 {
                         rect.origin.x = min(rect.minX, (point.x + 5) - titleNode.0.size.width)
                     }
                     
+                    if let image = item.titlesImages?[i] {
+                        ctx.draw(image, in: CGRect(origin: NSMakePoint(rect.minX - image.backingSize.width + 4, rect.minY), size: image.backingSize))
+                        rect.origin.x += 6
+                    }
+                    
+
                     titleNode.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
-            
+
             if let titles = item.titles, titles.count == 1, let title = titles.first {
-                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                 titleNode.1.draw(NSMakeRect(_focus(titleNode.0.size).minX, insets.top , titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
-            
-            
+
+
             ctx.setFillColor(theme.colors.border.cgColor)
             ctx.fillEllipse(in: NSMakeRect(selectPoint.x, selectPoint.y, selectSize.width, selectSize.height))
-            
-            ctx.setFillColor(.white)
+
+            ctx.setFillColor(theme.colors.background.cgColor)
             ctx.fillEllipse(in: NSMakeRect(selectPoint.x + 1, selectPoint.y + 1, selectSize.width - 2, selectSize.height - 2))
-            
+
             resetCursorRects()
             availableRects.removeAll()
             
             for i in 0 ..< item.sizes.count {
                 let perF = _focus(selectSize)
-                let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / (count - 1)) * CGFloat(i) - selectSize.width / 2, perF.minY)
+                let point = NSMakePoint(interactionRect.minX + floorToScreenPixels(backingScaleFactor, interactionRect.width / (count)) * CGFloat(i) - selectSize.width / 2, perF.minY)
                 let rect = NSMakeRect(point.x, point.y, selectSize.width, selectSize.height)
                 addCursorRect(rect, cursor: NSCursor.pointingHand)
                 availableRects.append(rect)

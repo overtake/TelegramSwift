@@ -250,7 +250,6 @@ public func qrCode(string: String, color: NSColor, backgroundColor: NSColor? = n
                         c.strokePath()
                         
                         let dotSide = markerSide - squareSize.width * 3.0
-//                        path = NSBezierPath(roundedRect: CGRect(x: x + squareSize.width * 2.0, y: y + squareSize.height * 2.0, width: dotSide, height: dotSide), cornerRadius: dotSide / 3.5)
                         c.addPath(CGPath(roundedRect: CGRect(x: x + squareSize.width * 2.0, y: y + squareSize.height * 2.0, width: dotSide, height: dotSide), cornerWidth: dotSide / 3.5, cornerHeight: dotSide / 3.5, transform: nil))
                         c.fillPath()
                     }
@@ -296,6 +295,7 @@ public func qrCode(string: String, color: NSColor, backgroundColor: NSColor? = n
                         break
                     }
                 }
+                addCorners(context, arguments: arguments, scale: arguments.scale)
                 
                 return context
             })

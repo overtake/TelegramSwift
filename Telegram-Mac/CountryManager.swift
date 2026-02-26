@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import TelegramCore
 
 class CountryItem  {
     let shortName:String
@@ -82,4 +83,65 @@ class CountryManager {
     func item(byShortCountryName countryName: String) -> CountryItem? {
         return shorted[countryName.lowercased()]
     }
+}
+
+
+
+func loadCountryCodes() -> [Country] {
+    guard let filePath = Bundle.main.path(forResource: "PhoneCountries", ofType: "txt") else {
+        return []
+    }
+    guard let stringData = try? Data(contentsOf: URL(fileURLWithPath: filePath)) else {
+        return []
+    }
+    guard let data = String(data: stringData, encoding: .utf8) else {
+        return []
+    }
+    
+    let delimiter = ";"
+    let endOfLine = "\n"
+    
+    var result: [Country] = []
+//    var countriesByPrefix: [String: (Country, Country.CountryCode)] = [:]
+    
+    var currentLocation = data.startIndex
+    
+    let locale = Locale(identifier: "en-US")
+    
+    while true {
+        guard let codeRange = data.range(of: delimiter, options: [], range: currentLocation ..< data.endIndex) else {
+            break
+        }
+        
+        let countryCode = String(data[currentLocation ..< codeRange.lowerBound])
+        
+        guard let idRange = data.range(of: delimiter, options: [], range: codeRange.upperBound ..< data.endIndex) else {
+            break
+        }
+        
+        let countryId = String(data[codeRange.upperBound ..< idRange.lowerBound])
+        
+        guard let patternRange = data.range(of: delimiter, options: [], range: idRange.upperBound ..< data.endIndex) else {
+            break
+        }
+        
+        let pattern = String(data[idRange.upperBound ..< patternRange.lowerBound])
+        
+        let maybeNameRange = data.range(of: endOfLine, options: [], range: patternRange.upperBound ..< data.endIndex)
+        
+        let countryName = locale.localizedString(forIdentifier: countryId) ?? ""
+        if let _ = Int(countryCode) {
+            let code = Country.CountryCode(code: countryCode, prefixes: [], patterns: !pattern.isEmpty ? [pattern] : [])
+            let country = Country(id: countryId, name: countryName, localizedName: nil, countryCodes: [code], hidden: false)
+            result.append(country)
+        }
+        
+        if let maybeNameRange = maybeNameRange {
+            currentLocation = maybeNameRange.upperBound
+        } else {
+            break
+        }
+    }
+        
+    return result
 }

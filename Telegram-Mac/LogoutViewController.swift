@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
+import WebKit
 
 private struct LogoutControllerState : Equatable {
     
@@ -49,43 +50,34 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsAlternativeOptionsSection), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().logoutOptionsAlternativeOptionsSection), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
     if activeAccounts.count < 3 {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.logoutOptionsAddAccountTitle, color: theme.colors.text, icon: theme.icons.logoutOptionAddAccount, type: .next, viewType: .firstItem, description: L10n.logoutOptionsAddAccountText, action: arguments.addAccount)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: strings().logoutOptionsAddAccountTitle, color: theme.colors.text, icon: theme.icons.logoutOptionAddAccount, type: .next, viewType: .firstItem, description: strings().logoutOptionsAddAccountText, action: arguments.addAccount)))
         index += 1
     }
 
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: L10n.logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: .innerItem, description: L10n.logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_set_a_passcode, data: InputDataGeneralData(name: strings().logoutOptionsSetPasscodeTitle, color: theme.colors.text, icon: theme.icons.logoutOptionSetPasscode, type: .next, viewType: activeAccounts.count < 3 ? .innerItem : .firstItem, description: strings().logoutOptionsSetPasscodeText, action: arguments.setPasscode)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_cache, data: InputDataGeneralData(name: L10n.logoutOptionsClearCacheTitle, color: theme.colors.text, icon: theme.icons.logoutOptionClearCache, type: .next, viewType: .innerItem, description: L10n.logoutOptionsClearCacheText, action: arguments.clearCache)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_cache, data: InputDataGeneralData(name: strings().logoutOptionsClearCacheTitle, color: theme.colors.text, icon: theme.icons.logoutOptionClearCache, type: .next, viewType: .innerItem, description: strings().logoutOptionsClearCacheText, action: arguments.clearCache)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_change_phone_number, data: InputDataGeneralData(name: L10n.logoutOptionsChangePhoneNumberTitle, color: theme.colors.text, icon: theme.icons.logoutOptionChangePhoneNumber, type: .next, viewType: .innerItem, description: L10n.logoutOptionsChangePhoneNumberText, action: arguments.changePhoneNumber)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_change_phone_number, data: InputDataGeneralData(name: strings().logoutOptionsChangePhoneNumberTitle, color: theme.colors.text, icon: theme.icons.logoutOptionChangePhoneNumber, type: .next, viewType: .innerItem, description: strings().logoutOptionsChangePhoneNumberText, action: arguments.changePhoneNumber)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: L10n.logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, viewType: .lastItem, description: L10n.logoutOptionsContactSupportText, action: arguments.contactSupport)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: strings().logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, viewType: .lastItem, description: strings().logoutOptionsContactSupportText, action: arguments.contactSupport)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
-//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: L10n.logoutOptionsLogOut, color: theme.colors.redUI, viewType: .singleItem, action: arguments.logout)))
-//    index += 1
-//
-//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.logoutOptionsLogOutInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-//    index += 1
-
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-
     
     return entries
 }
@@ -112,13 +104,18 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         f(StorageUsageController(context))
     }, changePhoneNumber: {
         closeAllModals()
-        f(PhoneNumberIntroController(context))
+        let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
+        navigation.alwaysAnimate = true
+        navigation._frameRect = NSMakeRect(0, 0, 350, 400)
+        navigation.readyOnce()
+        showModal(with: navigation, for: context.window)
     }, contactSupport: {
-        confirm(for: mainWindow, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
+        verifyAlert_button(for: context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
             closeAllModals()
             switch result {
             case .basic:
-                _ = showModalProgress(signal: supportPeerId(account: context.account), for: mainWindow).start(next: { peerId in
+                
+                _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: { peerId in
                     if let peerId = peerId {
                         f(ChatController(context: context, chatLocation: .peer(peerId)))
                     }
@@ -128,9 +125,12 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
             }
         })
     }, logout: {
-        confirm(for: mainWindow, header: L10n.accountConfirmLogout, information: L10n.accountConfirmLogoutText, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
             closeAllModals()
             _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+            
+            FastSettings.clear_uuid(context.account.id.int64)
+            
         })
     })
     
@@ -138,16 +138,16 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         return logoutEntries(state: state, activeAccounts: activeAccounts, arguments: arguments)
     }
     
-    let controller = InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.logoutOptionsTitle, hasDone: false)
+    let controller = InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: strings().logoutOptionsTitle, hasDone: false)
     
     
-    let modalController = InputDataModalController(controller, modalInteractions: ModalInteractions(acceptTitle: L10n.logoutOptionsLogOut, accept: {
+    let modalController = InputDataModalController(controller, modalInteractions: ModalInteractions(acceptTitle: strings().logoutOptionsLogOut, accept: {
         arguments.logout()
-    }, drawBorder: true, height: 50, singleButton: true))
+    }, singleButton: true))
     
     controller.afterTransaction = { [weak modalController] controller in
         modalController?.modalInteractions?.updateDone { button in
-            button.set(color: theme.colors.redUI, for: .Normal)
+            button.set(background: theme.colors.redUI, for: .Normal)
         }
     }
     

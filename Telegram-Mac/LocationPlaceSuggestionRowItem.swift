@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 private let randomColors = [NSColor(rgb: 0xe56cd5), NSColor(rgb: 0xf89440), NSColor(rgb: 0x9986ff), NSColor(rgb: 0x44b3f5), NSColor(rgb: 0x6dc139), NSColor(rgb: 0xff5d5a), NSColor(rgb: 0xf87aad), NSColor(rgb: 0x6e82b3), NSColor(rgb: 0xf5ba21)]
@@ -77,8 +77,8 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
                     _ = attr.append(string: venue.address, color: theme.colors.grayText, font: .normal(.text))
                     if let type = venue.type {
                         let resource = HttpReferenceMediaResource(url: "https://ss3.4sqi.net/img/categories_v2/\(type)_88.png", size: nil)
-                        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 60, height: 60), resource: resource, progressiveSizes: [])
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 60, height: 60), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(resource.url.hashValue)), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     }
                 }
                 self.color = venueIconColor(type: media.venue?.type ?? "")
@@ -151,7 +151,7 @@ private final class LocationPlaceSuggestionRowView : TableRowView {
         imageView.isHidden = item.image == nil
         if let image = item.image {
             imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, small: true))
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 25), imageSize: NSMakeSize(50, 50), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsetsZero))
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: NSMakeSize(50, 50), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsetsZero))
         }
     }
     

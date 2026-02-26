@@ -17,7 +17,7 @@ class ChatListFiltersHeaderItem: GeneralRowItem {
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         self.context = context
         self.sticker = sticker
-        super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
+        super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 20, right: 20, top: 0, bottom: 10))
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {

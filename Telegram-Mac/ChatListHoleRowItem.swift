@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 class ChatListHoleRowItem: TableRowItem {
 
     private var context: AccountContext

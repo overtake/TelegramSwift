@@ -9,7 +9,8 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+import TelegramCore
+import TelegramVoip
 
 enum CameraState : Equatable {
     case notInited
@@ -20,6 +21,24 @@ enum CameraState : Equatable {
 final class OutgoingVideoView : Control {
     
     private var progressIndicator: ProgressIndicator? = nil
+    private let videoContainer = Control()
+    var isMirrored: Bool = false {
+        didSet {
+            CATransaction.begin()
+            if isMirrored {
+                let rect = videoContainer.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
+                fr = CATransform3DScale(fr, -1, 1, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), 0, 0)
+                videoContainer.layer?.sublayerTransform = fr
+            } else {
+                videoContainer.layer?.sublayerTransform = CATransform3DIdentity
+            }
+           
+            CATransaction.commit()
+        }
+    }
     
     var isMoved: Bool = false
     
@@ -33,14 +52,14 @@ final class OutgoingVideoView : Control {
     
     var firstFrameHandler:(()->Void)? = nil
     
-    var videoView: (OngoingCallContextVideoView?, Bool)? {
+    var videoView: (OngoingCallContextPresentationCallVideoView?, Bool)? {
         didSet {
             self._cameraInitialized.set(.initializing)
             if let value = videoView, let videoView = value.0 {
                 
                 videoView.setVideoContentMode(.resizeAspectFill)
                 
-                addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
+                videoContainer.addSubview(videoView.view)
                 videoView.view.frame = self.bounds
                 videoView.view.layer?.cornerRadius = .cornerRadius
                 
@@ -85,12 +104,12 @@ final class OutgoingVideoView : Control {
     
     func unhideView(animated: Bool) {
         if let view = videoView?.0?.view, _hidden {
-            self.subviews.enumerated().forEach { _, view in
+            subviews.enumerated().forEach { _, view in
                 if !(view is Control) {
                     view.removeFromSuperview()
                 }
             }
-            addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+            videoContainer.addSubview(view, positioned: .below, relativeTo: self.subviews.first)
             view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         }
@@ -110,9 +129,12 @@ final class OutgoingVideoView : Control {
     
     override var isEventLess: Bool {
         didSet {
-            overlay.isEventLess = isEventLess
+            self.userInteractionEnabled = !isEventLess
+            //overlay.isEventLess = isEventLess
         }
     }
+    
+    
     
     static var defaultSize: NSSize = NSMakeSize(floor(100 * System.aspectRatio), 100)
     
@@ -129,16 +151,17 @@ final class OutgoingVideoView : Control {
     private var disabledView: NSVisualEffectView?
     private var notAvailableView: TextView?
     
-    
-    private let maskLayer = CAShapeLayer()
-    
+    private var animation:DisplayLinkAnimator? = nil
+        
     
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        super.addSubview(overlay)
+        self.overlay.forceMouseDownCanMoveWindow = true
         self.layer?.cornerRadius = .cornerRadius
         self.layer?.masksToBounds = true
+        self.addSubview(videoContainer)
+        self.addSubview(overlay)
     }
     
     required init?(coder: NSCoder) {
@@ -147,15 +170,17 @@ final class OutgoingVideoView : Control {
     
     override func layout() {
         super.layout()
+        
+        self.videoContainer.frame = bounds
         self.overlay.frame = bounds
         self.videoView?.0?.view.frame = bounds
         self.progressIndicator?.center()
         self.disabledView?.frame = bounds
-        
+        let isMirrored = self.isMirrored
+        self.isMirrored = isMirrored
+
         if let textView = notAvailableView {
-            let layout = textView.layout
-            layout?.measure(width: frame.width - 40)
-            textView.update(layout)
+            textView.resize(frame.width - 40)
             textView.center()
         }
     }
@@ -171,7 +196,7 @@ final class OutgoingVideoView : Control {
                 current.layer?.cornerRadius = .cornerRadius
                 current.frame = bounds
                 self.disabledView = current
-                addSubview(current, positioned: .below, relativeTo: overlay)
+                self.addSubview(current, positioned: .below, relativeTo: overlay)
                 
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -196,40 +221,45 @@ final class OutgoingVideoView : Control {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
     }
+    private(set) var savedFrame: NSRect? = nil
     
     func updateFrame(_ frame: NSRect, animated: Bool) {
-        if self.frame != frame {
-            let duration: Double = 0.18
+        if self.savedFrame != frame && animation == nil {
+            let duration: Double = 0.15
             
-            self.videoView?.0?.view.subviews.first?._change(size: frame.size, animated: animated, duration: duration)
-            self.videoView?.0?.view._change(size: frame.size, animated: animated, duration: duration)
-            self.overlay._change(size: frame.size, animated: animated, duration: duration)
-            self.progressIndicator?.change(pos: frame.focus(NSMakeSize(40, 40)).origin, animated: animated, duration: duration)
-            
-            self.disabledView?._change(size: frame.size, animated: animated, duration: duration)
-            
-            if let textView = notAvailableView, let layout = textView.layout {
-                layout.measure(width: frame.width - 40)
-                textView.update(layout)
-                textView.change(pos: frame.focus(layout.layoutSize).origin, animated: animated, duration: duration)
+            if animated {
+                                
+                let fromFrame = self.frame
+                let toFrame = frame
+                
+                
+                let animation = DisplayLinkAnimator(duration: duration, from: 0.0, to: 1.0, update: { [weak self] value in
+                    let x = fromFrame.minX - (fromFrame.minX - toFrame.minX) * value
+                    let y = fromFrame.minY - (fromFrame.minY - toFrame.minY) * value
+                    let w = fromFrame.width - (fromFrame.width - toFrame.width) * value
+                    let h = fromFrame.height - (fromFrame.height - toFrame.height) * value
+                    let updated = NSMakeRect(x, y, w, h)
+                    self?.frame = updated
+                }, completion: { [weak self] in
+                    guard let `self` = self else {
+                        return
+                    }
+                    self.animation = nil
+                    self.frame = frame
+                    self.savedFrame = frame
+                })
+                self.animation = animation
+            } else {
+                self.frame = frame
+                self.animation = nil
             }
-            self.change(size: frame.size, animated: animated)
-            self.change(pos: frame.origin, animated: animated, duration: duration)
         }
-        self.frame = frame
         updateCursorRects()
+        savedFrame = frame
     }
     
     private func updateCursorRects() {
-//        resetCursorRects()
-//        if let cursor = NSCursor.set_windowResizeNorthEastSouthWestCursor {
-//            addCursorRect(NSMakeRect(0, frame.height - 10, 10, 10), cursor: cursor)
-//            addCursorRect(NSMakeRect(frame.width - 10, 0, 10, 10), cursor: cursor)
-//        }
-//        if let cursor = NSCursor.set_windowResizeNorthWestSouthEastCursor {
-//            addCursorRect(NSMakeRect(0, 0, 10, 10), cursor: cursor)
-//            addCursorRect(NSMakeRect(frame.width - 10, frame.height - 10, 10, 10), cursor: cursor)
-//        }
+
     }
     
     override func cursorUpdate(with event: NSEvent) {
@@ -268,13 +298,12 @@ final class IncomingVideoView : Control {
     var firstFrameHandler:(()->Void)? = nil
     
     private var disabledView: NSVisualEffectView?
-    var videoView: OngoingCallContextVideoView? {
+    var videoView: OngoingCallContextPresentationCallVideoView? {
         didSet {
             _cameraInitialized.set(.initializing)
             
             if let videoView = videoView {
-                videoView.setVideoContentMode(.resizeAspect)
-                
+
                 addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
                 videoView.view.background = .clear
                 
@@ -311,7 +340,7 @@ final class IncomingVideoView : Control {
         }
         
         if let textView = disabledView?.subviews.first as? TextView {
-            let layout = textView.layout
+            let layout = textView.textLayout
             layout?.measure(width: frame.width - 40)
             textView.update(layout)
             textView.center()

@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 
@@ -18,12 +18,12 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
     fileprivate let file:TelegramMediaFile
     fileprivate let titleLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
+    fileprivate let music: (Message, GalleryAppearType)->Void
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, music: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         let message = object.message!
-        file = message.media[0] as! TelegramMediaFile
-        
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        self.file = message.media[0] as! TelegramMediaFile
+        self.music = music
+        let formatter = DateSelectorUtil.mediaMediumDate
         
         let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - interface.context.timeDifference)
         
@@ -33,14 +33,14 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         var peer:Peer? = message.chatPeer(interface.context.peerId)
         
         var title:String = peer?.displayTitle ?? ""
-        if let _peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
+        if let _peer = coreMessageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
             title = _peer.displayTitle
             peer = _peer
         }
         
         nameLayout = TextViewLayout(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
 
-        super.init(initialSize, interface, object, viewType: viewType)
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
         
     }
     
@@ -124,58 +124,51 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         guard let item = item as? PeerMediaVoiceRowItem else {return}
 
-        if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: item.message) {
-            controller.playOrPause()
-        } else {
-            
-            let controller:APController = APChatVoiceController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message), volume: FastSettings.volumeRate)
-            item.interface.inlineAudioPlayer(controller)
-            controller.start()
-        }
+        item.music(item.message, item.galleryType)
     }
     
     
     
     func fetch() {
         if let item = item as? PeerMediaVoiceRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.context, messageId: item.message.id, messageReference: .init(item.message), file: item.file, userInitiated: false).start())
         }
     }
     
     
     func cancelFetching() {
         if let item = item as? PeerMediaVoiceRowItem {
-            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file))
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, file: item.file)
         }
     }
     
-    func songDidChanged(song: APSongItem, for controller: APController) {
+    func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
         checkState()
     }
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
         checkState()
     }
     
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
     
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         
     }
     
     func delete() -> Void {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let messageId = item.message.id
-        let mediaBox = item.interface.context.account.postbox.mediaBox
+        let engine = item.interface.context.engine.messages
         _ = item.interface.context.account.postbox.transaction { transaction -> Void in
-            deleteMessages(transaction: transaction, mediaBox: mediaBox, ids: [messageId])
+            engine.deleteMessages(transaction: transaction, ids: [messageId])
         }.start()
     }
     
@@ -184,7 +177,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
 
         if let fetchStatus = self.fetchStatus {
             switch fetchStatus {
-            case .Fetching:
+            case .Fetching, .Paused:
                 if isControl {
                     if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
                         delete()
@@ -216,7 +209,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         didSet {
             if let fetchStatus = fetchStatus {
                 switch fetchStatus {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     progressView.state = .Fetching(progress: progress, force: false)
                 case .Remote:
                     progressView.state = .Remote
@@ -313,16 +306,16 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         let file:TelegramMediaFile = item.file
         
         if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(context: item.interface.context, message: item.message, file: file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
-                        return .Fetching(isActive: true, progress: pendingStatus.progress)
+                        return .Fetching(isActive: true, progress: pendingStatus.progress.progress)
                     } else {
                         return resourceStatus
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: item.interface.context.account, file: file) |> deliverOnMainQueue
+            updatedStatusSignal = chatMessageFileStatus(context: item.interface.context, message: item.message, file: file) |> deliverOnMainQueue
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
@@ -332,7 +325,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                 switch status {
                 case let .Fetching(_, progress):
                     strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                case .Remote:
+                case .Remote, .Paused:
                     strongSelf.progressView.state = .Remote
                 case .Local:
                     strongSelf.progressView.state = .Play
@@ -354,19 +347,19 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let backgroundColor: NSColor
         let foregroundColor: NSColor
-        if let media = item.message.media.first as? TelegramMediaFile, media.isInstantVideo {
+        if let media = item.message.anyMedia as? TelegramMediaFile, media.isInstantVideo {
             backgroundColor = .blackTransparent
             foregroundColor = .white
         } else {
             backgroundColor = theme.colors.fileActivityBackground
             foregroundColor = theme.colors.fileActivityForeground
         }
-        if let controller = globalAudio, let song = controller.currentSong {
+        if let controller = item.context.sharedContext.getAudioPlayer(), let song = controller.currentSong {
            
             
             if song.entry.isEqual(to: item.message), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:0))
-                progressView.state = .Icon(image: theme.icons.chatMusicPause, mode: .normal)
+                progressView.state = .Icon(image: theme.icons.chatMusicPause)
             } else {
                 progressView.theme = RadialProgressTheme(backgroundColor: backgroundColor, foregroundColor: foregroundColor, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
                 progressView.state = .Play

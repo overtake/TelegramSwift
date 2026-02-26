@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 
 final class InstantPageAnchorItem: InstantPageItem {
     var frame: CGRect

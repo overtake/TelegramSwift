@@ -65,11 +65,26 @@ func bestGeneralViewType<T>(_ array:[T], for i: Int) -> GeneralViewType  {
     }
 }
 
+func bestGeneralViewTypeAfterFirst<T>(_ array:[T], for i: Int) -> GeneralViewType  {
+    if i == 0 {
+        if array.count == 1 {
+            return .lastItem
+        } else {
+            return .innerItem
+        }
+    } else {
+        return bestGeneralViewType(array, for: i)
+    }
+}
+
 enum GeneralInteractedType : Equatable {
     case none
     case next
     case nextContext(String)
+    case imageContext(CGImage, String)
+    case nextImage(CGImage)
     case selectable(Bool)
+    case selectableLeft(Bool)
     case switchable(Bool)
     case context(String)
     case loading
@@ -77,8 +92,9 @@ enum GeneralInteractedType : Equatable {
     case button(String)
     case search(Bool)
     case colorSelector(NSColor)
+    case badge(String, NSColor)
     #if !SHARE
-    case contextSelector(String, [SPopoverItem])
+    case contextSelector(String, [ContextMenuItem])
     #endif
 }
 
@@ -102,7 +118,9 @@ final class GeneralViewItemCorners : OptionSet {
     static var all: GeneralViewItemCorners {
         return [.topLeft, .topRight, .bottomLeft, .bottomRight]
     }
-
+    static var allList: [GeneralViewItemCorners] {
+        return [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    }
 }
 
 enum GeneralViewItemPosition : Equatable {
@@ -169,7 +187,7 @@ enum GeneralViewType : Equatable {
         switch self {
         case .legacy:
             return []
-        case let .modern(position, _):
+        case let .modern(position, insets):
             return isPlainMode ? [] : position.corners
         }
     }
@@ -200,22 +218,22 @@ enum GeneralViewType : Equatable {
     }
     
     static var firstItem: GeneralViewType {
-        return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .first, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var innerItem: GeneralViewType {
-        return .modern(position: .inner, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .inner, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var lastItem: GeneralViewType {
-        return .modern(position: .last, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .last, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var singleItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(12, 16, 12, 16))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(10, 14, 10, 14))
     }
     static var textTopItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 5, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(0, 14, 5, 0))
     }
     static var textBottomItem: GeneralViewType {
-        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 16, 0, 0))
+        return .modern(position: .single, insets: NSEdgeInsetsMake(5, 14, 0, 0))
     }
     static var separator: GeneralViewType {
         return .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))
@@ -227,6 +245,87 @@ enum GeneralViewType : Equatable {
 
 class GeneralRowItem: TableRowItem {
 
+    
+    struct Theme : Equatable {
+        let backgroundColor: NSColor
+        let grayBackground: NSColor
+        let grayForeground: NSColor
+        let highlightColor: NSColor
+        let borderColor: NSColor
+        let accentColor: NSColor
+        let secondaryColor: NSColor
+        let textColor: NSColor
+        let grayTextColor: NSColor
+        let underSelectedColor: NSColor
+        let accentSelectColor: NSColor
+        let redColor: NSColor
+        let indicatorColor: NSColor
+        let appearance: NSAppearance
+        
+        let switchAppearance: SwitchViewAppearance?
+        
+        let unselectedImage: CGImage
+        let selectedImage: CGImage
+        
+        static func initialize(_ theme: TelegramPresentationTheme, background: NSColor? = nil) -> GeneralRowItem.Theme {
+            return .init(backgroundColor: background ?? theme.colors.background,
+                         grayBackground: theme.colors.grayBackground,
+                         grayForeground: theme.colors.grayForeground,
+                         highlightColor: theme.colors.grayHighlight,
+                         borderColor: theme.colors.border,
+                         accentColor: theme.colors.accent,
+                         secondaryColor: theme.colors.grayUI,
+                         textColor: theme.colors.text,
+                         grayTextColor: theme.colors.grayText,
+                         underSelectedColor: theme.colors.underSelectedColor,
+                         accentSelectColor: theme.colors.accentSelect,
+                         redColor: theme.colors.redUI,
+                         indicatorColor: theme.colors.indicatorColor,
+                         appearance: theme.colors.appearance,
+                         switchAppearance: .init(theme: theme),
+                         unselectedImage: theme.icons.chatToggleUnselected,
+                         selectedImage: theme.icons.chatToggleSelected)
+        }
+
+        init(backgroundColor: NSColor = theme.colors.background,
+             grayBackground: NSColor = theme.colors.grayBackground,
+             grayForeground: NSColor = theme.colors.grayForeground,
+             highlightColor: NSColor = theme.colors.grayHighlight,
+             borderColor: NSColor = theme.colors.border,
+             accentColor: NSColor = theme.colors.accent,
+             secondaryColor: NSColor = theme.colors.grayUI,
+             textColor: NSColor = theme.colors.text,
+             grayTextColor: NSColor = theme.colors.grayText,
+             underSelectedColor: NSColor = theme.colors.underSelectedColor,
+             accentSelectColor: NSColor = theme.colors.accentSelect,
+             redColor: NSColor = theme.colors.redUI,
+             indicatorColor: NSColor = theme.colors.indicatorColor,
+             appearance: NSAppearance = theme.colors.appearance,
+             switchAppearance: SwitchViewAppearance? = nil,
+             unselectedImage: CGImage = theme.icons.chatToggleUnselected,
+             selectedImage: CGImage = theme.icons.chatToggleSelected) {
+            
+            
+            self.backgroundColor = backgroundColor
+            self.grayBackground = grayBackground
+            self.grayForeground = grayForeground
+            self.highlightColor = highlightColor
+            self.borderColor = borderColor
+            self.accentColor = accentColor
+            self.secondaryColor = secondaryColor
+            self.textColor = textColor
+            self.grayTextColor = grayTextColor
+            self.underSelectedColor = underSelectedColor
+            self.redColor = redColor
+            self.accentSelectColor = accentSelectColor
+            self.indicatorColor = indicatorColor
+            self.appearance = appearance
+            self.switchAppearance = switchAppearance
+            self.unselectedImage = unselectedImage
+            self.selectedImage = selectedImage
+        }
+    }
+    
     let border:BorderType
     let enabled: Bool
     let _height:CGFloat
@@ -246,7 +345,7 @@ class GeneralRowItem: TableRowItem {
     var drawCustomSeparator:Bool = true {
         didSet {
             if drawCustomSeparator != oldValue {
-                self.redraw()
+                self.noteHeightOfRow()
             }
         }
     }
@@ -272,14 +371,24 @@ class GeneralRowItem: TableRowItem {
     func updateViewType(_ viewType: GeneralViewType) {
         self.viewType = viewType
     }
+    let customTheme: Theme?
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil) {
+    private let _ignoreAtInitialization: Bool
+    override var ignoreAtInitialization: Bool {
+        return _ignoreAtInitialization
+    }
+    
+    let containable: Bool
+    
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false, containable: Bool = false) {
         self.type = type
         _height = height
         _stableId = stableId
         self.border = border
         self._inset = inset
-        
+        self.containable = containable
+        self.customTheme = customTheme
+        self._ignoreAtInitialization = ignoreAtInitialization
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         } else {
@@ -308,6 +417,10 @@ class GeneralRowItem: TableRowItem {
         return success
     }
     
+    var hasBorder: Bool {
+        return viewType.hasBorder && (drawCustomSeparator || !containable)
+    }
+    
     override var instantlyResize: Bool {
         return true
     }
@@ -327,7 +440,11 @@ class GeneralRowItem: TableRowItem {
     }
     
     override func viewClass() -> AnyClass {
-        return GeneralRowView.self
+        if containable {
+            return GeneralContainableRowView.self
+        } else {
+            return GeneralRowView.self
+        }
     }
     
 }

@@ -8,10 +8,11 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import TelegramMedia
 import Postbox
 import SwiftSignalKit
 import TGUIKit
+
 class MGalleryGIFItem: MGalleryItem {
 
     private var mediaPlayer: MediaPlayer!
@@ -22,8 +23,14 @@ class MGalleryGIFItem: MGalleryItem {
         let view = self.view
         
         let fileReference = entry.fileReference(media)
-       
-        self.mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(media.resource), streamable: media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        let id = self.entry.peer?.id ?? self.entry.message?.id.peerId
+        let userLocation: MediaResourceUserLocation
+        if let id = id {
+            userLocation = .peer(id)
+        } else {
+            userLocation = .other
+        }
+        self.mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: userLocation, userContentType: .video, reference: fileReference.resourceReference(media.resource), streamable: media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
         mediaPlayer.actionAtEnd = .loop(nil)
 
         
@@ -47,7 +54,11 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
-        return chatMessageFileStatus(account: context.account, file: media)
+        if let message = entry.message {
+            return chatMessageFileStatus(context: context, message: message, file: media)
+        } else {
+            return context.account.postbox.mediaBox.resourceStatus(media.resource)
+        }
     }
     
     var media:TelegramMediaFile {
@@ -65,9 +76,9 @@ class MGalleryGIFItem: MGalleryItem {
             }
         case .instantMedia(let media, _):
             return media.media as! TelegramMediaFile
-        case let  .photo(_, _, photo, _, _, _, _):
+        case let  .photo(_, _, photo, _, _, _, _, _, _):
             let video = photo.videoRepresentations.last!
-            let file = TelegramMediaFile(fileId: photo.imageId, partialReference: nil, resource: video.resource, previewRepresentations: photo.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [.Video(duration:0, size: PixelDimensions(640, 640), flags: [])])
+            let file = TelegramMediaFile(fileId: photo.imageId, partialReference: nil, resource: video.resource, previewRepresentations: photo.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [.Video(duration:0, size: PixelDimensions(640, 640), flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)], alternativeRepresentations: [])
             
             return file
         default:
@@ -113,7 +124,7 @@ class MGalleryGIFItem: MGalleryItem {
         super.request(immediately: immediately)
         let size = media.dimensions?.size.fitted(pagerSize) ?? sizeValue
         
-        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)
+        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(account: context.account, fileReference: entry.fileReference(media), scale: System.backingScale)
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
         let result = signal |> deliverOn(graphicsThreadPool) |> mapToThrottled { generator -> Signal<CGImage?, NoError> in
             return .single(generator.execute(arguments, generator.data)?.generateImage())

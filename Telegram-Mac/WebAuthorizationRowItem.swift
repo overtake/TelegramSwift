@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import DateUtils
 import Postbox
 
 class WebAuthorizationRowItem: GeneralRowItem {
@@ -23,7 +23,7 @@ class WebAuthorizationRowItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, authorization: WebAuthorization, peer: Peer, viewType: GeneralViewType, logout:@escaping()->Void) {
         self.logoutInteraction = logout
         self.account = account
-        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum, nil)
         self.nameLayout = TextViewLayout(.initialize(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         let statusAttr = NSMutableAttributedString()
         
@@ -67,7 +67,7 @@ private class WebAuthorizationRowView : TableRowView, ViewDisplayDelegate {
     private let statusTextView: TextView = TextView()
     private let dateView: TextView = TextView()
     private let photoView: AvatarControl = AvatarControl(font: .avatar(8))
-    private let logoutButton: TitleButton = TitleButton()
+    private let logoutButton: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         botNameView.isSelectable = false
@@ -170,7 +170,7 @@ private class WebAuthorizationRowView : TableRowView, ViewDisplayDelegate {
         
         logoutButton.set(color: theme.colors.accent, for: .Normal)
         logoutButton.set(font: .medium(.text), for: .Normal)
-        logoutButton.set(text: L10n.webAuthorizationsLogout, for: .Normal)
+        logoutButton.set(text: strings().webAuthorizationsLogout, for: .Normal)
         _ = logoutButton.sizeToFit()
         
         needsLayout = true

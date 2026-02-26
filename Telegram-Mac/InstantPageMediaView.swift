@@ -10,10 +10,10 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import TelegramMedia
 import SwiftSignalKit
-import SyncCore
-final class InstantPageMediaView: View, InstantPageView {
+
+final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
     private let context: AccountContext
     let media: InstantPageMedia
     private let arguments: InstantPageMediaArguments
@@ -45,6 +45,13 @@ final class InstantPageMediaView: View, InstantPageView {
         }))
     }
     
+    func willAppear() {
+        
+    }
+    func willDisappear() {
+        
+    }
+    
     private func updatePlayerListenters() {
         removeNotificationListeners()
         if let window = window {
@@ -65,7 +72,7 @@ final class InstantPageMediaView: View, InstantPageView {
         self.context = context
         self.media = media
         self.arguments = arguments
-        
+                
         switch arguments {
         case .image:
              self.imageView = TransformImageView()
@@ -84,11 +91,12 @@ final class InstantPageMediaView: View, InstantPageView {
         
         progressView.isHidden = true
         
-        self.imageView.animatesAlphaOnFirstTransition = true
+     //   self.imageView.animatesAlphaOnFirstTransition = true
         self.addSubview(self.imageView)
         addSubview(progressView)
         
 
+        
         
         let updateProgressState:(MediaResourceStatus)->Void = { [weak self] status in
             guard let `self` = self else {return}
@@ -115,7 +123,7 @@ final class InstantPageMediaView: View, InstantPageView {
             })
             
             switch status {
-            case let .Fetching(_, progress):
+            case let .Fetching(_, progress), let .Paused(progress):
                 self.progressView.isHidden = false
                 self.progressView.state = .Fetching(progress: progress, force: false)
             case .Local:
@@ -145,7 +153,7 @@ final class InstantPageMediaView: View, InstantPageView {
             if file.mimeType.hasPrefix("image/") && !file.mimeType.hasSuffix("gif") {
                 self.imageView.setSignal(instantPageImageFile(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor, fetched: true))
             } else {
-                self.imageView.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
+                self.imageView.setSignal(chatMessageVideo(account: context.account, fileReference: .webPage(webPage: WebpageReference(media.webpage), media: file), scale: backingScaleFactor))
             }
 
             switch arguments {
@@ -179,7 +187,7 @@ final class InstantPageMediaView: View, InstantPageView {
 
             let resource = MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: Int32(dimensions.width), height: Int32(dimensions.height), zoom: zoom)
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
             let signal = chatWebpageSnippetPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, small: false)
             self.imageView.setSignal(signal)

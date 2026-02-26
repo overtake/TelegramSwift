@@ -9,12 +9,12 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
 import Quartz
 import Foundation
-import SyncCore
+
 
 private class QuickLookPreviewItem : NSObject, QLPreviewItem {
     let media:Media
@@ -33,9 +33,9 @@ private class QuickLookPreviewItem : NSObject, QLPreviewItem {
     
     var previewItemTitle: String! {
         if let media = media as? TelegramMediaFile {
-            return media.fileName ?? L10n.quickLookPreview
+            return media.fileName ?? strings().quickLookPreview
         }
-        return L10n.quickLookPreview
+        return strings().quickLookPreview
     }
 }
 
@@ -174,6 +174,11 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         return true
     }
     
+    override class func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
+        var bp = 0
+        bp += 1
+    }
+    
     func previewPanel(_ panel: QLPreviewPanel!, sourceFrameOnScreenFor item: QLPreviewItem!) -> NSRect {
         
         if let stableId = stableId {
@@ -187,6 +192,8 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         
        return NSZeroRect
     }
+    
+    	
     
     func previewPanel(_ panel: QLPreviewPanel!, transitionImageFor item: QLPreviewItem!, contentRect: UnsafeMutablePointer<NSRect>!) -> Any! {
         

@@ -21,6 +21,7 @@ func initialize() -> [String] {
     array.append("chatSearch")
     array.append("chatSearchActive")
     array.append("chatCall")
+    array.append("chatCallActive")
     array.append("chatActions")
     array.append("chatFailedCall_incoming")
     array.append("chatFailedCall_outgoing")
@@ -73,6 +74,11 @@ func initialize() -> [String] {
     array.append("chatChannelViewsInBubble_outgoing")
     array.append("chatChannelViewsOutBubble")
     array.append("chatChannelViewsOverlayBubble")
+    array.append("chatPaidMessageInBubble_incoming")
+    array.append("chatPaidMessageInBubble_outgoing")
+    array.append("chatPaidMessageOutBubble")
+    array.append("chatPaidMessageOverlayBubble")
+
     array.append("chatNavigationBack")
     array.append("peerInfoAddMember")
     array.append("chatSearchUp")
@@ -83,16 +89,8 @@ func initialize() -> [String] {
     array.append("dismissAccessory")
     array.append("chatScrollUp")
     array.append("chatScrollUpActive")
-    array.append("audioPlayerPlay")
-    array.append("audioPlayerPause")
-    array.append("audioPlayerNext")
-    array.append("audioPlayerPrev")
-    array.append("auduiPlayerDismiss")
-    array.append("audioPlayerRepeat")
-    array.append("audioPlayerRepeatActive")
-    array.append("audioPlayerLockedPlay")
-    array.append("audioPlayerLockedNext")
-    array.append("audioPlayerLockedPrev")
+    array.append("chatScrollDown")
+    array.append("chatScrollDownActive")
     array.append("chatSendMessage")
     array.append("chatSaveEditedMessage")
     array.append("chatRecordVoice")
@@ -225,7 +223,6 @@ func initialize() -> [String] {
     array.append("chatMentionActive")
     array.append("sliderControl")
     array.append("sliderControlActive")
-    array.append("stickersTabFave")
     array.append("chatInstantView")
     array.append("chatInstantViewBubble_incoming")
     array.append("chatInstantViewBubble_outgoing")
@@ -238,6 +235,7 @@ func initialize() -> [String] {
     array.append("groupStickerNotFound")
     array.append("settingsAskQuestion")
     array.append("settingsFaq")
+    array.append("settingsStories")
     array.append("settingsGeneral")
     array.append("settingsLanguage")
     array.append("settingsNotifications")
@@ -251,8 +249,11 @@ func initialize() -> [String] {
     array.append("settingsWallet")
     array.append("settingsUpdate")
     array.append("settingsFilters")
+    array.append("settingsPremium")
+    array.append("settingsGiftPremium")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
+    array.append("settingsStoriesActive")
     array.append("settingsGeneralActive")
     array.append("settingsLanguageActive")
     array.append("settingsNotificationsActive")
@@ -267,6 +268,9 @@ func initialize() -> [String] {
     array.append("settingsUpdateActive")
     array.append("settingsFiltersActive")
     array.append("settingsProfile")
+    array.append("settingsBusiness")
+    array.append("settingsBusinessActive")
+    array.append("settingsStars")
     array.append("generalCheck")
     array.append("settingsAbout")
     array.append("settingsLogout")
@@ -355,8 +359,6 @@ func initialize() -> [String] {
     array.append("galleryMore")
     array.append("galleryShare")
     array.append("galleryFastSave")
-    array.append("playingVoice1x")
-    array.append("playingVoice2x")
     array.append("galleryRotate")
     array.append("galleryZoomIn")
     array.append("galleryZoomOut")
@@ -384,9 +386,14 @@ func initialize() -> [String] {
     array.append("chatPollVoteUnselectedBubble_incoming")
     array.append("chatPollVoteUnselectedBubble_outgoing")
     array.append("peerInfoAdmins")
+    array.append("peerInfoRecentActions")
     array.append("peerInfoPermissions")
     array.append("peerInfoBanned")
     array.append("peerInfoMembers")
+    array.append("peerInfoStarsBalance")
+    array.append("peerInfoBalance")
+    array.append("peerInfoTonBalance")
+    array.append("peerInfoBotUsername")
     array.append("chatUndoAction")
     array.append("appUpdate")
     array.append("inlineVideoSoundOff")
@@ -400,12 +407,16 @@ func initialize() -> [String] {
     array.append("scam")
     array.append("scamActive")
     array.append("chatScam")
+    array.append("fake")
+    array.append("fakeActive")
+    array.append("chatFake")
     array.append("chatUnarchive")
     array.append("chatArchive")
     array.append("privacySettings_blocked")
     array.append("privacySettings_activeSessions")
     array.append("privacySettings_passcode")
     array.append("privacySettings_twoStep")
+    array.append("privacy_settings_autodelete")
     array.append("deletedAccount")
     array.append("stickerPackSelection")
     array.append("stickerPackSelectionActive")
@@ -415,10 +426,15 @@ func initialize() -> [String] {
     array.append("entertainment_Search")
     array.append("entertainment_Settings")
     array.append("entertainment_SearchCancel")
+    array.append("entertainment_AnimatedEmoji")
     array.append("scheduledAvatar")
     array.append("scheduledInputAction")
     array.append("verifyDialog")
     array.append("verifyDialogActive")
+    
+    array.append("verify_dialog_left")
+    array.append("verify_dialog_active_left")
+
     array.append("chatInputScheduled")
     array.append("appearanceAddPlatformTheme")
     
@@ -437,6 +453,9 @@ func initialize() -> [String] {
     array.append("wallpaper_color_add")
     array.append("wallpaper_color_swap")
     array.append("wallpaper_color_rotate")
+    array.append("wallpaper_color_play")
+
+    
     
     array.append("login_cap")
     array.append("login_qr_cap")
@@ -494,6 +513,8 @@ func initialize() -> [String] {
     array.append("chat_filter_non_contacts_avatar")
     array.append("chat_filter_archive_avatar")
     
+    array.append("chat_filter_new_chats")
+    array.append("chat_filter_existing_chats")
 
     array.append("group_invite_via_link")
     
@@ -525,15 +546,31 @@ func initialize() -> [String] {
     array.append("profile_share")
     array.append("profile_stats")
     array.append("profile_unblock")
-
+    array.append("profile_translate")
+    array.append("profile_join_channel")
+    array.append("profile_boost")
+    array.append("profile_archive")
     
+    array.append("stats_boost_boost")
+    array.append("stats_boost_giveaway")
+    array.append("stats_boost_info")
+
+
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
     array.append("chat_quiz_explanation_bubble_outgoing")
     
     
     array.append("stickers_add_featured")
+    array.append("stickers_add_featured_unread")
     
+    array.append("stickers_add_featured_active")
+    array.append("stickers_add_featured_unread_active")
+
+    
+    array.append("stickers_favorite")
+    array.append("stickers_favorite_active")
+
     array.append("channel_info_promo")
     array.append("channel_info_promo_bubble_incoming")
     array.append("channel_info_promo_bubble_outgoing")
@@ -556,13 +593,15 @@ func initialize() -> [String] {
 
     
     array.append("gif_trending")
-    
+    array.append("gif_trending_active")
+
+    array.append("gif_recent")
+    array.append("gif_recent_active")
+
     
     array.append("chat_list_thumb_play")
 
     
-    array.append("inline_audio_volume")
-    array.append("inline_audio_volume_off")
     
     
     array.append("call_tooltip_battery_low")
@@ -580,9 +619,11 @@ func initialize() -> [String] {
     array.append("search_filter_files")
     array.append("search_filter_links")
     array.append("search_filter_music")
+    array.append("search_filter_downloads")
     array.append("search_filter_add_peer")
     array.append("search_filter_add_peer_active")
-
+    array.append("search_filter_hashtag")
+    array.append("search_hashtag_chevron")
     
     array.append("chat_reply_count_bubble_incoming")
     array.append("chat_reply_count_bubble_outgoing")
@@ -614,6 +655,337 @@ func initialize() -> [String] {
     array.append("chat_voicechat_cant_unmute")
     array.append("chat_voicechat_unmuted")
 
+    array.append("profile_voice_chat")
+    
+    array.append("chat_voice_chat")
+    array.append("chat_voice_chat_active")
+    
+    array.append("editor_draw")
+    array.append("editor_delete")
+    array.append("editor_crop")
+
+    array.append("fast_copy_link")
+
+    array.append("profile_channel_sign")
+    array.append("profile_channel_type")
+    array.append("profile_group_type")
+    array.append("profile_group_topics")
+    array.append("profile_group_destruct")
+    array.append("profile_group_discussion")
+    
+    array.append("profile_requests")
+    array.append("profile_reactions")
+    array.append("profile_channel_color")
+    array.append("profile_channel_stats")
+
+    array.append("profile_removed")
+    array.append("profile_links")
+
+    array.append("destruct_clear_history")
+
+    array.append("chat_gigagroup_info")
+    
+    
+    array.append("playlist_next")
+    array.append("playlist_prev")
+    array.append("playlist_next_locked")
+    array.append("playlist_prev_locked")
+
+    array.append("playlist_random")
+    array.append("playlist_order_normal")
+    array.append("playlist_order_reversed")
+    array.append("playlist_order_random")
+
+    array.append("playlist_repeat_none")
+    array.append("playlist_repeat_circle")
+    array.append("playlist_repeat_one")
+    
+    array.append("audioplayer_next")
+    array.append("audioplayer_prev")
+    array.append("audioplayer_dismiss")
+    array.append("audioplayer_repeat_none")
+    array.append("audioplayer_repeat_circle")
+    array.append("audioplayer_repeat_one")
+    array.append("audioplayer_locked_next")
+    array.append("audioplayer_locked_prev")
+    array.append("audioplayer_volume")
+    array.append("audioplayer_volume_off")
+    array.append("audioplayer_speed_x1")
+    array.append("audioplayer_speed_x2")
+    array.append("audioplayer_list")
+
+    array.append("chat_info_voice_chat")
+    
+    array.append("chat_info_create_group")
+    array.append("chat_info_change_colors")
+
+    array.append("empty_chat_system")
+    array.append("empty_chat_dark")
+    array.append("empty_chat_light")
+    array.append("empty_chat_system_active")
+    array.append("empty_chat_dark_active")
+    array.append("empty_chat_light_active")
+    
+    
+    array.append("empty_chat_storage_clear")
+    array.append("empty_chat_storage_low")
+    array.append("empty_chat_storage_medium")
+    array.append("empty_chat_storage_high")
+    array.append("empty_chat_storage_low_active")
+    array.append("empty_chat_storage_medium_active")
+    array.append("empty_chat_storage_high_active")
+    
+    
+    array.append("empty_chat_stickers_none")
+    array.append("empty_chat_stickers_mysets")
+    array.append("empty_chat_stickers_allsets")
+    array.append("empty_chat_stickers_none_active")
+    array.append("empty_chat_stickers_mysets_active")
+    array.append("empty_chat_stickers_allsets_active")
+    
+    array.append("chat_action_dismiss")
+    array.append("chat_action_edit_message")
+    array.append("chat_action_forward_message")
+    array.append("chat_action_reply_message")
+    array.append("chat_action_url_preview")
+    
+    array.append("chat_action_menu_update_chat")
+    array.append("chat_action_menu_selected")
+    
+    
+    array.append("widget_peers_favorite")
+    array.append("widget_peers_recent")
+    array.append("widget_peers_both")
+    array.append("widget_peers_favorite_active")
+    array.append("widget_peers_recent_active")
+    array.append("widget_peers_both_active")
+    
+    array.append("chat_reactions_add")
+    array.append("chat_reactions_add_bubble")
+    array.append("chat_reactions_add_active")
+
+    
+    array.append("reactions_badge")
+    array.append("reactions_badge_active")
+
+    array.append("reactions_badge_archive")
+    array.append("reactions_badge_archive_active")
+
+    array.append("reactions_show_more")
+    
+    array.append("chat_reactions_badge")
+    array.append("chat_reactions_badge_active")
+    
+    
+    array.append("gallery_pip_close")
+    array.append("gallery_pip_muted")
+    array.append("gallery_pip_unmuted")
+    array.append("gallery_pip_out")
+    array.append("gallery_pip_pause")
+    array.append("gallery_pip_play")
+    
+    array.append("notification_sound_add")
+    
+    array.append("premium_lock")
+    array.append("premium_lock_gray")
+    array.append("premium_plus")
+
+    array.append("premium_account")
+    array.append("premium_account_active")
+
+    array.append("premium_account_rev")
+    array.append("premium_account_rev_active")
+    
+    array.append("premium_account_small")
+    array.append("premium_account_small_active")
+    array.append("premium_account_small_rev")
+    array.append("premium_account_small_rev_active")
+    array.append("premium_reaction_lock")
+    array.append("premium_boarding_feature_next")
+    array.append("premium_stickers")
+    array.append("premium_emoji_lock")
+    
+    
+    array.append("account_add_account")
+    array.append("account_set_status")
+    array.append("account_change_status")
+    
+    
+    array.append("chat_premium_status_red")
+    array.append("chat_premium_status_orange")
+    array.append("chat_premium_status_violet")
+    array.append("chat_premium_status_green")
+    array.append("chat_premium_status_cyan")
+    array.append("chat_premium_status_light_blue")
+    array.append("chat_premium_status_blue")
+
+    
+    array.append("extend_content_lock")
+    
+    array.append("chatlist_forum_closed_topic")
+    array.append("chatlist_forum_closed_topic_active")
+    
+    array.append("chatlist_arrow")
+    array.append("chatlist_arrow_active")
+    
+    array.append("dialog_auto_delete")
+    
+    array.append("contact_set_photo")
+    array.append("contact_suggest_photo")
+    
+    array.append("send_media_spoiler")
+    array.append("general_delete")
+    
+    array.append("storage_music_play")
+    array.append("storage_music_pause")
+    array.append("storage_media_play")
+
+    array.append("general_chevron_up")
+    array.append("general_chevron_down")
+    
+    array.append("account_settings_set_password")
+    
+    array.append("select_peer_create_channel")
+    array.append("select_peer_create_group")
+    array.append("chat_translate")
+    
+    array.append("msg_emoji_activities")
+    array.append("msg_emoji_angry")
+    array.append("msg_emoji_away")
+    array.append("msg_emoji_bath")
+    array.append("msg_emoji_busy")
+    array.append("msg_emoji_dislike")
+    array.append("msg_emoji_food")
+    array.append("msg_emoji_haha")
+    array.append("msg_emoji_happy")
+    array.append("msg_emoji_heart")
+    array.append("msg_emoji_hi2")
+    array.append("msg_emoji_home")
+    array.append("msg_emoji_like")
+    array.append("msg_emoji_neutral")
+    array.append("msg_emoji_omg")
+    array.append("msg_emoji_party")
+    array.append("msg_emoji_recent")
+    array.append("msg_emoji_sad")
+    array.append("msg_emoji_sleep")
+    array.append("msg_emoji_study")
+    array.append("msg_emoji_tongue")
+    array.append("msg_emoji_vacation")
+    array.append("msg_emoji_what")
+    array.append("msg_emoji_work")
+    array.append("msg_emoji_premium")
+    
+    array.append("installed_stickers_archive")
+    array.append("installed_stickers_custom_emoji")
+    array.append("installed_stickers_dynamic_order")
+    array.append("installed_stickers_loop")
+    array.append("installed_stickers_reactions")
+    array.append("installed_stickers_suggest")
+    array.append("installed_stickers_trending")
+
+    
+    array.append("folder_invite_link")
+    array.append("folder_invite_link_revoked")
+
+    array.append("folders_sidebar_edit")
+    array.append("folders_sidebar_edit_active")
+    
+    array.append("story_unseen")
+    array.append("story_seen")
+    array.append("story_selected")
+
+    array.append("story_unseen_chat")
+    array.append("story_seen_chat")
+
+    
+    array.append("story_unseen_profile")
+    array.append("story_seen_profile")
+
+    
+    array.append("story_view_read")
+    array.append("story_view_reaction")
+    
+    array.append("story_chatlist_reply")
+    array.append("story_chatlist_reply_active")
+    
+    
+    array.append("message_story_expired")
+    array.append("message_story_expired_bubble_incoming")
+    array.append("message_story_expired_bubble_outgoing")
+    
+    
+    array.append("message_quote_accent")
+    array.append("message_quote_red")
+    array.append("message_quote_orange")
+    array.append("message_quote_violet")
+    array.append("message_quote_green")
+    array.append("message_quote_cyan")
+    array.append("message_quote_blue")
+    array.append("message_quote_pink")
+    
+    array.append("message_quote_bubble_incoming")
+    array.append("message_quote_bubble_outgoing")
+
+    array.append("channel_stats_likes")
+    array.append("channel_stats_shares")
+    
+    array.append("story_repost_from_white")
+    array.append("story_repost_from_green")
+    
+    array.append("channel_feature_background")
+    array.append("channel_feature_background_photo")
+    array.append("channel_feature_cover_color")
+    array.append("channel_feature_cover_icon")
+    array.append("channel_feature_link_color")
+    array.append("channel_feature_link_icon")
+    array.append("channel_feature_name_color")
+    array.append("channel_feature_reaction")
+    array.append("channel_feature_status")
+    array.append("channel_feature_stories")
+    array.append("channel_feature_emoji_pack")
+    array.append("channel_feature_voice_to_text")
+    array.append("channel_feature_no_ads")
+    array.append("channel_feature_autotranslate")
+
+    array.append("chat_hidden_author")
+    array.append("chat_my_notes")
+    
+    array.append("premium_required_forward")
+    
+    array.append("create_new_message_general")
+    
+    array.append("bot_manager_settings")
+    
+    array.append("preview_text_down")
+    array.append("preview_text_up")
+
+
+    array.append("avatar_star_badge")
+    array.append("avatar_star_badge_active")
+    
+    array.append("avatar_star_badge_gray")
+    array.append("avatar_star_badge_large_gray")
+
+    array.append("chatlist_apps")
+    
+    array.append("chat_input_channel_gift")
+    array.append("chat_input_suggest_message")
+
+    
+    array.append("chat_input_send_gift")
+    array.append("chat_input_suggest_post")
+
+    
+    array.append("todo_selection")
+    array.append("todo_selected")
+    
+    array.append("todo_selection_other_incoming")
+    array.append("todo_selection_other_outgoing")
+    
+    array.append("todo_selected_other_incoming")
+    array.append("todo_selected_other_outgoing")
+
+
     return array
 }
 //swift ./tools/generate-images.swift
@@ -625,16 +997,17 @@ func generateClass() -> String {
     
     var lines:[String] = []
     lines.append("import SwiftSignalKit")
+    lines.append("import AppKit")
     lines.append("")
 
-    lines.append("final class TelegramIconsTheme {")
+    lines.append("public final class TelegramIconsTheme {")
     
     lines.append("  private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])")
     lines.append("  private var cachedWithInset:Atomic<[String: (CGImage, NSEdgeInsets)]> = Atomic(value: [:])")
     lines.append("")
     for item in items {
         if item.hasSuffix("_withInset") {
-            lines.append("  var \(item): (CGImage, NSEdgeInsets) {")
+            lines.append("  public var \(item): (CGImage, NSEdgeInsets) {")
             lines.append("      if let image = cachedWithInset.with({ $0[\"\(item)\"] }) {")
             lines.append("          return image")
             lines.append("      } else {")
@@ -650,7 +1023,7 @@ func generateClass() -> String {
             lines.append("      }")
             lines.append("  }")
         } else {
-            lines.append("  var \(item): CGImage {")
+            lines.append("  public var \(item): CGImage {")
             lines.append("      if let image = cached.with({ $0[\"\(item)\"] }) {")
             lines.append("          return image")
             lines.append("      } else {")
@@ -680,7 +1053,7 @@ func generateClass() -> String {
     
     lines.append("")
     
-    lines.append("  init(")
+    lines.append("  public init(")
     for item in items {
         if item != items.last {
             if item.hasSuffix("_withInset") {
@@ -715,4 +1088,4 @@ func generateClass() -> String {
 }
 
 print(FileManager.default.currentDirectoryPath)
-try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)
+try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/packages/TelegramIconsTheme/Sources/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)

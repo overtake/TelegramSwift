@@ -9,12 +9,13 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 enum InputPasswordValueError {
     case generic
     case wrong
+    case custom(String)
 }
 
 
@@ -46,17 +47,17 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -92,9 +93,11 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
                     let text: String
                     switch error {
                     case .wrong:
-                        text = L10n.inputPasswordControllerErrorWrongPassword
+                        text = strings().inputPasswordControllerErrorWrongPassword
+                    case let .custom(value):
+                        text = value
                     case .generic:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                     }
                     updateState {
                         return $0.withUpdatedLoading(false).withUpdatedError(InputDataValueError(description: text, target: .data))
@@ -117,15 +120,14 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         checkPassword.dispose()
     }, hasDone: true)
     
-    let interactions = ModalInteractions(acceptTitle: L10n.navigationDone, accept: { [weak controller] in
+    controller.autoInputAction = true
+    
+    let interactions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         
         controller?.validateInputValues()
         
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
-    controller.getBackgroundColor = {
-        theme.colors.listBackground
-    }
     
     let modalController = InputDataModalController(controller, modalInteractions: interactions, size: NSMakeSize(300, 300))
     

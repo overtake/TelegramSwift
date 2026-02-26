@@ -11,6 +11,8 @@ OUTPUTNAME="libjpeg.a"
 
 MACOS_PLATFORMDIR="$PLATFORM_DIR"
 MACOS_SYSROOT=($SDK_DIR)
+DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET
+
 
 cd "$BUILD_DIR"
 mkdir build
@@ -19,7 +21,7 @@ cd build
 for ARCH in $ARCHS
 do
 
-export CFLAGS="-Wall -arch $ARCH -mmacosx-version-min=10.11 -funwind-tables"
+export CFLAGS="-Wall -arch $ARCH -mmacosx-version-min=$DEPLOYMENT_TARGET -funwind-tables"
 
 mkdir $ARCH
 cd $ARCH
@@ -60,3 +62,4 @@ fi
 
 mv "${BUILD_DIR}build/x86_64/jconfigint.h" "${BUILD_DIR}build/jconfigint.h"
 mv "${BUILD_DIR}build/x86_64/jconfig.h" "${BUILD_DIR}build/jconfig.h"
+cp -r "${BUILD_DIR}../../submodules/telegram-ios/third-party/mozjpeg/mozjpeg/" "${BUILD_DIR}build/"

@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private final class FeaturedStickerPacksControllerArguments {
     let context: AccountContext
@@ -90,7 +90,7 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
                 
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -123,7 +123,7 @@ private func featuredStickerPacksControllerEntries(state: FeaturedStickerPacksCo
                 if let value = unreadPacks[item.info.id] {
                     unread = value
                 }
-                entries.append(.pack(sectionId: sectionId, index, item.info, unread, item.topItems.first, item.info.count, installedPacks.contains(item.info.id), bestGeneralViewType(featured, for: item)))
+                entries.append(.pack(sectionId: sectionId, index, item.info._parse(), unread, item.topItems.first, item.info.count, installedPacks.contains(item.info.id), bestGeneralViewType(featured, for: item)))
                 index += 1
             }
         }
@@ -166,9 +166,9 @@ class FeaturedStickerPacksController: TableViewController {
         actionsDisposable.add(resolveDisposable)
         
         let arguments = FeaturedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         }, addPack: { info in
-            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         })
         
         let stickerPacks = Promise<CombinedView>()

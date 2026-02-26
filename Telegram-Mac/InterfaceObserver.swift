@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 
-protocol Notifable : class {
+protocol Notifable : AnyObject {
     
     func notify(with value:Any, oldValue:Any, animated:Bool) -> Void
     

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
+import InAppVideoServices
 
 let sharedVideoLoader:ExternalVideoLoader = {
     let shared = ExternalVideoLoader()
@@ -77,7 +78,7 @@ fileprivate let vimeoIcon = #imageLiteral(resourceName: "Icon_VimeoPlay").precom
 
 class ExternalVideoLoader {
     
-    private let statusQueue = Queue()
+    private let statusQueue = resourcesQueue
     private let concurrentQueue = Queue.concurrentDefaultQueue()
     private var statusContexts: [WrappedExternalVideoId: ExternalVideoStatusContext] = [:]
    
@@ -152,7 +153,7 @@ class ExternalVideoLoader {
     
     func fetch(for content:TelegramMediaWebpageLoadedContent) -> Signal<ExternalVideo?,Void> {
         if content.displayUrl.lowercased().contains(youtubeName.lowercased()) {
-            return fetchYoutubeContent(for: content.displayUrl)
+            return .single(nil) //fetchYoutubeContent(for: content.displayUrl)
         }
         if content.displayUrl.lowercased().contains(vimeoName.lowercased()) {
             return fetchVimeoContent(for: content.displayUrl)

@@ -16,3 +16,5 @@ FOUNDATION_EXPORT const unsigned char webrtcVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <webrtc/PublicHeader.h>
 
 
+#import <webrtc/base/RTCMacros.h>
+

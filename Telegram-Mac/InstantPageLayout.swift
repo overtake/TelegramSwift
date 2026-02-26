@@ -8,10 +8,10 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import Localization
 import Postbox
 import TGUIKit
-import SyncCore
+
 
 final class InstantPageLayout {
     let origin: CGPoint
@@ -702,7 +702,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             if article.author != nil || article.date != nil {
                 if let author = article.author {
                     if let date = article.date {
-                        subtext = L10n.instantPageRelatedArticleAuthorAndDateTitle(author, stringForDate(date))
+                        subtext = strings().instantPageRelatedArticleAuthorAndDateTitle(author, stringForDate(date))
                     } else {
                         subtext = author
                     }
@@ -738,7 +738,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             }
         }
         
-        let map = TelegramMediaMap(latitude: latitude, longitude: longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
+        let map = TelegramMediaMap(latitude: latitude, longitude: longitude, heading: nil, accuracyRadius: nil, venue: nil, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
         let attributes: [InstantPageImageAttribute] = [InstantPageMapAttribute(zoom: zoom, dimensions: dimensions.size)]
         
         var contentSize = CGSize(width: boundingWidth - safeInset * 2.0, height: 0.0)
@@ -786,7 +786,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             if url.lowercased().contains("youtube"),  url.lowercased().contains("embed/") {
                 url = url.replacingOccurrences(of: "embed/", with: "watch?v=")
             }
-            let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: PixelDimensions(size), duration: nil, author: nil, image: image, file: nil, attributes: [], instantPage: nil)
+            let loadedContent = TelegramMediaWebpageLoadedContent(url: url, displayUrl: url, hash: 0, type: "video", websiteName: nil, title: nil, text: nil, embedUrl: url, embedType: "video", embedSize: PixelDimensions(size), duration: nil, author: nil, isMediaLargeByDefault: nil, imageIsVideoCover: false, image: image, file: nil, story: nil, attributes: [], instantPage: nil)
             let content = TelegramMediaWebpageContent.Loaded(loadedContent)
             
             item = InstantPageImageItem(frame: frame, webPage: webpage, media: InstantPageMedia(index: embedIndex, media: TelegramMediaWebpage(webpageId: MediaId(namespace: Namespaces.Media.LocalWebpage, id: -1), content: content), webpage: webpage, url: nil, caption: nil, credit: nil), attributes: [], interactive: false, roundCorners: false, fit: false)
@@ -866,7 +866,7 @@ func instantPageMedias(for webpage: TelegramMediaWebpage) -> [InstantPageMedia] 
         var index: Int = 0
         var detailsIndex: Int = 0
         if let instantPage = content.instantPage {
-            return instantPageMedias(for: instantPage.blocks, webpage: webpage, medias: instantPage.media, mediaIndexCounter: &index, detailsIndexCounter: &detailsIndex)
+            return instantPageMedias(for: instantPage._parse().blocks, webpage: webpage, medias: instantPage._parse().media, mediaIndexCounter: &index, detailsIndexCounter: &detailsIndex)
         } else {
             return []
         }
@@ -931,11 +931,13 @@ func instantPageLayoutForWebPage(_ webPage: TelegramMediaWebpage, boundingWidth:
     }
     
     let rtl = instantPage.rtl
-    let pageBlocks = instantPage.blocks
+    let pageBlocks = instantPage._parse().blocks
     var contentSize = CGSize(width: boundingWidth, height: 0.0)
     var items: [InstantPageItem] = []
     
-    var media = instantPage.media
+    var media = instantPage._parse().media
+    
+    
     if let image = loadedContent.image, let id = image.id {
         media[id] = image
     }

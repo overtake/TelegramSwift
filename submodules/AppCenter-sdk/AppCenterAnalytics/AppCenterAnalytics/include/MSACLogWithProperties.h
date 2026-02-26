@@ -1,1 +1,0 @@
-../../../AppCenter/AppCenter/Model/MSACLogWithProperties.h

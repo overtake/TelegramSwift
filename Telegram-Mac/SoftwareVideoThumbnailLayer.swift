@@ -11,7 +11,7 @@ import Cocoa
 import Foundation
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -20,12 +20,12 @@ private final class SoftwareVideoThumbnailLayerNullAction: NSObject, CAAction {
     }
 }
 
-final class SoftwareVideoThumbnailView: NSView {
+public final class SoftwareVideoThumbnailView: NSView {
     private var asolutePosition: (CGRect, CGSize)?
     
     var disposable = MetaDisposable()
     
-    var ready: (() -> Void)? {
+    public var ready: (() -> Void)? {
         didSet {
             if self.layer?.contents != nil {
                 self.ready?()
@@ -33,7 +33,7 @@ final class SoftwareVideoThumbnailView: NSView {
         }
     }
     
-    init(account: Account, fileReference: FileMediaReference, synchronousLoad: Bool) {
+    public init(account: Account, fileReference: FileMediaReference, synchronousLoad: Bool) {
         super.init(frame: .zero)
         
 
@@ -42,7 +42,7 @@ final class SoftwareVideoThumbnailView: NSView {
         self.layer?.masksToBounds = true
         
         if let dimensions = fileReference.media.dimensions {
-            self.disposable.set((mediaGridMessageVideo(postbox: account.postbox, fileReference: fileReference, scale: backingScaleFactor, synchronousLoad: synchronousLoad)
+            self.disposable.set((mediaGridMessageVideo(account: account, fileReference: fileReference, scale: backingScaleFactor, synchronousLoad: synchronousLoad)
                 |> deliverOnMainQueue).start(next: { [weak self] transform in
                     var boundingSize = dimensions.size.aspectFilled(CGSize(width: 93.0, height: 93.0))
                     let imageSize = boundingSize
@@ -62,7 +62,7 @@ final class SoftwareVideoThumbnailView: NSView {
         }
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     

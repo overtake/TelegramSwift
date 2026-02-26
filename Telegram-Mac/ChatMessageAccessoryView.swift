@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 
@@ -21,6 +21,7 @@ class ChatMessageAccessoryView: Control {
     private var maxWidth: CGFloat = 0
     private let unread = View()
     private var stringValue: String = ""
+    
     private let progress: RadialProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, cancelFetchingIcon: stopFetchStreamableControl), twist: true, size: NSMakeSize(24, 24))
     private let bufferingIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 10, 10))
     private let download: ImageButton = ImageButton(frame: NSMakeRect(0, 0, 24, 24))
@@ -30,6 +31,8 @@ class ChatMessageAccessoryView: Control {
     private var isCompact: Bool = false
     
     private var imageView: ImageView?
+    
+    private var visualEffect: VisualEffect?
     
     var soundOffOnImage: CGImage? {
         didSet {
@@ -57,6 +60,7 @@ class ChatMessageAccessoryView: Control {
     
     override func layout() {
         super.layout()
+        visualEffect?.frame = bounds
         download.centerY(x: 6)
         progress.centerY(x: 6)
         backgroundView.frame = bounds
@@ -66,7 +70,7 @@ class ChatMessageAccessoryView: Control {
             imageView.centerY(x: frame.width - imageView.frame.width - 6)
         }
         
-        if let textLayout = textView.layout {
+        if let textLayout = textView.textLayout {
             var rect = focus(textLayout.layoutSize)
             rect.origin.x = 6
             if hasStremingControls  {
@@ -100,7 +104,7 @@ class ChatMessageAccessoryView: Control {
         
         let animated = animated && self.isCompact != isCompact
         
-        let updatedText = TextViewLayout(.initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
+        let updatedText = TextViewLayout(.initialize(string: isStreamable && !isCompact ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
         updatedText.measure(width: maxWidth)
         textView.update(updatedText)
         
@@ -130,12 +134,10 @@ class ChatMessageAccessoryView: Control {
             case .Remote:
                 progress.isHidden = true
                 download.isHidden = false
-                progress.state = .None
             case .Local:
                 progress.isHidden = true
                 download.isHidden = true
-                progress.state = .None
-            case let .Fetching(_, progress):
+            case let .Fetching(_, progress), let .Paused(progress):
                 self.progress.state = !isCompact ? .Fetching(progress: progress, force: false) : .None
                 self.progress.isHidden = isCompact
                 download.isHidden = !isCompact
@@ -180,6 +182,23 @@ class ChatMessageAccessoryView: Control {
             layer.add(cornerAnimation, forKey: "cornerRadius")
         }
         
+        if theme.shouldBlurService, !isLite(.blur) {
+            let current: VisualEffect
+            if let view = self.visualEffect {
+                current = view
+            } else {
+                current = VisualEffect(frame: bounds)
+                self.visualEffect = current
+                addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+            }
+            current.layer?.cornerRadius = isStreamable ? 8 : newSize.height / 2
+            current.bgColor = theme.blurServiceColor
+            backgroundView.backgroundColor = .clear
+        } else if let view = visualEffect {
+            performSubviewRemoval(view, animated: false)
+            self.visualEffect = nil
+        }
+        
         needsLayout = true
     }
     
@@ -191,7 +210,6 @@ class ChatMessageAccessoryView: Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
         
         unread.setFrameSize(NSMakeSize(6, 6))
         unread.layer?.cornerRadius = 3

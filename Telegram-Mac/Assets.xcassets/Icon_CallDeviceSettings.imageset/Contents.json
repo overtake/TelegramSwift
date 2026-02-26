@@ -1,13 +1,13 @@
 {
   "images" : [
     {
+      "filename" : "Settings-1.png",
       "idiom" : "universal",
-      "filename" : "settings (1).png",
       "scale" : "1x"
     },
     {
+      "filename" : "Settings@2x.png",
       "idiom" : "universal",
-      "filename" : "settings.png",
       "scale" : "2x"
     },
     {
@@ -16,7 +16,7 @@
     }
   ],
   "info" : {
-    "version" : 1,
-    "author" : "xcode"
+    "author" : "xcode",
+    "version" : 1
   }
 }

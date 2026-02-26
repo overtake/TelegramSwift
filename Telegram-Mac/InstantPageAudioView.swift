@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import RangeSet
 import SwiftSignalKit
 
 final class InstantPageAudioView: View, InstantPageView, APDelegate {
@@ -22,7 +22,7 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
     private let statusView: RadialProgressView = RadialProgressView()
     private let linearProgress: LinearProgressControl = LinearProgressControl(progressHeight: 3)
     private var bufferingStatusDisposable: MetaDisposable = MetaDisposable()
-    private var ranges: (IndexSet, Int)?
+    private var ranges: (RangeSet<Int64>, Int64)?
 
     weak var controller:APController? {
         didSet {
@@ -38,11 +38,11 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         }
     }
     
-    private func updateStatus(_ ranges: IndexSet, _ size: Int) {
+    private func updateStatus(_ ranges: RangeSet<Int64>, _ size: Int64) {
         self.ranges = (ranges, size)
         
         if let ranges = self.ranges, !ranges.0.isEmpty, ranges.1 != 0 {
-            for range in ranges.0.rangeView {
+            for range in ranges.0.ranges {
                 var progress = (CGFloat(range.count) / CGFloat(ranges.1))
                 progress = progress == 1.0 ? 0 : progress
                 linearProgress.set(fetchingProgress: progress, animated: progress > 0)
@@ -80,19 +80,19 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         
         linearProgress.fetchingColor = theme.colors.grayText
         
-        if let current = globalAudio?.currentSong {
+        if let current = context.sharedContext.getAudioPlayer()?.currentSong {
             if current.entry.isEqual(to: self.wrapper) {
-                globalAudio?.add(listener: self)
+                context.sharedContext.getAudioPlayer()?.add(listener: self)
             }
         }
-        statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+        statusView.state = .Icon(image: theme.icons.ivAudioPlay)
         linearProgress.set(progress: 0, animated:true)
 
     }
     
     var wrapper: APSingleWrapper {
         let file = self.media.media as! TelegramMediaFile
-        return APSingleWrapper(resource: file.resource, name: nil, performer: nil, id: file.id ?? MediaId(namespace: 0, id: 0))
+        return APSingleWrapper(resource: file.resource, name: nil, performer: nil, duration: file.duration, id: file.id ?? MediaId(namespace: 0, id: 0))
     }
     
     override func layout() {
@@ -116,8 +116,8 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         
         
         if let nameView = nameView {
-            nameView.layout?.measure(width: maxTitleWidth)
-            nameView.update(nameView.layout, origin: CGPoint(x: insets.left + leftInset, y: 5))
+            nameView.textLayout?.measure(width: maxTitleWidth)
+            nameView.update(nameView.textLayout, origin: CGPoint(x: insets.left + leftInset, y: 5))
         }
         
         var topOffset: CGFloat = 0.0
@@ -133,46 +133,47 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         
     }
     
-    func songDidChanged(song: APSongItem, for controller: APController) {
+    func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
         linearProgress.onUserChanged = { [weak controller, weak self] progress in
             controller?.set(trackProgress: progress)
             self?.linearProgress.set(progress: CGFloat(progress), animated: false)
         }
     }
     
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
+        statusView.theme =  RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: nil, blendMode: .copy)
         switch song.state {
         case .waiting, .paused:
-            statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+            statusView.state = .Icon(image: theme.icons.ivAudioPlay)
         case .stoped:
-            statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+            statusView.state = .Icon(image: theme.icons.ivAudioPlay)
             linearProgress.set(progress: 0, animated:true)
-        case let .playing(data):
-            linearProgress.set(progress: CGFloat(data.progress), animated: data.animated)
-            statusView.state = .Icon(image: theme.icons.ivAudioPause, mode: .copy)
+        case let .playing(_, _, progress):
+            linearProgress.set(progress: CGFloat(progress), animated: animated)
+            statusView.state = .Icon(image: theme.icons.ivAudioPause)
             break
         case .fetching:
             break
         }
     }
     
-    func songDidStartPlaying(song: APSongItem, for controller: APController) {
+    func songDidStartPlaying(song: APSongItem, for controller: APController, animated: Bool) {
        
     }
     
-    func songDidStopPlaying(song: APSongItem, for controller: APController) {
+    func songDidStopPlaying(song: APSongItem, for controller: APController, animated: Bool) {
         self.bufferingStatusDisposable.set(nil)
-        statusView.state = .Icon(image: theme.icons.ivAudioPlay, mode: .copy)
+        statusView.state = .Icon(image: theme.icons.ivAudioPlay)
         linearProgress.set(progress: 0)
         linearProgress.set(fetchingProgress: 0)
         linearProgress.onUserChanged = nil
     }
     
-    func playerDidChangedTimebase(song: APSongItem, for controller: APController) {
+    func playerDidChangedTimebase(song: APSongItem, for controller: APController, animated: Bool) {
         
     }
     
-    func audioDidCompleteQueue(for controller: APController) {
+    func audioDidCompleteQueue(for controller: APController, animated: Bool) {
         
     }
     

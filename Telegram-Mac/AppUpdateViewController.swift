@@ -11,7 +11,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import Sparkle
@@ -167,7 +167,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     
     switch state.loadingState {
     case let .failed(error):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: strings().appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.localizedDescription), data: InputDataGeneralTextData(color: theme.colors.redUI, detectBold: false, viewType: .textBottomItem)))
@@ -175,32 +175,32 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         
     case let .hasUpdate(item):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_download_update, data: InputDataGeneralData(name: L10n.appUpdateDownloadUpdate, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_download_update, data: InputDataGeneralData(name: strings().appUpdateDownloadUpdate, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
     case .initializing:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_initializing, data: InputDataGeneralData(name: L10n.appUpdateRetrievingInfo, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_initializing, data: InputDataGeneralData(name: strings().appUpdateRetrievingInfo, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
     case let .loading(item, current, total):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_downloading, data: InputDataGeneralData(name: "\(L10n.appUpdateDownloading)  \(String.prettySized(with: current) + " / " + String.prettySized(with: total))", color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_downloading, data: InputDataGeneralData(name: "\(strings().appUpdateDownloading)  \(String.prettySized(with: current) + " / " + String.prettySized(with: total))", color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
     case .uptodate:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: strings().appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appUpdateUptodate), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appUpdateUptodate), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
         index += 1
     case let .unarchiving(item):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unarchiving, data: InputDataGeneralData(name: L10n.appUpdateUnarchiving, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unarchiving, data: InputDataGeneralData(name: strings().appUpdateUnarchiving, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
     case let .readyToInstall(item):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_install_update, data: InputDataGeneralData(name: L10n.updateUpdateTelegram, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_install_update, data: InputDataGeneralData(name: strings().updateUpdateTelegram, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
@@ -211,14 +211,14 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     
     if let item = currentItem {
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appUpdateNewestAvailable), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appUpdateNewestAvailable), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     
         let text = "**" + item.versionTitle + "**" + "\n" + item.updateText
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(item.fileURL.path), equatable: nil, item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(item.fileURL.path), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, textColor: theme.colors.listGrayText, fontSize: 13, isTextSelectable: true, viewType: .textTopItem)
         }))
         index += 1
@@ -241,7 +241,7 @@ func AppUpdateViewController() -> InputDataController {
     } |> map { InputDataSignalValue(entries: $0) }
     
 
-    return InputDataController(dataSignal: signal, title: L10n.appUpdateTitle, validateData: { data in
+    return InputDataController(dataSignal: signal, title: strings().appUpdateTitle, validateData: { data in
         
         if let _ = data[_id_download_update] {
             driver?.downloadUpdate()
@@ -261,8 +261,11 @@ func AppUpdateViewController() -> InputDataController {
     
 }
 
+#if STABLE
 private let updates_channel_xml = "macos_stable_updates_xml"
-
+#else
+private let updates_channel_xml = "macos_beta_updates_xml"
+#endif
 
 
 private final class InternalUpdaterDownloader : SPUDownloaderSession {
@@ -301,7 +304,7 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
             
             let url = inApp(for: internalUrl as NSString, context: self.context, peerId: nil, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch url {
-            case let .followResolvedName(_, username, messageId, context, _, _):
+            case let .followResolvedName(_, username, messageId, _, context, _, _):
                 if let messageId = messageId {
                     let signal = downloadAppUpdate(account: context.account, source: username, messageId: messageId) |> deliverOnMainQueue
                     disposable.set(signal.start(next: { [weak self] result in
@@ -317,19 +320,19 @@ private final class InternalUpdaterDownloader : SPUDownloaderSession {
                             self.urlSession(URLSession(), downloadTask: URLSessionDownloadTask(), didFinishDownloadingTo: URL(fileURLWithPath: path))
                         }
                     }, error: { [weak self] error in
-                            self?.delegate.downloaderDidFailWithError(NSError(domain: "Failed to download archive. Please try again.", code: 0, userInfo: nil))
+                            self?.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorFailedDownload, code: 0, userInfo: nil))
                     }))
                 } else {
-                    self.delegate.downloaderDidFailWithError(NSError(domain: "Wrong internal link. Please try again.", code: 0, userInfo: nil))
+                    self.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorWrongInternal, code: 0, userInfo: nil))
                 }
                 
             default:
-                self.delegate.downloaderDidFailWithError(NSError(domain: "Wrong internal link. Please try again.", code: 0, userInfo: nil))
+                self.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorWrongInternal, code: 0, userInfo: nil))
             }
             
             
         } else {
-            self.delegate.downloaderDidFailWithError(NSError(domain: "No internal link for this version. Please try again.", code: 0, userInfo: nil))
+            self.delegate.downloaderDidFailWithError(NSError(domain: strings().appUpdateErrorNoInternal, code: 0, userInfo: nil))
         }
         
     }
@@ -370,7 +373,7 @@ private final class InternalUpdateDriver : ExternalUpdateDriver {
             appcast.parseAppcastItems(fromXMLData: data, error: nil)
             self?.appcastDidFinishLoading(appcast)
         }, error: { [weak self] error in
-            self?.abortUpdateWithError(NSError(domain: "Failed to download updating info. Please try again.", code: 0, userInfo: nil))
+            self?.abortUpdateWithError(NSError(domain: strings().appUpdateErrorFailedUpdating, code: 0, userInfo: nil))
         }))
     }
     
@@ -483,14 +486,15 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
     override func downloaderDidFailWithError(_ error: Error!) {
         super.downloaderDidFailWithError(error)
         updateState { state in
-            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
+            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
+        trySwitchUpdaterBetweenSources()
     }
     
     override func abortUpdateWithError(_ error: Error!) {
         super.abortUpdateWithError(error)
         updateState { state in
-            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
+            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
         trySwitchUpdaterBetweenSources()
     }
@@ -498,7 +502,7 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
     override func installer(for host: SUHost!, failedWithError error: Error!) {
         super.installer(for: host, failedWithError: error)
         updateState { state in
-            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
+            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
         trySwitchUpdaterBetweenSources()
     }
@@ -563,7 +567,7 @@ private func resetUpdater() {
     
     #if !GITHUB
         let update:()->Void = {
-            let url = updater.domain ?? Bundle.main.infoDictionary!["SUFeedURL"] as! String
+            let url = Bundle.main.infoDictionary!["SUFeedURL"] as! String
             let state = stateValue.with { $0.loadingState }
             switch state {
             case .readyToInstall, .installing, .unarchiving, .loading:
@@ -619,7 +623,7 @@ private func trySwitchUpdaterBetweenSources() {
     if let source = updaterSource {
         switch source {
         case let .external(context):
-            #if STABLE || DEBUG
+            #if STABLE || DEBUG || BETA
             if let context = context {
                 updater_resetWithUpdaterSource(.internal(context: context), force: true)
             }

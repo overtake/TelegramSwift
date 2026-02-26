@@ -9,8 +9,11 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import CalendarUtils
 import Postbox
+
+
+
 
 private let timezoneOffset: Int32 = {
     let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
@@ -20,16 +23,17 @@ private let timezoneOffset: Int32 = {
     return Int32(timeinfoNow.tm_gmtoff)
 }()
 
+private let formatter = DateFormatter()
 private let granularity: Int32 = 60 * 60 * 24
 
 
 
 func chatDateId(for timestamp:Int32) -> Int64 {
-    return Int64(Calendar.autoupdatingCurrent.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
+    return Int64(Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
 }
 func mediaDateId(for timestamp:Int32) -> Int64 {
-    let startMonth = Calendar.autoupdatingCurrent.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
-    let endMonth = Calendar.autoupdatingCurrent.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
+    let startMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
+    let endMonth = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
     return Int64(endMonth.timeIntervalSince1970)
 }
 
@@ -40,11 +44,18 @@ class ChatDateStickItem : TableStickItem {
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
+    let presentation: TelegramPresentationTheme
+    
+    var monoforumState: MonoforumUIState? {
+        return entry.additionalData.monoforumState
+    }
+    
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
-        if case let .DateEntry(index, _) = entry {
+        self.presentation = theme
+        if case let .DateEntry(index, _, _, _) = entry {
             self.timestamp = index.timestamp
         } else {
             fatalError()
@@ -65,15 +76,15 @@ class ChatDateStickItem : TableStickItem {
             
             switch interaction.mode {
             case .scheduled:
-                text = L10n.chatDateScheduledForToday
+                text = strings().chatDateScheduledForToday
             default:
-                text = L10n.dateToday
+                text = strings().dateToday
             }
             
         } else {
-            let dateFormatter = makeNewDateFormatter()
+            let dateFormatter = formatter
             
-            dateFormatter.calendar = Calendar.autoupdatingCurrent
+            dateFormatter.calendar = Calendar.current
             //dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";
             //&& (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2)
@@ -85,10 +96,10 @@ class ChatDateStickItem : TableStickItem {
             let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
             switch interaction.mode {
             case .scheduled:
-                if timestamp == 2147457600 {
-                    text = L10n.chatDateScheduledUntilOnline
+                if timestamp - 2147460000 > 0 {
+                    text = strings().chatDateScheduledUntilOnline
                 } else {
-                    text = L10n.chatDateScheduledFor(dateString)
+                    text = strings().chatDateScheduledFor(dateString)
                 }
             default:
                 text = dateString
@@ -96,10 +107,17 @@ class ChatDateStickItem : TableStickItem {
         }
         
         
-        self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(theme.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.layout = TextViewLayout(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .medium(presentation.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 
         
         super.init(initialSize)
+    }
+    
+    var shouldBlurService: Bool {
+        if isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
     }
     
     override var canBeAnchor: Bool {
@@ -107,11 +125,12 @@ class ChatDateStickItem : TableStickItem {
     }
     
     required init(_ initialSize: NSSize) {
-        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list)
+        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list, theme, .init())
         timestamp = 0
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
         self.chatInteraction = nil
+        self.presentation = theme
         super.init(initialSize)
     }
     
@@ -141,14 +160,18 @@ class ChatDateStickView : TableStickView {
     private let containerView: Control = Control()
     private var borderView: View = View()
     required init(frame frameRect: NSRect) {
+        
+        
+        
         self.textView = TextView()
         self.textView.isSelectable = false
        // self.textView.userInteractionEnabled = false
         self.containerView.wantsLayer = true
-        self.textView.disableBackgroundDrawing = true
+//        self.textView.disableBackgroundDrawing = true
        // textView.isEventLess = false
         super.init(frame: frameRect)
         addSubview(textView)
+        
         textView.set(handler: { [weak self] control in
              if let strongSelf = self, let item = strongSelf.item as? ChatDateStickItem, let table = item.table {
                 
@@ -170,7 +193,7 @@ class ChatDateStickView : TableStickView {
                     item.chatInteraction?.jumpToDate(CalendarUtils.monthDay(components.day!, date: date))
                 } else if let chatInteraction = item.chatInteraction, chatInteraction.mode == .history {
                     if !hasPopover(chatInteraction.context.window) {
-                        let controller = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
+                        let controller = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
                         showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-84, -40))
                     }
                 }
@@ -222,25 +245,51 @@ class ChatDateStickView : TableStickView {
         }
     }
     
+    
     override func updateColors() {
         super.updateColors()
         
-
-        textView.backgroundColor = theme.chatServiceItemColor
+        if let item = item as? ChatDateStickItem {
+            var presentation = item.presentation
+            if let table = item.table {
+                table.enumerateItems(with: { item in
+                    if let item = item as? ChatRowItem {
+                        presentation = item.presentation
+                        return false
+                    } else if let item = item as? ChatDateStickItem {
+                        presentation = item.presentation
+                        return false
+                    }
+                    return true
+                })
+            }
+            if item.shouldBlurService {
+                textView.blurBackground = presentation.blurServiceColor
+                textView.backgroundColor = .clear
+            } else {
+                textView.backgroundColor = presentation.chatServiceItemColor
+                textView.blurBackground = nil
+            }
+        }
         
-        //containerView.layer?.borderColor = theme.colors.border.cgColor
-       // containerView.layer?.borderWidth = header || (theme.wallpaper != .none) ? 1.0 : 0
-        
-
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-    }
     
     override func layout() {
         super.layout()
-        textView.center()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        guard let item = item as? ChatDateStickItem else {
+            return
+        }
+        
+        let rect = textView.centerFrame().offsetBy(dx: item.monoforumState == .vertical ? 40 : 0, dy: 0)
+        
+        transition.updateFrame(view: textView, frame: rect)
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -248,12 +297,21 @@ class ChatDateStickView : TableStickView {
             textView.update(item.layout)
             textView.setFrameSize(item.layout.layoutSize.width + 16, item.layout.layoutSize.height + 6)
             textView.layer?.cornerRadius = textView.frame.height / 2
-//            if animated {
-//                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//            }
-            
-            self.needsLayout = true
+
         }
         super.set(item: item, animated:animated)
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
+    override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
+        if let item = item as? ChatDateStickItem, !isLite(.animations) {
+            if item.isBubbled, appearAnimated {
+                self.textView.layer?.animateScaleSpring(from: 0.5, to: 1, duration: 0.4, bounce: false)
+                self.textView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
+            }
+        }
     }
 }

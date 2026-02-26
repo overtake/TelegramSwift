@@ -10,5 +10,5 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 

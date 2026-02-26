@@ -1,0 +1,20 @@
+//
+//  debug.xcconfig
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 29.11.2021.
+//  Copyright © 2021 Telegram. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+
+#include "common.xcconfig"
+
+DSA_PEM_FILE = dsa_pub.pem
+SFEED_URL = https:$(SIMPLE_SLASH)/mac-updates.telegram.org/beta/versions.xml
+SOURCE = DEBUG
+
+TYPE = -D'BETA'
+OTHER_SWIFT_FLAGS = $(TYPE)

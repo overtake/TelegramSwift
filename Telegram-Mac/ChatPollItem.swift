@@ -10,11 +10,30 @@ import Cocoa
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import InAppSettings
 import Postbox
 import SwiftSignalKit
-import SyncCore
+import ColorPalette
 
+
+private extension TelegramMediaPoll {
+    func translated(_ poll: TranslationMessageAttribute) -> TelegramMediaPoll {
+        var options: [TelegramMediaPollOption] = self.options
+        for (i, option) in options.enumerated() {
+            options[i] = .init(text: poll.additional[i].text, entities: poll.additional[i].entities, opaqueIdentifier: option.opaqueIdentifier)
+        }
+        
+        let solution: TelegramMediaPollResults.Solution?
+        if let value = poll.pollSolution {
+            solution = .init(text: value.text, entities: value.entities)
+        } else {
+            solution = self.results.solution
+        }
+        
+        let result: TelegramMediaPollResults = .init(voters: self.results.voters, totalVoters: self.results.totalVoters, recentVoters: self.results.recentVoters, solution: solution)
+        return .init(pollId: self.pollId, publicity: self.publicity, kind: self.kind, text: poll.text, textEntities: poll.entities, options: options, correctAnswers: self.correctAnswers, results: result, isClosed: self.isClosed, deadlineTimeout: self.deadlineTimeout)
+    }
+}
 
 
 func isPollEffectivelyClosed(message: Message, poll: TelegramMediaPoll) -> Bool {
@@ -45,22 +64,22 @@ func isPollEffectivelyClosed(message: Message, poll: TelegramMediaPoll) -> Bool 
 extension TelegramMediaPoll {
     var title: String {
         if isClosed {
-            return L10n.chatPollTypeClosed
+            return strings().chatPollTypeClosed
         } else {
             switch self.kind {
             case .quiz:
                 switch self.publicity {
                 case .anonymous:
-                    return L10n.chatPollTypeAnonymousQuiz
+                    return strings().chatPollTypeAnonymousQuiz
                 case .public:
-                    return L10n.chatPollTypeQuiz
+                    return strings().chatPollTypeQuiz
                 }
             default:
                 switch self.publicity {
                 case .anonymous:
-                    return L10n.chatPollTypeAnonymous
+                    return strings().chatPollTypeAnonymous
                 case .public:
-                    return L10n.chatPollTypePublic
+                    return strings().chatPollTypePublic
                 }
             }
         }
@@ -178,7 +197,8 @@ private final class PollOption : Equatable {
     let isCorrect: Bool?
     let isQuiz: Bool
     let isMultipleSelected: Bool
-    init(option:TelegramMediaPollOption, nameText: TextViewLayout, percent: Float?, realPercent: Float, voteCount: Int32, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, voted: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, isCorrect: Bool?, isQuiz: Bool, isMultipleSelected: Bool, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize) {
+    let isTranslateLoading: Bool
+    init(option:TelegramMediaPollOption, nameText: TextViewLayout, percent: Float?, realPercent: Float, voteCount: Int32, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, voted: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, isCorrect: Bool?, isQuiz: Bool, isMultipleSelected: Bool, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize, isTranslateLoading: Bool) {
         self.option = option
         self.nameText = nameText
         self.percent = percent
@@ -195,21 +215,22 @@ private final class PollOption : Equatable {
         self.isCorrect = isCorrect
         self.isQuiz = isQuiz
         self.isMultipleSelected = isMultipleSelected
+        self.isTranslateLoading = isTranslateLoading
     }
     
     func withUpdatedLoading(_ isLoading: Bool) -> PollOption {
-        return PollOption(option: self.option, nameText: self.nameText, percent: self.percent, realPercent: self.realPercent, voteCount: self.voteCount, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, voted: self.voted, isLoading: isLoading, presentation: self.presentation, isCorrect: self.isCorrect, isQuiz: self.isQuiz, isMultipleSelected: self.isMultipleSelected, vote: self.vote, contentSize: self.contentSize)
+        return PollOption(option: self.option, nameText: self.nameText, percent: self.percent, realPercent: self.realPercent, voteCount: self.voteCount, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, voted: self.voted, isLoading: isLoading, presentation: self.presentation, isCorrect: self.isCorrect, isQuiz: self.isQuiz, isMultipleSelected: self.isMultipleSelected, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading)
     }
     func withUpdatedContentSize(_ contentSize: NSSize) -> PollOption {
-        return PollOption(option: self.option, nameText: self.nameText, percent: self.percent, realPercent: self.realPercent, voteCount: self.voteCount, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, voted: self.voted, isLoading: self.isLoading, presentation: self.presentation, isCorrect: self.isCorrect, isQuiz: self.isQuiz, isMultipleSelected: self.isMultipleSelected, vote: self.vote, contentSize: contentSize)
+        return PollOption(option: self.option, nameText: self.nameText, percent: self.percent, realPercent: self.realPercent, voteCount: self.voteCount, isSelected: self.isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, voted: self.voted, isLoading: self.isLoading, presentation: self.presentation, isCorrect: self.isCorrect, isQuiz: self.isQuiz, isMultipleSelected: self.isMultipleSelected, vote: self.vote, contentSize: contentSize, isTranslateLoading: self.isTranslateLoading)
     }
     func withUpdatedSelected(_ isSelected: Bool) -> PollOption {
-        return PollOption(option: self.option, nameText: self.nameText, percent: self.percent, realPercent: self.realPercent, voteCount: self.voteCount, isSelected: isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, voted: self.voted, isLoading: self.isLoading, presentation: self.presentation, isCorrect: self.isCorrect, isQuiz: self.isQuiz, isMultipleSelected: self.isMultipleSelected, vote: self.vote, contentSize: self.contentSize)
+        return PollOption(option: self.option, nameText: self.nameText, percent: self.percent, realPercent: self.realPercent, voteCount: self.voteCount, isSelected: isSelected, isIncoming: self.isIncoming, isBubbled: self.isBubbled, voted: self.voted, isLoading: self.isLoading, presentation: self.presentation, isCorrect: self.isCorrect, isQuiz: self.isQuiz, isMultipleSelected: self.isMultipleSelected, vote: self.vote, contentSize: self.contentSize, isTranslateLoading: self.isTranslateLoading)
     }
     
     
     static func ==(lhs: PollOption, rhs: PollOption) -> Bool {
-        return lhs.option == rhs.option && lhs.percent == rhs.percent && lhs.isSelected == rhs.isSelected && lhs.isIncoming == rhs.isIncoming && lhs.isLoading == rhs.isLoading && lhs.contentSize == rhs.contentSize && lhs.voted == rhs.voted && lhs.realPercent == rhs.realPercent && lhs.voteCount == rhs.voteCount && lhs.isCorrect == rhs.isCorrect && lhs.isQuiz == rhs.isQuiz && lhs.isMultipleSelected == rhs.isMultipleSelected
+        return lhs.option == rhs.option && lhs.percent == rhs.percent && lhs.isSelected == rhs.isSelected && lhs.isIncoming == rhs.isIncoming && lhs.isLoading == rhs.isLoading && lhs.contentSize == rhs.contentSize && lhs.voted == rhs.voted && lhs.realPercent == rhs.realPercent && lhs.voteCount == rhs.voteCount && lhs.isCorrect == rhs.isCorrect && lhs.isQuiz == rhs.isQuiz && lhs.isMultipleSelected == rhs.isMultipleSelected && lhs.isTranslateLoading == rhs.isTranslateLoading
     }
     
     
@@ -228,14 +249,17 @@ private final class PollOption : Equatable {
     }
     
     var tooltip: String {
-        var totalOptionVotes = self.isQuiz ? L10n.chatQuizTooltipVotesCountable(Int(self.voteCount)) : L10n.chatPollTooltipVotesCountable(Int(self.voteCount))
+        var totalOptionVotes = self.isQuiz ? strings().chatQuizTooltipVotesCountable(Int(self.voteCount)) : strings().chatPollTooltipVotesCountable(Int(self.voteCount))
         totalOptionVotes = totalOptionVotes.replacingOccurrences(of: "\(self.voteCount)", with: Int(self.voteCount).separatedNumber)
-        return self.voteCount == 0 ? (self.isQuiz ? L10n.chatQuizTooltipNoVotes : L10n.chatPollTooltipNoVotes) : totalOptionVotes
+        return self.voteCount == 0 ? (self.isQuiz ? strings().chatQuizTooltipNoVotes : strings().chatPollTooltipNoVotes) : totalOptionVotes
     }
     
     func measure(width: CGFloat) -> NSSize {
         nameText.measure(width: width - leftOptionInset)
         let contentSize = NSMakeSize(nameText.layoutSize.width + leftOptionInset, 10 + nameText.layoutSize.height + PollOption.spaceBetweenOptions)
+        if isTranslateLoading {
+            nameText.maskBlockImage = nameText.generateBlock(backgroundColor: .blackTransparent)
+        }
         return contentSize
     }
 }
@@ -258,7 +282,7 @@ class ChatPollItem: ChatRowItem {
                 return nil
             }
             if poll.publicity != .anonymous {
-                return L10n.chatPollViewResults
+                return strings().chatPollViewResults
             } else {
                 return nil
             }
@@ -266,18 +290,18 @@ class ChatPollItem: ChatRowItem {
         let hasSelected = options.contains(where: { $0.isSelected })
         if poll.isMultiple {
             if !hasSelected {
-                return L10n.chatPollSubmitVote
+                return strings().chatPollSubmitVote
             } else {
                 if poll.publicity != .anonymous {
                     if hasSelected {
-                        return L10n.chatPollViewResults
+                        return strings().chatPollViewResults
                     }
                 }
             }
         } else {
             if poll.publicity != .anonymous {
                 if hasSelected {
-                    return L10n.chatPollViewResults
+                    return strings().chatPollViewResults
                 }
             }
         }
@@ -305,18 +329,35 @@ class ChatPollItem: ChatRowItem {
     var isBotQuiz: Bool {
         if let message = message {
             if self.poll.isQuiz {
-                return messageMainPeer(message)?.isBot == true
+                return coreMessageMainPeer(message)?.isBot == true
             }
         }
         return false
     }
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+    let isTranslateLoading: Bool
+    
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
-        let poll = object.message!.media[0] as! TelegramMediaPoll
+        
+        var poll = object.message!.media[0] as! TelegramMediaPoll
+        let isTranslateLoading: Bool
+        if let translate = object.additionalData.translate {
+            switch translate {
+            case .loading:
+                isTranslateLoading = true
+            case let .complete(toLang: toLang):
+                if let attribute = object.message!.translationAttribute(toLang: toLang) {
+                    poll = poll.translated(attribute)
+                }
+                isTranslateLoading = false
+            }
+        } else {
+            isTranslateLoading = false
+        }
         self.poll = poll
-        
-        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        self.isTranslateLoading = isTranslateLoading
+        super.init(initialSize, chatInteraction, context, object, theme: theme)
     
         
         
@@ -363,12 +404,18 @@ class ChatPollItem: ChatRowItem {
             }
             
             let nameFont: NSFont = .normal(.text)//voted && isSelected ? .bold(.text) : .normal(.text)
-            let nameLayout = TextViewLayout(.initialize(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont), alwaysStaticItems: true)
-
+            
+            let optionText = NSMutableAttributedString()
+            optionText.append(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont)
+            InlineStickerItem.apply(to: optionText, associatedMedia: message?.associatedMedia ?? [:], entities: option.entities, isPremium: context.isPremium)
+            
+            let nameLayout = TextViewLayout(optionText, alwaysStaticItems: true)
+            
+            
             
             let wrapper = PollOption(option: option, nameText: nameLayout, percent: percent, realPercent: realPercent, voteCount: votedCount, isSelected: isSelected, isIncoming: isIncoming, isBubbled: renderType == .bubble, voted: voted, isLoading: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier) && object.additionalData.pollStateData.isLoading, presentation: self.presentation, isCorrect: isCorrect, isQuiz: poll.kind == .quiz, isMultipleSelected: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier), vote: { [weak self] control in
                 self?.voteOption(option, for: control)
-            })
+            }, isTranslateLoading: isTranslateLoading)
             
             options.append(wrapper)
         }
@@ -377,7 +424,7 @@ class ChatPollItem: ChatRowItem {
 
         let totalCount = poll.results.totalVoters ?? 0
         
-        var totalText = poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(totalCount)) : L10n.chatPollTotalVotes1Countable(Int(totalCount))
+        var totalText = poll.isQuiz ? strings().chatQuizTotalVotesCountable(Int(totalCount)) : strings().chatPollTotalVotes1Countable(Int(totalCount))
         totalText = totalText.replacingOccurrences(of: "\(totalCount)", with: Int(totalCount).separatedNumber)
         
         if actionButtonText == nil && !isBotQuiz {
@@ -386,9 +433,9 @@ class ChatPollItem: ChatRowItem {
                 text = totalText
             } else {
                 if poll.isQuiz {
-                    text = self.isClosed ? L10n.chatQuizTotalVotesResultEmpty : L10n.chatQuizTotalVotesEmpty
+                    text = self.isClosed ? strings().chatQuizTotalVotesResultEmpty : strings().chatQuizTotalVotesEmpty
                 } else {
-                    text = self.isClosed ? L10n.chatPollTotalVotesResultEmpty : L10n.chatPollTotalVotesEmpty
+                    text = self.isClosed ? strings().chatPollTotalVotesResultEmpty : strings().chatPollTotalVotesEmpty
                 }
             }
             self.totalVotesText = TextViewLayout(.initialize(string: text, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -397,18 +444,24 @@ class ChatPollItem: ChatRowItem {
         }
         
 
+        let titleAttr = NSMutableAttributedString()
+        titleAttr.append(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text))
         
-        self.titleText = TextViewLayout(.initialize(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text)), alwaysStaticItems: true)
+        InlineStickerItem.apply(to: titleAttr, associatedMedia: message?.associatedMedia ?? [:], entities: poll.textEntities, isPremium: context.isPremium)
+
         
-        let typeText: String = self.isBotQuiz ? L10n.chatQuizTextType : poll.title
+        self.titleText = TextViewLayout(titleAttr, alwaysStaticItems: true)
+        
+        
+        let typeText: String = self.isBotQuiz ? strings().chatQuizTextType : poll.title
         
         self.titleTypeText = TextViewLayout(.initialize(string: typeText, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         var size: NSSize = .zero
         if let action = self.actionButtonText {
-            size = TitleButton.size(with: action, font: .normal(.text))
+            size = TextButton.size(with: action, font: .normal(.text))
         } else if let totalVotesText = self.totalVotesText {
             size = totalVotesText.layoutSize
         }
@@ -416,61 +469,18 @@ class ChatPollItem: ChatRowItem {
         if size.width > 0 {
             let dif = contentSize.width - (contentSize.width / 2 + size.width / 2)
             if dif < (rightSize.width + insetBetweenContentAndDate) {
-                return 20
+                return true
             }
             
         }
         
         if isBotQuiz {
-            return 10
+            return true
         }
+        return super.isForceRightLine
+    }
+    
         
-        return super.additionalLineForDateInBubbleState
-    }
-
-    
-    override var isFixedRightPosition: Bool {
-        return true
-    }
-    
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return super.menuItems(in: location) |> map { [weak self] items in
-            guard let `self` = self, let message = self.message else { return items }
-            var items = items
-            if let poll = message.media.first as? TelegramMediaPoll {
-                if !self.isClosed && !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                    var index: Int = 0
-                    if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
-                        items.insert(ContextMenuItem(L10n.chatPollUnvote, handler: { [weak self] in
-                            self?.unvote()
-                        }), at: index)
-                        index += 1
-                    }
-                    if message.forwardInfo == nil {
-                        var canClose: Bool = message.author?.id == self.context.peerId
-                        if let peer = self.peer as? TelegramChannel {
-                            canClose = peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
-                        }
-                        if canClose {
-                            
-                            items.insert(ContextMenuItem(poll.kind == .quiz ? L10n.chatQuizStop : L10n.chatPollStop, handler: { [weak self] in
-                                confirm(for: mainWindow, header: poll.kind == .quiz ? L10n.chatQuizStopConfirmHeader : L10n.chatPollStopConfirmHeader, information: poll.kind == .quiz ? L10n.chatQuizStopConfirmText : L10n.chatPollStopConfirmText, okTitle: L10n.alertConfirmStop, successHandler: { [weak self] _ in
-                                    self?.stop()
-                                })
-                            }), at: index)
-                            index += 1
-                        }
-                    }
-                    if index != 0 {
-                        items.insert(ContextSeparatorItem(), at: index)
-                    }
-                }
-                
-            }
-            return items
-        }
-    }
-    
     private func stop() {
         if let message = message {
             chatInteraction.closePoll(message.id)
@@ -570,7 +580,9 @@ class ChatPollItem: ChatRowItem {
         titleTypeText.measure(width: width - bubbleContentInset - rightInset)
         totalVotesText?.measure(width: width - bubbleContentInset)
         
-        
+        if isTranslateLoading {
+            titleText.maskBlockImage = titleText.generateBlock(backgroundColor: .blackTransparent)
+        }
         
         var maxOptionNameWidth: CGFloat = 0
         for (i, option) in options.enumerated() {
@@ -600,15 +612,6 @@ class ChatPollItem: ChatRowItem {
         }
         
         return NSMakeSize(max(width, contentWidth), contentHeight)
-    }
-    
-    override func copyAndUpdate(animated: Bool) {
-        if let table = self.table {
-            let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
-            _ = item.makeSize(table.frame.width, oldWidth: 0)
-            let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
-            table.merge(with: transaction)
-        }
     }
     
 }
@@ -702,12 +705,11 @@ final class ChatPollItemView : ChatRowView {
     }
     
     override var selectableTextViews: [TextView] {
-        return [contentNode.titleView]
+        return [contentNode.titleView.textView]
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
-        let point = contentView.convert(location, from: nil)
-        return NSPointInRect(point, NSMakeRect(0, contentNode.titleView.frame.minY, contentNode.frame.width, contentNode.titleView.frame.height))
+        return true
     }
     
     override var needsDisplay: Bool {
@@ -747,7 +749,7 @@ final class ChatPollItemView : ChatRowView {
 
 private final class PollOptionView : Control {
     private var percentView: ImageView?
-    private let nameView: TextView = TextView()
+    private let nameView: InteractiveTextView = InteractiveTextView(frame: .zero)
     private var selectingView:ImageView?
     private let progressView: LinearProgressControl = LinearProgressControl(progressHeight: 5)
     private var progressIndicator: ProgressIndicator?
@@ -759,7 +761,6 @@ private final class PollOptionView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         nameView.userInteractionEnabled = false
-        nameView.isSelectable = false
         progressView.hasMinumimVisibility = true
         addSubview(nameView)
         addSubview(progressView)
@@ -767,6 +768,8 @@ private final class PollOptionView : Control {
         borderView.userInteractionEnabled = false
         progressView.userInteractionEnabled = false
         progressView.roundCorners = true
+        
+        layer?.masksToBounds = false
         
         progressView.isEventLess = true
         
@@ -779,7 +782,7 @@ private final class PollOptionView : Control {
         return 13
     }
     
-    func update(with option: PollOption, animated: Bool) {
+    func update(with option: PollOption, context: AccountContext, animated: Bool) {
         let animated = animated && self.option != option
         let previousOption = self.option
 
@@ -791,7 +794,11 @@ private final class PollOptionView : Control {
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
         
-        nameView.update(option.nameText, origin: NSMakePoint(option.leftOptionInset, 0))
+        nameView.set(text: option.nameText, context: context)
+        nameView.setFrameOrigin(NSMakePoint(option.leftOptionInset, 0))
+        
+        nameView.textView.setIsShimmering(option.isTranslateLoading, animated: animated)
+        
         progressView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 5))
         borderView.backgroundColor = option.presentation.chat.pollOptionBorder(option.isIncoming, option.isBubbled)
         borderView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5 - .borderSize + progressView.progressHeight, frame.width - nameView.frame.minX, .borderSize)
@@ -875,7 +882,7 @@ private final class PollOptionView : Control {
         if option.isSelected, let isCorrect = option.isCorrect {
             votedColor = isCorrect ? option.presentation.chat.greenUI(option.isIncoming, option.isBubbled) : option.presentation.chat.redUI(option.isIncoming, option.isBubbled)
         } else {
-            votedColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
+            votedColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
         }
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
 
@@ -984,7 +991,7 @@ private final class PollOptionView : Control {
                     }
                 }
 //                progressIndicator?.lineWidth = 1.0
-                progressIndicator?.progressColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
+                progressIndicator?.progressColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
                 progressIndicator?.setFrameOrigin(NSMakePoint(defaultInset, 0))
 
             } else {
@@ -1027,9 +1034,9 @@ private final class PollOptionView : Control {
 }
 
 private final class PollView : Control {
-    fileprivate let titleView: TextView = TextView()
+    fileprivate let titleView: InteractiveTextView = InteractiveTextView(frame: .zero)
     private let typeView: TextView = TextView()
-    private var actionButton: TitleButton?
+    private var actionButton: TextButton?
     private var totalVotesTextView: TextView?
     
     private var mergedAvatarsView: MergedAvatarsView?
@@ -1044,12 +1051,17 @@ private final class PollView : Control {
         typeView.userInteractionEnabled = false
         addSubview(titleView)
         addSubview(typeView)
+        
+        
+        titleView.textView.isSelectable = true
     }
     
     func update(with item: ChatPollItem, animated: Bool) {
         
-        titleView.update(item.titleText)
+        titleView.set(text: item.titleText, context: item.context)
         typeView.update(item.titleTypeText)
+        
+        titleView.textView.setIsShimmering(item.isTranslateLoading, animated: animated)
         
         var y: CGFloat = 0
         
@@ -1071,7 +1083,7 @@ private final class PollView : Control {
             
             
             self.options[i].frame = NSMakeRect(0, y - (i > 0 ? PollOption.spaceBetweenOptions : 0), frame.width, option.contentSize.height)
-            self.options[i].update(with: option, animated: animated)
+            self.options[i].update(with: option, context: item.context, animated: animated)
             y += option.contentSize.height
             if i != item.options.count - 1 {
                 y += PollOption.spaceBetweenOptions
@@ -1098,7 +1110,7 @@ private final class PollView : Control {
         if let actionText = item.actionButtonText {
             y += item.defaultContentInnerInset - 4
             if self.actionButton == nil {
-                self.actionButton = TitleButton()
+                self.actionButton = TextButton()
                 self.addSubview(self.actionButton!)
             }
             guard let actionButton = self.actionButton else {
@@ -1113,7 +1125,7 @@ private final class PollView : Control {
             }, for: .SingleClick)
             
             actionButton.set(font: .normal(.text), for: .Normal)
-            actionButton.set(color: item.presentation.chat.webPreviewActivity(item.isIncoming, item.isBubbled), for: .Normal)
+            actionButton.set(color: item.presentation.chat.activityColor(item.isIncoming, item.isBubbled), for: .Normal)
             actionButton.set(text: actionText, for: .Normal)
             _ = actionButton.sizeToFit(NSMakeSize(10, 4), thatFit: false)
             actionButton.centerX(y: y)
@@ -1146,7 +1158,7 @@ private final class PollView : Control {
             self.mergedAvatarsView?.removeAllHandlers()
             
             self.mergedAvatarsView?.set(handler: { [weak item] _ in
-                if item?.actionButtonText == L10n.chatPollViewResults, item?.actionButtonIsEnabled == true {
+                if item?.actionButtonText == strings().chatPollViewResults, item?.actionButtonIsEnabled == true {
                     item?.invokeAction()
                 }
             }, for: .Click)
@@ -1180,7 +1192,7 @@ private final class PollView : Control {
                 guard let item = item else {
                     return
                 }
-                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
+                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil, isDark: item.presentation.colors.isDark, bubbled: item.presentation.bubbled)
                 
                 tooltip(for: control, text: solution.text, attributedText: text, interactions: globalLinkExecutor, timeout: 10.0)
             }, for: .Click)

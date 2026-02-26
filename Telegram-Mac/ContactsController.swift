@@ -11,40 +11,67 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private enum ContactsControllerEntryId: Hashable {
     case peerId(Int64)
     case addContact
-    var hashValue: Int {
+    case space
+    case story(Int64)
+    case separator(Int32)
+    func hash(into hasher: inout Hasher) {
         switch self {
+        case let .story(peerId):
+            hasher.combine(0)
+            hasher.combine(peerId)
         case .addContact:
-            return 0
+            hasher.combine(1)
         case let .peerId(peerId):
-            return peerId.hashValue
-            
+            hasher.combine(2)
+            hasher.combine(peerId)
+        case let .separator(index):
+            hasher.combine(3)
+            hasher.combine(index)
+        case .space:
+            hasher.combine(4)
         }
     }
+    
 }
 
 
 private enum ContactsEntry: Comparable, Identifiable {
-    case peer(Peer, PeerPresence?, Int32)
+    case space
+    case separator(String, Int32)
+    case story(EngineStorySubscriptions.Item, Int32)
+    case peer(Peer, PeerPresence?, Int32, EngineStorySubscriptions.Item?)
     case addContact
     var stableId: ContactsControllerEntryId {
         switch self {
+        case let .story(item, _):
+            return .story(item.peer.id.toInt64())
         case .addContact:
             return .addContact
-        case let .peer(peer,_, _):
+        case .space:
+            return .space
+        case let .peer(peer,_, _, _):
             return .peerId(peer.id.toInt64())
+        case let .separator(_, index):
+            return .separator(index)
         }
     }
     
     var index: Int32 {
         switch self {
+        case let .story(_, index):
+            return index
+        case .space:
+            return -2
         case .addContact:
             return -1
-        case let .peer(_, _, index):
+        case let .peer(_, _, index, _):
+            return index
+        case let .separator(_, index):
             return index
         }
     }
@@ -59,13 +86,34 @@ private func ==(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
         } else {
             return false
         }
-    case let .peer(lhsPeer, lhsPresence, lhsIndex):
+    case .space:
+        if case .space = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .story(item, index):
+        if case .story(item, index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .separator(text, index):
+        if case .separator(text, index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .peer(lhsPeer, lhsPresence, lhsIndex, lhsStory):
         switch rhs {
-        case let .peer(rhsPeer, rhsPresence, rhsIndex):
+        case let .peer(rhsPeer, rhsPresence, rhsIndex, rhsStory):
             if !lhsPeer.isEqual(rhsPeer) {
                 return false
             }
             if lhsIndex != rhsIndex {
+                return false
+            }
+            if lhsStory != rhsStory {
                 return false
             }
             if let lhsPresence = lhsPresence, let rhsPresence = rhsPresence {
@@ -87,35 +135,73 @@ private func <(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
 }
 
 
-private func entriesForView(_ view: ContactPeersView) -> [ContactsEntry] {
+private func entriesForView(_ view: EngineContactList, storyList: EngineStorySubscriptions?, sort: PeerListState.ContactsSort, accountPeer: Peer?) -> [ContactsEntry] {
     var entries: [ContactsEntry] = []
-    if let accountPeer = view.accountPeer {
-        
-        entries.append(.addContact)
+    
+    entries.append(.space)
+    
+    if let accountPeer = accountPeer {
         
         var peerIds: Set<PeerId> = Set()
-        var index: Int32 = 0
-        
-        let orderedPeers = view.peers.sorted(by: { lhsPeer, rhsPeer in
-            let lhsPresence = view.peerPresences[lhsPeer.id]
-            let rhsPresence = view.peerPresences[rhsPeer.id]
-            if let lhsPresence = lhsPresence as? TelegramUserPresence, let rhsPresence = rhsPresence as? TelegramUserPresence {
-                if lhsPresence.status < rhsPresence.status {
-                    return false
-                } else if lhsPresence.status > rhsPresence.status {
+        let orderedPeers:[Peer]
+        switch sort {
+        case .lastSeen:
+            orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
+                let lhsPresence = view.presences[lhsPeer.id]
+                let rhsPresence = view.presences[rhsPeer.id]
+                if let lhsPresence = lhsPresence?._asPresence() as? TelegramUserPresence, let rhsPresence = rhsPresence?._asPresence() as? TelegramUserPresence {
+                    if lhsPresence.status < rhsPresence.status {
+                        return false
+                    } else if lhsPresence.status > rhsPresence.status {
+                        return true
+                    }
+                } else if let _ = lhsPresence {
                     return true
+                } else if let _ = rhsPresence {
+                    return false
                 }
-            } else if let _ = lhsPresence {
-                return true
-            } else if let _ = rhsPresence {
-                return false
+                return lhsPeer.id < rhsPeer.id
+            })
+        case .name:
+            orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
+                return {
+                    let lhsIsName = lhsPeer.displayTitle.trimmed.rangeOfCharacter(from: CharacterSet.letters) != nil
+                    let rhsIsName = rhsPeer.displayTitle.trimmed.rangeOfCharacter(from: CharacterSet.letters) != nil
+
+                    if lhsIsName != rhsIsName {
+                        return lhsIsName // Names appear before numbers
+                    }
+
+                    return lhsPeer.displayTitle.trimmed.localizedStandardCompare(rhsPeer.displayTitle.trimmed) == .orderedAscending
+                }()
+            })
+        }
+        
+        
+        //entries.append(.addContact)
+        var index: Int32 = 0
+        if let storyList = storyList {
+            let storyItems = storyList.items
+            if !storyItems.isEmpty {
+                entries.append(.separator("HIDDEN STORIES", index))
+                index += 1
+                for item in storyItems {
+                    entries.append(.story(item, index))
+                  //  index += 1
+                }
+                
+                if !orderedPeers.isEmpty {
+                    entries.append(.separator("CONTACTS", index))
+                  //  index += 1
+                }
             }
-            return lhsPeer.id < rhsPeer.id
-        })
+        }
+        
+    
         
         for peer in orderedPeers {
             if !peer.isEqual(accountPeer), !peerIds.contains(peer.id) {
-                entries.append(.peer(peer, view.peerPresences[peer.id], index))
+                entries.append(.peer(peer, view.presences[peer.id]?._asPresence(), index, storyList?.items.first(where: { $0.peer.id == peer.id })))
                 peerIds.insert(peer.id)
                 index += 1
             }
@@ -128,8 +214,10 @@ private func entriesForView(_ view: ContactPeersView) -> [ContactsEntry] {
 
 private final class ContactsArguments {
     let addContact:()->Void
-    init(addContact:@escaping()->Void) {
+    let openStory:(StoryInitialIndex?, Bool)->Void
+    init(addContact:@escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void) {
         self.addContact = addContact
+        self.openStory = openStory
     }
 }
 
@@ -142,18 +230,39 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
             let item:TableRowItem
             
             switch entry {
-            case let .peer(peer, presence, _):
+            case let .peer(peer, presence, _, story):
                 var color:NSColor = theme.colors.grayText
-                var string:String = L10n.peerStatusRecently
+                var string:String = strings().peerStatusRecently
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])
+                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], highlightVerified: true, story: nil, openStory: { initialId in
+                    arguments.openStory(initialId, true)
+                })
             case .addContact:
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()
                 })
+            case .space:
+                item = GeneralRowItem(initialSize, height: 90, stableId: entry.stableId)
+            case let .story(story, _):
+                let string = "\(story.storyCount) stories"
+                item = ShortPeerRowItem(initialSize, peer: story.peer._asPeer(), account: context.account, context: context, stableId: entry.stableId, statusStyle: ControlStyle(foregroundColor: theme.colors.grayText), status: string, borderType: [.Right], contextMenuItems: {
+                    
+                    var items: [ContextMenuItem] = []
+                    
+                    items.append(.init("Unhide", handler: {
+                        context.engine.peers.updatePeerStoriesHidden(id: story.peer.id, isHidden: false)
+                        showModalText(for: context.window, text: "Stories from \(story.peer._asPeer().compactDisplayTitle) will now be shown in Chats, not Contacts.")
+                    }, itemImage: MenuAnimation.menu_show_message.value))
+                    
+                    return .single(items)
+                }, highlightVerified: true, story: story, openStory: { initialId in
+                    arguments.openStory(initialId, true)
+                })
+            case let .separator(text, _):
+                item = SeparatorRowItem(initialSize, entry.stableId, string: text)
             }
             return item
         }
@@ -236,7 +345,8 @@ class ContactsController: PeersListController {
         super.viewDidLoad()
         backgroundColor = theme.colors.background
     }
-    
+    let first:Atomic<Bool> = Atomic(value:false)
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
@@ -244,19 +354,30 @@ class ContactsController: PeersListController {
         
         let previousEntries = self.previousEntries
         let initialSize = self.atomicSize
-        let first:Atomic<Bool> = Atomic(value:false)
+        let first = self.first
         
         let arguments = ContactsArguments(addContact: {
-            showModal(with: AddContactModalController(context), for: mainWindow)
+            showModal(with: AddContactModalController(context), for: context.window)
+        }, openStory: { initialId, singlePeer in
+            StoryModalController.ShowStories(context: context, isHidden: true, initialId: initialId, singlePeer: singlePeer)
         })
         
         
-        let transition = combineLatest(queue: prepareQueue, context.account.postbox.contactPeersView(accountPeerId: context.peerId, includePresences: true), appearanceSignal)
-            |> mapToQueue { view, appearance -> Signal<TableUpdateTransition, NoError> in
+        let contacts = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true))
+        
+        let accountPeer = context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
+        ) |> map { $0?._asPeer() }
+        
+        let sortState = self.stateUpdater |> map { $0.contactsSort } |> distinctUntilChanged
+        
+        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, sortState, appearanceSignal)
+            |> mapToQueue { view, accountPeer, sortState, appearance -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
-                let entries = entriesForView(view).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries = entriesForView(view, storyList: nil, sort: sortState, accountPeer: accountPeer)
+                    .map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
 
-                return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)
+                return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)
 
             }
         |> deliverOnMainQueue
@@ -264,8 +385,13 @@ class ContactsController: PeersListController {
         disposable.set(transition.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
+            self?.afterTransaction(transition)
         }))
         
+    }
+    
+    override func afterTransaction(_ transition: TableUpdateTransition) {
+        super.afterTransaction(transition)
     }
     
     override func scrollup(force: Bool = false) {
@@ -274,10 +400,7 @@ class ContactsController: PeersListController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        _ = previousEntries.swap(nil)
-        genericView.tableView.cancelSelection()
-        genericView.tableView.removeAll()
-        genericView.tableView.documentView?.removeAllSubviews()
+//        _ = previousEntries.swap(nil)
         disposable.set(nil)
     }
 
@@ -286,15 +409,15 @@ class ContactsController: PeersListController {
     }
     
     init(_ context:AccountContext) {
-        super.init(context, searchOptions: [.chats])
+        super.init(context, isContacts: true, searchOptions: [.chats])
     }
     
-    override func changeSelection(_ location: ChatLocation?) {
+    override func changeSelection(_ location: ChatLocation?, globalForumId: PeerId?) {
         if let location = location {
             switch location {
             case let .peer(peerId):
                 genericView.tableView.changeSelection(stableId: ContactsControllerEntryId.peerId(peerId.toInt64()))
-            case .replyThread:
+            case .thread:
                 break
             }
         } else {
@@ -303,6 +426,17 @@ class ContactsController: PeersListController {
     }
     
     override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
+        
+        if let item = item as? ShortPeerRowItem, let id = item.stableId.base as? ContactsControllerEntryId {
+            switch id {
+            case .story:
+                item.openPeerStory()
+                return false
+            default:
+                break
+            }
+        }
+        
         if  let item = item as? ShortPeerRowItem, let modalAction = navigationController?.modalAction {
             if !modalAction.isInvokable(for: item.peer) {
                 modalAction.alertError(for: item.peer, with:window!)
@@ -316,8 +450,9 @@ class ContactsController: PeersListController {
     
     override func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         
-        if let item = item as? ShortPeerRowItem, let navigation = navigationController {
+        if let item = item as? ShortPeerRowItem {
             
+            let navigation = context.bindings.rootNavigation()
             if !isNew {
                 if let modalAction = navigation.modalAction {
                     navigation.controller.invokeNavigation(action: modalAction)

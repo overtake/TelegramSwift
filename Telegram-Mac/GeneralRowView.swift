@@ -19,6 +19,10 @@ class GeneralContainableRowView : TableRowView {
         containerView.addSubview(borderView)
     }
     
+    override var firstResponder: NSResponder? {
+        return nil
+    }
+    
     deinit {
         self.containerView.removeAllSubviews()
     }
@@ -31,11 +35,19 @@ class GeneralContainableRowView : TableRowView {
         self.containerView.addSubview(view, positioned: place, relativeTo: otherView)
     }
     
+    func addBasicSubview(_ view: NSView, positioned place: NSWindow.OrderingMode) {
+        subviews.insert(view, at: place == .below ? 0 : 1)
+    }
+    
     override var backdorColor: NSColor {
         return theme.colors.background
     }
     
-    var borderColor: NSColor {
+    override var mouseDownCanMoveWindow: Bool {
+        return false
+    }
+    
+    override var borderColor: NSColor {
         return theme.colors.border
     }
     
@@ -48,17 +60,39 @@ class GeneralContainableRowView : TableRowView {
         self.borderView.backgroundColor = borderColor
     }
     
+    var maxBlockWidth: CGFloat {
+        return 600
+    }
+    var maxWidth: CGFloat {
+        return frame.width
+    }
+    var maxHeight: CGFloat {
+        return frame.height
+    }
+    
     override func layout() {
         super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
         guard let item = item as? GeneralRowItem else {
             return
         }
-        let blockWidth = min(600, frame.width - item.inset.left - item.inset.right)
+        let blockWidth = min(item.viewType == .legacy ? size.width : maxBlockWidth, size.width - item.inset.left - item.inset.right)
         
-        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), item.inset.top, blockWidth, frame.height - item.inset.bottom - item.inset.top)
-        self.containerView.setCorners(item.viewType.corners)
+        let rect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (size.width - blockWidth) / 2), item.inset.top, blockWidth, size.height - item.inset.bottom - item.inset.top)
+        transition.updateFrame(view: self.containerView, frame: rect)
         
-        borderView.frame = NSMakeRect(item.viewType.innerInset.left, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, .borderSize)
+        self.containerView.setCorners(item.viewType.corners, animated: transition.isAnimated, frame: rect)
+
+        transition.updateFrame(view: borderView, frame: NSMakeRect(item.viewType.innerInset.left + additionBorderInset, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - additionBorderInset, .borderSize))
+    }
+
+    var additionBorderInset: CGFloat {
+        return 0
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -68,7 +102,7 @@ class GeneralContainableRowView : TableRowView {
             return
         }
         
-        borderView.isHidden = !item.viewType.hasBorder
+        borderView.isHidden = !item.hasBorder
     }
     
     required init?(coder: NSCoder) {
@@ -161,6 +195,10 @@ class GeneralRowContainerView : Control {
         setCorners(corners, animated: animated, frame: NSMakeRect(0, 0, size.width, size.height))
     }
     
+    override func scrollWheel(with event: NSEvent) {
+        superview?.scrollWheel(with: event)
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -235,15 +273,6 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
         self.needsLayout = true
     }
 
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        if backingScaleFactor == 1.0 {
-            ctx.setFillColor(backdorColor.cgColor)
-            ctx.fill(layer.bounds)
-        }
-        super.draw(layer, in: ctx)
-    }
-    
-
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -279,6 +308,14 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
             return .clear
         }
         return item.backgroundColor
+    }
+    
+    override var mouseDownCanMoveWindow: Bool {
+        if self.className == GeneralRowView.className() {
+            return item?.table?._mouseDownCanMoveWindow ?? super.mouseDownCanMoveWindow
+        } else {
+            return false
+        }
     }
     
 }

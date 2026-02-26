@@ -3,19 +3,40 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MSAbstractLog.h"
-#import "MSAppCenter.h"
-#import "MSAppCenterErrors.h"
-#import "MSChannelGroupProtocol.h"
-#import "MSChannelProtocol.h"
-#import "MSConstants.h"
-#import "MSCustomProperties.h"
-#import "MSDevice.h"
-#import "MSEnable.h"
-#import "MSLog.h"
-#import "MSLogWithProperties.h"
-#import "MSLogger.h"
-#import "MSService.h"
-#import "MSServiceAbstract.h"
-#import "MSWrapperLogger.h"
-#import "MSWrapperSdk.h"
+#if __has_include(<AppCenter/MSACAppCenter.h>)
+#import <AppCenter/MSACAbstractLog.h>
+#import <AppCenter/MSACAppCenter.h>
+#import <AppCenter/MSACAppCenterErrors.h>
+#import <AppCenter/MSACChannelGroupProtocol.h>
+#import <AppCenter/MSACChannelProtocol.h>
+#import <AppCenter/MSACConstants+Flags.h>
+#import <AppCenter/MSACConstants.h>
+#import <AppCenter/MSACDevice.h>
+#import <AppCenter/MSACEnable.h>
+#import <AppCenter/MSACLog.h>
+#import <AppCenter/MSACLogWithProperties.h>
+#import <AppCenter/MSACLogger.h>
+#import <AppCenter/MSACSerializableObject.h>
+#import <AppCenter/MSACService.h>
+#import <AppCenter/MSACServiceAbstract.h>
+#import <AppCenter/MSACWrapperLogger.h>
+#import <AppCenter/MSACWrapperSdk.h>
+#else
+#import "MSACAbstractLog.h"
+#import "MSACAppCenter.h"
+#import "MSACAppCenterErrors.h"
+#import "MSACChannelGroupProtocol.h"
+#import "MSACChannelProtocol.h"
+#import "MSACConstants+Flags.h"
+#import "MSACConstants.h"
+#import "MSACDevice.h"
+#import "MSACEnable.h"
+#import "MSACLog.h"
+#import "MSACLogWithProperties.h"
+#import "MSACLogger.h"
+#import "MSACSerializableObject.h"
+#import "MSACService.h"
+#import "MSACServiceAbstract.h"
+#import "MSACWrapperLogger.h"
+#import "MSACWrapperSdk.h"
+#endif

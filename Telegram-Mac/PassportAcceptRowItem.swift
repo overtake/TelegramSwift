@@ -22,7 +22,7 @@ class PassportAcceptRowItem: GeneralRowItem {
 }
 
 final class PassportAcceptRowView : TableRowView {
-    private let button: TitleButton = TitleButton()
+    private let button: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(button)
@@ -45,7 +45,7 @@ final class PassportAcceptRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        button.set(text: L10n.secureIdRequestAccept, for: .Normal)
+        button.set(text: strings().secureIdRequestAccept, for: .Normal)
         button.set(color: .white, for: .Normal)
     }
     

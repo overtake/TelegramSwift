@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 struct GroupAccess {
@@ -21,6 +21,11 @@ struct GroupAccess {
     let canCreateInviteLink: Bool
     let canReport: Bool
     let canMakeVoiceChat: Bool
+    let canEditMessages: Bool
+    let canManageGifts: Bool
+    let canPostMessages: Bool
+    let canManageDirect: Bool
+    let canManageStories: Bool
 }
 
 extension Peer {
@@ -34,10 +39,19 @@ extension Peer {
         var isCreator = false
         var canReport = true
         var canMakeVoiceChat = false
+        var canPostMessages = false
+        var canManageDirect = false
+        var canEditMessages = false
+        var canPin: Bool
+        var canManageGifts = false
+        var canManageStories = false
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true
                 canReport = false
+                canMakeVoiceChat = true
+                canEditMessages = true
+                canPostMessages = true
             }
             highlightAdmins = true
             switch group.role {
@@ -46,6 +60,9 @@ extension Peer {
                 canEditMembers = true
                 canAddMembers = true
                 canReport = false
+                canMakeVoiceChat = true
+                canEditMessages = true
+                canPostMessages = true
             case .member:
                 break
             }
@@ -60,15 +77,19 @@ extension Peer {
             isPublic = channel.username != nil
             isCreator = channel.flags.contains(.isCreator)
             canReport = !channel.flags.contains(.isCreator) && channel.adminRights == nil
+            canManageStories = channel.flags.contains(.isCreator)
+            canPostMessages = channel.flags.contains(.isCreator)
+            canManageDirect = channel.flags.contains(.isCreator)
             if channel.hasPermission(.changeInfo) {
                 canEditGroupInfo = true
             }
             if channel.hasPermission(.banMembers) {
                 canEditMembers = true
             }
-            if channel.hasPermission(.inviteMembers) {
+            if channel.hasPermission(.inviteMembers) || isCreator || channel.adminRights?.rights.contains(.canInviteUsers) == true {
                 canAddMembers = true
             }
+            canManageGifts = isCreator || channel.adminRights?.rights.contains(.canPostMessages) == true
         }
         
         var canCreateInviteLink = false
@@ -77,17 +98,27 @@ extension Peer {
                 canCreateInviteLink = true
             }
         } else if let channel = self as? TelegramChannel {
-            if channel.hasPermission(.inviteMembers) && channel.adminRights != nil {
+            if let adminRights = channel.adminRights, adminRights.rights.contains(.canInviteUsers) {
                 canCreateInviteLink = true
             }
             if channel.hasPermission(.manageCalls) {
                 canMakeVoiceChat = true
             }
+            if channel.hasPermission(.editStories) {
+                canManageStories = true
+            }
+            if channel.hasPermission(.editAllMessages) {
+                canEditMessages = true
+            }
+            if let adminRights = channel.adminRights {
+                canPostMessages = adminRights.rights.contains(.canPostMessages)
+                canManageDirect = adminRights.rights.contains(.canManageDirect)
+            }
         }
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat, canEditMessages: canEditMessages, canManageGifts: canManageGifts, canPostMessages: canPostMessages, canManageDirect: canManageDirect, canManageStories: canManageStories)
     }
     
     var canInviteUsers:Bool {
@@ -132,7 +163,7 @@ extension TelegramChannel {
             return false
         }
         switch participant {
-        case let .member(_, _,  adminInfo, _, _):
+        case let .member(_, _,  adminInfo, _, _, _):
             if let adminInfo = adminInfo {
                 return accountId == adminInfo.promotedBy || flags.contains(.isCreator)
             } else {
@@ -185,11 +216,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank):
+    case let .member(_, lhsInvitedAt, _, _, _, _):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank):
+        case let .member(_, rhsInvitedAt, _, _, _, _):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

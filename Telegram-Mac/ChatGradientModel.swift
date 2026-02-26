@@ -13,33 +13,19 @@ private let maskInset: CGFloat = 1.0
 
 
 final class ChatMessageBubbleBackdrop: NSView {
-    private let backgroundContent: NSView
+    private var backgroundContent: NSView?
     private let borderView: SImageView = SImageView()
     private var currentMaskMode: Bool?
     
     private var maskView: SImageView?
     
-    override var frame: CGRect {
-        didSet {
-            if let maskView = self.maskView {
-                let maskFrame = self.bounds
-                if maskView.frame != maskFrame {
-                    maskView.frame = maskFrame
-                }
-            }
-        }
-    }
-    
     init() {
-        self.backgroundContent = NSView()
         
         super.init(frame: NSZeroRect)
         autoresizingMask = []
         autoresizesSubviews = false
-        self.backgroundContent.wantsLayer = true
         wantsLayer = true
         self.layer?.masksToBounds = true
-        self.addSubview(self.backgroundContent)
         self.addSubview(self.borderView)
         self.layer?.disableActions()
     }
@@ -48,19 +34,19 @@ final class ChatMessageBubbleBackdrop: NSView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) -> Void  {
-        super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     
-        
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
-    func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
-        maskView?._change(size: size, animated: animated, duration: duration, timingFunction: timingFunction)
-        super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        
-        self.borderView._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        if let view = maskView {
+            transition.updateFrame(view: view, frame: size.bounds)
+        }
+        transition.updateFrame(view: borderView, frame: size.bounds)
     }
-
     
     func setType(image: (CGImage, NSEdgeInsets)?, border: (CGImage, NSEdgeInsets)?, background: CGImage) {
         if let _ = image {
@@ -81,25 +67,39 @@ final class ChatMessageBubbleBackdrop: NSView {
             }
         }
         self.borderView.data = border
-        self.backgroundContent.layer?.contents = background
+        if image == nil {
+            if let view = self.backgroundContent {
+                performSubviewRemoval(view, animated: false)
+            }
+            self.backgroundContent = nil
+        } else {
+            let current: NSView
+            if let view = self.backgroundContent {
+                current = view
+            } else {
+                current = NSView()
+                current.wantsLayer = true
+                self.backgroundContent = current
+                addSubview(current, positioned: .below, relativeTo: self.borderView)
+            }
+            current.layer?.contents = background
+        }
+        
         if let maskView = self.maskView {
             maskView.data = image
         }
-        self.backgroundContent.isHidden = image == nil
     }
     
-    override func layout() {
-        super.layout()
-        self.borderView.frame = bounds
-    }
+    func update(rect: CGRect, within containerSize: CGSize, transition: ContainedViewLayoutTransition, rotated: Bool = false) {
+        
+        if let backgroundContent = backgroundContent {
+            transition.updateFrame(view: backgroundContent, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize))
+        }
 
-    func update(rect: CGRect, within containerSize: CGSize, animated: Bool, rotated: Bool = false) {
-        self.backgroundContent._change(size: containerSize, animated: animated)
-        self.backgroundContent._change(pos: CGPoint(x: -rect.minX, y: -rect.minY), animated: animated, forceAnimateIfHasAnimation: true)
         if rotated {
-            backgroundContent.rotate(byDegrees: 180)
+            backgroundContent?.rotate(byDegrees: 180)
         } else {
-            backgroundContent.rotate(byDegrees: 0)
+            backgroundContent?.rotate(byDegrees: 0)
         }
     }
 }

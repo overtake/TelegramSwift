@@ -1,11 +1,59 @@
 import Foundation
+import WebKit
+import UserNotifications
 import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
-
+import Localization
+import InAppSettings
 import IOKit
+import CodeSyntax
+import Dock
+import PrivateCallScreen
+import DetectSpeech
+
+
+func navigateToChat(navigation: NavigationViewController?, context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, focusTarget:ChatFocusTarget? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil, additional: Bool = false, animated: Bool = true, navigationStyle: ViewControllerStyle? = nil) {
+    
+    let open:()->Void = { [weak navigation] in
+        if additional {
+            navigation?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+        } else {
+            navigation?.push(ChatController(context: context, chatLocation: chatLocation, mode: mode, focusTarget: focusTarget, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder), animated, style: navigationStyle)
+        }
+    }
+    
+    let signal = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: chatLocation.peerId)) |> deliverOnMainQueue
+    
+    _ = signal.start(next: { peer in
+        if let peer = peer?._asPeer() {
+            if peer.hasSensitiveContent(platform: "ios") {
+                if !context.contentConfig.sensitiveContentEnabled, context.contentConfig.canAdjustSensitiveContent {
+                    let need_verification = context.appConfiguration.getBoolValue("need_age_video_verification", orElse: false)
+                    
+                    if need_verification {
+                        showModal(with: VerifyAgeAlertController(context: context), for: context.window)
+                        return
+                    }
+                }
+                if context.contentConfig.sensitiveContentEnabled {
+                    open()
+                } else {
+                    verifyAlert(for: context.window, header: strings().chatSensitiveContent, information: strings().chatSensitiveContentConfirm, ok: strings().chatSensitiveContentConfirmOk, option: context.contentConfig.canAdjustSensitiveContent ? strings().chatSensitiveContentConfirmThird : nil, optionIsSelected: false, successHandler: { result in
+                        
+                        if result == .thrid {
+                            let _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: true).start()
+                        }
+                        open()
+                    })
+                }
+            } else {
+                open()
+            }
+        }
+    })
+}
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -35,44 +83,42 @@ final class UnauthorizedApplicationContext {
     let sharedContext: SharedAccountContext
     
     private let updatesDisposable: DisposableSet = DisposableSet()
+    private let authController: AuthController
     
     var rootView: NSView {
         return rootController.view
     }
     
+    
     init(window:Window, sharedContext: SharedAccountContext, account: UnauthorizedAccount, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
 
         
         window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
-        window.minSize = NSMakeSize(380, 500)
-        
+        window.minSize = NSMakeSize(380, 550)
         
         updatesDisposable.add(managedAppConfigurationUpdates(accountManager: sharedContext.accountManager, network: account.network).start())
+                        
         
-        if !window.initFromSaver {
-            window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
+        if window.frame.height < window.minSize.height || window.frame.width < window.minSize.width {
+            window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
             window.center()
         }
-        
-        if window.frame.height < window.minSize.height {
-            window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
-        }
-        
+        self.authController = AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers)
         self.account = account
         self.window = window
         self.sharedContext = sharedContext
-        self.rootController = MajorNavigationController(AuthController.self, AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers), window)
+        self.rootController = MajorNavigationController(AuthController.self, self.authController, window)
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
 
         self.modal = AuthModalController(rootController)
         rootController.alwaysAnimate = true
 
-        
         account.shouldBeServiceTaskMaster.set(.single(.now))
         
- 
-        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
-        
+    }
+    
+    func applyExternalLoginCode(_ code: String) {
+        authController.applyExternalLoginCode(code)
     }
     
     deinit {
@@ -81,9 +127,6 @@ final class UnauthorizedApplicationContext {
         NSWorkspace.shared.notificationCenter.removeObserver(self)
     }
     
-    @objc func receiveWakeNote(_ notificaiton:Notification) {
-        account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.now)))
-    }
     
 }
 
@@ -160,7 +203,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var leftSidebarController: LeftSidebarController?
     
     private let loggedOutDisposable = MetaDisposable()
-    private let ringingStatesDisposable = MetaDisposable()
     
     private let settingsDisposable = MetaDisposable()
     private let suggestedLocalizationDisposable = MetaDisposable()
@@ -169,9 +211,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let termDisposable = MetaDisposable()
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
-    private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
-    private let updatesDisposable = MetaDisposable()
     private let updateFoldersDisposable = MetaDisposable()
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -186,7 +226,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, inlinePlayerContext: InlineAudioPlayerView.ContextObject?, folders: ChatListFolders?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -198,6 +238,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             window.center()
         }
         
+        window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
+        window.minSize = NSMakeSize(380, 550)
+
         
         context.account.importableContacts.set(.single([:]))
         
@@ -210,33 +253,45 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         rightController = ExMajorNavigationController(context, ChatController.self, emptyController);
-        rightController.set(header: NavigationHeader(44, initializer: { (header) -> NavigationHeaderView in
-            let view = InlineAudioPlayerView(header)
-            return view
+        rightController.set(header: NavigationHeader(44, initializer: { header, contextObject, view -> (NavigationHeaderView, CGFloat) in
+            let newView = view ?? InlineAudioPlayerView(header)
+            newView.update(with: contextObject)
+            return (newView, 44)
         }))
         
         
-        rightController.set(callHeader: CallNavigationHeader(35, initializer: { header -> NavigationHeaderView in
-            let view = GroupCallNavigationHeaderView(header)
-            return view
+        rightController.set(callHeader: CallNavigationHeader(35, initializer: { header, contextObject, view -> (NavigationHeaderView, CGFloat) in
+            let newView: NavigationHeaderView
+            if contextObject is GroupCallContext {
+                if let view = view, view.className == GroupCallNavigationHeaderView.className() {
+                    newView = view
+                } else {
+                    newView = GroupCallNavigationHeaderView(header)
+                }
+            } else if contextObject is PCallSession {
+                if let view = view, view.className == CallNavigationHeaderView.className() {
+                    newView = view
+                } else {
+                    newView = CallNavigationHeaderView(header)
+                }
+            } else {
+                fatalError("not supported")
+            }
+            newView.update(with: contextObject)
+            return (newView, 35 + 18)
         }))
         
         window.rootViewController = rightController
         
         leftController = MainViewController(context);
 
-        
-        leftController.navigationController = rightController
-        
+                
         
         super.init()
         
 
-        
-        
-        updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
-        
-        context.sharedContext.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
+                
+        context.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
                 return MajorNavigationController(ViewController.self, ViewController(), window)
             }
@@ -251,12 +306,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.rightController.controller.show(toaster: toaster, animated: animated)
-        }, globalSearch: { [weak self] search in
+        }, globalSearch: { [weak self] search, peerId, cached in
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.leftController.tabController.select(index: self.leftController.chatIndex)
-            self.leftController.chatList.globalSearch(search)
+            self.leftController.globalSearch(search, peerId: peerId, cached: cached)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
             guard let `self` = self else {
                 return EntertainmentViewController.init(size: NSZeroSize, context: context)
@@ -274,36 +329,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.view.splitView.needFullsize()
         }, displayUpgradeProgress: { progress in
                 
-        }, callSession: { [weak self] in
-            return (self?.rightController.callHeader?.view as? CallNavigationHeaderView)?.session
-        }, groupCall: { [weak self] in
-            return (self?.rightController.callHeader?.view as? GroupCallNavigationHeaderView)?.context
         })
         
         
-        chatUndoManagerDisposable.set((context.chatUndoManager.allStatuses() |> deliverOnMainQueue).start(next: { [weak self] statuses in
-            guard let `self` = self else {return}
-            
-            if let header = self.rightController.undoHeader {
-                (header.view as? UndoOverlayHeaderView)?.removeAnimationForNextTransition = true
-
-                if statuses.hasProcessingActions {
-                    header.show(true)
-                } else {
-                    header.hide(true)
-                }
-            }
-            
-        }))
-        
         termDisposable.set((context.account.stateManager.termsOfServiceUpdate |> deliverOnMainQueue).start(next: { terms in
             if let terms = terms {
-                showModal(with: TermsModalController(context, terms: terms), for: mainWindow)
+                showModal(with: TermsModalController(context, terms: terms), for: context.window)
             } else {
                 closeModal(TermsModalController.self)
             }
         }))
         
+        closeAllPopovers(for: context.window)
+        closeAllModals(window: context.window)
+        AppMenu.closeAll()
       
        // var forceNotice:Bool = false
         if FastSettings.isMinimisize {
@@ -316,12 +355,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.view.splitView.delegate = self;
         self.view.splitView.update(false)
         
-       
-        
+
         let accountId = context.account.id
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
                 let _ = logoutFromAccount(id: accountId, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
+                FastSettings.clear_uuid(context.account.id.int64)
+                BrowserStateContext.cleanup(context.account.id)
             }
         }))
         
@@ -336,8 +376,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 alert.informativeText = text.text
 
                 if text.isDropAuth {
-                    alert.addButton(withTitle: L10n.editAccountLogout)
-                    alert.addButton(withTitle: L10n.modalCancel)
+                    alert.addButton(withTitle: strings().editAccountLogout)
+                    alert.addButton(withTitle: strings().modalCancel)
 
                 }
 
@@ -402,7 +442,29 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
         
-        
+        window.set(handler: { _ -> KeyHandlerResult in
+            
+            
+            appDelegate?.sharedApplicationContextValue?.notificationManager.updatePasslock(context.sharedContext.accountManager.transaction { transaction -> Bool in
+                switch transaction.getAccessChallengeData() {
+                case .none:
+                    return false
+                default:
+                    return true
+                }
+            })
+            
+            let hasPasscode = context.sharedContext.accountManager.transaction { $0.getAccessChallengeData() != .none } |> deliverOnMainQueue
+            
+            _ = hasPasscode.startStandalone(next: { value in
+                if !value {
+                    context.bindings.rootNavigation().push(PasscodeSettingsViewController(context))
+                }
+            })
+                        
+            return .invoked
+        }, with: self, for: .L, priority: .supreme, modifierFlags: [.command])
+
         
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
@@ -459,56 +521,75 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(0, true)
+            self?.switchAccount(1, true)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(1, true)
+            self?.switchAccount(2, true)
             return .invoked
         }, with: self, for: .Two, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(2, true)
+            self?.switchAccount(3, true)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(3, true)
+            self?.switchAccount(4, true)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(4, true)
+            self?.switchAccount(5, true)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(5, true)
+            self?.switchAccount(6, true)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(6, true)
+            self?.switchAccount(7, true)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(7, true)
+            self?.switchAccount(8, true)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(8, true)
+            self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
+              
         
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(9, true)
+        
+        #if DEBUG
+        
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+            
+           // showModal(with: AddTonBalanceController(context: context), for: window)
+            
+           // context.bindings.rootNavigation().push(SuggestPostController(context: context, peerId: context.peerId))
+
             return .invoked
-        }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
         
+        self.context.window.set(handler: { _ -> KeyHandlerResult in
+                       
+            showModal(with: SuggetMessageModalController(context: context), for: window)
+
+           // showModal(with: GroupCallInviteLinkController(context: context, link: .init(link: "t.me/call/+kd93KsOsdd239k"), presentation: darkAppearance), for: window)
+
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+        
+        
+        #endif
         
         
 //        window.set(handler: { [weak self] _ -> KeyHandlerResult in
@@ -517,32 +598,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 //        }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .shift])
         
         window.set(handler: { _ -> KeyHandlerResult in
-            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            context.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked
         }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
-        
-        
-        #if DEBUG
-        window.set(handler: { _ -> KeyHandlerResult in
-            
-            
-//            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
-//                if let first = values?.first {
-//                    let asset = AVURLAsset(url: URL(fileURLWithPath: first))
-//                    let track = asset.tracks(withMediaType: .video).first
-//                    if let track = track {
-//                        showModal(with: VideoAvatarModalController(context: context, asset: asset, track: track), for: window)
-//                    }
-//                }
-//            })
-          //  showModal(with: VideoAvatarModalController(context: context), for: window)
-            
-          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
-        #endif
-        
+      
         
         appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in
             
@@ -551,13 +611,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         suggestedLocalizationDisposable.set(( context.account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, NoError> in
             
-            let preferences = preferences.values[PreferencesKeys.suggestedLocalization] as? SuggestedLocalizationEntry
+            let preferences = preferences.values[PreferencesKeys.suggestedLocalization]?.get(SuggestedLocalizationEntry.self)
             if preferences == nil || !preferences!.isSeen, preferences?.languageCode != appCurrentLanguage.languageCode, preferences?.languageCode != "en" {
                 let current = Locale.preferredLanguages[0]
                 let split = current.split(separator: "-")
                 let lan: String = !split.isEmpty ? String(split[0]) : "en"
                 if lan != "en" {
-                    return suggestedLocalizationInfo(network: context.account.network, languageCode: lan, extractKeys: ["Suggest.Localization.Header", "Suggest.Localization.Other"]) |> take(1)
+                    return context.engine.localization.suggestedLocalizationInfo(languageCode: lan, extractKeys: ["Suggest.Localization.Header", "Suggest.Localization.Other"]) |> take(1)
                 }
             }
             return .complete()
@@ -568,31 +628,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }))
         
 
-        someActionsDisposable.add(managedUpdatedRecentPeers(accountPeerId: context.account.peerId, postbox: context.account.postbox, network: context.account.network).start())
+        someActionsDisposable.add(context.engine.peers.managedUpdatedRecentPeers().start())
         
-        
-       
-        
+                
         clearReadNotifiesDisposable.set(context.account.stateManager.appliedIncomingReadMessages.start(next: { msgIds in
-            clearNotifies(by: msgIds)
+            UNUserNotifications.current?.clearNotifies(by: msgIds)
         }))
         
 
         
         someActionsDisposable.add(applyUpdateTextIfNeeded(context.account.postbox).start())
         
- 
-        
-        let foldersSemaphore = DispatchSemaphore(value: 0)
-        var folders: ChatListFolders = ChatListFolders(list: [], sidebar: false)
-            
-        _ = (chatListFilterPreferences(postbox: context.account.postbox) |> take(1)).start(next: { value in
-            folders = value
-            foldersSemaphore.signal()
-        })
-        foldersSemaphore.wait()
-        
-        self.updateLeftSidebar(with: folders, layout: context.sharedContext.layout, animated: false)
+        if let folders = folders {
+            self.updateLeftSidebar(with: folders, layout: context.layout, animated: false)
+        }
         
         
         self.view.splitView.layout()
@@ -606,65 +655,52 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 self.launchAction = .preferences
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
+            case let .profile(peer, necessary):
+                
+                _ready.set(leftController.chatList.ready.get())
+                self.leftController.tabController.select(index: self.leftController.chatIndex)
+
+                if (necessary || context.layout != .single) {
+                    let controller = PeerInfoController(context: context, peer: peer._asPeer())
+                    controller.navigationController = self.rightController
+                    controller.loadViewIfNeeded(self.rightController.bounds)
+
+                    self.launchAction = .navigate(controller)
+
+                    self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
+                } else {
+                    _ready.set(leftController.chatList.ready.get())
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
+                }
             case let .chat(peerId, necessary):
-                let peerSemaphore = DispatchSemaphore(value: 0)
-                var peer: Peer?
-                _ = context.account.postbox.transaction { transaction in
-                    peer = transaction.getPeer(peerId)
-                    peerSemaphore.signal()
-                }.start()
-                peerSemaphore.wait()
                 
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 
-                if (necessary || context.sharedContext.layout != .single) {
-                    if let peer = peer {
-                        let controller = ChatController(context: context, chatLocation: .peer(peer.id))
-                        controller.navigationController = self.rightController
-                        controller.loadViewIfNeeded(self.rightController.bounds)
+                if (necessary || context.layout != .single) {
+                    let controller = ChatController(context: context, chatLocation: .peer(peerId))
+                    controller.navigationController = self.rightController
+                    controller.loadViewIfNeeded(self.rightController.bounds)
 
-                        self.launchAction = .navigate(controller)
+                    self.launchAction = .navigate(controller)
 
-                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                    } else {
-                       // self._ready.set(self.leftController.chatList.ready.get())
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                        self._ready.set(.single(true))
-                    }
+                    self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
                 } else {
                    // self._ready.set(.single(true))
                     _ready.set(leftController.chatList.ready.get())
                     self.leftController.tabController.select(index: self.leftController.chatIndex)
                 }
-            case let .thread(threadId, fromId, _):
+            case let .thread(threadId, fromId, threadData, _):
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 self._ready.set(self.leftController.chatList.ready.get())
                 
-                let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: .channelPost(threadId))
-                
-                _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { [weak context] result in
-                    guard let context = context else {
-                        return
-                    }
-                    let chatLocation: ChatLocation = .replyThread(result.message)
-                    
-                    let updatedMode: ReplyThreadMode
-                    if result.isChannelPost {
-                        updatedMode = .comments(origin: fromId)
-                    } else {
-                        updatedMode = .replies(origin: fromId)
-                    }
-                    
-                    let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
-                    
-                    context.sharedContext.bindings.rootNavigation().push(controller)
-                    
-                }, error: { error in
-                    
-                })
-                
+                if let fromId = fromId {
+                    context.navigateToThread(threadId, fromId: fromId)
+                } else if let _ = threadData {
+                    _ = ForumUI.openTopic(Int64(threadId.id), peerId: threadId.peerId, context: context).start()
+                }
             }
         } else {
            // self._ready.set(.single(true))
@@ -674,23 +710,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }
         
         if let session = callSession {
-            context.sharedContext.showCallHeader(with: session)
+            rightController.callHeader?.show(true, contextObject: session)
         }
         
         if let groupCallContext = groupCallContext {
-            context.sharedContext.showGroupCall(with: groupCallContext)
+            rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
-        
-        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(postbox: context.account.postbox), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
+        if let inlinePlayerContext = inlinePlayerContext {
+            rightController.header?.show(true, contextObject: inlinePlayerContext)
+        }
+        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutValue).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
-        
-        
-        if let controller = globalAudio {
-            let header = self.rightController.header?.view as? InlineAudioPlayerView
-            header?.update(with: controller, context: context, tableView: nil)
-            self.rightController.header?.show(false)
-        }
         
        // _ready.set(.single(true))
     }
@@ -700,8 +731,19 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let foldersReadyDisposable = MetaDisposable()
     private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
         
-        let currentSidebar = !folders.list.isEmpty && (folders.sidebar || layout == .minimisize)
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.list.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
+        if let window = self.window as? AppWindow {
+            if (folders.sidebar && !folders.isEmpty) || layout == .minimisize {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = 0
+                window.initialButtonPoint = .system
+            } else {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = layout == .single ? Window.controlsInset : 0
+                window.initialButtonPoint = .app
+            }
+        }
+
+                
+        let currentSidebar = !folders.isEmpty && (folders.sidebar)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar)
 
         let readySignal: Signal<Bool, NoError>
         
@@ -734,8 +776,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                     return
                 }
                 self.view.updateLeftSideView(self.leftSidebarController?.genericView, animated: animated)
-                if !self.window.isFullScreen {
-                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
+                if !self.window.isFullScreen, let screen = self.window.screen {
+                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, min(self.window.frame.width + enlarge, screen.frame.width), self.window.frame.height), display: true, animate: false)
                 }
                 self.updateMinMaxWindowSize(animated: animated)
             }))
@@ -748,15 +790,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     
     private func updateMinMaxWindowSize(animated: Bool) {
-        window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
         var width: CGFloat = 380
         if leftSidebarController != nil {
             width += leftSidebarWidth
         }
-        if context.sharedContext.layout == .minimisize {
+        if context.layout == .minimisize {
             width += 70
         }
-        window.minSize = NSMakeSize(width, 500)
+        window.minSize = NSMakeSize(width, 550)
         
         if window.frame.width < window.minSize.width {
             window.setFrame(NSMakeRect(max(0, window.frame.minX - (window.minSize.width - window.frame.width)), window.frame.minY, window.minSize.width, window.frame.height), display: true, animate: false)
@@ -770,7 +811,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             switch launchAction {
             case let .navigate(controller):
                 leftController.tabController.select(index: leftController.chatIndex)
-                context.sharedContext.bindings.rootNavigation().push(controller, context.sharedContext.layout == .single)
+                context.bindings.rootNavigation().push(controller, context.layout == .single)
             case .preferences:
                 leftController.tabController.select(index: leftController.settingsIndex)
             }
@@ -785,6 +826,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private func openChat(_ index: Int, _ force: Bool = false) {
         leftController.openChat(index, force: force)
+    }
+    
+    private func switchAccount(_ index: Int, _ force: Bool = false) {
+        
+        let accounts = context.sharedContext.activeAccounts |> take(1) |> deliverOnMainQueue
+        let context = self.context
+        _ = accounts.start(next: { accounts in
+            let account = accounts.accounts[min(index - 1, accounts.accounts.count - 1)]
+            context.sharedContext.switchToAccount(id: account.0, action: nil)
+        })
     }
     
     func splitResizeCursor(at point: NSPoint) -> NSCursor? {
@@ -832,6 +883,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if rightController.stackCount == 1, previousState != .none {
                 leftController.viewDidAppear(false)
             }
+            
         case .dual:
             rightController.empty = emptyController
             if rightController.controller is ForwardChatListController {
@@ -848,10 +900,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             break;
         }
         
-        context.sharedContext.layoutHandler.set(state)
         updateMinMaxWindowSize(animated: false)
-        self.view.splitView.layout()
-
+        DispatchQueue.main.async {
+            self.view.splitView.needsLayout = true
+        }
+        context.layout = state
     }
     
 
@@ -876,7 +929,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.loggedOutDisposable.dispose()
         window.removeAllHandlers(for: self)
         settingsDisposable.dispose()
-        ringingStatesDisposable.dispose()
         suggestedLocalizationDisposable.dispose()
         audioDisposable.dispose()
         alertsDisposable.dispose()
@@ -884,9 +936,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         viewer?.close()
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
-        chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
-        updatesDisposable.dispose()
         updateFoldersDisposable.dispose()
         foldersReadyDisposable.dispose()
         context.cleanup()

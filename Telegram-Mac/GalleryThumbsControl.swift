@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 class GalleryThumbsControl: ViewController {
     private let interactions: GalleryInteractions
@@ -84,6 +84,8 @@ class GalleryThumbsControl: ViewController {
                 newItems = items
             case .secureIdDocument:
                 newItems = items
+            case .media:
+                newItems = items
             }
         }
 
@@ -119,6 +121,8 @@ class GalleryThumbsControl: ViewController {
                 break
             }
         }
+
+        genericView.updateHighlight()
         
         if self.items.count <= 1 {
             genericView.change(opacity: 0, animated: animated, completion: { [weak self] completed in

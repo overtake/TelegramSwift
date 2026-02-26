@@ -9,10 +9,12 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import SwiftSignalKit
+import InAppSettings
+
 class EBlockItem: TableRowItem {
 
-    var _stableId:Int64 = Int64(arc4random())
+    private let _stableId:AnyHashable
     override var stableId: AnyHashable {
         return _stableId
     }
@@ -24,11 +26,12 @@ class EBlockItem: TableRowItem {
     let lineAttr:[[NSAttributedString]]
     
     let account: Account
-    var selectHandler:(String)->Void = {_ in}
+    var selectHandler:(String, NSRect)->Void = { _, _ in}
     let segment: EmojiSegment
     
-    public init(_ initialSize:NSSize, attrLines:[[NSAttributedString]], segment: EmojiSegment, account: Account, selectHandler:@escaping(String)->Void) {
+    public init(_ initialSize:NSSize, stableId: AnyHashable, attrLines:[[NSAttributedString]], segment: EmojiSegment, account: Account, selectHandler:@escaping(String, NSRect)->Void) {
         self.lineAttr = attrLines
+        self._stableId = stableId
         self.account = account
         self.segment = segment
         self.selectHandler = selectHandler
@@ -40,4 +43,19 @@ class EBlockItem: TableRowItem {
         return EBlockRowView.self;
     }
     
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        var items: [ContextMenuItem] = []
+        let postbox = self.account.postbox
+        if let view = self.view as? EBlockRowView {
+            if let emoji = view.emojiUnderMouse?.emojiUnmodified, emoji.canHaveSkinToneModifier {
+                items.append(EmojiToleranceContextMenuItem(emoji: emoji, callback: { value in
+                    _ = modifySkinEmoji(emoji, modifier: value, postbox: postbox).start()
+                }))
+            }
+        }
+        
+       
+        return .single(items)
+    }
 }

@@ -10,12 +10,12 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 class ChannelDiscussionInputView: View {
-    private let leftButton: TitleButton = TitleButton()
-    private let rightButton: TitleButton = TitleButton()
+    private let leftButton: TextButton = TextButton()
+    private let rightButton: TextButton = TextButton()
     private var badge:BadgeNode?
     private var badgeView:View = View()
     private let disposable = MetaDisposable()
@@ -50,9 +50,9 @@ class ChannelDiscussionInputView: View {
         
         let context = chatInteraction.context
         if let discussionGroupId = discussionGroupId {
-            self.disposable.set((context.account.postbox.unreadMessageCountsView(items: [.peer(discussionGroupId)]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
+            self.disposable.set((context.account.postbox.unreadMessageCountsView(items: [.peer(id: discussionGroupId, handleThreads: false)]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
                 if let strongSelf = self {
-                    let count = unreadView.count(for: .peer(discussionGroupId)) ?? 0
+                    let count = unreadView.count(for: .peer(id: discussionGroupId, handleThreads: false)) ?? 0
                     if count > 0 {
                         strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.accent)
                         strongSelf.badge!.view = strongSelf.badgeView

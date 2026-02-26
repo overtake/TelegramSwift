@@ -7,74 +7,65 @@
 //
 
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 
 func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     
-    
-    if MessageIndex(id: lhsMessage.id, timestamp: lhsMessage.timestamp) != MessageIndex(id: rhsMessage.id, timestamp: rhsMessage.timestamp) || lhsMessage.stableVersion != rhsMessage.stableVersion {
-        return false
-    }
-    if lhsMessage.flags != rhsMessage.flags {
+    if lhsMessage.id != rhsMessage.id {
         return false
     }
     
-    if lhsMessage.media.count != rhsMessage.media.count {
-        return false
-    }
-    for i in 0 ..< lhsMessage.media.count {
-        if !lhsMessage.media[i].isEqual(to: rhsMessage.media[i]) {
-            return false
-        }
-    }
-    
-    if lhsMessage.attributes.count != rhsMessage.attributes.count {
+    if lhsMessage.id != rhsMessage.id {
         return false
     }
     
-    for (_, lhsAttr) in lhsMessage.attributes.enumerated() {
-        if let lhsAttr = lhsAttr as? ReplyThreadMessageAttribute {
-            let rhsAttr = rhsMessage.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
-            if let rhsAttr = rhsAttr {
-                if lhsAttr.count != rhsAttr.count {
-                    return false
-                }
-                if lhsAttr.latestUsers != rhsAttr.latestUsers {
-                    return false
-                }
-                if lhsAttr.maxMessageId != rhsAttr.maxMessageId {
-                    return false
-                }
-                if lhsAttr.maxReadMessageId != rhsAttr.maxReadMessageId {
-                    return false
-                }
-            } else {
-                return false
-            }
-        }
-        if let lhsAttr = lhsAttr as? ViewCountMessageAttribute {
-            let rhsAttr = rhsMessage.attributes.compactMap { $0 as? ViewCountMessageAttribute }.first
-            if let rhsAttr = rhsAttr {
-                if lhsAttr.count != rhsAttr.count {
-                    return false
-                }
-            } else {
-                return false
-            }
-        }
+    if lhsMessage.derivedDataAttribute?.data != rhsMessage.derivedDataAttribute?.data {
+        return false
     }
     
+    if lhsMessage.forwardVideoTimestampAttribute?.timestamp != rhsMessage.forwardVideoTimestampAttribute?.timestamp {
+        return false
+    }
+    
+    if lhsMessage.stableVersion != rhsMessage.stableVersion {
+        return false
+    }
     if lhsMessage.associatedMessages.count != rhsMessage.associatedMessages.count {
         return false
     } else {
         for (messageId, lhsAssociatedMessage) in lhsMessage.associatedMessages {
             if let rhsAssociatedMessage = rhsMessage.associatedMessages[messageId] {
-                if lhsAssociatedMessage.stableVersion != rhsAssociatedMessage.stableVersion {
+                if !isEqualMessages(lhsAssociatedMessage, rhsAssociatedMessage) {
                     return false
                 }
             } else {
+                return false
+            }
+        }
+    }
+    if lhsMessage.associatedStories.count != rhsMessage.associatedStories.count {
+        return false
+    } else {
+        for (storyId, lhsAssociatedStory) in lhsMessage.associatedStories {
+            if let rhsAssociatedStory = rhsMessage.associatedStories[storyId] {
+                let lhsStory = lhsAssociatedStory.get(Stories.StoredItem.self)
+                let rhsStory = rhsAssociatedStory.get(Stories.StoredItem.self)
+                if lhsStory != rhsStory {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    
+    if lhsMessage.media.count != rhsMessage.media.count {
+        return false
+    } else {
+        for i in 0 ..< lhsMessage.media.count {
+            if !lhsMessage.media[i].isEqual(to: rhsMessage.media[i]) {
                 return false
             }
         }
@@ -93,6 +84,8 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
             }
         }
     }
+    
+
     
     return true
 }

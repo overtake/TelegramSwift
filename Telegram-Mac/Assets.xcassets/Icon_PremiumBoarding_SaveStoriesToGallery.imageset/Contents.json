@@ -1,0 +1,22 @@
+{
+  "images" : [
+    {
+      "filename" : "Icon_PremiumBoarding_SaveStoriesToGallery.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "Icon_PremiumBoarding_SaveStoriesToGallery@2x.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

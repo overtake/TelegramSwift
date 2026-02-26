@@ -7,20 +7,20 @@
 //
 
 import Cocoa
-
+import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize?
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         if let size = self.size {
-            return "sticker-v1-png-\(Int(size.width))x\(Int(size.height))"
+            return "sticker-v3-png-\(Int(size.width))x\(Int(size.height))"
         } else {
-            return "sticker-v1-png"
+            return "sticker-v3-png"
         }
     }
     
@@ -113,29 +113,58 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
     }
 }
 
+final class CachedWallpaperRepresentation: CachedMediaResourceRepresentation {
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
+    var uniqueId: String {
+        return CachedBlurredWallpaperRepresentation.uniqueId
+    }
+    let isDark: Bool
+    let settings: WallpaperSettings
+    init(isDark: Bool, settings: WallpaperSettings) {
+        self.isDark = isDark
+        self.settings = settings
+    }
+    
+    static var uniqueId: String {
+        return "cached-wallpaper"
+    }
+    
+    func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let to = to as? CachedWallpaperRepresentation {
+            return to.isDark == self.isDark && to.settings == to.settings
+        } else {
+            return false
+        }
+    }
+}
+
 
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        let version: Int = 1
+        let version: Int = 18
         if let fitzModifier = self.fitzModifier {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)"
+            return "1animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
         } else {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)"
+            return "1animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
         }
     }
     let thumb: Bool
     let size: NSSize
     let fitzModifier: EmojiFitzModifier?
-    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil) {
+    let frame: Int
+    let isVideo: Bool
+    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil, frame: Int = 0, isVideo: Bool = false) {
         self.thumb = thumb
         self.size = size
         self.fitzModifier = fitzModifier
+        self.frame = frame
+        self.isVideo = isVideo
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedAnimatedStickerRepresentation {
-            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier
+            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier && self.frame == to.frame && self.isVideo == to.isVideo && self.uniqueId == to.uniqueId
         } else {
             return false
         }
@@ -156,9 +185,9 @@ final class CachedPatternWallpaperMaskRepresentation: CachedMediaResourceReprese
         }
         
         if let size = self.size {
-            return "pattern-wallpaper-mask----\(Int(size.width))x\(Int(size.height))" + color
+            return "pattern-wallpaper-mask--------\(Int(size.width))x\(Int(size.height))" + color
         } else {
-            return "pattern-wallpaper-mask----" + color
+            return "pattern-wallpaper-mask--------" + color
         }
     }
     
@@ -225,27 +254,23 @@ final class CachedSlotMachineRepresentation: CachedMediaResourceRepresentation {
 
 
 
-public enum EmojiFitzModifier: Int32, Equatable {
-    case type12
-    case type3
-    case type4
-    case type5
-    case type6
+
+
+final class CachedPreparedSvgRepresentation: CachedMediaResourceRepresentation {
+    public let keepDuration: CachedMediaRepresentationKeepDuration = .general
     
-    public init?(emoji: String) {
-        switch emoji.unicodeScalars.first?.value {
-        case 0x1f3fb:
-            self = .type12
-        case 0x1f3fc:
-            self = .type3
-        case 0x1f3fd:
-            self = .type4
-        case 0x1f3fe:
-            self = .type5
-        case 0x1f3ff:
-            self = .type6
-        default:
-            return nil
+    public var uniqueId: String {
+        return "prepared-svg"
+    }
+    
+    public init() {
+    }
+    
+    public func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if to is CachedPreparedSvgRepresentation {
+            return true
+        } else {
+            return false
         }
     }
 }

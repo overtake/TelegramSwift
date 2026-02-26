@@ -9,7 +9,7 @@
 import Cocoa
 
 import TelegramCore
-import SyncCore
+
 
 enum InstantPageMediaArguments {
     case image(interactive: Bool, roundCorners: Bool, fit: Bool)

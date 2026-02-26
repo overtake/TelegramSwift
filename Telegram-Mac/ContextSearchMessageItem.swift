@@ -8,10 +8,10 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import DateUtils
 import TGUIKit
 import Postbox
-
+import Strings
 
 class ContextSearchMessageItem: GeneralRowItem {
     
@@ -58,7 +58,9 @@ class ContextSearchMessageItem: GeneralRowItem {
         var peer:Peer = self.peer
         
         var title:String = peer.displayTitle
-        if let _peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
+        let mainPeer = coreMessageMainPeer(message)
+
+        if let _peer = mainPeer as? TelegramChannel, case .broadcast(_) = _peer.info {
             title = _peer.displayTitle
             peer = _peer
         }
@@ -66,11 +68,11 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         var nameColor:NSColor = theme.chat.linkColor(true, false)
         
-        if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
-            if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+        if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
+            if let peer = mainPeer as? TelegramChannel, case .broadcast(_) = peer.info {
                 nameColor = theme.chat.linkColor(true, false)
             } else if context.peerId != peer.id {
-                let value = abs(Int(peer.id.id) % 7)
+                let value = abs(Int(peer.id.id._internalGetInt64Value()) % 7)
                 nameColor = theme.chat.peerName(value)
             }
         }
@@ -82,18 +84,25 @@ class ContextSearchMessageItem: GeneralRowItem {
         self.titleText = titleText
         let messageTitle = NSMutableAttributedString()
         
-        var text = pullText(from: message) as String
+        var text = pullText(from: message).string as String
         if text.isEmpty {
-            text = serviceMessageText(message, account: context.account)
+            text = serviceMessageText(message, account: context.account).0
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
         
+        let string = text
+        let subranges = findSubstringRanges(in: string.lowercased(), query: searchText.lowercased()).0
+//
         
-        self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
-        let selectRange = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
-        if selectRange.location != NSNotFound {
-            self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
-        }
+
+        
+        self.messageLayout = TextViewLayout(messageTitle.trimNewLinesToSpace, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
+//        let selectRange = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
+        
+        
+//        if selectRange.location != NSNotFound {
+//            self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+//        }
         
         
         let selectedAttrText = messageTitle.mutableCopy() as! NSMutableAttributedString
@@ -111,7 +120,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
         dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
         
-        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, message, nil, peer.isForum, nil)
         
         super.init(initialSize, height: 44, action: action)
 
@@ -192,7 +201,7 @@ private class ContextSearchMessageView : GeneralRowView {
     
     private var titleText:TextNode = TextNode()
     private var messageText:TextView = TextView()
-    private var photo:AvatarControl = AvatarControl(font: .avatar(22))
+    private var photo:AvatarControl = AvatarControl(font: .avatar(14))
 
     
     
@@ -269,6 +278,7 @@ private class ContextSearchMessageView : GeneralRowView {
         messageText.userInteractionEnabled = false
         messageText.isSelectable = false
         
+        
     }
     
     override func layout() {
@@ -296,6 +306,8 @@ private class ContextSearchMessageView : GeneralRowView {
         
         photo.setState(account: item.context.account, state: item.photo)
         messageText.update(item.ctxMessageLayout)
+        
+        self.toolTip = item.ctxMessageLayout.attributedString.string.prefixWithDots(300)
     }
     
 }

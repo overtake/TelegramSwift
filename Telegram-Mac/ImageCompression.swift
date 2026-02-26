@@ -51,7 +51,7 @@ public func extractImageExtraScans(_ data: Data) -> [Int] {
 }
 
 public func compressImageToJPEG(_ cgImage: CGImage, quality: Float) -> Data? {
-    if let result = compressJPEGData(cgImage) {
+    if let result = compressJPEGData(cgImage, Int32(quality * 100.0)) {
         return result
     }
     

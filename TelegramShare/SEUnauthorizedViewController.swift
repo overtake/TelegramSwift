@@ -8,11 +8,11 @@
 
 import Cocoa
 import TGUIKit
-
+import Localization
 
 class SEUnauthorizedView : View {
     fileprivate let imageView:ImageView = ImageView()
-    fileprivate let cancel:TitleButton = TitleButton()
+    fileprivate let cancel:TextButton = TextButton()
     fileprivate let textView:TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -22,9 +22,9 @@ class SEUnauthorizedView : View {
         self.backgroundColor = theme.colors.background
         cancel.set(font: .medium(.title), for: .Normal)
         cancel.set(color: theme.colors.accent, for: .Normal)
-        cancel.set(text: tr(L10n.shareExtensionUnauthorizedOK), for: .Normal)
+        cancel.set(text: L10n.shareExtensionUnauthorizedOK, for: .Normal)
         
-        let layout = TextViewLayout(.initialize(string: tr(L10n.shareExtensionUnauthorizedDescription), color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        let layout = TextViewLayout(.initialize(string: L10n.shareExtensionUnauthorizedDescription, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         textView.backgroundColor = theme.colors.background
         textView.update(layout)
         
@@ -37,8 +37,8 @@ class SEUnauthorizedView : View {
     override func layout() {
         super.layout()
         imageView.centerX(y: 30)
-        textView.layout?.measure(width: frame.width - 60)
-        textView.update(textView.layout)
+        textView.textLayout?.measure(width: frame.width - 60)
+        textView.update(textView.textLayout)
         textView.center()
         cancel.centerX(y: textView.frame.maxY + 20)
     }

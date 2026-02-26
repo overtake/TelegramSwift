@@ -9,50 +9,12 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
-/*
- 
- struct InteractiveEmojiConfiguration : Equatable {
- static var defaultValue: InteractiveEmojiConfiguration {
- return InteractiveEmojiConfiguration(emojis: [], confettiCompitable: [:])
- }
- 
- let emojis: [String]
- private let confettiCompitable: [String: InteractiveEmojiConfetti]
- 
- fileprivate init(emojis: [String], confettiCompitable: [String: InteractiveEmojiConfetti]) {
- self.emojis = emojis.map { $0.fixed }
- self.confettiCompitable = confettiCompitable
- }
- 
- static func with(appConfiguration: AppConfiguration) -> InteractiveEmojiConfiguration {
- if let data = appConfiguration.data, let value = data["emojies_send_dice"] as? [String] {
- let dict:[String : Any]? = data["emojies_send_dice_success"] as? [String:Any]
- 
- var confetti:[String: InteractiveEmojiConfetti] = [:]
- if let dict = dict {
- for (key, value) in dict {
- if let data = value as? [String: Any], let frameStart = data["frame_start"] as? Double, let value = data["value"] as? Double {
- confetti[key] = InteractiveEmojiConfetti(playAt: Int32(frameStart), value: Int32(value))
- }
- }
- }
- return InteractiveEmojiConfiguration(emojis: value, confettiCompitable: confetti)
- } else {
- return .defaultValue
- }
- }
- 
- func playConfetti(_ emoji: String) -> InteractiveEmojiConfetti? {
- return confettiCompitable[emoji]
- }
- }
- */
 
-private struct AutoarchiveConfiguration : Equatable {
+struct AutoarchiveConfiguration : Equatable {
     let autoarchive_setting_available: Bool
     init(autoarchive_setting_available: Bool) {
         self.autoarchive_setting_available = autoarchive_setting_available
@@ -96,46 +58,60 @@ private final class PrivacyAndSecurityControllerArguments {
     let openLastSeenPrivacy: () -> Void
     let openGroupsPrivacy: () -> Void
     let openVoiceCallPrivacy: () -> Void
+    let openBioPrivacy:()->Void
+    let openBirthdayPrivacy:()->Void
+    let openGiftsPrivacy:()->Void
     let openProfilePhotoPrivacy: () -> Void
     let openForwardPrivacy: () -> Void
     let openPhoneNumberPrivacy: () -> Void
+    let openVoicePrivacy: () -> Void
+    let openMessagesPrivacy: () -> Void
     let openPasscode: () -> Void
     let openTwoStepVerification: (TwoStepVeriticationAccessConfiguration?) -> Void
     let openActiveSessions: ([RecentAccountSession]?) -> Void
     let openWebAuthorizations: () -> Void
     let setupAccountAutoremove: () -> Void
+    let setupGlobalAutoremove: () -> Void
     let openProxySettings:() ->Void
     let togglePeerSuggestions:(Bool)->Void
     let clearCloudDrafts: () -> Void
     let toggleSensitiveContent:(Bool)->Void
     let toggleSecretChatWebPreview: (Bool)->Void
     let toggleAutoArchive: (Bool)->Void
-    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void, toggleSecretChatWebPreview: @escaping(Bool)->Void, toggleAutoArchive: @escaping(Bool)->Void) {
+    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openBioPrivacy: @escaping()->Void, openBirthdayPrivacy:@escaping()->Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openVoicePrivacy: @escaping() -> Void, openMessagesPrivacy: @escaping()->Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, setupGlobalAutoremove: @escaping()->Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void, toggleSecretChatWebPreview: @escaping(Bool)->Void, toggleAutoArchive: @escaping(Bool)->Void, openGiftsPrivacy:@escaping()->Void) {
         self.context = context
         self.openBlockedUsers = openBlockedUsers
         self.openLastSeenPrivacy = openLastSeenPrivacy
         self.openGroupsPrivacy = openGroupsPrivacy
         self.openVoiceCallPrivacy = openVoiceCallPrivacy
+        self.openBioPrivacy = openBioPrivacy
         self.openPasscode = openPasscode
         self.openTwoStepVerification = openTwoStepVerification
         self.openActiveSessions = openActiveSessions
         self.openWebAuthorizations = openWebAuthorizations
         self.setupAccountAutoremove = setupAccountAutoremove
+        self.setupGlobalAutoremove = setupGlobalAutoremove
         self.openProxySettings = openProxySettings
         self.togglePeerSuggestions = togglePeerSuggestions
         self.clearCloudDrafts = clearCloudDrafts
         self.openProfilePhotoPrivacy = openProfilePhotoPrivacy
         self.openForwardPrivacy = openForwardPrivacy
         self.openPhoneNumberPrivacy = openPhoneNumberPrivacy
+        self.openVoicePrivacy = openVoicePrivacy
+        self.openMessagesPrivacy = openMessagesPrivacy
         self.toggleSensitiveContent = toggleSensitiveContent
         self.toggleSecretChatWebPreview = toggleSecretChatWebPreview
         self.toggleAutoArchive = toggleAutoArchive
+        self.openBirthdayPrivacy = openBirthdayPrivacy
+        self.openGiftsPrivacy = openGiftsPrivacy
     }
 }
 
 
 private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case privacyHeader(sectionId:Int)
+    case twoStepVerification(sectionId:Int, configuration: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
+    case passcode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case blockedPeers(sectionId:Int, Int?, viewType: GeneralViewType)
     case phoneNumberPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case lastSeenPrivacy(sectionId: Int, String, viewType: GeneralViewType)
@@ -143,9 +119,14 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case profilePhotoPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case forwardPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case voiceCallPrivacy(sectionId: Int, String, viewType: GeneralViewType)
+    case voiceMessagesPrivacy(sectionId: Int, String, Bool, viewType: GeneralViewType)
+    case messagesPrivacy(sectionId: Int, String, Bool, viewType: GeneralViewType)
+    case bioPrivacy(sectionId: Int, String, viewType: GeneralViewType)
+    case birthdayPrivacy(sectionId: Int, String, viewType: GeneralViewType)
+    case giftsPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case securityHeader(sectionId:Int)
-    case passcode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
-    case twoStepVerification(sectionId:Int, configuration: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
+    case globalTimer(sectionId: Int, String, viewType: GeneralViewType)
+    case globalTimerInfo(sectionId:Int)
     case activeSessions(sectionId:Int, [RecentAccountSession]?, viewType: GeneralViewType)
     case webAuthorizationsHeader(sectionId: Int)
     case webAuthorizations(sectionId:Int, viewType: GeneralViewType)
@@ -189,11 +170,25 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return sectionId
         case let .voiceCallPrivacy(sectionId, _, _):
             return sectionId
+        case let .voiceMessagesPrivacy(sectionId, _, _, _):
+            return sectionId
+        case let .messagesPrivacy(sectionId, _, _, _):
+            return sectionId
+        case let .bioPrivacy(sectionId, _, _):
+            return sectionId
+        case let .birthdayPrivacy(sectionId, _, _):
+            return sectionId
+        case let .giftsPrivacy(sectionId, _, _):
+            return sectionId
         case let .securityHeader(sectionId):
             return sectionId
         case let .passcode(sectionId, _, _):
             return sectionId
         case let .twoStepVerification(sectionId, _, _):
+            return sectionId
+        case let .globalTimer(sectionId, _, _):
+            return sectionId
+        case let .globalTimerInfo(sectionId):
             return sectionId
         case let .activeSessions(sectionId, _, _):
             return sectionId
@@ -245,70 +240,84 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
 
     var stableId:Int {
         switch self {
-        case .blockedPeers:
-            return 0
-        case .activeSessions:
-            return 1
-        case .passcode:
-            return 2
         case .twoStepVerification:
+            return 0
+        case .passcode:
+            return 1
+        case .blockedPeers:
+            return 2
+        case .activeSessions:
             return 3
-        case .privacyHeader:
+        case .globalTimer:
             return 4
-        case .phoneNumberPrivacy:
+        case .globalTimerInfo:
             return 5
-        case .lastSeenPrivacy:
+        case .privacyHeader:
             return 6
-        case .groupPrivacy:
+        case .phoneNumberPrivacy:
             return 7
-        case .voiceCallPrivacy:
+        case .lastSeenPrivacy:
             return 8
-        case .forwardPrivacy:
+        case .groupPrivacy:
             return 9
-        case .profilePhotoPrivacy:
+        case .voiceCallPrivacy:
             return 10
-        case .securityHeader:
+        case .forwardPrivacy:
             return 11
-        case .autoArchiveHeader:
+        case .profilePhotoPrivacy:
             return 12
-        case .autoArchiveToggle:
+        case .voiceMessagesPrivacy:
             return 13
-        case .autoArchiveDesc:
+        case .messagesPrivacy:
             return 14
-        case .accountHeader:
+        case .bioPrivacy:
             return 15
-        case .accountTimeout:
+        case .birthdayPrivacy:
             return 16
-        case .accountInfo:
+        case .giftsPrivacy:
             return 17
-        case .webAuthorizationsHeader:
+        case .securityHeader:
             return 18
-        case .webAuthorizations:
+        case .autoArchiveHeader:
             return 19
-        case .proxyHeader:
+        case .autoArchiveToggle:
             return 20
-        case .proxySettings:
+        case .autoArchiveDesc:
             return 21
-        case .togglePeerSuggestions:
+        case .accountHeader:
             return 22
-        case .togglePeerSuggestionsDesc:
+        case .accountTimeout:
             return 23
-        case .clearCloudDraftsHeader:
+        case .accountInfo:
             return 24
-        case .clearCloudDrafts:
+        case .webAuthorizationsHeader:
             return 25
-        case .sensitiveContentHeader:
+        case .webAuthorizations:
             return 26
-        case .sensitiveContentToggle:
+        case .proxyHeader:
             return 27
-        case .sensitiveContentDesc:
+        case .proxySettings:
             return 28
-        case .secretChatWebPreviewHeader:
+        case .togglePeerSuggestions:
             return 29
-        case .secretChatWebPreviewToggle:
+        case .togglePeerSuggestionsDesc:
             return 30
-        case .secretChatWebPreviewDesc:
+        case .clearCloudDraftsHeader:
             return 31
+        case .clearCloudDrafts:
+            return 32
+        case .sensitiveContentHeader:
+            return 33
+        case .sensitiveContentToggle:
+            return 34
+        case .sensitiveContentDesc:
+            return 35
+        case .secretChatWebPreviewHeader:
+            return 36
+        case .secretChatWebPreviewToggle:
+            return 37
+        case .secretChatWebPreviewDesc:
+            return 38
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -331,46 +340,62 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     func item(_ arguments: PrivacyAndSecurityControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .privacyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsPrivacyHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsPrivacyHeader, viewType: .textTopItem)
         case let .blockedPeers(_, count, viewType):
             let text: String
             if let count = count, count > 0 {
-                text = L10n.privacyAndSecurityBlockedUsers("\(count)")
+                text = strings().privacyAndSecurityBlockedUsers("\(count)")
             } else {
                 text = ""
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsBlockedUsers, icon: theme.icons.privacySettings_blocked, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsBlockedUsers, icon: theme.icons.privacySettings_blocked, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openBlockedUsers()
             })
         case let .phoneNumberPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPhoneNumber, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPhoneNumber, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openPhoneNumberPrivacy()
             })
         case let .lastSeenPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsLastSeen, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsLastSeen, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openLastSeenPrivacy()
             })
         case let .groupPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsGroups, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsGroups, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openGroupsPrivacy()
             })
         case let .profilePhotoPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsProfilePhoto, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsProfilePhoto, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openProfilePhotoPrivacy()
             })
         case let .forwardPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsForwards, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsForwards, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openForwardPrivacy()
             })
         case let .voiceCallPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsVoiceCalls, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsVoiceCalls, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openVoiceCallPrivacy()
             })
+        case let .voiceMessagesPrivacy(_, text, locked, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsVoiceMessages, type: .nextContext(text), viewType: viewType, action: arguments.openVoicePrivacy)
+        case let .messagesPrivacy(_, text, locked, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsMessages, type: .nextContext(text), viewType: viewType, action: arguments.openMessagesPrivacy)
+        case let .bioPrivacy(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsBio, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openBioPrivacy()
+            })
+        case let .birthdayPrivacy(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsBirthday, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openBirthdayPrivacy()
+            })
+        case let .giftsPrivacy(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsGifts, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openGiftsPrivacy()
+            })
         case .securityHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsSecurityHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsSecurityHeader, viewType: .textTopItem)
         case let .passcode(_, enabled, viewType):
-            let desc = enabled ? L10n.privacyAndSecurityItemOn : L10n.privacyAndSecurityItemOff
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPasscode, icon: theme.icons.privacySettings_passcode, type: .nextContext(desc), viewType: viewType, action: {
+            let desc = enabled ? strings().privacyAndSecurityItemOn : strings().privacyAndSecurityItemOff
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPasscode, icon: theme.icons.privacySettings_passcode, type: .nextContext(desc), viewType: viewType, action: {
                 arguments.openPasscode()
             })
         case let .twoStepVerification(_, configuration, viewType):
@@ -378,44 +403,48 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             if let configuration = configuration {
                 switch configuration {
                 case .set:
-                    desc = L10n.privacyAndSecurityItemOn
+                    desc = strings().privacyAndSecurityItemOn
                 case .notSet:
-                    desc = L10n.privacyAndSecurityItemOff
+                    desc = strings().privacyAndSecurityItemOff
                 }
             } else {
                 desc = ""
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsTwoStepVerification, icon: theme.icons.privacySettings_twoStep, type: .nextContext(desc), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsTwoStepVerification, icon: theme.icons.privacySettings_twoStep, type: .nextContext(desc), viewType: viewType, action: {
                 arguments.openTwoStepVerification(configuration)
             })
+        case let .globalTimer(_, text, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsGlobalTimer, icon: theme.icons.privacy_settings_autodelete, type: .nextContext(text), viewType: viewType, action: arguments.setupGlobalAutoremove)
+        case .globalTimerInfo:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsGlobalTimerInfo, viewType: .textBottomItem)
         case let .activeSessions(_, sessions, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsActiveSessions, icon: theme.icons.privacySettings_activeSessions, type: .nextContext(sessions != nil ? "\(sessions!.count)" : ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsActiveSessions, icon: theme.icons.privacySettings_activeSessions, type: .nextContext(sessions != nil ? "\(sessions!.count)" : ""), viewType: viewType, action: {
                 arguments.openActiveSessions(sessions)
             })
         case .webAuthorizationsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityWebAuthorizationHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityWebAuthorizationHeader, viewType: .textTopItem)
         case let .webAuthorizations(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.telegramWebSessionsController, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().telegramWebSessionsController, viewType: viewType, action: {
                 arguments.openWebAuthorizations()
             })
         case .accountHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsDeleteAccountHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsDeleteAccountHeader, viewType: .textTopItem)
         case let .accountTimeout(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsDeleteAccount, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsDeleteAccount, type: .context(text), viewType: viewType, action: {
                 arguments.setupAccountAutoremove()
             })
         case .accountInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsDeleteAccountDescription, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsDeleteAccountDescription, viewType: .textBottomItem)
         case .proxyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsProxyHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsProxyHeader, viewType: .textTopItem)
         case let .proxySettings(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openProxySettings()
             })
         case let .togglePeerSuggestions(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.suggestFrequentContacts, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().suggestFrequentContacts, type: .switchable(enabled), viewType: viewType, action: {
                 if enabled {
-                    confirm(for: mainWindow, information: L10n.suggestFrequentContactsAlert, successHandler: { _ in
+                    verifyAlert_button(for: arguments.context.window, information: strings().suggestFrequentContactsAlert, successHandler: { _ in
                         arguments.togglePeerSuggestions(!enabled)
                     })
                 } else {
@@ -423,17 +452,17 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 }
             }, autoswitch: false)
         case .togglePeerSuggestionsDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.suggestFrequentContactsDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().suggestFrequentContactsDesc, viewType: .textBottomItem)
         case .clearCloudDraftsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityClearCloudDraftsHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityClearCloudDraftsHeader, viewType: .textTopItem)
         case let .clearCloudDrafts(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecurityClearCloudDrafts, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecurityClearCloudDrafts, type: .none, viewType: viewType, action: {
                 arguments.clearCloudDrafts()
             })
         case .autoArchiveHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityAutoArchiveHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityAutoArchiveHeader, viewType: .textTopItem)
         case let .autoArchiveToggle(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecurityAutoArchiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecurityAutoArchiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
                 if let enabled = enabled {
                     arguments.toggleAutoArchive(!enabled)
                 } else {
@@ -441,34 +470,34 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 }
             }, autoswitch: true)
         case .autoArchiveDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityAutoArchiveDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityAutoArchiveDesc, viewType: .textBottomItem)
         case .sensitiveContentHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySensitiveHeader, viewType: .textTopItem)
         case let .sensitiveContentToggle(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySensitiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecuritySensitiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
                 if let enabled = enabled {
                     arguments.toggleSensitiveContent(!enabled)
                 }
             }, autoswitch: true)
         case .sensitiveContentDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
         case .secretChatWebPreviewHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySecretChatWebPreviewHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySecretChatWebPreviewHeader, viewType: .textTopItem)
         case let .secretChatWebPreviewToggle(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySecretChatWebPreviewText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecuritySecretChatWebPreviewText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
                 if let enabled = enabled {
                     arguments.toggleSecretChatWebPreview(!enabled)
                 }
             }, autoswitch: true)
         case .secretChatWebPreviewDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySecretChatWebPreviewDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySecretChatWebPreviewDesc, viewType: .textBottomItem)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
 
-func countForSelectivePeers(_ peers: [PeerId: SelectivePrivacyPeer]) -> Int {
+func countForSelectivePeers(_ peers: [PeerId: SelectivePrivacyPeer], enablePremium: Bool = false) -> Int {
     var result = 0
     for (_, peer) in peers {
         result += peer.userCount
@@ -477,55 +506,40 @@ func countForSelectivePeers(_ peers: [PeerId: SelectivePrivacyPeer]) -> Int {
 }
 
 
-private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> String {
+func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> String {
     switch settings {
-    case let .disableEveryone(enableFor):
+    case let .disableEveryone(enableFor, disableFor, enableForPremium, enableForBots):
         if enableFor.isEmpty {
-            return L10n.privacySettingsControllerNobody
+            if enableForPremium {
+                return strings().privacySettingsPremiumUsers
+            } else {
+                return strings().privacySettingsControllerNobody
+            }
         } else {
-            return L10n.privacySettingsLastSeenNobodyPlus("\(countForSelectivePeers(enableFor))")
+            return strings().privacySettingsLastSeenNobodyPlus("\(countForSelectivePeers(enableFor))") + "\(enableForPremium ? " , \(strings().privacySettingsPremiumUsers)" : "")"
         }
     case let .enableEveryone(disableFor):
         if disableFor.isEmpty {
-            return L10n.privacySettingsControllerEverbody
+            return strings().privacySettingsControllerEverbody
         } else {
-            return L10n.privacySettingsLastSeenEverybodyMinus("\(countForSelectivePeers(disableFor))")
+            return strings().privacySettingsLastSeenEverybodyMinus("\(countForSelectivePeers(disableFor))")
         }
-    case let .enableContacts(enableFor, disableFor):
+    case let .enableContacts(enableFor, disableFor, enableForPremium, enableForBots):
         if !enableFor.isEmpty && !disableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsMinusPlus("\(countForSelectivePeers(disableFor))", "\(countForSelectivePeers(enableFor))")
+            return strings().privacySettingsLastSeenContactsMinusPlus("\(countForSelectivePeers(disableFor))", "\(countForSelectivePeers(enableFor))")
         } else if !enableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsPlus("\(countForSelectivePeers(enableFor))")
+            return strings().privacySettingsLastSeenContactsPlus("\(countForSelectivePeers(enableFor))") + "\(enableForPremium ? ", \(strings().privacySettingsPremiumUsers)" : "")"
         } else if !disableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsMinus("\(countForSelectivePeers(disableFor))")
+            return strings().privacySettingsLastSeenContactsMinus("\(countForSelectivePeers(disableFor))")
         } else {
-            return L10n.privacySettingsControllerMyContacts
+            return strings().privacySettingsControllerMyContacts
         }
     }
 }
 
 private struct PrivacyAndSecurityControllerState: Equatable {
-    let updatingAccountTimeoutValue: Int32?
-
-    init() {
-        self.updatingAccountTimeoutValue = nil
-    }
-
-    init(updatingAccountTimeoutValue: Int32?) {
-        self.updatingAccountTimeoutValue = updatingAccountTimeoutValue
-    }
-
-    static func ==(lhs: PrivacyAndSecurityControllerState, rhs: PrivacyAndSecurityControllerState) -> Bool {
-        if lhs.updatingAccountTimeoutValue != rhs.updatingAccountTimeoutValue {
-            return false
-        }
-
-        return true
-    }
-
-    func withUpdatedUpdatingAccountTimeoutValue(_ updatingAccountTimeoutValue: Int32?) -> PrivacyAndSecurityControllerState {
-        return PrivacyAndSecurityControllerState(updatingAccountTimeoutValue: updatingAccountTimeoutValue)
-    }
+    var updatingAccountTimeoutValue: Int32?
+    var updatingGlobalTimeoutValue: Int32?
 }
 
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecurityEntry>], right: [AppearanceWrapperEntry<PrivacyAndSecurityEntry>], initialSize:NSSize, arguments:PrivacyAndSecurityControllerArguments) -> TableUpdateTransition {
@@ -537,26 +551,47 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecuri
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: [RecentAccountSession]?, passcodeData: PostboxAccessChallengeData, context: AccountContext) -> [PrivacyAndSecurityEntry] {
+private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: ActiveSessionsContextState, passcodeData: PostboxAccessChallengeData, context: AccountContext) -> [PrivacyAndSecurityEntry] {
     var entries: [PrivacyAndSecurityEntry] = []
 
     var sectionId:Int = 1
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
-
-    entries.append(.blockedPeers(sectionId: sectionId, blockedState.totalCount, viewType: .firstItem))
-   // entries.append(.activeSessions(sectionId: sectionId, activeSessions, viewType: .innerItem))
     
     let hasPasscode: Bool
     switch passcodeData {
     case .none:
         hasPasscode = false
     default:
-        hasPasscode = true
+        hasPasscode = context.sharedContext.appEncryptionValue.hasPasscode()
     }
-    
+    entries.append(.twoStepVerification(sectionId: sectionId, configuration: configuration, viewType: .firstItem))
     entries.append(.passcode(sectionId: sectionId, enabled: hasPasscode, viewType: .innerItem))
-    entries.append(.twoStepVerification(sectionId: sectionId, configuration: configuration, viewType: .lastItem))
+
+
+    entries.append(.blockedPeers(sectionId: sectionId, blockedState.totalCount, viewType: .innerItem))
+   // entries.append(.activeSessions(sectionId: sectionId, activeSessions, viewType: .innerItem))
+    
+    
+    if let privacySettings = privacySettings {
+        let value: Int32
+        if let updatingAccountTimeoutValue = state.updatingGlobalTimeoutValue {
+            value = updatingAccountTimeoutValue
+        } else {
+            value = privacySettings.messageAutoremoveTimeout ?? 0
+        }
+        if value != 0 {
+            entries.append(.globalTimer(sectionId: sectionId, timeIntervalString(Int(value)), viewType: .lastItem))
+        } else {
+            entries.append(.globalTimer(sectionId: sectionId, strings().privacySettingsGlobalTimerNever, viewType: .lastItem))
+        }
+
+    } else {
+        entries.append(.globalTimer(sectionId: sectionId, "", viewType: .lastItem))
+    }
+    entries.append(.globalTimerInfo(sectionId: sectionId))
+    
+
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -568,32 +603,52 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         entries.append(.groupPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.groupInvitations), viewType: .innerItem))
         entries.append(.voiceCallPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceCalls), viewType: .innerItem))
         entries.append(.profilePhotoPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.profilePhoto), viewType: .innerItem))
-        entries.append(.forwardPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.forwards), viewType: .lastItem))
+        entries.append(.bioPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.bio), viewType: .innerItem))
+        entries.append(.giftsPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.giftsAutoSave), viewType: .innerItem))
+        entries.append(.birthdayPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.birthday), viewType: .innerItem))
+        entries.append(.forwardPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.forwards), viewType: .innerItem))
+        entries.append(.voiceMessagesPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceMessages), !context.isPremium, viewType: .innerItem))
+        
+        let messagePrivacyText: String
+        switch privacySettings.globalSettings.nonContactChatsPrivacy {
+        case .everybody:
+            messagePrivacyText = strings().privacySettingsMessagesAll
+        case .requirePremium:
+            messagePrivacyText = strings().privacySettingsMessagesMyContacts
+        case .paidMessages(let starsAmount):
+            messagePrivacyText = strings().starListItemCountCountable(Int(starsAmount.value))
+        }
+        entries.append(.messagesPrivacy(sectionId: sectionId, messagePrivacyText, false, viewType: .lastItem))
+        
     } else {
         entries.append(.phoneNumberPrivacy(sectionId: sectionId, "", viewType: .firstItem))
         entries.append(.lastSeenPrivacy(sectionId: sectionId, "", viewType: .innerItem))
         entries.append(.groupPrivacy(sectionId: sectionId, "", viewType: .innerItem))
         entries.append(.voiceCallPrivacy(sectionId: sectionId, "", viewType: .innerItem))
         entries.append(.profilePhotoPrivacy(sectionId: sectionId, "", viewType: .innerItem))
-        entries.append(.forwardPrivacy(sectionId: sectionId, "", viewType: .lastItem))
+        entries.append(.bioPrivacy(sectionId: sectionId, "", viewType: .innerItem))
+        entries.append(.birthdayPrivacy(sectionId: sectionId, "", viewType: .innerItem))
+        entries.append(.giftsPrivacy(sectionId: sectionId, "", viewType: .innerItem))
+        entries.append(.forwardPrivacy(sectionId: sectionId, "", viewType: .innerItem))
+        entries.append(.voiceMessagesPrivacy(sectionId: sectionId, "", !context.isPremium, viewType: .lastItem))
     }
 
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    
-    let autoarchiveConfiguration = AutoarchiveConfiguration.with(appConfiguration: context.appConfiguration)
-
-    
-    if autoarchiveConfiguration.autoarchive_setting_available {
-        entries.append(.autoArchiveHeader(sectionId: sectionId))
-        entries.append(.autoArchiveToggle(sectionId: sectionId, value: privacySettings?.automaticallyArchiveAndMuteNonContacts, viewType: .singleItem))
-        entries.append(.autoArchiveDesc(sectionId: sectionId))
-        
-        entries.append(.section(sectionId: sectionId))
-        sectionId += 1
-    }
+//    
+//    let autoarchiveConfiguration = AutoarchiveConfiguration.with(appConfiguration: context.appConfiguration)
+//
+//    
+//    if autoarchiveConfiguration.autoarchive_setting_available {
+//        entries.append(.autoArchiveHeader(sectionId: sectionId))
+//        entries.append(.autoArchiveToggle(sectionId: sectionId, value: privacySettings?.globalSettings.automaticallyArchiveAndMuteNonContacts, viewType: .singleItem))
+//        entries.append(.autoArchiveDesc(sectionId: sectionId))
+//        
+//        entries.append(.section(sectionId: sectionId))
+//        sectionId += 1
+//    }
 
     entries.append(.accountHeader(sectionId: sectionId))
 
@@ -605,13 +660,14 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         } else {
             value = privacySettings.accountRemovalTimeout
         }
-        entries.append(.accountTimeout(sectionId: sectionId, timeIntervalString(Int(value)), viewType: .singleItem))
+        entries.append(.accountTimeout(sectionId: sectionId, timeIntervalString(Int(value), months: true), viewType: .singleItem))
 
     } else {
         entries.append(.accountTimeout(sectionId: sectionId, "", viewType: .singleItem))
     }
     entries.append(.accountInfo(sectionId: sectionId))
 
+    
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -647,8 +703,10 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
+    
+    
 
-    if let webSessions = webSessions, !webSessions.0.isEmpty {
+    if !webSessions.sessions.isEmpty {
         entries.append(.webAuthorizationsHeader(sectionId: sectionId))
         entries.append(.webAuthorizations(sectionId: sectionId, viewType: .singleItem))
         
@@ -675,22 +733,23 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
 
 class PrivacyAndSecurityViewController: TableViewController {
-    private let privacySettingsPromise = Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)>()
+    private let privacySettingsPromise = Promise<AccountPrivacySettings?>()
 
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        twoStepAccessConfiguration.set(twoStepVerificationConfiguration(account: context.account) |> map { TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)})
-        activeSessions.set(requestRecentAccountSessions(account: context.account) |> map(Optional.init))
     }
 
     private let twoStepAccessConfiguration: Promise<TwoStepVeriticationAccessConfiguration?> = Promise(nil)
-    private let activeSessions: Promise<[RecentAccountSession]?> = Promise(nil)
 
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        twoStepAccessConfiguration.set(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
         
         let statePromise = ValuePromise(PrivacyAndSecurityControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: PrivacyAndSecurityControllerState())
@@ -724,17 +783,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .presence, current: info.presence, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .presence, current: info.presence, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: updated, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: updated, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                     }
                                     return .complete()
                             }
@@ -747,17 +806,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .groupInvitations, current: info.groupInvitations, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .groupInvitations, current: info.groupInvitations, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: updated, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: updated, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                     }
                                     return .complete()
                             }
@@ -770,17 +829,63 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceCalls, current: info.voiceCalls, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _ in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceCalls, current: info.voiceCalls, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: updated, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: updated, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
+                                    }
+                                    return .complete()
+                            }
+                            currentInfoDisposable.set(applySetting.start())
+                        }
+                    }))
+                }
+            }))
+        }, openBioPrivacy: {
+            let signal = privacySettingsPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
+                if let info = info {
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .bio, current: info.bio, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
+                        if let currentInfoDisposable = currentInfoDisposable {
+                            let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
+                                |> filter { $0 != nil }
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                |> mapToSignal { value -> Signal<Void, NoError> in
+                                    if let value = value {
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: updated, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
+                                    }
+                                    return .complete()
+                            }
+                            currentInfoDisposable.set(applySetting.start())
+                        }
+                    }))
+                }
+            }))
+        }, openBirthdayPrivacy: {
+            let signal = privacySettingsPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
+                if let info = info {
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .birthday, current: info.birthday, callSettings: nil, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
+                        if let currentInfoDisposable = currentInfoDisposable {
+                            let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
+                                |> filter { $0 != nil }
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                |> mapToSignal { value -> Signal<Void, NoError> in
+                                    if let value = value {
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: updated, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                     }
                                     return .complete()
                             }
@@ -793,17 +898,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .profilePhoto, current: info.profilePhoto, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .profilePhoto, current: info.profilePhoto, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: updated, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: updated, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                     }
                                     return .complete()
                             }
@@ -816,17 +921,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .forwards, current: info.forwards, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .forwards, current: info.forwards, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, _, _, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: updated, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: updated, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                     }
                                     return .complete()
                             }
@@ -839,22 +944,57 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
-                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .phoneNumber, current: info.phoneNumber, phoneDiscoveryEnabled: info.phoneDiscoveryEnabled, updated: { updated, _, phoneDiscoveryEnabled in
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .phoneNumber, current: info.phoneNumber, phoneDiscoveryEnabled: info.phoneDiscoveryEnabled, updated: { updated, _, phoneDiscoveryEnabled, globalSettings in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: updated, phoneDiscoveryEnabled: phoneDiscoveryEnabled!, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: updated, phoneDiscoveryEnabled: phoneDiscoveryEnabled!, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                     }
                                     return .complete()
                             }
                             currentInfoDisposable.set(applySetting.start())
                         }
+                    }))
+                }
+            }))
+        }, openVoicePrivacy: {
+        
+            let signal = privacySettingsPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
+                if let info = info {
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceMessages, current: info.voiceMessages, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
+                        if let currentInfoDisposable = currentInfoDisposable {
+                            let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
+                                |> filter { $0 != nil }
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                |> mapToSignal { value -> Signal<Void, NoError> in
+                                    if let value = value {
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: updated, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
+                                    }
+                                    return .complete()
+                            }
+                            currentInfoDisposable.set(applySetting.start())
+                        }
+                    }))
+                }
+            }))
+        }, openMessagesPrivacy: {
+            let signal = privacySettingsPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+            currentInfoDisposable.set(signal.start(next: { info in
+                if let info = info {
+                    pushControllerImpl(MessagesPrivacyController(context: context, noPaidMessages: info.noPaidMessages, globalSettings: info.globalSettings, updated: { (noPaidMessages, updated) in
+                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: info.presence, groupInvitations: info.groupInvitations, voiceCalls: info.voiceCalls, voiceCallsP2P: info.voiceCallsP2P, profilePhoto: info.profilePhoto, forwards: info.forwards, phoneNumber: info.phoneNumber, phoneDiscoveryEnabled: info.phoneDiscoveryEnabled, voiceMessages: info.voiceMessages, bio: info.bio, birthday: info.birthday, giftsAutoSave: info.giftsAutoSave, noPaidMessages: noPaidMessages, globalSettings: updated, accountRemovalTimeout: info.accountRemovalTimeout, messageAutoremoveTimeout: info.messageAutoremoveTimeout)))
                     }))
                 }
             }))
@@ -882,91 +1022,119 @@ class PrivacyAndSecurityViewController: TableViewController {
                 self?.navigationController?.push(RecentSessionsController(context))
             }
         }, openWebAuthorizations: {
-
-            let signal = privacySettingsPromise.get()
-                |> take(1)
-                |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] _, sessions in
-                pushControllerImpl(WebSessionsController(context, sessions, updated: { updated in
-                    if let currentInfoDisposable = currentInfoDisposable {
-                        let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                            |> take(1)
-                            |> deliverOnMainQueue
-                            |> mapToSignal { privacy, _ -> Signal<Void, NoError> in
-                                privacySettingsPromise.set(.single((privacy, updated)))
-                                return .complete()
-                        }
-                        currentInfoDisposable.set(applySetting.start())
-                    }
-                }))
-            }))
-
+            pushControllerImpl(WebSessionsController(context))
         }, setupAccountAutoremove: { [weak self] in
 
             if let strongSelf = self {
-
                 let signal = privacySettingsPromise.get()
                     |> take(1)
                     |> deliverOnMainQueue
-                updateAccountTimeoutDisposable.set(signal.start(next: { [weak updateAccountTimeoutDisposable, weak strongSelf] privacySettingsValue, _ in
+                updateAccountTimeoutDisposable.set(signal.start(next: { [weak updateAccountTimeoutDisposable, weak strongSelf] privacySettingsValue in
                     if let _ = privacySettingsValue, let strongSelf = strongSelf {
 
                         let timeoutAction: (Int32) -> Void = { timeout in
                             if let updateAccountTimeoutDisposable = updateAccountTimeoutDisposable {
-                                updateState {
-                                    return $0.withUpdatedUpdatingAccountTimeoutValue(timeout)
+                                updateState { current in
+                                    var current = current
+                                    current.updatingAccountTimeoutValue = timeout
+                                    return current
                                 }
                                 let applyTimeout: Signal<Void, NoError> = privacySettingsPromise.get()
-                                    |> filter { $0.0 != nil }
+                                    |> filter { $0 != nil }
                                     |> take(1)
                                     |> deliverOnMainQueue
-                                    |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                    |> mapToSignal { value -> Signal<Void, NoError> in
                                         if let value = value {
-                                            privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: timeout), sessions)))
+                                            privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: value.globalSettings, accountRemovalTimeout: timeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
                                         }
                                         return .complete()
                                 }
-                                updateAccountTimeoutDisposable.set((updateAccountRemovalTimeout(account: context.account, timeout: timeout)
+                                updateAccountTimeoutDisposable.set((context.engine.privacy.updateAccountRemovalTimeout(timeout: timeout)
                                     |> then(applyTimeout)
-                                    |> deliverOnMainQueue).start(completed: {
-//                                        updateState {
-//                                            return $0.withUpdatedUpdatingAccountTimeoutValue(nil)
-//                                        }
-                                    }))
+                                    |> deliverOnMainQueue).start())
                             }
                         }
                         let timeoutValues: [Int32] = [
                             1 * 30 * 24 * 60 * 60,
                             3 * 30 * 24 * 60 * 60,
                             180 * 24 * 60 * 60,
-                            365 * 24 * 60 * 60
+                            365 * 24 * 60 * 60,
+                            548 * 24 * 60 * 60,
+                            730 * 24 * 60 * 60
                         ]
-                        var items: [SPopoverItem] = []
+                        var items: [ContextMenuItem] = []
 
-                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(1)), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(1), handler: {
                             timeoutAction(timeoutValues[0])
                         }))
-                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(3)), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(3), handler: {
                             timeoutAction(timeoutValues[1])
                         }))
-                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(6)), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(6), handler: {
                             timeoutAction(timeoutValues[2])
                         }))
-                        items.append(SPopoverItem(tr(L10n.timerYearsCountable(1)), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(12), handler: {
                             timeoutAction(timeoutValues[3])
                         }))
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(18), handler: {
+                            timeoutAction(timeoutValues[4])
+                        }))
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(24), handler: {
+                            timeoutAction(timeoutValues[5])
+                        }))
 
-                        if let index = strongSelf.genericView.index(hash: PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId) {
+                        let stableId = PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId
+                        
+                        if let index = strongSelf.genericView.index(hash: stableId) {
                             if let view = (strongSelf.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
-                                showPopover(for: view, with: SPopoverViewController(items: items))
+                                if let event = NSApp.currentEvent {
+                                    let menu = ContextMenu()
+                                    for item in items {
+                                        menu.addItem(item)
+                                    }
+                                    let value = AppMenu(menu: menu)
+                                    value.show(event: event, view: view)
+                                }
                             }
                         }
                     }
                 }))
-
-
             }
+        }, setupGlobalAutoremove: { [weak self] in
+            if let strongSelf = self {
+                let signal = privacySettingsPromise.get()
+                    |> take(1)
+                    |> deliverOnMainQueue
+                updateAccountTimeoutDisposable.set(signal.start(next: { [weak updateAccountTimeoutDisposable, weak strongSelf] privacySettingsValue in
+                    if let value = privacySettingsValue, let strongSelf = strongSelf {
 
+                        let timeoutAction: (Int32, Bool) -> Void = { timeout, save in
+                            if let updateAccountTimeoutDisposable = updateAccountTimeoutDisposable {
+                                updateState { current in
+                                    var current = current
+                                    current.updatingGlobalTimeoutValue = timeout
+                                    return current
+                                }
+                                let applyTimeout: Signal<Void, NoError> = privacySettingsPromise.get()
+                                    |> filter { $0 != nil }
+                                    |> take(1)
+                                    |> deliverOnMainQueue
+                                    |> mapToSignal { value -> Signal<Void, NoError> in
+                                        if let value = value {
+                                            privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: value.giftsAutoSave, noPaidMessages: value.noPaidMessages, globalSettings: value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: timeout)))
+                                        }
+                                        return .complete()
+                                }
+                                updateAccountTimeoutDisposable.set((context.engine.privacy.updateGlobalMessageRemovalTimeout(timeout: timeout == 0 ? nil : timeout)
+                                    |> then(applyTimeout)
+                                    |> deliverOnMainQueue).start())
+                            }
+                        }
+                        strongSelf.navigationController?.push(GlobalAutoremoveMessagesController(context: context, privacy: privacySettingsValue, updated: timeoutAction))
+                    }
+                }))
+            }
+            
         }, openProxySettings: { [weak self] in
             if let context = self?.context {
 
@@ -977,24 +1145,47 @@ class PrivacyAndSecurityViewController: TableViewController {
                     }
                     message = message.trimmed
 
-                    showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+                    showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: context.window)
                 }, pushController: { controller in
                     pushControllerImpl(controller)
                 })
                 pushControllerImpl(controller)
             }
         }, togglePeerSuggestions: { enabled in
-            _ = (updateRecentPeersEnabled(postbox: context.account.postbox, network: context.account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(accountPeerId: context.account.peerId, postbox: context.account.postbox, network: context.account.network) : Signal<Void, NoError>.complete())).start()
+            _ = (context.engine.peers.updateRecentPeersEnabled(enabled: enabled) |> then(enabled ? context.engine.peers.managedUpdatedRecentPeers() : Signal<Void, NoError>.complete())).start()
         }, clearCloudDrafts: {
-            confirm(for: context.window, information: L10n.privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
-                _ = showModalProgress(signal: clearCloudDraftsInteractively(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId), for: context.window).start()
+            verifyAlert_button(for: context.window, information: strings().privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
+                _ = showModalProgress(signal: context.engine.messages.clearCloudDraftsInteractively(), for: context.window).start()
             })
         }, toggleSensitiveContent: { value in
             _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start()
         }, toggleSecretChatWebPreview: { value in
             FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: value)
         }, toggleAutoArchive: { value in
-            _ = showModalProgress(signal: updateAccountAutoArchiveChats(account: context.account, value: value), for: context.window).start()
+            _ = showModalProgress(signal: context.engine.privacy.updateAccountAutoArchiveChats(value: value), for: context.window).start()
+        }, openGiftsPrivacy: {
+            let signal = privacySettingsPromise.get()
+                |> take(1)
+                |> deliverOnMainQueue
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
+                if let info = info {
+                    pushControllerImpl(SelectivePrivacySettingsController(context, kind: .gifts, current: info.giftsAutoSave, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, globalSettings: info.globalSettings, updated: { updated, p2pUpdated, _, globalSettings in
+                        if let currentInfoDisposable = currentInfoDisposable {
+                            let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
+                                |> filter { $0 != nil }
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                |> mapToSignal { value -> Signal<Void, NoError> in
+                                    if let value = value {
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, voiceMessages: value.voiceMessages, bio: value.bio, birthday: value.birthday, giftsAutoSave: updated, noPaidMessages: value.noPaidMessages, globalSettings: globalSettings ?? value.globalSettings, accountRemovalTimeout: value.accountRemovalTimeout, messageAutoremoveTimeout: value.messageAutoremoveTimeout)))
+                                    }
+                                    return .complete()
+                            }
+                            currentInfoDisposable.set(applySetting.start())
+                        }
+                    }))
+                }
+            }))
         })
 
 
@@ -1004,9 +1195,9 @@ class PrivacyAndSecurityViewController: TableViewController {
         let contentConfiguration: Signal<ContentSettingsConfiguration?, NoError> = .single(nil) |> then(contentSettingsConfiguration(network: context.account.network) |> map(Optional.init))
 
         
-        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), contentConfiguration, appearanceSignal, settings, privacySettingsPromise.get(), combineLatest(queue: .mainQueue(), recentPeers(account: context.account), twoStepAccessConfiguration.get(), activeSessions.get(), context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
-        |> map { state, contentConfiguration, appearance, proxy, values, additional, blockedState -> TableUpdateTransition in
-            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: values.0, webSessions: values.1, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data, context: context).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), contentConfiguration, appearanceSignal, settings, privacySettingsPromise.get(), context.webSessions.state, combineLatest(queue: .mainQueue(), context.engine.peers.recentPeers(), twoStepAccessConfiguration.get(), context.activeSessionsContext.state, context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
+        |> map { state, contentConfiguration, appearance, proxy, privacySettings, webSessions, additional, blockedState -> TableUpdateTransition in
+            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: privacySettings, webSessions: webSessions, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data, context: context).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()
@@ -1029,13 +1220,12 @@ class PrivacyAndSecurityViewController: TableViewController {
     
     private var focusOnItemTag: PrivacyAndSecurityEntryTag?
     private let disposable = MetaDisposable()
-    init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
+    init(_ context: AccountContext, initialSettings: AccountPrivacySettings?, focusOnItemTag: PrivacyAndSecurityEntryTag? = nil, twoStepVerificationConfiguration: TwoStepVeriticationAccessConfiguration?) {
         self.focusOnItemTag = focusOnItemTag
+        self.twoStepAccessConfiguration.set(.single(twoStepVerificationConfiguration))
         super.init(context)
         
-        let thenSignal:Signal<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), NoError> = requestAccountPrivacySettings(account: context.account) |> map {
-            return ($0, initialSettings.1)
-        }
+        let thenSignal:Signal<AccountPrivacySettings?, NoError> = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
         
         self.privacySettingsPromise.set(.single(initialSettings) |> then(thenSignal))
     }

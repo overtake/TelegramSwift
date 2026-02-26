@@ -10,140 +10,36 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import TelegramMedia
 import SwiftSignalKit
 import AVFoundation
-private class ConnectionStatusView : View {
-    private var textViewLayout:TextViewLayout?
-    private var disableProxyButton: TitleButton?
-    
-    private(set) var backButton: ImageButton?
-    
-    var isSingleLayout: Bool = false {
-        didSet {
-            updateBackButton()
-        }
-    }
-    
-    var disableProxy:(()->Void)?
-    
-    var status:ConnectionStatus = .online(proxyAddress: nil) {
-        didSet {
-            let attr:NSAttributedString
-            
-            if case let .connecting(proxy, _) = status {
-                if let _ = proxy {
-                    if disableProxyButton == nil {
-                        disableProxyButton = TitleButton()
-                    }
-                    disableProxyButton?.set(color: theme.colors.grayText, for: .Normal)
-                    disableProxyButton?.set(font: .medium(.text), for: .Normal)
-                    disableProxyButton?.set(text: tr(L10n.connectingStatusDisableProxy), for: .Normal)
-                    _ = disableProxyButton?.sizeToFit()
-                    addSubview(disableProxyButton!)
-                    
-                    disableProxyButton?.set(handler: { [weak self] _ in
-                        self?.disableProxy?()
-                        }, for: .Click)
-                } else {
-                    disableProxyButton?.removeFromSuperview()
-                    disableProxyButton = nil
-                }
-            } else {
-                disableProxyButton?.removeFromSuperview()
-                disableProxyButton = nil
-            }
-            
-            switch status {
-            case let .connecting(proxy, _):
-                attr = .initialize(string: proxy != nil ? L10n.chatConnectingStatusConnectingToProxy : L10n.chatConnectingStatusConnecting, color: theme.colors.text, font: .medium(.header))
-            case .updating:
-                attr = .initialize(string: L10n.chatConnectingStatusUpdating, color: theme.colors.text, font: .medium(.header))
-            case .waitingForNetwork:
-                attr = .initialize(string: L10n.chatConnectingStatusWaitingNetwork, color: theme.colors.text, font: .medium(.header))
-            case .online:
-                attr = NSAttributedString()
-            }
-            textViewLayout = TextViewLayout(attr, maximumNumberOfLines: 1)
-            needsLayout = true
-        }
-    }
-    private let textView:TextView = TextView()
-    private let indicator:ProgressIndicator = ProgressIndicator()
+
+
+private final class SelectMessagesPlaceholderView: View {
+    private let textView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
         addSubview(textView)
-        addSubview(indicator)
-        
         updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundColor = theme.colors.background
-        textView.backgroundColor = theme.colors.background
-        disableProxyButton?.set(background: theme.colors.background, for: .Normal)
-        indicator.progressColor = theme.colors.text
-        let status = self.status
-        self.status = status
+        background = theme.colors.background
+        let layout = TextViewLayout(.initialize(string: strings().chatTitleReportMessages, color: theme.colors.text, font: .medium(.header)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
     }
     
-    private func updateBackButton() {
-        if isSingleLayout {
-            let button: ImageButton
-            if let b = self.backButton {
-                button = b
-            } else {
-                button = ImageButton()
-                self.backButton = button
-                addSubview(button)
-            }
-            button.autohighlight = false
-            button.set(image: theme.icons.chatNavigationBack, for: .Normal)
-            _ = button.sizeToFit()
-        } else {
-            backButton?.removeFromSuperview()
-            backButton = nil
-        }
-        needsLayout = true
-    }
-
-    deinit {
-        //indicator.animates = false
+    override func layout() {
+        super.layout()
+        textView.centerY(x: 0)
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: coder)
     }
-    
-    fileprivate override func layout() {
-        super.layout()
-        
-        if let textViewLayout = textViewLayout {
-            
-            let offset: CGFloat = backButton != nil ? 16 : 0
-            
-            textViewLayout.measure(width: frame.width)
-            let f = focus(textViewLayout.layoutSize, inset:NSEdgeInsets(left: 12, top: 3))
-            indicator.centerY(x: offset)
-            
-            textView.update(textViewLayout)
-            
-            if let disableProxyButton = disableProxyButton {
-                disableProxyButton.setFrameOrigin(indicator.frame.maxX + 3, floorToScreenPixels(backingScaleFactor, frame.height / 2) + 2)
-                textView.setFrameOrigin(indicator.frame.maxX + 8, floorToScreenPixels(backingScaleFactor, frame.height / 2) - textView.frame.height + 2)
-            } else {
-                textView.setFrameOrigin(NSMakePoint(indicator.frame.maxX + 4, f.origin.y))
-            }
-            backButton?.centerY(x: 0)
-        }
-        
-    }
-    
 }
-
 
 private final class VideoAvatarProgressView: View {
     private let progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))
@@ -181,7 +77,6 @@ private final class VideoAvatarContainer : View {
         addSubview(circle)
         circle.frame = bounds
         
-        circle.layer?.cornerRadius = bounds.width / 2
         circle.layer?.borderWidth = 1
         circle.layer?.borderColor = theme.colors.accent.cgColor
         
@@ -197,12 +92,18 @@ private final class VideoAvatarContainer : View {
        // circle.layer?.animateScaleCenter(from: 1.0, to: 0.2, duration: 0.2)
     }
     
-    func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, reference: PeerReference?, context: AccountContext) {
+    func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, peer: Peer, reference: PeerReference?, context: AccountContext) {
        // player.update(FileMediaReference.standalone(media: file), context: context)
         if let reference = reference {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
         } else {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource)).start())
+        }
+        
+        if peer.isForum {
+            circle.layer?.cornerRadius = bounds.width / 3
+        } else {
+            circle.layer?.cornerRadius = bounds.width / 2
         }
         
         let mediaReference: MediaResourceReference
@@ -212,7 +113,7 @@ private final class VideoAvatarContainer : View {
             mediaReference = MediaResourceReference.standalone(resource: file.resource)
         }
         
-        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peer.id), userContentType: .avatar, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
         
         
         let view = MediaPlayerView()
@@ -277,115 +178,130 @@ private final class VideoAvatarContainer : View {
 class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
    
     
-    private var isSingleLayout:Bool = false {
-        didSet {
-            connectionStatusView?.isSingleLayout = isSingleLayout
-            connectionStatusView?.backButton?.removeAllHandlers()
-            connectionStatusView?.backButton?.set(handler: { [weak self] _ in
-                self?.chatInteraction.context.sharedContext.bindings.rootNavigation().back()
-            }, for: .Click)
-        }
+    private var layoutState:SplitViewState {
+        return chatInteraction.context.layout
     }
-    private var connectionStatusView:ConnectionStatusView? = nil
+    private var hasBackButton: Bool {
+        if let controller = controller {
+            return controller is ChatAdditionController || controller is ChatScheduleController || layoutState == .single
+        }
+        return false
+    }
+    private var reportPlaceholder: SelectMessagesPlaceholderView?
     private let activities:ChatActivitiesModel
     private let searchButton:ImageButton = ImageButton()
     private let callButton:ImageButton = ImageButton()
     private let chatInteraction:ChatInteraction
-    private let avatarControl:AvatarControl = AvatarControl(font: .avatar(.header))
+    private let avatarControl:AvatarStoryControl = AvatarStoryControl(font: .avatar(12), size: NSMakeSize(36, 36))
     private let badgeNode:GlobalBadgeNode
     private let disposable = MetaDisposable()
     private let closeButton = ImageButton()
     private var lastestUsersController: ViewController?
     private let fetchPeerAvatar = DisposableSet()
     
+    private var inlineTopicPhotoLayer: InlineStickerItemLayer? = nil
+    
+    private var statusControl: PremiumStatusControl?
+    private var leftStatusControl: PremiumStatusControl?
+
     private var videoAvatarView: VideoAvatarContainer?
+    
+    private var hasPhoto: Bool = false
+    
+    private let photoContainer: Control = Control(frame: NSMakeRect(0, 0, 36, 36))
+    
+    
     
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
             if connectionStatus != oldValue {
-                if case .online = connectionStatus {
-                    
-                    //containerView.change(pos: NSMakePoint(0, 0), animated: true)
-                    if let connectionStatusView = connectionStatusView {
-                        
-                        connectionStatusView.change(pos: NSMakePoint(0, -frame.height), animated: true)
-                        connectionStatusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] completed in
-                            self?.connectionStatusView?.removeFromSuperview()
-                            self?.connectionStatusView = nil
-                        })
-                        
+                self.updateStatus(presentation: self.chatInteraction.presentation)
+            }
+        }
+    }
+    
+
+    private var counters: ChatTitleCounters = ChatTitleCounters() {
+        didSet {
+            if oldValue != counters {
+                updateTitle(presentation: chatInteraction.presentation)
+            }
+        }
+    }
+
+    private func updatePeerView(_ peerView: PeerView?, animated: Bool) {
+        let oldValue = self.peerView
+        self.peerView = peerView
+        let context = chatInteraction.context
+        if let oldValue = oldValue, let newValue = peerView  {
+            let peerEqual = PeerEquatable(peerViewMainPeer(oldValue)) == PeerEquatable(peerViewMainPeer(newValue))
+            let cachedEqual = CachedDataEquatable(oldValue.cachedData) == CachedDataEquatable(newValue.cachedData)
+            var presenceEqual: Bool = true
+            if oldValue.peerPresences.count != newValue.peerPresences.count {
+                presenceEqual = false
+            } else {
+                for (key, lhsValue) in oldValue.peerPresences {
+                    let rhsValue = newValue.peerPresences[key]
+                    if let rhsValue = rhsValue, !lhsValue.isEqual(to: rhsValue) {
+                        presenceEqual = false
+                    } else if rhsValue == nil {
+                        presenceEqual = false
                     }
-                    
-                } else {
-                    if connectionStatusView == nil {
-                        connectionStatusView = ConnectionStatusView(frame: NSMakeRect(0, -frame.height, frame.width, frame.height))
-                        connectionStatusView?.isSingleLayout = isSingleLayout
-                        connectionStatusView?.disableProxy = chatInteraction.disableProxy
-                        addSubview(connectionStatusView!)
-                        connectionStatusView?.change(pos: NSMakePoint(0,0), animated: true)
+                    if !presenceEqual {
+                        break
                     }
-                    connectionStatusView?.status = connectionStatus
-                    applyVideoAvatarIfNeeded(nil)
                 }
             }
+
+            if !peerEqual || !cachedEqual || !presenceEqual || self.chatInteraction.mode.customChatLink != nil {
+                updateStatus(presentation: chatInteraction.presentation)
+            }
+        } else {
+            updateStatus(presentation: chatInteraction.presentation)
         }
     }
+    func update(_ peerView: PeerView?, story: PeerExpiringStoryListContext.State?, counters: ChatTitleCounters, animated: Bool) {
+        self.counters = counters
+        self.updatePeerView(peerView, animated: animated)
+        self.updateStoryState(story, animated: animated)
+    }
     
-    private var rootRepliesCount: Int = 0 {
-        didSet {
-            updateTitle()
+    var hasStories: Bool {
+        if let storyState = story, !storyState.items.isEmpty {
+            return true
         }
+        return false
+    }
+    
+    private func updateStoryState(_ story: PeerExpiringStoryListContext.State?, animated: Bool) {
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        if self.story != story {
+            if let storyState = story, !storyState.items.isEmpty {
+                let peer: Peer? = peerView != nil ? peerViewMainPeer(peerView!) : nil
+                
+                let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme, isRoundedRect: peer?.isForum == true)
+                avatarControl.update(component: compoment, availableSize: NSMakeSize(30, 30), transition: transition)
+            } else {
+                avatarControl.update(component: nil, availableSize: NSMakeSize(36, 36), transition: transition)
+            }
+        }
+        self.story = story
+        
     }
    
-    var postboxView:PostboxView? {
-        didSet {
-           updateStatus(true)
-            switch chatInteraction.mode {
-            case let .replyThread(data, _):
-                let answersCount = chatInteraction.context.account.postbox.messageView(data.messageId)
-                    |> map {
-                        $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
-                    }
-                    |> map {
-                        Int($0?.count ?? 0)
-                    }
-                    |> deliverOnMainQueue
-                
-                answersCountDisposable.set(answersCount.start(next: { [weak self] count in
-                    self?.rootRepliesCount = count
-                }))
-            default:
-                answersCountDisposable.set(nil)
-            }
-            
-        }
-    }
-    
-    var onlineMemberCount:Int32? = nil {
-        didSet {
-            updateStatus()
-        }
-    }
-    
-    
+    private var peerView:PeerView?
+    private var story: PeerExpiringStoryListContext.State?
     
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             if let inputActivities = inputActivities, self.chatInteraction.mode != .scheduled && self.chatInteraction.mode != .pinned  {
-                activities.update(with: inputActivities, for: max(frame.width - 80, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
+                activities.update(with: inputActivities, for: max(frame.width - inset, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
                     guard let `self` = self else { return }
-                    self.needsLayout = true
                     self.hiddenStatus = show
-                    self.setNeedsDisplay()
-                    
-                    
-                    
+                                        
                     if let view = self.activities.view {
                         if self.animates {
                             if show {
-                                if view.isHidden {
-                                    
-                                }
                                 view.isHidden = false
                                 view.change(opacity: 1, duration: 0.2)
                             } else {
@@ -402,7 +318,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                             view.isHidden = !show
                         }
                     }
-                    
+                    self.needsLayout = true
                 })
             } else {
                 activities.clean()
@@ -416,31 +332,42 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     init(controller: ViewController, _ chatInteraction:ChatInteraction) {
         activities = ChatActivitiesModel()
         self.chatInteraction = chatInteraction
-        
+                
         searchButton.disableActions()
         callButton.disableActions()
         
-        videoAvatarDisposable.set(peerPhotos(account: chatInteraction.context.account, peerId: chatInteraction.chatLocation.peerId).start())
-        
+                
         badgeNode = GlobalBadgeNode(chatInteraction.context.account, sharedContext: chatInteraction.context.sharedContext, excludePeerId: self.chatInteraction.peerId, view: View(), layoutChanged: {
         })
         
         super.init(controller: controller, textInset: 46)
         
         addSubview(activities.view!)
-
         
         searchButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil, nil))})
+            self?.chatInteraction.update { current in
+                current.updatedSearchMode(.init(inSearch: !current.searchMode.inSearch))
+            }
         }, for: .Click)
         
         addSubview(searchButton)
+        
         self.presenceManager = PeerPresenceStatusManager(update: { [weak self] in
-            self?.updateStatus()
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.updateStatus(presentation: strongSelf.chatInteraction.presentation)
         })
         
-        callButton.set(handler: { _ in
-           chatInteraction.call()
+        callButton.set(handler: { [weak self] _ in
+            guard let chatInteraction = self?.chatInteraction else {
+                return
+            }
+            if let groupCall = chatInteraction.presentation.groupCall {
+                chatInteraction.joinGroupCall(groupCall.activeCall, groupCall.joinHash)
+            } else {
+                chatInteraction.call()
+            }
         }, for: .Click)
         
         activities.view?.isHidden = true
@@ -448,32 +375,24 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         addSubview(callButton)
         
         avatarControl.setFrameSize(36,36)
-        addSubview(avatarControl)
+        photoContainer.addSubview(avatarControl)
         
-        disposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
-            if let strongSelf = self {
-                switch state {
-                case .single:
-                    strongSelf.isSingleLayout = true
-                    strongSelf.badgeNode.view?.isHidden = false
-                    strongSelf.closeButton.isHidden = false
-                default:
-                    strongSelf.isSingleLayout = strongSelf.controller?.className != "Telegram.ChatController" 
-                    strongSelf.badgeNode.view?.isHidden = true
-                    strongSelf.closeButton.isHidden = strongSelf.controller?.className == "Telegram.ChatController" && strongSelf.chatInteraction.mode.threadId == nil
-                }
-                strongSelf.avatarControl.isHidden = strongSelf.controller is ChatScheduleController || strongSelf.chatInteraction.mode.threadId != nil || strongSelf.chatInteraction.mode == .pinned
-
-                strongSelf.textInset = strongSelf.avatarControl.isHidden ? 24 : strongSelf.isSingleLayout ? 66 : 46
-                strongSelf.needsLayout = true
+        addSubview(photoContainer)
+        
+        photoContainer.set(handler: { [weak self] _ in
+            self?.openPhoto()
+        }, for: .Click)
+        
+        disposable.set(chatInteraction.context.layoutValue.start(next: { [weak self] state in
+            if let state = self?.chatInteraction.presentation {
+                self?.updateStatus(presentation: state)
             }
         }))
             
-        
         closeButton.autohighlight = false
         closeButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         closeButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+            self?.chatInteraction.context.bindings.rootNavigation().back()
         }, for: .Click)
         _ = closeButton.sizeToFit()
         closeButton.setFrameSize(closeButton.frame.width, frame.height)
@@ -487,25 +406,45 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         self.continuesAction = true
         
-    }
-    
-    func updateSearchButton(hidden: Bool, animated: Bool) {
-        (animated ? searchButton.animator() : searchButton).isHidden = hidden
-    }
-    
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        self.connectionStatusView?.setFrameSize(newSize)
-        let input = self.inputActivities
-        self.inputActivities = input
+        self.updateStatus(presentation: self.chatInteraction.presentation)
         
     }
     
+    private func openPhoto() {
+        if self.hasStories {
+            
+            chatInteraction.openStories({ [weak self] peerId, _, _ in
+                if self?.chatInteraction.peerId == peerId {
+                    return self?.avatarControl
+                } else {
+                    return nil
+                }
+            }, { [weak self] signal in
+                self?.setOpenProgress(signal)
+            })
+        } else {
+            if chatInteraction.mode == .history, chatInteraction.peerId != chatInteraction.context.peerId {
+                if let peer = chatInteraction.presentation.mainPeer, let large = peer.largeProfileImage {
+                    showPhotosGallery(context: chatInteraction.context, peerId: peer.id, firstStableId: AnyHashable(large.resource.id.stringRepresentation), self, nil)
+                    return
+                }
+            }
+        }
+        
+    }
+    
+    private func setOpenProgress(_ signal: Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.avatarControl.pushLoadingStatus(signal: signal))
+    }
+    
+    func updateSearchButton(hidden: Bool, animated: Bool) {
+        searchButton.isHidden = hidden
+        needsLayout = true
+    }
     
     func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
-        if chatInteraction.presentation.mainPeer?.largeProfileImage?.resource.id.uniqueId == stableId.base as? String {
-            return avatarControl
+        if chatInteraction.presentation.mainPeer?.largeProfileImage?.resource.id.stringRepresentation == stableId.base as? String {
+            return avatarControl.avatar
         }
         return nil
     }
@@ -522,162 +461,158 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
     }
     
-    private let videoAvatarDisposable = MetaDisposable()
-    private let answersCountDisposable = MetaDisposable()
     
-    override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-        applyVideoAvatarIfNeeded(nil)
-    }
-    override func mouseExited(with event: NSEvent) {
-        super.mouseExited(with: event)
-        applyVideoAvatarIfNeeded(nil)
-    }
-    
-    override func mouseMoved(with event: NSEvent) {
-        super.mouseMoved(with: event)
-        
-        let point = convert(event.locationInWindow, from: nil)
-        
-        
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode == .history, let peer = chatInteraction.presentation.mainPeer {
-           let signal = peerPhotos(account: chatInteraction.context.account, peerId: peer.id) |> deliverOnMainQueue
-            videoAvatarDisposable.set(signal.start(next: { [weak self] photos in
-                self?.applyVideoAvatarIfNeeded(photos.first)
-            }))
-        } else {
-            videoAvatarDisposable.set(nil)
-            applyVideoAvatarIfNeeded(nil)
-        }
-    }
-    
+
     private var currentPhoto: TelegramPeerPhoto?
     
-    private func applyVideoAvatarIfNeeded(_ photo: TelegramPeerPhoto?) {
-        guard let window = self.window as? Window, currentPhoto?.image != photo?.image else {
-            return
-        }
-        
-        currentPhoto = photo
-        
-        let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+    private var mouseDownWindowFrame: NSRect? = nil
 
-
-        let file: TelegramMediaFile?
-        let seekTo: TimeInterval?
-        if let photo = photo, let video = photo.image.videoRepresentations.last {
-            file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: photo.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
-            seekTo = video.startTimestamp
-        } else {
-            seekTo = nil
-            file = nil
-        }
-        
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, chatInteraction.peerId != chatInteraction.context.peerId, self.connectionStatusView == nil, let file = file, let peer = chatInteraction.presentation.mainPeer {
-            let control: VideoAvatarContainer
-            if let view = self.videoAvatarView {
-                control = view
-            } else {
-                control = VideoAvatarContainer(frame: NSMakeRect(avatarControl.frame.minX - 2, avatarControl.frame.minY - 2, avatarControl.frame.width + 4, avatarControl.frame.height + 4))
-                addSubview(control, positioned: .below, relativeTo: badgeNode.view)
-                control.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                control.animateIn()
-                self.videoAvatarView = control
-            }
-            control.updateWith(file: file, seekTo: seekTo, reference: PeerReference(peer), context: chatInteraction.context)
-            
-        } else {
-            if let view = self.videoAvatarView {
-                self.videoAvatarView = nil
-                view.animateOut()
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                    view?.removeFromSuperview()
-                })
-            }
-        }
-        
-    }
     
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        mouseDownWindowFrame = window?.frame
+    }
+
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         
-        let point = convert(event.locationInWindow, from: nil)
-
-        
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode == .history, chatInteraction.peerId != chatInteraction.context.peerId {
-            if let peer = chatInteraction.presentation.mainPeer, let large = peer.largeProfileImage {
-                showPhotosGallery(context: chatInteraction.context, peerId: peer.id, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
-                return
-            }
+        if mouseDownWindowFrame != window?.frame {
+            return
         }
         
-        if isSingleLayout {
-            if point.x > 20 {
-                if chatInteraction.mode == .history {
-                    if chatInteraction.peerId == repliesPeerId {
-                        
-                    } else if chatInteraction.peerId == chatInteraction.context.peerId {
-                        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
-                    } else {
-                        switch chatInteraction.chatLocation {
-                        case let .peer(peerId):
-                            chatInteraction.openInfo(peerId, false, nil, nil)
-                        case .replyThread:
-                            break
+        let point = convert(event.locationInWindow, from: nil)
+
+        let openInfo:(ChatInteraction)->Void = { chatInteraction in
+            if chatInteraction.mode == .history {
+                if chatInteraction.presentation.reportMode != nil {
+
+                } else if chatInteraction.peerId == repliesPeerId {
+                    
+                } else if chatInteraction.peerId == chatInteraction.context.peerId {
+                    chatInteraction.context.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, isBot: false))
+                } else {
+                    switch chatInteraction.chatLocation {
+                    case let .peer(peerId):
+                        chatInteraction.openInfo(peerId, false, nil, nil)
+                    case let .thread(data):
+                        if data.isMonoforumPost {
+                            chatInteraction.openInfo(PeerId(data.threadId), false, nil, nil)
+                        } else {
+                            chatInteraction.openInfo(data.peerId, false, nil, nil)
                         }
                     }
                 }
-               
+            } else if chatInteraction.presentation.isTopicMode {
+                chatInteraction.openInfo(chatInteraction.peerId, false, nil, nil)
+            } else if chatInteraction.mode.isSavedMessagesThread, let threadId = chatInteraction.chatLocation.threadId {
+                chatInteraction.openInfo(PeerId(threadId), false, nil, nil)
+            }
+        }
+        
+        if hasBackButton {
+            if point.x > 20 {
+               openInfo(chatInteraction)
             } else {
-                chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+                chatInteraction.context.bindings.rootNavigation().back()
             }
         } else {
-            if chatInteraction.peerId == repliesPeerId {
-                
-            } else if chatInteraction.peerId == chatInteraction.context.peerId {
-                chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
-            } else {
-                switch chatInteraction.chatLocation {
-                case let .peer(peerId):
-                    chatInteraction.openInfo(peerId, false, nil, nil)
-                case .replyThread:
-                    break
-                }
-            }
+            openInfo(chatInteraction)
         }
     }
     
     deinit {
         disposable.dispose()
-        fetchPeerAvatar.dispose()
-        videoAvatarDisposable.dispose()
-        answersCountDisposable.dispose()
+        NotificationCenter.default.removeObserver(self)
     }
     
     
-    override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateListeners()
+        updateAnimatableContent()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateListeners()
+        updateAnimatableContent()
+    }
+    
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    @objc func updateAnimatableContent() -> Void {
+        
+        let checkValue:(InlineStickerItemLayer)->Void = { value in
+            DispatchQueue.main.async {
+                if let superview = value.superview {
+                    var isKeyWindow: Bool = false
+                    if let window = superview.window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
+                    }
+                    value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                }
+            }
+        }
+     
+        if let value = inlineTopicPhotoLayer {
+            checkValue(value)
+        }
     }
     
     override func layout() {
         super.layout()
         
-        let additionInset:CGFloat = isSingleLayout ? 20 : 2
+        let additionInset:CGFloat = hasBackButton ? 20 : 2
         
-        avatarControl.centerY(x: additionInset)
+        if let photo = inlineTopicPhotoLayer {
+            photo.frame = NSMakeRect(additionInset, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - photo.frame.height) / 2), photo.frame.width, photo.frame.height)
+        }
+
+        
+        photoContainer.centerY(x: additionInset)
         searchButton.centerY(x:frame.width - searchButton.frame.width)
         callButton.centerY(x: searchButton.isHidden ? frame.width - callButton.frame.width : searchButton.frame.minX - callButton.frame.width - 20)
-        if !avatarControl.isHidden {
-            activities.view?.setFrameOrigin(avatarControl.frame.maxX + 8, 25)
-        } else {
-            activities.view?.setFrameOrigin(24, 25)
+        
+        if hasPhoto {
+            activities.view?.setFrameOrigin(photoContainer.frame.maxX + 8, 25)
+        } else if let titleRect = titleRect {
+            activities.view?.setFrameOrigin(titleRect.minX, 25)
         }
         badgeNode.view!.setFrameOrigin(6,4)
         
         closeButton.centerY()
         
+        if let statusControl = statusControl, let titleRect = titleRect {
+            statusControl.setFrameOrigin(NSMakePoint(titleRect.maxX + 2, titleRect.minY + 1))
+        }
+        
+        if let statusControl = leftStatusControl, let titleRect = titleRect {
+            statusControl.setFrameOrigin(NSMakePoint(titleRect.minX - statusControl.frame.width - 2, titleRect.minY + 1))
+        }
+        
+        reportPlaceholder?.frame = bounds
+        
+        
     }
     
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -688,138 +623,281 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
 
     override var inset:CGFloat {
-        return 36 + 50 + (callButton.isHidden ? 20 : callButton.frame.width + 30)
+        return 36 + 50 + (callButton.isHidden ? 10 : callButton.frame.width + 35) + (statusControl?.frame.width ?? 0)
     }
     
     
     private var currentRepresentations: [TelegramMediaImageRepresentation] = []
     
-    private func checkPhoto(_ peer: Peer?) {
-        if let peer = peer {
-            var representations:[TelegramMediaImageRepresentation] = []//peer.profileImageRepresentations
-            if let representation = peer.smallProfileImage {
-                representations.append(representation)
+
+
+    func updateStatus(_ force:Bool = false, presentation: ChatPresentationInterfaceState) {
+
+        if presentation.reportMode != nil {
+            if self.reportPlaceholder == nil {
+                self.reportPlaceholder = SelectMessagesPlaceholderView(frame: bounds)
+                addSubview(self.reportPlaceholder!)
             }
-            if let representation = peer.largeProfileImage {
-                representations.append(representation)
-            }
-            
-            if self.currentRepresentations != representations {
-                applyVideoAvatarIfNeeded(nil)
-                videoAvatarDisposable.set(peerPhotos(account: chatInteraction.context.account, peerId: peer.id, force: true).start())
-                
-                
-                if let peerReference = PeerReference(peer) {
-                    if let largeProfileImage = peer.largeProfileImage {
-                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
-                    }
-                    if let smallProfileImage = peer.smallProfileImage {
-                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
-                    }
-                }
-            }
-            self.currentRepresentations = representations
+        } else {
+            self.reportPlaceholder?.removeFromSuperview()
+            self.reportPlaceholder = nil
         }
-    }
 
-
-    func updateStatus(_ force:Bool = false) {
-        if let peerView = self.postboxView as? PeerView {
+        if let peerView = self.peerView {
+                        
+            switch layoutState {
+            case .single:
+                self.badgeNode.view?.isHidden = false
+                self.closeButton.isHidden = false
+            default:
+                self.badgeNode.view?.isHidden = true
+                self.closeButton.isHidden = !hasBackButton
+            }
+            let mode = chatInteraction.mode
             
-            checkPhoto(peerViewMainPeer(peerView))
+
+            self.hasPhoto = (!presentation.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled) && mode.customChatContents == nil && mode.customChatLink == nil
+            
+            self.photoContainer.isHidden = !hasPhoto
+
+            
+            self.textInset = !hasPhoto && !presentation.isTopicMode ? 24 : hasBackButton ? 66 : 46
+            
             
             switch chatInteraction.mode {
             case .history:
                 if let peer = peerViewMainPeer(peerView) {
-                    callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId
+                    if peer.isGroup || peer.isSupergroup || peer.isChannel {
+                        if let groupCall = presentation.groupCall {
+                            if let data = groupCall.data, data.participantCount == 0 && groupCall.activeCall.scheduleTimestamp == nil {
+                                callButton.isHidden = presentation.reportMode != nil
+                            } else {
+                                callButton.isHidden = true
+                            }
+                        } else {
+                            callButton.isHidden = true
+                        }
+                    } else {
+                        callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId || presentation.reportMode != nil || chatInteraction.isMonoforum
+                    }
+                    
+                    
                 } else {
                     callButton.isHidden = true
                 }
-            case .scheduled:
-                callButton.isHidden = true
-            case .replyThread:
-                callButton.isHidden = true
-            case .pinned:
+                
+            default:
                 callButton.isHidden = true
             }
-            
+
             
             if let peer = peerViewMainPeer(peerView) {
                 if peer.id == repliesPeerId {
                     let icon = theme.icons.chat_replies_avatar
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 17, avatarControl.frame.size.height - 17)), cornerRadius: nil)) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 17, avatarControl.frame.size.height - 17)), cornerRadius: nil), bubble: false) |> map {($0, false)})
+                } else if peer.id.isAnonymousSavedMessages {
+                    let icon = theme.icons.chat_hidden_author
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil), bubble: false) |> map {($0, false)})
+                } else if peer.id == chatInteraction.context.peerId, chatInteraction.mode.isSavedMessagesThread {
+                    let icon = theme.icons.chat_my_notes
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 5, avatarControl.frame.size.height - 5)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else if peer.id == chatInteraction.context.peerId {
                     let icon = theme.icons.searchSaved
-                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil)) |> map {($0, false)})
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil), bubble: false) |> map {($0, false)})
                 } else {
-                    avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
+                    if peer.isMonoForum, let mainForumPeer = peerViewMonoforumMainPeer(peerView) {
+                        avatarControl.setState(account: chatInteraction.context.account, state: .PeerAvatar(peer, mainForumPeer.displayLetters, mainForumPeer.smallProfileImage, mainForumPeer.nameColor, nil, nil, peer.groupAccess.canManageDirect, nil))
+                    } else {
+                        avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
+                    }
                 }
             }
-            
+            var statusControl: PremiumStatusControl? = nil
+            var leftStatusControl: PremiumStatusControl? = nil
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = (theme.icons.chatSecretTitle, .left)
-            } else if let peer = peerViewMainPeer(peerView), chatInteraction.mode == .history {
-                if peer.isVerified {
-                    titleImage = (theme.icons.verifiedImage, .right)
-                } else if peer.isScam {
-                    titleImage = (theme.icons.scam, .right)
+                titleImage = (theme.icons.chatSecretTitle, .left(topInset: 0))
+                callButton.set(image: theme.icons.chatCall, for: .Normal)
+                callButton.set(image: theme.icons.chatCallActive, for: .Highlight)
+            } else if let peer = peerViewMainPeer(peerView), chatInteraction.mode == .history || chatInteraction.mode.isSavedMessagesThread {
+                titleImage = nil
+                
+                let context = chatInteraction.context
+                
+                if let peer = (peerViewMonoforumMainPeer(peerView) ?? peerViewMainPeer(peerView)) {
+                    if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                        statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: false, isSelected: false, cached: self.statusControl, animated: false)
+                    }
+                    
+                    if chatInteraction.context.peerId != chatInteraction.peerId || chatInteraction.mode.isSavedMessagesThread, presentation.reportMode == nil {
+                        leftStatusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, left: true, isSelected: false, cached: self.leftStatusControl, animated: false)
+                    }
+                }
+                
+                
+                if peer.isGroup || peer.isSupergroup || peer.isChannel {
+                    callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)
+                    callButton.set(image: theme.icons.chat_voice_chat_active, for: .Highlight)
                 } else {
-                    titleImage = nil
+                    callButton.set(image: theme.icons.chatCall, for: .Normal)
+                    callButton.set(image: theme.icons.chatCallActive, for: .Highlight)
                 }
             } else {
                 titleImage = nil
             }
             
-            updateTitle(force)
-        } 
-    }
-    
-    private func updateTitle(_ force: Bool = false) {
-        var shouldUpdateLayout = false
-        if let peerView = self.postboxView as? PeerView {
-            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
-            
-            if chatInteraction.mode == .pinned {
-                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessagesCountable(chatInteraction.presentation.pinnedMessageId?.totalCount ?? 0))
-                status = nil
-            } else if chatInteraction.context.peerId == peerView.peerId  {
-                if chatInteraction.mode == .scheduled {
-                    result = result.withUpdatedTitle(L10n.chatTitleReminder)
-                } else {
-                    result = result.withUpdatedTitle(L10n.peerSavedMessages)
-                }
-            } else if chatInteraction.mode == .scheduled {
-                result = result.withUpdatedTitle(L10n.chatTitleScheduledMessages)
-            } else if case .replyThread(_, let mode) = chatInteraction.mode {
-                switch mode {
-                case .comments:
-                    result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
-                case .replies:
-                    result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
-                }
-                status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
-                result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
+            if let statusControl = statusControl {
+                self.statusControl = statusControl
+                self.addSubview(statusControl)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: false)
+                self.statusControl = nil
             }
             
-            if chatInteraction.context.peerId == peerView.peerId {
-                status = nil
-            } else if (status == nil || !status!.isEqual(to: result.status) || force) && chatInteraction.mode != .scheduled && chatInteraction.mode.threadId == nil && chatInteraction.mode != .pinned {
-                status = result.status
-                shouldUpdateLayout = true
+            if let statusControl = leftStatusControl {
+                self.leftStatusControl = statusControl
+                self.addSubview(statusControl)
+            } else if let view = self.leftStatusControl {
+                performSubviewRemoval(view, animated: false)
+                self.leftStatusControl = nil
+            }
+            
+            self.titleInset = leftStatusControl != nil ? leftStatusControl!.frame.width + 2 : 0
+
+            
+            callButton.sizeToFit()
+
+        }
+        self.updateTitle(force, presentation: presentation)
+        self.updatePhoto(presentation, animated: false)
+
+        needsLayout = true
+    }
+    
+    
+    private func updatePhoto(_ presentation: ChatPresentationInterfaceState, animated: Bool) {
+        let context = chatInteraction.context
+        if let threadInfo = presentation.threadInfo, presentation.isTopicMode {
+            let size = NSMakeSize(30, 30)
+            let current: InlineStickerItemLayer
+            if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == threadInfo.info.icon {
+                current = layer
+            } else {
+                if let layer = inlineTopicPhotoLayer {
+                    performSublayerRemoval(layer, animated: animated)
+                    self.inlineTopicPhotoLayer = nil
+                }
+                let info = threadInfo.info
+                if let fileId = info.icon {
+                    current = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                } else {
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: presentation.chatLocation.threadId == 1)
+                    current = .init(account: context.account, file: file, size: size, playPolicy: .playCount(2))
+                }
+                current.superview = containerView
+                self.containerView.layer?.addSublayer(current)
+                self.inlineTopicPhotoLayer = current
+            }
+        } else {
+            if let layer = inlineTopicPhotoLayer {
+                performSublayerRemoval(layer, animated: animated)
+                self.inlineTopicPhotoLayer = nil
+            }
+        }
+        self.updateAnimatableContent()
+    }
+    
+    private func updateTitle(_ force: Bool = false, presentation: ChatPresentationInterfaceState) {
+        if let peerView = self.peerView, let peer = peerViewMainPeer(peerView) {
+            var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online, ignoreActivity: presentation.chatMode.isSavedMessagesThread || presentation.chatMode.customChatLink != nil || presentation.isMonoforum)
+            
+            if presentation.isMonoforum {
+                if !presentation.monoforumTopics.isEmpty, presentation.chatLocation.threadId == nil {
+                    result = result
+                        .withUpdatedStatus(strings().chatTitleChatsCountable(presentation.monoforumTopics.count))
+                } else {
+                    result = result
+                        .withUpdatedStatus(strings().chatTitleTopicCountable(Int(self.counters.replies ?? 0)))
+                }
+            } else if let customLinkContents = chatInteraction.mode.customChatLink {
+                result = result.withUpdatedTitle(customLinkContents.name.isEmpty ? customLinkContents.link : customLinkContents.name).withUpdatedStatus(customLinkContents.name.isEmpty ? "" : customLinkContents.link)
+            } else if let customChatContents = chatInteraction.mode.customChatContents {
+                result = result.withUpdatedTitle(customChatContents.kind.text).withUpdatedStatus("")
+            } else if chatInteraction.mode == .pinned {
+                result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0)).withUpdatedStatus("")
+            } else if chatInteraction.mode == .scheduled {
+                result = result.withUpdatedTitle(strings().chatTitleScheduledMessages).withUpdatedStatus("")
+            } else if let threadInfo = presentation.threadInfo, presentation.isTopicMode {
+                if let count = self.counters.replies, count > 0 {
+                    result = result
+                        .withUpdatedTitle(threadInfo.info.title)
+                        .withUpdatedStatus(strings().chatTitleTopicCountable(Int(count)))
+                } else {
+                    result = result
+                        .withUpdatedTitle(threadInfo.info.title)
+                        .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                }
+            } else if case let .thread(mode) = chatInteraction.mode, case let .thread(data) = chatInteraction.chatLocation {
+                switch mode {
+                case .comments:
+                    result = result.withUpdatedTitle(strings().chatTitleDiscussion).withUpdatedStatus(strings().chatTitleCommentsCountable(Int(self.counters.replies ?? 0)))
+                case .replies:
+                    result = result.withUpdatedTitle(strings().chatTitleDiscussion).withUpdatedStatus(strings().chatTitleRepliesCountable(Int(self.counters.replies ?? 0)))
+                case .topic:
+                    if let count = self.counters.replies, count > 0 {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().chatTitleTopicCountable(Int(count)))
+                    } else {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                    }
+                case .savedMessages:
+                    if let count = self.counters.replies, count > 0 {
+                        result = result
+                            .withUpdatedStatus(strings().chatTitleTopicCountable(Int(count)))
+                    } else {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                    }
+                    if PeerId(data.threadId) == chatInteraction.context.peerId {
+                        result = result.withUpdatedTitle(strings().peerMyNotes)
+                    }
+                case .saved:
+                    break
+                }
+ 
+            } else if chatInteraction.context.peerId == peerView.peerId  {
+                if chatInteraction.mode == .scheduled {
+                    result = result.withUpdatedTitle(strings().chatTitleReminder).withUpdatedStatus("")
+                } else {
+                    result = result.withUpdatedTitle(strings().peerSavedMessages).withUpdatedStatus("")
+                }
+            }
+            
+            if (status == nil || !status!.isEqual(to: result.status) || force) {
+                status = result.status.string.isEmpty ? nil : result.status
+            }
+            switch connectionStatus {
+            case let .connecting(proxy, _):
+                status = .initialize(string: (proxy != nil ? strings().chatConnectingStatusConnectingToProxy : strings().chatConnectingStatusConnecting).lowercased(), color: theme.colors.grayText, font: .normal(.short))
+            case .updating:
+                status = .initialize(string: strings().chatConnectingStatusUpdating.lowercased(), color: theme.colors.grayText, font: .normal(.short))
+            case .waitingForNetwork:
+                status = .initialize(string: strings().chatConnectingStatusWaitingNetwork.lowercased(), color: theme.colors.grayText, font: .normal(.short))
+            case .online:
+                break
             }
             
             if text == nil || !text!.isEqual(to: result.title) || force {
                 text = result.title
-                shouldUpdateLayout = true
             }
             if let presence = result.presence {
                 self.presenceManager?.reset(presence: presence, timeDifference: Int32(chatInteraction.context.timeDifference))
             }
         }
-        
-        if shouldUpdateLayout {
-            setNeedsDisplay()
-        }
+  
     }
     
     
@@ -829,34 +907,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         searchButton.set(image: theme.icons.chatSearch, for: .Normal)
         searchButton.set(image: theme.icons.chatSearchActive, for: .Highlight)
 
-        
         _ = searchButton.sizeToFit()
-        
-        callButton.set(image: theme.icons.chatCall, for: .Normal)
-        _ = callButton.sizeToFit()
         
         closeButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
         
-        if let peerView = postboxView as? PeerView {
-            if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = (theme.icons.chatSecretTitle, .left)
-            } else if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = (theme.icons.chatSecretTitle, .left)
-            } else if let peer = peerViewMainPeer(peerView) {
-                if peer.isVerified {
-                    titleImage = (theme.icons.verifiedImage, .right)
-                } else if peer.isScam {
-                    titleImage = (theme.icons.scam, .right)
-                } else {
-                    titleImage = nil
-                }
-            } else {
-                titleImage = nil
-            }
-        } else {
-            titleImage = nil
-        }
+        updateStatus(true, presentation: chatInteraction.presentation)
     }
 }

@@ -9,13 +9,13 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 
 class ExMajorNavigationController: MajorNavigationController {
     private let context:AccountContext
     
     override var sidebar: ViewController? {
-        return context.sharedContext.bindings.entertainment()
+        return context.bindings.entertainment()
     }
     
     override var window: Window? {
@@ -33,11 +33,6 @@ class ExMajorNavigationController: MajorNavigationController {
     
     override func push(_ controller: ViewController, _ animated: Bool, style: ViewControllerStyle?) {
         super.push(controller, animated, style: style)
-    }
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        return  controller.makeTouchBar()//globalAudio?.makeTouchBar()//
     }
     
 }

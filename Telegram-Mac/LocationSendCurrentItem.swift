@@ -17,8 +17,10 @@ enum LocationSelectCurrentState : Equatable {
 class LocationSendCurrentItem: GeneralRowItem {
     fileprivate let statusLayout: TextViewLayout
     fileprivate let state: LocationSelectCurrentState
-    init(_ initialSize: NSSize, stableId: AnyHashable, state: LocationSelectCurrentState, action:@escaping()->Void) {
+    fileprivate let destination: SelectLocationDestination
+    init(_ initialSize: NSSize, stableId: AnyHashable, state: LocationSelectCurrentState, destination: SelectLocationDestination, action:@escaping()->Void) {
         self.state = state
+        self.destination = destination
         let text: String
         switch state {
         case let .accurate(location, _):
@@ -27,9 +29,9 @@ class LocationSendCurrentItem: GeneralRowItem {
                 formatter.unitStyle = .full
                 formatter.locale = Locale(identifier: appAppearance.language.languageCode)
                 let formatted = formatter.string(fromDistance: location.horizontalAccuracy)
-                text = L10n.locationSendAccurateTo("\(formatted)")
+                text = strings().locationSendAccurateTo("\(formatted)")
             } else {
-                text = L10n.locationSendLocating
+                text = strings().locationSendLocating
             }
             
         case let .selected(location):
@@ -54,7 +56,7 @@ class LocationSendCurrentItem: GeneralRowItem {
 private final class LocationSendCurrentView : TableRowView {
     private let iconView: ImageView = ImageView()
     private let statusView = TextView()
-    private let button: TitleButton = TitleButton()
+    private let button: TextButton = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(button)
@@ -87,9 +89,19 @@ private final class LocationSendCurrentView : TableRowView {
         let text: String
         switch item.state {
         case .accurate:
-            text = L10n.locationSendMyLocation
+            switch item.destination {
+            case .chat:
+                text = strings().locationSendMyLocation
+            case .business:
+                text = strings().locationSetLocation
+            }
         case .selected:
-            text = L10n.locationSendThisLocation
+            switch item.destination {
+            case .chat:
+                text = strings().locationSendThisLocation
+            case .business:
+                text = strings().locationSetLocation
+            }
         }
         button.set(text: text, for: .Normal)
         _ = button.sizeToFit()
@@ -97,7 +109,7 @@ private final class LocationSendCurrentView : TableRowView {
         statusView.update(item.statusLayout)
         
         iconView.image = theme.icons.locationPin
-        _ = iconView.sizeToFit()
+        iconView.sizeToFit()
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

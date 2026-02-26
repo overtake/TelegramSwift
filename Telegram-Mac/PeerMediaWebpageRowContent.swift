@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -23,8 +23,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     private(set) var icon:TelegramMediaImage?
     private(set) var iconArguments:TransformImageArguments?
     private(set) var thumb:CGImage? = nil
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
-        super.init(initialSize,interface,object, viewType: viewType)
+    //, gallery: GalleryAppearType = .history
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
 
         
         var linkLayouts:[TextViewLayout] = []
@@ -68,7 +69,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         
-        if let webpage = message.media.first as? TelegramMediaWebpage {
+        if let webpage = message.anyMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 
                 var hostName: String = ""
@@ -87,7 +88,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 }
                 
                 if let iconImageRepresentation = iconImageRepresentation {
-                    icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                    icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: arc4random64()), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     
                     let imageCorners = ImageCorners(radius: .cornerRadius)
                     iconArguments = TransformImageArguments(corners: imageCorners, imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
@@ -141,9 +142,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                     var items = items
                     if let layout = self.textLayout, layout.selectedRange.hasSelectText {
                         let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
-                        items.insert(ContextMenuItem(L10n.textCopy, handler: {
+                        items.insert(ContextMenuItem(strings().textCopy, handler: {
                             copyToClipboard(text.string)
-                        }), at: 0)
+                        }, itemImage: MenuAnimation.menu_copy.value), at: 0)
                         items.insert(ContextSeparatorItem(), at: 1)
                     }
                     return items
@@ -153,9 +154,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         
         for linkLayout in linkLayouts {
             linkLayout.interactions = TextViewInteractions(processURL: { [weak self] url in
-                if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
+                if let webpage = self?.message.anyMedia as? TelegramMediaWebpage, let `self` = self, let url = webpage.content.url {
                     if self.hasInstantPage {
-                        showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
+                        BrowserStateContext.get(self.interface.context).open(tab: .instantView(url: url, webPage: webpage, anchor: nil))
                         return
                     }
                 }
@@ -165,7 +166,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 copyToClipboard(linkLayout.attributedString.string)
                 return false
             }, localizeLinkCopy: { link in
-                return L10n.textContextCopyLink
+                return strings().textContextCopyLink
             })
         }
         
@@ -176,12 +177,12 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     }
     
     var hasInstantPage: Bool {
-        if let webpage = message.media.first as? TelegramMediaWebpage {
+        if let webpage = message.anyMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 if let instantPage = content.instantPage {
                     let hasInstantPage:()->Bool = {
-                        if instantPage.blocks.count == 3 {
-                            switch instantPage.blocks[2] {
+                        if instantPage._parse().blocks.count == 3 {
+                            switch instantPage._parse().blocks[2] {
                             case let .collage(_, caption), let .slideshow(_, caption):
                                 return !attributedStringForRichText(caption.text, styleStack: InstantPageTextStyleStack()).string.isEmpty
                             default:
@@ -275,7 +276,8 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        
+        let previous = self.item as? PeerMediaFileRowItem
+
         super.set(item: item,animated:animated)
         textView.backgroundColor = backdorColor
         if let item = item as? PeerMediaWebpageRowItem {
@@ -320,16 +322,30 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             if let icon = item.icon {
                 updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
-                updateIconImageSignal = .single(ImageDataTransformation())
+                updateIconImageSignal = .complete()
+            }
+            
+            
+            if let icon = item.icon, let arguments = item.iconArguments {
+                imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
+            } else {
+                imageView.clear()
+            }
+            
+            if !imageView.isFullyLoaded {
+                if !imageView.hasImage {
+                    imageView.layer?.contents = item.thumb
+                }
+                imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
+                    if let icon = item.icon, let arguments = item.iconArguments {
+                        cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)
+                    }
+                })
             }
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-                imageView.setSignal( updateIconImageSignal)
             }
-            
-            if item.icon == nil {
-                imageView.layer?.contents = item.thumb
-            }
+
             
             needsLayout = true
         }

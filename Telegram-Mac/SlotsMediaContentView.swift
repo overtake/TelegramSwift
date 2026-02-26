@@ -9,10 +9,10 @@
 import Cocoa
 import Postbox
 import TelegramCore
-import SyncCore
+import InAppSettings
 import TGUIKit
 import SwiftSignalKit
-
+import TelegramMedia
 
 
 class SlotsMediaContentView: ChatMediaContentView {
@@ -86,11 +86,11 @@ class SlotsMediaContentView: ChatMediaContentView {
                 
                 switch media.emoji {
                 case diceSymbol:
-                    text = L10n.chatEmojiDiceResultNew
+                    text = strings().chatEmojiDiceResultNew
                 case dartSymbol:
-                    text = L10n.chatEmojiDartResultNew
+                    text = strings().chatEmojiDartResultNew
                 default:
-                    text = L10n.chatEmojiDefResultNew(media.emoji)
+                    text = strings().chatEmojiDefResultNew(media.emoji)
                 }
                 let view: NSView
                 if !thumbView.isHidden {
@@ -98,7 +98,7 @@ class SlotsMediaContentView: ChatMediaContentView {
                 } else {
                     view = idlePlayer
                 }
-                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak item] in
+                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (strings().chatEmojiSend, { [weak item] in
                     item?.chatInteraction.sendPlainText(media.emoji)
                 }), offset: NSMakePoint(0, -30))
             }
@@ -152,13 +152,16 @@ class SlotsMediaContentView: ChatMediaContentView {
     override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool, positionFlags: LayoutPositionFlags?, approximateSynchronousValue: Bool) {
         
         
+        
         if parent?.stableId != self.parent?.stableId {
             _ = players.map {
                 $0.set(nil)
             }
         }
         
+        
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
+        
         
         guard let media = media as? TelegramMediaDice, let parent = parent else {
             return
@@ -170,7 +173,7 @@ class SlotsMediaContentView: ChatMediaContentView {
         
         let sent: Bool = media.value != nil
         
-        let played: Bool = FastSettings.diceHasAlreadyPlayed(parent)
+        let played: Bool = parameters?.dicePlayed(parent) ?? true
         
         
         
@@ -199,6 +202,9 @@ class SlotsMediaContentView: ChatMediaContentView {
             guard let `self` = self else {
                 return
             }
+            
+
+            
             if data.count < 21 {
                 return
             }
@@ -211,12 +217,12 @@ class SlotsMediaContentView: ChatMediaContentView {
                 } else {
                     policy = .onceToFrame(1)
                 }
-                let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(idleData.2.id), size: size), cachePurpose: .none, playPolicy: policy, maximumFps: 60)
+                let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(idleData.2.id), size: size), cachePurpose: .temporaryLZ4(.chat), playPolicy: policy, maximumFps: 30)
                 self.idlePlayer.set(animation)
             }
             let pullData = data[2]
             if let data = pullData.1 {
-                let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(pullData.2.id), size: size), cachePurpose: .none, playPolicy: played ? .toEnd(from: .max) : .onceEnd, maximumFps: 60)
+                let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(pullData.2.id), size: size), cachePurpose: .temporaryLZ4(.chat), playPolicy: played ? .toEnd(from: .max) : .onceEnd, maximumFps: 30)
                 self.pullPlayer.set(animation)
             }
             
@@ -224,15 +230,15 @@ class SlotsMediaContentView: ChatMediaContentView {
             
             
             
-            var spinViews:[LottiePlayerView] = [self.spin1Player, self.spin2Player, self.spin3Player]
+            let spinViews:[LottiePlayerView] = [self.spin1Player, self.spin2Player, self.spin3Player]
             
             for (i, index) in indexes.enumerated() {
                 let view = spinViews[i]
                 let spinData = data[index]
                 if let data = spinData.1 {
-                    let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(spinData.2.id), size: size), cachePurpose: .none, playPolicy: spinPolicy, maximumFps: 60)
-                    if sent && view.animation != nil {
-                        view.animation?.triggerOn = (.first, { [weak view] in
+                    let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(spinData.2.id), size: size), cachePurpose: .temporaryLZ4(.chat), playPolicy: spinPolicy, maximumFps: 30)
+                    if sent && view.contextAnimation != nil {
+                        view.contextAnimation?.triggerOn = (.first, { [weak view] in
                             view?.set(animation)
                         }, {})
                     } else {
@@ -240,7 +246,7 @@ class SlotsMediaContentView: ChatMediaContentView {
                     }
                     if sent {
                         animation.onFinish = {
-                            FastSettings.markDiceAsPlayed(parent)
+                            parameters?.markDiceAsPlayed(parent)
                             if !played, value.is777, !parent.isIncoming(context.account, theme.bubbled) {
                                 PlayConfetti(for: context.window)
                             }

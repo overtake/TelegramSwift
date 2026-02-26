@@ -1,3 +1,0 @@
-#include "./tvOS.xcconfig"
-
-EFFECTIVE_PLATFORM_NAME = -appletvuniversal

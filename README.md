@@ -1,5 +1,8 @@
 <div align="center">
-  <img src="Telegram-Mac/Assets.xcassets/AppIcon.appiconset/Default_128x128.png">
+  <img src="Telegram-Mac/Assets.xcassets/AppIcon.appiconset/Logo_1024.png"
+      width="125" 
+      height="125">
+  
   <h2 align="center">Telegram for macOS</h2>
 </div>
 
@@ -34,6 +37,9 @@ You can also [download the beta version](https://telegram.org/dl/macos/beta) if 
 
 ### Contributors on GitHub
 See [this repository’s contributors graph](https://github.com/overtake/TelegramSwift/graphs/contributors).
+
+### Bugs and Suggestions
+You can report bug or suggestions feature for Telegram for macOS on [Telegram’s Bugs & Suggestions platform](https://bugs.telegram.org). Read [the platform tip](https://bugs.telegram.org/c/746) before creating first card.
 
 ### Translations
 You can help translate Telegram for macOS on [Telegram’s translations platform](https://translations.telegram.org). Pick your language, then look for the macOS translation set.

@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
@@ -97,25 +97,25 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             let count = peer.participantCount
             if let count = count {
                 let count = Int(count)
-                let countValue = L10n.privacySettingsGroupMembersCountCountable(count)
+                let countValue = strings().privacySettingsGroupMembersCountCountable(count)
                 status = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
             }
 
 
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openInfo(peer.peer)
             }, contextMenuItems: {
-                return .single([ContextMenuItem(L10n.confirmDelete, handler: {
+                return .single([ContextMenuItem(strings().confirmDelete, handler: {
                     arguments.removePeer(peer.peer.id)
-                })])
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
             })
 
         case let .addItem(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addPeer()
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -194,11 +194,19 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
     private let updated:([PeerId: SelectivePrivacyPeer])->Void
     private let statePromise = ValuePromise(SelectivePrivacyPeersControllerState(), ignoreRepeated: true)
     private let stateValue = Atomic(value: SelectivePrivacyPeersControllerState())
-    init(_ context: AccountContext, title: String, initialPeers: [PeerId: SelectivePrivacyPeer], updated: @escaping ([PeerId: SelectivePrivacyPeer]) -> Void) {
+    private let premiumUsers: Bool?
+    private let enableForBots: Bool?
+    init(_ context: AccountContext, title: String, initialPeers: [PeerId: SelectivePrivacyPeer], premiumUsers: Bool?, enableForBots: Bool?, updated: @escaping ([PeerId: SelectivePrivacyPeer]) -> Void) {
         self.title = title
         self.initialPeers = initialPeers
         self.updated = updated
+        self.premiumUsers = premiumUsers
+        self.enableForBots = enableForBots
         super.init(context)
+    }
+    
+    override var defaultBarTitle: String {
+        return self.title
     }
 
     override func viewDidLoad() {
@@ -211,12 +219,26 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         let context = self.context
         let title = self.title
         self.setCenterTitle(title)
-        let initialPeers = self.initialPeers
+        var initialPeers = Array(self.initialPeers.values)
+        
+        if let premiumUsers, premiumUsers {
+            let premium = TelegramFilterCategory(category: .premiumUsers)
+            initialPeers.insert(.init(peer: premium, participantCount: nil), at: 0)
+        }
+        
+        if let enableForBots, enableForBots {
+            let enableForBots = TelegramFilterCategory(category: .miniApps)
+            initialPeers.insert(.init(peer: enableForBots, participantCount: nil), at: 0)
+        }
+        
         let updated = self.updated
         let initialSize = self.atomicSize
 
         let statePromise = self.statePromise
         let stateValue = self.stateValue
+        
+        let premiumUsers = self.premiumUsers
+        let enableForBots = self.enableForBots
 
         let actionsDisposable = DisposableSet()
 
@@ -227,9 +249,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
         actionsDisposable.add(removePeerDisposable)
 
         let peersPromise = Promise<[SelectivePrivacyPeer]>()
-        peersPromise.set(context.account.postbox.transaction { transaction -> [SelectivePrivacyPeer] in
-            return Array(initialPeers.values)
-        })
+        peersPromise.set(.single(initialPeers))
 
 
         var currentPeerIds:[PeerId] = []
@@ -260,8 +280,9 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
             removePeerDisposable.set(applyPeers.start())
 
         }, addPeer: {
+            
 
-            addPeerDisposable.set(selectModalPeers(context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectUsersAndGroupsBehavior(), confirmation: {_ in return .single(true)}).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote, .bots], premiumBlock: premiumUsers != nil, miniappsBlock: enableForBots != nil), confirmation: {_ in return .single(true) }, selectedPeerIds: Set(currentPeerIds)).start(next: { peerIds in
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[SelectivePrivacyPeer], NoError> in
@@ -279,6 +300,8 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                                     }
 
                                     updatedPeers.append(SelectivePrivacyPeer(peer: peer, participantCount: participantCount))
+                                } else if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace {
+                                    updatedPeers.insert(SelectivePrivacyPeer(peer: TelegramFilterCategory(category: .init(rawValue: Int32(peerId.id._internalGetInt64Value()))), participantCount: nil), at: 0)
                                 }
                             }
                             return updatedPeers
@@ -293,14 +316,15 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
                             updatedPeerDict[peer.peer.id] = peer
                         }
                         updated(updatedPeerDict)
-
                         return .complete()
                 }
 
                 removePeerDisposable.set(applyPeers.start())
             }))
         }, openInfo: { [weak self] peer in
-            self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
+            if let navigation = self?.navigationController {
+                PeerInfoController.push(navigation: navigation, context: context, peerId: peer.id)
+            }
         })
 
         let previous:Atomic<[AppearanceWrapperEntry<SelectivePrivacyPeersEntry>]> = Atomic(value: [])

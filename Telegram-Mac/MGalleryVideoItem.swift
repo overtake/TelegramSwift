@@ -9,12 +9,13 @@
 import Cocoa
 
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import TGUIKit
 import AVFoundation
 import AVKit
+import TelegramMedia
 
 class MGalleryVideoItem: MGalleryItem {
     var startTime: TimeInterval = 0
@@ -38,8 +39,13 @@ class MGalleryVideoItem: MGalleryItem {
             }
         } |> deliverOnMainQueue
     }
+    
+    func videoQualityState() -> (current: Int, preferred: UniversalVideoContentVideoQuality, available: [Int])? {
+        return controller.mediaPlayer.videoQualityState()
+    }
+    
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
-        controller = SVideoController(postbox: context.account.postbox, reference: entry.fileReference(entry.file!))
+        controller = SVideoController(context: context, reference: entry.fileReference(entry.file!), message: entry.message, isProtected: entry.isProtected, isControlsLimited: entry.message?.adAttribute != nil)
         super.init(context, entry, pagerSize)
         
         controller.togglePictureInPictureImpl = { [weak self] enter, control in
@@ -56,6 +62,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     deinit {
         updateMagnifyDisposable.dispose()
+        
     }
         
     override func singleView() -> NSView {
@@ -70,7 +77,7 @@ class MGalleryVideoItem: MGalleryItem {
         
         pausepip()
         
-        if let pauseMusic = globalAudio?.pause() {
+        if let pauseMusic = context.sharedContext.getAudioPlayer()?.pause() {
             isPausedGlobalPlayer = pauseMusic
         }
         
@@ -95,7 +102,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func disappear(for view: NSView?) {
         super.disappear(for: view)
         if isPausedGlobalPlayer {
-            _ = globalAudio?.play()
+            _ = context.sharedContext.getAudioPlayer()?.play()
         }
         if controller.style != .pictureInPicture {
             controller.pause()
@@ -109,12 +116,16 @@ class MGalleryVideoItem: MGalleryItem {
         if media.isStreamable {
             return .single(.Local)
         } else {
-            return chatMessageFileStatus(account: context.account, file: media)
+            return realStatus
         }
     }
     
     override var realStatus:Signal<MediaResourceStatus, NoError> {
-        return chatMessageFileStatus(account: context.account, file: media)
+        if let message = entry.message {
+            return chatMessageFileStatus(context: context, message: message, file: media)
+        } else {
+            return context.account.postbox.mediaBox.resourceStatus(media.resource)
+        }
     }
     
     var media:TelegramMediaFile {
@@ -217,7 +228,7 @@ class MGalleryVideoItem: MGalleryItem {
 
         super.request(immediately: immediately)
         
-        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
+        let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(account: context.account, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true, noVideoCover: true)
         
         let size = sizeValue
         
@@ -232,7 +243,6 @@ class MGalleryVideoItem: MGalleryItem {
             }
             return .never()
         })
-        
         self.image.set(media.previewRepresentations.isEmpty ? .single(GPreviewValueClass(.image(nil, nil))) |> deliverOnMainQueue : result |> map { GPreviewValueClass(.image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil, nil)) } |> deliverOnMainQueue)
         
         fetch()
@@ -242,7 +252,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func fetch() -> Void {
         if !media.isStreamable {
             if let parent = entry.message {
-                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start()
+                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: true).start()
             } else {
                 _ = freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start()
             }

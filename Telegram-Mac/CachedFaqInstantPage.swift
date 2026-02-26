@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 
 private func extractAnchor(string: String) -> (String, String?) {
@@ -47,7 +47,7 @@ func cachedFaqInstantPage(context: AccountContext) -> Signal<inAppLink, NoError>
                         if instantPage.isComplete {
                             let _ = updateCachedInstantPage(postbox: context.account.postbox, url: cachedUrl, webPage: webPage).start()
                         } else {
-                            let _ = (actualizedWebpage(postbox: context.account.postbox, network: context.account.network, webpage: webPage)
+                            let _ = (actualizedWebpage(account: context.account, webpage: webPage)
                                 |> mapToSignal { webPage -> Signal<Void, NoError> in
                                     if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, instantPage.isComplete {
                                         return updateCachedInstantPage(postbox: context.account.postbox, url: cachedUrl, webPage: webPage)
@@ -83,7 +83,7 @@ func faqSearchableItems(context: AccountContext) -> Signal<[SettingsSearchableIt
                 if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage {
                     var processingQuestions = false
                     var currentSection: String?
-                    outer: for block in instantPage.blocks {
+                    outer: for block in instantPage._parse().blocks {
                         if !processingQuestions {
                             switch block {
                             case .blockQuote:
@@ -112,8 +112,8 @@ func faqSearchableItems(context: AccountContext) -> Signal<[SettingsSearchableIt
                                             } else {
                                                 nextIndex += 1
                                             }
-                                            let item = SettingsSearchableItem(id: .faq(index), title: text.plainText, alternate: [], icon: .faq, breadcrumbs: [L10n.accountSettingsFAQ, currentSection], present: { context, _, present in
-                                                showInstantPage(InstantPageViewController(context, webPage: webPage, message: nil, anchor: anchor))
+                                            let item = SettingsSearchableItem(id: .faq(index), title: text.plainText, alternate: [], icon: .faq, breadcrumbs: [strings().accountSettingsFAQ, currentSection], present: { context, _, present in
+                                                BrowserStateContext.get(context).open(tab: .instantView(url: url, webPage: webPage, anchor: anchor))
                                             })
                                             if index == 1 {
                                                 results.insert(item, at: 0)

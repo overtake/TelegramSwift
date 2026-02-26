@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 import Postbox
 import SwiftSignalKit
@@ -18,13 +18,38 @@ class ReplyMarkupButtonLayout {
     
     private(set) var width:CGFloat = 0
     let text:TextViewLayout
-    let style:ControlStyle
     let button:ReplyMarkupButton
-    
-    init(button:ReplyMarkupButton, style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text), isInput: Bool) {
+    let presentation: TelegramPresentationTheme
+    init(button:ReplyMarkupButton, theme: TelegramPresentationTheme, isInput: Bool, paid: Bool, xtrAmount: Int64?) {
         self.button = button
-        self.style = style
-        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
+        self.presentation = theme
+        let attr = NSMutableAttributedString()
+        
+        
+        let color = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text
+        
+        attr.append(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: color, font: .semibold(.short))
+
+        switch button.action {
+        case let .url(url):
+            switch url {
+            case SuggestedPostMessageAttribute.commandApprove:
+                attr.insert(.initialize(string: clown_space), at: 0)
+                attr.insertEmbedded(.embedded(name: "Icon_SuggestPost_Approve", color: theme.chatServiceItemTextColor, resize: false), for: clown)
+            case SuggestedPostMessageAttribute.commandDecline:
+                attr.insert(.initialize(string: clown_space), at: 0)
+                attr.insertEmbedded(.embedded(name: "Icon_SuggestPost_Decline", color: theme.chatServiceItemTextColor, resize: false), for: clown)
+            case SuggestedPostMessageAttribute.commandChanges:
+                attr.insert(.initialize(string: clown_space), at: 0)
+                attr.insertEmbedded(.embedded(name: "Icon_SuggestPost_Edit", color: theme.chatServiceItemTextColor, resize: false), for: clown)
+            default:
+                break
+            }
+        default:
+            break
+        }
+        
+        self.text = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }
     
     func measure(_ width:CGFloat) {
@@ -42,7 +67,7 @@ class ReplyMarkupButtonLayout {
 class ReplyMarkupNode: Node {
 
     static let buttonHeight:CGFloat = 34
-    static let buttonPadding:CGFloat = 4
+    static let buttonPadding:CGFloat = 2
     static let rowHeight = buttonHeight + buttonPadding
     
     private var width:CGFloat = 0
@@ -53,63 +78,89 @@ class ReplyMarkupNode: Node {
     
     private let interactions:ReplyMarkupInteractions
     private let isInput: Bool
-    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ view:View? = nil, _ isInput: Bool = false) {
+    private let theme: TelegramPresentationTheme
+    private let xtr: Bool
+    private let isPostSuggest: Bool
+    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false, xtrAmount: Int64? = nil, isPostSuggest: Bool = false) {
         self.flags = flags
         self.isInput = isInput
+        self.isPostSuggest = isPostSuggest
+        self.xtr = xtrAmount != nil
         self.interactions = interactions
+        self.theme = theme
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
-                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, isInput: isInput))
+                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, theme: theme, isInput: isInput, paid: paid, xtrAmount: xtrAmount))
             }
         }
         self.markup = layoutRows
         super.init(view)
     }
     
+    var shouldBlurService: Bool {
+        return !isLite(.blur) && theme.shouldBlurService
+    }
+    
     func redraw() {
         view?.removeAllSubviews()
         for row in markup {
             for button in row {
-                
                 var urlView:ImageView?
                 switch button.button.action {
                 case let .url(url):
-                    if !url.isSingleEmoji {
+                    if !url.isSingleEmoji, !isPostSuggest {
                         urlView = ImageView()
                         urlView?.image = theme.chat.chatActionUrl(theme: theme)
+                        urlView?.sizeToFit()
+                    }
+                    
+                case .payment:
+                    if !xtr {
+                        urlView = ImageView()
+                        urlView?.image = theme.chat.chatInvoiceAction(theme: theme)
                         urlView?.sizeToFit()
                     }
                 case .switchInline:
                     urlView = ImageView()
                     urlView?.image = theme.chat.chatActionUrl(theme: theme)
                     urlView?.sizeToFit()
+                case .openWebApp, .openWebView:
+                    urlView = ImageView()
+                    urlView?.image = theme.chat.chatActionWebUrl(theme: theme)
+                    urlView?.sizeToFit()
+                case .copyText:
+                    urlView = ImageView()
+                    urlView?.image = theme.chat.chatActionCopy(theme: theme)
+                    urlView?.sizeToFit()
                 default:
                     break
                 }
                 
-                let btnView = TextView()
+                let btnView = InteractiveTextView()
                 btnView.set(handler: { [weak self, weak button] control in
                     if let button = button {
                         self?.proccess(control, button.button)
                     }
                 }, for: .Click)
                 
-                btnView.set(handler: { control in
-                    control.change(opacity: 0.7, animated: true)
-                }, for: .Highlight)
-                btnView.set(handler: { control in
-                    control.change(opacity: 1.0, animated: true)
-                }, for: .Normal)
-                btnView.set(handler: { control in
-                    control.change(opacity: 1.0, animated: true)
-                }, for: .Hover)
+                btnView.scaleOnClick = true
+    
                 btnView.layer?.cornerRadius = .cornerRadius
-                btnView.isSelectable = false
-                btnView.disableBackgroundDrawing = true
-
-                btnView.backgroundColor = button.style.backgroundColor
-                btnView.set(layout:button.text)
+                btnView.textView.isSelectable = false
+                
+                if !self.isInput && shouldBlurService {
+                    btnView.blurBackground = button.presentation.blurServiceColor
+                    btnView.backgroundColor = .clear
+                } else {
+                    btnView.blurBackground = nil
+                    if button.presentation.hasWallpaper && !self.isInput {
+                        btnView.backgroundColor = button.presentation.chatServiceItemColor
+                    } else {
+                        btnView.backgroundColor = button.presentation.colors.grayForeground
+                    }
+                }
+                btnView.set(text: button.text, context: self.interactions.context)
                 
                 if let urlView = urlView {
                     btnView.addSubview(urlView)
@@ -121,12 +172,12 @@ class ReplyMarkupNode: Node {
     }
     
     func proccess(_ control:Control, _ button:ReplyMarkupButton) {
-        interactions.proccess(button, { [weak control] loading in
+        interactions.proccess(button, { _ in
            // control?.backgroundColor = loading ? .black : theme.colors.grayBackground
         })
     }
     
-    func layout() {
+    func layout(transition: ContainedViewLayoutTransition = .immediate) {
         var y:CGFloat = 0
         
         var i:Int = 0
@@ -139,13 +190,26 @@ class ReplyMarkupNode: Node {
                     w = self.width - rect.minX
                 }
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
-                let button:View? = view?.subviews[i] as? View
-                button?.backgroundColor = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemColor : theme.colors.grayBackground
-                if let button = button {
-                    button.frame = rect
-                    button.setNeedsDisplayLayer()
-                    if !button.subviews.isEmpty, let urlView = button.subviews[0] as? ImageView {
-                        urlView.setFrameOrigin(rect.width - urlView.frame.width - 5, 5)
+                let btnView:InteractiveTextView? = view?.subviews[i] as? InteractiveTextView
+                
+                if !self.isInput && self.shouldBlurService {
+                    btnView?.blurBackground = button.presentation.blurServiceColor
+                    btnView?.backgroundColor = .clear
+                } else {
+                    btnView?.blurBackground = nil
+                    if button.presentation.hasWallpaper && !self.isInput {
+                        btnView?.backgroundColor = button.presentation.chatServiceItemColor
+                    } else {
+                        btnView?.backgroundColor = button.presentation.colors.grayForeground
+                    }
+                }
+                if let btnView = btnView {
+                    transition.updateFrame(view: btnView, frame: rect)
+                    btnView.textView.setNeedsDisplayLayer()
+                    if !btnView.subviews.isEmpty, let urlView = btnView.subviews.first(where: { $0 is ImageView }) {
+                        
+                        transition.updateFrame(view: urlView, frame: NSMakeRect(rect.width - urlView.frame.width - 5, 5, urlView.frame.width, urlView.frame.height))
+                        
                     }
                 }
                 
@@ -164,13 +228,14 @@ class ReplyMarkupNode: Node {
     override func measureSize(_ width: CGFloat) {
         for row in markup {
             let count = row.count
-            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(6 * (count - 1))) / CGFloat(count))
+            
+            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(ReplyMarkupNode.buttonPadding * CGFloat(count - 1))) / CGFloat(count))
             for button in row {
                 button.measure(single)
             }
         }
         self.width = width
-        self.height = CGFloat(markup.count * 34) + CGFloat((markup.count - 1) * 6)
+        self.height = CGFloat(CGFloat(markup.count) * ReplyMarkupNode.buttonHeight) + CGFloat(CGFloat(markup.count - 1) * ReplyMarkupNode.buttonPadding)
     }
     
     override var size: NSSize {

@@ -35,6 +35,8 @@ CROSS_TOP_MAC="$(xcode-select -p)/Platforms/MacOSX.platform"
 CROSS_SDK_MAC="MacOSX.sdk"
 
 
+DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET
+
 DEVROOT=`xcode-select --print-path`/Toolchains/XcodeDefault.xctoolchain
 export PATH="${DEVROOT}/usr/bin:${PATH}"
 
@@ -56,7 +58,7 @@ do
     
   SDKROOT=$CROSS_TOP_MAC/Developer/SDKs/$CROSS_SDK_MAC
   CFLAGS="-arch ${ARCH2:-${ARCH1}} -pipe -isysroot ${SDKROOT} -Os -DNDEBUG"
-  CFLAGS+=" -mmacosx-version-min=10.11 ${EXTRA_CFLAGS}"
+  CFLAGS+=" -mmacosx-version-min=$DEPLOYMENT_TARGET ${EXTRA_CFLAGS}"
   
   
   ./configure --host=${ARCH1}-apple-darwin \

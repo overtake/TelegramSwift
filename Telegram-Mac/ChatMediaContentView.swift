@@ -10,11 +10,14 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+import TelegramMedia
 import TGUIKit
 
 
-class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvider {
+class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvider, PinchableView {
+
+    
+    
     
     private var acceptDragging:Bool = false
     private var inDragging:Bool = false
@@ -27,6 +30,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     var fetchStatus: MediaResourceStatus? 
     var dragDisposable:MetaDisposable = MetaDisposable()
     var positionFlags: LayoutPositionFlags?
+    
+    var invokeNextMouse: Bool = false 
+    
     override var backgroundColor: NSColor {
         get {
             return super.backgroundColor
@@ -34,7 +40,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) && !(view is VoiceTranscriptionControl) {
+                    if let view = view as? View, view.isDynamicColorUpdateLocked {
+                        continue
+                    }
                     view.background = newValue
                 }
             }
@@ -43,9 +52,6 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     weak var table:TableView?
     
-    override func updateTrackingAreas() {
-        
-    }
     
     override init() {
         super.init()
@@ -66,7 +72,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         fatalError("init(coder:) has not been implemented")
     }
     
-    
+    func playIfNeeded(_ playSound: Bool = false) {
+        
+    }
     
     func willRemove() -> Void {
         //self.cancel()
@@ -82,9 +90,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     func delete() -> Void {
         cancel()
-        if let parentId = parent?.id, let mediaBox = context?.account.postbox.mediaBox {
+        let engine = context?.engine.messages
+        if let parentId = parent?.id {
             _ = context?.account.postbox.transaction({ transaction -> Void in
-                deleteMessages(transaction: transaction, mediaBox: mediaBox, ids: [parentId])
+                engine?.deleteMessages(transaction: transaction, ids: [parentId])
             }).start()
         }
     }
@@ -111,7 +120,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
     }
     
-    func fetch() -> Void {
+    func fetch(userInitiated: Bool) -> Void {
         
     }
     
@@ -126,18 +135,16 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     func executeInteraction(_ isControl:Bool) -> Void {
         if let fetchStatus = self.fetchStatus, userInteractionEnabled {
             switch fetchStatus {
-            case .Fetching:
+            case .Fetching, .Paused:
                 if isControl {
                     if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                         delete()
                     }
                     cancelFetching()
                 } else {
-                    //open()
                 }
             case .Remote:
-                fetch()
-            //open()
+                fetch(userInitiated: true)
             case .Local:
                 open()
                 break
@@ -153,23 +160,25 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.clean()
         dragDisposable.dispose()
     }
+     
+     func update(size: NSSize) {
+         
+     }
     
     func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) -> Void  {
-        self.setContent(size: size)
+        self.setContent(size: size, animated: animated)
         self.parameters = parameters
         self.positionFlags = positionFlags
         self.context = context
         self.parent = parent
         self.table = table
-        
-       
-        
+                
         self.media = media
         
         if let parameters = parameters {
             if let parent = parent {
                 if parameters.automaticDownloadFunc(parent) {
-                    fetch()
+                    fetch(userInitiated: false)
                     preloadStreamblePart()
                 } else {
                     if parameters.preload {
@@ -177,7 +186,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     }
                 }
             } else if parameters.automaticDownload {
-                fetch()
+                fetch(userInitiated: false)
                 preloadStreamblePart()
             } else if parameters.preload {
                 preloadStreamblePart()
@@ -204,8 +213,15 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.layer?.addSublayer(layer)
     }
     
-    func setContent(size:NSSize) -> Void {
-        self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
+    func setContent(size:NSSize, animated: Bool) -> Void {
+        let frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        transition.updateFrame(view: self, frame: frame)
     }
     
     override func copy() -> Any {
@@ -251,10 +267,13 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             inDragging = false
             dragpath = nil
             mouseDownPoint = convert(event.locationInWindow, from: nil)
-            acceptDragging = draggingAbility(event) && parent != nil && !parent!.containsSecretMedia
+            acceptDragging = draggingAbility(event) && parent != nil && !parent!.containsSecretMedia && !parent!.isCopyProtected()
             
-            if let parent = parent, parent.id.peerId.id == Namespaces.Peer.SecretChat {
+            if let parent = parent, parent.id.peerId.namespace == Namespaces.Peer.SecretChat {
                 acceptDragging = false
+            }
+            if hasHandlers || invokeNextMouse {
+                super.mouseDown(with: event)
             }
         }
         
@@ -281,11 +300,18 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             pasteboard?.declareTypes([.kFilenames, .string], owner: self)
             pasteboard?.setPropertyList([dragpath], forType: .kFilenames)
             pasteboard?.setString(dragpath, forType: .string)
-            
         }
     }
     
     
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+    }
     
     
     override func mouseDragged(with event: NSEvent) {
@@ -331,7 +357,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                 }
                 
             } else {
-                super.mouseDragged(with: event)
+                super.superview?.mouseDragged(with: event)
             }
             
         } else {
@@ -340,14 +366,21 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
     }
     
+    var canSpamClicks: Bool {
+        return false
+    }
+    
     override func mouseUp(with event: NSEvent) {
+            
         if event.modifierFlags.contains(.control) {
             super.mouseUp(with: event)
             return
         }
         
-        
-        if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 {
+        if userInteractionEnabled, hasHandlers || invokeNextMouse {
+            super.mouseUp(with: event)
+        }
+        if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 || canSpamClicks {
             executeInteraction(false)
         } else {
             super.superview?.mouseUp(with: event)

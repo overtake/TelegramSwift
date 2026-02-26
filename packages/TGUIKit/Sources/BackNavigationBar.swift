@@ -1,0 +1,64 @@
+//
+//  BackNavigationBar.swift
+//  TGUIKit
+//
+//  Created by keepcoder on 05/10/2016.
+//  Copyright © 2016 Telegram. All rights reserved.
+//
+
+import Cocoa
+
+open class BackNavigationBar: TextButtonBarView {
+
+    
+    public init(_ controller:ViewController, canBeEmpty: Bool = false) {
+        let backSettings = controller.backSettings()
+        super.init(controller: controller, text: backSettings.0, style: controller.barPresentation, alignment: .Left, canBeEmpty: canBeEmpty)
+
+        if let image = backSettings.1 {
+            set(image: image, for: .Normal)
+        }
+        set(handler: { [weak self] _ in
+            self?.controller?.executeReturn()
+        }, for: .Up)
+        
+        requestUpdate()
+    }
+    
+    override var isFitted: Bool {
+        return super.isFitted
+    }
+    
+    public func requestUpdate() {
+        guard let controller = self.controller else {
+            return
+        }
+        let backSettings = controller.backSettings()
+        set(text: backSettings.0, for: .Normal)
+        if let image = backSettings.1 {
+             set(image: image, for: .Normal)
+        } else {
+            removeImage(for: .Normal)
+        }
+        style = controller.barPresentation
+        needsLayout = true
+    }
+    
+    open override func layout() {
+        super.layout()
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required public init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+}

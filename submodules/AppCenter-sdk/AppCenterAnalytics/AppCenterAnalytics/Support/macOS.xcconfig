@@ -1,4 +1,0 @@
-#include "../../../Config/macOS.xcconfig"
-#include "../../../Config/Framework.xcconfig"
-
-OTHER_LDFLAGS=$(inherited) -framework AppKit

@@ -10,8 +10,8 @@ import Cocoa
 import TGUIKit
 
 class RestrictionWrappedView : Control {
-    let textView: TextView = TextView()
-    let text:String
+    private let textView: TextView = TextView()
+    private var text:String
     required init(frame frameRect: NSRect) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -24,11 +24,18 @@ class RestrictionWrappedView : Control {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    func update(_ text: String) {
+        self.text = text
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         self.backgroundColor = theme.colors.background
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        layout.measure(width: frame.width - 40)
         textView.update(layout)
         textView.backgroundColor = theme.colors.background
+        needsLayout = true
     }
     
     required init?(coder: NSCoder) {
@@ -37,8 +44,7 @@ class RestrictionWrappedView : Control {
     
     override func layout() {
         super.layout()
-        textView.layout?.measure(width: frame.width - 40)
-        textView.update(textView.layout)
+        textView.resize(frame.width - 40)
         textView.center()
     }
 }
@@ -156,22 +162,42 @@ class CornerView : View {
 
 
 class SearchTitleBarView : TitledBarView {
-    private var search:ImageButton = ImageButton()
-    init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void) {
+    private let search:ImageButton = ImageButton()
+    private let calendar:ImageButton = ImageButton()
+
+    init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void, calendarClick:(() ->Void)? = nil) {
         super.init(controller: controller, title)
         search.set(handler: { _ in
             handler()
         }, for: .Click)
         addSubview(search)
+        addSubview(calendar)
+        
+        calendar.autohighlight = false
+        calendar.scaleOnClick = true
+        
+        calendar.set(handler: { _ in
+            calendarClick?()
+        }, for: .Click)
+        
+        calendar.isHidden = calendarClick == nil
+        
         updateLocalizationAndTheme(theme: theme)
     }
     
-    func updateSearchVisibility(_ visible: Bool, animated: Bool = true) {
-        if visible {
+    func updateSearchVisibility(_ searchVisible: Bool, calendarVisible: Bool = false, animated: Bool = true) {
+        if searchVisible {
             self.search.isHidden = false
         }
-        search.change(opacity: visible ? 1 : 0, animated: animated, completion: { [weak self] _ in
-            self?.search.isHidden = !visible
+        search.change(opacity: searchVisible ? 1 : 0, animated: animated, completion: { [weak self] _ in
+            self?.search.isHidden = !searchVisible
+        })
+        
+        if calendarVisible {
+            self.calendar.isHidden = false
+        }
+        calendar.change(opacity: calendarVisible ? 1 : 0, animated: animated, completion: { [weak self] _ in
+            self?.calendar.isHidden = !calendarVisible
         })
     }
     
@@ -180,9 +206,12 @@ class SearchTitleBarView : TitledBarView {
         let theme = (theme as! TelegramPresentationTheme)
         search.set(image: theme.icons.chatSearch, for: .Normal)
         search.set(image: theme.icons.chatSearchActive, for: .Highlight)
+        _ = search.sizeToFit()
+        
+        calendar.set(image: theme.icons.chatSearchCalendar, for: .Normal)
+        _ = calendar.sizeToFit()
 
         
-        _ = search.sizeToFit()
         backgroundColor = theme.colors.background
         needsLayout = true
     }
@@ -190,6 +219,11 @@ class SearchTitleBarView : TitledBarView {
     override func layout() {
         super.layout()
         search.centerY(x: frame.width - search.frame.width)
+        if search.isHidden {
+            calendar.centerY(x: frame.width - calendar.frame.width)
+        } else {
+            calendar.centerY(x: frame.width - search.frame.width - 10 - calendar.frame.width)
+        }
     }
     
     

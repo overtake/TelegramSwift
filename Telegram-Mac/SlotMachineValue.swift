@@ -8,7 +8,7 @@
 
 import Cocoa
 
-struct SlotMachineValue : Equatable {
+struct SlotMachineValue : Hashable {
     enum ReelValue : Int32 {
         case rolling
         case bar

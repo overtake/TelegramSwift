@@ -16,9 +16,9 @@ private class GalleryThumb {
         if let item = item as? MGalleryPhotoItem {
             signal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: System.backingScale, small: true, secureIdAccessContext: item.secureIdAccessContext)
         } else if let item = item as? MGalleryGIFItem {
-            signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
+            signal = chatMessageVideo(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
         } else if let item = item as? MGalleryVideoItem {
-            signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
+            signal = chatMessageVideo(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: System.backingScale)
         } else if let item = item as? MGalleryPeerPhotoItem {
             signal = chatMessagePhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: System.backingScale)
         }
@@ -29,14 +29,14 @@ private class GalleryThumb {
     var selected: Bool = false
     var isEnabled: Bool = true
     private let callback:(MGalleryItem)->Void
-    private let item: MGalleryItem
+    let item: MGalleryItem
     
     var frame: NSRect = .zero
     
     init(_ item: MGalleryItem, callback:@escaping(MGalleryItem)->Void) {
         self.callback = callback
         self.item = item
-        
+
         if let item = item as? MGalleryPhotoItem {
             item.fetch()
         } else if let item = item as? MGalleryPeerPhotoItem {
@@ -100,8 +100,20 @@ class GalleryThumbContainer : Control {
         super.init(frame: NSZeroRect)
         backgroundColor = .clear
         if let signal = item.signal, let size = item.size {
-            imageView.setSignal(signal)
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(80, 80)), boundingSize: NSMakeSize(80, 80), intrinsicInsets: NSEdgeInsets())
+            let media = item.item.entry.media
+
+            if let media = media {
+                imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale), clearInstantly: true)
+            }
+            
+            imageView.preventsCapture = item.item.entry.isProtected
+
+            imageView.setSignal(signal, cacheImage: { result in
+                if let media = media {
+                    cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                }
+            }, isProtected: item.item.entry.isProtected)
             imageView.set(arguments: arguments)
         }
         overlay.layer?.opacity = 0.35
@@ -111,6 +123,8 @@ class GalleryThumbContainer : Control {
         addSubview(overlay)
         overlay.backgroundColor = .black
         layer?.cornerRadius = .cornerRadius
+        
+        handleScrollEventOnInteractionEnabled = false
     }
     
     deinit {
@@ -138,7 +152,7 @@ class GalleryThumbsControlView: View {
 
     private let scrollView: HorizontalScrollView = HorizontalScrollView()
     private let documentView: View = View()
-    private var selectedView: View?
+    private var selectedView: GalleryThumbContainer?
     
     private var items: [GalleryThumb] = []
     
@@ -152,9 +166,11 @@ class GalleryThumbsControlView: View {
         
         documentView.backgroundColor = .clear
         
+        self.layer?.cornerRadius = 4
         
-        NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
-        NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.frameDidChangeNotification, object: scrollView)
+        
+       // NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
+        //NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.frameDidChangeNotification, object: scrollView)
 
     }
     
@@ -188,7 +204,6 @@ class GalleryThumbsControlView: View {
         
         previousRange = range
         
-        documentView.subviews = range.location == NSNotFound ? [] : items.subarray(with: range).map { $0.view }
     }
     
     override func layout() {
@@ -243,6 +258,10 @@ class GalleryThumbsControlView: View {
     var documentSize: NSSize {
         return NSMakeSize(min(documentView.frame.width, frame.width), documentView.frame.height)
     }
+
+    func updateHighlight() {
+
+    }
     
     func layoutItems(selectedIndex: Int? = nil, animated: Bool) {
         
@@ -291,9 +310,13 @@ class GalleryThumbsControlView: View {
         
         if let selectedView = selectedView {
             scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated && documentView.subviews.count > 0)
+        } else if let selectedIndex = selectedIndex {
+            
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(items[selectedIndex].frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated && documentView.subviews.count > 0)
         }
         previousRange = nil
-        scrollDidUpdated()
+        documentView.subviews = items.map { $0.view }
+
     }
     
 }

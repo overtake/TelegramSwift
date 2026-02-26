@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 class ChatListFilterRecommendedItem: GeneralRowItem {
@@ -49,7 +49,7 @@ class ChatListFilterRecommendedItem: GeneralRowItem {
 
 private final class ChatListFilterRecommendedView : GeneralContainableRowView {
     private let textView: TextView = TextView()
-    private let button = TitleButton()
+    private let button = TextButton()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
@@ -86,7 +86,7 @@ private final class ChatListFilterRecommendedView : GeneralContainableRowView {
         
         button.set(font: .medium(.text), for: .Normal)
         button.set(color: theme.colors.underSelectedColor, for: .Normal)
-        button.set(text: L10n.chatListFilterRecommendedAdd, for: .Normal)
+        button.set(text: strings().chatListFilterRecommendedAdd, for: .Normal)
         _ = button.sizeToFit(NSMakeSize(8, 8))
         button.layer?.cornerRadius = button.frame.height / 2
         

@@ -9,33 +9,22 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 import Postbox
-private let _dQueue = Queue.init(name: "chatListQueue")
-private let _sQueue = Queue.init(name: "ChatQueue")
+import CoreMediaIO
+import Localization
 
-public let resourcesQueue = Queue(name: "ResourcesQueue")
-public let prepareQueue = Queue(name: "PrepareQueue")
-public let messagesViewQueue = Queue(name: "messagesViewQueue")
+public let resourcesQueue = Queue(name: "ResourcesQueue", qos: .utility)
+public let prepareQueue = Queue(name: "PrepareQueue", qos: .utility)
+public let messagesViewQueue = Queue(name: "messagesViewQueue", qos: .utility)
 
 public let appName = "Telegram"
 public let kMediaImageExt = "jpg";
 public let kMediaGifExt = "mov";
 public let kMediaVideoExt = "mp4";
 
-public weak var mw:Window?
 
-var mainWindow:Window {
-    if let window = NSApp.keyWindow as? Window {
-        return window
-    } else if let window = NSApp.mainWindow as? Window {
-        return window
-    } else if let mw = mw {
-        return mw
-    }
-    fatalError("window not found")
-}
 
 var systemAppearance: NSAppearance {
     if #available(OSX 10.14, *) {
@@ -113,49 +102,43 @@ fileprivate func proccessEntries<T,R>(_ reverse:Bool = true, _ left:[R]?,right:[
 
 
 
-func link(path:String?, ext:String) -> String? {
-    var realPath:String? = path
-    if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
-        let path = path.nsstring.appendingPathExtension(ext)!
-        if !FileManager.default.fileExists(atPath: path) {
-            try? FileManager.default.removeItem(atPath: path)
-            try? FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
-        }
-        realPath = path
+
+func DALDevices() -> [AVCaptureDevice] {
+    let video = AVCaptureDevice.devices(for: .video)
+    let muxed:[AVCaptureDevice] = AVCaptureDevice.devices(for: .muxed) //[]//
+    // && $0.hasMediaType(.video)
+    
+    
+    return (video + muxed).filter { $0.isConnected && !$0.isSuspended }
+}
+
+func shouldBeMirrored(_ device: AVCaptureDevice) -> Bool {
+    
+    if !device.hasMediaType(.video) {
+        return false
     }
-    return realPath
-}
+    
+    var latency_pa = CMIOObjectPropertyAddress(
+               mSelector: CMIOObjectPropertySelector(kCMIODevicePropertyLatency),
+               mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeWildcard),
+               mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementWildcard)
+           )
+    var dataSize = UInt32(0)
+    
+    let id = device.value(forKey: "_connectionID") as? CMIOObjectID
 
-func delay(_ delay:Double, closure:@escaping ()->()) {
-    let when = DispatchTime.now() + delay
-    DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
-}
-func delay(_ delay:Double, onQueue queue: DispatchQueue, closure:@escaping ()->()) {
-    let when = DispatchTime.now() + delay
-    queue.asyncAfter(deadline: when, execute: closure)
-}
-
-func fs(_ path:String) -> Int32? {
-    
-    if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
-    
-        if attrs["NSFileType"] as? String == "NSFileTypeSymbolicLink" {
-            if let path = try? FileManager.default.destinationOfSymbolicLink(atPath: path) {
-                attrs = (try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary) ?? attrs
-            }
+    if let id = id {
+        if CMIOObjectGetPropertyDataSize(id, &latency_pa, 0, nil, &dataSize) == OSStatus(kCMIOHardwareNoError) {
+            return false
+        } else {
+           return true
         }
-        
-        
-        let size = attrs.fileSize()
-    
-        if size > UInt64(INT32_MAX) {
-            return INT32_MAX
-        }
-        return Int32(size)
     }
-    return nil
+    return true
 }
 
 
 
-
+func strings() -> L10n.Type {
+    return L10n.self
+}

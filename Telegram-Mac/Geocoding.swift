@@ -19,7 +19,7 @@ func geocodeLocation(dictionary: [String: String]) -> Signal<(Double, Double)?, 
     }
 }
 
-struct ReverseGeocodedPlacemark {
+struct ReverseGeocodedPlacemark : Equatable {
     let street: String?
     let city: String?
     let country: String?

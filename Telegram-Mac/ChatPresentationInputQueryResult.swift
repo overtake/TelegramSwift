@@ -8,23 +8,30 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 enum ChatPresentationInputQueryResult: Equatable {
-    case hashtags([String])
+    case hashtags(String, [String], EnginePeer?)
     case mentions([Peer])
     case commands([PeerCommand])
+    case shortcut([ShortcutMessageList.Item], String)
     case stickers([FoundStickerItem])
-    case emoji([String], Bool)
+    case emoji([String], [TelegramMediaFile], Bool)
     case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), [Peer], String)
     case contextRequestResult(Peer, ChatContextResultCollection?)
     
     static func ==(lhs: ChatPresentationInputQueryResult, rhs: ChatPresentationInputQueryResult) -> Bool {
         switch lhs {
-        case let .hashtags(lhsResults):
-            if case let .hashtags(rhsResults) = rhs {
-                return lhsResults == rhsResults
+        case let .hashtags(query, list, peer):
+            if case .hashtags(query, list, peer) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .shortcut(results, query):
+            if case .shortcut(results, query) = rhs {
+                return true
             } else {
                 return false
             }
@@ -34,9 +41,9 @@ enum ChatPresentationInputQueryResult: Equatable {
             } else {
                 return false
             }
-        case let .emoji(lhsResults, lhsFirstWord):
-            if case let .emoji(rhsResults, rhsFirstWord) = rhs {
-                return lhsResults == rhsResults && lhsFirstWord == rhsFirstWord
+        case let .emoji(lhsResults, lhsAnimated, lhsFirstWord):
+            if case let .emoji(rhsResults, rhsAnimated, rhsFirstWord) = rhs {
+                return lhsResults == rhsResults && lhsFirstWord == rhsFirstWord && lhsAnimated == rhsAnimated
             } else {
                 return false
             }

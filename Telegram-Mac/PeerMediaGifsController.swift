@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-import SyncCore
+
 
 private final class PeerMediaGifsArguments {
     let context: AccountContext
@@ -52,8 +52,8 @@ private func mediaEntires(state: PeerMediaGifsState, initialSize: NSSize) -> [In
     let values = makeChatGridMediaEnties(state.messages, initialSize: NSMakeSize(initialSize.width, 100))
     
     var wrapped:[InputContextEntry] = []
-    for value in values {
-        wrapped.append(InputContextEntry.contextMediaResult(nil, value, Int64(arc4random()) | ((Int64(wrapped.count) << 40))))
+    for (i, value) in values.enumerated() {
+        wrapped.append(InputContextEntry.contextMediaResult(Int64(i), nil, value, Int64(value.hashValue)))
     }
     
     return wrapped
@@ -138,7 +138,7 @@ private final class PeerMediaGifsSupplyment : InteractionContentViewProtocol {
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputContextEntry>], right: [AppearanceWrapperEntry<InputContextEntry>], animated: Bool, initialSize:NSSize, arguments: PeerMediaGifsArguments) -> TableUpdateTransition {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         switch entry.entry {
-        case let .contextMediaResult(_, row, index):
+        case let .contextMediaResult(_, _, row, index):
             return ContextMediaRowItem(initialSize, row, index, arguments.context, ContextMediaArguments(openMessage: arguments.openMessage, messageMenuItems: arguments.menuItems))
         default:
             fatalError("not supported")
@@ -172,6 +172,9 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         let initialSize = self.atomicSize
         let chatInteraction = self.chatInteraction
         
+        let chatMode = chatInteraction.mode
+        let chatLocation = chatInteraction.chatLocation
+        
         
         self.genericView.tableView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: .gif)
         
@@ -193,7 +196,7 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         
         var requestCount = perPageCount() + 20
         
-        let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount), ignoreRepeated: true)
+        let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount, scrollPosition: nil), ignoreRepeated: true)
         
         let initialState = PeerMediaGifsState(isLoading: false, messages: [])
         let state: ValuePromise<PeerMediaGifsState> = ValuePromise()
@@ -205,18 +208,18 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
         let supplyment = PeerMediaGifsSupplyment(tableView: genericView.tableView)
         
         let arguments = PeerMediaGifsArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, openMessage: { message in
-            showChatGallery(context: context, message: message, supplyment, nil, type: .history, reversed: true)
+            showChatGallery(context: context, message: message, supplyment, nil, type: .history, reversed: true, chatMode: chatMode, chatLocation: chatLocation)
         }, menuItems: { message, view in
             return .single([])
         })
         
         
         let applyHole:() -> Void = {
-            location.set(.Initial(count: requestCount))
+            location.set(.Initial(count: requestCount, scrollPosition: nil))
         }
         
         let history = location.get() |> mapToSignal { location in
-            return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: [.gif])
+            return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tag: .tag(.gif))
         }
         
         self.historyDisposable.set(history.start(next: { update in
@@ -276,7 +279,7 @@ class PeerMediaGifsController: TelegramGenericViewController<PeerMediaGifsView> 
             switch position.direction {
             case .bottom:
                 requestCount += perPageCount() * 10
-                location.set(.Initial(count: requestCount))
+                location.set(.Initial(count: requestCount, scrollPosition: nil))
             default:
                 break
             }

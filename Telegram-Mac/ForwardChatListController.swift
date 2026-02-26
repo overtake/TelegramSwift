@@ -9,10 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 class ForwardChatListController: ChatListController {
     override func getLeftBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(L10n.chatCancel))
+        let button = TextButtonBarView(controller: self, text: strings().chatCancel)
         
         button.set(handler: { [weak self] _ in
             self?.navigationController?.removeModalAction()

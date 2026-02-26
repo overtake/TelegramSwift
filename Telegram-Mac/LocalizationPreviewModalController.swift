@@ -9,38 +9,25 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 
 private final class LocalizationPreviewView : Control {
-    private let titleView: TextView = TextView()
-    private let titleContainer: View = View()
     
     private let textView: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
-        titleView.isSelectable = false
-        titleView.userInteractionEnabled = false
-        
         textView.isSelectable = false
-        
-        titleContainer.addSubview(titleView)
-        addSubview(titleContainer)
         addSubview(textView)
-        titleContainer.border = [.Bottom]
     }
     
     func update(with info: LocalizationInfo, width: CGFloat) -> CGFloat {
-        let titleLayout = TextViewLayout(.initialize(string: L10n.applyLanguageChangeLanguageTitle, color: theme.colors.text, font: .medium(.title)), alwaysStaticItems: true)
-        titleLayout.measure(width: width)
-        titleView.update(titleLayout)
         
         
         let text: String
         if info.isOfficial {
-            text = L10n.applyLanguageChangeLanguageOfficialText(info.title)
+            text = strings().applyLanguageChangeLanguageOfficialText(info.title)
         } else {
-            text = L10n.applyLanguageChangeLanguageUnofficialText1(info.title, "\(Int(Float(info.translatedStringCount) / Float(info.totalStringCount) * 100.0))")
+            text = strings().applyLanguageChangeLanguageUnofficialText1(info.title, "\(Int(Float(info.translatedStringCount) / Float(info.totalStringCount) * 100.0))")
         }
         
         let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
@@ -57,15 +44,12 @@ private final class LocalizationPreviewView : Control {
         
         textView.update(textLayout)
         
-        return 50 + 40 + textLayout.layoutSize.height
+        return 40 + textLayout.layoutSize.height
     }
     
     override func layout() {
         super.layout()
-        titleContainer.frame = NSMakeRect(0, 0, frame.width, 50)
-        titleView.center()
-        
-        textView.centerX(y: titleContainer.frame.maxY + 20)
+        textView.centerX(y: 20)
     }
     
     required init?(coder: NSCoder) {
@@ -88,13 +72,21 @@ class LocalizationPreviewModalController: ModalViewController {
     
     private func applyLocalization() {
         close()
-        _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: info.languageCode), for: mainWindow).start()
+        _ = showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: info.languageCode), for: context.window).start()
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.applyLanguageApplyLanguageAction, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().applyLanguageApplyLanguageAction, accept: { [weak self] in
             self?.applyLocalization()
-        }, cancelTitle: L10n.modalCancel, height: 50)
+        }, height: 50, singleButton: true, customTheme: {
+            .init(background: theme.colors.background, listBackground: theme.colors.background)
+        })
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: strings().applyLanguageChangeLanguageTitle), right: nil)
     }
     
     override func viewClass() -> AnyClass {
