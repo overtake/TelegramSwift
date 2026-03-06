@@ -1325,7 +1325,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "AutomaticQuoteSubstitutionEnabled\(settingsKey)")
-            super.isAutomaticSpellingCorrectionEnabled = newValue
+            super.isAutomaticQuoteSubstitutionEnabled = newValue
         }
     }
 
@@ -1335,7 +1335,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "AutomaticLinkDetectionEnabled\(settingsKey)")
-            super.isAutomaticSpellingCorrectionEnabled = newValue
+            super.isAutomaticLinkDetectionEnabled = newValue
         }
     }
 
@@ -1345,7 +1345,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "AutomaticDataDetectionEnabled\(settingsKey)")
-            super.isAutomaticSpellingCorrectionEnabled = newValue
+            super.isAutomaticDataDetectionEnabled = newValue
         }
     }
 
@@ -1355,7 +1355,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "AutomaticDashSubstitutionEnabled\(settingsKey)")
-            super.isAutomaticSpellingCorrectionEnabled = newValue
+            super.isAutomaticDashSubstitutionEnabled = newValue
         }
     }
 }
