@@ -10,6 +10,7 @@ import Cocoa
 import TelegramCore
 
 import Postbox
+import FoundationUtils
 
 struct PossibleContextQueryTypes: OptionSet {
     var rawValue: Int32
@@ -90,6 +91,9 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         }
         if maxIndex == inputText.startIndex {
             return nil
+        }
+        if let commandQueryRange = TelegramCommandAutocomplete.queryRange(in: inputText, cursorUTF16Offset: inputState.selectionRange.lowerBound) {
+            return (commandQueryRange, [.command], nil)
         }
         var index = inputText.index(before: maxIndex)
         
