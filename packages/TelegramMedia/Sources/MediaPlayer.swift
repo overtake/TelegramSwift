@@ -376,7 +376,15 @@ private final class MediaPlayerContext {
                     if let strongSelf = self {
                         
                         if let loadedState = loadedState {
-                            switch action {
+                            // Re-read the current action from state so that a pause() call made
+                            // between seekingCompleted() and the flush completing is respected.
+                            let currentAction: MediaPlayerPlaybackAction
+                            if case let .seeking(_, _, _, stateAction, _) = strongSelf.state {
+                                currentAction = stateAction
+                            } else {
+                                currentAction = action
+                            }
+                            switch currentAction {
                             case .play:
                                 strongSelf.state = .playing(loadedState)
                                 strongSelf.audioRenderer?.renderer.start()
