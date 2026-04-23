@@ -3268,7 +3268,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                 case .loading:
-                    break
+                    current.presentation = theme.withUpdatedEmoticonThemes(emoticonThemes)
                 }
                 return current
             }
