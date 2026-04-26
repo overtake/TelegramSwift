@@ -29,7 +29,7 @@ LIBOPUS_PATH="${BUILD_DIR}../../libopus/build/libopus"
 LIBVPX_PATH="${BUILD_DIR}../../libvpx/build/libvpx"
 LIBDAV1D_PATH="${BUILD_DIR}../../dav1d/build/dav1d"
 
-FF_VERSION="7.1"
+FF_VERSION="7.1.1"
 SOURCE="$SOURCE_DIR/ffmpeg-$FF_VERSION"
 
 GAS_PREPROCESSOR_PATH="$SOURCE_DIR/gas-preprocessor.pl"
