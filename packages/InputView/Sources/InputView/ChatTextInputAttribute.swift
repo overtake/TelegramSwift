@@ -42,16 +42,6 @@ public final class TextInputTextQuoteAttribute: NSObject {
         self.collapsed = collapsed
         super.init()
     }
-    
-    override public func isEqual(_ object: Any?) -> Bool {
-        guard let other = object as? TextInputTextQuoteAttribute else {
-            return false
-        }
-        
-        let _ = other
-        
-        return self.collapsed == other.collapsed
-    }
 }
 
 public final class TextInputTextCustomEmojiAttribute: NSObject, Codable {
@@ -547,7 +537,7 @@ private func quoteRangesEqual(_ lhs: [(NSRange, TextInputTextQuoteAttribute)], _
         return false
     }
     for i in 0 ..< lhs.count {
-        if lhs[i].0 != rhs[i].0 || !lhs[i].1.isEqual(rhs[i].1) {
+        if lhs[i].0 != rhs[i].0 || lhs[i].1.collapsed != rhs[i].1.collapsed {
             return false
         }
     }
