@@ -347,31 +347,24 @@ var globalLinkExecutor:TextViewInteractions {
             }
             
             //modified.removeAttribute(TextInputAttributes.quote, range: modified.range)
-            modified.removeAttribute(TextInputAttributes.code, range: modified.range)
-            modified.removeAttribute(TextInputAttributes.monospace, range: modified.range)
 
             let input = ChatTextInputState(attributedText: modified, selectionRange: 0 ..< modified.length)
-            
+
             if !modified.string.isEmpty {
                 pb.clearContents()
                 let rtf = try? modified.data(from: modified.range, documentAttributes: [NSAttributedString.DocumentAttributeKey.documentType : NSAttributedString.DocumentType.rtf])
-                
-                
-                pb.declareTypes([.rtf, .kInApp], owner: nil)
-
+                pb.declareTypes([.rtf, .kInApp, .string], owner: nil)
                 let encoder = AdaptedPostboxEncoder()
-                let encoded = try? encoder.encode(input)
-                
-                if let data = encoded {
+                if let data = try? encoder.encode(input) {
                     pb.setData(data, forType: .kInApp)
                 }
                 if let rtf = rtf {
                     pb.setData(rtf, forType: .rtf)
-                    pb.setString(modified.string, forType: .string)
-                    return true
                 }
+                pb.setString(modified.string, forType: .string)
+                return true
             }
-            
+
             return false
         }, translate: { text, window in
             let language = Translate.detectLanguage(for: text)
