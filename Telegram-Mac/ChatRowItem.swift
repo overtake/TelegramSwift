@@ -2240,8 +2240,8 @@ class ChatRowItem: TableRowItem {
                 fillName = header == .normal && theme.bubbled
             }
             
-            if fillName {
-                
+            if fillName || message.hasInlineAttribute {
+
                 let canFillAuthorName: Bool = ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
 
                 if isForwardScam || canFillAuthorName {
