@@ -267,6 +267,9 @@ class ChatMessageItem: ChatRowItem {
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction,_ context: AccountContext, _ entry: ChatHistoryEntry, theme: TelegramPresentationTheme) {
         
          if let message = entry.message {
+            if message.inlinePeer == nil, message.id.namespace == Namespaces.Message.Cloud, message.text.isEmpty, message.media.contains(where: { $0 is TelegramMediaUnsupported }) {
+                chatInteraction.context.account.viewTracker.updateUnsupportedMediaForMessageIds(messageIds: Set([MessageAndThreadId(messageId: message.id, threadId: chatInteraction.chatLocation.threadId)]))
+            }
              
             
             let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
@@ -1030,4 +1033,3 @@ class ChatMessageItem: ChatRowItem {
     }
 
 }
-
