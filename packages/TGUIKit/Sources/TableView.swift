@@ -2303,6 +2303,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func noteHeightOfRow(_ row:Int, _ animated:Bool = true) {
+        guard row >= 0 && row < self.count else {
+            return
+        }
         if !animated {
             NSAnimationContext.current.duration = 0
             NSAnimationContext.current.timingFunction = nil
