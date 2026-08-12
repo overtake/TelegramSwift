@@ -29,6 +29,7 @@ enum SettingsSearchableItemIcon {
     case passport
     case support
     case faq
+    case powerSaving
 }
 
 extension SettingsSearchableItemIcon {
@@ -54,6 +55,8 @@ extension SettingsSearchableItemIcon {
             return theme.icons.settingsAskQuestion
         case .faq:
             return theme.icons.settingsFaq
+        case .powerSaving:
+            return theme.icons.settingsGeneral
         default:
             return nil
         }
@@ -79,6 +82,7 @@ enum SettingsSearchableItemId: Hashable {
     case wallet(Int32)
     case support(Int32)
     case faq(Int32)
+    case powerSaving(Int32)
     
     private var namespace: Int32 {
         switch self {
@@ -112,6 +116,8 @@ enum SettingsSearchableItemId: Hashable {
             return 14
         case .faq:
             return 15
+        case .powerSaving:
+            return 16
         }
     }
     
@@ -131,7 +137,8 @@ enum SettingsSearchableItemId: Hashable {
              let .passport(id),
              let .wallet(id),
              let .support(id),
-             let .faq(id):
+             let .faq(id),
+             let .powerSaving(id):
             return id
         }
     }
@@ -174,6 +181,8 @@ enum SettingsSearchableItemId: Hashable {
             self = .support(id)
         case 15:
             self = .faq(id)
+        case 16:
+            self = .powerSaving(id)
         default:
             return nil
         }
@@ -629,6 +638,33 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     return items
 }
 
+private func powerSavingSearchableItems(context: AccountContext) -> [SettingsSearchableItem] {
+    let icon: SettingsSearchableItemIcon = .powerSaving
+
+    let presentLiteMode: (AccountContext, (SettingsSearchableItemPresentation, ViewController?) -> Void) -> Void = { context, present in
+        present(.push, LiteModeController(context: context))
+    }
+
+    var items: [SettingsSearchableItem] = []
+    items.append(SettingsSearchableItem(id: .powerSaving(0), title: strings().generalSettingsLiteMode, alternate: [strings().liteModeTitle, strings().liteModeInfo], icon: icon, breadcrumbs: [strings().accountSettingsGeneral], present: { context, _, present in
+        presentLiteMode(context, present)
+    }))
+
+    var index: Int32 = 1
+    for key in LiteMode.allKeys {
+        var alternate: [String] = []
+        if let info = key.info {
+            alternate.append(info)
+        }
+        items.append(SettingsSearchableItem(id: .powerSaving(index), title: key.title, alternate: alternate, icon: icon, breadcrumbs: [strings().accountSettingsGeneral, strings().generalSettingsLiteMode], present: { context, _, present in
+            presentLiteMode(context, present)
+        }))
+        index += 1
+    }
+
+    return items
+}
+
 func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Signal<[ArchivedStickerPackItem]?, NoError>, privacySettings: Signal<AccountPrivacySettings?, NoError>) -> Signal<[SettingsSearchableItem], NoError> {
     
     let canAddAccount = activeAccountsAndPeers(context: context)
@@ -730,6 +766,9 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
             
             let appearanceItems = appearanceSearchableItems(context: context)
             allItems.append(contentsOf: appearanceItems)
+            
+            let powerSavingItems = powerSavingSearchableItems(context: context)
+            allItems.append(contentsOf: powerSavingItems)
             
             let languageItems = languageSearchableItems(context: context, localizations: localizations)
             allItems.append(contentsOf: languageItems)

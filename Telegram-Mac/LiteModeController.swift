@@ -12,7 +12,7 @@ import SwiftSignalKit
 import InAppSettings
 import Localization
 
-private extension LiteModeKey {
+extension LiteModeKey {
     var title: String {
         return _NSLocalizedString("LiteMode.Key.\(self.rawValue).Title")
     }
