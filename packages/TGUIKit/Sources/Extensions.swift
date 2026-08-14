@@ -540,6 +540,13 @@ public extension NSMutableAttributedString {
     }
     
     func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
+        guard range.location != NSNotFound, range.location >= 0, range.length >= 0 else {
+            return
+        }
+        let range = self.trimRange(range)
+        guard range.length > 0 else {
+            return
+        }
         self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
         self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
     }
